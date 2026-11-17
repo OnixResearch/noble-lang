@@ -71,7 +71,8 @@ let Pin = { rev | String, narHash | String } in
     aeneas_args | Array String = ["-backend", "lean", "-abort-on-error", "-warnings-as-errors", "-no-progress-bar", "-emit-json"],
     # Charon's Cargo subcommand compiles the selected Rust subject before extraction.
     charon_timeout_seconds | Number = 900,
-    translator_timeout_seconds | Number = 120,
+    # Whole-contract translation now exceeds the historical two-minute bound.
+    translator_timeout_seconds | Number = 300,
     lean_timeout_seconds | Number = 900,
     lean_heartbeats | Number = 1000000,
     lean_recursion_depth | Number = 2048,

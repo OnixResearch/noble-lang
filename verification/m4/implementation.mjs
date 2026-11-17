@@ -178,7 +178,7 @@ function validateSelection() {
     extraction_rust: 'nightly-2026-09-17', extraction_profile: 'dev', all_features: true,
     default_features: true, overflow_checks: true, panic: 'unwind', lean_heartbeats: 1000000,
     lean_recursion_depth: 2048, charon_timeout_seconds: 900, lean_timeout_seconds: 900,
-    translator_timeout_seconds: 120 })) {
+    translator_timeout_seconds: 300 })) {
     equal(selection.configuration[name], expected, 'SELECTION', name);
   }
   equal(selection.configuration.features, [], 'SELECTION', 'features');

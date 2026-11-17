@@ -3329,14 +3329,9 @@ def source.declared.parsing.name.closure := Unit
 def source.declared.parsing.logical_name.closure := Unit
 
 /-- [noble_contracts::source::declared::parsing::members::proof::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 382:69-382:87 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 385:69-385:87 -/
 @[reducible]
 def source.declared.parsing.members.proof.closure := Unit
-
-/-- [noble_contracts::source::declared::parsing::members::reference::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 262:22-268:5 -/
-@[reducible]
-def source.declared.parsing.members.reference.closure := Bool
 
 /-- [noble_contracts::source::declared::parsing::logic::logical_step::{closure#1}]
     Source: 'crates/noble-contracts/src/source/declared/parsing/logic.rs', lines 110:53-112:5 -/
@@ -3376,7 +3371,7 @@ def source.declared.parsing.logic.parse.closure := Unit
 def source.declared.parsing.members.revision.closure := source.lexer.Token
 
 /-- [noble_contracts::source::declared::parsing::members::contract::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 304:62-304:80 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 307:62-307:80 -/
 @[reducible]
 def source.declared.parsing.members.contract.closure := Unit
 
@@ -4945,12 +4940,12 @@ def intrinsic.proof_tree.closure_1 := Span
 def intrinsic.proof_tree.closure := Span
 
 /-- [noble_contracts::intrinsic::matches_eq_add::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4633:39-4633:70 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4638:39-4638:70 -/
 @[reducible]
 def intrinsic.matches_eq_add.closure := Unit
 
 /-- [noble_contracts::intrinsic::recipe_shape_differs::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4322:59-4322:87 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4327:59-4327:87 -/
 @[reducible]
 def intrinsic.recipe_shape_differs.closure := Std.U32
 
@@ -9375,62 +9370,62 @@ def source.procedures.persistence.compare_evidence.closure :=
   source.procedures.EvidenceRecord × source.procedures.EvidenceRecord
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1823:49-1827:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1892:49-1896:13 -/
 def source.procedures.ProcedureLibrary.is_dependencies_ready.closure_1 :=
   Slice Std.Usize × source.chunks.DefinitionRef
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1814:49-1817:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1883:49-1886:13 -/
 def source.procedures.ProcedureLibrary.is_dependencies_ready.closure :=
   source.procedures.LibraryDependency × Slice Std.Usize
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_rebuilt::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1763:21-1763:76 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1832:21-1832:76 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.admit_rebuilt.closure_1 := Unit
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_rebuilt::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1751:51-1759:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1820:51-1828:9 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.admit_rebuilt.closure := Unit
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_edge_matched::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1576:48-1582:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1589:48-1595:13 -/
 def source.procedures.ProcedureLibrary.is_edge_matched.closure :=
   source.procedures.LibraryDependency × source.chunks.DefinitionRef
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{closure}::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1519:52-1523:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1532:52-1536:17 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.check_dependencies.closure.closure :=
   source.procedures.LibraryDependency
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1517:70-1525:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1530:70-1538:9 -/
 def source.procedures.ProcedureLibrary.check_dependencies.closure :=
   source.procedures.ProcedureRecord × Slice source.procedures.ProcedureRecord
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_retained::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1722:59-1725:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1791:59-1794:9 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.check_retained.closure := Std.Usize
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1481:28-1491:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1494:28-1504:17 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.validate_promoted_obligation.closure_2
   :=
   Std.Usize
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1478:61-1480:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1491:61-1493:17 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.validate_promoted_obligation.closure_1
   :=
   Std.U32
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1465:29-1465:62 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1478:29-1478:62 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.validate_promoted_obligation.closure :=
   Std.U32
@@ -9443,43 +9438,42 @@ structure source.procedures.ConsumerPolicy where
   obligations : alloc.vec.Vec source.procedures.ConsumerObligation
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1419:25-1419:55 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1432:25-1432:55 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.validate_record.closure_2 :=
   source.procedures.ProcedureRecord
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1390:68-1392:21 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1403:68-1405:21 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.validate_record.closure_1 :=
   source.procedures.Promotion
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1344:69-1352:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1357:69-1365:17 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.validate_record.closure := Unit
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1233:74-1235:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1246:74-1248:13 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.validate_claims.closure_1 := Unit
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1229:69-1231:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1242:69-1244:9 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.validate_claims.closure := Unit
 
-/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1618:48-1620:13 -/
+/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor::{closure#1}]
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1645:20-1654:9 -/
 @[reducible]
-def source.procedures.ProcedureLibrary.check_supersession.closure_1 :=
-  Array Std.U8 32#usize
+def source.procedures.ProcedureLibrary.link_successor.closure_1 := Std.Usize
 
-/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1600:48-1602:13 -/
+/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor::{closure}]
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1642:48-1644:9 -/
 @[reducible]
-def source.procedures.ProcedureLibrary.check_supersession.closure :=
-  source.procedures.ProcedureRecord
+def source.procedures.ProcedureLibrary.link_successor.closure :=
+  Array Std.U8 32#usize
 
 /-- [noble_contracts::source::procedures::persistence::check_loaded_record::{closure}]
     Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2330:49-2330:89 -/
@@ -9811,43 +9805,43 @@ def source.procedures.ProcedureLibrary.chunk_order_owner.closure := Unit
 def source.procedures.ProcedureLibrary.generation.closure := Std.U32
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1649:61-1649:99 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1709:61-1709:99 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.supersede_existing.closure_1 :=
   Array Std.U8 32#usize
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1640:39-1648:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1700:39-1708:9 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.supersede_existing.closure := Unit
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1178:25-1180:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1191:25-1193:17 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.canonicalize_evidence.closure_1 := Unit
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1173:25-1175:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1186:25-1188:17 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.canonicalize_evidence.closure := Unit
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#4}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1039:80-1047:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1052:80-1060:9 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.admit_state.closure_4 := Unit
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1036:34-1038:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1049:34-1051:9 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.admit_state.closure_3 := Unit
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1006:63-1010:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1021:63-1025:17 -/
 def source.procedures.ProcedureLibrary.admit_state.closure_2 :=
   Array Std.U8 16#usize × alloc.vec.Vec source.procedures.LibraryDependency
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 951:76-959:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 954:76-962:13 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.admit_state.closure_1 := Unit
 
@@ -9884,50 +9878,50 @@ def source.procedures.ProcedureLibrary.admit_batch.closure_1 := Unit
 def source.procedures.ProcedureLibrary.admit_batch.closure := Unit
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#4}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1936:75-1944:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2005:75-2013:9 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.demote.closure_4 := Unit
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1933:34-1935:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2002:34-2004:9 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.demote.closure_3 := Unit
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1919:66-1921:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1988:66-1990:9 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.demote.closure_2 :=
   Array Std.U8 32#usize
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1893:28-1901:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1962:28-1970:17 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.demote.closure_1 := Unit
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1891:52-1891:96 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1960:52-1960:96 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.demote.closure := Array Std.U8 32#usize
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2077:82-2079:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2146:82-2148:13 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.check_rollback_record.closure_1 :=
   Slice String
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2055:83-2057:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2124:83-2126:13 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.check_rollback_record.closure :=
   Slice String
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rollback::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2024:75-2032:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2093:75-2101:9 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.rollback.closure_1 := Unit
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rollback::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2002:65-2010:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2071:65-2079:9 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.rollback.closure := Unit
 

@@ -74254,7 +74254,7 @@ def source.declared.parsing.logical_name («name» : Str) : Result Bool := do
   else ok false
 
 /-- [noble_contracts::source::declared::parsing::members::exported_name]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 703:4-705:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 706:4-708:5 -/
 @[rust_loop_body]
 def source.declared.parsing.members.exported_name_loop.body
   (bytes : Slice Std.U8) (split : Std.Usize) :
@@ -74271,7 +74271,7 @@ def source.declared.parsing.members.exported_name_loop.body
   else ok (done split)
 
 /-- [noble_contracts::source::declared::parsing::members::exported_name]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 703:4-705:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 706:4-708:5 -/
 @[rust_loop]
 def source.declared.parsing.members.exported_name_loop
   (bytes : Slice Std.U8) (split : Std.Usize) : Result Std.Usize := do
@@ -74281,7 +74281,7 @@ def source.declared.parsing.members.exported_name_loop
     split
 
 /-- [noble_contracts::source::declared::parsing::members::exported_name]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 700:0-715:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 703:0-718:1 -/
 def source.declared.parsing.members.exported_name
   (target : Str) : Result Bool := do
   let bytes ← core.str.Str.as_bytes target
@@ -74333,7 +74333,7 @@ def source.declared.parsing.members.exported_name
     else ok false
 
 /-- [noble_contracts::source::declared::parsing::members::export]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 683:0-698:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 686:0-701:1 -/
 def source.declared.parsing.members.export
   (cursor : source.declared.parsing.Cursor) :
   Result (core.result.Result (source.declared.parsing.Cursor ×
@@ -74399,7 +74399,7 @@ def source.declared.parsing.Cursor.ident
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::parsing::members::require]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 641:0-681:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 644:0-684:1 -/
 def source.declared.parsing.members.require
   (cursor : source.declared.parsing.Cursor) :
   Result (core.result.Result (source.declared.parsing.Cursor ×
@@ -74585,7 +74585,7 @@ def source.declared.parsing.Cursor.public
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::parsing::members::variant_arm]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 610:0-635:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 613:0-638:1 -/
 def source.declared.parsing.members.variant_arm
   (cursor : source.declared.parsing.Cursor) :
   Result (core.result.Result (source.declared.parsing.Cursor × String ×
@@ -74712,7 +74712,7 @@ def scan.split_once_byte
       (Str × Str) residual
 
 /-- [noble_contracts::source::declared::parsing::members::variant_name]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 564:0-608:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 567:0-611:1 -/
 def source.declared.parsing.members.variant_name
   (spelling : Str) (span : Span) :
   Result (core.result.Result (String × (alloc.vec.Vec String)) Diagnostic)
@@ -74798,7 +74798,7 @@ def source.declared.parsing.members.variant_name
           ok (core.result.Result.Err d)
 
 /-- [noble_contracts::source::declared::parsing::members::variant]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 534:0-554:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 537:0-557:1 -/
 def source.declared.parsing.members.variant
   (cursor : source.declared.parsing.Cursor) :
   Result (core.result.Result (source.declared.parsing.Cursor ×
@@ -74829,7 +74829,7 @@ def source.declared.parsing.members.variant
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::parsing::members::opaque]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 524:0-532:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 527:0-535:1 -/
 def source.declared.parsing.members.opaque
   (cursor : source.declared.parsing.Cursor) :
   Result (core.result.Result (source.declared.parsing.Cursor ×
@@ -74876,7 +74876,7 @@ def source.declared.parsing.open_at
     | source.lexer.TokenKind.LogicalBody _ => ok false
 
 /-- [noble_contracts::source::declared::parsing::members::signature_word]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 509:0-522:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 512:0-525:1 -/
 def source.declared.parsing.members.signature_word
   (cursor : source.declared.parsing.Cursor) (count : Std.Usize) :
   Result (core.result.Result (source.declared.parsing.Cursor × Str)
@@ -74897,7 +74897,7 @@ def source.declared.parsing.members.signature_word
   | core.result.Result.Err _ => ok r
 
 /-- [noble_contracts::source::declared::parsing::members::signature]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 465:4-484:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 468:4-487:5 -/
 @[rust_loop_body]
 def source.declared.parsing.members.signature_loop.body
   (tokens : Slice source.lexer.Token) (tokens1 : Slice source.lexer.Token)
@@ -75025,7 +75025,7 @@ def source.declared.parsing.members.signature_loop.body
   else ok (done (tokens1, i, s, words, «end», problem))
 
 /-- [noble_contracts::source::declared::parsing::members::signature]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 465:4-484:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 468:4-487:5 -/
 @[rust_loop]
 def source.declared.parsing.members.signature_loop
   (tokens : Slice source.lexer.Token) (i : Std.Usize) (s : Span)
@@ -75041,7 +75041,7 @@ def source.declared.parsing.members.signature_loop
     (tokens, i, s, words, «end», problem)
 
 /-- [noble_contracts::source::declared::parsing::members::signature]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 442:0-506:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 445:0-509:1 -/
 def source.declared.parsing.members.signature
   (cursor : source.declared.parsing.Cursor) :
   Result (core.result.Result (source.declared.parsing.Cursor ×
@@ -75135,7 +75135,7 @@ def source.declared.parsing.Cursor.logical_ident
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::parsing::members::end_before]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 425:0-432:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 428:0-435:1 -/
 def source.declared.parsing.members.end_before
   (tokens : Slice source.lexer.Token) («at» : Std.Usize) :
   Result (Option Std.U32)
@@ -75154,7 +75154,7 @@ def source.declared.parsing.members.end_before
       Std.U32 residual
 
 /-- [noble_contracts::source::declared::parsing::members::proof::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::lexer::Token,), noble_contracts::Span> for noble_contracts::source::declared::parsing::members::proof::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 382:69-382:87 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 385:69-385:87 -/
 def
   source.declared.parsing.members.proof.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TokenSpan.call_once
   (c : source.declared.parsing.members.proof.closure)
@@ -75164,7 +75164,7 @@ def
   ok tupled_args.span
 
 /-- Trait implementation: [noble_contracts::source::declared::parsing::members::proof::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::lexer::Token,), noble_contracts::Span> for noble_contracts::source::declared::parsing::members::proof::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 382:69-382:87 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 385:69-385:87 -/
 @[reducible]
 def
   source.declared.parsing.members.proof.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TokenSpan
@@ -75174,31 +75174,25 @@ def
     source.declared.parsing.members.proof.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TokenSpan.call_once
 }
 
-/-- [noble_contracts::source::declared::parsing::members::reference::{impl core::ops::function::Fn<(&'_1 str,), bool> for noble_contracts::source::declared::parsing::members::reference::{closure}<'_0>}::call]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 262:22-268:5 -/
-def
-  source.declared.parsing.members.reference.closure.Insts.CoreOpsFunctionFnTupleShared1StrBool.call
-  (c : source.declared.parsing.members.reference.closure) (tupled_args : Str) :
-  Result Bool
-  := do
-  if c
-  then source.declared.parsing.logical_name tupled_args
-  else source.declared.parsing.name tupled_args
+/-- [noble_contracts::source::declared::parsing::members::reference_name]:
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 281:0-287:1 -/
+def source.declared.parsing.members.reference_name
+  («name» : Str) (logical_target : Bool) : Result Bool := do
+  if logical_target
+  then source.declared.parsing.logical_name «name»
+  else source.declared.parsing.name «name»
 
 /-- [noble_contracts::source::declared::parsing::members::reference]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 261:0-284:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 261:0-277:1 -/
 def source.declared.parsing.members.reference
   (text : Str) (logical_target : Bool) : Result Bool := do
   let o ← scan.split_once_byte text 46#u8
   match o with
-  | none =>
-    source.declared.parsing.members.reference.closure.Insts.CoreOpsFunctionFnTupleShared1StrBool.call
-      logical_target text
+  | none => source.declared.parsing.members.reference_name text logical_target
   | some p =>
     let (scope, «local») := p
     let b ←
-      source.declared.parsing.members.reference.closure.Insts.CoreOpsFunctionFnTupleShared1StrBool.call
-        logical_target «local»
+      source.declared.parsing.members.reference_name «local» logical_target
     if b
     then
       let s ← core.str.Str.as_bytes «local»
@@ -75799,7 +75793,7 @@ def source.declared.parsing.members.revision
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::parsing::members::proof]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 358:0-422:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 361:0-425:1 -/
 def source.declared.parsing.members.proof
   (cursor : source.declared.parsing.Cursor) (span : Span) :
   Result (core.result.Result (source.declared.parsing.Cursor ×
@@ -75973,7 +75967,7 @@ def source.declared.parsing.members.proof
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::parsing::members::contract::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::lexer::Token,), noble_contracts::Span> for noble_contracts::source::declared::parsing::members::contract::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 304:62-304:80 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 307:62-307:80 -/
 def
   source.declared.parsing.members.contract.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TokenSpan.call_once
   (c : source.declared.parsing.members.contract.closure)
@@ -75983,7 +75977,7 @@ def
   ok tupled_args.span
 
 /-- Trait implementation: [noble_contracts::source::declared::parsing::members::contract::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::lexer::Token,), noble_contracts::Span> for noble_contracts::source::declared::parsing::members::contract::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 304:62-304:80 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 307:62-307:80 -/
 @[reducible]
 def
   source.declared.parsing.members.contract.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TokenSpan
@@ -76188,7 +76182,7 @@ def source.declared.parsing.members.binding_block
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::source::declared::parsing::members::contract]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 290:0-352:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 293:0-355:1 -/
 def source.declared.parsing.members.contract
   (cursor : source.declared.parsing.Cursor) (span : Span) :
   Result (core.result.Result (source.declared.parsing.Cursor ×
@@ -78413,7 +78407,7 @@ def intrinsic.named_v2.body_request
   ok { submission.request with expected := e }
 
 /-- [noble_contracts::intrinsic::derivation_agrees]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4484:0-4492:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4489:0-4497:1 -/
 def intrinsic.derivation_agrees
   (left : noble_kernel.untrusted.Derivation)
   (right : noble_kernel.untrusted.Derivation) :
@@ -78443,7 +78437,7 @@ def intrinsic.derivation_agrees
   else ok false
 
 /-- [noble_contracts::intrinsic::derivations_agree]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4473:4-4476:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4478:4-4481:5 -/
 @[rust_loop_body]
 def intrinsic.derivations_agree_loop.body
   (left : Slice noble_kernel.untrusted.Derivation)
@@ -78469,7 +78463,7 @@ def intrinsic.derivations_agree_loop.body
   else ok (done is_agreed)
 
 /-- [noble_contracts::intrinsic::derivations_agree]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4473:4-4476:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4478:4-4481:5 -/
 @[rust_loop]
 def intrinsic.derivations_agree_loop
   (left : Slice noble_kernel.untrusted.Derivation)
@@ -78483,7 +78477,7 @@ def intrinsic.derivations_agree_loop
     (index1, is_agreed)
 
 /-- [noble_contracts::intrinsic::derivations_agree]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4467:0-4478:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4472:0-4483:1 -/
 @[reducible]
 def intrinsic.derivations_agree
   (left : Slice noble_kernel.untrusted.Derivation)
@@ -78636,7 +78630,7 @@ def source.Session.commit
     ok (core.result.Result.Err e, self)
 
 /-- [noble_contracts::intrinsic::same_binding]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4600:0-4609:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4605:0-4614:1 -/
 def intrinsic.same_binding
   (a : noble_kernel.words.Binding) (b : noble_kernel.words.Binding) :
   Result Bool
@@ -78673,7 +78667,7 @@ def intrinsic.same_binding
       noble_kernel.words.Variable.Insts.CoreCmpPartialEqVariable.eq a1 b1
 
 /-- [noble_contracts::intrinsic::same_inst]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4585:4-4588:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4590:4-4593:5 -/
 @[rust_loop_body]
 def intrinsic.same_inst_loop.body
   (v : alloc.vec.Vec noble_kernel.words.Binding)
@@ -78699,7 +78693,7 @@ def intrinsic.same_inst_loop.body
   else ok (done is_same)
 
 /-- [noble_contracts::intrinsic::same_inst]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4585:4-4588:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4590:4-4593:5 -/
 @[rust_loop]
 def intrinsic.same_inst_loop
   (v : alloc.vec.Vec noble_kernel.words.Binding)
@@ -78713,7 +78707,7 @@ def intrinsic.same_inst_loop
     (is_same, index1)
 
 /-- [noble_contracts::intrinsic::same_inst]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4582:0-4590:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4587:0-4595:1 -/
 def intrinsic.same_inst
   (a : noble_kernel.words.Inst) (b : noble_kernel.words.Inst) :
   Result Bool
@@ -79351,7 +79345,7 @@ def source.declared.verify_named_export
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::intrinsic::deps_are]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4523:0-4532:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4528:0-4537:1 -/
 def intrinsic.deps_are
   (deps : Slice (alloc.vec.Vec noble_kernel.contracts.Definition))
   (slot : Std.Usize) (expected : Slice noble_kernel.contracts.Definition) :
@@ -80898,7 +80892,7 @@ def intrinsic.named_v2.root_binding_differs
                       Bool (core.convert.FromSame Diagnostic) residual
 
 /-- [noble_contracts::intrinsic::is_i64_pattern]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4576:0-4578:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4581:0-4583:1 -/
 def intrinsic.is_i64_pattern
   (pattern : noble_kernel.shapes.Pattern) : Result Bool := do
   match pattern with
@@ -80922,7 +80916,7 @@ def intrinsic.is_i64_pattern
   | noble_kernel.shapes.Pattern.StackVarPattern _ => ok false
 
 /-- [noble_contracts::intrinsic::is_stack_zero]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4569:0-4574:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4574:0-4579:1 -/
 def intrinsic.is_stack_zero
   (pattern : noble_kernel.shapes.Pattern) : Result Bool := do
   match pattern with
@@ -80949,7 +80943,7 @@ def intrinsic.is_stack_zero
     | _ => ok false
 
 /-- [noble_contracts::intrinsic::is_stack_then_i64s]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4562:4-4565:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4567:4-4570:5 -/
 @[rust_loop_body]
 def intrinsic.is_stack_then_i64s_loop.body
   (rest : Slice noble_kernel.shapes.Pattern) (is_shape : Bool)
@@ -80969,7 +80963,7 @@ def intrinsic.is_stack_then_i64s_loop.body
   else ok (done is_shape)
 
 /-- [noble_contracts::intrinsic::is_stack_then_i64s]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4562:4-4565:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4567:4-4570:5 -/
 @[rust_loop]
 def intrinsic.is_stack_then_i64s_loop
   (rest : Slice noble_kernel.shapes.Pattern) (is_shape : Bool)
@@ -80982,7 +80976,7 @@ def intrinsic.is_stack_then_i64s_loop
     (is_shape, index1)
 
 /-- [noble_contracts::intrinsic::is_stack_then_i64s]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4556:0-4567:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4561:0-4572:1 -/
 def intrinsic.is_stack_then_i64s
   (patterns : Slice noble_kernel.shapes.Pattern) (i64s : Std.Usize) :
   Result Bool
@@ -81000,7 +80994,7 @@ def intrinsic.is_stack_then_i64s
     intrinsic.is_stack_then_i64s_loop rest is_shape 0#usize
 
 /-- [noble_contracts::intrinsic::canonical_wrapping_add]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4538:0-4553:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4543:0-4558:1 -/
 def intrinsic.canonical_wrapping_add
   (env : noble_kernel.contracts.Env) : Result Bool := do
   let o ← noble_kernel.contracts.Env.scheme env 4#u32
@@ -93981,7 +93975,7 @@ def intrinsic.proof_walk
   ok (meter1, result)
 
 /-- [noble_contracts::intrinsic::replace_all]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4719:4-4730:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4724:4-4735:5 -/
 @[rust_loop_body]
 def intrinsic.replace_all_loop.body
   (text : Str) (value : Str) (haystack : Slice Std.U8) (needle : Slice Std.U8)
@@ -94012,7 +94006,7 @@ def intrinsic.replace_all_loop.body
   else ok (done (replaced, copied))
 
 /-- [noble_contracts::intrinsic::replace_all]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4719:4-4730:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4724:4-4735:5 -/
 @[rust_loop]
 def intrinsic.replace_all_loop
   (text : Str) (value : Str) (haystack : Slice Std.U8) (needle : Slice Std.U8)
@@ -94025,7 +94019,7 @@ def intrinsic.replace_all_loop
     (replaced, copied, index1)
 
 /-- [noble_contracts::intrinsic::replace_all]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4712:0-4733:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4717:0-4738:1 -/
 def intrinsic.replace_all
   (text : Str) (marker : Str) (value : Str) : Result String := do
   let b ← core.str.Str.is_empty marker
@@ -94043,14 +94037,14 @@ def intrinsic.replace_all
   alloc.string.String.push_str replaced1 s
 
 /-- [noble_contracts::intrinsic::lower_unary_add::TERM]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4647:4-4693:3 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4652:4-4698:3 -/
 @[global_simps, irreducible]
 def intrinsic.lower_unary_add.TERM : Str :=
   toStr
     "\n(exportedClaim_consequence\n  (exportedClaim_unaryI64\n    (code := [.lit (.i64 __N__)] ++ [.word 4])\n    (f := fun x => x + (__N__ : BitVec 64))\n    (fun tail x final execution =>\n      let first : PC [.lit (.i64 __N__)]\n          (fun before => before = tail ++ [.i64 x])\n          (fun _ middle => middle = (tail ++ [.i64 x]) ++ [.i64 __N__]) :=\n        pc_exact (code := [.lit (.i64 __N__)]) (s := tail ++ [.i64 x])\n          (expected := (tail ++ [.i64 x]) ++ [.i64 __N__])\n          (fun actual => exec_lit_iff (v := .i64 __N__)\n            (s := tail ++ [.i64 x]) (t := actual))\n      let second : PC [.word 4]\n          (fun middle => middle = tail ++ [.i64 x, .i64 __N__])\n          (fun _ actual => actual = tail ++ [.i64 (x + (__N__ : BitVec 64))]) :=\n        pc_exact (code := [.word 4]) (s := tail ++ [.i64 x, .i64 __N__])\n          (expected := tail ++ [.i64 (x + (__N__ : BitVec 64))])\n          (fun actual => exec_add_iff (a := x) (b := __N__)\n            (s := tail) (t := actual))\n      let composed : PC ([.lit (.i64 __N__)] ++ [.word 4])\n          (fun before => before = tail ++ [.i64 x])\n          (fun before actual => before = tail ++ [.i64 x] __AND__\n            actual = tail ++ [.i64 (x + (__N__ : BitVec 64))]) :=\n        @pc_sequence\n          [.lit (.i64 __N__)] [.word 4]\n          (fun (before : Stack) => before = tail ++ [.i64 x])\n          (fun (_ middle : Stack) => middle = (tail ++ [.i64 x]) ++ [.i64 __N__])\n          (fun (middle : Stack) => middle = tail ++ [.i64 x, .i64 __N__])\n          (fun (_ actual : Stack) => actual = tail ++ [.i64 (x + (__N__ : BitVec 64))])\n          (fun (before actual : Stack) => before = tail ++ [.i64 x] __AND__\n            actual = tail ++ [.i64 (x + (__N__ : BitVec 64))])\n          first second\n          (fun _ middle _ exactMiddle =>\n            exactMiddle.trans (List.append_assoc tail [.i64 x] [.i64 __N__]))\n          (fun _ _ _ initial _ exactFinal => __LANGLE__initial, exactFinal__RANGLE__)\n      ((composed (tail ++ [.i64 x]) final rfl execution).2)))\n  (fun _ _ _ => True.intro)\n  (fun before after params _ exactPost =>\n    match exactPost with\n    | __LANGLE__x, hbefore, hafter__RANGLE__ =>\n      hbefore.symm __REWRITE__ hafter.symm __REWRITE__\n      (holds_eq (.output 0) (.add (.input 0) (.i64 __N__))\n        __LANGLE__[.i64 x], [.i64 (x + (__N__ : BitVec 64))], params__RANGLE__\n        (.i64 (x + (__N__ : BitVec 64))) (.i64 (x + (__N__ : BitVec 64)))\n        rfl rfl).mpr rfl))\n"
 
 /-- [noble_contracts::intrinsic::lower_unary_add]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4646:0-4705:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4651:0-4710:1 -/
 def intrinsic.lower_unary_add (literal : Std.I64) : Result String := do
   let digits ← alloc.string.String.new
   let digits1 ← rendering.integer digits literal
@@ -94075,7 +94069,7 @@ def intrinsic.lower_unary_add (literal : Std.I64) : Result String := do
   intrinsic.replace_all s10 (toStr "__REWRITE__") s12
 
 /-- [noble_contracts::intrinsic::matches_eq_add::{impl core::ops::function::FnOnce<(&'_0 str,), core::option::Option<i64>> for noble_contracts::intrinsic::matches_eq_add::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4633:39-4633:70 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4638:39-4638:70 -/
 def
   intrinsic.matches_eq_add.closure.Insts.CoreOpsFunctionFnOnceTupleShared0StrOptionI64.call_once
   (c : intrinsic.matches_eq_add.closure) (tupled_args : Str) :
@@ -94086,7 +94080,7 @@ def
   core.result.Result.ok r
 
 /-- Trait implementation: [noble_contracts::intrinsic::matches_eq_add::{impl core::ops::function::FnOnce<(&'_0 str,), core::option::Option<i64>> for noble_contracts::intrinsic::matches_eq_add::{closure}}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4633:39-4633:70 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4638:39-4638:70 -/
 @[reducible]
 def
   intrinsic.matches_eq_add.closure.Insts.CoreOpsFunctionFnOnceTupleShared0StrOptionI64
@@ -94097,7 +94091,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::matches_eq_add]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4618:0-4634:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4623:0-4639:1 -/
 def intrinsic.matches_eq_add
   (form : intrinsic.Form) (input_name : Str) (output_name : Str)
   (literal : Std.I64) :
@@ -94162,7 +94156,7 @@ def prepare
   frontend.prepare source limits
 
 /-- [noble_contracts::intrinsic::candidate_node]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4402:0-4410:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4407:0-4415:1 -/
 def intrinsic.candidate_node
   (nodes : Slice noble_kernel.untrusted.Node)
   (id : noble_kernel.untrusted.NodeId) :
@@ -94176,7 +94170,7 @@ def intrinsic.candidate_node
   | core.result.Result.Err _ => ok none
 
 /-- [noble_contracts::intrinsic::same_subject_operation]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4438:0-4464:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4443:0-4469:1 -/
 def intrinsic.same_subject_operation
   (expected : noble_kernel.untrusted.Candidate)
   (actual : noble_kernel.untrusted.Candidate) (index1 : Std.Usize)
@@ -94302,7 +94296,7 @@ def intrinsic.same_subject_operation
         ok (core.result.Result.Err d)
 
 /-- [noble_contracts::intrinsic::identity_position]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4388:4-4393:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4393:4-4398:5 -/
 @[rust_loop_body]
 def intrinsic.identity_position_loop.body
   (definitions : Slice noble_kernel.execution.Definition) (identity : Std.U64)
@@ -94326,7 +94320,7 @@ def intrinsic.identity_position_loop.body
   else ok (done found)
 
 /-- [noble_contracts::intrinsic::identity_position]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4388:4-4393:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4393:4-4398:5 -/
 @[rust_loop]
 def intrinsic.identity_position_loop
   (definitions : Slice noble_kernel.execution.Definition) (identity : Std.U64)
@@ -94339,7 +94333,7 @@ def intrinsic.identity_position_loop
     (index1, found)
 
 /-- [noble_contracts::intrinsic::identity_position]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4381:0-4395:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4386:0-4400:1 -/
 @[reducible]
 def intrinsic.identity_position
   (definitions : Slice noble_kernel.execution.Definition) (identity : Std.U64)
@@ -94349,7 +94343,7 @@ def intrinsic.identity_position
   intrinsic.identity_position_loop definitions identity «from» none
 
 /-- [noble_contracts::intrinsic::is_own_module_origin]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4370:0-4378:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4375:0-4383:1 -/
 def intrinsic.is_own_module_origin
   (subject : intrinsic.SubjectBinding) : Result Bool := do
   let i := alloc.vec.Vec.len subject.source_dependencies
@@ -94372,7 +94366,7 @@ def intrinsic.is_own_module_origin
     else ok false
 
 /-- [noble_contracts::intrinsic::literal_then_add]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4499:0-4516:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4504:0-4521:1 -/
 def intrinsic.literal_then_add
   (nodes : Slice noble_kernel.untrusted.Node) : Result (Option Std.I64) := do
   let i := Slice.len nodes
@@ -94403,7 +94397,7 @@ def intrinsic.literal_then_add
     | noble_kernel.untrusted.Node.Quotation _ _ => ok none
 
 /-- [noble_contracts::intrinsic::is_unary_literal_add]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4352:0-4363:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4357:0-4368:1 -/
 def intrinsic.is_unary_literal_add
   (expected : noble_kernel.untrusted.Candidate)
   (subject : intrinsic.SubjectBinding) :
@@ -94429,7 +94423,7 @@ def intrinsic.is_unary_literal_add
   else ok false
 
 /-- [noble_contracts::intrinsic::unary_literal]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4335:0-4345:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4340:0-4350:1 -/
 def intrinsic.unary_literal
   (expected : noble_kernel.untrusted.Candidate)
   (subject : intrinsic.SubjectBinding) :
@@ -94449,7 +94443,7 @@ def intrinsic.unary_literal
       Std.I64 residual
 
 /-- [noble_contracts::intrinsic::builtin_add_differs]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4325:0-4332:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4330:0-4337:1 -/
 def intrinsic.builtin_add_differs
   (environment : noble_kernel.contracts.Env) (slot : Std.Usize) :
   Result Bool
@@ -94464,7 +94458,7 @@ def intrinsic.builtin_add_differs
   else ok true
 
 /-- [noble_contracts::intrinsic::recipe_shape_differs::{impl core::ops::function::FnOnce<(u32,), bool> for noble_contracts::intrinsic::recipe_shape_differs::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4322:59-4322:87 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4327:59-4327:87 -/
 def
   intrinsic.recipe_shape_differs.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool.call_once
   (c : intrinsic.recipe_shape_differs.closure) (tupled_args : Std.U32) :
@@ -94473,7 +94467,7 @@ def
   ok (tupled_args > c)
 
 /-- Trait implementation: [noble_contracts::intrinsic::recipe_shape_differs::{impl core::ops::function::FnOnce<(u32,), bool> for noble_contracts::intrinsic::recipe_shape_differs::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4322:59-4322:87 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4327:59-4327:87 -/
 @[reducible]
 def
   intrinsic.recipe_shape_differs.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool
@@ -94484,7 +94478,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::recipe_shape_differs]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4310:0-4323:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4315:0-4328:1 -/
 def intrinsic.recipe_shape_differs
   (definition : noble_kernel.execution.Definition)
   (actual : noble_kernel.untrusted.Candidate) (limits : Limits) :
@@ -94523,7 +94517,7 @@ def intrinsic.recipe_shape_differs
   else ok true
 
 /-- [noble_contracts::intrinsic::interface_differs]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4252:0-4259:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4257:0-4264:1 -/
 def intrinsic.interface_differs
   (interface : noble_kernel.untrusted.Interface)
   (subject : intrinsic.SubjectBinding) :
@@ -94548,7 +94542,7 @@ def intrinsic.interface_differs
         interface.effects subject.effects
 
 /-- [noble_contracts::intrinsic::typed_contract_differs]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4299:0-4303:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4304:0-4308:1 -/
 def intrinsic.typed_contract_differs
   (result : Prepared) (contract : intrinsic.ContractGoal) : Result Bool := do
   let s ← Prepared.impl.inputs result
@@ -94567,7 +94561,7 @@ def intrinsic.typed_contract_differs
       intrinsic.interface_differs c.interface contract.subject
 
 /-- [noble_contracts::intrinsic::is_single_invocation]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4416:0-4427:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4421:0-4432:1 -/
 def intrinsic.is_single_invocation
   (candidate : noble_kernel.untrusted.Candidate)
   (definition : noble_kernel.contracts.Definition) :
@@ -94599,7 +94593,7 @@ def intrinsic.is_single_invocation
       | noble_kernel.untrusted.Node.Quotation _ _ => ok false
 
 /-- [noble_contracts::intrinsic::invocation_differs]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4280:0-4292:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4285:0-4297:1 -/
 def intrinsic.invocation_differs
   (subject : intrinsic.SubjectBinding)
   (definition : noble_kernel.execution.Definition) (slot : Std.Usize) :
@@ -94648,7 +94642,7 @@ def intrinsic.invocation_differs
       else ok true
 
 /-- [noble_contracts::intrinsic::expected_differs]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4266:0-4273:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4271:0-4278:1 -/
 def intrinsic.expected_differs
   (expected : noble_kernel.untrusted.Expected)
   (subject : intrinsic.SubjectBinding) :
@@ -94673,7 +94667,7 @@ def intrinsic.expected_differs
         expected.allowed_effects subject.effects
 
 /-- [noble_contracts::intrinsic::contract_binding]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4239:0-4246:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4244:0-4251:1 -/
 def intrinsic.contract_binding
   (text : String) («name» : Str) (ty : Str) : Result String := do
   let text1 ← alloc.string.String.push_str text (toStr " (")
@@ -94683,7 +94677,7 @@ def intrinsic.contract_binding
   alloc.string.String.push text4 ')'
 
 /-- [noble_contracts::intrinsic::contract_text]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4218:4-4220:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4223:4-4225:5 -/
 @[rust_loop_body]
 def intrinsic.contract_text_loop0.body
   (iter : core.slice.iter.Iter (String × String)) (text : String) :
@@ -94701,7 +94695,7 @@ def intrinsic.contract_text_loop0.body
     ok (cont (iter1, text1))
 
 /-- [noble_contracts::intrinsic::contract_text]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4218:4-4220:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4223:4-4225:5 -/
 @[rust_loop]
 def intrinsic.contract_text_loop0
   (iter : core.slice.iter.Iter (String × String)) (text : String) :
@@ -94712,7 +94706,7 @@ def intrinsic.contract_text_loop0
     (iter, text)
 
 /-- [noble_contracts::intrinsic::contract_text]: loop body 1:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4222:4-4224:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4227:4-4229:5 -/
 @[rust_loop_body]
 def intrinsic.contract_text_loop1.body
   (iter : core.slice.iter.Iter (String × String)) (text : String) :
@@ -94730,7 +94724,7 @@ def intrinsic.contract_text_loop1.body
     ok (cont (iter1, text1))
 
 /-- [noble_contracts::intrinsic::contract_text]: loop 1:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4222:4-4224:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4227:4-4229:5 -/
 @[rust_loop]
 def intrinsic.contract_text_loop1
   (iter : core.slice.iter.Iter (String × String)) (text : String) :
@@ -94741,10 +94735,10 @@ def intrinsic.contract_text_loop1
     (iter, text)
 
 /-- [noble_contracts::intrinsic::contract_text]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4214:0-4233:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4214:0-4238:1 -/
 def intrinsic.contract_text
-  (contract : intrinsic.ContractGoal) (body : Str) (requires : Str)
-  (ensures : Str) :
+  (contract : intrinsic.ContractGoal) (body : Str) (requires_text : Str)
+  (ensures_text : Str) :
   Result String
   := do
   let text ←
@@ -94766,9 +94760,9 @@ def intrinsic.contract_text
   let text6 ← alloc.string.String.push_str text5 (toStr ") (program ")
   let text7 ← alloc.string.String.push_str text6 body
   let text8 ← alloc.string.String.push_str text7 (toStr ") (requires ")
-  let text9 ← alloc.string.String.push_str text8 requires
+  let text9 ← alloc.string.String.push_str text8 requires_text
   let text10 ← alloc.string.String.push_str text9 (toStr ") (ensures ")
-  let text11 ← alloc.string.String.push_str text10 ensures
+  let text11 ← alloc.string.String.push_str text10 ensures_text
   alloc.string.String.push_str text11 (toStr "))")
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract::{impl core::ops::function::FnOnce<(core::str::error::Utf8Error,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::prepare_checked_contract::{closure#5}<'_0>}::call_once]:
@@ -181912,7 +181906,7 @@ def source.procedures.persistence.confirm_records
   | some refusal => ok (core.result.Result.Err refusal)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_closure_entry]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2148:4-2174:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2217:4-2243:5 -/
 def source.procedures.ProcedureLibrary.check_closure_entry
   (entry : source.procedures.ClosureEntry)
   (record : source.procedures.ProcedureRecord) (index1 : Std.Usize) :
@@ -181958,7 +181952,7 @@ def source.procedures.ProcedureLibrary.check_closure_entry
         Unit (core.convert.FromSame source.procedures.Refusal) residual
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::verify_snapshot]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2133:8-2143:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2202:8-2212:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.verify_snapshot_loop.body
   (v : alloc.vec.Vec source.procedures.ClosureEntry)
@@ -181992,7 +181986,7 @@ def source.procedures.ProcedureLibrary.verify_snapshot_loop.body
   else ok (done outcome)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::verify_snapshot]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2133:8-2143:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2202:8-2212:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.verify_snapshot_loop
   (v : alloc.vec.Vec source.procedures.ClosureEntry)
@@ -182008,7 +182002,7 @@ def source.procedures.ProcedureLibrary.verify_snapshot_loop
     (outcome, index1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::verify_snapshot]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2109:4-2145:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2178:4-2214:5 -/
 def source.procedures.ProcedureLibrary.verify_snapshot
   (snapshot : source.procedures.Snapshot) :
   Result (core.result.Result Unit source.procedures.Refusal)
@@ -182055,7 +182049,7 @@ def source.procedures.ProcedureLibrary.verify_snapshot
       Unit (core.convert.FromSame source.procedures.Refusal) residual
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::any_record]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1841:8-1844:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1910:8-1913:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.any_record_loop.body
   {T0 : Type _} (coreopsfunctionFnMutT0PairUsizeSharedProcedureRecordBoolInst :
@@ -182079,7 +182073,7 @@ def source.procedures.ProcedureLibrary.any_record_loop.body
     else ok (done is_found)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::any_record]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1841:8-1844:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1910:8-1913:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.any_record_loop
   {T0 : Type _} (coreopsfunctionFnMutT0PairUsizeSharedProcedureRecordBoolInst :
@@ -182096,7 +182090,7 @@ def source.procedures.ProcedureLibrary.any_record_loop
     (predicate, is_found, index1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::any_record]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1835:4-1846:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1904:4-1915:5 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.any_record
   {T0 : Type _} (coreopsfunctionFnMutT0PairUsizeShared0ProcedureRecordBoolInst
@@ -182109,7 +182103,7 @@ def source.procedures.ProcedureLibrary.any_record
     predicate false 0#usize
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{impl core::ops::function::FnMut<(usize, &'_2 noble_contracts::source::procedures::ProcedureRecord), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{closure#1}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1823:49-1827:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1892:49-1896:13 -/
 def
   source.procedures.ProcedureLibrary.is_dependencies_ready.closure_1.Insts.CoreOpsFunctionFnMutPairUsizeShared2ProcedureRecordBool.call_mut
   (c : source.procedures.ProcedureLibrary.is_dependencies_ready.closure_1)
@@ -182139,7 +182133,7 @@ def
   else ok (false, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{impl core::ops::function::FnOnce<(usize, &'_2 noble_contracts::source::procedures::ProcedureRecord), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{closure#1}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1823:49-1827:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1892:49-1896:13 -/
 def
   source.procedures.ProcedureLibrary.is_dependencies_ready.closure_1.Insts.CoreOpsFunctionFnOncePairUsizeShared2ProcedureRecordBool.call_once
   (c : source.procedures.ProcedureLibrary.is_dependencies_ready.closure_1)
@@ -182152,7 +182146,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{impl core::ops::function::FnOnce<(usize, &'_2 noble_contracts::source::procedures::ProcedureRecord), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{closure#1}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1823:49-1827:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1892:49-1896:13 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.is_dependencies_ready.closure_1.Insts.CoreOpsFunctionFnOncePairUsizeShared2ProcedureRecordBool
@@ -182164,7 +182158,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{impl core::ops::function::FnMut<(usize, &'_2 noble_contracts::source::procedures::ProcedureRecord), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{closure#1}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1823:49-1827:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1892:49-1896:13 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.is_dependencies_ready.closure_1.Insts.CoreOpsFunctionFnMutPairUsizeShared2ProcedureRecordBool
@@ -182178,7 +182172,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{impl core::ops::function::FnMut<(usize, &'_2 noble_contracts::source::procedures::ProcedureRecord), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{closure}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1814:49-1817:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1883:49-1886:13 -/
 def
   source.procedures.ProcedureLibrary.is_dependencies_ready.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared2ProcedureRecordBool.call_mut
   (c : source.procedures.ProcedureLibrary.is_dependencies_ready.closure)
@@ -182199,7 +182193,7 @@ def
   else ok (false, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{impl core::ops::function::FnOnce<(usize, &'_2 noble_contracts::source::procedures::ProcedureRecord), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{closure}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1814:49-1817:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1883:49-1886:13 -/
 def
   source.procedures.ProcedureLibrary.is_dependencies_ready.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared2ProcedureRecordBool.call_once
   (c : source.procedures.ProcedureLibrary.is_dependencies_ready.closure)
@@ -182212,7 +182206,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{impl core::ops::function::FnOnce<(usize, &'_2 noble_contracts::source::procedures::ProcedureRecord), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1814:49-1817:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1883:49-1886:13 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.is_dependencies_ready.closure.Insts.CoreOpsFunctionFnOncePairUsizeShared2ProcedureRecordBool
@@ -182224,7 +182218,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{impl core::ops::function::FnMut<(usize, &'_2 noble_contracts::source::procedures::ProcedureRecord), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1814:49-1817:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1883:49-1886:13 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.is_dependencies_ready.closure.Insts.CoreOpsFunctionFnMutPairUsizeShared2ProcedureRecordBool
@@ -182238,7 +182232,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1812:8-1819:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1881:8-1888:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.is_dependencies_ready_loop0.body
   (records : Slice source.procedures.ProcedureRecord) (order : Slice Std.Usize)
@@ -182266,7 +182260,7 @@ def source.procedures.ProcedureLibrary.is_dependencies_ready_loop0.body
   else ok (done (record, is_ready))
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1812:8-1819:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1881:8-1888:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.is_dependencies_ready_loop0
   (records : Slice source.procedures.ProcedureRecord) (order : Slice Std.Usize)
@@ -182281,7 +182275,7 @@ def source.procedures.ProcedureLibrary.is_dependencies_ready_loop0
     (is_ready, index1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1821:8-1829:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1890:8-1898:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.is_dependencies_ready_loop1.body
   (records : Slice source.procedures.ProcedureRecord) (order : Slice Std.Usize)
@@ -182307,7 +182301,7 @@ def source.procedures.ProcedureLibrary.is_dependencies_ready_loop1.body
   else ok (done is_ready)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready]: loop 1:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1821:8-1829:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1890:8-1898:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.is_dependencies_ready_loop1
   (records : Slice source.procedures.ProcedureRecord) (order : Slice Std.Usize)
@@ -182322,7 +182316,7 @@ def source.procedures.ProcedureLibrary.is_dependencies_ready_loop1
     (is_ready, index1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_dependencies_ready]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1805:4-1831:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1874:4-1900:5 -/
 def source.procedures.ProcedureLibrary.is_dependencies_ready
   (records : Slice source.procedures.ProcedureRecord) (order : Slice Std.Usize)
   (record : source.procedures.ProcedureRecord) :
@@ -182335,7 +182329,7 @@ def source.procedures.ProcedureLibrary.is_dependencies_ready
     record1 is_ready 0#usize
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::next_ready]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1793:8-1800:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1862:8-1869:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.next_ready_loop.body
   (records : Slice source.procedures.ProcedureRecord) (order : Slice Std.Usize)
@@ -182368,7 +182362,7 @@ def source.procedures.ProcedureLibrary.next_ready_loop.body
   else ok (done selected)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::next_ready]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1793:8-1800:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1862:8-1869:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.next_ready_loop
   (records : Slice source.procedures.ProcedureRecord) (order : Slice Std.Usize)
@@ -182382,7 +182376,7 @@ def source.procedures.ProcedureLibrary.next_ready_loop
     (selected, candidate_index)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::next_ready]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1790:4-1802:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1859:4-1871:5 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.next_ready
   (records : Slice source.procedures.ProcedureRecord) (order : Slice Std.Usize)
@@ -182392,7 +182386,7 @@ def source.procedures.ProcedureLibrary.next_ready
   source.procedures.ProcedureLibrary.next_ready_loop records order none 0#usize
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admission_order]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1771:8-1776:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1840:8-1845:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.admission_order_loop.body
   (records : Slice source.procedures.ProcedureRecord)
@@ -182417,7 +182411,7 @@ def source.procedures.ProcedureLibrary.admission_order_loop.body
     else ok (done (order, is_stuck))
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admission_order]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1771:8-1776:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1840:8-1845:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.admission_order_loop
   (records : Slice source.procedures.ProcedureRecord)
@@ -182431,7 +182425,7 @@ def source.procedures.ProcedureLibrary.admission_order_loop
     (order, is_stuck)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admission_order]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1768:4-1787:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1837:4-1856:5 -/
 def source.procedures.ProcedureLibrary.admission_order
   (records : Slice source.procedures.ProcedureRecord) :
   Result (core.result.Result (alloc.vec.Vec Std.Usize)
@@ -182493,7 +182487,7 @@ def source.procedures.Refusal.from_chunk
       }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_rebuilt::{impl core::ops::function::FnOnce<(noble_contracts::source::chunks::Refusal,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_rebuilt::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1763:21-1763:76 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1832:21-1832:76 -/
 def
   source.procedures.ProcedureLibrary.admit_rebuilt.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusalRefusal.call_once
   (c : source.procedures.ProcedureLibrary.admit_rebuilt.closure_1)
@@ -182503,7 +182497,7 @@ def
   source.procedures.Refusal.from_chunk tupled_args
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_rebuilt::{impl core::ops::function::FnOnce<(noble_contracts::source::chunks::Refusal,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_rebuilt::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1763:21-1763:76 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1832:21-1832:76 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.admit_rebuilt.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusalRefusal
@@ -182515,7 +182509,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_rebuilt::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_rebuilt::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1751:51-1759:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1820:51-1828:9 -/
 def
   source.procedures.ProcedureLibrary.admit_rebuilt.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.ProcedureLibrary.admit_rebuilt.closure) (_ : Unit) :
@@ -182528,7 +182522,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_rebuilt::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_rebuilt::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1751:51-1759:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1820:51-1828:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.admit_rebuilt.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -182540,7 +182534,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::position_first]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2183:4-2188:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2252:4-2257:5 -/
 @[rust_loop_body]
 def source.procedures.position_first_loop.body
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleSharedTBoolInst :
@@ -182567,7 +182561,7 @@ def source.procedures.position_first_loop.body
   else ok (done found)
 
 /-- [noble_contracts::source::procedures::position_first]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2183:4-2188:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2252:4-2257:5 -/
 @[rust_loop]
 def source.procedures.position_first_loop
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleSharedTBoolInst :
@@ -182583,7 +182577,7 @@ def source.procedures.position_first_loop
     (predicate, index1, found)
 
 /-- [noble_contracts::source::procedures::position_first]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2180:0-2190:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2249:0-2259:1 -/
 @[reducible]
 def source.procedures.position_first
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleShared0TBoolInst :
@@ -182594,7 +182588,7 @@ def source.procedures.position_first
     coreopsfunctionFnMutT1TupleShared0TBoolInst items predicate 0#usize none
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_edge_matched::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_edge_matched::{closure}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1576:48-1582:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1589:48-1595:13 -/
 def
   source.procedures.ProcedureLibrary.is_edge_matched.closure.Insts.CoreOpsFunctionFnMutTupleShared2ProcedureRecordBool.call_mut
   (c : source.procedures.ProcedureLibrary.is_edge_matched.closure)
@@ -182625,7 +182619,7 @@ def
   else ok (false, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_edge_matched::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_edge_matched::{closure}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1576:48-1582:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1589:48-1595:13 -/
 def
   source.procedures.ProcedureLibrary.is_edge_matched.closure.Insts.CoreOpsFunctionFnOnceTupleShared2ProcedureRecordBool.call_once
   (c : source.procedures.ProcedureLibrary.is_edge_matched.closure)
@@ -182638,7 +182632,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_edge_matched::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_edge_matched::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1576:48-1582:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1589:48-1595:13 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.is_edge_matched.closure.Insts.CoreOpsFunctionFnOnceTupleShared2ProcedureRecordBool
@@ -182650,7 +182644,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_edge_matched::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_edge_matched::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1576:48-1582:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1589:48-1595:13 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.is_edge_matched.closure.Insts.CoreOpsFunctionFnMutTupleShared2ProcedureRecordBool
@@ -182664,7 +182658,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::is_edge_matched]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1567:4-1584:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1580:4-1597:5 -/
 def source.procedures.ProcedureLibrary.is_edge_matched
   (records : Slice source.procedures.ProcedureRecord)
   (dependency : source.chunks.DefinitionRef)
@@ -182696,7 +182690,7 @@ def source.procedures.ProcedureLibrary.is_edge_matched
   else ok false
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{closure}::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{closure}::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1519:52-1523:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1532:52-1536:17 -/
 def
   source.procedures.ProcedureLibrary.check_dependencies.closure.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool.call_mut
   (c : source.procedures.ProcedureLibrary.check_dependencies.closure.closure)
@@ -182722,7 +182716,7 @@ def
   else ok (false, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{closure}::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{closure}::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1519:52-1523:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1532:52-1536:17 -/
 def
   source.procedures.ProcedureLibrary.check_dependencies.closure.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool.call_once
   (c : source.procedures.ProcedureLibrary.check_dependencies.closure.closure)
@@ -182735,7 +182729,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{closure}::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{closure}::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1519:52-1523:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1532:52-1536:17 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.check_dependencies.closure.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool
@@ -182747,7 +182741,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{closure}::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{closure}::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1519:52-1523:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1532:52-1536:17 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.check_dependencies.closure.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool
@@ -182761,7 +182755,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::procedures::LibraryDependency,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{closure}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1517:70-1525:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1530:70-1538:9 -/
 def
   source.procedures.ProcedureLibrary.check_dependencies.closure.Insts.CoreOpsFunctionFnMutTupleShared2LibraryDependencyBool.call_mut
   (c : source.procedures.ProcedureLibrary.check_dependencies.closure)
@@ -182784,7 +182778,7 @@ def
     ok (b1, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::procedures::LibraryDependency,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{closure}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1517:70-1525:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1530:70-1538:9 -/
 def
   source.procedures.ProcedureLibrary.check_dependencies.closure.Insts.CoreOpsFunctionFnOnceTupleShared2LibraryDependencyBool.call_once
   (c : source.procedures.ProcedureLibrary.check_dependencies.closure)
@@ -182797,7 +182791,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::procedures::LibraryDependency,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1517:70-1525:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1530:70-1538:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.check_dependencies.closure.Insts.CoreOpsFunctionFnOnceTupleShared2LibraryDependencyBool
@@ -182809,7 +182803,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::procedures::LibraryDependency,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1517:70-1525:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1530:70-1538:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.check_dependencies.closure.Insts.CoreOpsFunctionFnMutTupleShared2LibraryDependencyBool
@@ -182823,7 +182817,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1538:8-1550:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1551:8-1563:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.check_dependencies_loop.body
   (records : Slice source.procedures.ProcedureRecord)
@@ -182859,7 +182853,7 @@ def source.procedures.ProcedureLibrary.check_dependencies_loop.body
   else ok (done mismatched)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1538:8-1550:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1551:8-1563:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.check_dependencies_loop
   (records : Slice source.procedures.ProcedureRecord)
@@ -182875,7 +182869,7 @@ def source.procedures.ProcedureLibrary.check_dependencies_loop
     (mismatched, index1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_dependencies]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1504:4-1563:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1517:4-1576:5 -/
 def source.procedures.ProcedureLibrary.check_dependencies
   (records : Slice source.procedures.ProcedureRecord)
   (record : source.procedures.ProcedureRecord) :
@@ -183166,7 +183160,7 @@ def source.procedures.ProcedureRecord.Insts.CoreCloneClone.clone
     }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_rebuilt]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1744:4-1766:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1813:4-1835:5 -/
 def source.procedures.ProcedureLibrary.admit_rebuilt
   («namespace» : source.Session)
   (records : Slice source.procedures.ProcedureRecord) (index1 : Std.Usize)
@@ -183221,7 +183215,7 @@ def source.procedures.ProcedureLibrary.admit_rebuilt
     ok (r1, library, admitted)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_retained::{impl core::ops::function::FnOnce<(noble_contracts::source::procedures::Refusal,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_retained::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1722:59-1725:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1791:59-1794:9 -/
 def
   source.procedures.ProcedureLibrary.check_retained.closure.Insts.CoreOpsFunctionFnOnceTupleRefusalRefusal.call_once
   (c : source.procedures.ProcedureLibrary.check_retained.closure)
@@ -183233,7 +183227,7 @@ def
   ok { tupled_args with location := l }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_retained::{impl core::ops::function::FnOnce<(noble_contracts::source::procedures::Refusal,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_retained::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1722:59-1725:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1791:59-1794:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.check_retained.closure.Insts.CoreOpsFunctionFnOnceTupleRefusalRefusal
@@ -183245,7 +183239,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1481:28-1491:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1494:28-1504:17 -/
 def
   source.procedures.ProcedureLibrary.validate_promoted_obligation.closure_2.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c :
@@ -183263,7 +183257,7 @@ def
     } i
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1481:28-1491:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1494:28-1504:17 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.validate_promoted_obligation.closure_2.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -183275,7 +183269,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ConsumerObligation,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{closure#1}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1478:61-1480:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1491:61-1493:17 -/
 def
   source.procedures.ProcedureLibrary.validate_promoted_obligation.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1ConsumerObligationBool.call_mut
   (c :
@@ -183287,7 +183281,7 @@ def
   ok (tupled_args.id = c, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ConsumerObligation,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1478:61-1480:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1491:61-1493:17 -/
 def
   source.procedures.ProcedureLibrary.validate_promoted_obligation.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1ConsumerObligationBool.call_once
   (c :
@@ -183301,7 +183295,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ConsumerObligation,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1478:61-1480:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1491:61-1493:17 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.validate_promoted_obligation.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1ConsumerObligationBool
@@ -183313,7 +183307,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ConsumerObligation,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1478:61-1480:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1491:61-1493:17 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.validate_promoted_obligation.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1ConsumerObligationBool
@@ -183327,7 +183321,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{impl core::ops::function::FnOnce<(&'_1 u32,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1465:29-1465:62 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1478:29-1478:62 -/
 def
   source.procedures.ProcedureLibrary.validate_promoted_obligation.closure.Insts.CoreOpsFunctionFnOnceTupleShared1U32Bool.call_once
   (c : source.procedures.ProcedureLibrary.validate_promoted_obligation.closure)
@@ -183337,7 +183331,7 @@ def
   core.cmp.impls.PartialOrdShared.ge core.cmp.PartialOrdU32 tupled_args c
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{impl core::ops::function::FnOnce<(&'_1 u32,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1465:29-1465:62 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1478:29-1478:62 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.validate_promoted_obligation.closure.Insts.CoreOpsFunctionFnOnceTupleShared1U32Bool
@@ -183349,7 +183343,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_promoted_obligation]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1454:4-1502:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1467:4-1515:5 -/
 def source.procedures.ProcedureLibrary.validate_promoted_obligation
   (record : source.procedures.ProcedureRecord)
   (promotion : source.procedures.Promotion)
@@ -183488,7 +183482,7 @@ def source.procedures.ProcedureLibrary.validate_promoted_obligation
           Unit (core.convert.FromSame source.procedures.Refusal) residual
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{impl core::ops::function::FnOnce<([u8; 32usize],), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1419:25-1419:55 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1432:25-1432:55 -/
 def
   source.procedures.ProcedureLibrary.validate_record.closure_2.Insts.CoreOpsFunctionFnOnceTupleArrayU832Bool.call_once
   (c : source.procedures.ProcedureLibrary.validate_record.closure_2)
@@ -183499,7 +183493,7 @@ def
     c.procedure_id
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{impl core::ops::function::FnOnce<([u8; 32usize],), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1419:25-1419:55 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1432:25-1432:55 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.validate_record.closure_2.Insts.CoreOpsFunctionFnOnceTupleArrayU832Bool
@@ -183511,7 +183505,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ConsumerObligation,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{closure#1}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1390:68-1392:21 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1403:68-1405:21 -/
 def
   source.procedures.ProcedureLibrary.validate_record.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1ConsumerObligationBool.call_mut
   (c : source.procedures.ProcedureLibrary.validate_record.closure_1)
@@ -183523,7 +183517,7 @@ def
   ok (¬ b, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ConsumerObligation,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1390:68-1392:21 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1403:68-1405:21 -/
 def
   source.procedures.ProcedureLibrary.validate_record.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1ConsumerObligationBool.call_once
   (c : source.procedures.ProcedureLibrary.validate_record.closure_1)
@@ -183536,7 +183530,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ConsumerObligation,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1390:68-1392:21 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1403:68-1405:21 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.validate_record.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1ConsumerObligationBool
@@ -183548,7 +183542,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ConsumerObligation,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1390:68-1392:21 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1403:68-1405:21 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.validate_record.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1ConsumerObligationBool
@@ -183562,7 +183556,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1344:69-1352:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1357:69-1365:17 -/
 def
   source.procedures.ProcedureLibrary.validate_record.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.ProcedureLibrary.validate_record.closure) (_ : Unit) :
@@ -183575,7 +183569,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1344:69-1352:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1357:69-1365:17 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.validate_record.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -183587,7 +183581,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claim]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1282:4-1315:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1295:4-1328:5 -/
 def source.procedures.ProcedureLibrary.validate_claim
   (record : source.procedures.ProcedureRecord) (index1 : Std.Usize) :
   Result (core.result.Result Unit source.procedures.Refusal)
@@ -183716,7 +183710,7 @@ def source.procedures.ProcedureLibrary.validate_claim
           else ok (core.result.Result.Ok ())
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_each_claim]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1274:8-1277:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1287:8-1290:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.validate_each_claim_loop.body
   (record : source.procedures.ProcedureRecord)
@@ -183739,7 +183733,7 @@ def source.procedures.ProcedureLibrary.validate_each_claim_loop.body
   else ok (done outcome)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_each_claim]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1274:8-1277:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1287:8-1290:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.validate_each_claim_loop
   (record : source.procedures.ProcedureRecord)
@@ -183754,7 +183748,7 @@ def source.procedures.ProcedureLibrary.validate_each_claim_loop
     (outcome, index1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_each_claim]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1271:4-1279:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1284:4-1292:5 -/
 @[reducible]
 def source.procedures.ProcedureLibrary.validate_each_claim
   (record : source.procedures.ProcedureRecord) :
@@ -183764,7 +183758,7 @@ def source.procedures.ProcedureLibrary.validate_each_claim
     (core.result.Result.Ok ()) 0#usize
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{impl core::ops::function::FnMut<(&'_0 noble_kernel::types::Ty,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{closure#1}}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1233:74-1235:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1246:74-1248:13 -/
 def
   source.procedures.ProcedureLibrary.validate_claims.closure_1.Insts.CoreOpsFunctionFnMutTupleShared0TyBool.call_mut
   (c : source.procedures.ProcedureLibrary.validate_claims.closure_1)
@@ -183775,7 +183769,7 @@ def
   ok (¬ b, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::types::Ty,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1233:74-1235:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1246:74-1248:13 -/
 def
   source.procedures.ProcedureLibrary.validate_claims.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared0TyBool.call_once
   (c : source.procedures.ProcedureLibrary.validate_claims.closure_1)
@@ -183788,7 +183782,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::types::Ty,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1233:74-1235:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1246:74-1248:13 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.validate_claims.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared0TyBool
@@ -183800,7 +183794,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{impl core::ops::function::FnMut<(&'_0 noble_kernel::types::Ty,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1233:74-1235:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1246:74-1248:13 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.validate_claims.closure_1.Insts.CoreOpsFunctionFnMutTupleShared0TyBool
@@ -183814,7 +183808,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{impl core::ops::function::FnMut<(&'_0 noble_kernel::types::Ty,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{closure}}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1229:69-1231:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1242:69-1244:9 -/
 def
   source.procedures.ProcedureLibrary.validate_claims.closure.Insts.CoreOpsFunctionFnMutTupleShared0TyBool.call_mut
   (c : source.procedures.ProcedureLibrary.validate_claims.closure)
@@ -183825,7 +183819,7 @@ def
   ok (¬ b, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::types::Ty,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1229:69-1231:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1242:69-1244:9 -/
 def
   source.procedures.ProcedureLibrary.validate_claims.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TyBool.call_once
   (c : source.procedures.ProcedureLibrary.validate_claims.closure)
@@ -183838,7 +183832,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::types::Ty,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1229:69-1231:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1242:69-1244:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.validate_claims.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TyBool
@@ -183850,7 +183844,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{impl core::ops::function::FnMut<(&'_0 noble_kernel::types::Ty,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1229:69-1231:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1242:69-1244:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.validate_claims.closure.Insts.CoreOpsFunctionFnMutTupleShared0TyBool
@@ -183921,7 +183915,7 @@ def source.procedures.retrieval.signature
     }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_claims]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1198:4-1268:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1211:4-1281:5 -/
 def source.procedures.ProcedureLibrary.validate_claims
   (record : source.procedures.ProcedureRecord) :
   Result (core.result.Result Unit source.procedures.Refusal)
@@ -184093,7 +184087,7 @@ def source.procedures.ProcedureLibrary.validate_claims
             ok (core.result.Result.Err r)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1384:16-1387:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1397:16-1400:17 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.validate_record_loop0.body
   (i : Std.U32) (i1 : Std.U32) (e : source.procedures.Encoder)
@@ -184142,7 +184136,7 @@ def source.procedures.ProcedureLibrary.validate_record_loop0.body
   else ok (done outcome)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1384:16-1387:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1397:16-1400:17 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.validate_record_loop0
   (i : Std.U32) (i1 : Std.U32) (e : source.procedures.Encoder)
@@ -184166,7 +184160,7 @@ def source.procedures.ProcedureLibrary.validate_record_loop0
     (outcome, index1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1384:16-1387:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1397:16-1400:17 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.validate_record_loop1.body
   (i : Std.U32) (i1 : Std.U32) (e : source.procedures.Encoder)
@@ -184217,7 +184211,7 @@ def source.procedures.ProcedureLibrary.validate_record_loop1.body
   else ok (done outcome)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record]: loop 1:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1384:16-1387:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1397:16-1400:17 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.validate_record_loop1
   (i : Std.U32) (i1 : Std.U32) (e : source.procedures.Encoder)
@@ -184242,7 +184236,7 @@ def source.procedures.ProcedureLibrary.validate_record_loop1
     (outcome, index1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record]: loop body 2:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1384:16-1387:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1397:16-1400:17 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.validate_record_loop2.body
   (i : Std.U32) (i1 : Std.U32) (e : source.procedures.Encoder)
@@ -184291,7 +184285,7 @@ def source.procedures.ProcedureLibrary.validate_record_loop2.body
   else ok (done outcome)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record]: loop 2:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1384:16-1387:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1397:16-1400:17 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.validate_record_loop2
   (i : Std.U32) (i1 : Std.U32) (e : source.procedures.Encoder)
@@ -184315,7 +184309,7 @@ def source.procedures.ProcedureLibrary.validate_record_loop2
     (outcome, index1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record]: loop body 3:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1384:16-1387:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1397:16-1400:17 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.validate_record_loop3.body
   (i : Std.U32) (i1 : Std.U32) (e : source.procedures.Encoder)
@@ -184366,7 +184360,7 @@ def source.procedures.ProcedureLibrary.validate_record_loop3.body
   else ok (done outcome)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record]: loop 3:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1384:16-1387:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1397:16-1400:17 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.validate_record_loop3
   (i : Std.U32) (i1 : Std.U32) (e : source.procedures.Encoder)
@@ -184391,7 +184385,7 @@ def source.procedures.ProcedureLibrary.validate_record_loop3
     (outcome, index1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_record]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1319:4-1450:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1332:4-1463:5 -/
 def source.procedures.ProcedureLibrary.validate_record
   (record : source.procedures.ProcedureRecord)
   (policy : Option source.procedures.ConsumerPolicy)
@@ -185063,7 +185057,7 @@ def source.procedures.ProcedureRecord.identity_digest
     self.chunk self.provenance s
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_retained]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1720:4-1737:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1789:4-1806:5 -/
 def source.procedures.ProcedureLibrary.check_retained
   (records : Slice source.procedures.ProcedureRecord) (index1 : Std.Usize) :
   Result (core.result.Result Unit source.procedures.Refusal)
@@ -185116,14 +185110,139 @@ def source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq
   let other1 := read_discriminant other
   ok (self1 = other1)
 
-/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{closure#1}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1618:48-1620:13 -/
+/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rooted_path]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1689:8-1692:9 -/
+@[rust_loop_body]
+def source.procedures.ProcedureLibrary.rooted_path_loop0.body
+  (successors : Slice (Option Std.Usize)) (current : Option Std.Usize)
+  (count : Std.Usize) :
+  Result (ControlFlow ((Option Std.Usize) × Std.Usize) Std.Usize)
+  := do
+  match current with
+  | none => ok (done count)
+  | some link_index =>
+    let count1 ← count + 1#usize
+    let current1 ← Slice.index_usize successors link_index
+    ok (cont (current1, count1))
+
+/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rooted_path]: loop 0:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1689:8-1692:9 -/
+@[rust_loop]
+def source.procedures.ProcedureLibrary.rooted_path_loop0
+  (current : Option Std.Usize) (successors : Slice (Option Std.Usize))
+  (count : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (current1, count1) =>
+      source.procedures.ProcedureLibrary.rooted_path_loop0.body successors
+      current1 count1)
+    (current, count)
+
+/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rooted_path]: loop body 1:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1689:8-1692:9 -/
+@[rust_loop_body]
+def source.procedures.ProcedureLibrary.rooted_path_loop1.body
+  (successors : Slice (Option Std.Usize)) (current : Option Std.Usize)
+  (count : Std.Usize) :
+  Result (ControlFlow ((Option Std.Usize) × Std.Usize) Std.Usize)
+  := do
+  match current with
+  | none => ok (done count)
+  | some link_index =>
+    let count1 ← count + 1#usize
+    let current1 ← Slice.index_usize successors link_index
+    ok (cont (current1, count1))
+
+/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rooted_path]: loop 1:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1689:8-1692:9 -/
+@[rust_loop]
+def source.procedures.ProcedureLibrary.rooted_path_loop1
+  (current : Option Std.Usize) (successors : Slice (Option Std.Usize))
+  (count : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (current1, count1) =>
+      source.procedures.ProcedureLibrary.rooted_path_loop1.body successors
+      current1 count1)
+    (current, count)
+
+/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rooted_path]:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1671:4-1694:5 -/
+def source.procedures.ProcedureLibrary.rooted_path
+  (records : Slice source.procedures.ProcedureRecord)
+  (successors : Slice (Option Std.Usize)) (index1 : Std.Usize) :
+  Result (core.result.Result Std.Usize source.procedures.Refusal)
+  := do
+  let record ← Slice.index_usize records index1
+  let b ←
+    source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq record.status
+      source.procedures.Status.Superseded
+  if b
+  then
+    let o ← Slice.index_usize successors index1
+    let b1 := core.option.Option.is_none o
+    if b1
+    then
+      let i ← lift (UScalar.cast .U32 index1)
+      let r ←
+        source.procedures.Refusal.at source.procedures.RefusalKind.Invalid
+          {
+            field := (toStr "supersedes"),
+            message :=
+              (toStr "replacement target is not retained as superseded")
+          } i
+      ok (core.result.Result.Err r)
+    else
+      let b2 := core.option.Option.is_none record.supersedes
+      let current ← core.bool.Bool.then_some b2 index1
+      let count ←
+        source.procedures.ProcedureLibrary.rooted_path_loop0 current successors
+          0#usize
+      ok (core.result.Result.Ok count)
+  else
+    let b1 := core.option.Option.is_none record.supersedes
+    let current ← core.bool.Bool.then_some b1 index1
+    let count ←
+      source.procedures.ProcedureLibrary.rooted_path_loop1 current successors
+        0#usize
+    ok (core.result.Result.Ok count)
+
+/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor::{closure#1}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1645:20-1654:9 -/
 def
-  source.procedures.ProcedureLibrary.check_supersession.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool.call_mut
-  (c : source.procedures.ProcedureLibrary.check_supersession.closure_1)
+  source.procedures.ProcedureLibrary.link_successor.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
+  (c : source.procedures.ProcedureLibrary.link_successor.closure_1) (_ : Unit)
+  :
+  Result source.procedures.Refusal
+  := do
+  let i ← lift (UScalar.cast .U32 c)
+  source.procedures.Refusal.at source.procedures.RefusalKind.Invalid
+    {
+      field := (toStr "supersedes"),
+      message := (toStr "replacement target is not retained as superseded")
+    } i
+
+/-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor::{closure#1}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1645:20-1654:9 -/
+@[reducible]
+def
+  source.procedures.ProcedureLibrary.link_successor.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal
+  : core.ops.function.FnOnce
+  source.procedures.ProcedureLibrary.link_successor.closure_1 Unit
+  source.procedures.Refusal := {
+  call_once :=
+    source.procedures.ProcedureLibrary.link_successor.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
+}
+
+/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor::{closure}<'_0>}::call_mut]:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1642:48-1644:9 -/
+def
+  source.procedures.ProcedureLibrary.link_successor.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool.call_mut
+  (c : source.procedures.ProcedureLibrary.link_successor.closure)
   (tupled_args : source.procedures.ProcedureRecord) :
-  Result (Bool ×
-    source.procedures.ProcedureLibrary.check_supersession.closure_1)
+  Result (Bool × source.procedures.ProcedureLibrary.link_successor.closure)
   := do
   let b ←
     core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8
@@ -185136,242 +185255,103 @@ def
     ok (b1, c)
   else ok (false, c)
 
-/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1618:48-1620:13 -/
+/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1642:48-1644:9 -/
 def
-  source.procedures.ProcedureLibrary.check_supersession.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool.call_once
-  (c : source.procedures.ProcedureLibrary.check_supersession.closure_1)
+  source.procedures.ProcedureLibrary.link_successor.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool.call_once
+  (c : source.procedures.ProcedureLibrary.link_successor.closure)
   (pr : source.procedures.ProcedureRecord) :
   Result Bool
   := do
   let (b, _) ←
-    source.procedures.ProcedureLibrary.check_supersession.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool.call_mut
+    source.procedures.ProcedureLibrary.link_successor.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool.call_mut
       c pr
   ok b
 
-/-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1618:48-1620:13 -/
+/-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1642:48-1644:9 -/
 @[reducible]
 def
-  source.procedures.ProcedureLibrary.check_supersession.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool
+  source.procedures.ProcedureLibrary.link_successor.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool
   : core.ops.function.FnOnce
-  source.procedures.ProcedureLibrary.check_supersession.closure_1
+  source.procedures.ProcedureLibrary.link_successor.closure
   source.procedures.ProcedureRecord Bool := {
   call_once :=
-    source.procedures.ProcedureLibrary.check_supersession.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool.call_once
+    source.procedures.ProcedureLibrary.link_successor.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool.call_once
 }
 
-/-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1618:48-1620:13 -/
+/-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor::{closure}<'_0>}]
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1642:48-1644:9 -/
 @[reducible]
 def
-  source.procedures.ProcedureLibrary.check_supersession.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool
+  source.procedures.ProcedureLibrary.link_successor.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool
   : core.ops.function.FnMut
-  source.procedures.ProcedureLibrary.check_supersession.closure_1
+  source.procedures.ProcedureLibrary.link_successor.closure
   source.procedures.ProcedureRecord Bool := {
   FnOnceInst :=
-    source.procedures.ProcedureLibrary.check_supersession.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool
+    source.procedures.ProcedureLibrary.link_successor.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool
   call_mut :=
-    source.procedures.ProcedureLibrary.check_supersession.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool.call_mut
+    source.procedures.ProcedureLibrary.link_successor.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool.call_mut
 }
 
-/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1600:48-1602:13 -/
-def
-  source.procedures.ProcedureLibrary.check_supersession.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool.call_mut
-  (c : source.procedures.ProcedureLibrary.check_supersession.closure)
-  (tupled_args : source.procedures.ProcedureRecord) :
-  Result (Bool ×
-    source.procedures.ProcedureLibrary.check_supersession.closure)
-  := do
-  let b ←
-    core.option.Option.Insts.CoreCmpPartialEqOption.eq
-      (Array.Insts.CoreCmpPartialEqArray 32#usize core.cmp.PartialEqU8)
-      tupled_args.supersedes (some c.procedure_id)
-  ok (b, c)
-
-/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1600:48-1602:13 -/
-def
-  source.procedures.ProcedureLibrary.check_supersession.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool.call_once
-  (c : source.procedures.ProcedureLibrary.check_supersession.closure)
-  (pr : source.procedures.ProcedureRecord) :
-  Result Bool
-  := do
-  let (b, _) ←
-    source.procedures.ProcedureLibrary.check_supersession.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool.call_mut
-      c pr
-  ok b
-
-/-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1600:48-1602:13 -/
-@[reducible]
-def
-  source.procedures.ProcedureLibrary.check_supersession.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool
-  : core.ops.function.FnOnce
-  source.procedures.ProcedureLibrary.check_supersession.closure
-  source.procedures.ProcedureRecord Bool := {
-  call_once :=
-    source.procedures.ProcedureLibrary.check_supersession.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool.call_once
-}
-
-/-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1600:48-1602:13 -/
-@[reducible]
-def
-  source.procedures.ProcedureLibrary.check_supersession.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool
-  : core.ops.function.FnMut
-  source.procedures.ProcedureLibrary.check_supersession.closure
-  source.procedures.ProcedureRecord Bool := {
-  FnOnceInst :=
-    source.procedures.ProcedureLibrary.check_supersession.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool
-  call_mut :=
-    source.procedures.ProcedureLibrary.check_supersession.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool.call_mut
-}
-
-/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_supersession]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1597:4-1634:5 -/
-def source.procedures.ProcedureLibrary.check_supersession
-  (records : Slice source.procedures.ProcedureRecord) (index1 : Std.Usize) :
-  Result (core.result.Result Unit source.procedures.Refusal)
+/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::link_successor]:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1633:4-1667:5 -/
+def source.procedures.ProcedureLibrary.link_successor
+  (records : Slice source.procedures.ProcedureRecord) (index1 : Std.Usize)
+  (successors : Slice (Option Std.Usize)) :
+  Result ((core.result.Result Unit source.procedures.Refusal) × (Slice (Option
+    Std.Usize)))
   := do
   let record ← Slice.index_usize records index1
-  let b ←
-    source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq record.status
-      source.procedures.Status.Superseded
-  if b
-  then
+  match record.supersedes with
+  | none => ok (core.result.Result.Ok (), successors)
+  | some replaced_id =>
     let o ←
-      scan.find_first
-        source.procedures.ProcedureLibrary.check_supersession.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool
-        records record
-    let b1 := core.option.Option.is_none o
-    if b1
-    then
-      let i ← lift (UScalar.cast .U32 index1)
-      let r ←
-        source.procedures.Refusal.at source.procedures.RefusalKind.Invalid
-          {
-            field := (toStr "supersedes"),
-            message :=
-              (toStr
-                "superseded record must remain linked to a retained replacement")
-          } i
-      ok (core.result.Result.Err r)
-    else
-      match record.supersedes with
-      | none => ok (core.result.Result.Ok ())
-      | some replaced_id =>
-        if b
-        then
-          let i ← lift (UScalar.cast .U32 index1)
-          let r ←
-            source.procedures.Refusal.at source.procedures.RefusalKind.Invalid
-              {
-                field := (toStr "supersedes"),
-                message :=
-                  (toStr
-                    "replacement relation must point from a live distinct record to the replaced subject")
-              } i
-          ok (core.result.Result.Err r)
-        else
-          let b2 ←
-            core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8
-              replaced_id record.procedure_id
-          if b2
-          then
-            let i ← lift (UScalar.cast .U32 index1)
-            let r ←
-              source.procedures.Refusal.at
-                source.procedures.RefusalKind.Invalid
-                {
-                  field := (toStr "supersedes"),
-                  message :=
-                    (toStr
-                      "replacement relation must point from a live distinct record to the replaced subject")
-                } i
-            ok (core.result.Result.Err r)
-          else
-            let o1 ←
-              scan.find_first
-                source.procedures.ProcedureLibrary.check_supersession.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool
-                records replaced_id
-            let b3 := core.option.Option.is_none o1
-            if b3
-            then
-              let i ← lift (UScalar.cast .U32 index1)
-              let r ←
-                source.procedures.Refusal.at
-                  source.procedures.RefusalKind.Invalid
-                  {
-                    field := (toStr "supersedes"),
-                    message :=
-                      (toStr
-                        "replacement target is not retained as superseded")
-                  } i
-              ok (core.result.Result.Err r)
-            else ok (core.result.Result.Ok ())
-  else
-    match record.supersedes with
-    | none => ok (core.result.Result.Ok ())
-    | some replaced_id =>
+      source.procedures.position_first
+        source.procedures.ProcedureLibrary.link_successor.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool
+        records replaced_id
+    let r ←
+      core.option.Option.ok_or_else
+        source.procedures.ProcedureLibrary.link_successor.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal
+        o index1
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let o1 ← Slice.index_usize successors val
+      let b := core.option.Option.is_some o1
       if b
       then
         let i ← lift (UScalar.cast .U32 index1)
-        let r ←
+        let r1 ←
           source.procedures.Refusal.at source.procedures.RefusalKind.Invalid
             {
               field := (toStr "supersedes"),
               message :=
                 (toStr
-                  "replacement relation must point from a live distinct record to the replaced subject")
+                  "a replaced subject must have exactly one retained successor")
             } i
-        ok (core.result.Result.Err r)
+        ok (core.result.Result.Err r1, successors)
       else
-        let b1 ←
-          core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8
-            replaced_id record.procedure_id
-        if b1
-        then
-          let i ← lift (UScalar.cast .U32 index1)
-          let r ←
-            source.procedures.Refusal.at source.procedures.RefusalKind.Invalid
-              {
-                field := (toStr "supersedes"),
-                message :=
-                  (toStr
-                    "replacement relation must point from a live distinct record to the replaced subject")
-              } i
-          ok (core.result.Result.Err r)
-        else
-          let o ←
-            scan.find_first
-              source.procedures.ProcedureLibrary.check_supersession.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool
-              records replaced_id
-          let b2 := core.option.Option.is_none o
-          if b2
-          then
-            let i ← lift (UScalar.cast .U32 index1)
-            let r ←
-              source.procedures.Refusal.at
-                source.procedures.RefusalKind.Invalid
-                {
-                  field := (toStr "supersedes"),
-                  message :=
-                    (toStr "replacement target is not retained as superseded")
-                } i
-            ok (core.result.Result.Err r)
-          else ok (core.result.Result.Ok ())
+        let successors1 ← Slice.update successors val (some index1)
+        ok (core.result.Result.Ok (), successors1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame source.procedures.Refusal) residual
+      ok (r1, successors)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_supersession]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1589:8-1592:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1603:8-1606:9 -/
 @[rust_loop_body]
-def source.procedures.ProcedureLibrary.validate_supersession_loop.body
+def source.procedures.ProcedureLibrary.validate_supersession_loop0.body
   (records : Slice source.procedures.ProcedureRecord)
+  (successors : Array (Option Std.Usize) 64#usize)
   (outcome : core.result.Result Unit source.procedures.Refusal)
   (index1 : Std.Usize) :
-  Result (ControlFlow ((core.result.Result Unit source.procedures.Refusal) ×
-    Std.Usize) (core.result.Result Unit source.procedures.Refusal))
+  Result (ControlFlow ((Array (Option Std.Usize) 64#usize) ×
+    (core.result.Result Unit source.procedures.Refusal) × Std.Usize) ((Array
+    (Option Std.Usize) 64#usize) × (core.result.Result Unit
+    source.procedures.Refusal)))
   := do
   let b ← core.result.Result.is_ok outcome
   if b
@@ -185379,40 +185359,120 @@ def source.procedures.ProcedureLibrary.validate_supersession_loop.body
     let i := Slice.len records
     if index1 < i
     then
-      let outcome1 ←
-        source.procedures.ProcedureLibrary.check_supersession records index1
+      let (s, to_slice_mut_back) ← lift (Array.to_slice_mut successors)
+      let (outcome1, s1) ←
+        source.procedures.ProcedureLibrary.link_successor records index1 s
       let index2 ← index1 + 1#usize
-      ok (cont (outcome1, index2))
-    else ok (done outcome)
-  else ok (done outcome)
+      let successors1 := to_slice_mut_back s1
+      ok (cont (successors1, outcome1, index2))
+    else ok (done (successors, outcome))
+  else ok (done (successors, outcome))
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_supersession]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1589:8-1592:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1603:8-1606:9 -/
 @[rust_loop]
-def source.procedures.ProcedureLibrary.validate_supersession_loop
+def source.procedures.ProcedureLibrary.validate_supersession_loop0
   (records : Slice source.procedures.ProcedureRecord)
+  (successors : Array (Option Std.Usize) 64#usize)
   (outcome : core.result.Result Unit source.procedures.Refusal)
   (index1 : Std.Usize) :
-  Result (core.result.Result Unit source.procedures.Refusal)
+  Result ((Array (Option Std.Usize) 64#usize) × (core.result.Result Unit
+    source.procedures.Refusal))
   := do
   loop
-    (fun (outcome1, index2) =>
-      source.procedures.ProcedureLibrary.validate_supersession_loop.body
-      records outcome1 index2)
-    (outcome, index1)
+    (fun (successors1, outcome1, index2) =>
+      source.procedures.ProcedureLibrary.validate_supersession_loop0.body
+      records successors1 outcome1 index2)
+    (successors, outcome, index1)
+
+/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_supersession]: loop body 1:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1611:8-1617:9 -/
+@[rust_loop_body]
+def source.procedures.ProcedureLibrary.validate_supersession_loop1.body
+  (records : Slice source.procedures.ProcedureRecord)
+  (successors : Array (Option Std.Usize) 64#usize) (rooted_records : Std.Usize)
+  (outcome : core.result.Result Unit source.procedures.Refusal)
+  (index1 : Std.Usize) :
+  Result (ControlFlow (Std.Usize × (core.result.Result Unit
+    source.procedures.Refusal) × Std.Usize) (Std.Usize × (core.result.Result
+    Unit source.procedures.Refusal)))
+  := do
+  let b ← core.result.Result.is_ok outcome
+  if b
+  then
+    let i := Slice.len records
+    if index1 < i
+    then
+      let s ← lift (Array.to_slice successors)
+      let r ← source.procedures.ProcedureLibrary.rooted_path records s index1
+      let (rooted_records1, outcome1) ←
+        match r with
+        | core.result.Result.Ok count =>
+          do
+          let rooted_records2 ← rooted_records + count
+          ok (rooted_records2, outcome)
+        | core.result.Result.Err refusal =>
+          ok (rooted_records, core.result.Result.Err refusal)
+      let index2 ← index1 + 1#usize
+      ok (cont (rooted_records1, outcome1, index2))
+    else ok (done (rooted_records, outcome))
+  else ok (done (rooted_records, outcome))
+
+/-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_supersession]: loop 1:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1611:8-1617:9 -/
+@[rust_loop]
+def source.procedures.ProcedureLibrary.validate_supersession_loop1
+  (records : Slice source.procedures.ProcedureRecord)
+  (successors : Array (Option Std.Usize) 64#usize) (rooted_records : Std.Usize)
+  (outcome : core.result.Result Unit source.procedures.Refusal)
+  (index1 : Std.Usize) :
+  Result (Std.Usize × (core.result.Result Unit source.procedures.Refusal))
+  := do
+  loop
+    (fun (rooted_records1, outcome1, index2) =>
+      source.procedures.ProcedureLibrary.validate_supersession_loop1.body
+      records successors rooted_records1 outcome1 index2)
+    (rooted_records, outcome, index1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::validate_supersession]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1586:4-1594:5 -/
-@[reducible]
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1599:4-1629:5 -/
 def source.procedures.ProcedureLibrary.validate_supersession
   (records : Slice source.procedures.ProcedureRecord) :
   Result (core.result.Result Unit source.procedures.Refusal)
   := do
-  source.procedures.ProcedureLibrary.validate_supersession_loop records
-    (core.result.Result.Ok ()) 0#usize
+  let successors := Array.repeat 64#usize none
+  let (successors1, outcome) ←
+    source.procedures.ProcedureLibrary.validate_supersession_loop0 records
+      successors (core.result.Result.Ok ()) 0#usize
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch outcome
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue _ =>
+    let (rooted_records, outcome1) ←
+      source.procedures.ProcedureLibrary.validate_supersession_loop1 records
+        successors1 0#usize (core.result.Result.Ok ()) 0#usize
+    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch outcome1
+    match cf1 with
+    | core.ops.control_flow.ControlFlow.Continue _ =>
+      let i := Slice.len records
+      if rooted_records != i
+      then
+        let r ←
+          source.procedures.Refusal.new source.procedures.RefusalKind.Invalid
+            {
+              field := (toStr "supersedes"),
+              message := (toStr "replacement relation must be acyclic")
+            }
+        ok (core.result.Result.Err r)
+      else ok (core.result.Result.Ok ())
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Unit (core.convert.FromSame source.procedures.Refusal) residual
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+      Unit (core.convert.FromSame source.procedures.Refusal) residual
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rebuild_chunks]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1685:8-1688:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1754:8-1757:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.rebuild_chunks_loop0.body
   (records : Slice source.procedures.ProcedureRecord)
@@ -185435,7 +185495,7 @@ def source.procedures.ProcedureLibrary.rebuild_chunks_loop0.body
   else ok (done outcome)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rebuild_chunks]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1685:8-1688:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1754:8-1757:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.rebuild_chunks_loop0
   (records : Slice source.procedures.ProcedureRecord)
@@ -185450,7 +185510,7 @@ def source.procedures.ProcedureLibrary.rebuild_chunks_loop0
     (outcome, index1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rebuild_chunks]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1695:8-1704:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1764:8-1773:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.rebuild_chunks_loop1.body
   («namespace» : source.Session)
@@ -185482,7 +185542,7 @@ def source.procedures.ProcedureLibrary.rebuild_chunks_loop1.body
   else ok (done (library, outcome))
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rebuild_chunks]: loop 1:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1695:8-1704:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1764:8-1773:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.rebuild_chunks_loop1
   («namespace» : source.Session)
@@ -185501,7 +185561,7 @@ def source.procedures.ProcedureLibrary.rebuild_chunks_loop1
     (library, admitted, outcome, position)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rebuild_chunks]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1668:4-1717:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1737:4-1786:5 -/
 def source.procedures.ProcedureLibrary.rebuild_chunks
   («namespace» : source.Session) (revision : Array Std.U8 32#usize)
   (records : Slice source.procedures.ProcedureRecord) :
@@ -194310,7 +194370,7 @@ def source.procedures.ProcedureLibrary.generation
     s id
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::snapshot]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1856:8-1866:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1925:8-1935:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.snapshot_loop.body
   (records : alloc.vec.Vec source.procedures.ProcedureRecord)
@@ -194346,7 +194406,7 @@ def source.procedures.ProcedureLibrary.snapshot_loop.body
   else ok (done (closure, failure))
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::snapshot]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1856:8-1866:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1925:8-1935:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.snapshot_loop
   (records : alloc.vec.Vec source.procedures.ProcedureRecord)
@@ -194362,7 +194422,7 @@ def source.procedures.ProcedureLibrary.snapshot_loop
     (closure, failure, index1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::snapshot]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1848:4-1883:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1917:4-1952:5 -/
 def source.procedures.ProcedureLibrary.snapshot
   (transition : source.procedures.GenerationTransition)
   (chunk_library_revision : Array Std.U8 32#usize)
@@ -194403,7 +194463,7 @@ def source.procedures.ProcedureLibrary.snapshot
   | some refusal => ok (core.result.Result.Err refusal)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing::{closure#1}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1649:61-1649:99 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1709:61-1709:99 -/
 def
   source.procedures.ProcedureLibrary.supersede_existing.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool.call_mut
   (c : source.procedures.ProcedureLibrary.supersede_existing.closure_1)
@@ -194417,7 +194477,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1649:61-1649:99 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1709:61-1709:99 -/
 def
   source.procedures.ProcedureLibrary.supersede_existing.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool.call_once
   (c : source.procedures.ProcedureLibrary.supersede_existing.closure_1)
@@ -194430,7 +194490,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1649:61-1649:99 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1709:61-1709:99 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.supersede_existing.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool
@@ -194442,7 +194502,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1649:61-1649:99 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1709:61-1709:99 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.supersede_existing.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool
@@ -194456,7 +194516,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1640:39-1648:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1700:39-1708:9 -/
 def
   source.procedures.ProcedureLibrary.supersede_existing.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.ProcedureLibrary.supersede_existing.closure)
@@ -194470,7 +194530,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1640:39-1648:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1700:39-1708:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.supersede_existing.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -194482,7 +194542,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::supersede_existing]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1636:4-1666:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1696:4-1735:5 -/
 def source.procedures.ProcedureLibrary.supersede_existing
   (records : Slice source.procedures.ProcedureRecord)
   (old_id : Option (Array Std.U8 32#usize)) :
@@ -194511,23 +194571,40 @@ def source.procedures.ProcedureLibrary.supersede_existing
       let records1 := find_first_mut_back none
       ok (core.result.Result.Err r1, records1)
     | some old =>
-      let rs ←
-        source.procedures.retrieval.signature
-          {
-            old
-              with
-              status := source.procedures.Status.Superseded, promotion := none
-          }
-      let records1 :=
-        find_first_mut_back (some
-          {
-            old
-              with
-              status := source.procedures.Status.Superseded,
-              promotion := none,
-              retrieval := rs
-          })
-      ok (core.result.Result.Ok (), records1)
+      let b ←
+        source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq old.status
+          source.procedures.Status.Superseded
+      if b
+      then
+        let r1 ←
+          source.procedures.Refusal.new
+            source.procedures.RefusalKind.StaleContext
+            {
+              field := (toStr "supersedes"),
+              message :=
+                (toStr "a superseded record already has a retained successor")
+            }
+        let records1 := find_first_mut_back o
+        ok (core.result.Result.Err r1, records1)
+      else
+        let rs ←
+          source.procedures.retrieval.signature
+            {
+              old
+                with
+                status := source.procedures.Status.Superseded,
+                promotion := none
+            }
+        let records1 :=
+          find_first_mut_back (some
+            {
+              old
+                with
+                status := source.procedures.Status.Superseded,
+                promotion := none,
+                retrieval := rs
+            })
+        ok (core.result.Result.Ok (), records1)
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -194535,7 +194612,7 @@ def source.procedures.ProcedureLibrary.supersede_existing
     ok (r1, records)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::acceptance::VerifiedEvidence, &'_1 noble_contracts::source::procedures::acceptance::VerifiedEvidence), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{closure#1}}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1178:25-1180:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1191:25-1193:17 -/
 def
   source.procedures.ProcedureLibrary.canonicalize_evidence.closure_1.Insts.CoreOpsFunctionFnMutPairShared0VerifiedEvidenceShared1VerifiedEvidenceOrdering.call_mut
   (c : source.procedures.ProcedureLibrary.canonicalize_evidence.closure_1)
@@ -194549,7 +194626,7 @@ def
   ok (o, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::acceptance::VerifiedEvidence, &'_1 noble_contracts::source::procedures::acceptance::VerifiedEvidence), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1178:25-1180:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1191:25-1193:17 -/
 def
   source.procedures.ProcedureLibrary.canonicalize_evidence.closure_1.Insts.CoreOpsFunctionFnOncePairShared0VerifiedEvidenceShared1VerifiedEvidenceOrdering.call_once
   (c : source.procedures.ProcedureLibrary.canonicalize_evidence.closure_1)
@@ -194563,7 +194640,7 @@ def
   ok o
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::acceptance::VerifiedEvidence, &'_1 noble_contracts::source::procedures::acceptance::VerifiedEvidence), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1178:25-1180:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1191:25-1193:17 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.canonicalize_evidence.closure_1.Insts.CoreOpsFunctionFnOncePairShared0VerifiedEvidenceShared1VerifiedEvidenceOrdering
@@ -194576,7 +194653,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::acceptance::VerifiedEvidence, &'_1 noble_contracts::source::procedures::acceptance::VerifiedEvidence), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1178:25-1180:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1191:25-1193:17 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.canonicalize_evidence.closure_1.Insts.CoreOpsFunctionFnMutPairShared0VerifiedEvidenceShared1VerifiedEvidenceOrdering
@@ -194591,7 +194668,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::EvidenceRecord, &'_1 noble_contracts::source::procedures::EvidenceRecord), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{closure}}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1173:25-1175:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1186:25-1188:17 -/
 def
   source.procedures.ProcedureLibrary.canonicalize_evidence.closure.Insts.CoreOpsFunctionFnMutPairShared0EvidenceRecordShared1EvidenceRecordOrdering.call_mut
   (c : source.procedures.ProcedureLibrary.canonicalize_evidence.closure)
@@ -194605,7 +194682,7 @@ def
   ok (o, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::EvidenceRecord, &'_1 noble_contracts::source::procedures::EvidenceRecord), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1173:25-1175:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1186:25-1188:17 -/
 def
   source.procedures.ProcedureLibrary.canonicalize_evidence.closure.Insts.CoreOpsFunctionFnOncePairShared0EvidenceRecordShared1EvidenceRecordOrdering.call_once
   (c : source.procedures.ProcedureLibrary.canonicalize_evidence.closure)
@@ -194619,7 +194696,7 @@ def
   ok o
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::EvidenceRecord, &'_1 noble_contracts::source::procedures::EvidenceRecord), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1173:25-1175:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1186:25-1188:17 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.canonicalize_evidence.closure.Insts.CoreOpsFunctionFnOncePairShared0EvidenceRecordShared1EvidenceRecordOrdering
@@ -194632,7 +194709,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::EvidenceRecord, &'_1 noble_contracts::source::procedures::EvidenceRecord), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1173:25-1175:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1186:25-1188:17 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.canonicalize_evidence.closure.Insts.CoreOpsFunctionFnMutPairShared0EvidenceRecordShared1EvidenceRecordOrdering
@@ -194647,7 +194724,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1169:8-1183:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1182:8-1196:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.canonicalize_evidence_loop.body
   (records : Slice source.procedures.ProcedureRecord) (is_exhausted : Bool)
@@ -194683,7 +194760,7 @@ def source.procedures.ProcedureLibrary.canonicalize_evidence_loop.body
     else ok (done (records, is_exhausted))
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1169:8-1183:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1182:8-1196:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.canonicalize_evidence_loop
   (records : Slice source.procedures.ProcedureRecord) (is_exhausted : Bool)
@@ -194697,7 +194774,7 @@ def source.procedures.ProcedureLibrary.canonicalize_evidence_loop
     (records, is_exhausted, index1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::canonicalize_evidence]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1166:4-1194:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1179:4-1207:5 -/
 def source.procedures.ProcedureLibrary.canonicalize_evidence
   (records : Slice source.procedures.ProcedureRecord) :
   Result ((core.result.Result Unit source.procedures.Refusal) × (Slice
@@ -194718,7 +194795,7 @@ def source.procedures.ProcedureLibrary.canonicalize_evidence
   else ok (core.result.Result.Ok (), records1)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::inherit_alias_and_cost]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1157:4-1164:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1170:4-1177:5 -/
 def source.procedures.ProcedureLibrary.inherit_alias_and_cost
   (existing : source.procedures.ProcedureRecord)
   (incoming : source.procedures.ProcedureRecord) :
@@ -194743,7 +194820,7 @@ def source.procedures.ProcedureLibrary.inherit_alias_and_cost
   else ok { incoming with alias_of := o }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::inherit_promotion_and_supersession]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1144:4-1154:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1157:4-1167:5 -/
 def source.procedures.ProcedureLibrary.inherit_promotion_and_supersession
   (existing : source.procedures.ProcedureRecord)
   (incoming : source.procedures.ProcedureRecord) :
@@ -194765,7 +194842,7 @@ def source.procedures.ProcedureLibrary.inherit_promotion_and_supersession
   else ok { incoming with promotion := o }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::merged_status]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1132:4-1141:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1145:4-1154:5 -/
 def source.procedures.ProcedureLibrary.merged_status
   (existing : source.procedures.Status) (incoming : source.procedures.Status) :
   Result source.procedures.Status
@@ -194799,7 +194876,7 @@ def source.procedures.ProcedureLibrary.merged_status
   else ok status
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::merge_claims]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1116:8-1120:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1129:8-1133:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.merge_claims_loop0.body
   (iter : core.slice.iter.Iter source.procedures.EvidenceRecord)
@@ -194825,7 +194902,7 @@ def source.procedures.ProcedureLibrary.merge_claims_loop0.body
       ok (cont (iter1, { incoming with evidence := v }))
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::merge_claims]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1116:8-1120:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1129:8-1133:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.merge_claims_loop0
   (iter : core.slice.iter.Iter source.procedures.EvidenceRecord)
@@ -194839,7 +194916,7 @@ def source.procedures.ProcedureLibrary.merge_claims_loop0
     (iter, incoming)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::merge_claims]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1122:8-1126:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1135:8-1139:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.merge_claims_loop1.body
   (iter : core.slice.iter.Iter source.procedures.acceptance.VerifiedEvidence)
@@ -194867,7 +194944,7 @@ def source.procedures.ProcedureLibrary.merge_claims_loop1.body
       ok (cont (iter1, { incoming with verified := v }))
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::merge_claims]: loop 1:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1122:8-1126:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1135:8-1139:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.merge_claims_loop1
   (iter : core.slice.iter.Iter source.procedures.acceptance.VerifiedEvidence)
@@ -194881,7 +194958,7 @@ def source.procedures.ProcedureLibrary.merge_claims_loop1
     (iter, incoming)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::merge_claims]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1115:4-1127:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1128:4-1140:5 -/
 def source.procedures.ProcedureLibrary.merge_claims
   (existing : source.procedures.ProcedureRecord)
   (incoming : source.procedures.ProcedureRecord) :
@@ -194896,7 +194973,7 @@ def source.procedures.ProcedureLibrary.merge_claims
   source.procedures.ProcedureLibrary.merge_claims_loop1 iter1 incoming1
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::merge_state]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1092:4-1111:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1105:4-1124:5 -/
 def source.procedures.ProcedureLibrary.merge_state
   (existing : source.procedures.ProcedureRecord)
   (incoming : source.procedures.ProcedureRecord) :
@@ -194928,7 +195005,7 @@ def source.procedures.ProcedureLibrary.merge_state
   else ok (core.result.Result.Ok { incoming3 with retrieval := rs })
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#4}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1039:80-1047:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1052:80-1060:9 -/
 def
   source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.ProcedureLibrary.admit_state.closure_4) (_ : Unit) :
@@ -194941,7 +195018,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#4}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1039:80-1047:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1052:80-1060:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -194953,7 +195030,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::ProcedureRecord, &'_1 noble_contracts::source::procedures::ProcedureRecord), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#3}}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1036:34-1038:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1049:34-1051:9 -/
 def
   source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering.call_mut
   (c : source.procedures.ProcedureLibrary.admit_state.closure_3)
@@ -194966,7 +195043,7 @@ def
   ok (o, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::ProcedureRecord, &'_1 noble_contracts::source::procedures::ProcedureRecord), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#3}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1036:34-1038:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1049:34-1051:9 -/
 def
   source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnOncePairShared0ProcedureRecordShared1ProcedureRecordOrdering.call_once
   (c : source.procedures.ProcedureLibrary.admit_state.closure_3)
@@ -194980,7 +195057,7 @@ def
   ok o
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::ProcedureRecord, &'_1 noble_contracts::source::procedures::ProcedureRecord), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#3}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1036:34-1038:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1049:34-1051:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnOncePairShared0ProcedureRecordShared1ProcedureRecordOrdering
@@ -194993,7 +195070,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::ProcedureRecord, &'_1 noble_contracts::source::procedures::ProcedureRecord), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#3}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1036:34-1038:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1049:34-1051:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
@@ -195008,7 +195085,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#2}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1006:63-1010:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1021:63-1025:17 -/
 def
   source.procedures.ProcedureLibrary.admit_state.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2ProcedureRecordBool.call_mut
   (c : source.procedures.ProcedureLibrary.admit_state.closure_2)
@@ -195035,7 +195112,7 @@ def
   else ok (false, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#2}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1006:63-1010:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1021:63-1025:17 -/
 def
   source.procedures.ProcedureLibrary.admit_state.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared2ProcedureRecordBool.call_once
   (c : source.procedures.ProcedureLibrary.admit_state.closure_2)
@@ -195048,7 +195125,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#2}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1006:63-1010:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1021:63-1025:17 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.admit_state.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared2ProcedureRecordBool
@@ -195060,7 +195137,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#2}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1006:63-1010:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1021:63-1025:17 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.admit_state.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2ProcedureRecordBool
@@ -195074,7 +195151,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 951:76-959:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 954:76-962:13 -/
 def
   source.procedures.ProcedureLibrary.admit_state.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.ProcedureLibrary.admit_state.closure_1) (_ : Unit) :
@@ -195087,7 +195164,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 951:76-959:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 954:76-962:13 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.admit_state.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -195151,7 +195228,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::admit_state]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 927:4-1090:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 927:4-1103:5 -/
 def source.procedures.ProcedureLibrary.admit_state
   (self : source.procedures.ProcedureLibrary) («namespace» : source.Session)
   (policy : Option source.procedures.ConsumerPolicy)
@@ -195210,60 +195287,449 @@ def source.procedures.ProcedureLibrary.admit_state
           let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
           match cf3 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
-            match existing_position with
-            | none =>
-              let i := alloc.vec.Vec.len candidate_records
-              if i >= source.procedures.MAX_RECORDS
-              then
-                let r4 ←
-                  source.procedures.Refusal.new
-                    source.procedures.RefusalKind.Exhausted
-                    {
-                      field := (toStr "library.entries"),
-                      message := (toStr "procedure record limit reached")
-                    }
-                ok (core.result.Result.Err r4, self)
-              else
-                let b1 ←
-                  source.procedures.Producer.Insts.CoreCmpPartialEqProducer.eq
-                    record1.provenance.producer
-                    source.procedures.Producer.Composition
-                if b1
-                then
-                  let s2 := alloc.vec.Vec.deref candidate_records
-                  let o1 ←
-                    scan.find_first
-                      source.procedures.ProcedureLibrary.admit_state.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2ProcedureRecordBool
-                      s2 (record1.chunk.chunk_id, record1.library_dependencies)
-                  let b2 := core.option.Option.is_some o1
-                  if b2
+            if replacement
+            then
+              let (s2, deref_mut_back) ←
+                lift (alloc.vec.Vec.deref_mut candidate_records)
+              let (r4, s3) ←
+                source.procedures.ProcedureLibrary.supersede_existing s2
+                  record1.supersedes
+              let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
+              match cf4 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                match existing_position with
+                | none =>
+                  let candidate_records1 := deref_mut_back s3
+                  let i := alloc.vec.Vec.len candidate_records1
+                  if i >= source.procedures.MAX_RECORDS
                   then
-                    let r4 ←
+                    let r5 ←
                       source.procedures.Refusal.new
-                        source.procedures.RefusalKind.DuplicateEntry
+                        source.procedures.RefusalKind.Exhausted
                         {
-                          field := (toStr "library_dependencies"),
-                          message :=
-                            (toStr
-                              "composition restates an existing derivation")
+                          field := (toStr "library.entries"),
+                          message := (toStr "procedure record limit reached")
                         }
-                    ok (core.result.Result.Err r4, self)
+                    ok (core.result.Result.Err r5, self)
                   else
-                    if replacement
+                    let b1 ←
+                      source.procedures.Producer.Insts.CoreCmpPartialEqProducer.eq
+                        record1.provenance.producer
+                        source.procedures.Producer.Composition
+                    if b1
                     then
-                      let (s3, deref_mut_back) ←
-                        lift (alloc.vec.Vec.deref_mut candidate_records)
-                      let (r4, s4) ←
-                        source.procedures.ProcedureLibrary.supersede_existing
-                          s3 record1.supersedes
-                      let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-                      match cf4 with
-                      | core.ops.control_flow.ControlFlow.Continue _ =>
-                        let candidate_records1 := deref_mut_back s4
-                        let s5 := alloc.vec.Vec.deref candidate_records1
+                      let s4 := alloc.vec.Vec.deref candidate_records1
+                      let o1 ←
+                        scan.find_first
+                          source.procedures.ProcedureLibrary.admit_state.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2ProcedureRecordBool
+                          s4 (record1.chunk.chunk_id,
+                          record1.library_dependencies)
+                      let b2 := core.option.Option.is_some o1
+                      if b2
+                      then
+                        let r5 ←
+                          source.procedures.Refusal.new
+                            source.procedures.RefusalKind.DuplicateEntry
+                            {
+                              field := (toStr "library_dependencies"),
+                              message :=
+                                (toStr
+                                  "composition restates an existing derivation")
+                            }
+                        ok (core.result.Result.Err r5, self)
+                      else
+                        if replacement
+                        then
+                          let s5 := alloc.vec.Vec.deref candidate_records1
+                          let r5 ←
+                            source.procedures.ProcedureLibrary.check_dependencies
+                              s5 record1
+                          let cf5 ←
+                            core.result.Result.Insts.CoreOpsTry.branch r5
+                          match cf5 with
+                          | core.ops.control_flow.ControlFlow.Continue _ =>
+                            let pr ←
+                              source.procedures.ProcedureRecord.Insts.CoreCloneClone.clone
+                                record1
+                            let candidate_records2 ←
+                              alloc.vec.Vec.push candidate_records1 pr
+                            let (s6, deref_mut_back1) ←
+                              lift (alloc.vec.Vec.deref_mut candidate_records2)
+                            let (r6, s7) ←
+                              source.procedures.ProcedureLibrary.canonicalize_evidence
+                                s6
+                            let cf6 ←
+                              core.result.Result.Insts.CoreOpsTry.branch r6
+                            match cf6 with
+                            | core.ops.control_flow.ControlFlow.Continue _ =>
+                              let candidate_records3 := deref_mut_back1 s7
+                              let (s8, deref_mut_back2) ←
+                                lift (alloc.vec.Vec.deref_mut
+                                  candidate_records3)
+                              let s9 ←
+                                alloc.slice.Slice.sort_by
+                                  source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                  s8 ()
+                              let o2 ←
+                                lift (U32.checked_add self.current_generation
+                                  1#u32)
+                              let r7 ←
+                                core.option.Option.ok_or_else
+                                  source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                  o2 ()
+                              let cf7 ←
+                                core.result.Result.Insts.CoreOpsTry.branch r7
+                              match cf7 with
+                              | core.ops.control_flow.ControlFlow.Continue val1
+                                =>
+                                let i1 := alloc.vec.Vec.len self.generations
+                                if i1 >= source.procedures.MAX_GENERATIONS
+                                then
+                                  let r8 ←
+                                    source.procedures.Refusal.new
+                                      source.procedures.RefusalKind.Exhausted
+                                      {
+                                        field := (toStr "generations"),
+                                        message :=
+                                          (toStr
+                                            "retained generation limit reached")
+                                      }
+                                  ok (core.result.Result.Err r8, self)
+                                else
+                                  let candidate_records4 := deref_mut_back2 s9
+                                  let s10 :=
+                                    alloc.vec.Vec.deref candidate_records4
+                                  let r8 ←
+                                    source.procedures.ProcedureLibrary.rebuild_chunks
+                                      «namespace» self.chunk_revision s10
+                                  let cf8 ←
+                                    core.result.Result.Insts.CoreOpsTry.branch
+                                      r8
+                                  match cf8 with
+                                  | core.ops.control_flow.ControlFlow.Continue
+                                    val2 =>
+                                    let a ←
+                                      source.chunks.Library.impl.revision val2
+                                    let r9 ←
+                                      source.procedures.ProcedureLibrary.snapshot
+                                        {
+                                          generation := val1,
+                                          parent_generation :=
+                                            (some self.current_generation),
+                                          rollback_of := none,
+                                          kind :=
+                                            source.procedures.GenerationKind.Publish
+                                        } a candidate_records4
+                                    let cf9 ←
+                                      core.result.Result.Insts.CoreOpsTry.branch
+                                        r9
+                                    match cf9 with
+                                    |
+                                      core.ops.control_flow.ControlFlow.Continue
+                                      val3 =>
+                                      let candidate_generations ←
+                                        alloc.vec.CloneVec.clone
+                                          source.procedures.Snapshot.Insts.CoreCloneClone
+                                          self.generations
+                                      let candidate_generations1 ←
+                                        alloc.vec.Vec.push
+                                          candidate_generations val3
+                                      let s11 :=
+                                        alloc.vec.Vec.deref
+                                          candidate_generations1
+                                      let r10 ←
+                                        source.procedures.persistence.encode_parts
+                                          self.chunk_revision s11 val1
+                                      let cf10 ←
+                                        core.result.Result.Insts.CoreOpsTry.branch
+                                          r10
+                                      match cf10 with
+                                      |
+                                        core.ops.control_flow.ControlFlow.Continue
+                                        val4 =>
+                                        let i2 := alloc.vec.Vec.len val4
+                                        if i2 >
+                                          source.procedures.MAX_STORAGE_BYTES
+                                        then
+                                          let r11 ←
+                                            source.procedures.Refusal.new
+                                              source.procedures.RefusalKind.Exhausted
+                                              {
+                                                field :=
+                                                  (toStr "library.bytes"),
+                                                message :=
+                                                  (toStr
+                                                    "append-only procedure generations exceed the retained storage bound")
+                                              }
+                                          ok (core.result.Result.Err r11, self)
+                                        else
+                                          ok (core.result.Result.Ok
+                                            record.procedure_id,
+                                            {
+                                              self
+                                                with
+                                                chunk_library := val2,
+                                                generations :=
+                                                  candidate_generations1,
+                                                current_generation := val1
+                                            })
+                                      | core.ops.control_flow.ControlFlow.Break
+                                        residual =>
+                                        let r11 ←
+                                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                            (Array Std.U8 32#usize)
+                                            (core.convert.FromSame
+                                            source.procedures.Refusal) residual
+                                        ok (r11, self)
+                                    | core.ops.control_flow.ControlFlow.Break
+                                      residual =>
+                                      let r10 ←
+                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                          (Array Std.U8 32#usize)
+                                          (core.convert.FromSame
+                                          source.procedures.Refusal) residual
+                                      ok (r10, self)
+                                  | core.ops.control_flow.ControlFlow.Break
+                                    residual =>
+                                    let r9 ←
+                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                        (Array Std.U8 32#usize)
+                                        (core.convert.FromSame
+                                        source.procedures.Refusal) residual
+                                    ok (r9, self)
+                              | core.ops.control_flow.ControlFlow.Break
+                                residual =>
+                                let r8 ←
+                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                    (Array Std.U8 32#usize)
+                                    (core.convert.FromSame
+                                    source.procedures.Refusal) residual
+                                ok (r8, self)
+                            | core.ops.control_flow.ControlFlow.Break residual
+                              =>
+                              let r7 ←
+                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                  (Array Std.U8 32#usize)
+                                  (core.convert.FromSame
+                                  source.procedures.Refusal) residual
+                              ok (r7, self)
+                          | core.ops.control_flow.ControlFlow.Break residual =>
+                            let r6 ←
+                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                (Array Std.U8 32#usize) (core.convert.FromSame
+                                source.procedures.Refusal) residual
+                            ok (r6, self)
+                        else
+                          let b3 :=
+                            core.option.Option.is_some record1.supersedes
+                          if b3
+                          then
+                            let r5 ←
+                              source.procedures.Refusal.new
+                                source.procedures.RefusalKind.Invalid
+                                {
+                                  field := (toStr "supersedes"),
+                                  message :=
+                                    (toStr
+                                      "replacement references require the atomic replace operation")
+                                }
+                            ok (core.result.Result.Err r5, self)
+                          else
+                            let s5 := alloc.vec.Vec.deref candidate_records1
+                            let r5 ←
+                              source.procedures.ProcedureLibrary.check_dependencies
+                                s5 record1
+                            let cf5 ←
+                              core.result.Result.Insts.CoreOpsTry.branch r5
+                            match cf5 with
+                            | core.ops.control_flow.ControlFlow.Continue _ =>
+                              let pr ←
+                                source.procedures.ProcedureRecord.Insts.CoreCloneClone.clone
+                                  record1
+                              let candidate_records2 ←
+                                alloc.vec.Vec.push candidate_records1 pr
+                              let (s6, deref_mut_back1) ←
+                                lift (alloc.vec.Vec.deref_mut
+                                  candidate_records2)
+                              let (r6, s7) ←
+                                source.procedures.ProcedureLibrary.canonicalize_evidence
+                                  s6
+                              let cf6 ←
+                                core.result.Result.Insts.CoreOpsTry.branch r6
+                              match cf6 with
+                              | core.ops.control_flow.ControlFlow.Continue _ =>
+                                let candidate_records3 := deref_mut_back1 s7
+                                let (s8, deref_mut_back2) ←
+                                  lift (alloc.vec.Vec.deref_mut
+                                    candidate_records3)
+                                let s9 ←
+                                  alloc.slice.Slice.sort_by
+                                    source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                    s8 ()
+                                let o2 ←
+                                  lift (U32.checked_add self.current_generation
+                                    1#u32)
+                                let r7 ←
+                                  core.option.Option.ok_or_else
+                                    source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                    o2 ()
+                                let cf7 ←
+                                  core.result.Result.Insts.CoreOpsTry.branch r7
+                                match cf7 with
+                                | core.ops.control_flow.ControlFlow.Continue
+                                  val1 =>
+                                  let i1 := alloc.vec.Vec.len self.generations
+                                  if i1 >= source.procedures.MAX_GENERATIONS
+                                  then
+                                    let r8 ←
+                                      source.procedures.Refusal.new
+                                        source.procedures.RefusalKind.Exhausted
+                                        {
+                                          field := (toStr "generations"),
+                                          message :=
+                                            (toStr
+                                              "retained generation limit reached")
+                                        }
+                                    ok (core.result.Result.Err r8, self)
+                                  else
+                                    let candidate_records4 :=
+                                      deref_mut_back2 s9
+                                    let s10 :=
+                                      alloc.vec.Vec.deref candidate_records4
+                                    let r8 ←
+                                      source.procedures.ProcedureLibrary.rebuild_chunks
+                                        «namespace» self.chunk_revision s10
+                                    let cf8 ←
+                                      core.result.Result.Insts.CoreOpsTry.branch
+                                        r8
+                                    match cf8 with
+                                    |
+                                      core.ops.control_flow.ControlFlow.Continue
+                                      val2 =>
+                                      let a ←
+                                        source.chunks.Library.impl.revision
+                                          val2
+                                      let r9 ←
+                                        source.procedures.ProcedureLibrary.snapshot
+                                          {
+                                            generation := val1,
+                                            parent_generation :=
+                                              (some self.current_generation),
+                                            rollback_of := none,
+                                            kind :=
+                                              source.procedures.GenerationKind.Publish
+                                          } a candidate_records4
+                                      let cf9 ←
+                                        core.result.Result.Insts.CoreOpsTry.branch
+                                          r9
+                                      match cf9 with
+                                      |
+                                        core.ops.control_flow.ControlFlow.Continue
+                                        val3 =>
+                                        let candidate_generations ←
+                                          alloc.vec.CloneVec.clone
+                                            source.procedures.Snapshot.Insts.CoreCloneClone
+                                            self.generations
+                                        let candidate_generations1 ←
+                                          alloc.vec.Vec.push
+                                            candidate_generations val3
+                                        let s11 :=
+                                          alloc.vec.Vec.deref
+                                            candidate_generations1
+                                        let r10 ←
+                                          source.procedures.persistence.encode_parts
+                                            self.chunk_revision s11 val1
+                                        let cf10 ←
+                                          core.result.Result.Insts.CoreOpsTry.branch
+                                            r10
+                                        match cf10 with
+                                        |
+                                          core.ops.control_flow.ControlFlow.Continue
+                                          val4 =>
+                                          let i2 := alloc.vec.Vec.len val4
+                                          if i2 >
+                                            source.procedures.MAX_STORAGE_BYTES
+                                          then
+                                            let r11 ←
+                                              source.procedures.Refusal.new
+                                                source.procedures.RefusalKind.Exhausted
+                                                {
+                                                  field :=
+                                                    (toStr "library.bytes"),
+                                                  message :=
+                                                    (toStr
+                                                      "append-only procedure generations exceed the retained storage bound")
+                                                }
+                                            ok (core.result.Result.Err r11,
+                                              self)
+                                          else
+                                            ok (core.result.Result.Ok
+                                              record.procedure_id,
+                                              {
+                                                self
+                                                  with
+                                                  chunk_library := val2,
+                                                  generations :=
+                                                    candidate_generations1,
+                                                  current_generation := val1
+                                              })
+                                        |
+                                          core.ops.control_flow.ControlFlow.Break
+                                          residual =>
+                                          let r11 ←
+                                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                              (Array Std.U8 32#usize)
+                                              (core.convert.FromSame
+                                              source.procedures.Refusal)
+                                              residual
+                                          ok (r11, self)
+                                      | core.ops.control_flow.ControlFlow.Break
+                                        residual =>
+                                        let r10 ←
+                                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                            (Array Std.U8 32#usize)
+                                            (core.convert.FromSame
+                                            source.procedures.Refusal) residual
+                                        ok (r10, self)
+                                    | core.ops.control_flow.ControlFlow.Break
+                                      residual =>
+                                      let r9 ←
+                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                          (Array Std.U8 32#usize)
+                                          (core.convert.FromSame
+                                          source.procedures.Refusal) residual
+                                      ok (r9, self)
+                                | core.ops.control_flow.ControlFlow.Break
+                                  residual =>
+                                  let r8 ←
+                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                      (Array Std.U8 32#usize)
+                                      (core.convert.FromSame
+                                      source.procedures.Refusal) residual
+                                  ok (r8, self)
+                              | core.ops.control_flow.ControlFlow.Break
+                                residual =>
+                                let r7 ←
+                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                    (Array Std.U8 32#usize)
+                                    (core.convert.FromSame
+                                    source.procedures.Refusal) residual
+                                ok (r7, self)
+                            | core.ops.control_flow.ControlFlow.Break residual
+                              =>
+                              let r6 ←
+                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                  (Array Std.U8 32#usize)
+                                  (core.convert.FromSame
+                                  source.procedures.Refusal) residual
+                              ok (r6, self)
+                    else
+                      if replacement
+                      then
+                        let s4 := alloc.vec.Vec.deref candidate_records1
                         let r5 ←
                           source.procedures.ProcedureLibrary.check_dependencies
-                            s5 record1
+                            s4 record1
                         let cf5 ←
                           core.result.Result.Insts.CoreOpsTry.branch r5
                         match cf5 with
@@ -195273,29 +195739,29 @@ def source.procedures.ProcedureLibrary.admit_state
                               record1
                           let candidate_records2 ←
                             alloc.vec.Vec.push candidate_records1 pr
-                          let (s6, deref_mut_back1) ←
+                          let (s5, deref_mut_back1) ←
                             lift (alloc.vec.Vec.deref_mut candidate_records2)
-                          let (r6, s7) ←
+                          let (r6, s6) ←
                             source.procedures.ProcedureLibrary.canonicalize_evidence
-                              s6
+                              s5
                           let cf6 ←
                             core.result.Result.Insts.CoreOpsTry.branch r6
                           match cf6 with
                           | core.ops.control_flow.ControlFlow.Continue _ =>
-                            let candidate_records3 := deref_mut_back1 s7
-                            let (s8, deref_mut_back2) ←
+                            let candidate_records3 := deref_mut_back1 s6
+                            let (s7, deref_mut_back2) ←
                               lift (alloc.vec.Vec.deref_mut candidate_records3)
-                            let s9 ←
+                            let s8 ←
                               alloc.slice.Slice.sort_by
                                 source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
-                                s8 ()
-                            let o2 ←
+                                s7 ()
+                            let o1 ←
                               lift (U32.checked_add self.current_generation
                                 1#u32)
                             let r7 ←
                               core.option.Option.ok_or_else
                                 source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
-                                o2 ()
+                                o1 ()
                             let cf7 ←
                               core.result.Result.Insts.CoreOpsTry.branch r7
                             match cf7 with
@@ -195315,12 +195781,12 @@ def source.procedures.ProcedureLibrary.admit_state
                                     }
                                 ok (core.result.Result.Err r8, self)
                               else
-                                let candidate_records4 := deref_mut_back2 s9
-                                let s10 :=
+                                let candidate_records4 := deref_mut_back2 s8
+                                let s9 :=
                                   alloc.vec.Vec.deref candidate_records4
                                 let r8 ←
                                   source.procedures.ProcedureLibrary.rebuild_chunks
-                                    «namespace» self.chunk_revision s10
+                                    «namespace» self.chunk_revision s9
                                 let cf8 ←
                                   core.result.Result.Insts.CoreOpsTry.branch r8
                                 match cf8 with
@@ -195351,12 +195817,12 @@ def source.procedures.ProcedureLibrary.admit_state
                                     let candidate_generations1 ←
                                       alloc.vec.Vec.push candidate_generations
                                         val3
-                                    let s11 :=
+                                    let s10 :=
                                       alloc.vec.Vec.deref
                                         candidate_generations1
                                     let r10 ←
                                       source.procedures.persistence.encode_parts
-                                        self.chunk_revision s11 val1
+                                        self.chunk_revision s10 val1
                                     let cf10 ←
                                       core.result.Result.Insts.CoreOpsTry.branch
                                         r10
@@ -195433,27 +195899,1993 @@ def source.procedures.ProcedureLibrary.admit_state
                               (Array Std.U8 32#usize) (core.convert.FromSame
                               source.procedures.Refusal) residual
                           ok (r6, self)
+                      else
+                        let b2 := core.option.Option.is_some record1.supersedes
+                        if b2
+                        then
+                          let r5 ←
+                            source.procedures.Refusal.new
+                              source.procedures.RefusalKind.Invalid
+                              {
+                                field := (toStr "supersedes"),
+                                message :=
+                                  (toStr
+                                    "replacement references require the atomic replace operation")
+                              }
+                          ok (core.result.Result.Err r5, self)
+                        else
+                          let s4 := alloc.vec.Vec.deref candidate_records1
+                          let r5 ←
+                            source.procedures.ProcedureLibrary.check_dependencies
+                              s4 record1
+                          let cf5 ←
+                            core.result.Result.Insts.CoreOpsTry.branch r5
+                          match cf5 with
+                          | core.ops.control_flow.ControlFlow.Continue _ =>
+                            let pr ←
+                              source.procedures.ProcedureRecord.Insts.CoreCloneClone.clone
+                                record1
+                            let candidate_records2 ←
+                              alloc.vec.Vec.push candidate_records1 pr
+                            let (s5, deref_mut_back1) ←
+                              lift (alloc.vec.Vec.deref_mut candidate_records2)
+                            let (r6, s6) ←
+                              source.procedures.ProcedureLibrary.canonicalize_evidence
+                                s5
+                            let cf6 ←
+                              core.result.Result.Insts.CoreOpsTry.branch r6
+                            match cf6 with
+                            | core.ops.control_flow.ControlFlow.Continue _ =>
+                              let candidate_records3 := deref_mut_back1 s6
+                              let (s7, deref_mut_back2) ←
+                                lift (alloc.vec.Vec.deref_mut
+                                  candidate_records3)
+                              let s8 ←
+                                alloc.slice.Slice.sort_by
+                                  source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                  s7 ()
+                              let o1 ←
+                                lift (U32.checked_add self.current_generation
+                                  1#u32)
+                              let r7 ←
+                                core.option.Option.ok_or_else
+                                  source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                  o1 ()
+                              let cf7 ←
+                                core.result.Result.Insts.CoreOpsTry.branch r7
+                              match cf7 with
+                              | core.ops.control_flow.ControlFlow.Continue val1
+                                =>
+                                let i1 := alloc.vec.Vec.len self.generations
+                                if i1 >= source.procedures.MAX_GENERATIONS
+                                then
+                                  let r8 ←
+                                    source.procedures.Refusal.new
+                                      source.procedures.RefusalKind.Exhausted
+                                      {
+                                        field := (toStr "generations"),
+                                        message :=
+                                          (toStr
+                                            "retained generation limit reached")
+                                      }
+                                  ok (core.result.Result.Err r8, self)
+                                else
+                                  let candidate_records4 := deref_mut_back2 s8
+                                  let s9 :=
+                                    alloc.vec.Vec.deref candidate_records4
+                                  let r8 ←
+                                    source.procedures.ProcedureLibrary.rebuild_chunks
+                                      «namespace» self.chunk_revision s9
+                                  let cf8 ←
+                                    core.result.Result.Insts.CoreOpsTry.branch
+                                      r8
+                                  match cf8 with
+                                  | core.ops.control_flow.ControlFlow.Continue
+                                    val2 =>
+                                    let a ←
+                                      source.chunks.Library.impl.revision val2
+                                    let r9 ←
+                                      source.procedures.ProcedureLibrary.snapshot
+                                        {
+                                          generation := val1,
+                                          parent_generation :=
+                                            (some self.current_generation),
+                                          rollback_of := none,
+                                          kind :=
+                                            source.procedures.GenerationKind.Publish
+                                        } a candidate_records4
+                                    let cf9 ←
+                                      core.result.Result.Insts.CoreOpsTry.branch
+                                        r9
+                                    match cf9 with
+                                    |
+                                      core.ops.control_flow.ControlFlow.Continue
+                                      val3 =>
+                                      let candidate_generations ←
+                                        alloc.vec.CloneVec.clone
+                                          source.procedures.Snapshot.Insts.CoreCloneClone
+                                          self.generations
+                                      let candidate_generations1 ←
+                                        alloc.vec.Vec.push
+                                          candidate_generations val3
+                                      let s10 :=
+                                        alloc.vec.Vec.deref
+                                          candidate_generations1
+                                      let r10 ←
+                                        source.procedures.persistence.encode_parts
+                                          self.chunk_revision s10 val1
+                                      let cf10 ←
+                                        core.result.Result.Insts.CoreOpsTry.branch
+                                          r10
+                                      match cf10 with
+                                      |
+                                        core.ops.control_flow.ControlFlow.Continue
+                                        val4 =>
+                                        let i2 := alloc.vec.Vec.len val4
+                                        if i2 >
+                                          source.procedures.MAX_STORAGE_BYTES
+                                        then
+                                          let r11 ←
+                                            source.procedures.Refusal.new
+                                              source.procedures.RefusalKind.Exhausted
+                                              {
+                                                field :=
+                                                  (toStr "library.bytes"),
+                                                message :=
+                                                  (toStr
+                                                    "append-only procedure generations exceed the retained storage bound")
+                                              }
+                                          ok (core.result.Result.Err r11, self)
+                                        else
+                                          ok (core.result.Result.Ok
+                                            record.procedure_id,
+                                            {
+                                              self
+                                                with
+                                                chunk_library := val2,
+                                                generations :=
+                                                  candidate_generations1,
+                                                current_generation := val1
+                                            })
+                                      | core.ops.control_flow.ControlFlow.Break
+                                        residual =>
+                                        let r11 ←
+                                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                            (Array Std.U8 32#usize)
+                                            (core.convert.FromSame
+                                            source.procedures.Refusal) residual
+                                        ok (r11, self)
+                                    | core.ops.control_flow.ControlFlow.Break
+                                      residual =>
+                                      let r10 ←
+                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                          (Array Std.U8 32#usize)
+                                          (core.convert.FromSame
+                                          source.procedures.Refusal) residual
+                                      ok (r10, self)
+                                  | core.ops.control_flow.ControlFlow.Break
+                                    residual =>
+                                    let r9 ←
+                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                        (Array Std.U8 32#usize)
+                                        (core.convert.FromSame
+                                        source.procedures.Refusal) residual
+                                    ok (r9, self)
+                              | core.ops.control_flow.ControlFlow.Break
+                                residual =>
+                                let r8 ←
+                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                    (Array Std.U8 32#usize)
+                                    (core.convert.FromSame
+                                    source.procedures.Refusal) residual
+                                ok (r8, self)
+                            | core.ops.control_flow.ControlFlow.Break residual
+                              =>
+                              let r7 ←
+                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                  (Array Std.U8 32#usize)
+                                  (core.convert.FromSame
+                                  source.procedures.Refusal) residual
+                              ok (r7, self)
+                          | core.ops.control_flow.ControlFlow.Break residual =>
+                            let r6 ←
+                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                (Array Std.U8 32#usize) (core.convert.FromSame
+                                source.procedures.Refusal) residual
+                            ok (r6, self)
+                | some existing_index =>
+                  let candidate_records1 := deref_mut_back s3
+                  let s4 := alloc.vec.Vec.deref candidate_records1
+                  let o1 ←
+                    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+                      source.procedures.ProcedureRecord) s4 existing_index
+                  let r5 ←
+                    core.option.Option.ok_or_else
+                      source.procedures.ProcedureLibrary.admit_state.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                      o1 ()
+                  let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
+                  match cf5 with
+                  | core.ops.control_flow.ControlFlow.Continue val1 =>
+                    let r6 ←
+                      source.procedures.persistence.identity_bytes val1
+                    let cf6 ← core.result.Result.Insts.CoreOpsTry.branch r6
+                    match cf6 with
+                    | core.ops.control_flow.ControlFlow.Continue val2 =>
+                      let r7 ←
+                        source.procedures.persistence.identity_bytes record1
+                      let cf7 ← core.result.Result.Insts.CoreOpsTry.branch r7
+                      match cf7 with
+                      | core.ops.control_flow.ControlFlow.Continue val3 =>
+                        let b1 ←
+                          alloc.vec.partial_eq.PartialEqVec.ne
+                            core.cmp.PartialEqU8 val2 val3
+                        if b1
+                        then
+                          let r8 ←
+                            source.procedures.Refusal.new
+                              source.procedures.RefusalKind.Invalid
+                              {
+                                field := (toStr "procedure_id"),
+                                message :=
+                                  (toStr
+                                    "identity collision between unequal immutable subjects")
+                              }
+                          ok (core.result.Result.Err r8, self)
+                        else
+                          let b2 ←
+                            alloc.vec.partial_eq.PartialEqVec.ne
+                              source.procedures.LibraryDependency.Insts.CoreCmpPartialEqLibraryDependency
+                              val1.library_dependencies
+                              record1.library_dependencies
+                          if b2
+                          then
+                            let r8 ←
+                              source.procedures.Refusal.new
+                                source.procedures.RefusalKind.Invalid
+                                {
+                                  field := (toStr "library_dependencies"),
+                                  message :=
+                                    (toStr
+                                      "an existing subject cannot change its dependency closure")
+                                }
+                            ok (core.result.Result.Err r8, self)
+                          else
+                            let b3 :=
+                              core.option.Option.is_some record1.supersedes
+                            if b3
+                            then
+                              let b4 ←
+                                core.cmp.PartialEq.ne.trait_default
+                                  (core.option.Option.Insts.CoreCmpPartialEqOption
+                                  (Array.Insts.CoreCmpPartialEqArray 32#usize
+                                  core.cmp.PartialEqU8)) record1.supersedes
+                                  val1.supersedes
+                              if b4
+                              then
+                                if replacement
+                                then
+                                  let b5 :=
+                                    core.option.Option.is_some val1.supersedes
+                                  if b5
+                                  then
+                                    let r8 ←
+                                      source.procedures.Refusal.new
+                                        source.procedures.RefusalKind.Invalid
+                                        {
+                                          field := (toStr "supersedes"),
+                                          message :=
+                                            (toStr
+                                              "retained replacement predecessors cannot change outside atomic replacement")
+                                        }
+                                    ok (core.result.Result.Err r8, self)
+                                  else
+                                    let b6 ←
+                                      source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq
+                                        val1.status
+                                        source.procedures.Status.Superseded
+                                    if b6
+                                    then
+                                      let b7 ←
+                                        core.cmp.PartialEq.ne.trait_default
+                                          source.procedures.Status.Insts.CoreCmpPartialEqStatus
+                                          record1.status
+                                          source.procedures.Status.Superseded
+                                      if b7
+                                      then
+                                        let r8 ←
+                                          source.procedures.Refusal.new
+                                            source.procedures.RefusalKind.StaleContext
+                                            {
+                                              field := (toStr "status"),
+                                              message :=
+                                                (toStr
+                                                  "a superseded record cannot be silently reactivated")
+                                            }
+                                        ok (core.result.Result.Err r8, self)
+                                      else
+                                        let r8 ←
+                                          source.procedures.ProcedureLibrary.merge_state
+                                            val1 record1
+                                        let cf8 ←
+                                          core.result.Result.Insts.CoreOpsTry.branch
+                                            r8
+                                        match cf8 with
+                                        |
+                                          core.ops.control_flow.ControlFlow.Continue
+                                          val4 =>
+                                          let r9 ←
+                                            source.procedures.ProcedureLibrary.validate_record
+                                              val4 policy true
+                                          let cf9 ←
+                                            core.result.Result.Insts.CoreOpsTry.branch
+                                              r9
+                                          match cf9 with
+                                          |
+                                            core.ops.control_flow.ControlFlow.Continue
+                                            _ =>
+                                            let b8 ←
+                                              source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
+                                                val1 val4
+                                            if b8
+                                            then
+                                              ok (core.result.Result.Ok
+                                                val4.procedure_id, self)
+                                            else
+                                              let (s5, deref_mut_back1) ←
+                                                lift (alloc.vec.Vec.deref_mut
+                                                  candidate_records1)
+                                              let (o2, get_mut_back) ←
+                                                core.slice.Slice.get_mut
+                                                  (core.slice.index.SliceIndexUsizeSlice
+                                                  source.procedures.ProcedureRecord)
+                                                  s5 existing_index
+                                              let s6 ←
+                                                match o2 with
+                                                | none =>
+                                                  ok (get_mut_back none)
+                                                | some _ =>
+                                                  ok (get_mut_back (some val4))
+                                              let candidate_records2 :=
+                                                deref_mut_back1 s6
+                                              let (s7, deref_mut_back2) ←
+                                                lift (alloc.vec.Vec.deref_mut
+                                                  candidate_records2)
+                                              let (r10, s8) ←
+                                                source.procedures.ProcedureLibrary.canonicalize_evidence
+                                                  s7
+                                              let cf10 ←
+                                                core.result.Result.Insts.CoreOpsTry.branch
+                                                  r10
+                                              match cf10 with
+                                              |
+                                                core.ops.control_flow.ControlFlow.Continue
+                                                _ =>
+                                                let candidate_records3 :=
+                                                  deref_mut_back2 s8
+                                                let (s9, deref_mut_back3) ←
+                                                  lift (alloc.vec.Vec.deref_mut
+                                                    candidate_records3)
+                                                let s10 ←
+                                                  alloc.slice.Slice.sort_by
+                                                    source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                                    s9 ()
+                                                let o3 ←
+                                                  lift (U32.checked_add
+                                                    self.current_generation
+                                                    1#u32)
+                                                let r11 ←
+                                                  core.option.Option.ok_or_else
+                                                    source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                                    o3 ()
+                                                let cf11 ←
+                                                  core.result.Result.Insts.CoreOpsTry.branch
+                                                    r11
+                                                match cf11 with
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Continue
+                                                  val5 =>
+                                                  let i :=
+                                                    alloc.vec.Vec.len
+                                                      self.generations
+                                                  if i >=
+                                                    source.procedures.MAX_GENERATIONS
+                                                  then
+                                                    let r12 ←
+                                                      source.procedures.Refusal.new
+                                                        source.procedures.RefusalKind.Exhausted
+                                                        {
+                                                          field :=
+                                                            (toStr
+                                                              "generations"),
+                                                          message :=
+                                                            (toStr
+                                                              "retained generation limit reached")
+                                                        }
+                                                    ok (core.result.Result.Err
+                                                      r12, self)
+                                                  else
+                                                    let candidate_records4 :=
+                                                      deref_mut_back3 s10
+                                                    let s11 :=
+                                                      alloc.vec.Vec.deref
+                                                        candidate_records4
+                                                    let r12 ←
+                                                      source.procedures.ProcedureLibrary.rebuild_chunks
+                                                        «namespace»
+                                                        self.chunk_revision s11
+                                                    let cf12 ←
+                                                      core.result.Result.Insts.CoreOpsTry.branch
+                                                        r12
+                                                    match cf12 with
+                                                    |
+                                                      core.ops.control_flow.ControlFlow.Continue
+                                                      val6 =>
+                                                      let a ←
+                                                        source.chunks.Library.impl.revision
+                                                          val6
+                                                      let r13 ←
+                                                        source.procedures.ProcedureLibrary.snapshot
+                                                          {
+                                                            generation := val5,
+                                                            parent_generation :=
+                                                              (some
+                                                                self.current_generation),
+                                                            rollback_of := none,
+                                                            kind :=
+                                                              source.procedures.GenerationKind.Publish
+                                                          } a
+                                                          candidate_records4
+                                                      let cf13 ←
+                                                        core.result.Result.Insts.CoreOpsTry.branch
+                                                          r13
+                                                      match cf13 with
+                                                      |
+                                                        core.ops.control_flow.ControlFlow.Continue
+                                                        val7 =>
+                                                        let
+                                                          candidate_generations
+                                                          ←
+                                                          alloc.vec.CloneVec.clone
+                                                            source.procedures.Snapshot.Insts.CoreCloneClone
+                                                            self.generations
+                                                        let
+                                                          candidate_generations1
+                                                          ←
+                                                          alloc.vec.Vec.push
+                                                            candidate_generations
+                                                            val7
+                                                        let s12 :=
+                                                          alloc.vec.Vec.deref
+                                                            candidate_generations1
+                                                        let r14 ←
+                                                          source.procedures.persistence.encode_parts
+                                                            self.chunk_revision
+                                                            s12 val5
+                                                        let cf14 ←
+                                                          core.result.Result.Insts.CoreOpsTry.branch
+                                                            r14
+                                                        match cf14 with
+                                                        |
+                                                          core.ops.control_flow.ControlFlow.Continue
+                                                          val8 =>
+                                                          let i1 :=
+                                                            alloc.vec.Vec.len
+                                                              val8
+                                                          if i1 >
+                                                            source.procedures.MAX_STORAGE_BYTES
+                                                          then
+                                                            let r15 ←
+                                                              source.procedures.Refusal.new
+                                                                source.procedures.RefusalKind.Exhausted
+                                                                {
+                                                                  field :=
+                                                                    (toStr
+                                                                    "library.bytes"),
+                                                                  message :=
+                                                                    (toStr
+                                                                    "append-only procedure generations exceed the retained storage bound")
+                                                                }
+                                                            ok
+                                                              (core.result.Result.Err
+                                                              r15, self)
+                                                          else
+                                                            ok
+                                                              (core.result.Result.Ok
+                                                              record.procedure_id,
+                                                              {
+                                                                self
+                                                                  with
+                                                                  chunk_library :=
+                                                                    val6,
+                                                                  generations :=
+                                                                    candidate_generations1,
+                                                                  current_generation :=
+                                                                    val5
+                                                              })
+                                                        |
+                                                          core.ops.control_flow.ControlFlow.Break
+                                                          residual =>
+                                                          let r15 ←
+                                                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                              (Array Std.U8
+                                                              32#usize)
+                                                              (core.convert.FromSame
+                                                              source.procedures.Refusal)
+                                                              residual
+                                                          ok (r15, self)
+                                                      |
+                                                        core.ops.control_flow.ControlFlow.Break
+                                                        residual =>
+                                                        let r14 ←
+                                                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                            (Array Std.U8
+                                                            32#usize)
+                                                            (core.convert.FromSame
+                                                            source.procedures.Refusal)
+                                                            residual
+                                                        ok (r14, self)
+                                                    |
+                                                      core.ops.control_flow.ControlFlow.Break
+                                                      residual =>
+                                                      let r13 ←
+                                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                          (Array Std.U8
+                                                          32#usize)
+                                                          (core.convert.FromSame
+                                                          source.procedures.Refusal)
+                                                          residual
+                                                      ok (r13, self)
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Break
+                                                  residual =>
+                                                  let r12 ←
+                                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                      (Array Std.U8 32#usize)
+                                                      (core.convert.FromSame
+                                                      source.procedures.Refusal)
+                                                      residual
+                                                  ok (r12, self)
+                                              |
+                                                core.ops.control_flow.ControlFlow.Break
+                                                residual =>
+                                                let r11 ←
+                                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                    (Array Std.U8 32#usize)
+                                                    (core.convert.FromSame
+                                                    source.procedures.Refusal)
+                                                    residual
+                                                ok (r11, self)
+                                          |
+                                            core.ops.control_flow.ControlFlow.Break
+                                            residual =>
+                                            let r10 ←
+                                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                (Array Std.U8 32#usize)
+                                                (core.convert.FromSame
+                                                source.procedures.Refusal)
+                                                residual
+                                            ok (r10, self)
+                                        |
+                                          core.ops.control_flow.ControlFlow.Break
+                                          residual =>
+                                          let r9 ←
+                                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                              (Array Std.U8 32#usize)
+                                              (core.convert.FromSame
+                                              source.procedures.Refusal)
+                                              residual
+                                          ok (r9, self)
+                                    else
+                                      let r8 ←
+                                        source.procedures.ProcedureLibrary.merge_state
+                                          val1 record1
+                                      let cf8 ←
+                                        core.result.Result.Insts.CoreOpsTry.branch
+                                          r8
+                                      match cf8 with
+                                      |
+                                        core.ops.control_flow.ControlFlow.Continue
+                                        val4 =>
+                                        let r9 ←
+                                          source.procedures.ProcedureLibrary.validate_record
+                                            val4 policy true
+                                        let cf9 ←
+                                          core.result.Result.Insts.CoreOpsTry.branch
+                                            r9
+                                        match cf9 with
+                                        |
+                                          core.ops.control_flow.ControlFlow.Continue
+                                          _ =>
+                                          let b7 ←
+                                            source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
+                                              val1 val4
+                                          if b7
+                                          then
+                                            ok (core.result.Result.Ok
+                                              val4.procedure_id, self)
+                                          else
+                                            let (s5, deref_mut_back1) ←
+                                              lift (alloc.vec.Vec.deref_mut
+                                                candidate_records1)
+                                            let (o2, get_mut_back) ←
+                                              core.slice.Slice.get_mut
+                                                (core.slice.index.SliceIndexUsizeSlice
+                                                source.procedures.ProcedureRecord)
+                                                s5 existing_index
+                                            let s6 ←
+                                              match o2 with
+                                              | none => ok (get_mut_back none)
+                                              | some _ =>
+                                                ok (get_mut_back (some val4))
+                                            let candidate_records2 :=
+                                              deref_mut_back1 s6
+                                            let (s7, deref_mut_back2) ←
+                                              lift (alloc.vec.Vec.deref_mut
+                                                candidate_records2)
+                                            let (r10, s8) ←
+                                              source.procedures.ProcedureLibrary.canonicalize_evidence
+                                                s7
+                                            let cf10 ←
+                                              core.result.Result.Insts.CoreOpsTry.branch
+                                                r10
+                                            match cf10 with
+                                            |
+                                              core.ops.control_flow.ControlFlow.Continue
+                                              _ =>
+                                              let candidate_records3 :=
+                                                deref_mut_back2 s8
+                                              let (s9, deref_mut_back3) ←
+                                                lift (alloc.vec.Vec.deref_mut
+                                                  candidate_records3)
+                                              let s10 ←
+                                                alloc.slice.Slice.sort_by
+                                                  source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                                  s9 ()
+                                              let o3 ←
+                                                lift (U32.checked_add
+                                                  self.current_generation
+                                                  1#u32)
+                                              let r11 ←
+                                                core.option.Option.ok_or_else
+                                                  source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                                  o3 ()
+                                              let cf11 ←
+                                                core.result.Result.Insts.CoreOpsTry.branch
+                                                  r11
+                                              match cf11 with
+                                              |
+                                                core.ops.control_flow.ControlFlow.Continue
+                                                val5 =>
+                                                let i :=
+                                                  alloc.vec.Vec.len
+                                                    self.generations
+                                                if i >=
+                                                  source.procedures.MAX_GENERATIONS
+                                                then
+                                                  let r12 ←
+                                                    source.procedures.Refusal.new
+                                                      source.procedures.RefusalKind.Exhausted
+                                                      {
+                                                        field :=
+                                                          (toStr "generations"),
+                                                        message :=
+                                                          (toStr
+                                                            "retained generation limit reached")
+                                                      }
+                                                  ok (core.result.Result.Err
+                                                    r12, self)
+                                                else
+                                                  let candidate_records4 :=
+                                                    deref_mut_back3 s10
+                                                  let s11 :=
+                                                    alloc.vec.Vec.deref
+                                                      candidate_records4
+                                                  let r12 ←
+                                                    source.procedures.ProcedureLibrary.rebuild_chunks
+                                                      «namespace»
+                                                      self.chunk_revision s11
+                                                  let cf12 ←
+                                                    core.result.Result.Insts.CoreOpsTry.branch
+                                                      r12
+                                                  match cf12 with
+                                                  |
+                                                    core.ops.control_flow.ControlFlow.Continue
+                                                    val6 =>
+                                                    let a ←
+                                                      source.chunks.Library.impl.revision
+                                                        val6
+                                                    let r13 ←
+                                                      source.procedures.ProcedureLibrary.snapshot
+                                                        {
+                                                          generation := val5,
+                                                          parent_generation :=
+                                                            (some
+                                                              self.current_generation),
+                                                          rollback_of := none,
+                                                          kind :=
+                                                            source.procedures.GenerationKind.Publish
+                                                        } a candidate_records4
+                                                    let cf13 ←
+                                                      core.result.Result.Insts.CoreOpsTry.branch
+                                                        r13
+                                                    match cf13 with
+                                                    |
+                                                      core.ops.control_flow.ControlFlow.Continue
+                                                      val7 =>
+                                                      let candidate_generations
+                                                        ←
+                                                        alloc.vec.CloneVec.clone
+                                                          source.procedures.Snapshot.Insts.CoreCloneClone
+                                                          self.generations
+                                                      let
+                                                        candidate_generations1
+                                                        ←
+                                                        alloc.vec.Vec.push
+                                                          candidate_generations
+                                                          val7
+                                                      let s12 :=
+                                                        alloc.vec.Vec.deref
+                                                          candidate_generations1
+                                                      let r14 ←
+                                                        source.procedures.persistence.encode_parts
+                                                          self.chunk_revision
+                                                          s12 val5
+                                                      let cf14 ←
+                                                        core.result.Result.Insts.CoreOpsTry.branch
+                                                          r14
+                                                      match cf14 with
+                                                      |
+                                                        core.ops.control_flow.ControlFlow.Continue
+                                                        val8 =>
+                                                        let i1 :=
+                                                          alloc.vec.Vec.len
+                                                            val8
+                                                        if i1 >
+                                                          source.procedures.MAX_STORAGE_BYTES
+                                                        then
+                                                          let r15 ←
+                                                            source.procedures.Refusal.new
+                                                              source.procedures.RefusalKind.Exhausted
+                                                              {
+                                                                field :=
+                                                                  (toStr
+                                                                    "library.bytes"),
+                                                                message :=
+                                                                  (toStr
+                                                                    "append-only procedure generations exceed the retained storage bound")
+                                                              }
+                                                          ok
+                                                            (core.result.Result.Err
+                                                            r15, self)
+                                                        else
+                                                          ok
+                                                            (core.result.Result.Ok
+                                                            record.procedure_id,
+                                                            {
+                                                              self
+                                                                with
+                                                                chunk_library :=
+                                                                  val6,
+                                                                generations :=
+                                                                  candidate_generations1,
+                                                                current_generation :=
+                                                                  val5
+                                                            })
+                                                      |
+                                                        core.ops.control_flow.ControlFlow.Break
+                                                        residual =>
+                                                        let r15 ←
+                                                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                            (Array Std.U8
+                                                            32#usize)
+                                                            (core.convert.FromSame
+                                                            source.procedures.Refusal)
+                                                            residual
+                                                        ok (r15, self)
+                                                    |
+                                                      core.ops.control_flow.ControlFlow.Break
+                                                      residual =>
+                                                      let r14 ←
+                                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                          (Array Std.U8
+                                                          32#usize)
+                                                          (core.convert.FromSame
+                                                          source.procedures.Refusal)
+                                                          residual
+                                                      ok (r14, self)
+                                                  |
+                                                    core.ops.control_flow.ControlFlow.Break
+                                                    residual =>
+                                                    let r13 ←
+                                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                        (Array Std.U8 32#usize)
+                                                        (core.convert.FromSame
+                                                        source.procedures.Refusal)
+                                                        residual
+                                                    ok (r13, self)
+                                              |
+                                                core.ops.control_flow.ControlFlow.Break
+                                                residual =>
+                                                let r12 ←
+                                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                    (Array Std.U8 32#usize)
+                                                    (core.convert.FromSame
+                                                    source.procedures.Refusal)
+                                                    residual
+                                                ok (r12, self)
+                                            |
+                                              core.ops.control_flow.ControlFlow.Break
+                                              residual =>
+                                              let r11 ←
+                                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                  (Array Std.U8 32#usize)
+                                                  (core.convert.FromSame
+                                                  source.procedures.Refusal)
+                                                  residual
+                                              ok (r11, self)
+                                        |
+                                          core.ops.control_flow.ControlFlow.Break
+                                          residual =>
+                                          let r10 ←
+                                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                              (Array Std.U8 32#usize)
+                                              (core.convert.FromSame
+                                              source.procedures.Refusal)
+                                              residual
+                                          ok (r10, self)
+                                      | core.ops.control_flow.ControlFlow.Break
+                                        residual =>
+                                        let r9 ←
+                                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                            (Array Std.U8 32#usize)
+                                            (core.convert.FromSame
+                                            source.procedures.Refusal) residual
+                                        ok (r9, self)
+                                else
+                                  let r8 ←
+                                    source.procedures.Refusal.new
+                                      source.procedures.RefusalKind.Invalid
+                                      {
+                                        field := (toStr "supersedes"),
+                                        message :=
+                                          (toStr
+                                            "retained replacement predecessors cannot change outside atomic replacement")
+                                      }
+                                  ok (core.result.Result.Err r8, self)
+                              else
+                                let b5 ←
+                                  source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq
+                                    val1.status
+                                    source.procedures.Status.Superseded
+                                if b5
+                                then
+                                  let b6 ←
+                                    core.cmp.PartialEq.ne.trait_default
+                                      source.procedures.Status.Insts.CoreCmpPartialEqStatus
+                                      record1.status
+                                      source.procedures.Status.Superseded
+                                  if b6
+                                  then
+                                    let r8 ←
+                                      source.procedures.Refusal.new
+                                        source.procedures.RefusalKind.StaleContext
+                                        {
+                                          field := (toStr "status"),
+                                          message :=
+                                            (toStr
+                                              "a superseded record cannot be silently reactivated")
+                                        }
+                                    ok (core.result.Result.Err r8, self)
+                                  else
+                                    let r8 ←
+                                      source.procedures.ProcedureLibrary.merge_state
+                                        val1 record1
+                                    let cf8 ←
+                                      core.result.Result.Insts.CoreOpsTry.branch
+                                        r8
+                                    match cf8 with
+                                    |
+                                      core.ops.control_flow.ControlFlow.Continue
+                                      val4 =>
+                                      let r9 ←
+                                        source.procedures.ProcedureLibrary.validate_record
+                                          val4 policy true
+                                      let cf9 ←
+                                        core.result.Result.Insts.CoreOpsTry.branch
+                                          r9
+                                      match cf9 with
+                                      |
+                                        core.ops.control_flow.ControlFlow.Continue
+                                        _ =>
+                                        let b7 ←
+                                          source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
+                                            val1 val4
+                                        if b7
+                                        then
+                                          ok (core.result.Result.Ok
+                                            val4.procedure_id, self)
+                                        else
+                                          let (s5, deref_mut_back1) ←
+                                            lift (alloc.vec.Vec.deref_mut
+                                              candidate_records1)
+                                          let (o2, get_mut_back) ←
+                                            core.slice.Slice.get_mut
+                                              (core.slice.index.SliceIndexUsizeSlice
+                                              source.procedures.ProcedureRecord)
+                                              s5 existing_index
+                                          let s6 ←
+                                            match o2 with
+                                            | none => ok (get_mut_back none)
+                                            | some _ =>
+                                              ok (get_mut_back (some val4))
+                                          let candidate_records2 :=
+                                            deref_mut_back1 s6
+                                          let (s7, deref_mut_back2) ←
+                                            lift (alloc.vec.Vec.deref_mut
+                                              candidate_records2)
+                                          let (r10, s8) ←
+                                            source.procedures.ProcedureLibrary.canonicalize_evidence
+                                              s7
+                                          let cf10 ←
+                                            core.result.Result.Insts.CoreOpsTry.branch
+                                              r10
+                                          match cf10 with
+                                          |
+                                            core.ops.control_flow.ControlFlow.Continue
+                                            _ =>
+                                            let candidate_records3 :=
+                                              deref_mut_back2 s8
+                                            let (s9, deref_mut_back3) ←
+                                              lift (alloc.vec.Vec.deref_mut
+                                                candidate_records3)
+                                            let s10 ←
+                                              alloc.slice.Slice.sort_by
+                                                source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                                s9 ()
+                                            let o3 ←
+                                              lift (U32.checked_add
+                                                self.current_generation 1#u32)
+                                            let r11 ←
+                                              core.option.Option.ok_or_else
+                                                source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                                o3 ()
+                                            let cf11 ←
+                                              core.result.Result.Insts.CoreOpsTry.branch
+                                                r11
+                                            match cf11 with
+                                            |
+                                              core.ops.control_flow.ControlFlow.Continue
+                                              val5 =>
+                                              let i :=
+                                                alloc.vec.Vec.len
+                                                  self.generations
+                                              if i >=
+                                                source.procedures.MAX_GENERATIONS
+                                              then
+                                                let r12 ←
+                                                  source.procedures.Refusal.new
+                                                    source.procedures.RefusalKind.Exhausted
+                                                    {
+                                                      field :=
+                                                        (toStr "generations"),
+                                                      message :=
+                                                        (toStr
+                                                          "retained generation limit reached")
+                                                    }
+                                                ok (core.result.Result.Err r12,
+                                                  self)
+                                              else
+                                                let candidate_records4 :=
+                                                  deref_mut_back3 s10
+                                                let s11 :=
+                                                  alloc.vec.Vec.deref
+                                                    candidate_records4
+                                                let r12 ←
+                                                  source.procedures.ProcedureLibrary.rebuild_chunks
+                                                    «namespace»
+                                                    self.chunk_revision s11
+                                                let cf12 ←
+                                                  core.result.Result.Insts.CoreOpsTry.branch
+                                                    r12
+                                                match cf12 with
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Continue
+                                                  val6 =>
+                                                  let a ←
+                                                    source.chunks.Library.impl.revision
+                                                      val6
+                                                  let r13 ←
+                                                    source.procedures.ProcedureLibrary.snapshot
+                                                      {
+                                                        generation := val5,
+                                                        parent_generation :=
+                                                          (some
+                                                            self.current_generation),
+                                                        rollback_of := none,
+                                                        kind :=
+                                                          source.procedures.GenerationKind.Publish
+                                                      } a candidate_records4
+                                                  let cf13 ←
+                                                    core.result.Result.Insts.CoreOpsTry.branch
+                                                      r13
+                                                  match cf13 with
+                                                  |
+                                                    core.ops.control_flow.ControlFlow.Continue
+                                                    val7 =>
+                                                    let candidate_generations
+                                                      ←
+                                                      alloc.vec.CloneVec.clone
+                                                        source.procedures.Snapshot.Insts.CoreCloneClone
+                                                        self.generations
+                                                    let candidate_generations1
+                                                      ←
+                                                      alloc.vec.Vec.push
+                                                        candidate_generations
+                                                        val7
+                                                    let s12 :=
+                                                      alloc.vec.Vec.deref
+                                                        candidate_generations1
+                                                    let r14 ←
+                                                      source.procedures.persistence.encode_parts
+                                                        self.chunk_revision s12
+                                                        val5
+                                                    let cf14 ←
+                                                      core.result.Result.Insts.CoreOpsTry.branch
+                                                        r14
+                                                    match cf14 with
+                                                    |
+                                                      core.ops.control_flow.ControlFlow.Continue
+                                                      val8 =>
+                                                      let i1 :=
+                                                        alloc.vec.Vec.len val8
+                                                      if i1 >
+                                                        source.procedures.MAX_STORAGE_BYTES
+                                                      then
+                                                        let r15 ←
+                                                          source.procedures.Refusal.new
+                                                            source.procedures.RefusalKind.Exhausted
+                                                            {
+                                                              field :=
+                                                                (toStr
+                                                                  "library.bytes"),
+                                                              message :=
+                                                                (toStr
+                                                                  "append-only procedure generations exceed the retained storage bound")
+                                                            }
+                                                        ok
+                                                          (core.result.Result.Err
+                                                          r15, self)
+                                                      else
+                                                        ok
+                                                          (core.result.Result.Ok
+                                                          record.procedure_id,
+                                                          {
+                                                            self
+                                                              with
+                                                              chunk_library :=
+                                                                val6,
+                                                              generations :=
+                                                                candidate_generations1,
+                                                              current_generation :=
+                                                                val5
+                                                          })
+                                                    |
+                                                      core.ops.control_flow.ControlFlow.Break
+                                                      residual =>
+                                                      let r15 ←
+                                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                          (Array Std.U8
+                                                          32#usize)
+                                                          (core.convert.FromSame
+                                                          source.procedures.Refusal)
+                                                          residual
+                                                      ok (r15, self)
+                                                  |
+                                                    core.ops.control_flow.ControlFlow.Break
+                                                    residual =>
+                                                    let r14 ←
+                                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                        (Array Std.U8 32#usize)
+                                                        (core.convert.FromSame
+                                                        source.procedures.Refusal)
+                                                        residual
+                                                    ok (r14, self)
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Break
+                                                  residual =>
+                                                  let r13 ←
+                                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                      (Array Std.U8 32#usize)
+                                                      (core.convert.FromSame
+                                                      source.procedures.Refusal)
+                                                      residual
+                                                  ok (r13, self)
+                                            |
+                                              core.ops.control_flow.ControlFlow.Break
+                                              residual =>
+                                              let r12 ←
+                                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                  (Array Std.U8 32#usize)
+                                                  (core.convert.FromSame
+                                                  source.procedures.Refusal)
+                                                  residual
+                                              ok (r12, self)
+                                          |
+                                            core.ops.control_flow.ControlFlow.Break
+                                            residual =>
+                                            let r11 ←
+                                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                (Array Std.U8 32#usize)
+                                                (core.convert.FromSame
+                                                source.procedures.Refusal)
+                                                residual
+                                            ok (r11, self)
+                                      | core.ops.control_flow.ControlFlow.Break
+                                        residual =>
+                                        let r10 ←
+                                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                            (Array Std.U8 32#usize)
+                                            (core.convert.FromSame
+                                            source.procedures.Refusal) residual
+                                        ok (r10, self)
+                                    | core.ops.control_flow.ControlFlow.Break
+                                      residual =>
+                                      let r9 ←
+                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                          (Array Std.U8 32#usize)
+                                          (core.convert.FromSame
+                                          source.procedures.Refusal) residual
+                                      ok (r9, self)
+                                else
+                                  let r8 ←
+                                    source.procedures.ProcedureLibrary.merge_state
+                                      val1 record1
+                                  let cf8 ←
+                                    core.result.Result.Insts.CoreOpsTry.branch
+                                      r8
+                                  match cf8 with
+                                  | core.ops.control_flow.ControlFlow.Continue
+                                    val4 =>
+                                    let r9 ←
+                                      source.procedures.ProcedureLibrary.validate_record
+                                        val4 policy true
+                                    let cf9 ←
+                                      core.result.Result.Insts.CoreOpsTry.branch
+                                        r9
+                                    match cf9 with
+                                    |
+                                      core.ops.control_flow.ControlFlow.Continue
+                                      _ =>
+                                      let b6 ←
+                                        source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
+                                          val1 val4
+                                      if b6
+                                      then
+                                        ok (core.result.Result.Ok
+                                          val4.procedure_id, self)
+                                      else
+                                        let (s5, deref_mut_back1) ←
+                                          lift (alloc.vec.Vec.deref_mut
+                                            candidate_records1)
+                                        let (o2, get_mut_back) ←
+                                          core.slice.Slice.get_mut
+                                            (core.slice.index.SliceIndexUsizeSlice
+                                            source.procedures.ProcedureRecord)
+                                            s5 existing_index
+                                        let s6 ←
+                                          match o2 with
+                                          | none => ok (get_mut_back none)
+                                          | some _ =>
+                                            ok (get_mut_back (some val4))
+                                        let candidate_records2 :=
+                                          deref_mut_back1 s6
+                                        let (s7, deref_mut_back2) ←
+                                          lift (alloc.vec.Vec.deref_mut
+                                            candidate_records2)
+                                        let (r10, s8) ←
+                                          source.procedures.ProcedureLibrary.canonicalize_evidence
+                                            s7
+                                        let cf10 ←
+                                          core.result.Result.Insts.CoreOpsTry.branch
+                                            r10
+                                        match cf10 with
+                                        |
+                                          core.ops.control_flow.ControlFlow.Continue
+                                          _ =>
+                                          let candidate_records3 :=
+                                            deref_mut_back2 s8
+                                          let (s9, deref_mut_back3) ←
+                                            lift (alloc.vec.Vec.deref_mut
+                                              candidate_records3)
+                                          let s10 ←
+                                            alloc.slice.Slice.sort_by
+                                              source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                              s9 ()
+                                          let o3 ←
+                                            lift (U32.checked_add
+                                              self.current_generation 1#u32)
+                                          let r11 ←
+                                            core.option.Option.ok_or_else
+                                              source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                              o3 ()
+                                          let cf11 ←
+                                            core.result.Result.Insts.CoreOpsTry.branch
+                                              r11
+                                          match cf11 with
+                                          |
+                                            core.ops.control_flow.ControlFlow.Continue
+                                            val5 =>
+                                            let i :=
+                                              alloc.vec.Vec.len
+                                                self.generations
+                                            if i >=
+                                              source.procedures.MAX_GENERATIONS
+                                            then
+                                              let r12 ←
+                                                source.procedures.Refusal.new
+                                                  source.procedures.RefusalKind.Exhausted
+                                                  {
+                                                    field :=
+                                                      (toStr "generations"),
+                                                    message :=
+                                                      (toStr
+                                                        "retained generation limit reached")
+                                                  }
+                                              ok (core.result.Result.Err r12,
+                                                self)
+                                            else
+                                              let candidate_records4 :=
+                                                deref_mut_back3 s10
+                                              let s11 :=
+                                                alloc.vec.Vec.deref
+                                                  candidate_records4
+                                              let r12 ←
+                                                source.procedures.ProcedureLibrary.rebuild_chunks
+                                                  «namespace»
+                                                  self.chunk_revision s11
+                                              let cf12 ←
+                                                core.result.Result.Insts.CoreOpsTry.branch
+                                                  r12
+                                              match cf12 with
+                                              |
+                                                core.ops.control_flow.ControlFlow.Continue
+                                                val6 =>
+                                                let a ←
+                                                  source.chunks.Library.impl.revision
+                                                    val6
+                                                let r13 ←
+                                                  source.procedures.ProcedureLibrary.snapshot
+                                                    {
+                                                      generation := val5,
+                                                      parent_generation :=
+                                                        (some
+                                                          self.current_generation),
+                                                      rollback_of := none,
+                                                      kind :=
+                                                        source.procedures.GenerationKind.Publish
+                                                    } a candidate_records4
+                                                let cf13 ←
+                                                  core.result.Result.Insts.CoreOpsTry.branch
+                                                    r13
+                                                match cf13 with
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Continue
+                                                  val7 =>
+                                                  let candidate_generations ←
+                                                    alloc.vec.CloneVec.clone
+                                                      source.procedures.Snapshot.Insts.CoreCloneClone
+                                                      self.generations
+                                                  let candidate_generations1
+                                                    ←
+                                                    alloc.vec.Vec.push
+                                                      candidate_generations
+                                                      val7
+                                                  let s12 :=
+                                                    alloc.vec.Vec.deref
+                                                      candidate_generations1
+                                                  let r14 ←
+                                                    source.procedures.persistence.encode_parts
+                                                      self.chunk_revision s12
+                                                      val5
+                                                  let cf14 ←
+                                                    core.result.Result.Insts.CoreOpsTry.branch
+                                                      r14
+                                                  match cf14 with
+                                                  |
+                                                    core.ops.control_flow.ControlFlow.Continue
+                                                    val8 =>
+                                                    let i1 :=
+                                                      alloc.vec.Vec.len val8
+                                                    if i1 >
+                                                      source.procedures.MAX_STORAGE_BYTES
+                                                    then
+                                                      let r15 ←
+                                                        source.procedures.Refusal.new
+                                                          source.procedures.RefusalKind.Exhausted
+                                                          {
+                                                            field :=
+                                                              (toStr
+                                                                "library.bytes"),
+                                                            message :=
+                                                              (toStr
+                                                                "append-only procedure generations exceed the retained storage bound")
+                                                          }
+                                                      ok
+                                                        (core.result.Result.Err
+                                                        r15, self)
+                                                    else
+                                                      ok (core.result.Result.Ok
+                                                        record.procedure_id,
+                                                        {
+                                                          self
+                                                            with
+                                                            chunk_library :=
+                                                              val6,
+                                                            generations :=
+                                                              candidate_generations1,
+                                                            current_generation :=
+                                                              val5
+                                                        })
+                                                  |
+                                                    core.ops.control_flow.ControlFlow.Break
+                                                    residual =>
+                                                    let r15 ←
+                                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                        (Array Std.U8 32#usize)
+                                                        (core.convert.FromSame
+                                                        source.procedures.Refusal)
+                                                        residual
+                                                    ok (r15, self)
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Break
+                                                  residual =>
+                                                  let r14 ←
+                                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                      (Array Std.U8 32#usize)
+                                                      (core.convert.FromSame
+                                                      source.procedures.Refusal)
+                                                      residual
+                                                  ok (r14, self)
+                                              |
+                                                core.ops.control_flow.ControlFlow.Break
+                                                residual =>
+                                                let r13 ←
+                                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                    (Array Std.U8 32#usize)
+                                                    (core.convert.FromSame
+                                                    source.procedures.Refusal)
+                                                    residual
+                                                ok (r13, self)
+                                          |
+                                            core.ops.control_flow.ControlFlow.Break
+                                            residual =>
+                                            let r12 ←
+                                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                (Array Std.U8 32#usize)
+                                                (core.convert.FromSame
+                                                source.procedures.Refusal)
+                                                residual
+                                            ok (r12, self)
+                                        |
+                                          core.ops.control_flow.ControlFlow.Break
+                                          residual =>
+                                          let r11 ←
+                                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                              (Array Std.U8 32#usize)
+                                              (core.convert.FromSame
+                                              source.procedures.Refusal)
+                                              residual
+                                          ok (r11, self)
+                                    | core.ops.control_flow.ControlFlow.Break
+                                      residual =>
+                                      let r10 ←
+                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                          (Array Std.U8 32#usize)
+                                          (core.convert.FromSame
+                                          source.procedures.Refusal) residual
+                                      ok (r10, self)
+                                  | core.ops.control_flow.ControlFlow.Break
+                                    residual =>
+                                    let r9 ←
+                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                        (Array Std.U8 32#usize)
+                                        (core.convert.FromSame
+                                        source.procedures.Refusal) residual
+                                    ok (r9, self)
+                            else
+                              let b4 ←
+                                source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq
+                                  val1.status
+                                  source.procedures.Status.Superseded
+                              if b4
+                              then
+                                let b5 ←
+                                  core.cmp.PartialEq.ne.trait_default
+                                    source.procedures.Status.Insts.CoreCmpPartialEqStatus
+                                    record1.status
+                                    source.procedures.Status.Superseded
+                                if b5
+                                then
+                                  let r8 ←
+                                    source.procedures.Refusal.new
+                                      source.procedures.RefusalKind.StaleContext
+                                      {
+                                        field := (toStr "status"),
+                                        message :=
+                                          (toStr
+                                            "a superseded record cannot be silently reactivated")
+                                      }
+                                  ok (core.result.Result.Err r8, self)
+                                else
+                                  let r8 ←
+                                    source.procedures.ProcedureLibrary.merge_state
+                                      val1 record1
+                                  let cf8 ←
+                                    core.result.Result.Insts.CoreOpsTry.branch
+                                      r8
+                                  match cf8 with
+                                  | core.ops.control_flow.ControlFlow.Continue
+                                    val4 =>
+                                    let r9 ←
+                                      source.procedures.ProcedureLibrary.validate_record
+                                        val4 policy true
+                                    let cf9 ←
+                                      core.result.Result.Insts.CoreOpsTry.branch
+                                        r9
+                                    match cf9 with
+                                    |
+                                      core.ops.control_flow.ControlFlow.Continue
+                                      _ =>
+                                      let b6 ←
+                                        source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
+                                          val1 val4
+                                      if b6
+                                      then
+                                        ok (core.result.Result.Ok
+                                          val4.procedure_id, self)
+                                      else
+                                        let (s5, deref_mut_back1) ←
+                                          lift (alloc.vec.Vec.deref_mut
+                                            candidate_records1)
+                                        let (o2, get_mut_back) ←
+                                          core.slice.Slice.get_mut
+                                            (core.slice.index.SliceIndexUsizeSlice
+                                            source.procedures.ProcedureRecord)
+                                            s5 existing_index
+                                        let s6 ←
+                                          match o2 with
+                                          | none => ok (get_mut_back none)
+                                          | some _ =>
+                                            ok (get_mut_back (some val4))
+                                        let candidate_records2 :=
+                                          deref_mut_back1 s6
+                                        let (s7, deref_mut_back2) ←
+                                          lift (alloc.vec.Vec.deref_mut
+                                            candidate_records2)
+                                        let (r10, s8) ←
+                                          source.procedures.ProcedureLibrary.canonicalize_evidence
+                                            s7
+                                        let cf10 ←
+                                          core.result.Result.Insts.CoreOpsTry.branch
+                                            r10
+                                        match cf10 with
+                                        |
+                                          core.ops.control_flow.ControlFlow.Continue
+                                          _ =>
+                                          let candidate_records3 :=
+                                            deref_mut_back2 s8
+                                          let (s9, deref_mut_back3) ←
+                                            lift (alloc.vec.Vec.deref_mut
+                                              candidate_records3)
+                                          let s10 ←
+                                            alloc.slice.Slice.sort_by
+                                              source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                              s9 ()
+                                          let o3 ←
+                                            lift (U32.checked_add
+                                              self.current_generation 1#u32)
+                                          let r11 ←
+                                            core.option.Option.ok_or_else
+                                              source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                              o3 ()
+                                          let cf11 ←
+                                            core.result.Result.Insts.CoreOpsTry.branch
+                                              r11
+                                          match cf11 with
+                                          |
+                                            core.ops.control_flow.ControlFlow.Continue
+                                            val5 =>
+                                            let i :=
+                                              alloc.vec.Vec.len
+                                                self.generations
+                                            if i >=
+                                              source.procedures.MAX_GENERATIONS
+                                            then
+                                              let r12 ←
+                                                source.procedures.Refusal.new
+                                                  source.procedures.RefusalKind.Exhausted
+                                                  {
+                                                    field :=
+                                                      (toStr "generations"),
+                                                    message :=
+                                                      (toStr
+                                                        "retained generation limit reached")
+                                                  }
+                                              ok (core.result.Result.Err r12,
+                                                self)
+                                            else
+                                              let candidate_records4 :=
+                                                deref_mut_back3 s10
+                                              let s11 :=
+                                                alloc.vec.Vec.deref
+                                                  candidate_records4
+                                              let r12 ←
+                                                source.procedures.ProcedureLibrary.rebuild_chunks
+                                                  «namespace»
+                                                  self.chunk_revision s11
+                                              let cf12 ←
+                                                core.result.Result.Insts.CoreOpsTry.branch
+                                                  r12
+                                              match cf12 with
+                                              |
+                                                core.ops.control_flow.ControlFlow.Continue
+                                                val6 =>
+                                                let a ←
+                                                  source.chunks.Library.impl.revision
+                                                    val6
+                                                let r13 ←
+                                                  source.procedures.ProcedureLibrary.snapshot
+                                                    {
+                                                      generation := val5,
+                                                      parent_generation :=
+                                                        (some
+                                                          self.current_generation),
+                                                      rollback_of := none,
+                                                      kind :=
+                                                        source.procedures.GenerationKind.Publish
+                                                    } a candidate_records4
+                                                let cf13 ←
+                                                  core.result.Result.Insts.CoreOpsTry.branch
+                                                    r13
+                                                match cf13 with
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Continue
+                                                  val7 =>
+                                                  let candidate_generations ←
+                                                    alloc.vec.CloneVec.clone
+                                                      source.procedures.Snapshot.Insts.CoreCloneClone
+                                                      self.generations
+                                                  let candidate_generations1
+                                                    ←
+                                                    alloc.vec.Vec.push
+                                                      candidate_generations
+                                                      val7
+                                                  let s12 :=
+                                                    alloc.vec.Vec.deref
+                                                      candidate_generations1
+                                                  let r14 ←
+                                                    source.procedures.persistence.encode_parts
+                                                      self.chunk_revision s12
+                                                      val5
+                                                  let cf14 ←
+                                                    core.result.Result.Insts.CoreOpsTry.branch
+                                                      r14
+                                                  match cf14 with
+                                                  |
+                                                    core.ops.control_flow.ControlFlow.Continue
+                                                    val8 =>
+                                                    let i1 :=
+                                                      alloc.vec.Vec.len val8
+                                                    if i1 >
+                                                      source.procedures.MAX_STORAGE_BYTES
+                                                    then
+                                                      let r15 ←
+                                                        source.procedures.Refusal.new
+                                                          source.procedures.RefusalKind.Exhausted
+                                                          {
+                                                            field :=
+                                                              (toStr
+                                                                "library.bytes"),
+                                                            message :=
+                                                              (toStr
+                                                                "append-only procedure generations exceed the retained storage bound")
+                                                          }
+                                                      ok
+                                                        (core.result.Result.Err
+                                                        r15, self)
+                                                    else
+                                                      ok (core.result.Result.Ok
+                                                        record.procedure_id,
+                                                        {
+                                                          self
+                                                            with
+                                                            chunk_library :=
+                                                              val6,
+                                                            generations :=
+                                                              candidate_generations1,
+                                                            current_generation :=
+                                                              val5
+                                                        })
+                                                  |
+                                                    core.ops.control_flow.ControlFlow.Break
+                                                    residual =>
+                                                    let r15 ←
+                                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                        (Array Std.U8 32#usize)
+                                                        (core.convert.FromSame
+                                                        source.procedures.Refusal)
+                                                        residual
+                                                    ok (r15, self)
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Break
+                                                  residual =>
+                                                  let r14 ←
+                                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                      (Array Std.U8 32#usize)
+                                                      (core.convert.FromSame
+                                                      source.procedures.Refusal)
+                                                      residual
+                                                  ok (r14, self)
+                                              |
+                                                core.ops.control_flow.ControlFlow.Break
+                                                residual =>
+                                                let r13 ←
+                                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                    (Array Std.U8 32#usize)
+                                                    (core.convert.FromSame
+                                                    source.procedures.Refusal)
+                                                    residual
+                                                ok (r13, self)
+                                          |
+                                            core.ops.control_flow.ControlFlow.Break
+                                            residual =>
+                                            let r12 ←
+                                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                (Array Std.U8 32#usize)
+                                                (core.convert.FromSame
+                                                source.procedures.Refusal)
+                                                residual
+                                            ok (r12, self)
+                                        |
+                                          core.ops.control_flow.ControlFlow.Break
+                                          residual =>
+                                          let r11 ←
+                                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                              (Array Std.U8 32#usize)
+                                              (core.convert.FromSame
+                                              source.procedures.Refusal)
+                                              residual
+                                          ok (r11, self)
+                                    | core.ops.control_flow.ControlFlow.Break
+                                      residual =>
+                                      let r10 ←
+                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                          (Array Std.U8 32#usize)
+                                          (core.convert.FromSame
+                                          source.procedures.Refusal) residual
+                                      ok (r10, self)
+                                  | core.ops.control_flow.ControlFlow.Break
+                                    residual =>
+                                    let r9 ←
+                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                        (Array Std.U8 32#usize)
+                                        (core.convert.FromSame
+                                        source.procedures.Refusal) residual
+                                    ok (r9, self)
+                              else
+                                let r8 ←
+                                  source.procedures.ProcedureLibrary.merge_state
+                                    val1 record1
+                                let cf8 ←
+                                  core.result.Result.Insts.CoreOpsTry.branch r8
+                                match cf8 with
+                                | core.ops.control_flow.ControlFlow.Continue
+                                  val4 =>
+                                  let r9 ←
+                                    source.procedures.ProcedureLibrary.validate_record
+                                      val4 policy true
+                                  let cf9 ←
+                                    core.result.Result.Insts.CoreOpsTry.branch
+                                      r9
+                                  match cf9 with
+                                  | core.ops.control_flow.ControlFlow.Continue
+                                    _ =>
+                                    let b5 ←
+                                      source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
+                                        val1 val4
+                                    if b5
+                                    then
+                                      ok (core.result.Result.Ok
+                                        val4.procedure_id, self)
+                                    else
+                                      let (s5, deref_mut_back1) ←
+                                        lift (alloc.vec.Vec.deref_mut
+                                          candidate_records1)
+                                      let (o2, get_mut_back) ←
+                                        core.slice.Slice.get_mut
+                                          (core.slice.index.SliceIndexUsizeSlice
+                                          source.procedures.ProcedureRecord) s5
+                                          existing_index
+                                      let s6 ←
+                                        match o2 with
+                                        | none => ok (get_mut_back none)
+                                        | some _ =>
+                                          ok (get_mut_back (some val4))
+                                      let candidate_records2 :=
+                                        deref_mut_back1 s6
+                                      let (s7, deref_mut_back2) ←
+                                        lift (alloc.vec.Vec.deref_mut
+                                          candidate_records2)
+                                      let (r10, s8) ←
+                                        source.procedures.ProcedureLibrary.canonicalize_evidence
+                                          s7
+                                      let cf10 ←
+                                        core.result.Result.Insts.CoreOpsTry.branch
+                                          r10
+                                      match cf10 with
+                                      |
+                                        core.ops.control_flow.ControlFlow.Continue
+                                        _ =>
+                                        let candidate_records3 :=
+                                          deref_mut_back2 s8
+                                        let (s9, deref_mut_back3) ←
+                                          lift (alloc.vec.Vec.deref_mut
+                                            candidate_records3)
+                                        let s10 ←
+                                          alloc.slice.Slice.sort_by
+                                            source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                            s9 ()
+                                        let o3 ←
+                                          lift (U32.checked_add
+                                            self.current_generation 1#u32)
+                                        let r11 ←
+                                          core.option.Option.ok_or_else
+                                            source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                            o3 ()
+                                        let cf11 ←
+                                          core.result.Result.Insts.CoreOpsTry.branch
+                                            r11
+                                        match cf11 with
+                                        |
+                                          core.ops.control_flow.ControlFlow.Continue
+                                          val5 =>
+                                          let i :=
+                                            alloc.vec.Vec.len self.generations
+                                          if i >=
+                                            source.procedures.MAX_GENERATIONS
+                                          then
+                                            let r12 ←
+                                              source.procedures.Refusal.new
+                                                source.procedures.RefusalKind.Exhausted
+                                                {
+                                                  field :=
+                                                    (toStr "generations"),
+                                                  message :=
+                                                    (toStr
+                                                      "retained generation limit reached")
+                                                }
+                                            ok (core.result.Result.Err r12,
+                                              self)
+                                          else
+                                            let candidate_records4 :=
+                                              deref_mut_back3 s10
+                                            let s11 :=
+                                              alloc.vec.Vec.deref
+                                                candidate_records4
+                                            let r12 ←
+                                              source.procedures.ProcedureLibrary.rebuild_chunks
+                                                «namespace»
+                                                self.chunk_revision s11
+                                            let cf12 ←
+                                              core.result.Result.Insts.CoreOpsTry.branch
+                                                r12
+                                            match cf12 with
+                                            |
+                                              core.ops.control_flow.ControlFlow.Continue
+                                              val6 =>
+                                              let a ←
+                                                source.chunks.Library.impl.revision
+                                                  val6
+                                              let r13 ←
+                                                source.procedures.ProcedureLibrary.snapshot
+                                                  {
+                                                    generation := val5,
+                                                    parent_generation :=
+                                                      (some
+                                                        self.current_generation),
+                                                    rollback_of := none,
+                                                    kind :=
+                                                      source.procedures.GenerationKind.Publish
+                                                  } a candidate_records4
+                                              let cf13 ←
+                                                core.result.Result.Insts.CoreOpsTry.branch
+                                                  r13
+                                              match cf13 with
+                                              |
+                                                core.ops.control_flow.ControlFlow.Continue
+                                                val7 =>
+                                                let candidate_generations ←
+                                                  alloc.vec.CloneVec.clone
+                                                    source.procedures.Snapshot.Insts.CoreCloneClone
+                                                    self.generations
+                                                let candidate_generations1 ←
+                                                  alloc.vec.Vec.push
+                                                    candidate_generations val7
+                                                let s12 :=
+                                                  alloc.vec.Vec.deref
+                                                    candidate_generations1
+                                                let r14 ←
+                                                  source.procedures.persistence.encode_parts
+                                                    self.chunk_revision s12
+                                                    val5
+                                                let cf14 ←
+                                                  core.result.Result.Insts.CoreOpsTry.branch
+                                                    r14
+                                                match cf14 with
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Continue
+                                                  val8 =>
+                                                  let i1 :=
+                                                    alloc.vec.Vec.len val8
+                                                  if i1 >
+                                                    source.procedures.MAX_STORAGE_BYTES
+                                                  then
+                                                    let r15 ←
+                                                      source.procedures.Refusal.new
+                                                        source.procedures.RefusalKind.Exhausted
+                                                        {
+                                                          field :=
+                                                            (toStr
+                                                              "library.bytes"),
+                                                          message :=
+                                                            (toStr
+                                                              "append-only procedure generations exceed the retained storage bound")
+                                                        }
+                                                    ok (core.result.Result.Err
+                                                      r15, self)
+                                                  else
+                                                    ok (core.result.Result.Ok
+                                                      record.procedure_id,
+                                                      {
+                                                        self
+                                                          with
+                                                          chunk_library := val6,
+                                                          generations :=
+                                                            candidate_generations1,
+                                                          current_generation :=
+                                                            val5
+                                                      })
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Break
+                                                  residual =>
+                                                  let r15 ←
+                                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                      (Array Std.U8 32#usize)
+                                                      (core.convert.FromSame
+                                                      source.procedures.Refusal)
+                                                      residual
+                                                  ok (r15, self)
+                                              |
+                                                core.ops.control_flow.ControlFlow.Break
+                                                residual =>
+                                                let r14 ←
+                                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                    (Array Std.U8 32#usize)
+                                                    (core.convert.FromSame
+                                                    source.procedures.Refusal)
+                                                    residual
+                                                ok (r14, self)
+                                            |
+                                              core.ops.control_flow.ControlFlow.Break
+                                              residual =>
+                                              let r13 ←
+                                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                  (Array Std.U8 32#usize)
+                                                  (core.convert.FromSame
+                                                  source.procedures.Refusal)
+                                                  residual
+                                              ok (r13, self)
+                                        |
+                                          core.ops.control_flow.ControlFlow.Break
+                                          residual =>
+                                          let r12 ←
+                                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                              (Array Std.U8 32#usize)
+                                              (core.convert.FromSame
+                                              source.procedures.Refusal)
+                                              residual
+                                          ok (r12, self)
+                                      | core.ops.control_flow.ControlFlow.Break
+                                        residual =>
+                                        let r11 ←
+                                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                            (Array Std.U8 32#usize)
+                                            (core.convert.FromSame
+                                            source.procedures.Refusal) residual
+                                        ok (r11, self)
+                                  | core.ops.control_flow.ControlFlow.Break
+                                    residual =>
+                                    let r10 ←
+                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                        (Array Std.U8 32#usize)
+                                        (core.convert.FromSame
+                                        source.procedures.Refusal) residual
+                                    ok (r10, self)
+                                | core.ops.control_flow.ControlFlow.Break
+                                  residual =>
+                                  let r9 ←
+                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                      (Array Std.U8 32#usize)
+                                      (core.convert.FromSame
+                                      source.procedures.Refusal) residual
+                                  ok (r9, self)
                       | core.ops.control_flow.ControlFlow.Break residual =>
-                        let r5 ←
+                        let r8 ←
                           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                             (Array Std.U8 32#usize) (core.convert.FromSame
                             source.procedures.Refusal) residual
-                        ok (r5, self)
+                        ok (r8, self)
+                    | core.ops.control_flow.ControlFlow.Break residual =>
+                      let r7 ←
+                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                          (Array Std.U8 32#usize) (core.convert.FromSame
+                          source.procedures.Refusal) residual
+                      ok (r7, self)
+                  | core.ops.control_flow.ControlFlow.Break residual =>
+                    let r6 ←
+                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                        (Array Std.U8 32#usize) (core.convert.FromSame
+                        source.procedures.Refusal) residual
+                    ok (r6, self)
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r5 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    (Array Std.U8 32#usize) (core.convert.FromSame
+                    source.procedures.Refusal) residual
+                ok (r5, self)
+            else
+              match existing_position with
+              | none =>
+                let i := alloc.vec.Vec.len candidate_records
+                if i >= source.procedures.MAX_RECORDS
+                then
+                  let r4 ←
+                    source.procedures.Refusal.new
+                      source.procedures.RefusalKind.Exhausted
+                      {
+                        field := (toStr "library.entries"),
+                        message := (toStr "procedure record limit reached")
+                      }
+                  ok (core.result.Result.Err r4, self)
+                else
+                  let b1 ←
+                    source.procedures.Producer.Insts.CoreCmpPartialEqProducer.eq
+                      record1.provenance.producer
+                      source.procedures.Producer.Composition
+                  if b1
+                  then
+                    let s2 := alloc.vec.Vec.deref candidate_records
+                    let o1 ←
+                      scan.find_first
+                        source.procedures.ProcedureLibrary.admit_state.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2ProcedureRecordBool
+                        s2 (record1.chunk.chunk_id,
+                        record1.library_dependencies)
+                    let b2 := core.option.Option.is_some o1
+                    if b2
+                    then
+                      let r4 ←
+                        source.procedures.Refusal.new
+                          source.procedures.RefusalKind.DuplicateEntry
+                          {
+                            field := (toStr "library_dependencies"),
+                            message :=
+                              (toStr
+                                "composition restates an existing derivation")
+                          }
+                      ok (core.result.Result.Err r4, self)
                     else
-                      let b3 := core.option.Option.is_some record1.supersedes
-                      if b3
+                      if replacement
                       then
-                        let r4 ←
-                          source.procedures.Refusal.new
-                            source.procedures.RefusalKind.Invalid
-                            {
-                              field := (toStr "supersedes"),
-                              message :=
-                                (toStr
-                                  "replacement references require the atomic replace operation")
-                            }
-                        ok (core.result.Result.Err r4, self)
-                      else
                         let s3 := alloc.vec.Vec.deref candidate_records
                         let r4 ←
                           source.procedures.ProcedureLibrary.check_dependencies
@@ -195627,203 +198059,203 @@ def source.procedures.ProcedureLibrary.admit_state
                               (Array Std.U8 32#usize) (core.convert.FromSame
                               source.procedures.Refusal) residual
                           ok (r5, self)
-                else
-                  if replacement
-                  then
-                    let (s2, deref_mut_back) ←
-                      lift (alloc.vec.Vec.deref_mut candidate_records)
-                    let (r4, s3) ←
-                      source.procedures.ProcedureLibrary.supersede_existing s2
-                        record1.supersedes
-                    let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-                    match cf4 with
-                    | core.ops.control_flow.ControlFlow.Continue _ =>
-                      let candidate_records1 := deref_mut_back s3
-                      let s4 := alloc.vec.Vec.deref candidate_records1
-                      let r5 ←
-                        source.procedures.ProcedureLibrary.check_dependencies
-                          s4 record1
-                      let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
-                      match cf5 with
-                      | core.ops.control_flow.ControlFlow.Continue _ =>
-                        let pr ←
-                          source.procedures.ProcedureRecord.Insts.CoreCloneClone.clone
-                            record1
-                        let candidate_records2 ←
-                          alloc.vec.Vec.push candidate_records1 pr
-                        let (s5, deref_mut_back1) ←
-                          lift (alloc.vec.Vec.deref_mut candidate_records2)
-                        let (r6, s6) ←
-                          source.procedures.ProcedureLibrary.canonicalize_evidence
-                            s5
-                        let cf6 ←
-                          core.result.Result.Insts.CoreOpsTry.branch r6
-                        match cf6 with
-                        | core.ops.control_flow.ControlFlow.Continue _ =>
-                          let candidate_records3 := deref_mut_back1 s6
-                          let (s7, deref_mut_back2) ←
-                            lift (alloc.vec.Vec.deref_mut candidate_records3)
-                          let s8 ←
-                            alloc.slice.Slice.sort_by
-                              source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
-                              s7 ()
-                          let o1 ←
-                            lift (U32.checked_add self.current_generation
-                              1#u32)
-                          let r7 ←
-                            core.option.Option.ok_or_else
-                              source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
-                              o1 ()
-                          let cf7 ←
-                            core.result.Result.Insts.CoreOpsTry.branch r7
-                          match cf7 with
-                          | core.ops.control_flow.ControlFlow.Continue val1 =>
-                            let i1 := alloc.vec.Vec.len self.generations
-                            if i1 >= source.procedures.MAX_GENERATIONS
-                            then
-                              let r8 ←
-                                source.procedures.Refusal.new
-                                  source.procedures.RefusalKind.Exhausted
-                                  {
-                                    field := (toStr "generations"),
-                                    message :=
-                                      (toStr
-                                        "retained generation limit reached")
-                                  }
-                              ok (core.result.Result.Err r8, self)
-                            else
-                              let candidate_records4 := deref_mut_back2 s8
-                              let s9 := alloc.vec.Vec.deref candidate_records4
-                              let r8 ←
-                                source.procedures.ProcedureLibrary.rebuild_chunks
-                                  «namespace» self.chunk_revision s9
-                              let cf8 ←
-                                core.result.Result.Insts.CoreOpsTry.branch r8
-                              match cf8 with
-                              | core.ops.control_flow.ControlFlow.Continue val2
+                      else
+                        let b3 := core.option.Option.is_some record1.supersedes
+                        if b3
+                        then
+                          let r4 ←
+                            source.procedures.Refusal.new
+                              source.procedures.RefusalKind.Invalid
+                              {
+                                field := (toStr "supersedes"),
+                                message :=
+                                  (toStr
+                                    "replacement references require the atomic replace operation")
+                              }
+                          ok (core.result.Result.Err r4, self)
+                        else
+                          let s3 := alloc.vec.Vec.deref candidate_records
+                          let r4 ←
+                            source.procedures.ProcedureLibrary.check_dependencies
+                              s3 record1
+                          let cf4 ←
+                            core.result.Result.Insts.CoreOpsTry.branch r4
+                          match cf4 with
+                          | core.ops.control_flow.ControlFlow.Continue _ =>
+                            let pr ←
+                              source.procedures.ProcedureRecord.Insts.CoreCloneClone.clone
+                                record1
+                            let candidate_records1 ←
+                              alloc.vec.Vec.push candidate_records pr
+                            let (s4, deref_mut_back) ←
+                              lift (alloc.vec.Vec.deref_mut candidate_records1)
+                            let (r5, s5) ←
+                              source.procedures.ProcedureLibrary.canonicalize_evidence
+                                s4
+                            let cf5 ←
+                              core.result.Result.Insts.CoreOpsTry.branch r5
+                            match cf5 with
+                            | core.ops.control_flow.ControlFlow.Continue _ =>
+                              let candidate_records2 := deref_mut_back s5
+                              let (s6, deref_mut_back1) ←
+                                lift (alloc.vec.Vec.deref_mut
+                                  candidate_records2)
+                              let s7 ←
+                                alloc.slice.Slice.sort_by
+                                  source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                  s6 ()
+                              let o2 ←
+                                lift (U32.checked_add self.current_generation
+                                  1#u32)
+                              let r6 ←
+                                core.option.Option.ok_or_else
+                                  source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                  o2 ()
+                              let cf6 ←
+                                core.result.Result.Insts.CoreOpsTry.branch r6
+                              match cf6 with
+                              | core.ops.control_flow.ControlFlow.Continue val1
                                 =>
-                                let a ←
-                                  source.chunks.Library.impl.revision val2
-                                let r9 ←
-                                  source.procedures.ProcedureLibrary.snapshot
-                                    {
-                                      generation := val1,
-                                      parent_generation :=
-                                        (some self.current_generation),
-                                      rollback_of := none,
-                                      kind :=
-                                        source.procedures.GenerationKind.Publish
-                                    } a candidate_records4
-                                let cf9 ←
-                                  core.result.Result.Insts.CoreOpsTry.branch r9
-                                match cf9 with
-                                | core.ops.control_flow.ControlFlow.Continue
-                                  val3 =>
-                                  let candidate_generations ←
-                                    alloc.vec.CloneVec.clone
-                                      source.procedures.Snapshot.Insts.CoreCloneClone
-                                      self.generations
-                                  let candidate_generations1 ←
-                                    alloc.vec.Vec.push candidate_generations
-                                      val3
-                                  let s10 :=
-                                    alloc.vec.Vec.deref candidate_generations1
-                                  let r10 ←
-                                    source.procedures.persistence.encode_parts
-                                      self.chunk_revision s10 val1
-                                  let cf10 ←
+                                let i1 := alloc.vec.Vec.len self.generations
+                                if i1 >= source.procedures.MAX_GENERATIONS
+                                then
+                                  let r7 ←
+                                    source.procedures.Refusal.new
+                                      source.procedures.RefusalKind.Exhausted
+                                      {
+                                        field := (toStr "generations"),
+                                        message :=
+                                          (toStr
+                                            "retained generation limit reached")
+                                      }
+                                  ok (core.result.Result.Err r7, self)
+                                else
+                                  let candidate_records3 := deref_mut_back1 s7
+                                  let s8 :=
+                                    alloc.vec.Vec.deref candidate_records3
+                                  let r7 ←
+                                    source.procedures.ProcedureLibrary.rebuild_chunks
+                                      «namespace» self.chunk_revision s8
+                                  let cf7 ←
                                     core.result.Result.Insts.CoreOpsTry.branch
-                                      r10
-                                  match cf10 with
+                                      r7
+                                  match cf7 with
                                   | core.ops.control_flow.ControlFlow.Continue
-                                    val4 =>
-                                    let i2 := alloc.vec.Vec.len val4
-                                    if i2 > source.procedures.MAX_STORAGE_BYTES
-                                    then
-                                      let r11 ←
-                                        source.procedures.Refusal.new
-                                          source.procedures.RefusalKind.Exhausted
-                                          {
-                                            field := (toStr "library.bytes"),
-                                            message :=
-                                              (toStr
-                                                "append-only procedure generations exceed the retained storage bound")
-                                          }
-                                      ok (core.result.Result.Err r11, self)
-                                    else
-                                      ok (core.result.Result.Ok
-                                        record.procedure_id,
+                                    val2 =>
+                                    let a ←
+                                      source.chunks.Library.impl.revision val2
+                                    let r8 ←
+                                      source.procedures.ProcedureLibrary.snapshot
                                         {
-                                          self
-                                            with
-                                            chunk_library := val2,
-                                            generations :=
-                                              candidate_generations1,
-                                            current_generation := val1
-                                        })
+                                          generation := val1,
+                                          parent_generation :=
+                                            (some self.current_generation),
+                                          rollback_of := none,
+                                          kind :=
+                                            source.procedures.GenerationKind.Publish
+                                        } a candidate_records3
+                                    let cf8 ←
+                                      core.result.Result.Insts.CoreOpsTry.branch
+                                        r8
+                                    match cf8 with
+                                    |
+                                      core.ops.control_flow.ControlFlow.Continue
+                                      val3 =>
+                                      let candidate_generations ←
+                                        alloc.vec.CloneVec.clone
+                                          source.procedures.Snapshot.Insts.CoreCloneClone
+                                          self.generations
+                                      let candidate_generations1 ←
+                                        alloc.vec.Vec.push
+                                          candidate_generations val3
+                                      let s9 :=
+                                        alloc.vec.Vec.deref
+                                          candidate_generations1
+                                      let r9 ←
+                                        source.procedures.persistence.encode_parts
+                                          self.chunk_revision s9 val1
+                                      let cf9 ←
+                                        core.result.Result.Insts.CoreOpsTry.branch
+                                          r9
+                                      match cf9 with
+                                      |
+                                        core.ops.control_flow.ControlFlow.Continue
+                                        val4 =>
+                                        let i2 := alloc.vec.Vec.len val4
+                                        if i2 >
+                                          source.procedures.MAX_STORAGE_BYTES
+                                        then
+                                          let r10 ←
+                                            source.procedures.Refusal.new
+                                              source.procedures.RefusalKind.Exhausted
+                                              {
+                                                field :=
+                                                  (toStr "library.bytes"),
+                                                message :=
+                                                  (toStr
+                                                    "append-only procedure generations exceed the retained storage bound")
+                                              }
+                                          ok (core.result.Result.Err r10, self)
+                                        else
+                                          ok (core.result.Result.Ok
+                                            record.procedure_id,
+                                            {
+                                              self
+                                                with
+                                                chunk_library := val2,
+                                                generations :=
+                                                  candidate_generations1,
+                                                current_generation := val1
+                                            })
+                                      | core.ops.control_flow.ControlFlow.Break
+                                        residual =>
+                                        let r10 ←
+                                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                            (Array Std.U8 32#usize)
+                                            (core.convert.FromSame
+                                            source.procedures.Refusal) residual
+                                        ok (r10, self)
+                                    | core.ops.control_flow.ControlFlow.Break
+                                      residual =>
+                                      let r9 ←
+                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                          (Array Std.U8 32#usize)
+                                          (core.convert.FromSame
+                                          source.procedures.Refusal) residual
+                                      ok (r9, self)
                                   | core.ops.control_flow.ControlFlow.Break
                                     residual =>
-                                    let r11 ←
+                                    let r8 ←
                                       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                         (Array Std.U8 32#usize)
                                         (core.convert.FromSame
                                         source.procedures.Refusal) residual
-                                    ok (r11, self)
-                                | core.ops.control_flow.ControlFlow.Break
-                                  residual =>
-                                  let r10 ←
-                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                      (Array Std.U8 32#usize)
-                                      (core.convert.FromSame
-                                      source.procedures.Refusal) residual
-                                  ok (r10, self)
+                                    ok (r8, self)
                               | core.ops.control_flow.ControlFlow.Break
                                 residual =>
-                                let r9 ←
+                                let r7 ←
                                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                     (Array Std.U8 32#usize)
                                     (core.convert.FromSame
                                     source.procedures.Refusal) residual
-                                ok (r9, self)
+                                ok (r7, self)
+                            | core.ops.control_flow.ControlFlow.Break residual
+                              =>
+                              let r6 ←
+                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                  (Array Std.U8 32#usize)
+                                  (core.convert.FromSame
+                                  source.procedures.Refusal) residual
+                              ok (r6, self)
                           | core.ops.control_flow.ControlFlow.Break residual =>
-                            let r8 ←
+                            let r5 ←
                               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                 (Array Std.U8 32#usize) (core.convert.FromSame
                                 source.procedures.Refusal) residual
-                            ok (r8, self)
-                        | core.ops.control_flow.ControlFlow.Break residual =>
-                          let r7 ←
-                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                              (Array Std.U8 32#usize) (core.convert.FromSame
-                              source.procedures.Refusal) residual
-                          ok (r7, self)
-                      | core.ops.control_flow.ControlFlow.Break residual =>
-                        let r6 ←
-                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                            (Array Std.U8 32#usize) (core.convert.FromSame
-                            source.procedures.Refusal) residual
-                        ok (r6, self)
-                    | core.ops.control_flow.ControlFlow.Break residual =>
-                      let r5 ←
-                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                          (Array Std.U8 32#usize) (core.convert.FromSame
-                          source.procedures.Refusal) residual
-                      ok (r5, self)
+                            ok (r5, self)
                   else
-                    let b2 := core.option.Option.is_some record1.supersedes
-                    if b2
+                    if replacement
                     then
-                      let r4 ←
-                        source.procedures.Refusal.new
-                          source.procedures.RefusalKind.Invalid
-                          {
-                            field := (toStr "supersedes"),
-                            message :=
-                              (toStr
-                                "replacement references require the atomic replace operation")
-                          }
-                      ok (core.result.Result.Err r4, self)
-                    else
                       let s2 := alloc.vec.Vec.deref candidate_records
                       let r4 ←
                         source.procedures.ProcedureLibrary.check_dependencies
@@ -195988,556 +198420,1892 @@ def source.procedures.ProcedureLibrary.admit_state
                             (Array Std.U8 32#usize) (core.convert.FromSame
                             source.procedures.Refusal) residual
                         ok (r5, self)
-            | some existing_index =>
-              let s2 := alloc.vec.Vec.deref candidate_records
-              let o1 ←
-                core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
-                  source.procedures.ProcedureRecord) s2 existing_index
-              let r4 ←
-                core.option.Option.ok_or_else
-                  source.procedures.ProcedureLibrary.admit_state.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal
-                  o1 ()
-              let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-              match cf4 with
-              | core.ops.control_flow.ControlFlow.Continue val1 =>
-                let r5 ← source.procedures.persistence.identity_bytes val1
-                let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
-                match cf5 with
-                | core.ops.control_flow.ControlFlow.Continue val2 =>
-                  let r6 ←
-                    source.procedures.persistence.identity_bytes record1
-                  let cf6 ← core.result.Result.Insts.CoreOpsTry.branch r6
-                  match cf6 with
-                  | core.ops.control_flow.ControlFlow.Continue val3 =>
-                    let b1 ←
-                      alloc.vec.partial_eq.PartialEqVec.ne core.cmp.PartialEqU8
-                        val2 val3
-                    if b1
-                    then
-                      let r7 ←
-                        source.procedures.Refusal.new
-                          source.procedures.RefusalKind.Invalid
-                          {
-                            field := (toStr "procedure_id"),
-                            message :=
-                              (toStr
-                                "identity collision between unequal immutable subjects")
-                          }
-                      ok (core.result.Result.Err r7, self)
                     else
-                      let b2 ←
-                        alloc.vec.partial_eq.PartialEqVec.ne
-                          source.procedures.LibraryDependency.Insts.CoreCmpPartialEqLibraryDependency
-                          val1.library_dependencies
-                          record1.library_dependencies
+                      let b2 := core.option.Option.is_some record1.supersedes
                       if b2
+                      then
+                        let r4 ←
+                          source.procedures.Refusal.new
+                            source.procedures.RefusalKind.Invalid
+                            {
+                              field := (toStr "supersedes"),
+                              message :=
+                                (toStr
+                                  "replacement references require the atomic replace operation")
+                            }
+                        ok (core.result.Result.Err r4, self)
+                      else
+                        let s2 := alloc.vec.Vec.deref candidate_records
+                        let r4 ←
+                          source.procedures.ProcedureLibrary.check_dependencies
+                            s2 record1
+                        let cf4 ←
+                          core.result.Result.Insts.CoreOpsTry.branch r4
+                        match cf4 with
+                        | core.ops.control_flow.ControlFlow.Continue _ =>
+                          let pr ←
+                            source.procedures.ProcedureRecord.Insts.CoreCloneClone.clone
+                              record1
+                          let candidate_records1 ←
+                            alloc.vec.Vec.push candidate_records pr
+                          let (s3, deref_mut_back) ←
+                            lift (alloc.vec.Vec.deref_mut candidate_records1)
+                          let (r5, s4) ←
+                            source.procedures.ProcedureLibrary.canonicalize_evidence
+                              s3
+                          let cf5 ←
+                            core.result.Result.Insts.CoreOpsTry.branch r5
+                          match cf5 with
+                          | core.ops.control_flow.ControlFlow.Continue _ =>
+                            let candidate_records2 := deref_mut_back s4
+                            let (s5, deref_mut_back1) ←
+                              lift (alloc.vec.Vec.deref_mut candidate_records2)
+                            let s6 ←
+                              alloc.slice.Slice.sort_by
+                                source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                s5 ()
+                            let o1 ←
+                              lift (U32.checked_add self.current_generation
+                                1#u32)
+                            let r6 ←
+                              core.option.Option.ok_or_else
+                                source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                o1 ()
+                            let cf6 ←
+                              core.result.Result.Insts.CoreOpsTry.branch r6
+                            match cf6 with
+                            | core.ops.control_flow.ControlFlow.Continue val1
+                              =>
+                              let i1 := alloc.vec.Vec.len self.generations
+                              if i1 >= source.procedures.MAX_GENERATIONS
+                              then
+                                let r7 ←
+                                  source.procedures.Refusal.new
+                                    source.procedures.RefusalKind.Exhausted
+                                    {
+                                      field := (toStr "generations"),
+                                      message :=
+                                        (toStr
+                                          "retained generation limit reached")
+                                    }
+                                ok (core.result.Result.Err r7, self)
+                              else
+                                let candidate_records3 := deref_mut_back1 s6
+                                let s7 :=
+                                  alloc.vec.Vec.deref candidate_records3
+                                let r7 ←
+                                  source.procedures.ProcedureLibrary.rebuild_chunks
+                                    «namespace» self.chunk_revision s7
+                                let cf7 ←
+                                  core.result.Result.Insts.CoreOpsTry.branch r7
+                                match cf7 with
+                                | core.ops.control_flow.ControlFlow.Continue
+                                  val2 =>
+                                  let a ←
+                                    source.chunks.Library.impl.revision val2
+                                  let r8 ←
+                                    source.procedures.ProcedureLibrary.snapshot
+                                      {
+                                        generation := val1,
+                                        parent_generation :=
+                                          (some self.current_generation),
+                                        rollback_of := none,
+                                        kind :=
+                                          source.procedures.GenerationKind.Publish
+                                      } a candidate_records3
+                                  let cf8 ←
+                                    core.result.Result.Insts.CoreOpsTry.branch
+                                      r8
+                                  match cf8 with
+                                  | core.ops.control_flow.ControlFlow.Continue
+                                    val3 =>
+                                    let candidate_generations ←
+                                      alloc.vec.CloneVec.clone
+                                        source.procedures.Snapshot.Insts.CoreCloneClone
+                                        self.generations
+                                    let candidate_generations1 ←
+                                      alloc.vec.Vec.push candidate_generations
+                                        val3
+                                    let s8 :=
+                                      alloc.vec.Vec.deref
+                                        candidate_generations1
+                                    let r9 ←
+                                      source.procedures.persistence.encode_parts
+                                        self.chunk_revision s8 val1
+                                    let cf9 ←
+                                      core.result.Result.Insts.CoreOpsTry.branch
+                                        r9
+                                    match cf9 with
+                                    |
+                                      core.ops.control_flow.ControlFlow.Continue
+                                      val4 =>
+                                      let i2 := alloc.vec.Vec.len val4
+                                      if i2 >
+                                        source.procedures.MAX_STORAGE_BYTES
+                                      then
+                                        let r10 ←
+                                          source.procedures.Refusal.new
+                                            source.procedures.RefusalKind.Exhausted
+                                            {
+                                              field := (toStr "library.bytes"),
+                                              message :=
+                                                (toStr
+                                                  "append-only procedure generations exceed the retained storage bound")
+                                            }
+                                        ok (core.result.Result.Err r10, self)
+                                      else
+                                        ok (core.result.Result.Ok
+                                          record.procedure_id,
+                                          {
+                                            self
+                                              with
+                                              chunk_library := val2,
+                                              generations :=
+                                                candidate_generations1,
+                                              current_generation := val1
+                                          })
+                                    | core.ops.control_flow.ControlFlow.Break
+                                      residual =>
+                                      let r10 ←
+                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                          (Array Std.U8 32#usize)
+                                          (core.convert.FromSame
+                                          source.procedures.Refusal) residual
+                                      ok (r10, self)
+                                  | core.ops.control_flow.ControlFlow.Break
+                                    residual =>
+                                    let r9 ←
+                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                        (Array Std.U8 32#usize)
+                                        (core.convert.FromSame
+                                        source.procedures.Refusal) residual
+                                    ok (r9, self)
+                                | core.ops.control_flow.ControlFlow.Break
+                                  residual =>
+                                  let r8 ←
+                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                      (Array Std.U8 32#usize)
+                                      (core.convert.FromSame
+                                      source.procedures.Refusal) residual
+                                  ok (r8, self)
+                            | core.ops.control_flow.ControlFlow.Break residual
+                              =>
+                              let r7 ←
+                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                  (Array Std.U8 32#usize)
+                                  (core.convert.FromSame
+                                  source.procedures.Refusal) residual
+                              ok (r7, self)
+                          | core.ops.control_flow.ControlFlow.Break residual =>
+                            let r6 ←
+                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                (Array Std.U8 32#usize) (core.convert.FromSame
+                                source.procedures.Refusal) residual
+                            ok (r6, self)
+                        | core.ops.control_flow.ControlFlow.Break residual =>
+                          let r5 ←
+                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                              (Array Std.U8 32#usize) (core.convert.FromSame
+                              source.procedures.Refusal) residual
+                          ok (r5, self)
+              | some existing_index =>
+                let s2 := alloc.vec.Vec.deref candidate_records
+                let o1 ←
+                  core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+                    source.procedures.ProcedureRecord) s2 existing_index
+                let r4 ←
+                  core.option.Option.ok_or_else
+                    source.procedures.ProcedureLibrary.admit_state.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                    o1 ()
+                let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
+                match cf4 with
+                | core.ops.control_flow.ControlFlow.Continue val1 =>
+                  let r5 ← source.procedures.persistence.identity_bytes val1
+                  let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
+                  match cf5 with
+                  | core.ops.control_flow.ControlFlow.Continue val2 =>
+                    let r6 ←
+                      source.procedures.persistence.identity_bytes record1
+                    let cf6 ← core.result.Result.Insts.CoreOpsTry.branch r6
+                    match cf6 with
+                    | core.ops.control_flow.ControlFlow.Continue val3 =>
+                      let b1 ←
+                        alloc.vec.partial_eq.PartialEqVec.ne
+                          core.cmp.PartialEqU8 val2 val3
+                      if b1
                       then
                         let r7 ←
                           source.procedures.Refusal.new
                             source.procedures.RefusalKind.Invalid
                             {
-                              field := (toStr "library_dependencies"),
+                              field := (toStr "procedure_id"),
                               message :=
                                 (toStr
-                                  "an existing subject cannot change its dependency closure")
+                                  "identity collision between unequal immutable subjects")
                             }
                         ok (core.result.Result.Err r7, self)
                       else
-                        let b3 ←
-                          source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq
-                            val1.status source.procedures.Status.Superseded
-                        if b3
+                        let b2 ←
+                          alloc.vec.partial_eq.PartialEqVec.ne
+                            source.procedures.LibraryDependency.Insts.CoreCmpPartialEqLibraryDependency
+                            val1.library_dependencies
+                            record1.library_dependencies
+                        if b2
                         then
-                          let b4 ←
-                            core.cmp.PartialEq.ne.trait_default
-                              source.procedures.Status.Insts.CoreCmpPartialEqStatus
-                              record1.status
-                              source.procedures.Status.Superseded
-                          if b4
+                          let r7 ←
+                            source.procedures.Refusal.new
+                              source.procedures.RefusalKind.Invalid
+                              {
+                                field := (toStr "library_dependencies"),
+                                message :=
+                                  (toStr
+                                    "an existing subject cannot change its dependency closure")
+                              }
+                          ok (core.result.Result.Err r7, self)
+                        else
+                          let b3 :=
+                            core.option.Option.is_some record1.supersedes
+                          if b3
                           then
-                            let r7 ←
-                              source.procedures.Refusal.new
-                                source.procedures.RefusalKind.StaleContext
-                                {
-                                  field := (toStr "status"),
-                                  message :=
-                                    (toStr
-                                      "a superseded record cannot be silently reactivated")
-                                }
-                            ok (core.result.Result.Err r7, self)
-                          else
-                            let r7 ←
-                              source.procedures.ProcedureLibrary.merge_state
-                                val1 record1
-                            let cf7 ←
-                              core.result.Result.Insts.CoreOpsTry.branch r7
-                            match cf7 with
-                            | core.ops.control_flow.ControlFlow.Continue val4
-                              =>
-                              let r8 ←
-                                source.procedures.ProcedureLibrary.validate_record
-                                  val4 policy true
-                              let cf8 ←
-                                core.result.Result.Insts.CoreOpsTry.branch r8
-                              match cf8 with
-                              | core.ops.control_flow.ControlFlow.Continue _ =>
-                                let b5 ←
-                                  source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
-                                    val1 val4
+                            let b4 ←
+                              core.cmp.PartialEq.ne.trait_default
+                                (core.option.Option.Insts.CoreCmpPartialEqOption
+                                (Array.Insts.CoreCmpPartialEqArray 32#usize
+                                core.cmp.PartialEqU8)) record1.supersedes
+                                val1.supersedes
+                            if b4
+                            then
+                              if replacement
+                              then
+                                let b5 :=
+                                  core.option.Option.is_some val1.supersedes
                                 if b5
                                 then
-                                  ok (core.result.Result.Ok val4.procedure_id,
-                                    self)
+                                  let r7 ←
+                                    source.procedures.Refusal.new
+                                      source.procedures.RefusalKind.Invalid
+                                      {
+                                        field := (toStr "supersedes"),
+                                        message :=
+                                          (toStr
+                                            "retained replacement predecessors cannot change outside atomic replacement")
+                                      }
+                                  ok (core.result.Result.Err r7, self)
                                 else
-                                  let (s3, deref_mut_back) ←
-                                    lift (alloc.vec.Vec.deref_mut
-                                      candidate_records)
-                                  let (o2, get_mut_back) ←
-                                    core.slice.Slice.get_mut
-                                      (core.slice.index.SliceIndexUsizeSlice
-                                      source.procedures.ProcedureRecord) s3
-                                      existing_index
-                                  let s4 ←
-                                    match o2 with
-                                    | none => ok (get_mut_back none)
-                                    | some _ => ok (get_mut_back (some val4))
-                                  let candidate_records1 := deref_mut_back s4
-                                  let (s5, deref_mut_back1) ←
-                                    lift (alloc.vec.Vec.deref_mut
-                                      candidate_records1)
-                                  let (r9, s6) ←
-                                    source.procedures.ProcedureLibrary.canonicalize_evidence
-                                      s5
-                                  let cf9 ←
-                                    core.result.Result.Insts.CoreOpsTry.branch
-                                      r9
-                                  match cf9 with
-                                  | core.ops.control_flow.ControlFlow.Continue
-                                    _ =>
-                                    let candidate_records2 :=
-                                      deref_mut_back1 s6
-                                    let (s7, deref_mut_back2) ←
-                                      lift (alloc.vec.Vec.deref_mut
-                                        candidate_records2)
-                                    let s8 ←
-                                      alloc.slice.Slice.sort_by
-                                        source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
-                                        s7 ()
-                                    let o3 ←
-                                      lift (U32.checked_add
-                                        self.current_generation 1#u32)
-                                    let r10 ←
-                                      core.option.Option.ok_or_else
-                                        source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
-                                        o3 ()
-                                    let cf10 ←
-                                      core.result.Result.Insts.CoreOpsTry.branch
-                                        r10
-                                    match cf10 with
-                                    |
-                                      core.ops.control_flow.ControlFlow.Continue
-                                      val5 =>
-                                      let i :=
-                                        alloc.vec.Vec.len self.generations
-                                      if i >= source.procedures.MAX_GENERATIONS
-                                      then
-                                        let r11 ←
-                                          source.procedures.Refusal.new
-                                            source.procedures.RefusalKind.Exhausted
-                                            {
-                                              field := (toStr "generations"),
-                                              message :=
-                                                (toStr
-                                                  "retained generation limit reached")
-                                            }
-                                        ok (core.result.Result.Err r11, self)
-                                      else
-                                        let candidate_records3 :=
-                                          deref_mut_back2 s8
-                                        let s9 :=
-                                          alloc.vec.Vec.deref
-                                            candidate_records3
-                                        let r11 ←
-                                          source.procedures.ProcedureLibrary.rebuild_chunks
-                                            «namespace» self.chunk_revision
-                                            s9
-                                        let cf11 ←
+                                  let b6 ←
+                                    source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq
+                                      val1.status
+                                      source.procedures.Status.Superseded
+                                  if b6
+                                  then
+                                    let b7 ←
+                                      core.cmp.PartialEq.ne.trait_default
+                                        source.procedures.Status.Insts.CoreCmpPartialEqStatus
+                                        record1.status
+                                        source.procedures.Status.Superseded
+                                    if b7
+                                    then
+                                      let r7 ←
+                                        source.procedures.Refusal.new
+                                          source.procedures.RefusalKind.StaleContext
+                                          {
+                                            field := (toStr "status"),
+                                            message :=
+                                              (toStr
+                                                "a superseded record cannot be silently reactivated")
+                                          }
+                                      ok (core.result.Result.Err r7, self)
+                                    else
+                                      let r7 ←
+                                        source.procedures.ProcedureLibrary.merge_state
+                                          val1 record1
+                                      let cf7 ←
+                                        core.result.Result.Insts.CoreOpsTry.branch
+                                          r7
+                                      match cf7 with
+                                      |
+                                        core.ops.control_flow.ControlFlow.Continue
+                                        val4 =>
+                                        let r8 ←
+                                          source.procedures.ProcedureLibrary.validate_record
+                                            val4 policy true
+                                        let cf8 ←
                                           core.result.Result.Insts.CoreOpsTry.branch
-                                            r11
-                                        match cf11 with
+                                            r8
+                                        match cf8 with
                                         |
                                           core.ops.control_flow.ControlFlow.Continue
-                                          val6 =>
-                                          let a ←
-                                            source.chunks.Library.impl.revision
-                                              val6
-                                          let r12 ←
-                                            source.procedures.ProcedureLibrary.snapshot
-                                              {
-                                                generation := val5,
-                                                parent_generation :=
-                                                  (some
-                                                    self.current_generation),
-                                                rollback_of := none,
-                                                kind :=
-                                                  source.procedures.GenerationKind.Publish
-                                              } a candidate_records3
-                                          let cf12 ←
-                                            core.result.Result.Insts.CoreOpsTry.branch
-                                              r12
-                                          match cf12 with
-                                          |
-                                            core.ops.control_flow.ControlFlow.Continue
-                                            val7 =>
-                                            let candidate_generations ←
-                                              alloc.vec.CloneVec.clone
-                                                source.procedures.Snapshot.Insts.CoreCloneClone
-                                                self.generations
-                                            let candidate_generations1 ←
-                                              alloc.vec.Vec.push
-                                                candidate_generations val7
-                                            let s10 :=
-                                              alloc.vec.Vec.deref
-                                                candidate_generations1
-                                            let r13 ←
-                                              source.procedures.persistence.encode_parts
-                                                self.chunk_revision s10 val5
-                                            let cf13 ←
+                                          _ =>
+                                          let b8 ←
+                                            source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
+                                              val1 val4
+                                          if b8
+                                          then
+                                            ok (core.result.Result.Ok
+                                              val4.procedure_id, self)
+                                          else
+                                            let (s3, deref_mut_back) ←
+                                              lift (alloc.vec.Vec.deref_mut
+                                                candidate_records)
+                                            let (o2, get_mut_back) ←
+                                              core.slice.Slice.get_mut
+                                                (core.slice.index.SliceIndexUsizeSlice
+                                                source.procedures.ProcedureRecord)
+                                                s3 existing_index
+                                            let s4 ←
+                                              match o2 with
+                                              | none => ok (get_mut_back none)
+                                              | some _ =>
+                                                ok (get_mut_back (some val4))
+                                            let candidate_records1 :=
+                                              deref_mut_back s4
+                                            let (s5, deref_mut_back1) ←
+                                              lift (alloc.vec.Vec.deref_mut
+                                                candidate_records1)
+                                            let (r9, s6) ←
+                                              source.procedures.ProcedureLibrary.canonicalize_evidence
+                                                s5
+                                            let cf9 ←
                                               core.result.Result.Insts.CoreOpsTry.branch
-                                                r13
-                                            match cf13 with
+                                                r9
+                                            match cf9 with
                                             |
                                               core.ops.control_flow.ControlFlow.Continue
-                                              val8 =>
-                                              let i1 := alloc.vec.Vec.len val8
-                                              if i1 >
-                                                source.procedures.MAX_STORAGE_BYTES
-                                              then
-                                                let r14 ←
-                                                  source.procedures.Refusal.new
-                                                    source.procedures.RefusalKind.Exhausted
-                                                    {
-                                                      field :=
-                                                        (toStr "library.bytes"),
-                                                      message :=
-                                                        (toStr
-                                                          "append-only procedure generations exceed the retained storage bound")
-                                                    }
-                                                ok (core.result.Result.Err r14,
-                                                  self)
-                                              else
-                                                ok (core.result.Result.Ok
-                                                  record.procedure_id,
-                                                  {
-                                                    self
-                                                      with
-                                                      chunk_library := val6,
-                                                      generations :=
-                                                        candidate_generations1,
-                                                      current_generation :=
-                                                        val5
-                                                  })
+                                              _ =>
+                                              let candidate_records2 :=
+                                                deref_mut_back1 s6
+                                              let (s7, deref_mut_back2) ←
+                                                lift (alloc.vec.Vec.deref_mut
+                                                  candidate_records2)
+                                              let s8 ←
+                                                alloc.slice.Slice.sort_by
+                                                  source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                                  s7 ()
+                                              let o3 ←
+                                                lift (U32.checked_add
+                                                  self.current_generation
+                                                  1#u32)
+                                              let r10 ←
+                                                core.option.Option.ok_or_else
+                                                  source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                                  o3 ()
+                                              let cf10 ←
+                                                core.result.Result.Insts.CoreOpsTry.branch
+                                                  r10
+                                              match cf10 with
+                                              |
+                                                core.ops.control_flow.ControlFlow.Continue
+                                                val5 =>
+                                                let i :=
+                                                  alloc.vec.Vec.len
+                                                    self.generations
+                                                if i >=
+                                                  source.procedures.MAX_GENERATIONS
+                                                then
+                                                  let r11 ←
+                                                    source.procedures.Refusal.new
+                                                      source.procedures.RefusalKind.Exhausted
+                                                      {
+                                                        field :=
+                                                          (toStr "generations"),
+                                                        message :=
+                                                          (toStr
+                                                            "retained generation limit reached")
+                                                      }
+                                                  ok (core.result.Result.Err
+                                                    r11, self)
+                                                else
+                                                  let candidate_records3 :=
+                                                    deref_mut_back2 s8
+                                                  let s9 :=
+                                                    alloc.vec.Vec.deref
+                                                      candidate_records3
+                                                  let r11 ←
+                                                    source.procedures.ProcedureLibrary.rebuild_chunks
+                                                      «namespace»
+                                                      self.chunk_revision s9
+                                                  let cf11 ←
+                                                    core.result.Result.Insts.CoreOpsTry.branch
+                                                      r11
+                                                  match cf11 with
+                                                  |
+                                                    core.ops.control_flow.ControlFlow.Continue
+                                                    val6 =>
+                                                    let a ←
+                                                      source.chunks.Library.impl.revision
+                                                        val6
+                                                    let r12 ←
+                                                      source.procedures.ProcedureLibrary.snapshot
+                                                        {
+                                                          generation := val5,
+                                                          parent_generation :=
+                                                            (some
+                                                              self.current_generation),
+                                                          rollback_of := none,
+                                                          kind :=
+                                                            source.procedures.GenerationKind.Publish
+                                                        } a candidate_records3
+                                                    let cf12 ←
+                                                      core.result.Result.Insts.CoreOpsTry.branch
+                                                        r12
+                                                    match cf12 with
+                                                    |
+                                                      core.ops.control_flow.ControlFlow.Continue
+                                                      val7 =>
+                                                      let candidate_generations
+                                                        ←
+                                                        alloc.vec.CloneVec.clone
+                                                          source.procedures.Snapshot.Insts.CoreCloneClone
+                                                          self.generations
+                                                      let
+                                                        candidate_generations1
+                                                        ←
+                                                        alloc.vec.Vec.push
+                                                          candidate_generations
+                                                          val7
+                                                      let s10 :=
+                                                        alloc.vec.Vec.deref
+                                                          candidate_generations1
+                                                      let r13 ←
+                                                        source.procedures.persistence.encode_parts
+                                                          self.chunk_revision
+                                                          s10 val5
+                                                      let cf13 ←
+                                                        core.result.Result.Insts.CoreOpsTry.branch
+                                                          r13
+                                                      match cf13 with
+                                                      |
+                                                        core.ops.control_flow.ControlFlow.Continue
+                                                        val8 =>
+                                                        let i1 :=
+                                                          alloc.vec.Vec.len
+                                                            val8
+                                                        if i1 >
+                                                          source.procedures.MAX_STORAGE_BYTES
+                                                        then
+                                                          let r14 ←
+                                                            source.procedures.Refusal.new
+                                                              source.procedures.RefusalKind.Exhausted
+                                                              {
+                                                                field :=
+                                                                  (toStr
+                                                                    "library.bytes"),
+                                                                message :=
+                                                                  (toStr
+                                                                    "append-only procedure generations exceed the retained storage bound")
+                                                              }
+                                                          ok
+                                                            (core.result.Result.Err
+                                                            r14, self)
+                                                        else
+                                                          ok
+                                                            (core.result.Result.Ok
+                                                            record.procedure_id,
+                                                            {
+                                                              self
+                                                                with
+                                                                chunk_library :=
+                                                                  val6,
+                                                                generations :=
+                                                                  candidate_generations1,
+                                                                current_generation :=
+                                                                  val5
+                                                            })
+                                                      |
+                                                        core.ops.control_flow.ControlFlow.Break
+                                                        residual =>
+                                                        let r14 ←
+                                                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                            (Array Std.U8
+                                                            32#usize)
+                                                            (core.convert.FromSame
+                                                            source.procedures.Refusal)
+                                                            residual
+                                                        ok (r14, self)
+                                                    |
+                                                      core.ops.control_flow.ControlFlow.Break
+                                                      residual =>
+                                                      let r13 ←
+                                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                          (Array Std.U8
+                                                          32#usize)
+                                                          (core.convert.FromSame
+                                                          source.procedures.Refusal)
+                                                          residual
+                                                      ok (r13, self)
+                                                  |
+                                                    core.ops.control_flow.ControlFlow.Break
+                                                    residual =>
+                                                    let r12 ←
+                                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                        (Array Std.U8 32#usize)
+                                                        (core.convert.FromSame
+                                                        source.procedures.Refusal)
+                                                        residual
+                                                    ok (r12, self)
+                                              |
+                                                core.ops.control_flow.ControlFlow.Break
+                                                residual =>
+                                                let r11 ←
+                                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                    (Array Std.U8 32#usize)
+                                                    (core.convert.FromSame
+                                                    source.procedures.Refusal)
+                                                    residual
+                                                ok (r11, self)
                                             |
                                               core.ops.control_flow.ControlFlow.Break
                                               residual =>
-                                              let r14 ←
+                                              let r10 ←
                                                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                                   (Array Std.U8 32#usize)
                                                   (core.convert.FromSame
                                                   source.procedures.Refusal)
                                                   residual
-                                              ok (r14, self)
-                                          |
-                                            core.ops.control_flow.ControlFlow.Break
-                                            residual =>
-                                            let r13 ←
-                                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                                (Array Std.U8 32#usize)
-                                                (core.convert.FromSame
-                                                source.procedures.Refusal)
-                                                residual
-                                            ok (r13, self)
+                                              ok (r10, self)
                                         |
                                           core.ops.control_flow.ControlFlow.Break
                                           residual =>
-                                          let r12 ←
+                                          let r9 ←
                                             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                               (Array Std.U8 32#usize)
                                               (core.convert.FromSame
                                               source.procedures.Refusal)
                                               residual
-                                          ok (r12, self)
-                                    | core.ops.control_flow.ControlFlow.Break
-                                      residual =>
-                                      let r11 ←
-                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                          (Array Std.U8 32#usize)
-                                          (core.convert.FromSame
-                                          source.procedures.Refusal) residual
-                                      ok (r11, self)
-                                  | core.ops.control_flow.ControlFlow.Break
-                                    residual =>
-                                    let r10 ←
-                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                        (Array Std.U8 32#usize)
-                                        (core.convert.FromSame
-                                        source.procedures.Refusal) residual
-                                    ok (r10, self)
-                              | core.ops.control_flow.ControlFlow.Break
-                                residual =>
-                                let r9 ←
-                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                    (Array Std.U8 32#usize)
-                                    (core.convert.FromSame
-                                    source.procedures.Refusal) residual
-                                ok (r9, self)
-                            | core.ops.control_flow.ControlFlow.Break residual
-                              =>
-                              let r8 ←
-                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                  (Array Std.U8 32#usize)
-                                  (core.convert.FromSame
-                                  source.procedures.Refusal) residual
-                              ok (r8, self)
-                        else
-                          let r7 ←
-                            source.procedures.ProcedureLibrary.merge_state val1
-                              record1
-                          let cf7 ←
-                            core.result.Result.Insts.CoreOpsTry.branch r7
-                          match cf7 with
-                          | core.ops.control_flow.ControlFlow.Continue val4 =>
-                            let r8 ←
-                              source.procedures.ProcedureLibrary.validate_record
-                                val4 policy true
-                            let cf8 ←
-                              core.result.Result.Insts.CoreOpsTry.branch r8
-                            match cf8 with
-                            | core.ops.control_flow.ControlFlow.Continue _ =>
-                              let b4 ←
-                                source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
-                                  val1 val4
-                              if b4
-                              then
-                                ok (core.result.Result.Ok val4.procedure_id,
-                                  self)
-                              else
-                                let (s3, deref_mut_back) ←
-                                  lift (alloc.vec.Vec.deref_mut
-                                    candidate_records)
-                                let (o2, get_mut_back) ←
-                                  core.slice.Slice.get_mut
-                                    (core.slice.index.SliceIndexUsizeSlice
-                                    source.procedures.ProcedureRecord) s3
-                                    existing_index
-                                let s4 ←
-                                  match o2 with
-                                  | none => ok (get_mut_back none)
-                                  | some _ => ok (get_mut_back (some val4))
-                                let candidate_records1 := deref_mut_back s4
-                                let (s5, deref_mut_back1) ←
-                                  lift (alloc.vec.Vec.deref_mut
-                                    candidate_records1)
-                                let (r9, s6) ←
-                                  source.procedures.ProcedureLibrary.canonicalize_evidence
-                                    s5
-                                let cf9 ←
-                                  core.result.Result.Insts.CoreOpsTry.branch r9
-                                match cf9 with
-                                | core.ops.control_flow.ControlFlow.Continue _
-                                  =>
-                                  let candidate_records2 := deref_mut_back1 s6
-                                  let (s7, deref_mut_back2) ←
-                                    lift (alloc.vec.Vec.deref_mut
-                                      candidate_records2)
-                                  let s8 ←
-                                    alloc.slice.Slice.sort_by
-                                      source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
-                                      s7 ()
-                                  let o3 ←
-                                    lift (U32.checked_add
-                                      self.current_generation 1#u32)
-                                  let r10 ←
-                                    core.option.Option.ok_or_else
-                                      source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
-                                      o3 ()
-                                  let cf10 ←
-                                    core.result.Result.Insts.CoreOpsTry.branch
-                                      r10
-                                  match cf10 with
-                                  | core.ops.control_flow.ControlFlow.Continue
-                                    val5 =>
-                                    let i := alloc.vec.Vec.len self.generations
-                                    if i >= source.procedures.MAX_GENERATIONS
-                                    then
-                                      let r11 ←
-                                        source.procedures.Refusal.new
-                                          source.procedures.RefusalKind.Exhausted
-                                          {
-                                            field := (toStr "generations"),
-                                            message :=
-                                              (toStr
-                                                "retained generation limit reached")
-                                          }
-                                      ok (core.result.Result.Err r11, self)
-                                    else
-                                      let candidate_records3 :=
-                                        deref_mut_back2 s8
-                                      let s9 :=
-                                        alloc.vec.Vec.deref candidate_records3
-                                      let r11 ←
-                                        source.procedures.ProcedureLibrary.rebuild_chunks
-                                          «namespace» self.chunk_revision s9
-                                      let cf11 ←
-                                        core.result.Result.Insts.CoreOpsTry.branch
-                                          r11
-                                      match cf11 with
-                                      |
-                                        core.ops.control_flow.ControlFlow.Continue
-                                        val6 =>
-                                        let a ←
-                                          source.chunks.Library.impl.revision
-                                            val6
-                                        let r12 ←
-                                          source.procedures.ProcedureLibrary.snapshot
-                                            {
-                                              generation := val5,
-                                              parent_generation :=
-                                                (some self.current_generation),
-                                              rollback_of := none,
-                                              kind :=
-                                                source.procedures.GenerationKind.Publish
-                                            } a candidate_records3
-                                        let cf12 ←
-                                          core.result.Result.Insts.CoreOpsTry.branch
-                                            r12
-                                        match cf12 with
-                                        |
-                                          core.ops.control_flow.ControlFlow.Continue
-                                          val7 =>
-                                          let candidate_generations ←
-                                            alloc.vec.CloneVec.clone
-                                              source.procedures.Snapshot.Insts.CoreCloneClone
-                                              self.generations
-                                          let candidate_generations1 ←
-                                            alloc.vec.Vec.push
-                                              candidate_generations val7
-                                          let s10 :=
-                                            alloc.vec.Vec.deref
-                                              candidate_generations1
-                                          let r13 ←
-                                            source.procedures.persistence.encode_parts
-                                              self.chunk_revision s10 val5
-                                          let cf13 ←
-                                            core.result.Result.Insts.CoreOpsTry.branch
-                                              r13
-                                          match cf13 with
-                                          |
-                                            core.ops.control_flow.ControlFlow.Continue
-                                            val8 =>
-                                            let i1 := alloc.vec.Vec.len val8
-                                            if i1 >
-                                              source.procedures.MAX_STORAGE_BYTES
-                                            then
-                                              let r14 ←
-                                                source.procedures.Refusal.new
-                                                  source.procedures.RefusalKind.Exhausted
-                                                  {
-                                                    field :=
-                                                      (toStr "library.bytes"),
-                                                    message :=
-                                                      (toStr
-                                                        "append-only procedure generations exceed the retained storage bound")
-                                                  }
-                                              ok (core.result.Result.Err r14,
-                                                self)
-                                            else
-                                              ok (core.result.Result.Ok
-                                                record.procedure_id,
-                                                {
-                                                  self
-                                                    with
-                                                    chunk_library := val6,
-                                                    generations :=
-                                                      candidate_generations1,
-                                                    current_generation := val5
-                                                })
-                                          |
-                                            core.ops.control_flow.ControlFlow.Break
-                                            residual =>
-                                            let r14 ←
-                                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                                (Array Std.U8 32#usize)
-                                                (core.convert.FromSame
-                                                source.procedures.Refusal)
-                                                residual
-                                            ok (r14, self)
-                                        |
-                                          core.ops.control_flow.ControlFlow.Break
-                                          residual =>
-                                          let r13 ←
-                                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                              (Array Std.U8 32#usize)
-                                              (core.convert.FromSame
-                                              source.procedures.Refusal)
-                                              residual
-                                          ok (r13, self)
+                                          ok (r9, self)
                                       | core.ops.control_flow.ControlFlow.Break
                                         residual =>
-                                        let r12 ←
+                                        let r8 ←
                                           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                             (Array Std.U8 32#usize)
                                             (core.convert.FromSame
                                             source.procedures.Refusal) residual
-                                        ok (r12, self)
+                                        ok (r8, self)
+                                  else
+                                    let r7 ←
+                                      source.procedures.ProcedureLibrary.merge_state
+                                        val1 record1
+                                    let cf7 ←
+                                      core.result.Result.Insts.CoreOpsTry.branch
+                                        r7
+                                    match cf7 with
+                                    |
+                                      core.ops.control_flow.ControlFlow.Continue
+                                      val4 =>
+                                      let r8 ←
+                                        source.procedures.ProcedureLibrary.validate_record
+                                          val4 policy true
+                                      let cf8 ←
+                                        core.result.Result.Insts.CoreOpsTry.branch
+                                          r8
+                                      match cf8 with
+                                      |
+                                        core.ops.control_flow.ControlFlow.Continue
+                                        _ =>
+                                        let b7 ←
+                                          source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
+                                            val1 val4
+                                        if b7
+                                        then
+                                          ok (core.result.Result.Ok
+                                            val4.procedure_id, self)
+                                        else
+                                          let (s3, deref_mut_back) ←
+                                            lift (alloc.vec.Vec.deref_mut
+                                              candidate_records)
+                                          let (o2, get_mut_back) ←
+                                            core.slice.Slice.get_mut
+                                              (core.slice.index.SliceIndexUsizeSlice
+                                              source.procedures.ProcedureRecord)
+                                              s3 existing_index
+                                          let s4 ←
+                                            match o2 with
+                                            | none => ok (get_mut_back none)
+                                            | some _ =>
+                                              ok (get_mut_back (some val4))
+                                          let candidate_records1 :=
+                                            deref_mut_back s4
+                                          let (s5, deref_mut_back1) ←
+                                            lift (alloc.vec.Vec.deref_mut
+                                              candidate_records1)
+                                          let (r9, s6) ←
+                                            source.procedures.ProcedureLibrary.canonicalize_evidence
+                                              s5
+                                          let cf9 ←
+                                            core.result.Result.Insts.CoreOpsTry.branch
+                                              r9
+                                          match cf9 with
+                                          |
+                                            core.ops.control_flow.ControlFlow.Continue
+                                            _ =>
+                                            let candidate_records2 :=
+                                              deref_mut_back1 s6
+                                            let (s7, deref_mut_back2) ←
+                                              lift (alloc.vec.Vec.deref_mut
+                                                candidate_records2)
+                                            let s8 ←
+                                              alloc.slice.Slice.sort_by
+                                                source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                                s7 ()
+                                            let o3 ←
+                                              lift (U32.checked_add
+                                                self.current_generation 1#u32)
+                                            let r10 ←
+                                              core.option.Option.ok_or_else
+                                                source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                                o3 ()
+                                            let cf10 ←
+                                              core.result.Result.Insts.CoreOpsTry.branch
+                                                r10
+                                            match cf10 with
+                                            |
+                                              core.ops.control_flow.ControlFlow.Continue
+                                              val5 =>
+                                              let i :=
+                                                alloc.vec.Vec.len
+                                                  self.generations
+                                              if i >=
+                                                source.procedures.MAX_GENERATIONS
+                                              then
+                                                let r11 ←
+                                                  source.procedures.Refusal.new
+                                                    source.procedures.RefusalKind.Exhausted
+                                                    {
+                                                      field :=
+                                                        (toStr "generations"),
+                                                      message :=
+                                                        (toStr
+                                                          "retained generation limit reached")
+                                                    }
+                                                ok (core.result.Result.Err r11,
+                                                  self)
+                                              else
+                                                let candidate_records3 :=
+                                                  deref_mut_back2 s8
+                                                let s9 :=
+                                                  alloc.vec.Vec.deref
+                                                    candidate_records3
+                                                let r11 ←
+                                                  source.procedures.ProcedureLibrary.rebuild_chunks
+                                                    «namespace»
+                                                    self.chunk_revision s9
+                                                let cf11 ←
+                                                  core.result.Result.Insts.CoreOpsTry.branch
+                                                    r11
+                                                match cf11 with
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Continue
+                                                  val6 =>
+                                                  let a ←
+                                                    source.chunks.Library.impl.revision
+                                                      val6
+                                                  let r12 ←
+                                                    source.procedures.ProcedureLibrary.snapshot
+                                                      {
+                                                        generation := val5,
+                                                        parent_generation :=
+                                                          (some
+                                                            self.current_generation),
+                                                        rollback_of := none,
+                                                        kind :=
+                                                          source.procedures.GenerationKind.Publish
+                                                      } a candidate_records3
+                                                  let cf12 ←
+                                                    core.result.Result.Insts.CoreOpsTry.branch
+                                                      r12
+                                                  match cf12 with
+                                                  |
+                                                    core.ops.control_flow.ControlFlow.Continue
+                                                    val7 =>
+                                                    let candidate_generations
+                                                      ←
+                                                      alloc.vec.CloneVec.clone
+                                                        source.procedures.Snapshot.Insts.CoreCloneClone
+                                                        self.generations
+                                                    let candidate_generations1
+                                                      ←
+                                                      alloc.vec.Vec.push
+                                                        candidate_generations
+                                                        val7
+                                                    let s10 :=
+                                                      alloc.vec.Vec.deref
+                                                        candidate_generations1
+                                                    let r13 ←
+                                                      source.procedures.persistence.encode_parts
+                                                        self.chunk_revision s10
+                                                        val5
+                                                    let cf13 ←
+                                                      core.result.Result.Insts.CoreOpsTry.branch
+                                                        r13
+                                                    match cf13 with
+                                                    |
+                                                      core.ops.control_flow.ControlFlow.Continue
+                                                      val8 =>
+                                                      let i1 :=
+                                                        alloc.vec.Vec.len val8
+                                                      if i1 >
+                                                        source.procedures.MAX_STORAGE_BYTES
+                                                      then
+                                                        let r14 ←
+                                                          source.procedures.Refusal.new
+                                                            source.procedures.RefusalKind.Exhausted
+                                                            {
+                                                              field :=
+                                                                (toStr
+                                                                  "library.bytes"),
+                                                              message :=
+                                                                (toStr
+                                                                  "append-only procedure generations exceed the retained storage bound")
+                                                            }
+                                                        ok
+                                                          (core.result.Result.Err
+                                                          r14, self)
+                                                      else
+                                                        ok
+                                                          (core.result.Result.Ok
+                                                          record.procedure_id,
+                                                          {
+                                                            self
+                                                              with
+                                                              chunk_library :=
+                                                                val6,
+                                                              generations :=
+                                                                candidate_generations1,
+                                                              current_generation :=
+                                                                val5
+                                                          })
+                                                    |
+                                                      core.ops.control_flow.ControlFlow.Break
+                                                      residual =>
+                                                      let r14 ←
+                                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                          (Array Std.U8
+                                                          32#usize)
+                                                          (core.convert.FromSame
+                                                          source.procedures.Refusal)
+                                                          residual
+                                                      ok (r14, self)
+                                                  |
+                                                    core.ops.control_flow.ControlFlow.Break
+                                                    residual =>
+                                                    let r13 ←
+                                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                        (Array Std.U8 32#usize)
+                                                        (core.convert.FromSame
+                                                        source.procedures.Refusal)
+                                                        residual
+                                                    ok (r13, self)
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Break
+                                                  residual =>
+                                                  let r12 ←
+                                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                      (Array Std.U8 32#usize)
+                                                      (core.convert.FromSame
+                                                      source.procedures.Refusal)
+                                                      residual
+                                                  ok (r12, self)
+                                            |
+                                              core.ops.control_flow.ControlFlow.Break
+                                              residual =>
+                                              let r11 ←
+                                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                  (Array Std.U8 32#usize)
+                                                  (core.convert.FromSame
+                                                  source.procedures.Refusal)
+                                                  residual
+                                              ok (r11, self)
+                                          |
+                                            core.ops.control_flow.ControlFlow.Break
+                                            residual =>
+                                            let r10 ←
+                                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                (Array Std.U8 32#usize)
+                                                (core.convert.FromSame
+                                                source.procedures.Refusal)
+                                                residual
+                                            ok (r10, self)
+                                      | core.ops.control_flow.ControlFlow.Break
+                                        residual =>
+                                        let r9 ←
+                                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                            (Array Std.U8 32#usize)
+                                            (core.convert.FromSame
+                                            source.procedures.Refusal) residual
+                                        ok (r9, self)
+                                    | core.ops.control_flow.ControlFlow.Break
+                                      residual =>
+                                      let r8 ←
+                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                          (Array Std.U8 32#usize)
+                                          (core.convert.FromSame
+                                          source.procedures.Refusal) residual
+                                      ok (r8, self)
+                              else
+                                let r7 ←
+                                  source.procedures.Refusal.new
+                                    source.procedures.RefusalKind.Invalid
+                                    {
+                                      field := (toStr "supersedes"),
+                                      message :=
+                                        (toStr
+                                          "retained replacement predecessors cannot change outside atomic replacement")
+                                    }
+                                ok (core.result.Result.Err r7, self)
+                            else
+                              let b5 ←
+                                source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq
+                                  val1.status
+                                  source.procedures.Status.Superseded
+                              if b5
+                              then
+                                let b6 ←
+                                  core.cmp.PartialEq.ne.trait_default
+                                    source.procedures.Status.Insts.CoreCmpPartialEqStatus
+                                    record1.status
+                                    source.procedures.Status.Superseded
+                                if b6
+                                then
+                                  let r7 ←
+                                    source.procedures.Refusal.new
+                                      source.procedures.RefusalKind.StaleContext
+                                      {
+                                        field := (toStr "status"),
+                                        message :=
+                                          (toStr
+                                            "a superseded record cannot be silently reactivated")
+                                      }
+                                  ok (core.result.Result.Err r7, self)
+                                else
+                                  let r7 ←
+                                    source.procedures.ProcedureLibrary.merge_state
+                                      val1 record1
+                                  let cf7 ←
+                                    core.result.Result.Insts.CoreOpsTry.branch
+                                      r7
+                                  match cf7 with
+                                  | core.ops.control_flow.ControlFlow.Continue
+                                    val4 =>
+                                    let r8 ←
+                                      source.procedures.ProcedureLibrary.validate_record
+                                        val4 policy true
+                                    let cf8 ←
+                                      core.result.Result.Insts.CoreOpsTry.branch
+                                        r8
+                                    match cf8 with
+                                    |
+                                      core.ops.control_flow.ControlFlow.Continue
+                                      _ =>
+                                      let b7 ←
+                                        source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
+                                          val1 val4
+                                      if b7
+                                      then
+                                        ok (core.result.Result.Ok
+                                          val4.procedure_id, self)
+                                      else
+                                        let (s3, deref_mut_back) ←
+                                          lift (alloc.vec.Vec.deref_mut
+                                            candidate_records)
+                                        let (o2, get_mut_back) ←
+                                          core.slice.Slice.get_mut
+                                            (core.slice.index.SliceIndexUsizeSlice
+                                            source.procedures.ProcedureRecord)
+                                            s3 existing_index
+                                        let s4 ←
+                                          match o2 with
+                                          | none => ok (get_mut_back none)
+                                          | some _ =>
+                                            ok (get_mut_back (some val4))
+                                        let candidate_records1 :=
+                                          deref_mut_back s4
+                                        let (s5, deref_mut_back1) ←
+                                          lift (alloc.vec.Vec.deref_mut
+                                            candidate_records1)
+                                        let (r9, s6) ←
+                                          source.procedures.ProcedureLibrary.canonicalize_evidence
+                                            s5
+                                        let cf9 ←
+                                          core.result.Result.Insts.CoreOpsTry.branch
+                                            r9
+                                        match cf9 with
+                                        |
+                                          core.ops.control_flow.ControlFlow.Continue
+                                          _ =>
+                                          let candidate_records2 :=
+                                            deref_mut_back1 s6
+                                          let (s7, deref_mut_back2) ←
+                                            lift (alloc.vec.Vec.deref_mut
+                                              candidate_records2)
+                                          let s8 ←
+                                            alloc.slice.Slice.sort_by
+                                              source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                              s7 ()
+                                          let o3 ←
+                                            lift (U32.checked_add
+                                              self.current_generation 1#u32)
+                                          let r10 ←
+                                            core.option.Option.ok_or_else
+                                              source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                              o3 ()
+                                          let cf10 ←
+                                            core.result.Result.Insts.CoreOpsTry.branch
+                                              r10
+                                          match cf10 with
+                                          |
+                                            core.ops.control_flow.ControlFlow.Continue
+                                            val5 =>
+                                            let i :=
+                                              alloc.vec.Vec.len
+                                                self.generations
+                                            if i >=
+                                              source.procedures.MAX_GENERATIONS
+                                            then
+                                              let r11 ←
+                                                source.procedures.Refusal.new
+                                                  source.procedures.RefusalKind.Exhausted
+                                                  {
+                                                    field :=
+                                                      (toStr "generations"),
+                                                    message :=
+                                                      (toStr
+                                                        "retained generation limit reached")
+                                                  }
+                                              ok (core.result.Result.Err r11,
+                                                self)
+                                            else
+                                              let candidate_records3 :=
+                                                deref_mut_back2 s8
+                                              let s9 :=
+                                                alloc.vec.Vec.deref
+                                                  candidate_records3
+                                              let r11 ←
+                                                source.procedures.ProcedureLibrary.rebuild_chunks
+                                                  «namespace»
+                                                  self.chunk_revision s9
+                                              let cf11 ←
+                                                core.result.Result.Insts.CoreOpsTry.branch
+                                                  r11
+                                              match cf11 with
+                                              |
+                                                core.ops.control_flow.ControlFlow.Continue
+                                                val6 =>
+                                                let a ←
+                                                  source.chunks.Library.impl.revision
+                                                    val6
+                                                let r12 ←
+                                                  source.procedures.ProcedureLibrary.snapshot
+                                                    {
+                                                      generation := val5,
+                                                      parent_generation :=
+                                                        (some
+                                                          self.current_generation),
+                                                      rollback_of := none,
+                                                      kind :=
+                                                        source.procedures.GenerationKind.Publish
+                                                    } a candidate_records3
+                                                let cf12 ←
+                                                  core.result.Result.Insts.CoreOpsTry.branch
+                                                    r12
+                                                match cf12 with
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Continue
+                                                  val7 =>
+                                                  let candidate_generations ←
+                                                    alloc.vec.CloneVec.clone
+                                                      source.procedures.Snapshot.Insts.CoreCloneClone
+                                                      self.generations
+                                                  let candidate_generations1
+                                                    ←
+                                                    alloc.vec.Vec.push
+                                                      candidate_generations
+                                                      val7
+                                                  let s10 :=
+                                                    alloc.vec.Vec.deref
+                                                      candidate_generations1
+                                                  let r13 ←
+                                                    source.procedures.persistence.encode_parts
+                                                      self.chunk_revision s10
+                                                      val5
+                                                  let cf13 ←
+                                                    core.result.Result.Insts.CoreOpsTry.branch
+                                                      r13
+                                                  match cf13 with
+                                                  |
+                                                    core.ops.control_flow.ControlFlow.Continue
+                                                    val8 =>
+                                                    let i1 :=
+                                                      alloc.vec.Vec.len val8
+                                                    if i1 >
+                                                      source.procedures.MAX_STORAGE_BYTES
+                                                    then
+                                                      let r14 ←
+                                                        source.procedures.Refusal.new
+                                                          source.procedures.RefusalKind.Exhausted
+                                                          {
+                                                            field :=
+                                                              (toStr
+                                                                "library.bytes"),
+                                                            message :=
+                                                              (toStr
+                                                                "append-only procedure generations exceed the retained storage bound")
+                                                          }
+                                                      ok
+                                                        (core.result.Result.Err
+                                                        r14, self)
+                                                    else
+                                                      ok (core.result.Result.Ok
+                                                        record.procedure_id,
+                                                        {
+                                                          self
+                                                            with
+                                                            chunk_library :=
+                                                              val6,
+                                                            generations :=
+                                                              candidate_generations1,
+                                                            current_generation :=
+                                                              val5
+                                                        })
+                                                  |
+                                                    core.ops.control_flow.ControlFlow.Break
+                                                    residual =>
+                                                    let r14 ←
+                                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                        (Array Std.U8 32#usize)
+                                                        (core.convert.FromSame
+                                                        source.procedures.Refusal)
+                                                        residual
+                                                    ok (r14, self)
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Break
+                                                  residual =>
+                                                  let r13 ←
+                                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                      (Array Std.U8 32#usize)
+                                                      (core.convert.FromSame
+                                                      source.procedures.Refusal)
+                                                      residual
+                                                  ok (r13, self)
+                                              |
+                                                core.ops.control_flow.ControlFlow.Break
+                                                residual =>
+                                                let r12 ←
+                                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                    (Array Std.U8 32#usize)
+                                                    (core.convert.FromSame
+                                                    source.procedures.Refusal)
+                                                    residual
+                                                ok (r12, self)
+                                          |
+                                            core.ops.control_flow.ControlFlow.Break
+                                            residual =>
+                                            let r11 ←
+                                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                (Array Std.U8 32#usize)
+                                                (core.convert.FromSame
+                                                source.procedures.Refusal)
+                                                residual
+                                            ok (r11, self)
+                                        |
+                                          core.ops.control_flow.ControlFlow.Break
+                                          residual =>
+                                          let r10 ←
+                                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                              (Array Std.U8 32#usize)
+                                              (core.convert.FromSame
+                                              source.procedures.Refusal)
+                                              residual
+                                          ok (r10, self)
+                                    | core.ops.control_flow.ControlFlow.Break
+                                      residual =>
+                                      let r9 ←
+                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                          (Array Std.U8 32#usize)
+                                          (core.convert.FromSame
+                                          source.procedures.Refusal) residual
+                                      ok (r9, self)
                                   | core.ops.control_flow.ControlFlow.Break
                                     residual =>
-                                    let r11 ←
+                                    let r8 ←
                                       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                         (Array Std.U8 32#usize)
                                         (core.convert.FromSame
                                         source.procedures.Refusal) residual
-                                    ok (r11, self)
+                                    ok (r8, self)
+                              else
+                                let r7 ←
+                                  source.procedures.ProcedureLibrary.merge_state
+                                    val1 record1
+                                let cf7 ←
+                                  core.result.Result.Insts.CoreOpsTry.branch r7
+                                match cf7 with
+                                | core.ops.control_flow.ControlFlow.Continue
+                                  val4 =>
+                                  let r8 ←
+                                    source.procedures.ProcedureLibrary.validate_record
+                                      val4 policy true
+                                  let cf8 ←
+                                    core.result.Result.Insts.CoreOpsTry.branch
+                                      r8
+                                  match cf8 with
+                                  | core.ops.control_flow.ControlFlow.Continue
+                                    _ =>
+                                    let b6 ←
+                                      source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
+                                        val1 val4
+                                    if b6
+                                    then
+                                      ok (core.result.Result.Ok
+                                        val4.procedure_id, self)
+                                    else
+                                      let (s3, deref_mut_back) ←
+                                        lift (alloc.vec.Vec.deref_mut
+                                          candidate_records)
+                                      let (o2, get_mut_back) ←
+                                        core.slice.Slice.get_mut
+                                          (core.slice.index.SliceIndexUsizeSlice
+                                          source.procedures.ProcedureRecord) s3
+                                          existing_index
+                                      let s4 ←
+                                        match o2 with
+                                        | none => ok (get_mut_back none)
+                                        | some _ =>
+                                          ok (get_mut_back (some val4))
+                                      let candidate_records1 :=
+                                        deref_mut_back s4
+                                      let (s5, deref_mut_back1) ←
+                                        lift (alloc.vec.Vec.deref_mut
+                                          candidate_records1)
+                                      let (r9, s6) ←
+                                        source.procedures.ProcedureLibrary.canonicalize_evidence
+                                          s5
+                                      let cf9 ←
+                                        core.result.Result.Insts.CoreOpsTry.branch
+                                          r9
+                                      match cf9 with
+                                      |
+                                        core.ops.control_flow.ControlFlow.Continue
+                                        _ =>
+                                        let candidate_records2 :=
+                                          deref_mut_back1 s6
+                                        let (s7, deref_mut_back2) ←
+                                          lift (alloc.vec.Vec.deref_mut
+                                            candidate_records2)
+                                        let s8 ←
+                                          alloc.slice.Slice.sort_by
+                                            source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                            s7 ()
+                                        let o3 ←
+                                          lift (U32.checked_add
+                                            self.current_generation 1#u32)
+                                        let r10 ←
+                                          core.option.Option.ok_or_else
+                                            source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                            o3 ()
+                                        let cf10 ←
+                                          core.result.Result.Insts.CoreOpsTry.branch
+                                            r10
+                                        match cf10 with
+                                        |
+                                          core.ops.control_flow.ControlFlow.Continue
+                                          val5 =>
+                                          let i :=
+                                            alloc.vec.Vec.len self.generations
+                                          if i >=
+                                            source.procedures.MAX_GENERATIONS
+                                          then
+                                            let r11 ←
+                                              source.procedures.Refusal.new
+                                                source.procedures.RefusalKind.Exhausted
+                                                {
+                                                  field :=
+                                                    (toStr "generations"),
+                                                  message :=
+                                                    (toStr
+                                                      "retained generation limit reached")
+                                                }
+                                            ok (core.result.Result.Err r11,
+                                              self)
+                                          else
+                                            let candidate_records3 :=
+                                              deref_mut_back2 s8
+                                            let s9 :=
+                                              alloc.vec.Vec.deref
+                                                candidate_records3
+                                            let r11 ←
+                                              source.procedures.ProcedureLibrary.rebuild_chunks
+                                                «namespace»
+                                                self.chunk_revision s9
+                                            let cf11 ←
+                                              core.result.Result.Insts.CoreOpsTry.branch
+                                                r11
+                                            match cf11 with
+                                            |
+                                              core.ops.control_flow.ControlFlow.Continue
+                                              val6 =>
+                                              let a ←
+                                                source.chunks.Library.impl.revision
+                                                  val6
+                                              let r12 ←
+                                                source.procedures.ProcedureLibrary.snapshot
+                                                  {
+                                                    generation := val5,
+                                                    parent_generation :=
+                                                      (some
+                                                        self.current_generation),
+                                                    rollback_of := none,
+                                                    kind :=
+                                                      source.procedures.GenerationKind.Publish
+                                                  } a candidate_records3
+                                              let cf12 ←
+                                                core.result.Result.Insts.CoreOpsTry.branch
+                                                  r12
+                                              match cf12 with
+                                              |
+                                                core.ops.control_flow.ControlFlow.Continue
+                                                val7 =>
+                                                let candidate_generations ←
+                                                  alloc.vec.CloneVec.clone
+                                                    source.procedures.Snapshot.Insts.CoreCloneClone
+                                                    self.generations
+                                                let candidate_generations1 ←
+                                                  alloc.vec.Vec.push
+                                                    candidate_generations val7
+                                                let s10 :=
+                                                  alloc.vec.Vec.deref
+                                                    candidate_generations1
+                                                let r13 ←
+                                                  source.procedures.persistence.encode_parts
+                                                    self.chunk_revision s10
+                                                    val5
+                                                let cf13 ←
+                                                  core.result.Result.Insts.CoreOpsTry.branch
+                                                    r13
+                                                match cf13 with
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Continue
+                                                  val8 =>
+                                                  let i1 :=
+                                                    alloc.vec.Vec.len val8
+                                                  if i1 >
+                                                    source.procedures.MAX_STORAGE_BYTES
+                                                  then
+                                                    let r14 ←
+                                                      source.procedures.Refusal.new
+                                                        source.procedures.RefusalKind.Exhausted
+                                                        {
+                                                          field :=
+                                                            (toStr
+                                                              "library.bytes"),
+                                                          message :=
+                                                            (toStr
+                                                              "append-only procedure generations exceed the retained storage bound")
+                                                        }
+                                                    ok (core.result.Result.Err
+                                                      r14, self)
+                                                  else
+                                                    ok (core.result.Result.Ok
+                                                      record.procedure_id,
+                                                      {
+                                                        self
+                                                          with
+                                                          chunk_library := val6,
+                                                          generations :=
+                                                            candidate_generations1,
+                                                          current_generation :=
+                                                            val5
+                                                      })
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Break
+                                                  residual =>
+                                                  let r14 ←
+                                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                      (Array Std.U8 32#usize)
+                                                      (core.convert.FromSame
+                                                      source.procedures.Refusal)
+                                                      residual
+                                                  ok (r14, self)
+                                              |
+                                                core.ops.control_flow.ControlFlow.Break
+                                                residual =>
+                                                let r13 ←
+                                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                    (Array Std.U8 32#usize)
+                                                    (core.convert.FromSame
+                                                    source.procedures.Refusal)
+                                                    residual
+                                                ok (r13, self)
+                                            |
+                                              core.ops.control_flow.ControlFlow.Break
+                                              residual =>
+                                              let r12 ←
+                                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                  (Array Std.U8 32#usize)
+                                                  (core.convert.FromSame
+                                                  source.procedures.Refusal)
+                                                  residual
+                                              ok (r12, self)
+                                        |
+                                          core.ops.control_flow.ControlFlow.Break
+                                          residual =>
+                                          let r11 ←
+                                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                              (Array Std.U8 32#usize)
+                                              (core.convert.FromSame
+                                              source.procedures.Refusal)
+                                              residual
+                                          ok (r11, self)
+                                      | core.ops.control_flow.ControlFlow.Break
+                                        residual =>
+                                        let r10 ←
+                                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                            (Array Std.U8 32#usize)
+                                            (core.convert.FromSame
+                                            source.procedures.Refusal) residual
+                                        ok (r10, self)
+                                  | core.ops.control_flow.ControlFlow.Break
+                                    residual =>
+                                    let r9 ←
+                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                        (Array Std.U8 32#usize)
+                                        (core.convert.FromSame
+                                        source.procedures.Refusal) residual
+                                    ok (r9, self)
                                 | core.ops.control_flow.ControlFlow.Break
                                   residual =>
-                                  let r10 ←
+                                  let r8 ←
                                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                       (Array Std.U8 32#usize)
                                       (core.convert.FromSame
                                       source.procedures.Refusal) residual
-                                  ok (r10, self)
-                            | core.ops.control_flow.ControlFlow.Break residual
-                              =>
-                              let r9 ←
-                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                  (Array Std.U8 32#usize)
-                                  (core.convert.FromSame
-                                  source.procedures.Refusal) residual
-                              ok (r9, self)
-                          | core.ops.control_flow.ControlFlow.Break residual =>
-                            let r8 ←
-                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                (Array Std.U8 32#usize) (core.convert.FromSame
-                                source.procedures.Refusal) residual
-                            ok (r8, self)
+                                  ok (r8, self)
+                          else
+                            let b4 ←
+                              source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq
+                                val1.status source.procedures.Status.Superseded
+                            if b4
+                            then
+                              let b5 ←
+                                core.cmp.PartialEq.ne.trait_default
+                                  source.procedures.Status.Insts.CoreCmpPartialEqStatus
+                                  record1.status
+                                  source.procedures.Status.Superseded
+                              if b5
+                              then
+                                let r7 ←
+                                  source.procedures.Refusal.new
+                                    source.procedures.RefusalKind.StaleContext
+                                    {
+                                      field := (toStr "status"),
+                                      message :=
+                                        (toStr
+                                          "a superseded record cannot be silently reactivated")
+                                    }
+                                ok (core.result.Result.Err r7, self)
+                              else
+                                let r7 ←
+                                  source.procedures.ProcedureLibrary.merge_state
+                                    val1 record1
+                                let cf7 ←
+                                  core.result.Result.Insts.CoreOpsTry.branch r7
+                                match cf7 with
+                                | core.ops.control_flow.ControlFlow.Continue
+                                  val4 =>
+                                  let r8 ←
+                                    source.procedures.ProcedureLibrary.validate_record
+                                      val4 policy true
+                                  let cf8 ←
+                                    core.result.Result.Insts.CoreOpsTry.branch
+                                      r8
+                                  match cf8 with
+                                  | core.ops.control_flow.ControlFlow.Continue
+                                    _ =>
+                                    let b6 ←
+                                      source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
+                                        val1 val4
+                                    if b6
+                                    then
+                                      ok (core.result.Result.Ok
+                                        val4.procedure_id, self)
+                                    else
+                                      let (s3, deref_mut_back) ←
+                                        lift (alloc.vec.Vec.deref_mut
+                                          candidate_records)
+                                      let (o2, get_mut_back) ←
+                                        core.slice.Slice.get_mut
+                                          (core.slice.index.SliceIndexUsizeSlice
+                                          source.procedures.ProcedureRecord) s3
+                                          existing_index
+                                      let s4 ←
+                                        match o2 with
+                                        | none => ok (get_mut_back none)
+                                        | some _ =>
+                                          ok (get_mut_back (some val4))
+                                      let candidate_records1 :=
+                                        deref_mut_back s4
+                                      let (s5, deref_mut_back1) ←
+                                        lift (alloc.vec.Vec.deref_mut
+                                          candidate_records1)
+                                      let (r9, s6) ←
+                                        source.procedures.ProcedureLibrary.canonicalize_evidence
+                                          s5
+                                      let cf9 ←
+                                        core.result.Result.Insts.CoreOpsTry.branch
+                                          r9
+                                      match cf9 with
+                                      |
+                                        core.ops.control_flow.ControlFlow.Continue
+                                        _ =>
+                                        let candidate_records2 :=
+                                          deref_mut_back1 s6
+                                        let (s7, deref_mut_back2) ←
+                                          lift (alloc.vec.Vec.deref_mut
+                                            candidate_records2)
+                                        let s8 ←
+                                          alloc.slice.Slice.sort_by
+                                            source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                            s7 ()
+                                        let o3 ←
+                                          lift (U32.checked_add
+                                            self.current_generation 1#u32)
+                                        let r10 ←
+                                          core.option.Option.ok_or_else
+                                            source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                            o3 ()
+                                        let cf10 ←
+                                          core.result.Result.Insts.CoreOpsTry.branch
+                                            r10
+                                        match cf10 with
+                                        |
+                                          core.ops.control_flow.ControlFlow.Continue
+                                          val5 =>
+                                          let i :=
+                                            alloc.vec.Vec.len self.generations
+                                          if i >=
+                                            source.procedures.MAX_GENERATIONS
+                                          then
+                                            let r11 ←
+                                              source.procedures.Refusal.new
+                                                source.procedures.RefusalKind.Exhausted
+                                                {
+                                                  field :=
+                                                    (toStr "generations"),
+                                                  message :=
+                                                    (toStr
+                                                      "retained generation limit reached")
+                                                }
+                                            ok (core.result.Result.Err r11,
+                                              self)
+                                          else
+                                            let candidate_records3 :=
+                                              deref_mut_back2 s8
+                                            let s9 :=
+                                              alloc.vec.Vec.deref
+                                                candidate_records3
+                                            let r11 ←
+                                              source.procedures.ProcedureLibrary.rebuild_chunks
+                                                «namespace»
+                                                self.chunk_revision s9
+                                            let cf11 ←
+                                              core.result.Result.Insts.CoreOpsTry.branch
+                                                r11
+                                            match cf11 with
+                                            |
+                                              core.ops.control_flow.ControlFlow.Continue
+                                              val6 =>
+                                              let a ←
+                                                source.chunks.Library.impl.revision
+                                                  val6
+                                              let r12 ←
+                                                source.procedures.ProcedureLibrary.snapshot
+                                                  {
+                                                    generation := val5,
+                                                    parent_generation :=
+                                                      (some
+                                                        self.current_generation),
+                                                    rollback_of := none,
+                                                    kind :=
+                                                      source.procedures.GenerationKind.Publish
+                                                  } a candidate_records3
+                                              let cf12 ←
+                                                core.result.Result.Insts.CoreOpsTry.branch
+                                                  r12
+                                              match cf12 with
+                                              |
+                                                core.ops.control_flow.ControlFlow.Continue
+                                                val7 =>
+                                                let candidate_generations ←
+                                                  alloc.vec.CloneVec.clone
+                                                    source.procedures.Snapshot.Insts.CoreCloneClone
+                                                    self.generations
+                                                let candidate_generations1 ←
+                                                  alloc.vec.Vec.push
+                                                    candidate_generations val7
+                                                let s10 :=
+                                                  alloc.vec.Vec.deref
+                                                    candidate_generations1
+                                                let r13 ←
+                                                  source.procedures.persistence.encode_parts
+                                                    self.chunk_revision s10
+                                                    val5
+                                                let cf13 ←
+                                                  core.result.Result.Insts.CoreOpsTry.branch
+                                                    r13
+                                                match cf13 with
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Continue
+                                                  val8 =>
+                                                  let i1 :=
+                                                    alloc.vec.Vec.len val8
+                                                  if i1 >
+                                                    source.procedures.MAX_STORAGE_BYTES
+                                                  then
+                                                    let r14 ←
+                                                      source.procedures.Refusal.new
+                                                        source.procedures.RefusalKind.Exhausted
+                                                        {
+                                                          field :=
+                                                            (toStr
+                                                              "library.bytes"),
+                                                          message :=
+                                                            (toStr
+                                                              "append-only procedure generations exceed the retained storage bound")
+                                                        }
+                                                    ok (core.result.Result.Err
+                                                      r14, self)
+                                                  else
+                                                    ok (core.result.Result.Ok
+                                                      record.procedure_id,
+                                                      {
+                                                        self
+                                                          with
+                                                          chunk_library := val6,
+                                                          generations :=
+                                                            candidate_generations1,
+                                                          current_generation :=
+                                                            val5
+                                                      })
+                                                |
+                                                  core.ops.control_flow.ControlFlow.Break
+                                                  residual =>
+                                                  let r14 ←
+                                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                      (Array Std.U8 32#usize)
+                                                      (core.convert.FromSame
+                                                      source.procedures.Refusal)
+                                                      residual
+                                                  ok (r14, self)
+                                              |
+                                                core.ops.control_flow.ControlFlow.Break
+                                                residual =>
+                                                let r13 ←
+                                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                    (Array Std.U8 32#usize)
+                                                    (core.convert.FromSame
+                                                    source.procedures.Refusal)
+                                                    residual
+                                                ok (r13, self)
+                                            |
+                                              core.ops.control_flow.ControlFlow.Break
+                                              residual =>
+                                              let r12 ←
+                                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                  (Array Std.U8 32#usize)
+                                                  (core.convert.FromSame
+                                                  source.procedures.Refusal)
+                                                  residual
+                                              ok (r12, self)
+                                        |
+                                          core.ops.control_flow.ControlFlow.Break
+                                          residual =>
+                                          let r11 ←
+                                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                              (Array Std.U8 32#usize)
+                                              (core.convert.FromSame
+                                              source.procedures.Refusal)
+                                              residual
+                                          ok (r11, self)
+                                      | core.ops.control_flow.ControlFlow.Break
+                                        residual =>
+                                        let r10 ←
+                                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                            (Array Std.U8 32#usize)
+                                            (core.convert.FromSame
+                                            source.procedures.Refusal) residual
+                                        ok (r10, self)
+                                  | core.ops.control_flow.ControlFlow.Break
+                                    residual =>
+                                    let r9 ←
+                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                        (Array Std.U8 32#usize)
+                                        (core.convert.FromSame
+                                        source.procedures.Refusal) residual
+                                    ok (r9, self)
+                                | core.ops.control_flow.ControlFlow.Break
+                                  residual =>
+                                  let r8 ←
+                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                      (Array Std.U8 32#usize)
+                                      (core.convert.FromSame
+                                      source.procedures.Refusal) residual
+                                  ok (r8, self)
+                            else
+                              let r7 ←
+                                source.procedures.ProcedureLibrary.merge_state
+                                  val1 record1
+                              let cf7 ←
+                                core.result.Result.Insts.CoreOpsTry.branch r7
+                              match cf7 with
+                              | core.ops.control_flow.ControlFlow.Continue val4
+                                =>
+                                let r8 ←
+                                  source.procedures.ProcedureLibrary.validate_record
+                                    val4 policy true
+                                let cf8 ←
+                                  core.result.Result.Insts.CoreOpsTry.branch r8
+                                match cf8 with
+                                | core.ops.control_flow.ControlFlow.Continue _
+                                  =>
+                                  let b5 ←
+                                    source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
+                                      val1 val4
+                                  if b5
+                                  then
+                                    ok (core.result.Result.Ok
+                                      val4.procedure_id, self)
+                                  else
+                                    let (s3, deref_mut_back) ←
+                                      lift (alloc.vec.Vec.deref_mut
+                                        candidate_records)
+                                    let (o2, get_mut_back) ←
+                                      core.slice.Slice.get_mut
+                                        (core.slice.index.SliceIndexUsizeSlice
+                                        source.procedures.ProcedureRecord) s3
+                                        existing_index
+                                    let s4 ←
+                                      match o2 with
+                                      | none => ok (get_mut_back none)
+                                      | some _ => ok (get_mut_back (some val4))
+                                    let candidate_records1 := deref_mut_back s4
+                                    let (s5, deref_mut_back1) ←
+                                      lift (alloc.vec.Vec.deref_mut
+                                        candidate_records1)
+                                    let (r9, s6) ←
+                                      source.procedures.ProcedureLibrary.canonicalize_evidence
+                                        s5
+                                    let cf9 ←
+                                      core.result.Result.Insts.CoreOpsTry.branch
+                                        r9
+                                    match cf9 with
+                                    |
+                                      core.ops.control_flow.ControlFlow.Continue
+                                      _ =>
+                                      let candidate_records2 :=
+                                        deref_mut_back1 s6
+                                      let (s7, deref_mut_back2) ←
+                                        lift (alloc.vec.Vec.deref_mut
+                                          candidate_records2)
+                                      let s8 ←
+                                        alloc.slice.Slice.sort_by
+                                          source.procedures.ProcedureLibrary.admit_state.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
+                                          s7 ()
+                                      let o3 ←
+                                        lift (U32.checked_add
+                                          self.current_generation 1#u32)
+                                      let r10 ←
+                                        core.option.Option.ok_or_else
+                                          source.procedures.ProcedureLibrary.admit_state.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
+                                          o3 ()
+                                      let cf10 ←
+                                        core.result.Result.Insts.CoreOpsTry.branch
+                                          r10
+                                      match cf10 with
+                                      |
+                                        core.ops.control_flow.ControlFlow.Continue
+                                        val5 =>
+                                        let i :=
+                                          alloc.vec.Vec.len self.generations
+                                        if i >=
+                                          source.procedures.MAX_GENERATIONS
+                                        then
+                                          let r11 ←
+                                            source.procedures.Refusal.new
+                                              source.procedures.RefusalKind.Exhausted
+                                              {
+                                                field := (toStr "generations"),
+                                                message :=
+                                                  (toStr
+                                                    "retained generation limit reached")
+                                              }
+                                          ok (core.result.Result.Err r11, self)
+                                        else
+                                          let candidate_records3 :=
+                                            deref_mut_back2 s8
+                                          let s9 :=
+                                            alloc.vec.Vec.deref
+                                              candidate_records3
+                                          let r11 ←
+                                            source.procedures.ProcedureLibrary.rebuild_chunks
+                                              «namespace» self.chunk_revision
+                                              s9
+                                          let cf11 ←
+                                            core.result.Result.Insts.CoreOpsTry.branch
+                                              r11
+                                          match cf11 with
+                                          |
+                                            core.ops.control_flow.ControlFlow.Continue
+                                            val6 =>
+                                            let a ←
+                                              source.chunks.Library.impl.revision
+                                                val6
+                                            let r12 ←
+                                              source.procedures.ProcedureLibrary.snapshot
+                                                {
+                                                  generation := val5,
+                                                  parent_generation :=
+                                                    (some
+                                                      self.current_generation),
+                                                  rollback_of := none,
+                                                  kind :=
+                                                    source.procedures.GenerationKind.Publish
+                                                } a candidate_records3
+                                            let cf12 ←
+                                              core.result.Result.Insts.CoreOpsTry.branch
+                                                r12
+                                            match cf12 with
+                                            |
+                                              core.ops.control_flow.ControlFlow.Continue
+                                              val7 =>
+                                              let candidate_generations ←
+                                                alloc.vec.CloneVec.clone
+                                                  source.procedures.Snapshot.Insts.CoreCloneClone
+                                                  self.generations
+                                              let candidate_generations1 ←
+                                                alloc.vec.Vec.push
+                                                  candidate_generations val7
+                                              let s10 :=
+                                                alloc.vec.Vec.deref
+                                                  candidate_generations1
+                                              let r13 ←
+                                                source.procedures.persistence.encode_parts
+                                                  self.chunk_revision s10 val5
+                                              let cf13 ←
+                                                core.result.Result.Insts.CoreOpsTry.branch
+                                                  r13
+                                              match cf13 with
+                                              |
+                                                core.ops.control_flow.ControlFlow.Continue
+                                                val8 =>
+                                                let i1 :=
+                                                  alloc.vec.Vec.len val8
+                                                if i1 >
+                                                  source.procedures.MAX_STORAGE_BYTES
+                                                then
+                                                  let r14 ←
+                                                    source.procedures.Refusal.new
+                                                      source.procedures.RefusalKind.Exhausted
+                                                      {
+                                                        field :=
+                                                          (toStr
+                                                            "library.bytes"),
+                                                        message :=
+                                                          (toStr
+                                                            "append-only procedure generations exceed the retained storage bound")
+                                                      }
+                                                  ok (core.result.Result.Err
+                                                    r14, self)
+                                                else
+                                                  ok (core.result.Result.Ok
+                                                    record.procedure_id,
+                                                    {
+                                                      self
+                                                        with
+                                                        chunk_library := val6,
+                                                        generations :=
+                                                          candidate_generations1,
+                                                        current_generation :=
+                                                          val5
+                                                    })
+                                              |
+                                                core.ops.control_flow.ControlFlow.Break
+                                                residual =>
+                                                let r14 ←
+                                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                    (Array Std.U8 32#usize)
+                                                    (core.convert.FromSame
+                                                    source.procedures.Refusal)
+                                                    residual
+                                                ok (r14, self)
+                                            |
+                                              core.ops.control_flow.ControlFlow.Break
+                                              residual =>
+                                              let r13 ←
+                                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                  (Array Std.U8 32#usize)
+                                                  (core.convert.FromSame
+                                                  source.procedures.Refusal)
+                                                  residual
+                                              ok (r13, self)
+                                          |
+                                            core.ops.control_flow.ControlFlow.Break
+                                            residual =>
+                                            let r12 ←
+                                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                (Array Std.U8 32#usize)
+                                                (core.convert.FromSame
+                                                source.procedures.Refusal)
+                                                residual
+                                            ok (r12, self)
+                                      | core.ops.control_flow.ControlFlow.Break
+                                        residual =>
+                                        let r11 ←
+                                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                            (Array Std.U8 32#usize)
+                                            (core.convert.FromSame
+                                            source.procedures.Refusal) residual
+                                        ok (r11, self)
+                                    | core.ops.control_flow.ControlFlow.Break
+                                      residual =>
+                                      let r10 ←
+                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                          (Array Std.U8 32#usize)
+                                          (core.convert.FromSame
+                                          source.procedures.Refusal) residual
+                                      ok (r10, self)
+                                | core.ops.control_flow.ControlFlow.Break
+                                  residual =>
+                                  let r9 ←
+                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                      (Array Std.U8 32#usize)
+                                      (core.convert.FromSame
+                                      source.procedures.Refusal) residual
+                                  ok (r9, self)
+                              | core.ops.control_flow.ControlFlow.Break
+                                residual =>
+                                let r8 ←
+                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                    (Array Std.U8 32#usize)
+                                    (core.convert.FromSame
+                                    source.procedures.Refusal) residual
+                                ok (r8, self)
+                    | core.ops.control_flow.ControlFlow.Break residual =>
+                      let r7 ←
+                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                          (Array Std.U8 32#usize) (core.convert.FromSame
+                          source.procedures.Refusal) residual
+                      ok (r7, self)
                   | core.ops.control_flow.ControlFlow.Break residual =>
-                    let r7 ←
+                    let r6 ←
                       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                         (Array Std.U8 32#usize) (core.convert.FromSame
                         source.procedures.Refusal) residual
-                    ok (r7, self)
+                    ok (r6, self)
                 | core.ops.control_flow.ControlFlow.Break residual =>
-                  let r6 ←
+                  let r5 ←
                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                       (Array Std.U8 32#usize) (core.convert.FromSame
                       source.procedures.Refusal) residual
-                  ok (r6, self)
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                let r5 ←
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    (Array Std.U8 32#usize) (core.convert.FromSame
-                    source.procedures.Refusal) residual
-                ok (r5, self)
+                  ok (r5, self)
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r4 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -197364,7 +201132,7 @@ def source.procedures.ProcedureLibrary.replace
       { replacement with supersedes := (some old_id) } true
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::publish_snapshot]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1957:4-1994:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2026:4-2063:5 -/
 def source.procedures.ProcedureLibrary.publish_snapshot
   (self : source.procedures.ProcedureLibrary) («namespace» : source.Session)
   (records : alloc.vec.Vec source.procedures.ProcedureRecord)
@@ -197447,7 +201215,7 @@ def source.procedures.ProcedureLibrary.publish_snapshot
       ok (r1, self)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#4}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1936:75-1944:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2005:75-2013:9 -/
 def
   source.procedures.ProcedureLibrary.demote.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.ProcedureLibrary.demote.closure_4) (_ : Unit) :
@@ -197460,7 +201228,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#4}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1936:75-1944:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2005:75-2013:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.demote.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -197472,7 +201240,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::ProcedureRecord, &'_1 noble_contracts::source::procedures::ProcedureRecord), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#3}}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1933:34-1935:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2002:34-2004:9 -/
 def
   source.procedures.ProcedureLibrary.demote.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering.call_mut
   (c : source.procedures.ProcedureLibrary.demote.closure_3)
@@ -197485,7 +201253,7 @@ def
   ok (o, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::ProcedureRecord, &'_1 noble_contracts::source::procedures::ProcedureRecord), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#3}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1933:34-1935:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2002:34-2004:9 -/
 def
   source.procedures.ProcedureLibrary.demote.closure_3.Insts.CoreOpsFunctionFnOncePairShared0ProcedureRecordShared1ProcedureRecordOrdering.call_once
   (c : source.procedures.ProcedureLibrary.demote.closure_3)
@@ -197499,7 +201267,7 @@ def
   ok o
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::ProcedureRecord, &'_1 noble_contracts::source::procedures::ProcedureRecord), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#3}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1933:34-1935:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2002:34-2004:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.demote.closure_3.Insts.CoreOpsFunctionFnOncePairShared0ProcedureRecordShared1ProcedureRecordOrdering
@@ -197512,7 +201280,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::ProcedureRecord, &'_1 noble_contracts::source::procedures::ProcedureRecord), core::cmp::Ordering> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#3}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1933:34-1935:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2002:34-2004:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.demote.closure_3.Insts.CoreOpsFunctionFnMutPairShared0ProcedureRecordShared1ProcedureRecordOrdering
@@ -197526,7 +201294,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#2}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1919:66-1921:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1988:66-1990:9 -/
 def
   source.procedures.ProcedureLibrary.demote.closure_2.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool.call_mut
   (c : source.procedures.ProcedureLibrary.demote.closure_2)
@@ -197539,7 +201307,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1919:66-1921:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1988:66-1990:9 -/
 def
   source.procedures.ProcedureLibrary.demote.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool.call_once
   (c : source.procedures.ProcedureLibrary.demote.closure_2)
@@ -197552,7 +201320,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1919:66-1921:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1988:66-1990:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.demote.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool
@@ -197564,7 +201332,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1919:66-1921:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1988:66-1990:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.demote.closure_2.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool
@@ -197577,7 +201345,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1893:28-1901:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1962:28-1970:17 -/
 def
   source.procedures.ProcedureLibrary.demote.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.ProcedureLibrary.demote.closure_1) (_ : Unit) :
@@ -197588,7 +201356,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1893:28-1901:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1962:28-1970:17 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.demote.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -197600,7 +201368,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1891:52-1891:96 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1960:52-1960:96 -/
 def
   source.procedures.ProcedureLibrary.demote.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool.call_mut
   (c : source.procedures.ProcedureLibrary.demote.closure)
@@ -197613,7 +201381,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1891:52-1891:96 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1960:52-1960:96 -/
 def
   source.procedures.ProcedureLibrary.demote.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool.call_once
   (c : source.procedures.ProcedureLibrary.demote.closure)
@@ -197626,7 +201394,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1891:52-1891:96 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1960:52-1960:96 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.demote.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ProcedureRecordBool
@@ -197637,7 +201405,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::ProcedureRecord,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1891:52-1891:96 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1960:52-1960:96 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.demote.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProcedureRecordBool
@@ -197650,7 +201418,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::demote]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1885:4-1955:5
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1954:4-2024:5
     Visibility: public -/
 def source.procedures.ProcedureLibrary.demote
   (self : source.procedures.ProcedureLibrary) («namespace» : source.Session)
@@ -197754,7 +201522,7 @@ def source.procedures.ProcedureLibrary.demote
     ok (r1, self)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{impl core::ops::function::FnMut<(&'_1 alloc::string::String,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{closure#1}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2077:82-2079:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2146:82-2148:13 -/
 def
   source.procedures.ProcedureLibrary.check_rollback_record.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1StringBool.call_mut
   (c : source.procedures.ProcedureLibrary.check_rollback_record.closure_1)
@@ -197768,7 +201536,7 @@ def
   ok (¬ b, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{impl core::ops::function::FnOnce<(&'_1 alloc::string::String,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2077:82-2079:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2146:82-2148:13 -/
 def
   source.procedures.ProcedureLibrary.check_rollback_record.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1StringBool.call_once
   (c : source.procedures.ProcedureLibrary.check_rollback_record.closure_1)
@@ -197781,7 +201549,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{impl core::ops::function::FnOnce<(&'_1 alloc::string::String,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2077:82-2079:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2146:82-2148:13 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.check_rollback_record.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1StringBool
@@ -197793,7 +201561,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{impl core::ops::function::FnMut<(&'_1 alloc::string::String,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2077:82-2079:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2146:82-2148:13 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.check_rollback_record.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1StringBool
@@ -197807,7 +201575,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{impl core::ops::function::FnMut<(&'_1 alloc::string::String,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2055:83-2057:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2124:83-2126:13 -/
 def
   source.procedures.ProcedureLibrary.check_rollback_record.closure.Insts.CoreOpsFunctionFnMutTupleShared1StringBool.call_mut
   (c : source.procedures.ProcedureLibrary.check_rollback_record.closure)
@@ -197821,7 +201589,7 @@ def
   ok (¬ b, c)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{impl core::ops::function::FnOnce<(&'_1 alloc::string::String,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2055:83-2057:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2124:83-2126:13 -/
 def
   source.procedures.ProcedureLibrary.check_rollback_record.closure.Insts.CoreOpsFunctionFnOnceTupleShared1StringBool.call_once
   (c : source.procedures.ProcedureLibrary.check_rollback_record.closure)
@@ -197834,7 +201602,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{impl core::ops::function::FnOnce<(&'_1 alloc::string::String,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2055:83-2057:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2124:83-2126:13 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.check_rollback_record.closure.Insts.CoreOpsFunctionFnOnceTupleShared1StringBool
@@ -197846,7 +201614,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{impl core::ops::function::FnMut<(&'_1 alloc::string::String,), bool> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2055:83-2057:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2124:83-2126:13 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.check_rollback_record.closure.Insts.CoreOpsFunctionFnMutTupleShared1StringBool
@@ -197860,7 +201628,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2054:8-2063:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2123:8-2132:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.check_rollback_record_loop0.body
   (record : source.procedures.ProcedureRecord)
@@ -197894,7 +201662,7 @@ def source.procedures.ProcedureLibrary.check_rollback_record_loop0.body
   else ok (done (record, unavailable))
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2054:8-2063:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2123:8-2132:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.check_rollback_record_loop0
   (record : source.procedures.ProcedureRecord)
@@ -197909,7 +201677,7 @@ def source.procedures.ProcedureLibrary.check_rollback_record_loop0
     (unavailable, evidence_index)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2076:8-2085:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2145:8-2154:9 -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.check_rollback_record_loop1.body
   (record : source.procedures.ProcedureRecord)
@@ -197943,7 +201711,7 @@ def source.procedures.ProcedureLibrary.check_rollback_record_loop1.body
   else ok (done unavailable)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record]: loop 1:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2076:8-2085:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2145:8-2154:9 -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.check_rollback_record_loop1
   (record : source.procedures.ProcedureRecord)
@@ -197958,7 +201726,7 @@ def source.procedures.ProcedureLibrary.check_rollback_record_loop1
     (unavailable, receipt_index)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::check_rollback_record]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2047:4-2107:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2116:4-2176:5 -/
 def source.procedures.ProcedureLibrary.check_rollback_record
   (record : source.procedures.ProcedureRecord) (record_index : Std.Usize)
   (available_toolchains : Slice String) :
@@ -198008,7 +201776,7 @@ def source.procedures.ProcedureLibrary.check_rollback_record
     ok (core.result.Result.Err r)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rollback::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rollback::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2024:75-2032:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2093:75-2101:9 -/
 def
   source.procedures.ProcedureLibrary.rollback.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.ProcedureLibrary.rollback.closure_1) (_ : Unit) :
@@ -198021,7 +201789,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rollback::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rollback::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2024:75-2032:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2093:75-2101:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.rollback.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -198033,7 +201801,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rollback::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rollback::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2002:65-2010:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2071:65-2079:9 -/
 def
   source.procedures.ProcedureLibrary.rollback.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.ProcedureLibrary.rollback.closure) (_ : Unit) :
@@ -198046,7 +201814,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rollback::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rollback::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2002:65-2010:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2071:65-2079:9 -/
 @[reducible]
 def
   source.procedures.ProcedureLibrary.rollback.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -198058,7 +201826,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rollback]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2015:8-2022:9
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2084:8-2091:9
     Visibility: public -/
 @[rust_loop_body]
 def source.procedures.ProcedureLibrary.rollback_loop.body
@@ -198087,7 +201855,7 @@ def source.procedures.ProcedureLibrary.rollback_loop.body
   else ok (done outcome)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rollback]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2015:8-2022:9
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2084:8-2091:9
     Visibility: public -/
 @[rust_loop]
 def source.procedures.ProcedureLibrary.rollback_loop
@@ -198104,7 +201872,7 @@ def source.procedures.ProcedureLibrary.rollback_loop
     (outcome, record_index)
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rollback]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1996:4-2043:5
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 2065:4-2112:5
     Visibility: public -/
 def source.procedures.ProcedureLibrary.rollback
   (self : source.procedures.ProcedureLibrary) («namespace» : source.Session)
