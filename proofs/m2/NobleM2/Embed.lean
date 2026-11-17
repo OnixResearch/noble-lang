@@ -26,6 +26,22 @@ not just the list spine — and the public wrappers add a constant margin, so
 the fuel-exhausted fallback arms never fire on any well-formed input: for
 every reference value, embedding followed by projection is the identity on
 the fragment's identifiers and shapes.
+
+The extracted kernel's vocabulary is larger than fragment v0's:
+
+* Its environment carries twelve fields the reference environment does not
+  model; `embedEnv` fixes them at an explicit admission surface (documented
+  there) that is a premise of every refinement theorem.
+* Its types include contract, evidence, certified, live-reference, nominal and
+  generic-nominal types, which the embedding never produces. Their projection
+  (`outOfFragmentTy`) is a resource type whose kind lies outside the `U32`
+  identifier range, so it can never coincide with the projection of an
+  in-fragment type or with a type the reference derives from fragment inputs.
+* Its constraints include five rejection reasons the reference checker never
+  emits; they project onto the matching kernel-only reference constructors.
+* Its checked result also lists live dispatch sites, which only slot
+  invocations record; the embedded environment disables live slots and the
+  embedding never produces such a node, so the projection drops the list.
 -/
 
 import NobleKernel
@@ -290,7 +306,27 @@ def embedBehavior : Behavior → noble_kernel.contracts.Behavior
   | .testEmit => .TestEmitBehavior
   | .named => .NamedBehavior
 
-/-- Reference environment → extracted environment. -/
+/-- Reference environment → extracted environment.
+
+    The extracted environment has twelve fields the fragment v0 reference
+    environment does not model. The embedding fixes them at the values of the
+    Rust bootstrap environment (`contracts::environment`, which the kernel's
+    acceptance tests extend), so every refinement theorem is about a kernel
+    run whose environment has:
+
+    - one declared resource kind, `fixtureResource` (Rust's
+      `FIXTURE_RESOURCE`): the kernel admits a resource type only when its
+      kind is declared, and the fixture kind is the fragment's only one;
+    - no nominal declarations, generic variants or live-resource nominals;
+    - every optional profile unselected: `live_slots`, `live_test_hosts`,
+      `text_cursor` and `calculator` are all `false`;
+    - no caller module and no declared-module admission;
+    - no definition owners and no bound adapters.
+
+    That admission surface is a premise of the theorems, not a fact about the
+    Rust kernel: nothing here is evidence about a run declaring another
+    resource kind, nominals, an optional profile, a caller module, declared
+    modules, owners or adapters. -/
 def embedEnv (env : Env) : noble_kernel.contracts.Env :=
   { defs := vecOf embedScheme env.defs
     kinds := vecOf embedBehavior env.kinds
@@ -298,6 +334,19 @@ def embedEnv (env : Env) : noble_kernel.contracts.Env :=
     -- data: no dependencies and no user-declared schemas embed.
     deps := alloc.vec.Vec.new _
     schemas := alloc.vec.Vec.new _
+    -- The admission surface documented above.
+    nominals := alloc.vec.Vec.new _
+    generic_variants := alloc.vec.Vec.new _
+    resource_kinds := vecOf embedU32 [fixtureResource]
+    live_resource_nominals := alloc.vec.Vec.new _
+    live_slots := false
+    live_test_hosts := false
+    caller_module := none
+    declared_modules := false
+    text_cursor := false
+    calculator := false
+    definition_owners := alloc.vec.Vec.new _
+    bound_adapters := alloc.vec.Vec.new _
     effects := vecOf embedU32 env.effects }
 
 /-! ## Projection: extracted values → reference model -/
@@ -344,7 +393,9 @@ theorem sizeOf_vec2_lt_programType (i o : alloc.vec.Vec noble_kernel.types.Ty)
 /-! A size measure for extracted types: one point per constructor node. Its
     `ProgramType` arm recurses through the `Vec`/`Slice`/`ListN` field chain,
     discharged by `sizeOf_programType_lt`. The body never touches `sizeOf`, so
-    the size instances of the extracted module are not needed at run time. -/
+    the size instances of the extracted module are not needed at run time.
+    The types outside fragment v0 count one point: their projection
+    (`outOfFragmentTy`) does not descend into their payloads. -/
 
 mutual
 
@@ -361,6 +412,8 @@ mutual
       1 + genTyListSizeN i.slice.leng i.slice.list
         + genTyListSizeN o.slice.leng o.slice.list
     | .ResourceType _ => 1
+    | .ContractType | .EvidenceType | .CertifiedType | .LiveRefType _ _ _
+    | .NominalType _ _ | .GenericNominalType _ _ _ => 1
     termination_by t => sizeOf t
     decreasing_by
       all_goals
@@ -386,6 +439,17 @@ def genTyListSize : List noble_kernel.types.Ty → Nat
   | [] => 1
   | t :: ts => 1 + genTySize t + genTyListSize ts
 
+/-- The projection of an extracted type outside fragment v0: a contract,
+    evidence, certified, live-reference, nominal or generic-nominal type. The
+    reference universe has no such type, so the projection marks it as a
+    resource type of kind `2^32 + tag`. That kind lies outside the `U32`
+    range: no extracted resource kind projects onto it, and no fragment
+    identifier reaches it (every fragment identifier is far below `2^32`, see
+    the module docstring), so a projected outcome carrying it never equals one
+    the reference derives from fragment inputs. The tag tells the six
+    constructors apart; their payloads are not projected. -/
+def outOfFragmentTy (tag : Nat) : Ty := .resource (2 ^ 32 + tag)
+
 mutual
 
   /-- Fuel-driven type projection. -/
@@ -404,6 +468,12 @@ mutual
       .program (projectTyListFuel fuel i.val) (projectTyListFuel fuel o.val)
         (projectEffSet e)
     | _ + 1, .ResourceType k => .resource (projectU32 k)
+    | _ + 1, .ContractType => outOfFragmentTy 0
+    | _ + 1, .EvidenceType => outOfFragmentTy 1
+    | _ + 1, .CertifiedType => outOfFragmentTy 2
+    | _ + 1, .LiveRefType _ _ _ => outOfFragmentTy 3
+    | _ + 1, .NominalType _ _ => outOfFragmentTy 4
+    | _ + 1, .GenericNominalType _ _ _ => outOfFragmentTy 5
     termination_by fuel
 
   /-- Fuel-driven stack projection over the extracted type list. -/
@@ -435,7 +505,11 @@ def projectDerivation (d : noble_kernel.untrusted.Derivation) : Derivation :=
   { node := projectU32 d.node
     interface := projectInterface d.interface }
 
-/-- Extracted checked result → reference checked result. -/
+/-- Extracted checked result → reference checked result. The live dispatch
+    sites are dropped: only a slot invocation records one, and the embedded
+    environment disables live slots (the kernel refuses every slot invocation
+    node at preflight), so the list is empty on every run over an embedded
+    environment. -/
 def project_checked (c : noble_kernel.untrusted.Checked) : Checked :=
   { interface := projectInterface c.interface
     derivations := c.derivations.val.map projectDerivation }
@@ -452,6 +526,14 @@ def projectConstraint : noble_kernel.untrusted.Constraint → Constraint
   | .MalformedReference n => .malformedReference (projectU32 n)
   | .UnknownDefinition d => .unknownDefinition (projectU32 d)
   | .CyclicWitness => .cyclicWitness
+  -- Kernel-only rejection reasons: the reference checker never emits these,
+  -- and the projection keeps them distinguishable rather than mapping them
+  -- onto an unrelated reason.
+  | .InvalidType => .invalidType
+  | .InvalidContract => .invalidContract
+  | .PrivateDefinition d => .privateDefinition (projectU32 d)
+  | .BorrowProvenance => .borrowProvenance
+  | .SlotSite => .slotSite
 
 /-- Extracted diagnostic → reference diagnostic. -/
 def projectDiagnostic (d : noble_kernel.untrusted.Diagnostic) : Diagnostic :=

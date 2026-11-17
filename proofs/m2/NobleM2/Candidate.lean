@@ -113,6 +113,21 @@ inductive Constraint where
   | malformedReference : Nat → Constraint
   | unknownDefinition : Nat → Constraint
   | cyclicWitness : Constraint
+  /-- The extracted kernel rejects a type or pattern descriptor that differs
+      from its declared canonical schema. The fragment v0 checker never emits
+      this reason; it exists so kernel diagnostics project without loss
+      (`NobleM2.projectConstraint`). -/
+  | invalidType : Constraint
+  /-- Likewise for a forged nominal-operation or bound-adapter contract. -/
+  | invalidContract : Constraint
+  /-- Likewise for an invocation private to a different owner or without a
+      binding. -/
+  | privateDefinition : Nat → Constraint
+  /-- Likewise for a live slot whose reference is not one of the independently
+      supplied borrowed inputs. -/
+  | borrowProvenance : Constraint
+  /-- Likewise for a candidate that aliases another live dispatch site. -/
+  | slotSite : Constraint
   deriving Repr, Inhabited
 
 /-- One rejection's diagnostic. -/
