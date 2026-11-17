@@ -42,6 +42,12 @@ wire producer changes links and recomputes state and library integrity
 indexes: fork, cycle, self-cycle, dangling-target, live-target and orphan
 controls must refuse at `supersedes`, rather than merely at a stale checksum.
 
+The lineage cases live in `tests/editor/procedures/generations/lineage.rs`
+and `tests/editor/procedures/reload-negative/lineage.rs`, under the existing
+editor test target. After splitting the oversized files and making wire-offset
+arithmetic checked, that target still passed 126 tests with 2 historical
+measurements ignored; no test or Cargo target was dropped.
+
 Observed verification for this correction, not retained clean-source
 receipts:
 
@@ -345,7 +351,7 @@ proof claim: independent MC2 checked-evidence remains required.
 | Reuse, two-record composition, ordinary source/kernel re-admission, invalid contract/effect/capability/policy refusals | DONE | `tests/editor/procedures/composition.rs`, `admission.rs`; `procedures/composition.rs`. Resulting authority is checked under the caller's budgets. |
 | Exact-record deduplication and refusal of digest-only alias claims | DONE | `tests/editor/procedures/identity.rs` and `admission::an_alias_digest_cannot_replace_a_verified_exact_pair_certificate`; no claim that a digest proves semantic equivalence. |
 | Positive semantic alias of distinct records in the bounded pure-I64 fragment (LPL-04) | DONE | `procedures/alias.rs` recomputes bounded polynomial forms and empty closure digests from both retained records on admission and reload; `admission/alias/{mod,forgery}.rs` tests distribution, wraparound, success, replay and forged/unsupported refusals. The distinct `validation/passed` evidence does not claim a #56 proof, proof-demanding promotion or formal Rust/Lean refinement. |
-| Two-process reload equality, deterministic dependency order, mutation/encoder-drift refusals, replacement and rollback | DONE, with the issue #136 correction above | `tests/editor/procedures/identity.rs`, `reload-negative.rs`, `generations.rs`. Two child processes compare the exact identity manifest against the parent. Single-successor chains retain predecessor edges; rebound forks, cycles and dangling links refuse, and rollback/reload preserve exact closures. |
+| Two-process reload equality, deterministic dependency order, mutation/encoder-drift refusals, replacement and rollback | DONE, with the issue #136 correction above | `tests/editor/procedures/identity.rs`, `reload-negative/lineage.rs`, `generations/lineage.rs`. Two child processes compare the exact identity manifest against the parent. Single-successor chains retain predecessor edges; rebound forks, cycles and dangling links refuse, and rollback/reload preserve exact closures. |
 | Frozen held-out composed-task evaluation and per-seed library growth/retrieval overhead | DONE for the **repaired fixture** | Criterion SHA-256 above; both attempts retained separately; one repaired repeat meets 8/8 and 24/24. Per-arm rows, bytes, query counts, restart, retention, regression and null break-even reasons are in `transfer-repeat.json`. This is not an incremental benefit over the frozen-hand library. |
 | #116-generated held-out **transfer measurement**, with grammar/budget/trace/verifier status and no target leakage | DONE for frozen v3 | `criteria-producer-targets-v3.json`/`producer-targets-v3.txt` were mechanically derived and committed before target generation. One clean-source #116 producer receipt retains candidates, budgets, trace, external solver answers, held-out producer examples and normal CLI re-admission. One clean-source four-arm receipt `producer-transfer-v3.json` plus raw log gives GO, learned 8/8 and 24/24, hand 8/8, other controls 0/8, all restart/regression checks passed. Generated target bodies are oracle-only; acquired source procedures alone enter the library. Neither v1 nor defective v2 was rerun. |
 | No runtime teacher/proposer fallback, including an attempted-call refusal | DONE for v3; historical original frozen clause unmet | V3's 16 scored rows have zero attempts and calls; its four isolated negative controls each deliberately attempted both producer types and refused before any callbacks or library mutation. The original frozen repeat missed the attempted-call clause and is not retroactively repaired. |
