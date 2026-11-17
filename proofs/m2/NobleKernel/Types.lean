@@ -22,25 +22,42 @@ set_option maxRecDepth 2048
 namespace noble_kernel
 
 /-- [noble_kernel::types::EffId]
-    Source: 'crates/noble-kernel/src/types.rs', lines 26:0-26:26
+    Source: 'crates/noble-kernel/src/types.rs', lines 61:0-61:26
     Visibility: public -/
 @[reducible]
 def types.EffId := Std.U32
 
 /-- [noble_kernel::types::EffSet]
-    Source: 'crates/noble-kernel/src/types.rs', lines 30:0-30:42
+    Source: 'crates/noble-kernel/src/types.rs', lines 65:0-65:42
     Visibility: public -/
 @[reducible]
 def types.EffSet := alloc.vec.Vec types.EffId
 
+/-- [noble_kernel::types::NominalTypeId]
+    Source: 'crates/noble-kernel/src/types.rs', lines 39:0-42:1
+    Visibility: public -/
+structure types.NominalTypeId where
+  module : Std.U64
+  ordinal : Std.U32
+
 /-- [noble_kernel::types::ResourceKind]
-    Source: 'crates/noble-kernel/src/types.rs', lines 15:0-15:33
+    Source: 'crates/noble-kernel/src/types.rs', lines 35:0-35:33
     Visibility: public -/
 @[reducible]
 def types.ResourceKind := Std.U32
 
+mutual
+
+/-- [noble_kernel::types::NominalShape]
+    Source: 'crates/noble-kernel/src/types.rs', lines 47:0-50:1
+    Visibility: public -/
+@[discriminant isize]
+inductive types.NominalShape where
+| Opaque : types.Ty → types.NominalShape
+| Variant : types.Ty → types.Ty → types.NominalShape
+
 /-- [noble_kernel::types::Ty]
-    Source: 'crates/noble-kernel/src/types.rs', lines 153:0-178:1
+    Source: 'crates/noble-kernel/src/types.rs', lines 216:0-268:1
     Visibility: public -/
 @[discriminant isize]
 inductive types.Ty where
@@ -49,6 +66,9 @@ inductive types.Ty where
 | I64Type : types.Ty
 | TextType : types.Ty
 | SyntaxType : types.Ty
+| ContractType : types.Ty
+| EvidenceType : types.Ty
+| CertifiedType : types.Ty
 | PairType : types.Ty → types.Ty → types.Ty
 | SumType : types.Ty → types.Ty → types.Ty
 | ListType : types.Ty → types.Ty
@@ -57,10 +77,23 @@ inductive types.Ty where
   alloc.vec.Vec types.Ty →
   types.EffSet →
   types.Ty
+| LiveRefType :
+  alloc.vec.Vec types.Ty →
+  alloc.vec.Vec types.Ty →
+  types.EffSet →
+  types.Ty
 | ResourceType : types.ResourceKind → types.Ty
+| NominalType : types.NominalTypeId → types.NominalShape → types.Ty
+| GenericNominalType :
+  types.NominalTypeId →
+  Array types.Ty 2#usize →
+  types.NominalShape →
+  types.Ty
+
+end
 
 /-- [noble_kernel::untrusted::Interface]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 135:0-142:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 161:0-168:1
     Visibility: public -/
 structure untrusted.Interface where
   stack_in : alloc.vec.Vec types.Ty
@@ -73,20 +106,27 @@ structure untrusted.Interface where
 @[reducible]
 def untrusted.NodeId := Std.U32
 
+/-- [noble_kernel::acceptance::BorrowedInput]
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 22:0-25:1 -/
+structure acceptance.BorrowedInput where
+  logical_position : Std.Usize
+  ty : types.Ty
+
 /-- [noble_kernel::acceptance::Frame]
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 21:0-30:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 28:0-38:1 -/
 structure acceptance.Frame where
   depth : Std.U32
   origin : Option untrusted.NodeId
   body : alloc.vec.Vec untrusted.NodeId
   index : Std.Usize
   stack : alloc.vec.Vec types.Ty
+  borrowed : alloc.vec.Vec acceptance.BorrowedInput
   effects : types.EffSet
   claimed_out : alloc.vec.Vec types.Ty
   claimed_effects : types.EffSet
 
 /-- [noble_kernel::acceptance::frames::Completion]
-    Source: 'crates/noble-kernel/src/acceptance/frames.rs', lines 4:0-18:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/frames.rs', lines 8:0-22:1 -/
 @[discriminant isize]
 inductive acceptance.frames.Completion where
 | Entry : types.EffSet → acceptance.frames.Completion
@@ -98,7 +138,7 @@ inductive acceptance.frames.Completion where
   acceptance.frames.Completion
 
 /-- [noble_kernel::untrusted::Limits]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 104:0-119:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 125:0-145:1
     Visibility: public -/
 structure untrusted.Limits where
   bytes : Std.U32
@@ -110,7 +150,7 @@ structure untrusted.Limits where
   diagnostics : Std.U32
 
 /-- [noble_kernel::untrusted::Expected]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 93:0-100:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 114:0-121:1
     Visibility: public -/
 structure untrusted.Expected where
   stack_in : alloc.vec.Vec types.Ty
@@ -118,7 +158,7 @@ structure untrusted.Expected where
   allowed_effects : types.EffSet
 
 /-- [noble_kernel::untrusted::Request]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 123:0-130:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 149:0-156:1
     Visibility: public -/
 structure untrusted.Request where
   input_bytes : Std.U32
@@ -158,22 +198,24 @@ inductive untrusted.Lit where
 | UnitLit : untrusted.Lit
 
 /-- [noble_kernel::contracts::Definition]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 11:0-11:31
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 18:0-18:31
     Visibility: public -/
 @[reducible]
 def contracts.Definition := Std.U32
 
 /-- [noble_kernel::untrusted::Node]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 53:0-76:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 53:0-97:1
     Visibility: public -/
 @[discriminant isize]
 inductive untrusted.Node where
 | Literal : untrusted.Lit → words.Inst → untrusted.Node
 | Invocation : contracts.Definition → words.Inst → untrusted.Node
+| SignedSelf : contracts.Definition → words.Inst → untrusted.Node
+| SlotInvoke : Std.U32 → Std.U32 → alloc.vec.Vec Std.U32 → untrusted.Node
 | Quotation : alloc.vec.Vec untrusted.NodeId → words.Inst → untrusted.Node
 
 /-- [noble_kernel::untrusted::Candidate]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 80:0-89:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 101:0-110:1
     Visibility: public -/
 structure untrusted.Candidate where
   format : Std.U32
@@ -191,7 +233,7 @@ inductive words.VariableKind where
 | Effect : words.VariableKind
 
 /-- [noble_kernel::shapes::EffectSlot]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 74:0-79:1
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 113:0-118:1
     Visibility: public -/
 @[discriminant isize]
 inductive shapes.EffectSlot where
@@ -199,7 +241,7 @@ inductive shapes.EffectSlot where
 | Var : words.Variable → shapes.EffectSlot
 
 /-- [noble_kernel::shapes::Pattern]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 26:0-55:1
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 28:0-81:1
     Visibility: public -/
 @[discriminant isize]
 inductive shapes.Pattern where
@@ -208,6 +250,9 @@ inductive shapes.Pattern where
 | I64Pattern : shapes.Pattern
 | TextPattern : shapes.Pattern
 | SyntaxPattern : shapes.Pattern
+| ContractPattern : shapes.Pattern
+| EvidencePattern : shapes.Pattern
+| CertifiedPattern : shapes.Pattern
 | PairPattern : shapes.Pattern → shapes.Pattern → shapes.Pattern
 | SumPattern : shapes.Pattern → shapes.Pattern → shapes.Pattern
 | ListPattern : shapes.Pattern → shapes.Pattern
@@ -216,7 +261,21 @@ inductive shapes.Pattern where
   alloc.vec.Vec shapes.Pattern →
   alloc.vec.Vec shapes.EffectSlot →
   shapes.Pattern
+| LiveRefPattern :
+  alloc.vec.Vec shapes.Pattern →
+  alloc.vec.Vec shapes.Pattern →
+  alloc.vec.Vec shapes.EffectSlot →
+  shapes.Pattern
 | ResourcePattern : types.ResourceKind → shapes.Pattern
+| NominalPattern :
+  types.NominalTypeId →
+  types.NominalShape →
+  shapes.Pattern
+| GenericNominalPattern :
+  types.NominalTypeId →
+  Array shapes.Pattern 2#usize →
+  Array Std.U8 2#usize →
+  shapes.Pattern
 | VarPattern : words.Variable → shapes.Pattern
 | StackVarPattern : words.Variable → shapes.Pattern
 
@@ -230,7 +289,7 @@ structure words.Scheme where
   effects : alloc.vec.Vec shapes.EffectSlot
 
 /-- [noble_kernel::untrusted::Constraint]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 202:0-224:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 257:0-290:1
     Visibility: public -/
 @[discriminant isize]
 inductive untrusted.Constraint where
@@ -243,10 +302,15 @@ inductive untrusted.Constraint where
 | InstantiationArity : untrusted.Constraint
 | MalformedReference : untrusted.NodeId → untrusted.Constraint
 | UnknownDefinition : contracts.Definition → untrusted.Constraint
+| InvalidType : untrusted.Constraint
+| InvalidContract : untrusted.Constraint
+| PrivateDefinition : contracts.Definition → untrusted.Constraint
 | CyclicWitness : untrusted.Constraint
+| BorrowProvenance : untrusted.Constraint
+| SlotSite : untrusted.Constraint
 
 /-- [noble_kernel::untrusted::Diagnostic]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 228:0-243:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 294:0-309:1
     Visibility: public -/
 structure untrusted.Diagnostic where
   node : Option untrusted.NodeId
@@ -257,53 +321,49 @@ structure untrusted.Diagnostic where
   provenance_available : Bool
   truncated : Bool
 
-/-- [noble_kernel::contracts::SchemaId]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 21:0-21:29
-    Visibility: public -/
-@[reducible]
-def contracts.SchemaId := Std.U32
-
-/-- [noble_kernel::untrusted::UnsupportedKind]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 183:0-196:1
-    Visibility: public -/
-@[discriminant isize]
-inductive untrusted.UnsupportedKind where
-| FormatRevision : untrusted.UnsupportedKind
-| NodeForm : untrusted.UnsupportedKind
-| SchemeForm : untrusted.UnsupportedKind
-| RecursiveDependency : contracts.Definition → untrusted.UnsupportedKind
-| RecursiveSchema : contracts.SchemaId → untrusted.UnsupportedKind
-
-/-- [noble_kernel::untrusted::LimitKind]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 164:0-179:1
-    Visibility: public -/
-@[discriminant isize]
-inductive untrusted.LimitKind where
-| Bytes : untrusted.LimitKind
-| Nodes : untrusted.LimitKind
-| Depth : untrusted.LimitKind
-| TypeSize : untrusted.LimitKind
-| StackHeight : untrusted.LimitKind
-| Work : untrusted.LimitKind
-| Diagnostics : untrusted.LimitKind
-
-/-- [noble_kernel::acceptance::Fail]
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 13:0-18:1 -/
-@[discriminant isize]
-inductive acceptance.Fail where
-| Invalid : untrusted.Diagnostic → acceptance.Fail
-| Unsupported : untrusted.UnsupportedKind → acceptance.Fail
-| Exhausted : untrusted.LimitKind → acceptance.Fail
-| Internal : acceptance.Fail
-
 /-- [noble_kernel::acceptance::parts::Site]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 16:0-21:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 24:0-27:1 -/
 structure acceptance.parts.Site where
   node : Option untrusted.NodeId
   «def» : Option contracts.Definition
 
+/-- [noble_kernel::contracts::BoundAdapter]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 206:0-213:1
+    Visibility: public -/
+structure contracts.BoundAdapter where
+  definition : contracts.Definition
+  adapter_identity : String
+  adapter_slot : Std.U32
+  input : alloc.vec.Vec types.Ty
+  output : alloc.vec.Vec types.Ty
+  effects : types.EffSet
+
+/-- [noble_kernel::contracts::GenericVariantDecl]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 180:0-185:1
+    Visibility: public -/
+structure contracts.GenericVariantDecl where
+  id : types.NominalTypeId
+  payload_params : Array Std.U8 2#usize
+  exported : Bool
+  «public» : Array Bool 2#usize
+
+/-- [noble_kernel::contracts::NominalDecl]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 168:0-175:1
+    Visibility: public -/
+structure contracts.NominalDecl where
+  id : types.NominalTypeId
+  shape : types.NominalShape
+  exported : Bool
+  «public» : Array Bool 2#usize
+
+/-- [noble_kernel::contracts::SchemaId]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 44:0-44:29
+    Visibility: public -/
+@[reducible]
+def contracts.SchemaId := Std.U32
+
 /-- [noble_kernel::contracts::SchemaDecl]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 83:0-90:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 157:0-164:1
     Visibility: public -/
 structure contracts.SchemaDecl where
   id : contracts.SchemaId
@@ -311,7 +371,7 @@ structure contracts.SchemaDecl where
   recursive : Bool
 
 /-- [noble_kernel::contracts::Behavior]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 30:0-75:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 53:0-149:1
     Visibility: public -/
 @[discriminant isize]
 inductive contracts.Behavior where
@@ -336,23 +396,96 @@ inductive contracts.Behavior where
 | ConsBehavior : contracts.Behavior
 | ListCaseBehavior : contracts.Behavior
 | TestEmitBehavior : contracts.Behavior
+| TextByteBehavior : contracts.Behavior
+| I64LessBehavior : contracts.Behavior
+| CheckedI64AddBehavior : contracts.Behavior
+| CheckedI64SubBehavior : contracts.Behavior
+| CheckedI64MulBehavior : contracts.Behavior
+| CheckedI64NegBehavior : contracts.Behavior
+| CheckedI64AbsBehavior : contracts.Behavior
+| CheckedI64LessBehavior : contracts.Behavior
+| CheckedI64DivRemBehavior : contracts.Behavior
+| CalculatorIterateBehavior : contracts.Behavior
+| CalculatorCompareBehavior : contracts.Behavior
+| CalculatorDivRemBehavior : contracts.Behavior
+| CalculatorTextFromAsciiBehavior : contracts.Behavior
+| CalculatorTextLengthBehavior : contracts.Behavior
+| ReservedBehavior : contracts.Behavior
+| BoundEmitBehavior : Std.U32 → contracts.Behavior
+| BoundClockBehavior : Std.U32 → contracts.Behavior
+| BoundCodeExportBehavior : Std.U32 → contracts.Behavior
+| BoundSendBehavior : Std.U32 → contracts.Behavior
+| NominalNewBehavior : types.NominalTypeId → contracts.Behavior
+| NominalIntoBehavior : types.NominalTypeId → contracts.Behavior
+| NominalLeftBehavior : types.NominalTypeId → contracts.Behavior
+| NominalRightBehavior : types.NominalTypeId → contracts.Behavior
+| NominalMatchBehavior : types.NominalTypeId → contracts.Behavior
+| GenericLeftBehavior : types.NominalTypeId → contracts.Behavior
+| GenericRightBehavior : types.NominalTypeId → contracts.Behavior
+| GenericMatchBehavior : types.NominalTypeId → contracts.Behavior
 | NamedBehavior : contracts.Behavior
 
 /-- [noble_kernel::contracts::Env]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 94:0-106:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 323:0-363:1
     Visibility: public -/
 structure contracts.Env where
   defs : alloc.vec.Vec words.Scheme
   kinds : alloc.vec.Vec contracts.Behavior
   deps : alloc.vec.Vec (alloc.vec.Vec contracts.Definition)
   schemas : alloc.vec.Vec contracts.SchemaDecl
+  nominals : alloc.vec.Vec contracts.NominalDecl
+  generic_variants : alloc.vec.Vec contracts.GenericVariantDecl
+  resource_kinds : alloc.vec.Vec types.ResourceKind
+  live_resource_nominals : alloc.vec.Vec types.NominalTypeId
+  live_slots : Bool
+  live_test_hosts : Bool
+  caller_module : Option Std.U64
+  declared_modules : Bool
+  text_cursor : Bool
+  calculator : Bool
+  definition_owners : alloc.vec.Vec (Option Std.U64)
+  bound_adapters : alloc.vec.Vec contracts.BoundAdapter
   effects : alloc.vec.Vec types.EffId
 
 /-- [noble_kernel::acceptance::parts::Ctx]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 7:0-12:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 14:0-20:1 -/
 structure acceptance.parts.Ctx where
   request : untrusted.Request
   env : contracts.Env
+  signed_owner : Option contracts.Definition
+
+/-- [noble_kernel::untrusted::UnsupportedKind]
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 238:0-251:1
+    Visibility: public -/
+@[discriminant isize]
+inductive untrusted.UnsupportedKind where
+| FormatRevision : untrusted.UnsupportedKind
+| NodeForm : untrusted.UnsupportedKind
+| SchemeForm : untrusted.UnsupportedKind
+| RecursiveDependency : contracts.Definition → untrusted.UnsupportedKind
+| RecursiveSchema : contracts.SchemaId → untrusted.UnsupportedKind
+
+/-- [noble_kernel::untrusted::LimitKind]
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 219:0-234:1
+    Visibility: public -/
+@[discriminant isize]
+inductive untrusted.LimitKind where
+| Bytes : untrusted.LimitKind
+| Nodes : untrusted.LimitKind
+| Depth : untrusted.LimitKind
+| TypeSize : untrusted.LimitKind
+| StackHeight : untrusted.LimitKind
+| Work : untrusted.LimitKind
+| Diagnostics : untrusted.LimitKind
+
+/-- [noble_kernel::acceptance::Fail]
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 14:0-19:1 -/
+@[discriminant isize]
+inductive acceptance.Fail where
+| Invalid : untrusted.Diagnostic → acceptance.Fail
+| Unsupported : untrusted.UnsupportedKind → acceptance.Fail
+| Exhausted : untrusted.LimitKind → acceptance.Fail
+| Internal : acceptance.Fail
 
 /-- [noble_kernel::words::InstError]
     Source: 'crates/noble-kernel/src/words.rs', lines 71:0-89:1
@@ -369,7 +502,7 @@ inductive words.InstError where
 | WalkExhausted : words.InstError
 
 /-- [noble_kernel::types::size::Step]
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 18:0-25:1 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 20:0-27:1 -/
 @[discriminant isize]
 inductive types.size.Step where
 | Continue : types.size.Step
@@ -377,23 +510,57 @@ inductive types.size.Step where
 | Failed : types.size.Step
 
 /-- [noble_kernel::types::size::Walk]
-    Source: 'crates/noble-kernel/src/types/size.rs', lines 10:0-15:1 -/
+    Source: 'crates/noble-kernel/src/types/size.rs', lines 12:0-17:1 -/
 structure types.size.Walk where
   todo : alloc.vec.Vec (types.Ty × Bool)
   sizes : alloc.vec.Vec Std.U32
 
+/-- [noble_kernel::contracts::nominal::validation::valid_program_components::{closure}]
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 687:23-687:60 -/
+@[reducible]
+def contracts.nominal.validation.valid_program_components.closure := Std.U32
+
+/-- [noble_kernel::contracts::nominal::type::walk::work::State]
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk/work.rs', lines 4:0-8:1 -/
+structure contracts.nominal.type.walk.work.State where
+  pending : alloc.vec.Vec (types.Ty × Bool)
+  visited : Std.U32
+
+/-- [noble_kernel::contracts::nominal::type::walk::ShapeStep]
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 283:0-287:1 -/
+@[discriminant isize]
+inductive contracts.nominal.type.walk.ShapeStep where
+| Continue :
+  contracts.nominal.type.walk.work.State →
+  contracts.nominal.type.walk.ShapeStep
+| Done : contracts.nominal.type.walk.ShapeStep
+| Failed : contracts.nominal.type.walk.ShapeStep
+
+/-- [noble_kernel::contracts::nominal::type::walk::Scope]
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 5:0-10:1 -/
+structure contracts.nominal.type.walk.Scope where
+  max_nodes : Std.U32
+  payload_only : Bool
+  prior : Std.Usize
+  caller : Option Std.U64
+
+/-- [noble_kernel::acceptance::parts::join::{closure}]
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 228:23-228:84 -/
+@[reducible]
+def acceptance.parts.join.closure := untrusted.Request
+
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects::{closure}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 248:46-248:75 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 256:46-256:75 -/
 @[reducible]
 def words.Scheme.subst_effects.closure := Unit
 
 /-- [noble_kernel::words::{noble_kernel::words::Scheme}::subst_stack::{closure}]
-    Source: 'crates/noble-kernel/src/words.rs', lines 199:44-199:66 -/
+    Source: 'crates/noble-kernel/src/words.rs', lines 203:44-203:66 -/
 @[reducible]
 def words.Scheme.subst_stack.closure := Unit
 
 /-- [noble_kernel::words::subst::Task]
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 16:0-21:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 17:0-22:1 -/
 @[discriminant isize]
 inductive words.subst.Task where
 | Part : shapes.Pattern → words.subst.Task
@@ -402,13 +569,23 @@ inductive words.subst.Task where
 | Emit : alloc.vec.Vec types.Ty → words.subst.Task
 
 /-- [noble_kernel::words::subst::Walk]
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 24:0-29:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 25:0-30:1 -/
 structure words.subst.Walk where
   work : alloc.vec.Vec words.subst.Task
   segments : alloc.vec.Vec (alloc.vec.Vec types.Ty)
 
+/-- [noble_kernel::words::subst::finish::apply::{closure#1}]
+    Source: 'crates/noble-kernel/src/words/subst/finish.rs', lines 42:22-42:50 -/
+@[reducible]
+def words.subst.finish.apply.closure_1 := Unit
+
+/-- [noble_kernel::words::subst::finish::apply::{closure}]
+    Source: 'crates/noble-kernel/src/words/subst/finish.rs', lines 41:22-41:50 -/
+@[reducible]
+def words.subst.finish.apply.closure := Unit
+
 /-- [noble_kernel::words::subst::StepResult]
-    Source: 'crates/noble-kernel/src/words/subst.rs', lines 32:0-39:1 -/
+    Source: 'crates/noble-kernel/src/words/subst.rs', lines 33:0-40:1 -/
 @[discriminant isize]
 inductive words.subst.StepResult where
 | Continue : words.subst.StepResult
@@ -421,58 +598,49 @@ structure words.resolve.Walk where
   out : alloc.vec.Vec words.Binding
   spent : Std.U32
 
-/-- [noble_kernel::shapes::Defect]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 83:0-88:1
+/-- [noble_kernel::untrusted::LiveSite]
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 194:0-204:1
     Visibility: public -/
-@[discriminant isize]
-inductive shapes.Defect where
-| UnknownVariable : shapes.Defect
-| KindMismatch : shapes.Defect
-
-/-- [noble_kernel::shapes::Step]
-    Source: 'crates/noble-kernel/src/shapes.rs', lines 94:0-98:1 -/
-@[discriminant isize]
-inductive shapes.Step where
-| Pattern : shapes.Pattern → shapes.Step
-| Parts : alloc.vec.Vec shapes.Pattern → shapes.Step
-| Slots : alloc.vec.Vec shapes.EffectSlot → shapes.Step
-
-/-- [noble_kernel::acceptance::validate::DepWalk]
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 11:0-18:1 -/
-structure acceptance.validate.DepWalk where
-  colors : alloc.vec.Vec Std.U8
-  stack : alloc.vec.Vec contracts.Definition
-  spent : Std.U32
+structure untrusted.LiveSite where
+  site_id : Std.U32
+  ref_ordinal : Std.U32
+  root_logical_input_position : Std.U32
+  forwarded_ref_ordinals : alloc.vec.Vec Std.U32
+  stack_in : alloc.vec.Vec types.Ty
+  stack_out : alloc.vec.Vec types.Ty
+  allowed_effects : types.EffSet
 
 /-- [noble_kernel::untrusted::Derivation]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 146:0-151:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 172:0-177:1
     Visibility: public -/
 structure untrusted.Derivation where
   node : untrusted.NodeId
   interface : untrusted.Interface
 
 /-- [noble_kernel::acceptance::State]
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 32:0-35:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 40:0-44:1 -/
 structure acceptance.State where
   work : Std.U32
   derivations : alloc.vec.Vec untrusted.Derivation
+  live_sites : alloc.vec.Vec untrusted.LiveSite
 
 /-- [noble_kernel::acceptance::Machine]
-    Source: 'crates/noble-kernel/src/acceptance.rs', lines 39:0-43:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 48:0-52:1 -/
 structure acceptance.Machine where
   state : acceptance.State
   frames : alloc.vec.Vec acceptance.Frame
   outcome : Option (core.result.Result untrusted.Interface acceptance.Fail)
 
 /-- [noble_kernel::untrusted::Checked]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 155:0-160:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 181:0-189:1
     Visibility: public -/
 structure untrusted.Checked where
   interface : untrusted.Interface
   derivations : alloc.vec.Vec untrusted.Derivation
+  live_sites : alloc.vec.Vec untrusted.LiveSite
 
 /-- [noble_kernel::untrusted::Outcome]
-    Source: 'crates/noble-kernel/src/untrusted.rs', lines 247:0-258:1
+    Source: 'crates/noble-kernel/src/untrusted.rs', lines 313:0-324:1
     Visibility: public -/
 @[discriminant isize]
 inductive untrusted.Outcome where
@@ -482,12 +650,1483 @@ inductive untrusted.Outcome where
 | Exhausted : untrusted.LimitKind → untrusted.Outcome
 | InternalFailure : untrusted.Outcome
 
+/-- [noble_kernel::shapes::Defect]
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 122:0-127:1
+    Visibility: public -/
+@[discriminant isize]
+inductive shapes.Defect where
+| UnknownVariable : shapes.Defect
+| KindMismatch : shapes.Defect
+
+/-- [noble_kernel::shapes::Step]
+    Source: 'crates/noble-kernel/src/shapes.rs', lines 133:0-137:1 -/
+@[discriminant isize]
+inductive shapes.Step where
+| Pattern : shapes.Pattern → shapes.Step
+| Parts : alloc.vec.Vec shapes.Pattern → shapes.Step
+| Slots : alloc.vec.Vec shapes.EffectSlot → shapes.Step
+
+/-- [noble_kernel::acceptance::validate::colored_slot::{closure}]
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 41:43-41:66 -/
+@[reducible]
+def acceptance.validate.colored_slot.closure := Std.Usize
+
+/-- [noble_kernel::acceptance::validate::DepWalk]
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 11:0-18:1 -/
+structure acceptance.validate.DepWalk where
+  colors : alloc.vec.Vec Std.U8
+  stack : alloc.vec.Vec contracts.Definition
+  spent : Std.U32
+
+/-- [noble_kernel::contracts::nominal::inspection::{noble_kernel::contracts::Env}::enqueue_program_pattern::{closure}]
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 157:51-157:87 -/
+@[reducible]
+def contracts.nominal.inspection.Env.enqueue_program_pattern.closure := Std.U32
+
+/-- [noble_kernel::contracts::nominal::inspection::PatternLimits]
+    Source: 'crates/noble-kernel/src/contracts/nominal/inspection.rs', lines 3:0-6:1 -/
+structure contracts.nominal.inspection.PatternLimits where
+  remaining : Std.U32
+  max_nodes : Std.U32
+
+/-- [noble_kernel::contracts::nominal::payload::Frame]
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 4:0-7:1 -/
+structure contracts.nominal.payload.Frame where
+  ty : types.Ty
+  is_complete : Bool
+
+/-- [noble_kernel::contracts::nominal::payload::Build]
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 9:0-13:1 -/
+structure contracts.nominal.payload.Build where
+  work : alloc.vec.Vec contracts.nominal.payload.Frame
+  built : alloc.vec.Vec shapes.Pattern
+  entered : Std.Usize
+
+/-- [noble_kernel::acceptance::preflight::nominal_payload_size::{closure}]
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 662:22-662:61 -/
+@[reducible]
+def acceptance.preflight.nominal_payload_size.closure := Unit
+
+/-- [noble_kernel::acceptance::preflight::NominalFailure]
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 561:0-563:1 -/
+structure acceptance.preflight.NominalFailure where
+  is_invalid_type : Bool
+
+/-- [noble_kernel::acceptance::preflight::guard_ty::{closure#1}]
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 451:29-451:90 -/
+@[reducible]
+def acceptance.preflight.guard_ty.closure_1 := Unit
+
+/-- [noble_kernel::acceptance::preflight::guard_ty::{closure}]
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 444:32-444:68 -/
+@[reducible]
+def acceptance.preflight.guard_ty.closure := untrusted.Request
+
+/-- [noble_kernel::acceptance::preflight::guard_one_binding::{closure#1}]
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 353:25-353:86 -/
+@[reducible]
+def acceptance.preflight.guard_one_binding.closure_1 := Unit
+
+/-- [noble_kernel::acceptance::preflight::guard_one_binding::{closure}]
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 337:28-337:67 -/
+@[reducible]
+def acceptance.preflight.guard_one_binding.closure := untrusted.Request
+
+/-- [noble_kernel::acceptance::preflight::SignedOwner]
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 216:0-221:1 -/
+structure acceptance.preflight.SignedOwner where
+  scheme : words.Scheme
+  inst : words.Inst
+  cost : Std.U32
+  «at» : acceptance.parts.Site
+
+/-- [noble_kernel::acceptance::preflight::check_request::{closure}]
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 121:39-121:57 -/
+@[reducible]
+def acceptance.preflight.check_request.closure := Unit
+
+/-- [noble_kernel::acceptance::nodes::visibility::Access]
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 230:0-236:1 -/
+@[discriminant isize]
+inductive acceptance.nodes.visibility.Access where
+| New : acceptance.nodes.visibility.Access
+| Into : acceptance.nodes.visibility.Access
+| Left : acceptance.nodes.visibility.Access
+| Right : acceptance.nodes.visibility.Access
+| Match : acceptance.nodes.visibility.Access
+
+/-- [noble_kernel::acceptance::nodes::visibility::public_operation_visible::{closure}]
+    Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 288:56-288:94 -/
+@[reducible]
+def acceptance.nodes.visibility.public_operation_visible.closure :=
+  contracts.Env
+
+/-- [noble_kernel::acceptance::run::{closure}]
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 136:39-136:57 -/
+@[reducible]
+def acceptance.run.closure := Unit
+
+/-- [noble_kernel::async_tasks::domain::Obligations]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 72:0-76:1
+    Visibility: public -/
+structure async_tasks.domain.Obligations where
+  inputs : Std.U64
+  results : Std.U64
+  buffers : Std.U8
+
+/-- [noble_kernel::async_tasks::domain::Accounting]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 169:0-183:1
+    Visibility: public -/
+structure async_tasks.domain.Accounting where
+  acquired : async_tasks.domain.Obligations
+  consumed_inputs : Std.U64
+  retirement_withdrawn_inputs : Std.U64
+  retired : async_tasks.domain.Obligations
+  delivered : async_tasks.domain.Obligations
+  cleaned : async_tasks.domain.Obligations
+  pins_acquired : Std.U64
+  pins_released : Std.U64
+  rejected_result_bytes : Std.Usize
+  completion_accepted : Bool
+  wake_queued : Bool
+  wake_removed : Bool
+  reservation_released : Bool
+
+/-- [noble_kernel::async_tasks::domain::Outcome]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 47:0-50:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.domain.Outcome where
+| Success : async_tasks.domain.Outcome
+| DomainError : async_tasks.domain.Outcome
+
+/-- [noble_kernel::async_tasks::domain::Failure]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 37:0-43:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.domain.Failure where
+| Cancelled : async_tasks.domain.Failure
+| Trap : async_tasks.domain.Failure
+| Deadline : async_tasks.domain.Failure
+| Budget : async_tasks.domain.Failure
+| Internal : async_tasks.domain.Failure
+
+/-- [noble_kernel::async_tasks::domain::Action]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 147:0-165:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.domain.Action where
+| Admitted : async_tasks.domain.Action
+| Inspected : async_tasks.domain.Action
+| ResultReady : async_tasks.domain.Outcome → async_tasks.domain.Action
+| ResultDelivered : async_tasks.domain.Action
+| CancellationAcknowledged : async_tasks.domain.Action
+| FailureRecorded : async_tasks.domain.Failure → async_tasks.domain.Action
+| CompletionRetired : async_tasks.domain.Outcome → async_tasks.domain.Action
+| OversizedResult : async_tasks.domain.Action
+| NativeStopObserved : async_tasks.domain.Action
+| PinsSettled : async_tasks.domain.Action
+| CleanupSettled : async_tasks.domain.Action
+| WakeQueued : async_tasks.domain.Action
+| WakeCoalesced : async_tasks.domain.Action
+| WakeTaken : async_tasks.domain.Action
+| RetirementCompleted : async_tasks.domain.Action
+| DeliverySettled : async_tasks.domain.Action
+| Duplicate : async_tasks.domain.Action
+
+/-- [noble_kernel::async_tasks::domain::Disposition]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 54:0-58:1
+    Visibility: public -/
+structure async_tasks.domain.Disposition where
+  returned : Std.U64
+  consumed : Std.U64
+  retired : Std.U64
+
+/-- [noble_kernel::async_tasks::domain::Completion]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 63:0-67:1
+    Visibility: public -/
+structure async_tasks.domain.Completion where
+  inputs : async_tasks.domain.Disposition
+  produced : Std.U64
+  bytes : Std.Usize
+
+/-- [noble_kernel::async_tasks::domain::State]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 27:0-33:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.domain.State where
+| Pending : async_tasks.domain.State
+| Ready : async_tasks.domain.State
+| Delivered : async_tasks.domain.State
+| Retiring : async_tasks.domain.State
+| Retired : async_tasks.domain.State
+
+/-- [noble_kernel::resources::Context]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 30:0-30:28
+    Visibility: public -/
+@[reducible]
+def resources.Context := Std.U64
+
+/-- [noble_kernel::async_tasks::domain::TableId]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 3:0-3:28
+    Visibility: public -/
+@[reducible]
+def async_tasks.domain.TableId := Std.U64
+
+/-- [noble_kernel::async_tasks::domain::Handle]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 11:0-16:1
+    Visibility: public -/
+structure async_tasks.domain.Handle where
+  table : async_tasks.domain.TableId
+  slot : Std.Usize
+  generation : Std.U64
+  context : resources.Context
+
+/-- [noble_kernel::async_tasks::domain::NativeId]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 7:0-7:29
+    Visibility: public -/
+@[reducible]
+def async_tasks.domain.NativeId := Std.U64
+
+/-- [noble_kernel::async_tasks::bounds::Request]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 10:0-20:1
+    Visibility: public -/
+structure async_tasks.bounds.Request where
+  context : resources.Context
+  native : async_tasks.domain.NativeId
+  inputs : Std.U8
+  results : Std.U8
+  input_bytes : Std.Usize
+  result_bytes : Std.Usize
+  parked_bytes : Std.Usize
+  pins : Std.U8
+  wakeups : Std.U32
+
+/-- [noble_kernel::async_tasks::domain::Snapshot]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 90:0-108:1
+    Visibility: public -/
+structure async_tasks.domain.Snapshot where
+  handle : async_tasks.domain.Handle
+  native : async_tasks.domain.NativeId
+  state : async_tasks.domain.State
+  reservation : async_tasks.bounds.Request
+  completion : Option async_tasks.domain.Completion
+  outcome : Option async_tasks.domain.Outcome
+  failure : Option async_tasks.domain.Failure
+  completion_closed : Bool
+  native_stopped : Bool
+  pins : Std.U64
+  returned_inputs : Std.U64
+  retiring_inputs : Std.U64
+  results : Std.U64
+  buffers : Std.U8
+  wake_pending : Bool
+  wakeups_remaining : Std.U32
+  finalized : Bool
+
+/-- [noble_kernel::async_tasks::domain::Decision]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 187:0-191:1
+    Visibility: public -/
+structure async_tasks.domain.Decision where
+  record : async_tasks.domain.Snapshot
+  action : async_tasks.domain.Action
+  accounting : async_tasks.domain.Accounting
+
+/-- [noble_kernel::async_tasks::bounds::Limits]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 23:0-32:1
+    Visibility: public -/
+structure async_tasks.bounds.Limits where
+  tasks : Std.Usize
+  terminal_results : Std.Usize
+  bytes : Std.Usize
+  parked_payloads : Std.Usize
+  pins : Std.Usize
+  wakeups : Std.U64
+  retirement_work : Std.Usize
+  generations : Std.U64
+
+/-- [noble_kernel::async_tasks::bounds::Footprint]
+    Source: 'crates/noble-kernel/src/async_tasks/bounds.rs', lines 36:0-44:1
+    Visibility: public -/
+structure async_tasks.bounds.Footprint where
+  tasks : Std.Usize
+  terminal_results : Std.Usize
+  bytes : Std.Usize
+  parked_payloads : Std.Usize
+  pins : Std.Usize
+  wakeups : Std.U64
+  retirement_work : Std.Usize
+
+/-- [noble_kernel::async_tasks::domain::Error]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 195:0-225:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.domain.Error where
+| InvalidLimits : async_tasks.domain.Error
+| InvalidRequest : async_tasks.domain.Error
+| StorageUnavailable : async_tasks.domain.Error
+| TaskCapacity : async_tasks.domain.Error
+| TerminalCapacity : async_tasks.domain.Error
+| ByteCapacity : async_tasks.domain.Error
+| ParkedCapacity : async_tasks.domain.Error
+| PinCapacity : async_tasks.domain.Error
+| WakeCapacity : async_tasks.domain.Error
+| RetirementCapacity : async_tasks.domain.Error
+| GenerationExhausted : async_tasks.domain.Error
+| InvalidHandle : async_tasks.domain.Error
+| WrongContext : async_tasks.domain.Error
+| WrongGeneration : async_tasks.domain.Error
+| WrongNative : async_tasks.domain.Error
+| InvalidRecord : async_tasks.domain.Error
+| InvalidDisposition : async_tasks.domain.Error
+| ResultCapacity : async_tasks.domain.Error
+| Pending : async_tasks.domain.Error
+| Ready : async_tasks.domain.Error
+| Delivered : async_tasks.domain.Error
+| Retiring : async_tasks.domain.Error
+| Retired : async_tasks.domain.Error
+| NativeStillRunning : async_tasks.domain.Error
+| PinsOutstanding : async_tasks.domain.Error
+| InvalidPins : async_tasks.domain.Error
+| InvalidCleanup : async_tasks.domain.Error
+| CleanupOutstanding : async_tasks.domain.Error
+| NoWakeup : async_tasks.domain.Error
+
+/-- [noble_kernel::async_tasks::domain::Callback]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 20:0-23:1
+    Visibility: public -/
+structure async_tasks.domain.Callback where
+  task : async_tasks.domain.Handle
+  native : async_tasks.domain.NativeId
+
+/-- [noble_kernel::async_tasks::domain::Event]
+    Source: 'crates/noble-kernel/src/async_tasks/domain.rs', lines 113:0-142:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.domain.Event where
+| Inspect : async_tasks.domain.Event
+| CompleteSuccess :
+  async_tasks.domain.NativeId →
+  async_tasks.domain.Completion →
+  async_tasks.domain.Event
+| CompleteDomainError :
+  async_tasks.domain.NativeId →
+  async_tasks.domain.Completion →
+  async_tasks.domain.Event
+| Deliver : async_tasks.domain.Event
+| Cancel : async_tasks.domain.Event
+| Trap : async_tasks.domain.Event
+| Deadline : async_tasks.domain.Event
+| Budget : async_tasks.domain.Event
+| InternalFailure : async_tasks.domain.Event
+| NativeStopped : async_tasks.domain.NativeId → async_tasks.domain.Event
+| SettlePins :
+  async_tasks.domain.NativeId →
+  Std.U64 →
+  async_tasks.domain.Event
+| Cleanup : async_tasks.domain.Obligations → async_tasks.domain.Event
+| Wake : async_tasks.domain.NativeId → async_tasks.domain.Event
+| TakeWake : async_tasks.domain.Event
+| Finish : async_tasks.domain.Event
+
+/-- [noble_kernel::async_tasks::Task]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 39:0-41:1
+    Visibility: public -/
+structure async_tasks.Task where
+  handle : async_tasks.domain.Handle
+
+/-- [noble_kernel::async_tasks::Rejected]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 52:0-55:1
+    Visibility: public -/
+structure async_tasks.Rejected (T : Type _) where
+  error : async_tasks.domain.Error
+  input : T
+
+/-- [noble_kernel::async_tasks::Admitted]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 59:0-64:1
+    Visibility: public -/
+structure async_tasks.Admitted (T : Type _) where
+  task : async_tasks.Task
+  callback : async_tasks.domain.Callback
+  inputs : T
+  decision : async_tasks.domain.Decision
+
+/-- [noble_kernel::async_tasks::Observation]
+    Source: 'crates/noble-kernel/src/async_tasks/mod.rs', lines 68:0-77:1
+    Visibility: public -/
+structure async_tasks.Observation where
+  pending : Std.Usize
+  ready : Std.Usize
+  delivered : Std.Usize
+  retiring : Std.Usize
+  retired : Std.Usize
+  outstanding_pins : Std.Usize
+  queued_wakeups : Std.Usize
+  reserved : async_tasks.bounds.Footprint
+
+/-- [noble_kernel::async_tasks::schema::Rule]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 96:0-111:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.schema.Rule where
+| Inspect : async_tasks.schema.Rule
+| Complete :
+  async_tasks.domain.Outcome →
+  async_tasks.domain.Completion →
+  async_tasks.schema.Rule
+| Deliver : async_tasks.schema.Rule
+| Retire : async_tasks.domain.Failure → async_tasks.schema.Rule
+| ObserveStop : async_tasks.schema.Rule
+| SettlePins : Std.U64 → async_tasks.schema.Rule
+| Cleanup : async_tasks.domain.Obligations → async_tasks.schema.Rule
+| Wake : async_tasks.schema.Rule
+| TakeWake : async_tasks.schema.Rule
+| Finish : async_tasks.schema.Rule
+| Duplicate : async_tasks.schema.Rule
+
+/-- [noble_kernel::async_tasks::schema::EventKind]
+    Source: 'crates/noble-kernel/src/async_tasks/schema.rs', lines 30:0-46:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.schema.EventKind where
+| Inspect : async_tasks.schema.EventKind
+| CompleteSuccess : async_tasks.schema.EventKind
+| CompleteDomainError : async_tasks.schema.EventKind
+| Deliver : async_tasks.schema.EventKind
+| Cancel : async_tasks.schema.EventKind
+| Trap : async_tasks.schema.EventKind
+| Deadline : async_tasks.schema.EventKind
+| Budget : async_tasks.schema.EventKind
+| InternalFailure : async_tasks.schema.EventKind
+| NativeStopped : async_tasks.schema.EventKind
+| SettlePins : async_tasks.schema.EventKind
+| Cleanup : async_tasks.schema.EventKind
+| Wake : async_tasks.schema.EventKind
+| TakeWake : async_tasks.schema.EventKind
+| Finish : async_tasks.schema.EventKind
+
+/-- [noble_kernel::async_tasks::schema::coverage::CoverageRow]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 8:0-12:1
+    Visibility: public -/
+structure async_tasks.schema.coverage.CoverageRow where
+  state : async_tasks.domain.State
+  event : async_tasks.schema.EventKind
+  rule : core.result.Result async_tasks.schema.Rule async_tasks.domain.Error
+
+/-- [noble_kernel::async_tasks::schema::coverage::CoverageError]
+    Source: 'crates/noble-kernel/src/async_tasks/schema/coverage.rs', lines 19:0-26:1
+    Visibility: public -/
+@[discriminant isize]
+inductive async_tasks.schema.coverage.CoverageError where
+| StateSchema : async_tasks.schema.coverage.CoverageError
+| EventSchema : async_tasks.schema.coverage.CoverageError
+| ExcessRows : async_tasks.schema.coverage.CoverageError
+| DuplicatePair : async_tasks.schema.coverage.CoverageError
+| MissingPair : async_tasks.schema.coverage.CoverageError
+| WrongDisposition : async_tasks.schema.coverage.CoverageError
+
+/-- [noble_kernel::async_tasks::table::Table]
+    Source: 'crates/noble-kernel/src/async_tasks/table.rs', lines 8:0-13:1
+    Visibility: public -/
+structure async_tasks.table.Table where
+  id : async_tasks.domain.TableId
+  limits : async_tasks.bounds.Limits
+  records : alloc.vec.Vec async_tasks.domain.Snapshot
+  generation : Std.U64
+
+/-- [noble_kernel::async_tasks::table::Admission]
+    Source: 'crates/noble-kernel/src/async_tasks/table.rs', lines 19:0-22:1
+    Visibility: public -/
+structure async_tasks.table.Admission where
+  table : async_tasks.table.Table
+  record : async_tasks.domain.Snapshot
+
+/-- [noble_kernel::authority::report::ReceiptScope]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 86:0-91:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.report.ReceiptScope where
+| AuthorizationBoundary : authority.report.ReceiptScope
+| AdmissionBoundary : authority.report.ReceiptScope
+| OperationBoundary : authority.report.ReceiptScope
+| InvocationDelivery : authority.report.ReceiptScope
+
+/-- [noble_kernel::authority::report::ReceiptClaim]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 76:0-83:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.report.ReceiptClaim where
+| Denial : authority.report.ReceiptClaim
+| PreflightFailure : authority.report.ReceiptClaim
+| Unknown : authority.report.ReceiptClaim
+| OperationFailure : authority.report.ReceiptClaim
+| OperationSuccess : authority.report.ReceiptClaim
+| InvocationSuccess : authority.report.ReceiptClaim
+
+/-- [noble_kernel::authority::report::InvocationOutcome]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 3:0-8:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.report.InvocationOutcome where
+| Pending : authority.report.InvocationOutcome
+| Succeeded : authority.report.InvocationOutcome
+| Failed : authority.report.InvocationOutcome
+| Cancelled : authority.report.InvocationOutcome
+
+/-- [noble_kernel::authority::OwnerContext]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 47:0-51:1
+    Visibility: public -/
+structure authority.OwnerContext where
+  «instance» : Std.U64
+  invocation : Std.U64
+  generation : Std.U64
+
+/-- [noble_kernel::authority::permit::AttemptKey]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 121:0-125:1
+    Visibility: public -/
+structure authority.permit.AttemptKey where
+  owner : authority.OwnerContext
+  slot : Std.Usize
+  generation : Std.U64
+
+/-- [noble_kernel::authority::permit::PreflightFailure]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 27:0-31:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.permit.PreflightFailure where
+| WitnessCapacity : authority.permit.PreflightFailure
+| AttemptCapacity : authority.permit.PreflightFailure
+| RequestCapacity : authority.permit.PreflightFailure
+
+/-- [noble_kernel::authority::permit::Denial]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 2:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.permit.Denial where
+| WrongAuthoritySource : authority.permit.Denial
+| StaleFacts : authority.permit.Denial
+| MissingFacts : authority.permit.Denial
+| InvalidCredentials : authority.permit.Denial
+| Revoked : authority.permit.Denial
+| ChangedPlan : authority.permit.Denial
+| WrongOwnerContext : authority.permit.Denial
+| ChangedPolicy : authority.permit.Denial
+| NotYetValid : authority.permit.Denial
+| Expired : authority.permit.Denial
+| QuotaExhausted : authority.permit.Denial
+| InconsistentQuota : authority.permit.Denial
+| WrongResourceKind : authority.permit.Denial
+| MissingRights : authority.permit.Denial
+| UnknownWitness : authority.permit.Denial
+| StaleGeneration : authority.permit.Denial
+| WrongScope : authority.permit.Denial
+| ConsumedWitness : authority.permit.Denial
+| RetiredWitness : authority.permit.Denial
+| UntrustedWitnessClaim : authority.permit.Denial
+| InvocationFinished : authority.permit.Denial
+
+/-- [noble_kernel::authority::QuotaId]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 43:0-43:28
+    Visibility: public -/
+@[reducible]
+def authority.QuotaId := Std.U64
+
+/-- [noble_kernel::authority::Constraints]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 68:0-74:1
+    Visibility: public -/
+structure authority.Constraints where
+  not_before : Std.U64
+  expires_at : Std.U64
+  quota : authority.QuotaId
+  units : Std.U64
+  scope : Std.U64
+
+/-- [noble_kernel::authority::OperationContract]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 62:0-65:1
+    Visibility: public -/
+structure authority.OperationContract where
+  «name» : alloc.vec.Vec Std.U8
+  effect : types.EffId
+
+/-- [noble_kernel::authority::PolicyRevision]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 39:0-39:35
+    Visibility: public -/
+@[reducible]
+def authority.PolicyRevision := Std.U64
+
+/-- [noble_kernel::authority::ActorId]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 37:0-37:28
+    Visibility: public -/
+@[reducible]
+def authority.ActorId := Std.U64
+
+/-- [noble_kernel::authority::PlanDescription]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 79:0-86:1
+    Visibility: public -/
+structure authority.PlanDescription where
+  operation : authority.OperationContract
+  arguments : alloc.vec.Vec Std.U8
+  actor : authority.ActorId
+  owner : authority.OwnerContext
+  policy : authority.PolicyRevision
+  constraints : authority.Constraints
+
+/-- [noble_kernel::authority::Plan]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 90:0-92:1
+    Visibility: public -/
+structure authority.Plan where
+  description : authority.PlanDescription
+
+/-- [noble_kernel::authority::Checkpoint]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 55:0-58:1
+    Visibility: public -/
+structure authority.Checkpoint where
+  sequence : Std.U64
+  now : Std.U64
+
+/-- [noble_kernel::authority::SourceId]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 41:0-41:29
+    Visibility: public -/
+@[reducible]
+def authority.SourceId := Std.U64
+
+/-- [noble_kernel::authority::report::ReceiptDescription]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 96:0-107:1
+    Visibility: public -/
+structure authority.report.ReceiptDescription where
+  plan : authority.Plan
+  boundary_owner : authority.OwnerContext
+  attempt : Option authority.permit.AttemptKey
+  source : authority.SourceId
+  checkpoint : authority.Checkpoint
+  claim : authority.report.ReceiptClaim
+  scope : authority.report.ReceiptScope
+  invocation : authority.report.InvocationOutcome
+  denial : Option authority.permit.Denial
+  preflight : Option authority.permit.PreflightFailure
+
+/-- [noble_kernel::authority::report::Receipt]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 110:0-112:1
+    Visibility: public -/
+structure authority.report.Receipt where
+  description : authority.report.ReceiptDescription
+
+/-- [noble_kernel::authority::report::Rejection]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 121:0-123:1
+    Visibility: public -/
+structure authority.report.Rejection where
+  receipt : authority.report.Receipt
+
+/-- [noble_kernel::authority::DeliveryRecord]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 213:0-216:1 -/
+structure authority.DeliveryRecord where
+  attempt : authority.permit.AttemptKey
+  checkpoint : authority.Checkpoint
+
+/-- [noble_kernel::authority::QuotaRecord]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 204:0-209:1 -/
+structure authority.QuotaRecord where
+  quota : authority.QuotaId
+  checkpoint : authority.Checkpoint
+  available : Std.U64
+  spent : Std.U64
+
+/-- [noble_kernel::authority::report::ObservedOutcome]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 12:0-16:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.report.ObservedOutcome where
+| Unknown : authority.report.ObservedOutcome
+| OperationFailure : authority.report.ObservedOutcome
+| OperationSuccess : authority.report.ObservedOutcome
+
+/-- [noble_kernel::authority::report::ObservationDescription]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 20:0-26:1
+    Visibility: public -/
+structure authority.report.ObservationDescription where
+  attempt : authority.permit.AttemptKey
+  plan : authority.Plan
+  source : authority.SourceId
+  checkpoint : authority.Checkpoint
+  outcome : authority.report.ObservedOutcome
+
+/-- [noble_kernel::authority::AttemptRecord]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 195:0-202:1 -/
+structure authority.AttemptRecord where
+  key : authority.permit.AttemptKey
+  plan : authority.Plan
+  started : Bool
+  admitted : authority.Checkpoint
+  unknown : Option authority.report.ObservationDescription
+  terminal : Option authority.report.ObservationDescription
+
+/-- [noble_kernel::authority::permit::WitnessState]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 161:0-165:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.permit.WitnessState where
+| Live : authority.permit.WitnessState
+| Consumed : authority.permit.WitnessState
+| Retired : authority.permit.WitnessState
+
+/-- [noble_kernel::authority::permit::WitnessClaim]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 43:0-50:1
+    Visibility: public -/
+structure authority.permit.WitnessClaim where
+  owner : authority.OwnerContext
+  slot : Std.Usize
+  generation : Std.U64
+  kind : types.ResourceKind
+  rights : Std.U32
+  scope : Std.U64
+
+/-- [noble_kernel::authority::WitnessRecord]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 189:0-193:1 -/
+structure authority.WitnessRecord where
+  claim : authority.permit.WitnessClaim
+  plan : authority.Plan
+  state : authority.permit.WitnessState
+
+/-- [noble_kernel::authority::Counters]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 178:0-187:1
+    Visibility: public -/
+structure authority.Counters where
+  authorization_requests : Std.U32
+  admission_requests : Std.U32
+  witnesses_created : Std.U32
+  witness_consumptions : Std.U32
+  attempts_admitted : Std.U32
+  protected_operations : Std.U32
+  approved_observations : Std.U32
+  successful_deliveries : Std.U32
+
+/-- [noble_kernel::authority::Limits]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 129:0-133:1
+    Visibility: public -/
+structure authority.Limits where
+  witnesses : Std.Usize
+  attempts : Std.Usize
+  requests : Std.U32
+
+/-- [noble_kernel::authority::Profile]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 138:0-146:1
+    Visibility: public -/
+structure authority.Profile where
+  owner : authority.OwnerContext
+  witness_kind : types.ResourceKind
+  authority_source : authority.SourceId
+  observation_source : authority.SourceId
+  invocation_source : authority.SourceId
+  checkpoint : authority.Checkpoint
+  limits : authority.Limits
+
+/-- [noble_kernel::authority::Authority]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 220:0-229:1
+    Visibility: public -/
+structure authority.Authority where
+  profile : authority.Profile
+  witnesses : alloc.vec.Vec authority.WitnessRecord
+  attempts : alloc.vec.Vec authority.AttemptRecord
+  quotas : alloc.vec.Vec authority.QuotaRecord
+  effects : alloc.vec.Vec types.EffId
+  counters : authority.Counters
+  invocation : authority.report.InvocationOutcome
+  delivered : Option authority.DeliveryRecord
+
+/-- [noble_kernel::authority::permit::Execution]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 130:0-132:1
+    Visibility: public -/
+structure authority.permit.Execution where
+  attempt : authority.permit.AttemptKey
+
+/-- [noble_kernel::authority::permit::Witness]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 81:0-83:1
+    Visibility: public -/
+structure authority.permit.Witness where
+  claim : authority.permit.WitnessClaim
+
+/-- [noble_kernel::authority::permit::Admission]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 108:0-118:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.permit.Admission where
+| Committed : authority.permit.Execution → authority.permit.Admission
+| Denied :
+  Option authority.permit.Witness →
+  authority.report.Rejection →
+  authority.permit.Admission
+| Preflight :
+  Option authority.permit.Witness →
+  authority.report.Rejection →
+  authority.permit.Admission
+
+/-- [noble_kernel::authority::permit::AdmissionRequest]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 100:0-103:1
+    Visibility: public -/
+structure authority.permit.AdmissionRequest where
+  claim : authority.permit.WitnessClaim
+  plan : authority.Plan
+
+/-- [noble_kernel::authority::Grant]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 157:0-161:1
+    Visibility: public -/
+structure authority.Grant where
+  plan : authority.Plan
+  kind : types.ResourceKind
+  rights : Std.U32
+
+/-- [noble_kernel::authority::CurrentFacts]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 167:0-175:1
+    Visibility: public -/
+structure authority.CurrentFacts where
+  source : authority.SourceId
+  checkpoint : authority.Checkpoint
+  grant : Option authority.Grant
+  credentials_valid : Option Bool
+  revoked : Option Bool
+  policy : Option authority.PolicyRevision
+  quota_remaining : Option Std.U64
+
+/-- [noble_kernel::authority::report::BoundaryError]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 57:0-72:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.report.BoundaryError where
+| WrongContext : authority.report.BoundaryError
+| UnknownAttempt : authority.report.BoundaryError
+| StaleGeneration : authority.report.BoundaryError
+| NotStarted : authority.report.BoundaryError
+| AlreadyStarted : authority.report.BoundaryError
+| WrongSource : authority.report.BoundaryError
+| StaleObservation : authority.report.BoundaryError
+| ChangedPlan : authority.report.BoundaryError
+| ConflictingObservation : authority.report.BoundaryError
+| MissingObservation : authority.report.BoundaryError
+| InapplicableObservation : authority.report.BoundaryError
+| InvocationFinished : authority.report.BoundaryError
+| ImportedTrustFlag : authority.report.BoundaryError
+| InapplicableReceipt : authority.report.BoundaryError
+
+/-- [noble_kernel::authority::permit::Started]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 144:0-147:1
+    Visibility: public -/
+structure authority.permit.Started where
+  attempt : authority.permit.AttemptKey
+  plan : authority.Plan
+
+/-- [noble_kernel::authority::permit::AttemptSnapshot]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 174:0-179:1
+    Visibility: public -/
+structure authority.permit.AttemptSnapshot where
+  key : authority.permit.AttemptKey
+  effect : types.EffId
+  started : Bool
+  outcome : Option authority.report.ObservedOutcome
+
+/-- [noble_kernel::authority::admission::{noble_kernel::authority::Authority}::attempt_snapshot::{closure}]
+    Source: 'crates/noble-kernel/src/authority/admission.rs', lines 267:21-267:54 -/
+@[reducible]
+def authority.admission.Authority.attempt_snapshot.closure := Unit
+
+/-- [noble_kernel::authority::SetupError]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 149:0-152:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.SetupError where
+| InvalidLimits : authority.SetupError
+| StaleCheckpoint : authority.SetupError
+
+/-- [noble_kernel::authority::permit::Decision]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 35:0-38:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.permit.Decision where
+| Allow : authority.permit.Decision
+| Deny : authority.permit.Denial → authority.permit.Decision
+
+/-- [noble_kernel::authority::permit::Authorization]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 93:0-97:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.permit.Authorization where
+| Authorized : authority.permit.Witness → authority.permit.Authorization
+| Denied : authority.report.Rejection → authority.permit.Authorization
+| Preflight : authority.report.Rejection → authority.permit.Authorization
+
+/-- [noble_kernel::authority::PlanError]
+    Source: 'crates/noble-kernel/src/authority/mod.rs', lines 95:0-101:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authority.PlanError where
+| EmptyContract : authority.PlanError
+| OversizedContract : authority.PlanError
+| OversizedArguments : authority.PlanError
+| InvalidValidity : authority.PlanError
+| EmptyQuotaCharge : authority.PlanError
+
+/-- [noble_kernel::authority::report::Observation]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 51:0-54:1
+    Visibility: public -/
+structure authority.report.Observation where
+  attempt : authority.permit.AttemptKey
+  outcome : authority.report.ObservedOutcome
+
+/-- [noble_kernel::authority::permit::WitnessSnapshot]
+    Source: 'crates/noble-kernel/src/authority/permit.rs', lines 168:0-171:1
+    Visibility: public -/
+structure authority.permit.WitnessSnapshot where
+  claim : authority.permit.WitnessClaim
+  state : authority.permit.WitnessState
+
+/-- [noble_kernel::authority::report::UntrustedReceipt]
+    Source: 'crates/noble-kernel/src/authority/report.rs', lines 134:0-136:1
+    Visibility: public -/
+structure authority.report.UntrustedReceipt where
+  description : authority.report.ReceiptDescription
+
+/-- [noble_kernel::contracts::clone_budget::CloneBudget]
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 27:0-31:1
+    Visibility: public -/
+structure contracts.clone_budget.CloneBudget where
+  bytes : Std.U64
+  allocations : Std.U64
+  reserved_bytes : Std.U64
+
+/-- [noble_kernel::contracts::clone_budget::Counter]
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 33:0-36:1 -/
+structure contracts.clone_budget.Counter where
+  bytes : Std.U64
+  allocations : Std.U64
+
+/-- [noble_kernel::contracts::NominalError]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 198:0-202:1
+    Visibility: public -/
+@[discriminant isize]
+inductive contracts.NominalError where
+| DuplicateIdentity : contracts.NominalError
+| InvalidRepresentation : contracts.NominalError
+| TooManyDefinitions : contracts.NominalError
+
+/-- [noble_kernel::contracts::NominalOps]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 189:0-195:1
+    Visibility: public -/
+structure contracts.NominalOps where
+  new : Option contracts.Definition
+  into : Option contracts.Definition
+  left : Option contracts.Definition
+  right : Option contracts.Definition
+  matcher : Option contracts.Definition
+
+/-- [noble_kernel::contracts::nominal::has_definition_space::{closure}]
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 180:18-180:43 -/
+@[reducible]
+def contracts.nominal.has_definition_space.closure := Unit
+
+/-- [noble_kernel::contracts::nominal::register_generic_variant::{closure}]
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 109:18-109:43 -/
+@[reducible]
+def contracts.nominal.register_generic_variant.closure := Unit
+
+/-- [noble_kernel::contracts::BoundEmitRegistration]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 216:0-223:1
+    Visibility: public -/
+structure contracts.BoundEmitRegistration where
+  adapter_identity : String
+  adapter_slot : Std.U32
+  owner : Std.U64
+  input : alloc.vec.Vec types.Ty
+  output : alloc.vec.Vec types.Ty
+  effects : types.EffSet
+
+/-- [noble_kernel::contracts::BoundClockRegistration]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 226:0-233:1
+    Visibility: public -/
+structure contracts.BoundClockRegistration where
+  adapter_identity : String
+  adapter_slot : Std.U32
+  owner : Std.U64
+  input : alloc.vec.Vec types.Ty
+  output : alloc.vec.Vec types.Ty
+  effects : types.EffSet
+
+/-- [noble_kernel::contracts::BoundCodeExportRegistration]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 236:0-243:1
+    Visibility: public -/
+structure contracts.BoundCodeExportRegistration where
+  adapter_identity : String
+  adapter_slot : Std.U32
+  owner : Std.U64
+  input : alloc.vec.Vec types.Ty
+  output : alloc.vec.Vec types.Ty
+  effects : types.EffSet
+
+/-- [noble_kernel::contracts::BoundSendRegistration]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 246:0-253:1
+    Visibility: public -/
+structure contracts.BoundSendRegistration where
+  adapter_identity : String
+  adapter_slot : Std.U32
+  owner : Std.U64
+  input : alloc.vec.Vec types.Ty
+  output : alloc.vec.Vec types.Ty
+  effects : types.EffSet
+
+/-- [noble_kernel::contracts::ClockDecision]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 257:0-262:1
+    Visibility: public -/
+@[discriminant isize]
+inductive contracts.ClockDecision where
+| Value : Std.I64 → contracts.ClockDecision
+| Denied : contracts.ClockDecision
+| ScriptExhausted : contracts.ClockDecision
+| UnexpectedOperation : contracts.ClockDecision
+
+/-- [noble_kernel::contracts::ClockPlan]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 266:0-274:1
+    Visibility: public -/
+structure contracts.ClockPlan where
+  operation : Str
+  adapter_identity : Str
+  input : Slice types.Ty
+  output : Slice types.Ty
+  effects : Slice types.EffId
+  allowed : Bool
+  script : Slice Std.I64
+
+/-- [noble_kernel::contracts::checked_i64_environment::{closure#1}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 722:16-727:5 -/
+@[reducible]
+def contracts.checked_i64_environment.closure_1 := shapes.Pattern
+
+/-- [noble_kernel::contracts::checked_i64_environment::{closure}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 712:17-721:5 -/
+@[reducible]
+def contracts.checked_i64_environment.closure := shapes.Pattern
+
+/-- [noble_kernel::dataspace::Error]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 18:0-26:1
+    Visibility: public -/
+@[discriminant isize]
+inductive dataspace.Error where
+| ByteLimit : dataspace.Error
+| DepthLimit : dataspace.Error
+| Schema : dataspace.Error
+| InvalidName : dataspace.Error
+| InvalidFacet : dataspace.Error
+| Denied : dataspace.Error
+| Capacity : dataspace.Error
+
+/-- [noble_kernel::dataspace::Rights]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 43:0-46:1
+    Visibility: public -/
+structure dataspace.Rights where
+  publish : Bool
+  observe : Bool
+
+/-- [noble_kernel::dataspace::Publication]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 49:0-53:1
+    Visibility: public -/
+@[discriminant isize]
+inductive dataspace.Publication where
+| Unchanged : dataspace.Publication
+| Added : dataspace.Publication
+| Replaced : dataspace.Publication
+
+/-- [noble_kernel::dataspace::Operation]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 67:0-70:1
+    Visibility: public -/
+@[discriminant isize]
+inductive dataspace.Operation where
+| Publish : dataspace.Operation
+| Observe : dataspace.Operation
+
+/-- [noble_kernel::dataspace::Facet]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 82:0-82:22
+    Visibility: public -/
+@[reducible]
+def dataspace.Facet := Std.U64
+
+/-- [noble_kernel::dataspace::Limits]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 85:0-90:1
+    Visibility: public -/
+structure dataspace.Limits where
+  facets : Std.Usize
+  assertions : Std.Usize
+  interests : Std.Usize
+  events : Std.Usize
+
+/-- [noble_kernel::dataspace::Service]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 93:0-96:1
+    Visibility: public -/
+structure dataspace.Service where
+  «name» : String
+  ready : Bool
+
+/-- [noble_kernel::dataspace::wire::ServiceRef]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 7:0-10:1
+    Visibility: public -/
+structure dataspace.wire.ServiceRef where
+  «name» : Str
+  ready : Bool
+
+/-- [noble_kernel::dataspace::Change]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 108:0-111:1
+    Visibility: public -/
+@[discriminant isize]
+inductive dataspace.Change where
+| Added : dataspace.Change
+| Removed : dataspace.Change
+
+/-- [noble_kernel::dataspace::Event]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 114:0-118:1
+    Visibility: public -/
+structure dataspace.Event where
+  observer : dataspace.Facet
+  service : dataspace.Service
+  change : dataspace.Change
+
+/-- [noble_kernel::dataspace::Scope]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 120:0-125:1 -/
+structure dataspace.Scope where
+  id : dataspace.Facet
+  parent : Option dataspace.Facet
+  rights : dataspace.Rights
+  live : Bool
+
+/-- [noble_kernel::dataspace::Assertion]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 127:0-130:1 -/
+structure dataspace.Assertion where
+  owner : dataspace.Facet
+  service : dataspace.Service
+
+/-- [noble_kernel::dataspace::Interest]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 132:0-135:1 -/
+structure dataspace.Interest where
+  owner : dataspace.Facet
+  service : dataspace.Service
+
+/-- [noble_kernel::dataspace::Table]
+    Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 137:0-144:1
+    Visibility: public -/
+structure dataspace.Table where
+  limits : dataspace.Limits
+  next : Std.U64
+  scopes : alloc.vec.Vec dataspace.Scope
+  assertions : alloc.vec.Vec dataspace.Assertion
+  interests : alloc.vec.Vec dataspace.Interest
+  events : alloc.vec.Vec dataspace.Event
+
+/-- [noble_kernel::dataspace::table::Reservation]
+    Source: 'crates/noble-kernel/src/dataspace/table.rs', lines 4:0-7:1 -/
+structure dataspace.table.Reservation where
+  immediate : Std.Usize
+  removals : Std.Usize
+
+/-- [noble_kernel::dataspace::table::actions::{noble_kernel::dataspace::Table}::publish::{closure}]
+    Source: 'crates/noble-kernel/src/dataspace/table/actions.rs', lines 13:33-13:77 -/
+@[reducible]
+def dataspace.table.actions.Table.publish.closure :=
+  alloc.vec.Vec dataspace.Assertion
+
+/-- [noble_kernel::dataspace::wire::Packet]
+    Source: 'crates/noble-kernel/src/dataspace/wire.rs', lines 13:0-16:1
+    Visibility: public -/
+structure dataspace.wire.Packet where
+  bytes : Array Std.U8 64#usize
+  len : Std.Usize
+
+/-- [noble_kernel::execution::TextLiteral]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 9:0-12:1
+    Visibility: public -/
+structure execution.TextLiteral where
+  node : untrusted.NodeId
+  bytes : alloc.vec.Vec Std.U8
+
+/-- [noble_kernel::execution::Body]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 16:0-19:1
+    Visibility: public -/
+structure execution.Body where
+  candidate : untrusted.Candidate
+  texts : alloc.vec.Vec execution.TextLiteral
+
+/-- [noble_kernel::execution::Definition]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 23:0-37:1
+    Visibility: public -/
+structure execution.Definition where
+  definition : contracts.Definition
+  identity : Std.U64
+  source_identity : Std.U64
+  body : execution.Body
+  expected : untrusted.Expected
+  owner_slot : Option Std.U32
+  owner_inst : Option words.Inst
+
+/-- [noble_kernel::execution::Submission]
+    Source: 'crates/noble-kernel/src/execution/mod.rs', lines 44:0-49:1
+    Visibility: public -/
+structure execution.Submission where
+  environment : contracts.Env
+  definitions : alloc.vec.Vec execution.Definition
+  body : execution.Body
+  request : untrusted.Request
+
+/-- [noble_kernel::integer::I64]
+    Source: 'crates/noble-kernel/src/integer.rs', lines 5:0-7:1
+    Visibility: public -/
+structure integer.I64 where
+  value : Std.I64
+
 /-- [noble_kernel::BudgetOutcome]
-    Source: 'crates/noble-kernel/src/lib.rs', lines 37:0-40:1
+    Source: 'crates/noble-kernel/src/lib.rs', lines 59:0-62:1
     Visibility: public -/
 @[discriminant isize]
 inductive BudgetOutcome where
 | Remaining : Std.U32 → BudgetOutcome
 | Exhausted : BudgetOutcome
+
+/-- [noble_kernel::region_read::Refusal]
+    Source: 'crates/noble-kernel/src/region/read.rs', lines 7:0-12:1
+    Visibility: public -/
+@[discriminant isize]
+inductive region_read.Refusal where
+| Representation : region_read.Refusal
+| NoOwner : region_read.Refusal
+| Identity : region_read.Refusal
+| Bounds : region_read.Refusal
+
+/-- [noble_kernel::resources::Rights]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 34:0-34:27
+    Visibility: public -/
+@[reducible]
+def resources.Rights := Std.U64
+
+/-- [noble_kernel::resources::TableId]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 26:0-26:28
+    Visibility: public -/
+@[reducible]
+def resources.TableId := Std.U64
+
+/-- [noble_kernel::resources::Handle]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 38:0-45:1
+    Visibility: public -/
+structure resources.Handle where
+  table : resources.TableId
+  slot : Std.Usize
+  generation : Std.U64
+  context : resources.Context
+  kind : types.ResourceKind
+  rights : resources.Rights
+
+/-- [noble_kernel::region_read::Request]
+    Source: 'crates/noble-kernel/src/region/read.rs', lines 15:0-21:1
+    Visibility: public -/
+structure region_read.Request where
+  representation : Std.U32
+  claim : resources.Handle
+  retained : Option resources.Handle
+  offset_bytes : Std.I64
+  length_bytes : Std.I64
+
+/-- [noble_kernel::region_read::Range]
+    Source: 'crates/noble-kernel/src/region/read.rs', lines 24:0-27:1
+    Visibility: public -/
+structure region_read.Range where
+  start : Std.Usize
+  finish : Std.Usize
+
+/-- [noble_kernel::resources::Error]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 186:0-205:1
+    Visibility: public -/
+@[discriminant isize]
+inductive resources.Error where
+| InvalidLimits : resources.Error
+| Capacity : resources.Error
+| PinCapacity : resources.Error
+| ContextCapacity : resources.Error
+| InvalidHandle : resources.Error
+| WrongContext : resources.Error
+| WrongKind : resources.Error
+| WrongGeneration : resources.Error
+| WrongRights : resources.Error
+| Busy : resources.Error
+| Retiring : resources.Error
+| Retired : resources.Error
+| WrongScope : resources.Error
+| GenerationExhausted : resources.Error
+| ScopeExhausted : resources.Error
+| ArgumentCount : resources.Error
+| DuplicateOwner : resources.Error
+| InvalidRecord : resources.Error
+
+/-- [noble_kernel::resources::Retirement]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 74:0-79:1
+    Visibility: public -/
+@[discriminant isize]
+inductive resources.Retirement where
+| Cancelled : resources.Retirement
+| Trap : resources.Retirement
+| UnexpectedSuspension : resources.Retirement
+| HostCleanup : resources.Retirement
+
+/-- [noble_kernel::resources::State]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 65:0-70:1
+    Visibility: public -/
+@[discriminant isize]
+inductive resources.State where
+| Live : resources.State
+| Busy : Std.U64 → resources.State
+| Retiring : Std.U64 → resources.State
+| Retired : resources.State
+
+/-- [noble_kernel::resources::Snapshot]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 90:0-95:1
+    Visibility: public -/
+structure resources.Snapshot where
+  handle : resources.Handle
+  state : resources.State
+  last_scope : Option Std.U64
+  retirement : Option resources.Retirement
+
+/-- [noble_kernel::resources::Requirement]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 49:0-53:1
+    Visibility: public -/
+structure resources.Requirement where
+  context : resources.Context
+  kind : types.ResourceKind
+  rights : resources.Rights
+
+/-- [noble_kernel::resources::Completion]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 83:0-86:1
+    Visibility: public -/
+@[discriminant isize]
+inductive resources.Completion where
+| Success : resources.Completion
+| DomainError : resources.Completion
+
+/-- [noble_kernel::resources::Action]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 129:0-137:1
+    Visibility: public -/
+@[discriminant isize]
+inductive resources.Action where
+| Unchanged : resources.Action
+| BorrowAdmitted : resources.Action
+| OwnerReturned : resources.Completion → resources.Action
+| AccessRevoked : resources.Action
+| LocalRelease : resources.Action
+| RetirementCompleted : resources.Action
+| OwnerTransferred : resources.Action
+
+/-- [noble_kernel::resources::Decision]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 141:0-144:1
+    Visibility: public -/
+structure resources.Decision where
+  record : resources.Snapshot
+  action : resources.Action
+
+/-- [noble_kernel::resources::Event]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 100:0-124:1
+    Visibility: public -/
+@[discriminant isize]
+inductive resources.Event where
+| Inspect : resources.Requirement → resources.Event
+| Begin : resources.Requirement → Std.U64 → resources.Event
+| Access : Std.U64 → resources.Event
+| Complete : Std.U64 → resources.Completion → resources.Event
+| Revoke : Std.U64 → resources.Retirement → resources.Event
+| Retire : resources.Retirement → resources.Event
+| Release : resources.Requirement → resources.Event
+| Transfer :
+  resources.Requirement →
+  resources.Context →
+  Std.U64 →
+  resources.Event
+
+/-- [noble_kernel::resources::Limits]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 264:0-270:1
+    Visibility: public -/
+structure resources.Limits where
+  slots : Std.Usize
+  pins : Std.Usize
+  owners_per_context : Std.Usize
+  generations : Std.U64
+  scopes : Std.U64
+
+/-- [noble_kernel::resources::table::Table]
+    Source: 'crates/noble-kernel/src/resources/table.rs', lines 16:0-23:1
+    Visibility: public -/
+structure resources.table.Table where
+  id : resources.TableId
+  limits : resources.Limits
+  records : alloc.vec.Vec resources.Snapshot
+  generation : Std.U64
+  scope : Std.U64
+  pins : Std.Usize
+
+/-- [noble_kernel::resources::Scope]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 57:0-60:1
+    Visibility: public -/
+structure resources.Scope where
+  handle : resources.Handle
+  serial : Std.U64
+
+/-- [noble_kernel::resources::Accounting]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 148:0-154:1
+    Visibility: public -/
+structure resources.Accounting where
+  pins_acquired : Std.Usize
+  pins_released : Std.Usize
+  owners_returned : Std.Usize
+  owners_transferred : Std.Usize
+  local_releases : Std.Usize
+
+/-- [noble_kernel::resources::Owner]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 209:0-211:1
+    Visibility: public -/
+structure resources.Owner where
+  handle : resources.Handle
+
+/-- [noble_kernel::resources::Borrow]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 222:0-224:1
+    Visibility: public -/
+structure resources.Borrow where
+  scope : resources.Scope
+
+/-- [noble_kernel::resources::Admitted]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 228:0-231:1
+    Visibility: public -/
+structure resources.Admitted where
+  borrow : resources.Borrow
+  decision : resources.Decision
+
+/-- [noble_kernel::resources::Rejected]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 242:0-245:1
+    Visibility: public -/
+structure resources.Rejected (T : Type _) where
+  error : resources.Error
+  input : T
+
+/-- [noble_kernel::resources::Completed]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 249:0-252:1
+    Visibility: public -/
+structure resources.Completed where
+  owner : Option resources.Owner
+  decision : resources.Decision
+
+/-- [noble_kernel::resources::Transferred]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 256:0-259:1
+    Visibility: public -/
+structure resources.Transferred where
+  owners : alloc.vec.Vec resources.Owner
+  decisions : alloc.vec.Vec resources.Decision
+
+/-- [noble_kernel::resources::Observation]
+    Source: 'crates/noble-kernel/src/resources/mod.rs', lines 274:0-280:1
+    Visibility: public -/
+structure resources.Observation where
+  live : Std.Usize
+  busy : Std.Usize
+  retiring : Std.Usize
+  retired : Std.Usize
+  native_pins : Std.Usize
 
 end noble_kernel
