@@ -57,6 +57,76 @@ macro_rules! attempt {
     };
 }
 
+/// Sequence searches written as explicit index walks.
+///
+/// The pinned Aeneas cannot translate `Iterator::find` (its predicate has a
+/// higher-ranked bound). Each helper visits in the same order, stops at the
+/// same element and returns the same value as the method it replaces.
+pub(crate) mod scan {
+    /// The first element satisfying `predicate`, as `items.iter().find(..)`:
+    /// elements are tested in order and none after the first match.
+    pub(crate) fn find_first<'a, T>(
+        items: &'a [T],
+        mut predicate: impl FnMut(&T) -> bool,
+    ) -> Option<&'a T> {
+        let mut index = 0;
+        let mut found = None;
+        while found.is_none() && index < items.len() {
+            if predicate(&items[index]) {
+                found = Some(index);
+            }
+            index += 1;
+        }
+        match found {
+            Some(at) => Some(&items[at]),
+            None => None,
+        }
+    }
+
+    /// The first element satisfying `predicate`, mutably, as
+    /// `items.iter_mut().find(..)`.
+    pub(crate) fn find_first_mut<'a, T>(
+        items: &'a mut [T],
+        mut predicate: impl FnMut(&T) -> bool,
+    ) -> Option<&'a mut T> {
+        let mut index = 0;
+        let mut found = None;
+        while found.is_none() && index < items.len() {
+            if predicate(&items[index]) {
+                found = Some(index);
+            }
+            index += 1;
+        }
+        match found {
+            Some(at) => Some(&mut items[at]),
+            None => None,
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        #[test]
+        fn find_first_visits_in_order_and_stops_at_the_first_match() {
+            let items = [3u32, 5, 4, 5, 6];
+            let mut visited = alloc::vec::Vec::new();
+            let found = super::find_first(&items, |item| {
+                visited.push(*item);
+                *item == 5
+            });
+            assert_eq!(found, items.iter().find(|item| **item == 5));
+            assert!(core::ptr::eq(found.unwrap_or(&0), &items[1]));
+            assert_eq!(visited, [3, 5]);
+            assert_eq!(super::find_first(&items, |item| *item == 9), None);
+            let mut mutable = items;
+            if let Some(item) = super::find_first_mut(&mut mutable, |item| *item == 5) {
+                *item = 7;
+            }
+            assert_eq!(mutable, [3, 7, 4, 5, 6]);
+            assert!(super::find_first_mut(&mut mutable, |item| *item == 9).is_none());
+        }
+    }
+}
+
 mod admission;
 pub mod component;
 mod emit;
