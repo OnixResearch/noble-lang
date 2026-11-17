@@ -209,21 +209,24 @@ def noble_contracts.component.Type.Insts.CoreCmpPartialEqType.eq
   _root_.noble_contracts.component.Type.Insts.CoreCmpPartialEqType.eq
     (toType self) (toType other)
 
+/-- The world-dependent stack of an operation's parameters: `None` when a
+parameter has no kernel type in the given world. -/
 @[rust_fun "noble_contracts::component::{noble_contracts::component::Operation}::input_types"]
 def noble_contracts.component.Operation.input_types
-    (self : noble_contracts.component.Operation) :
-    Result (alloc.vec.Vec noble_kernel.types.Ty) := do
-  let value ← _root_.noble_contracts.component.Operation.input_types (toOperation self)
-  ok (KernelBridge.mapVec
-    (fun ty => KernelBridge.fromTy (_root_.noble_contracts.KernelBridge.toTy ty)) value)
+    (self : noble_contracts.component.Operation) (world : noble_contracts.component.World) :
+    Result (Option (alloc.vec.Vec noble_kernel.types.Ty)) := do
+  let value ← _root_.noble_contracts.component.Operation.input_types (toOperation self) world
+  ok (value.map (KernelBridge.mapVec
+    (fun ty => KernelBridge.fromTy (_root_.noble_contracts.KernelBridge.toTy ty))))
 
+/-- The world-dependent stack of an operation's results, as `input_types`. -/
 @[rust_fun "noble_contracts::component::{noble_contracts::component::Operation}::output_types"]
 def noble_contracts.component.Operation.output_types
-    (self : noble_contracts.component.Operation) :
-    Result (alloc.vec.Vec noble_kernel.types.Ty) := do
-  let value ← _root_.noble_contracts.component.Operation.output_types (toOperation self)
-  ok (KernelBridge.mapVec
-    (fun ty => KernelBridge.fromTy (_root_.noble_contracts.KernelBridge.toTy ty)) value)
+    (self : noble_contracts.component.Operation) (world : noble_contracts.component.World) :
+    Result (Option (alloc.vec.Vec noble_kernel.types.Ty)) := do
+  let value ← _root_.noble_contracts.component.Operation.output_types (toOperation self) world
+  ok (value.map (KernelBridge.mapVec
+    (fun ty => KernelBridge.fromTy (_root_.noble_contracts.KernelBridge.toTy ty))))
 
 @[rust_fun "noble_contracts::component::{noble_contracts::component::World}::imports"]
 def noble_contracts.component.World.imports
