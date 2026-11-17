@@ -57,7 +57,9 @@ def meaning (lookup : U32 → NobleContracts.Op) : wire.SemanticNode → NobleCo
   | .Word value => .word value.val
   | .Quotation body => .block (body.val.map lookup)
 
-/-- The source graph's meaning, independent of the executable projection. -/
+/-- The source graph's meaning, independent of the executable projection.
+Text literals, host words, signed-owner self references and live-slot
+invocations have no meaning in the pure semantic wire. -/
 def sourceMeaning (lookup : U32 → NobleContracts.Op) :
     noble_contracts.noble_kernel.untrusted.Node → Option NobleContracts.Op
   | .Literal (.I64Lit value) _ => some (.lit (.i64 value.bv))
@@ -65,6 +67,8 @@ def sourceMeaning (lookup : U32 → NobleContracts.Op) :
   | .Literal .UnitLit _ => some (.lit .unit)
   | .Literal .TextLit _ => none
   | .Invocation word _ => if word < 22#u32 then some (.word word.val) else none
+  | .SignedSelf _ _ => none
+  | .SlotInvoke _ _ _ => none
   | .Quotation body _ => some (.block (body.val.map lookup))
 
 /-- Successful projection preserves literal bits, primitive identity, and the
@@ -82,6 +86,8 @@ theorem lower_node_refines
   | Invocation word inst =>
     simp only [wire.lower_node]
     split <;> simp_all [sourceMeaning, meaning]
+  | SignedSelf word inst => simp [wire.lower_node, sourceMeaning]
+  | SlotInvoke site reference forwarded => simp [wire.lower_node, sourceMeaning]
   | Quotation body inst =>
     simp only [wire.lower_node]
     step as ⟨projected, hprojected⟩

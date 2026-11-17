@@ -177,35 +177,60 @@ def core.num.U8.is_ascii_whitespace (value : U8) : Result Bool :=
   ok (decide (value.val = 0x09 ∨ value.val = 0x0a ∨ value.val = 0x0c ∨
     value.val = 0x0d ∨ value.val = 0x20))
 
-/-- Check each digit before reporting overflow at that digit, as Rust does;
-an already overflowing prefix stops before examining any later bytes. -/
-def parseU32Digits {n : Nat} (digits : ListN U8 n) (value : U32) :
-    Result (core.result.Result U32 core.num.error.ParseIntError) :=
-  match digits with
-  | .nil => ok (.Ok value)
-  | .cons digit rest =>
+/-- The digit loop of Rust's `from_ascii_bytes_radix_impl` at radix 10, on the
+magnitude. Each byte is checked as a digit before overflow is reported at that
+digit, and an overflowing prefix stops before any later byte is examined.
+Rust's two checked steps (`checked_mul` by ten, then `checked_add`, or
+`checked_sub` for a negative value) overflow exactly when the new magnitude
+exceeds `limit`, the largest magnitude of that sign, and both report the same
+kind; the unchecked loop Rust uses for short inputs cannot overflow at all. -/
+def decimalDigits (limit : Nat) (overflow : core.num.error.IntErrorKind) :
+    List U8 → Nat → core.result.Result Nat core.num.error.ParseIntError
+  | [], value => .Ok value
+  | digit :: rest, value =>
     if 48 ≤ digit.val ∧ digit.val ≤ 57 then
-      let next := value.val * 10 + (digit.val - 48)
-      if next ≤ U32.max then do
-        let value ← UScalar.tryMk .U32 next
-        parseU32Digits rest value
-      else
-        ok (.Err { kind := .PosOverflow })
+      let next := value * 10 + (digit.val - 48)
+      if next ≤ limit then decimalDigits limit overflow rest next
+      else .Err { kind := overflow }
     else
-      ok (.Err { kind := .InvalidDigit })
-termination_by structural digits
+      .Err { kind := .InvalidDigit }
 
-def parseU32Start {n : Nat} (digits : ListN U8 n) :
-    Result (core.result.Result U32 core.num.error.ParseIntError) :=
-  match digits with
-  | .nil => ok (.Err { kind := .Empty })
-  | .cons first rest =>
-    if first.val = 43 then
-      match rest with
-      | .nil => ok (.Err { kind := .InvalidDigit })
-      | .cons _ _ => parseU32Digits rest 0#u32
-    else
-      parseU32Digits digits 0#u32
+/-- Rust's sign match, after the empty check: a lone `+` or `-` is an invalid
+digit; `+` precedes a positive magnitude, and `-` a negative one only for a
+signed type (for an unsigned type it stays in the digits, which refuse it).
+The result is whether the value is positive, and its digits. -/
+def decimalSign (signed : Bool) :
+    List U8 → core.result.Result (Bool × List U8) core.num.error.ParseIntError
+  | [] => .Err { kind := .Empty }
+  | [sign] =>
+    if sign.val = 43 ∨ sign.val = 45 then .Err { kind := .InvalidDigit }
+    else .Ok (true, [sign])
+  | sign :: rest =>
+    if sign.val = 43 then .Ok (true, rest)
+    else if sign.val = 45 ∧ signed then .Ok (false, rest)
+    else .Ok (true, sign :: rest)
+
+/-- Decimal `FromStr` for an unsigned type whose largest value is `max`: no
+trimming, radix prefixes, underscores or Unicode digits. -/
+def parseUnsignedDecimal (value : Str) (max : Nat) :
+    core.result.Result Nat core.num.error.ParseIntError :=
+  match decimalSign false value.val with
+  | .Err error => .Err error
+  | .Ok (_, digits) => decimalDigits max .PosOverflow digits 0
+
+/-- Decimal `FromStr` for a signed type with range `-minimum ..= max`. -/
+def parseSignedDecimal (value : Str) (max minimum : Nat) :
+    core.result.Result Int core.num.error.ParseIntError :=
+  match decimalSign true value.val with
+  | .Err error => .Err error
+  | .Ok (true, digits) =>
+    match decimalDigits max .PosOverflow digits 0 with
+    | .Ok magnitude => .Ok (Int.ofNat magnitude)
+    | .Err error => .Err error
+  | .Ok (false, digits) =>
+    match decimalDigits minimum .NegOverflow digits 0 with
+    | .Ok magnitude => .Ok (-Int.ofNat magnitude)
+    | .Err error => .Err error
 
 /-- Decimal `u32::from_str`: no trimming, radix prefixes, underscores, Unicode
 digits, or minus sign; a single leading plus is permitted only before digits. -/
@@ -213,7 +238,9 @@ digits, or minus sign; a single leading plus is permitted only before digits. -/
   "core::num::{core::str::traits::FromStr<u32, core::num::error::ParseIntError>}::from_str"]
 def U32.Insts.CoreStrTraitsFromStrParseIntError.from_str (value : Str) :
     Result (core.result.Result U32 core.num.error.ParseIntError) :=
-  parseU32Start value.list
+  match parseUnsignedDecimal value U32.max with
+  | .Ok parsed => do ok (.Ok (← UScalar.tryMk .U32 parsed))
+  | .Err error => ok (.Err error)
 
 /-- Consume the exact finite word width, not an arbitrary recursion budget. -/
 def countLowBits : Nat → Nat → Nat
@@ -273,13 +300,6 @@ def core.fmt.Formatter.debug_tuple_field2_finish
     | .Err error => ok (.Err error, formatter)
     | .Ok () => second.inst.fmt second.value formatter
 
-@[rust_fun "core::fmt::{core::fmt::Formatter<'a>}::debug_c_like_enum_write_str"]
-def core.fmt.Formatter.debug_c_like_enum_write_str (formatter : core.fmt.Formatter)
-    (names : Str) (offsets : Slice Usize) (index : Usize) :
-    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
-  _root_.noble_kernel.core.fmt.Formatter.debug_c_like_enum_write_str
-    formatter names offsets index
-
 @[rust_fun "core::fmt::{core::fmt::Debug<(@U, @T)>}::fmt"]
 def Pair.Insts.CoreFmtDebug.fmt {U T : Type}
     (first : core.fmt.Debug U) (second : core.fmt.Debug T)
@@ -337,19 +357,6 @@ def core.option.Option.as_mut {T : Type} (value : Option T) :
     match value, replacement with
     | some _, some updated => some updated
     | _, _ => value)
-
-@[rust_fun "core::option::{core::option::Option<@T>}::is_some_and"]
-def core.option.Option.is_some_and {T F : Type}
-    (inst : core.ops.function.FnOnce F T Bool)
-    (value : Option T) (predicate : F) : Result Bool :=
-  match value with
-  | none => ok false
-  | some payload => inst.call_once predicate payload
-
-@[rust_fun "core::option::{core::option::Option<@T>}::map"]
-def core.option.Option.map {T U F : Type} (inst : core.ops.function.FnOnce F T U)
-    (value : Option T) (function : F) : Result (Option U) :=
-  _root_.noble_kernel.core.option.Option.map inst value function
 
 @[rust_fun "core::option::{core::option::Option<@T>}::ok_or_else"]
 def core.option.Option.ok_or_else {T E F : Type}
@@ -516,98 +523,6 @@ def core.slice.Slice.sort_unstable {T : Type} (inst : core.cmp.Ord T)
   else do
     let sorted ← sortItems inst slice.list
     ok (.from sorted.val (by rw [sorted.property]; exact slice.bound))
-
-/-- Traverse existing slice storage without materializing another list. Every
-callback receives the state returned by its predecessor; skipped items do not
-invoke it. The cursor includes the item that triggers short-circuiting. -/
-def scanIterator {T F : Type} (inst : core.ops.function.FnMut F T Bool)
-    (stopOn : Bool) {n : Nat} (items : ListN T n) (skip cursor : Nat)
-    (function : F) : Result (Bool × Nat) :=
-  match items with
-  | .nil => ok (!stopOn, cursor)
-  | .cons value rest =>
-    match skip with
-    | skip + 1 => scanIterator inst stopOn rest skip cursor function
-    | 0 => do
-      let (result, function) ← inst.call_mut function value
-      if result == stopOn then
-        ok (result, cursor + 1)
-      else
-        scanIterator inst stopOn rest 0 (cursor + 1) function
-termination_by structural items
-
-def foldIterator {T B F : Type} (inst : core.ops.function.FnMut F (B × T) B)
-    {n : Nat} (items : ListN T n) (skip : Nat) (accumulator : B)
-    (function : F) : Result B :=
-  match items with
-  | .nil => ok accumulator
-  | .cons value rest =>
-    match skip with
-    | skip + 1 => foldIterator inst rest skip accumulator function
-    | 0 => do
-      let (accumulator, function) ← inst.call_mut function (accumulator, value)
-      foldIterator inst rest 0 accumulator function
-termination_by structural items
-
-@[rust_fun
-  "core::slice::iter::{core::iter::traits::iterator::Iterator<core::slice::iter::Iter<'a, @T>, &'a @T>}::fold"]
-def core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.fold
-    {T B F : Type} (inst : core.ops.function.FnMut F (B × T) B)
-    (iterator : core.slice.iter.Iter T) (initial : B) (function : F) : Result B :=
-  foldIterator inst iterator.slice.list iterator.i initial function
-
-@[rust_fun
-  "core::slice::iter::{core::iter::traits::iterator::Iterator<core::slice::iter::Iter<'a, @T>, &'a @T>}::any"]
-def core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.any
-    {T F : Type} (inst : core.ops.function.FnMut F T Bool)
-    (iterator : core.slice.iter.Iter T) (function : F) :
-    Result (Bool × core.slice.iter.Iter T) := do
-  let (result, cursor) ←
-    scanIterator inst true iterator.slice.list iterator.i iterator.i function
-  ok (result, { iterator with i := cursor })
-
-@[rust_fun
-  "core::slice::iter::{core::iter::traits::iterator::Iterator<core::slice::iter::Iter<'a, @T>, &'a @T>}::all"]
-def core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.all
-    {T F : Type} (inst : core.ops.function.FnMut F T Bool)
-    (iterator : core.slice.iter.Iter T) (function : F) :
-    Result (Bool × core.slice.iter.Iter T) := do
-  let (result, cursor) ←
-    scanIterator inst false iterator.slice.list iterator.i iterator.i function
-  ok (result, { iterator with i := cursor })
-
-@[rust_fun
-  "core::slice::iter::{core::iter::traits::iterator::Iterator<core::slice::iter::Iter<'a, @T>, &'a @T>}::position"]
-def core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.position
-    {T P : Type} (inst : core.ops.function.FnMut P T Bool)
-    (iterator : core.slice.iter.Iter T) (predicate : P) :
-    Result (Option Usize × core.slice.iter.Iter T) := do
-  let (found, cursor) ←
-    scanIterator inst true iterator.slice.list iterator.i iterator.i predicate
-  let updated := { iterator with i := cursor }
-  if found then do
-    let position ← UScalar.tryMk .Usize (cursor - iterator.i - 1)
-    ok (some position, updated)
-  else
-    ok (none, updated)
-
-@[rust_fun
-  "core::str::iter::{core::iter::traits::iterator::Iterator<core::str::iter::Bytes<'0>, u8>}::all"]
-def core.str.iter.Bytes.Insts.CoreIterTraitsIteratorIteratorU8.all
-    {F : Type} (inst : core.ops.function.FnMut F U8 Bool)
-    (iterator : core.str.iter.Bytes) (function : F) :
-    Result (Bool × core.str.iter.Bytes) := do
-  let (result, cursor) ←
-    scanIterator inst false iterator.iter.slice.list iterator.iter.i iterator.iter.i function
-  ok (result, { iter := { iterator.iter with i := cursor } })
-
-@[rust_fun
-  "core::str::iter::{core::iter::traits::iterator::Iterator<core::str::iter::Bytes<'0>, u8>}::next"]
-def core.str.iter.Bytes.Insts.CoreIterTraitsIteratorIteratorU8.next
-    (iterator : core.str.iter.Bytes) :
-    Result (Option U8 × core.str.iter.Bytes) := do
-  let (value, iter) ← core.slice.iter.IteratorSliceIter.next iterator.iter
-  ok (value, { iter := iter })
 
 /-- A returned mutable borrow updates only the last element. As in Aeneas's
 `get_mut` boundary, returning `none` through the backward function leaves the
@@ -1010,10 +925,6 @@ def Str.Insts.CoreOpsIndexIndex.index {I Output : Type}
     (value : Str) (index : I) : Result Output :=
   inst.index index value
 
-@[rust_fun "core::str::{str}::bytes"]
-def core.str.Str.bytes (value : Str) : Result core.str.iter.Bytes :=
-  ok { iter := { slice := value, i := 0 } }
-
 @[rust_fun "core::str::{str}::parse"]
 def core.str.Str.parse {F E : Type} (inst : core.str.traits.FromStr F E) (value : Str) :
     Result (core.result.Result F E) :=
@@ -1185,5 +1096,885 @@ def alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
 def alloc.string.String.Insts.CoreConvertFromShared0Str.from
     (value : Str) : Result String :=
   if value.val.length ≤ Isize.max.toNat then decodeStr value else fail .panic
+
+/-! ## Models of the regenerated subject (#97)
+
+The standard-library items the regenerated subject calls besides the ones
+above. Bodies follow the pinned Rust library (1.100.0-nightly 2026-09-17).
+Where the inherited kernel already models the same Rust item over the same
+Lean types, the model delegates to it by name. -/
+
+/-! ### Delegations to the identical inherited kernel models -/
+
+@[rust_fun
+  "core::array::iter::{core::iter::traits::collect::IntoIterator<[@T; @N], @T, core::array::iter::IntoIter<@T, @N>>}::into_iter"]
+def Array.Insts.CoreIterTraitsCollectIntoIteratorTIntoIter.into_iter {T : Type} {N : Usize}
+    (array : Array T N) : Result (core.array.iter.IntoIter T N) :=
+  _root_.noble_kernel.Array.Insts.CoreIterTraitsCollectIntoIteratorTIntoIter.into_iter array
+
+@[rust_fun
+  "core::array::iter::{core::iter::traits::iterator::Iterator<core::array::iter::IntoIter<@T, @N>, @T>}::next"]
+def core.array.iter.IntoIter.Insts.CoreIterTraitsIteratorIterator.next {T : Type} {N : Usize}
+    (iter : core.array.iter.IntoIter T N) : Result (Option T × core.array.iter.IntoIter T N) :=
+  _root_.noble_kernel.core.array.iter.IntoIter.Insts.CoreIterTraitsIteratorIterator.next iter
+
+@[rust_fun "core::bool::{bool}::then_some"]
+def core.bool.Bool.then_some {T : Type} (condition : Bool) (value : T) : Result (Option T) :=
+  _root_.noble_kernel.core.bool.Bool.then_some condition value
+
+@[rust_fun
+  "core::convert::num::{core::convert::TryFrom<u32, u64, core::num::error::TryFromIntError>}::try_from"]
+def U32.Insts.CoreConvertTryFromU64TryFromIntError.try_from (value : U64) :
+    Result (core.result.Result U32 core.num.error.TryFromIntError) :=
+  _root_.noble_kernel.U32.Insts.CoreConvertTryFromU64TryFromIntError.try_from value
+
+@[rust_fun "core::fmt::{core::fmt::Debug<str>}::fmt"]
+def Str.Insts.CoreFmtDebug.fmt (value : Str) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.Str.Insts.CoreFmtDebug.fmt value formatter
+
+/-- Fails, as the inherited model does: the layout size is not determined by
+the Rust source (see `NobleKernel.FunsExternal`). -/
+@[rust_fun "core::mem::size_of"]
+def core.mem.size_of (T : Type) : Result Usize :=
+  _root_.noble_kernel.core.mem.size_of T
+
+@[rust_fun "core::option::{core::option::Option<@T>}::is_none_or"]
+def core.option.Option.is_none_or {T F : Type} (inst : core.ops.function.FnOnce F T Bool)
+    (value : Option T) (predicate : F) : Result Bool :=
+  _root_.noble_kernel.core.option.Option.is_none_or inst value predicate
+
+@[rust_fun "core::option::{core::option::Option<@T>}::zip"]
+def core.option.Option.zip {T U : Type} (left : Option T) (right : Option U) :
+    Result (Option (T × U)) :=
+  _root_.noble_kernel.core.option.Option.zip left right
+
+@[rust_fun
+  "core::option::{core::default::Default<core::option::Option<@T>>}::default"]
+def core.option.Option.Insts.CoreDefaultDefault.default (T : Type) : Result (Option T) :=
+  _root_.noble_kernel.core.option.Option.Insts.CoreDefaultDefault.default T
+
+@[rust_fun
+  "core::option::{core::ops::try_trait::Try<core::option::Option<@T>>}::branch"]
+def core.option.Option.Insts.CoreOpsTry_traitTry.branch {T : Type} (value : Option T) :
+    Result (core.ops.control_flow.ControlFlow (Option Never) T) :=
+  _root_.noble_kernel.core.option.Option.Insts.CoreOpsTry_traitTry.branch value
+
+@[rust_fun
+  "core::option::{core::ops::try_trait::FromResidual<core::option::Option<@T>, core::option::Option<!>>}::from_residual"]
+def core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual (T : Type)
+    (residual : Option Never) : Result (Option T) :=
+  _root_.noble_kernel.core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+    T residual
+
+@[rust_fun
+  "core::result::{core::cmp::PartialEq<core::result::Result<@T, @E>, core::result::Result<@T, @E>>}::eq"]
+def core.result.Result.Insts.CoreCmpPartialEqResult.eq {T E : Type}
+    (valueEq : core.cmp.PartialEq T T) (errorEq : core.cmp.PartialEq E E)
+    (left right : core.result.Result T E) : Result Bool :=
+  _root_.noble_kernel.core.result.Result.Insts.CoreCmpPartialEqResult.eq
+    valueEq errorEq left right
+
+@[rust_fun "core::result::{core::result::Result<@T, @E>}::map_or"]
+def core.result.Result.map_or {T E U F : Type} (inst : core.ops.function.FnOnce F T U)
+    (value : core.result.Result T E) (fallback : U) (function : F) : Result U :=
+  _root_.noble_kernel.core.result.Result.map_or inst value fallback function
+
+@[rust_fun "alloc::boxed::{core::cmp::PartialEq<Box<@T>, Box<@T>>}::ne"]
+def Box.Insts.CoreCmpPartialEqBox.ne {T : Type} (A : Type) (inst : core.cmp.PartialEq T T)
+    (left right : T) : Result Bool :=
+  _root_.noble_kernel.Box.Insts.CoreCmpPartialEqBox.ne A inst left right
+
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::remove"]
+def alloc.vec.Vec.remove {T : Type} (A : Type) (vector : alloc.vec.Vec T) (index : Usize) :
+    Result (T × alloc.vec.Vec T) :=
+  _root_.noble_kernel.alloc.vec.Vec.remove A vector index
+
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::clear"]
+def alloc.vec.Vec.clear {T : Type} (A : Type) (vector : alloc.vec.Vec T) :
+    Result (alloc.vec.Vec T) :=
+  _root_.noble_kernel.alloc.vec.Vec.clear A vector
+
+@[rust_fun
+  "alloc::vec::{core::iter::traits::collect::Extend<alloc::vec::Vec<@T>, @T>}::extend"]
+def alloc.vec.Vec.Insts.CoreIterTraitsCollectExtend.extend {T : Type} (A : Type) {I : Type}
+    {Clause0_IntoIter : Type}
+    (inst : core.iter.traits.collect.IntoIterator I T Clause0_IntoIter)
+    (vector : alloc.vec.Vec T) (items : I) : Result (alloc.vec.Vec T) :=
+  _root_.noble_kernel.alloc.vec.Vec.Insts.CoreIterTraitsCollectExtend.extend A inst vector items
+
+/-! ### `f32`
+
+`F32` is Lean's IEEE 754 binary32 `Float32` (see `TypesExternal.lean`). Rust's
+`f32` arithmetic never panics: overflow and invalid operations produce
+infinities and NaN, as `Float32` does. -/
+
+@[rust_fun "core::clone::impls::{core::clone::Clone<f32>}::clone"]
+def F32.Insts.CoreCloneClone.clone (value : F32) : Result F32 :=
+  ok value
+
+/-- IEEE equality (`NaN ≠ NaN`, `0.0 = -0.0`), Rust's `f32 == f32`. -/
+@[rust_fun "core::cmp::impls::{core::cmp::PartialEq<f32, f32>}::eq"]
+def F32.Insts.CoreCmpPartialEqF32.eq (left right : F32) : Result Bool :=
+  ok (Float32.beq left right)
+
+@[rust_fun "core::cmp::impls::{core::cmp::PartialEq<f32, f32>}::ne"]
+def F32.Insts.CoreCmpPartialEqF32.ne (left right : F32) : Result Bool :=
+  ok (!Float32.beq left right)
+
+/-- Rust's float `partial_cmp`: `match (self <= other, self >= other)`, so a
+NaN operand compares as `None`. -/
+@[rust_fun "core::cmp::impls::{core::cmp::PartialOrd<f32, f32>}::partial_cmp"]
+def F32.Insts.CoreCmpPartialOrdF32.partial_cmp (left right : F32) : Result (Option Ordering) :=
+  ok (match Float32.le left right, Float32.le right left with
+    | false, false => none
+    | false, true => some .gt
+    | true, false => some .lt
+    | true, true => some .eq)
+
+/-- `u8 as f32` is exact. -/
+@[rust_fun "core::convert::num::{core::convert::From<f32, u8>}::from"]
+def F32.Insts.CoreConvertFromU8.from (value : U8) : Result F32 :=
+  ok (UInt8.toFloat32 (UInt8.ofBitVec value.bv))
+
+/-- `u16 as f32` is exact. -/
+@[rust_fun "core::convert::num::{core::convert::From<f32, u16>}::from"]
+def F32.Insts.CoreConvertFromU16.from (value : U16) : Result F32 :=
+  ok (UInt16.toFloat32 (UInt16.ofBitVec value.bv))
+
+/-- Rust converts through `bool as u8`: `1.0` or `0.0`. -/
+@[rust_fun "core::convert::num::{core::convert::From<f32, bool>}::from"]
+def F32.Insts.CoreConvertFromBool.from (value : Bool) : Result F32 :=
+  ok (UInt8.toFloat32 (if value then 1 else 0))
+
+/-- The digits are formatter text, which the Aeneas formatter erases; float
+formatting itself cannot fail, so this is a successful step that preserves
+the formatter, as for every other leaf `Debug` model. -/
+@[rust_fun "core::fmt::float::{core::fmt::Debug<f32>}::fmt"]
+def F32.Insts.CoreFmtDebug.fmt (_ : F32) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  ok (.Ok (), formatter)
+
+/-- Rust defines `f32::NAN` as `0.0 / 0.0`. NaN payloads are not observable
+through any operation the translation calls. -/
+@[rust_const "core::f32::{f32}::NAN"]
+def core.f32.F32.NAN : Result F32 :=
+  ok Float32.nan
+
+@[rust_fun "core::f32::{f32}::is_finite"]
+def core.f32.F32.is_finite (value : F32) : Result Bool :=
+  ok (Float32.isFinite value)
+
+@[rust_fun "core::ops::arith::{core::ops::arith::Add<f32, f32, f32>}::add"]
+def F32.Insts.CoreOpsArithAddF32F32.add (left right : F32) : Result F32 :=
+  ok (Float32.add left right)
+
+@[rust_fun "core::ops::arith::{core::ops::arith::Mul<f32, f32, f32>}::mul"]
+def F32.Insts.CoreOpsArithMulF32F32.mul (left right : F32) : Result F32 :=
+  ok (Float32.mul left right)
+
+@[rust_fun "core::ops::arith::{core::ops::arith::Div<f32, f32, f32>}::div"]
+def F32.Insts.CoreOpsArithDivF32F32.div (left right : F32) : Result F32 :=
+  ok (Float32.div left right)
+
+/-! ### Integers, characters, booleans and orderings -/
+
+@[rust_fun "core::cmp::impls::{core::cmp::Ord<bool>}::cmp"]
+def Bool.Insts.CoreCmpOrd.cmp (left right : Bool) : Result Ordering :=
+  ok (match left, right with
+    | false, true => .lt
+    | true, false => .gt
+    | _, _ => .eq)
+
+@[rust_fun
+  "core::cmp::{core::cmp::PartialEq<core::cmp::Ordering, core::cmp::Ordering>}::eq"]
+def core.cmp.Ordering.Insts.CoreCmpPartialEqOrdering.eq (left right : Ordering) :
+    Result Bool :=
+  ok (decide (left = right))
+
+/-- The closure runs only when the receiver is `Equal`. -/
+@[rust_fun "core::cmp::{core::cmp::Ordering}::then_with"]
+def core.cmp.Ordering.then_with {F : Type} (inst : core.ops.function.FnOnce F Unit Ordering)
+    (order : Ordering) (function : F) : Result Ordering :=
+  match order with
+  | .eq => inst.call_once function ()
+  | _ => ok order
+
+@[rust_fun "core::char::methods::{char}::len_utf8"]
+def core.char.methods.Char.len_utf8 (value : Char) : Result Usize :=
+  UScalar.tryMk .Usize value.utf8Size
+
+@[rust_fun
+  "core::convert::{core::convert::TryFrom<@T, @U, !>}::try_from"]
+def core.convert.TryFromTUNever.Blanket.try_from {T U : Type} (inst : core.convert.Into U T)
+    (value : U) : Result (core.result.Result T Never) := do
+  ok (.Ok (← inst.into value))
+
+@[rust_fun
+  "core::convert::num::ptr_try_from_impls::{core::convert::TryFrom<u16, usize, core::num::error::TryFromIntError>}::try_from"]
+def U16.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from (value : Usize) :
+    Result (core.result.Result U16 core.num.error.TryFromIntError) :=
+  core.num.tryFromUScalar .U16 value
+
+@[rust_fun
+  "core::convert::num::{core::convert::TryFrom<u8, u64, core::num::error::TryFromIntError>}::try_from"]
+def U8.Insts.CoreConvertTryFromU64TryFromIntError.try_from (value : U64) :
+    Result (core.result.Result U8 core.num.error.TryFromIntError) :=
+  core.num.tryFromUScalar .U8 value
+
+@[rust_fun
+  "core::convert::num::ptr_try_from_impls::{core::convert::TryFrom<u8, usize, core::num::error::TryFromIntError>}::try_from"]
+def U8.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from (value : Usize) :
+    Result (core.result.Result U8 core.num.error.TryFromIntError) :=
+  core.num.tryFromUScalar .U8 value
+
+@[rust_fun
+  "core::convert::num::{core::convert::TryFrom<u8, u32, core::num::error::TryFromIntError>}::try_from"]
+def U8.Insts.CoreConvertTryFromU32TryFromIntError.try_from (value : U32) :
+    Result (core.result.Result U8 core.num.error.TryFromIntError) :=
+  core.num.tryFromUScalar .U8 value
+
+@[rust_fun
+  "core::convert::num::{core::convert::TryFrom<u8, u16, core::num::error::TryFromIntError>}::try_from"]
+def U8.Insts.CoreConvertTryFromU16TryFromIntError.try_from (value : U16) :
+    Result (core.result.Result U8 core.num.error.TryFromIntError) :=
+  core.num.tryFromUScalar .U8 value
+
+deriving instance DecidableEq for core.num.error.IntErrorKind
+
+@[rust_fun
+  "core::num::error::{core::cmp::PartialEq<core::num::error::ParseIntError, core::num::error::ParseIntError>}::eq"]
+def core.num.error.ParseIntError.Insts.CoreCmpPartialEqParseIntError.eq
+    (left right : core.num.error.ParseIntError) : Result Bool :=
+  ok (decide (left.kind = right.kind))
+
+@[rust_fun "core::num::{u8}::is_ascii"]
+def core.num.U8.is_ascii (value : U8) : Result Bool :=
+  ok (decide (value.val < 128))
+
+@[rust_fun
+  "core::num::{core::str::traits::FromStr<i64, core::num::error::ParseIntError>}::from_str"]
+def I64.Insts.CoreStrTraitsFromStrParseIntError.from_str (value : Str) :
+    Result (core.result.Result I64 core.num.error.ParseIntError) :=
+  match parseSignedDecimal value I64.max.toNat (-I64.min).toNat with
+  | .Ok parsed => do ok (.Ok (← IScalar.tryMk .I64 parsed))
+  | .Err error => ok (.Err error)
+
+@[rust_fun
+  "core::num::{core::str::traits::FromStr<usize, core::num::error::ParseIntError>}::from_str"]
+def Usize.Insts.CoreStrTraitsFromStrParseIntError.from_str (value : Str) :
+    Result (core.result.Result Usize core.num.error.ParseIntError) :=
+  match parseUnsignedDecimal value Usize.max with
+  | .Ok parsed => do ok (.Ok (← UScalar.tryMk .Usize parsed))
+  | .Err error => ok (.Err error)
+
+/-- `⌊log₁₀ value⌋` for a positive value; `fuel` bounds the divisions, and
+`value` itself is always enough fuel. -/
+def floorLog10 : Nat → Nat → Nat
+  | 0, _ => 0
+  | fuel + 1, value => if value < 10 then 0 else floorLog10 fuel (value / 10) + 1
+
+/-- `usize::ilog10` panics on zero (`panic_for_nonpositive_argument`). -/
+@[rust_fun "core::num::{usize}::ilog10"]
+def core.num.Usize.ilog10 (value : Usize) : Result U32 :=
+  if value.val = 0 then fail .panic
+  else UScalar.tryMk .U32 (floorLog10 value.val value.val)
+
+@[rust_fun "core::num::{u64}::saturating_mul"]
+def core.num.U64.saturating_mul (left right : U64) : Result U64 :=
+  UScalar.tryMk .U64 (min U64.max (left.val * right.val))
+
+/-- Two's-complement negation modulo `2^64`. -/
+@[rust_fun "core::num::{u64}::wrapping_neg"]
+def core.num.U64.wrapping_neg (value : U64) : Result U64 :=
+  ok ⟨-value.bv⟩
+
+/-! ### Ranges -/
+
+/-- `RangeBounds::contains` for `start..end`: `start <= item && item < end`,
+short-circuiting, through the two mixed `PartialOrd` instances. -/
+@[rust_fun "core::ops::range::{core::ops::range::Range<@Idx>}::contains"]
+def core.ops.range.Range.contains {Idx U : Type} (_ : core.cmp.PartialOrd Idx Idx)
+    (idxItem : core.cmp.PartialOrd Idx U) (itemIdx : core.cmp.PartialOrd U Idx)
+    (range : core.ops.range.Range Idx) (item : U) : Result Bool := do
+  if ← idxItem.le range.start item then itemIdx.lt item range.end else ok false
+
+/-- `RangeBounds::contains` for `start..=end`. An exhausted range reports the
+end bound `Excluded(start)`, so it contains nothing. -/
+@[rust_fun
+  "core::ops::range::{core::ops::range::RangeInclusive<@Idx>}::contains"]
+def core.ops.range.RangeInclusive.contains {Idx U : Type} (_ : core.cmp.PartialOrd Idx Idx)
+    (idxItem : core.cmp.PartialOrd Idx U) (itemIdx : core.cmp.PartialOrd U Idx)
+    (range : core.ops.range.RangeInclusive Idx) (item : U) : Result Bool := do
+  if ← idxItem.le range.start item then
+    if range.exhausted then itemIdx.lt item range.start else itemIdx.le item range.end
+  else ok false
+
+@[rust_fun
+  "core::ops::range::{core::ops::range::RangeBounds<core::ops::range::RangeToInclusive<@T>, @T>}::end_bound"]
+def core.ops.range.RangeToInclusive.Insts.CoreOpsRangeRangeBounds.end_bound {T : Type}
+    (range : core.ops.range.RangeToInclusive T) : Result (core.ops.range.Bound T) :=
+  ok (.Included range.end)
+
+@[rust_fun
+  "core::ops::range::{core::ops::range::RangeBounds<core::ops::range::RangeToInclusive<@T>, @T>}::start_bound"]
+def core.ops.range.RangeToInclusive.Insts.CoreOpsRangeRangeBounds.start_bound {T : Type}
+    (_ : core.ops.range.RangeToInclusive T) : Result (core.ops.range.Bound T) :=
+  ok .Unbounded
+
+/-! ### Options, results, borrows and boxes -/
+
+/-- Rust: `(Some(to), Some(from)) => to.clone_from(from)`, otherwise
+`*to = from.clone()`. -/
+@[rust_fun
+  "core::option::{core::clone::Clone<core::option::Option<@T>>}::clone_from"]
+def core.option.Option.Insts.CoreCloneClone.clone_from {T : Type} (inst : core.clone.Clone T)
+    (target source : Option T) : Result (Option T) :=
+  match target, source with
+  | some target, some source => do ok (some (← inst.clone_from target source))
+  | _, _ => core.option.Option.Insts.CoreCloneClone.clone inst source
+
+@[rust_fun "core::option::Option::Some"]
+def core.option.Option.Some.constructor {T : Type} (value : T) : Result (Option T) :=
+  ok (some value)
+
+/-- `FnOnce` of the `Option::Some` constructor item, the only value of its
+zero-sized type (the generated instance passes
+`core.option.Option.Some.constructor`). The template's signature misprints the
+function argument without parentheses; the generated instance requires
+`(T → Result (Option T)) → T → Result (Option T)`. -/
+@[rust_fun
+  "core::option::Option::{core::ops::function::FnOnce<@, (@T), core::option::Option<@T>>}::call_once"]
+def P.Insts.CoreOpsFunctionFnOnceTupleTOption.call_once {T : Type}
+    (_ : T → Result (Option T)) (value : T) : Result (Option T) :=
+  ok (some value)
+
+@[rust_fun "core::option::{core::option::Option<@T>}::map_or"]
+def core.option.Option.map_or {T U F : Type} (inst : core.ops.function.FnOnce F T U)
+    (value : Option T) (fallback : U) (function : F) : Result U :=
+  match value with
+  | some payload => inst.call_once function payload
+  | none => ok fallback
+
+@[rust_fun "core::option::{core::option::Option<@T>}::filter"]
+def core.option.Option.filter {T P : Type} (inst : core.ops.function.FnOnce P T Bool)
+    (value : Option T) (predicate : P) : Result (Option T) :=
+  match value with
+  | some payload => do
+    if ← inst.call_once predicate payload then ok (some payload) else ok none
+  | none => ok none
+
+@[rust_fun "core::option::{core::option::Option<&'0 @T>}::cloned"]
+def core.option.OptionShared0T.cloned {T : Type} (inst : core.clone.Clone T)
+    (value : Option T) : Result (Option T) :=
+  match value with
+  | some payload => do ok (some (← inst.clone payload))
+  | none => ok none
+
+@[rust_fun
+  "core::option::{core::option::Option<core::result::Result<@T, @E>>}::transpose"]
+def core.option.OptionResult.transpose {T E : Type} (value : Option (core.result.Result T E)) :
+    Result (core.result.Result (Option T) E) :=
+  match value with
+  | none => ok (.Ok none)
+  | some (.Ok payload) => ok (.Ok (some payload))
+  | some (.Err error) => ok (.Err error)
+
+@[rust_fun "core::result::{core::result::Result<@T, @E>}::and_then"]
+def core.result.Result.and_then {T E U F : Type}
+    (inst : core.ops.function.FnOnce F T (core.result.Result U E))
+    (value : core.result.Result T E) (function : F) : Result (core.result.Result U E) :=
+  match value with
+  | .Ok payload => inst.call_once function payload
+  | .Err error => pure (.Err error)
+
+@[rust_fun "core::borrow::{core::borrow::Borrow<@T, @T>}::borrow"]
+def core.borrow.Borrow.Blanket.borrow {T : Type} (value : T) : Result T :=
+  ok value
+
+/-- `impl<T: Clone> ToOwned for T`: `self.clone()`. -/
+@[rust_fun "alloc::borrow::{alloc::borrow::ToOwned<@T, @T>}::to_owned"]
+def alloc.borrow.ToOwned.Blanket.to_owned {T : Type} (inst : core.clone.Clone T) (value : T) :
+    Result T :=
+  inst.clone value
+
+/-- `(**self).clone_from(&**source)`; a box is its value in Aeneas. -/
+@[rust_fun "alloc::boxed::{core::clone::Clone<Box<@T>>}::clone_from"]
+def Box.Insts.CoreCloneClone.clone_from {T A : Type} (inst : core.clone.Clone T)
+    (_ : core.clone.Clone A) (target source : T) : Result T :=
+  inst.clone_from target source
+
+/-! ### Cells, shared pointers and sets -/
+
+@[rust_fun "core::cell::{core::cell::Cell<@T>}::new"]
+def core.cell.Cell.new {T : Type} (value : T) : Result (core.cell.Cell T) :=
+  ok ⟨value⟩
+
+/-- A `Copy` read of the current value. -/
+@[rust_fun "core::cell::{core::cell::Cell<@T>}::get"]
+def core.cell.Cell.get {T : Type} (_ : core.marker.Copy T) (cell : core.cell.Cell T) : Result T :=
+  ok cell.value
+
+/-- `Cell::set` writes through a shared reference. Aeneas reads shared
+references as values, so the generated signature returns no updated cell and
+the write cannot be carried to the other holders of the cell (the only use is
+the shared `Rc<Cell<u32>>` request-work pool, debited by `Meter::charge`).
+No value-returning model is faithful: returning `ok ()` would drop the debit
+and let later reads see unspent work. As with `core::mem::size_of`, the
+model fails, so no run that writes a cell yields an `ok` result, and every
+run that does not write one reads the cells' Rust values exactly. -/
+@[rust_fun "core::cell::{core::cell::Cell<@T>}::set"]
+def core.cell.Cell.set {T : Type} (_ : core.cell.Cell T) (_ : T) : Result Unit :=
+  fail .undef
+
+/-- `debug_struct("Cell").field("value", &self.get()).finish()`: the value's
+`Debug` runs; text and layout are formatter state the abstraction erases. -/
+@[rust_fun "core::fmt::{core::fmt::Debug<core::cell::Cell<@T>>}::fmt"]
+def core.cell.Cell.Insts.CoreFmtDebug.fmt {T : Type} (_ : core.marker.Copy T)
+    (inst : core.fmt.Debug T) (cell : core.cell.Cell T) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  inst.fmt cell.value formatter
+
+@[rust_fun "alloc::rc::{alloc::rc::Rc<@T>}::new"]
+def alloc.rc.Rc.new {T : Type} (value : T) : Result (alloc.rc.Rc T) :=
+  ok ⟨value⟩
+
+@[rust_fun "alloc::rc::{core::ops::deref::Deref<alloc::rc::Rc<@T>, @T>}::deref"]
+def alloc.rc.Rc.Insts.CoreOpsDerefDeref.deref {T : Type} (_A : Type) (rc : alloc.rc.Rc T) :
+    Result T :=
+  ok rc.value
+
+/-- A clone shares the allocation, hence the value. -/
+@[rust_fun "alloc::rc::{core::clone::Clone<alloc::rc::Rc<@T>>}::clone"]
+def alloc.rc.Rc.Insts.CoreCloneClone.clone {T : Type} {A : Type _}
+    (_ : core.alloc.AllocatorClone A) (rc : alloc.rc.Rc T) : Result (alloc.rc.Rc T) :=
+  ok rc
+
+/-- `fmt::Debug::fmt(&**self, f)`. -/
+@[rust_fun "alloc::rc::{core::fmt::Debug<alloc::rc::Rc<@T>>}::fmt"]
+def alloc.rc.Rc.Insts.CoreFmtDebug.fmt {T : Type} (_A : Type) (inst : core.fmt.Debug T)
+    (rc : alloc.rc.Rc T) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  inst.fmt rc.value formatter
+
+@[rust_fun "alloc::sync::{alloc::sync::Arc<@T>}::new"]
+def alloc.sync.Arc.new {T : Type} (value : T) : Result (alloc.sync.Arc T) :=
+  ok ⟨value⟩
+
+/-- `Arc::ptr_eq` compares allocation identity, which Aeneas's value model does
+not have: two `Arc::new(())` owners and two clones of one owner are the same
+value, yet Rust answers `false` and `true`. No function of the values is
+faithful, so, as with `core::mem::size_of`, the model fails; no run that
+compares owners yields an `ok` result. The only caller is
+`Session::is_current_namespace` (live-slot commit), never `prepare`. -/
+@[rust_fun "alloc::sync::{alloc::sync::Arc<@T>}::ptr_eq"]
+def alloc.sync.Arc.ptr_eq {T : Type} (_A : Type) (_ _ : alloc.sync.Arc T) : Result Bool :=
+  fail .undef
+
+@[rust_fun "alloc::sync::{core::clone::Clone<alloc::sync::Arc<@T>>}::clone"]
+def alloc.sync.Arc.Insts.CoreCloneClone.clone {T : Type} {A : Type _}
+    (_ : core.alloc.AllocatorClone A) (arc : alloc.sync.Arc T) : Result (alloc.sync.Arc T) :=
+  ok arc
+
+@[rust_fun "alloc::sync::{core::fmt::Debug<alloc::sync::Arc<@T>>}::fmt"]
+def alloc.sync.Arc.Insts.CoreFmtDebug.fmt {T : Type} (_A : Type) (inst : core.fmt.Debug T)
+    (arc : alloc.sync.Arc T) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  inst.fmt arc.value formatter
+
+@[rust_fun
+  "alloc::collections::btree::set::{alloc::collections::btree::set::BTreeSet<@T, alloc::alloc::Global>}::new"]
+def alloc.collections.btree.set.BTreeSetTGlobal.new (T : Type) :
+    Result (alloc.collections.btree.set.BTreeSet T Global) :=
+  ok ⟨[]⟩
+
+/-- Insert into the ascending element list. An element equal to `value` is
+kept and `value` dropped, as in Rust. For a `cmp` that cannot fail (the only
+instantiation, `String`) the result is Rust's; the comparisons themselves are
+made along the list rather than along B-tree nodes. -/
+def btreeInsert {T : Type} (inst : core.cmp.Ord T) (value : T) :
+    List T → Result (Bool × List T)
+  | [] => ok (true, [value])
+  | first :: rest => do
+    match ← inst.cmp value first with
+    | .lt => ok (true, value :: first :: rest)
+    | .eq => ok (false, first :: rest)
+    | .gt => do
+      let (inserted, rest) ← btreeInsert inst value rest
+      ok (inserted, first :: rest)
+
+@[rust_fun
+  "alloc::collections::btree::set::{alloc::collections::btree::set::BTreeSet<@T, @A>}::insert"]
+def alloc.collections.btree.set.BTreeSet.insert {T A : Type} (_ : core.alloc.AllocatorClone A)
+    (inst : core.cmp.Ord T) (set : alloc.collections.btree.set.BTreeSet T A) (value : T) :
+    Result (Bool × alloc.collections.btree.set.BTreeSet T A) := do
+  let (inserted, elements) ← btreeInsert inst value set.elements
+  ok (inserted, ⟨elements⟩)
+
+/-! ### Slices, arrays and vectors -/
+
+/-- Lexicographic comparison by the element `cmp`, then by length (Rust's
+`SliceOrd::compare`); stops at the first unequal pair. -/
+def lexCompare {T : Type _} (compare : T → T → Result Ordering) :
+    List T → List T → Result Ordering
+  | [], [] => ok .eq
+  | [], _ :: _ => ok .lt
+  | _ :: _, [] => ok .gt
+  | left :: lefts, right :: rights => do
+    match ← compare left right with
+    | .eq => lexCompare compare lefts rights
+    | order => ok order
+
+/-- The same with the element `partial_cmp` (Rust's `SlicePartialOrd`): any
+result other than `Some(Equal)` ends the comparison. -/
+def lexPartialCompare {T : Type _} (compare : T → T → Result (Option Ordering)) :
+    List T → List T → Result (Option Ordering)
+  | [], [] => ok (some .eq)
+  | [], _ :: _ => ok (some .lt)
+  | _ :: _, [] => ok (some .gt)
+  | left :: lefts, right :: rights => do
+    match ← compare left right with
+    | some .eq => lexPartialCompare compare lefts rights
+    | order => ok order
+
+/-- `[T; N]::partial_cmp` is the slice comparison. -/
+@[rust_fun "core::array::{core::cmp::PartialOrd<[@T; @N], [@T; @N]>}::partial_cmp"]
+def Array.Insts.CoreCmpPartialOrdArray.partial_cmp {T : Type _} {N : Usize}
+    (inst : core.cmp.PartialOrd T T) (left right : Array T N) : Result (Option Ordering) :=
+  lexPartialCompare inst.partial_cmp left.val right.val
+
+/-- `[T; N]::ge` is the slice `__chaining_ge`: the first element pair that
+is not `Some(Equal)` decides (`None` is `false`), and equal lengths are `true`. -/
+@[rust_fun "core::array::{core::cmp::PartialOrd<[@T; @N], [@T; @N]>}::ge"]
+def Array.Insts.CoreCmpPartialOrdArray.ge {T : Type _} {N : Usize}
+    (inst : core.cmp.PartialOrd T T) (left right : Array T N) : Result Bool := do
+  match ← lexPartialCompare inst.partial_cmp left.val right.val with
+  | some .gt => ok true
+  | some .eq => ok true
+  | _ => ok false
+
+@[rust_fun "core::array::{core::cmp::Ord<[@T; @N]>}::cmp"]
+def Array.Insts.CoreCmpOrd.cmp {T : Type _} {N : Usize} (inst : core.cmp.Ord T)
+    (left right : Array T N) : Result Ordering :=
+  lexCompare inst.cmp left.val right.val
+
+/-- Call the closure on `index, index + 1, …`, threading its state. -/
+def generatedArrayItems {T F : Type} (inst : core.ops.function.FnMut F Usize T) :
+    (count index : Nat) → F → Result { items : List T // items.length = count }
+  | 0, _, _ => ok ⟨[], rfl⟩
+  | count + 1, index, function => do
+    let position ← UScalar.tryMk .Usize index
+    let (item, function) ← inst.call_mut function position
+    let rest ← generatedArrayItems inst count (index + 1) function
+    ok ⟨item :: rest.val, by simp [rest.property]⟩
+
+/-- `array::from_fn` calls the closure on `0, 1, …, N - 1` in order. -/
+@[rust_fun "core::array::from_fn"]
+def core.array.from_fn {T F : Type} (N : Usize) (inst : core.ops.function.FnMut F Usize T)
+    (function : F) : Result (Array T N) := do
+  let items ← generatedArrayItems inst N.val 0 function
+  ok (Array.from items.val items.property)
+
+@[rust_fun "core::slice::{[@T]}::split_first"]
+def core.slice.Slice.split_first {T : Type} (slice : Slice T) : Result (Option (T × Slice T)) :=
+  match h : slice.val with
+  | [] => ok none
+  | first :: rest =>
+    ok (some (first, .from rest (by
+      have bound := slice.property
+      rw [h] at bound
+      simp only [List.length_cons] at bound
+      omega)))
+
+/-- As for `last_mut`: the backward function updates only the first element,
+and `none` leaves the slice unchanged. -/
+@[rust_fun "core::slice::{[@T]}::first_mut"]
+def core.slice.Slice.first_mut {T : Type} (slice : Slice T) :
+    Result (Option T × (Option T → Slice T)) :=
+  ok (slice.val.head?, fun replacement =>
+    match replacement with
+    | none => slice
+    | some value => slice.setAtNat 0 value)
+
+/-- `m >= n && needle == &self[m - n..]`, comparing `needle` on the left. -/
+@[rust_fun "core::slice::{[@T]}::ends_with"]
+def core.slice.Slice.ends_with {T : Type} (inst : core.cmp.PartialEq T T)
+    (slice needle : Slice T) : Result Bool :=
+  if needle.length ≤ slice.length then
+    core.slice.cmp.PartialEqSlice.eq inst needle
+      (.from (slice.val.drop (slice.length - needle.length)) (by
+        have bound := slice.property
+        simp only [List.length_drop]
+        omega))
+  else
+    ok false
+
+/-- The loop of the pinned `binary_search_by`: no early exit on `Equal`;
+`base` moves to `mid` unless the comparison is `Greater`, and `size` loses
+`size / 2` per step. `fuel` starts at the initial size; since `size` drops by
+at least one per step while it exceeds one, the fuel never ends the loop. -/
+def binarySearchSteps {T F : Type} (compare : F → T → Result (Ordering × F))
+    (items : List T) : Nat → Nat → Nat → F → Result (Nat × F)
+  | 0, _, base, function => ok (base, function)
+  | fuel + 1, size, base, function =>
+    if 1 < size then
+      match items[base + size / 2]? with
+      | none => fail .undef
+      | some item => do
+        let (order, function) ← compare function item
+        binarySearchSteps compare items fuel (size - size / 2)
+          (if order = .gt then base else base + size / 2) function
+    else
+      ok (base, function)
+
+/-- `binary_search_by`: `Err(0)` on an empty slice; after the loop one more
+comparison at `base` gives `Ok(base)` on `Equal`, else
+`Err(base + (order == Less))`. The closure's final state is dropped. -/
+def binarySearchBy {T F : Type} (compare : F → T → Result (Ordering × F))
+    (slice : Slice T) (function : F) : Result (core.result.Result Usize Usize) := do
+  if slice.length = 0 then return .Err 0#usize
+  let (base, function) ← binarySearchSteps compare slice.val slice.length slice.length 0 function
+  match slice.val[base]? with
+  | none => fail .undef
+  | some item =>
+    let (order, _) ← compare function item
+    if order = .eq then return .Ok (← UScalar.tryMk .Usize base)
+    return .Err (← UScalar.tryMk .Usize (if order = .lt then base + 1 else base))
+
+/-- `binary_search_by(|p| p.cmp(x))`. -/
+@[rust_fun "core::slice::{[@T]}::binary_search"]
+def core.slice.Slice.binary_search {T : Type} (inst : core.cmp.Ord T) (slice : Slice T)
+    (target : T) : Result (core.result.Result Usize Usize) :=
+  binarySearchBy (fun (_ : Unit) item => do ok (← inst.cmp item target, ())) slice ()
+
+/-- `binary_search_by(|k| f(k).cmp(b))`, threading the key closure's state. -/
+@[rust_fun "core::slice::{[@T]}::binary_search_by_key"]
+def core.slice.Slice.binary_search_by_key {T B F : Type}
+    (key : core.ops.function.FnMut F T B) (inst : core.cmp.Ord B) (slice : Slice T)
+    (target : B) (function : F) : Result (core.result.Result Usize Usize) :=
+  binarySearchBy (fun function item => do
+      let (itemKey, function) ← key.call_mut function item
+      ok (← inst.cmp itemKey target, function)) slice function
+
+/-- Stable insertion with a stateful comparator, as in `insertSorted`: `item`
+goes before the first element it does not compare `Greater` to, and every
+comparison threads the closure state. -/
+def insertSortedBy {T F : Type} (compare : F → T → T → Result (Ordering × F)) (item : T) :
+    (items : List T) → F →
+      Result ({ sorted : List T // sorted.length = items.length + 1 } × F)
+  | [], function => ok (⟨[item], by simp⟩, function)
+  | first :: rest, function => do
+    let (order, function) ← compare function item first
+    if order = .gt then
+      let (inserted, function) ← insertSortedBy compare item rest function
+      ok (⟨first :: inserted.val, by simp [inserted.property]⟩, function)
+    else
+      ok (⟨item :: first :: rest, by simp⟩, function)
+
+def sortItemsBy {T F : Type} (compare : F → T → T → Result (Ordering × F)) :
+    (items : List T) → F → Result ({ sorted : List T // sorted.length = items.length } × F)
+  | [], function => ok (⟨[], rfl⟩, function)
+  | first :: rest, function => do
+    let (sorted, function) ← sortItemsBy compare rest function
+    let (inserted, function) ← insertSortedBy compare first sorted.val function
+    ok (⟨inserted.val, by simp [inserted.property, sorted.property]⟩, function)
+
+/-- A stable sort; Rust returns before any comparison when the length is below
+two. A stable order is the unique sorted order of `sort_by` and one of the
+orders `sort_unstable_by` permits (it leaves the order of equal elements
+unspecified). -/
+def sortSliceBy {T F : Type} (compare : F → T → T → Result (Ordering × F))
+    (slice : Slice T) (function : F) : Result (Slice T) :=
+  if slice.length ≤ 1 then
+    ok slice
+  else do
+    let (sorted, _) ← sortItemsBy compare slice.val function
+    ok (.from sorted.val (by rw [sorted.property]; exact slice.property))
+
+@[rust_fun "core::slice::{[@T]}::sort_unstable_by"]
+def core.slice.Slice.sort_unstable_by {T F : Type}
+    (inst : core.ops.function.FnMut F (T × T) Ordering) (slice : Slice T) (function : F) :
+    Result (Slice T) :=
+  sortSliceBy (fun function item first => inst.call_mut function (item, first)) slice function
+
+/-- Rust compares by `f(a).lt(&f(b))`: the key closure runs twice per
+comparison and `K`'s `lt` decides; `item` passes `first` exactly when
+`first`'s key is less. -/
+@[rust_fun "core::slice::{[@T]}::sort_unstable_by_key"]
+def core.slice.Slice.sort_unstable_by_key {T K F : Type} (key : core.ops.function.FnMut F T K)
+    (inst : core.cmp.Ord K) (slice : Slice T) (function : F) : Result (Slice T) :=
+  sortSliceBy (fun function item first => do
+      let (firstKey, function) ← key.call_mut function first
+      let (itemKey, function) ← key.call_mut function item
+      let passes ← inst.partialOrdInst.lt firstKey itemKey
+      ok (if passes then .gt else .lt, function)) slice function
+
+/-- Stable `sort_by`. -/
+@[rust_fun "alloc::slice::{[@T]}::sort_by"]
+def alloc.slice.Slice.sort_by {T F : Type} (inst : core.ops.function.FnMut F (T × T) Ordering)
+    (slice : Slice T) (function : F) : Result (Slice T) :=
+  sortSliceBy (fun function item first => inst.call_mut function (item, first)) slice function
+
+@[rust_fun "core::slice::raw::from_ref"]
+def core.slice.raw.from_ref {T : Type} (value : T) : Result (Slice T) :=
+  ok (.from [value] (by simp only [List.length_singleton]; scalar_tac))
+
+@[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::append"]
+def alloc.vec.Vec.append {T : Type} (_A : Type) (vector other : alloc.vec.Vec T) :
+    Result (alloc.vec.Vec T × alloc.vec.Vec T) :=
+  if h : vector.val.length + other.val.length ≤ Usize.max then
+    ok (.from (vector.val ++ other.val) (by simp only [List.length_append]; exact h),
+      .from [] (by simp))
+  else
+    fail .panic
+
+/-- The general `SpecCloneIntoVec` path: `clone_from` on the common prefix in
+index order, then clones of the remaining source elements; surplus target
+elements are dropped. -/
+def cloneIntoItems {T : Type} (inst : core.clone.Clone T) :
+    (targets sources : List T) → Result { cloned : List T // cloned.length = sources.length }
+  | target :: targets, source :: sources => do
+    let first ← inst.clone_from target source
+    let rest ← cloneIntoItems inst targets sources
+    ok ⟨first :: rest.val, by simp [rest.property]⟩
+  | _, [] => ok ⟨[], rfl⟩
+  | [], source :: sources => do
+    let first ← inst.clone source
+    let rest ← cloneIntoItems inst [] sources
+    ok ⟨first :: rest.val, by simp [rest.property]⟩
+
+@[rust_fun "alloc::vec::{core::clone::Clone<alloc::vec::Vec<@T>>}::clone_from"]
+def alloc.vec.Vec.Insts.CoreCloneClone.clone_from {T A : Type} (inst : core.clone.Clone T)
+    (_ : core.clone.Clone A) (vector source : alloc.vec.Vec T) : Result (alloc.vec.Vec T) := do
+  let cloned ← cloneIntoItems inst vector.val source.val
+  ok (.from cloned.val (by rw [cloned.property]; exact source.slice.property))
+
+@[rust_fun
+  "alloc::vec::{core::iter::traits::collect::IntoIterator<&'a alloc::vec::Vec<@T>, &'a @T, core::slice::iter::Iter<'a, @T>>}::into_iter"]
+def SharedAVec.Insts.CoreIterTraitsCollectIntoIteratorSharedATIter.into_iter {T : Type}
+    (_A : Type) (vector : alloc.vec.Vec T) : Result (core.slice.iter.Iter T) :=
+  core.slice.Slice.iter vector.slice
+
+@[rust_fun "alloc::vec::{core::cmp::Ord<alloc::vec::Vec<@T>>}::cmp"]
+def alloc.vec.Vec.Insts.CoreCmpOrd.cmp {T : Type} (_A : Type) (inst : core.cmp.Ord T)
+    (left right : alloc.vec.Vec T) : Result Ordering :=
+  lexCompare inst.cmp left.val right.val
+
+@[rust_fun
+  "alloc::vec::partial_eq::{core::cmp::PartialEq<alloc::vec::Vec<@T>, [@U; @N]>}::eq"]
+def alloc.vec.Vec.Insts.CoreCmpPartialEqArray.eq {T U : Type} (_A : Type) {N : Usize}
+    (inst : core.cmp.PartialEq T U) (left : alloc.vec.Vec T) (right : Array U N) : Result Bool :=
+  core.slice.cmp.PartialEqSlice.eq inst left.slice right.to_slice
+
+@[rust_fun
+  "alloc::vec::partial_eq::{core::cmp::PartialEq<alloc::vec::Vec<@T>, [@U; @N]>}::ne"]
+def alloc.vec.Vec.Insts.CoreCmpPartialEqArray.ne {T U : Type} (_A : Type) {N : Usize}
+    (inst : core.cmp.PartialEq T U) (left : alloc.vec.Vec T) (right : Array U N) : Result Bool :=
+  core.slice.cmp.PartialEqSlice.ne inst left.slice right.to_slice
+
+@[rust_fun
+  "alloc::vec::partial_eq::{core::cmp::PartialEq<alloc::vec::Vec<@T>, [@U]>}::eq"]
+def alloc.vec.Vec.Insts.CoreCmpPartialEqSlice.eq {T U : Type} (_A : Type)
+    (inst : core.cmp.PartialEq T U) (left : alloc.vec.Vec T) (right : Slice U) : Result Bool :=
+  core.slice.cmp.PartialEqSlice.eq inst left.slice right
+
+@[rust_fun
+  "alloc::vec::partial_eq::{core::cmp::PartialEq<alloc::vec::Vec<@T>, [@U]>}::ne"]
+def alloc.vec.Vec.Insts.CoreCmpPartialEqSlice.ne {T U : Type} (_A : Type)
+    (inst : core.cmp.PartialEq T U) (left : alloc.vec.Vec T) (right : Slice U) : Result Bool :=
+  core.slice.cmp.PartialEqSlice.ne inst left.slice right
+
+@[rust_fun
+  "alloc::vec::partial_eq::{core::cmp::PartialEq<alloc::vec::Vec<@T>, &'0 [@U]>}::ne"]
+def alloc.vec.Vec.Insts.CoreCmpPartialEqShared0Slice.ne {T U : Type} (_A : Type)
+    (inst : core.cmp.PartialEq T U) (left : alloc.vec.Vec T) (right : Slice U) : Result Bool :=
+  core.slice.cmp.PartialEqSlice.ne inst left.slice right
+
+/-! ### Strings -/
+
+/-- Byte-wise lexicographic order, then length: Rust's `Ord` for `[u8]`, which
+`str` and `String` (a derived `Ord` over its `Vec<u8>`) use. -/
+def bytesCompare : List Nat → List Nat → Ordering
+  | [], [] => .eq
+  | [], _ :: _ => .lt
+  | _ :: _, [] => .gt
+  | left :: lefts, right :: rights =>
+    if left < right then .lt else if right < left then .gt else bytesCompare lefts rights
+
+/-- The UTF-8 bytes of an owned string. -/
+def stringBytes (value : String) : List Nat :=
+  value.toUTF8.toList.map UInt8.toNat
+
+@[rust_fun "core::str::traits::{core::cmp::Ord<str>}::cmp"]
+def Str.Insts.CoreCmpOrd.cmp (left right : Str) : Result Ordering :=
+  ok (bytesCompare (left.val.map (·.val)) (right.val.map (·.val)))
+
+@[rust_fun "alloc::string::{core::cmp::Ord<alloc::string::String>}::cmp"]
+def alloc.string.String.Insts.CoreCmpOrd.cmp (left right : String) : Result Ordering :=
+  ok (bytesCompare (stringBytes left) (stringBytes right))
+
+@[rust_fun
+  "alloc::string::{core::cmp::PartialOrd<alloc::string::String, alloc::string::String>}::partial_cmp"]
+def alloc.string.String.Insts.CoreCmpPartialOrdString.partial_cmp (left right : String) :
+    Result (Option Ordering) :=
+  ok (some (bytesCompare (stringBytes left) (stringBytes right)))
+
+@[rust_fun "alloc::string::{core::cmp::Eq<alloc::string::String>}::assert_fields_are_eq"]
+def alloc.string.String.Insts.CoreCmpEq.assert_fields_are_eq (_ : String) : Result Unit :=
+  ok ()
+
+@[rust_fun "alloc::string::{alloc::string::String}::into_bytes"]
+def alloc.string.String.into_bytes (value : String) : Result (alloc.vec.Vec U8) := do
+  ok ⟨← alloc.string.String.as_bytes value⟩
+
+/-- `String::replace_range`: `slice::range(range, ..len)` reads `start_bound`
+then `end_bound`, resolves and checks the end, then the start, panicking on
+`end > len` or `start > end`; both ends must be character boundaries; growth
+beyond `isize::MAX` bytes panics in `reserve`. The bytes are then spliced. -/
+@[rust_fun "alloc::string::{alloc::string::String}::replace_range"]
+def alloc.string.String.replace_range {R : Type} (inst : core.ops.range.RangeBounds R Usize)
+    (value : String) (range : R) (replacement : Str) : Result String := do
+  let startBound ← inst.start_bound range
+  let endBound ← inst.end_bound range
+  let bytes ← alloc.string.String.as_bytes value
+  let stop ← match endBound with
+    | .Included index => if bytes.length ≤ index.val then fail .panic else ok (index.val + 1)
+    | .Excluded index => if bytes.length < index.val then fail .panic else ok index.val
+    | .Unbounded => ok bytes.length
+  let start ← match startBound with
+    | .Excluded index => if stop ≤ index.val then fail .panic else ok (index.val + 1)
+    | .Included index => if stop < index.val then fail .panic else ok index.val
+    | .Unbounded => ok 0
+  if strBoundary bytes start && strBoundary bytes stop then
+    let spliced := bytes.val.take start ++ replacement.val ++ bytes.val.drop stop
+    if spliced.length ≤ Isize.max.toNat then
+      if h : spliced.length ≤ Usize.max then decodeStr (.from spliced h) else fail .panic
+    else
+      fail .panic
+  else
+    fail .panic
+
+@[rust_fun
+  "alloc::string::{core::clone::Clone<alloc::string::String>}::clone_from"]
+def alloc.string.String.Insts.CoreCloneClone.clone_from (_ source : String) : Result String :=
+  ok source
+
+@[rust_fun
+  "alloc::string::{core::cmp::PartialEq<alloc::string::String, &'0 str>}::ne"]
+def alloc.string.String.Insts.CoreCmpPartialEqShared0Str.ne (left : String) (right : Str) :
+    Result Bool := do
+  let equal ← alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq left right
+  ok (!equal)
+
+@[rust_fun
+  "alloc::string::{core::cmp::PartialEq<&'0 str, alloc::string::String>}::ne"]
+def Shared0Str.Insts.CoreCmpPartialEqString.ne (left : Str) (right : String) : Result Bool := do
+  let equal ← Shared0Str.Insts.CoreCmpPartialEqString.eq left right
+  ok (!equal)
+
+@[rust_fun
+  "alloc::string::{core::default::Default<alloc::string::String>}::default"]
+def alloc.string.String.Insts.CoreDefaultDefault.default : Result String :=
+  ok ""
 
 end noble_contracts
