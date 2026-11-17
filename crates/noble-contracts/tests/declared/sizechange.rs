@@ -433,3 +433,66 @@ fn certificate_checks_closures_and_refusals() -> Result<(), String> {
     assert!(certificate.contains("decide"));
     Ok(())
 }
+
+/// Signed-owner admission meters every source/draft comparison of the symbolic check in a fixed
+/// order: the first admitting work bound and the sequence of exhausted steps are pinned.
+#[test]
+fn signed_owner_admission_meters_a_fixed_work_bound() -> Result<(), String> {
+    let source = module(
+        "signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down \
+         def down [ dup 0 swap < [ 1 - down ] [ ] if ]",
+    );
+    let declared = session()?;
+    let sweep = super::first_admitting_bound(|limits| declared.prepare(&source, &[], limits))?;
+    assert_eq!(sweep.bound, 3_410);
+    assert_eq!(sweep.refusals.len(), 150);
+    Ok(())
+}
+
+/// A signed owner calling a named helper also meters each namespace word it binds, scanned from
+/// the last binding: the first admitting work bound and the sequence of exhausted steps are pinned.
+#[test]
+fn signed_owner_with_named_helper_meters_a_fixed_work_bound() -> Result<(), String> {
+    let source = module(
+        "signature first forall<S:stack> [ S I64 -- S I64 ! pure ] export first def first [ 1 + ] \
+         signature spin forall<S:stack> [ S I64 -- S I64 ! pure ] export spin def spin [ spin ] \
+         signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down \
+         def down [ dup 0 swap < [ 1 - down ] [ ] if spin ]",
+    );
+    let declared = session()?;
+    let sweep = super::first_admitting_bound(|limits| declared.prepare(&source, &[], limits))?;
+    assert_eq!(sweep.bound, 8_068);
+    assert_eq!(sweep.refusals.len(), 224);
+    Ok(())
+}
+
+/// The walk stops at its first unmodelled word: a later well-formed self call is never recorded.
+#[test]
+fn walk_stops_at_its_first_unmodelled_word() -> Result<(), String> {
+    let evidence = analyze(&module(
+        "signature spin forall<S:stack> [ S I64 -- S I64 ! pure ] export spin def spin [ spin ] \
+         signature step forall<S:stack> [ S I64 -- S I64 ! pure ] export step \
+         def step [ spin step ]",
+    ))?;
+    let entry = evidence
+        .iter()
+        .find(|entry| entry.definition == "step")
+        .ok_or_else(|| std::string::String::from("missing recursive caller"))?;
+    assert!(
+        entry.sites.is_empty(),
+        "sites after the halt: {:?}",
+        entry.sites
+    );
+    assert!(
+        matches!(
+            entry.verdict,
+            Verdict::Unsupported {
+                reason: Unsupported::UnmodelledCall,
+                ..
+            }
+        ),
+        "expected an unmodelled-call verdict, got {:?}",
+        entry.verdict
+    );
+    Ok(())
+}

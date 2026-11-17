@@ -36,10 +36,10 @@ macro_rules! attempt {
 pub(crate) mod scan {
     /// The first element satisfying `predicate`, as `items.iter().find(..)`:
     /// elements are tested in order and none after the first match.
-    pub(crate) fn find_first<'a, T>(
-        items: &'a [T],
+    pub(crate) fn find_first<T>(
+        items: &[T],
         mut predicate: impl FnMut(&T) -> bool,
-    ) -> Option<&'a T> {
+    ) -> Option<&T> {
         let mut index = 0;
         let mut found = None;
         while found.is_none() && index < items.len() {
@@ -56,10 +56,10 @@ pub(crate) mod scan {
 
     /// The first element satisfying `predicate`, mutably, as
     /// `items.iter_mut().find(..)`.
-    pub(crate) fn find_first_mut<'a, T>(
-        items: &'a mut [T],
+    pub(crate) fn find_first_mut<T>(
+        items: &mut [T],
         mut predicate: impl FnMut(&T) -> bool,
-    ) -> Option<&'a mut T> {
+    ) -> Option<&mut T> {
         let mut index = 0;
         let mut found = None;
         while found.is_none() && index < items.len() {
@@ -280,7 +280,10 @@ pub struct JoinDiagnostic {
     pub word: alloc::string::String,
     pub expected_stack: alloc::string::String,
     pub actual_stack: alloc::string::String,
-    pub constraint: &'static str,
+    /// The violated constraint's stable name (for example `stack-type`). Owned
+    /// rather than `&'static str`: a `'static` borrow inside the crate-wide error
+    /// type makes the pinned Aeneas refuse every `?` and loop that carries it.
+    pub constraint: alloc::string::String,
     pub value_origin: Option<Span>,
     /// Where the two stacks first differ, when the mismatch is positional.
     pub difference: Option<StackDifference>,

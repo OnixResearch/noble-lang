@@ -118,10 +118,10 @@ impl super::Session {
         };
         if name.is_some()
             && self.live_slots.is_some()
-            && tree
-                .nodes
-                .iter()
-                .any(|node| matches!(node.kind, super::Kind::Call(super::Target::SlotInvoke(_))))
+            && crate::scan::find_first(&tree.nodes, |node| {
+                matches!(node.kind, super::Kind::Call(super::Target::SlotInvoke(_)))
+            })
+            .is_some()
         {
             return Err(super::Error::at(
                 super::Stage::Check,
@@ -160,58 +160,41 @@ impl super::Session {
         if let Err(error) = self.retained(extra, retained_bytes, tree.span, meter) {
             return Err(super::Error::at(super::Stage::Check, error));
         }
-        let mut environment = match self.environment() {
+        let environment = match self.environment() {
             Ok(environment) => environment,
             Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
         };
-        // An actual unpublished owner interface occupies this transaction's
-        // prospective Env row while its body is checked. It is never installed
-        // into the committed namespace or exposed as a raw graph self edge.
-        let prospective_owner = if is_signed_owner
-            && tree
-                .nodes
-                .iter()
-                .any(|node| matches!(node.kind, super::Kind::Call(super::Target::SelfOwner)))
-        {
-            let Some(scheme) = signature else {
-                return Err(super::Error::at(
-                    super::Stage::Check,
-                    crate::invalid(tree.span, "signed owner has no signature"),
-                ));
-            };
-            let Some(owner) = self.declared.as_ref().and_then(|context| context.owner) else {
-                return Err(super::Error::at(
-                    super::Stage::Check,
-                    crate::invalid(tree.span, "signed owner has no module"),
-                ));
-            };
-            let def = noble_kernel::contracts::Definition(attempt!(crate::index(
-                environment.defs.len(),
-                tree.span,
-            )
-            .map_err(|problem| super::Error::at(super::Stage::Check, problem))));
-            attempt!(meter
-                .node(tree.span)
-                .map_err(|problem| super::Error::at(super::Stage::Check, problem)));
-            // Copy-on-write: only a signed declaration pays for an owned
-            // prospective environment row.
-            let owned = environment.to_mut();
-            owned.defs.push(scheme.clone());
-            owned.kinds.push(noble_kernel::contracts::Behavior::Named);
-            owned.deps.push(alloc::vec::Vec::new());
-            owned.definition_owners.push(Some(owner));
-            Some(def)
-        } else {
-            None
+        let (environment, prospective_owner) =
+            attempt!(self.prospective_owner(environment, &tree, signature, is_signed_owner, meter));
+        // The environment is read through an explicit match on its
+        // copy-on-write state; the pinned Aeneas cannot translate `Cow`'s Deref.
+        let inferred = match &environment {
+            Cow::Borrowed(borrowed) => super::inference::infer(
+                super::inference::Scope {
+                    root: &tree,
+                    session: self,
+                    environment: borrowed,
+                    root_signature: signature,
+                    prospective_owner,
+                },
+                mode,
+                inputs,
+                meter,
+            ),
+            Cow::Owned(owned) => super::inference::infer(
+                super::inference::Scope {
+                    root: &tree,
+                    session: self,
+                    environment: owned,
+                    root_signature: signature,
+                    prospective_owner,
+                },
+                mode,
+                inputs,
+                meter,
+            ),
         };
-        let scope = super::inference::Scope {
-            root: &tree,
-            session: self,
-            environment: &environment,
-            root_signature: signature,
-            prospective_owner,
-        };
-        let state = match super::inference::infer(scope, mode, inputs, meter) {
+        let state = match inferred {
             Ok(state) => state,
             Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
         };
@@ -223,17 +206,29 @@ impl super::Session {
                         crate::invalid(tree.span, "signed owner has no signature"),
                     )
                 })?;
-                Some(attempt!(symbolic::check(
-                    &tree,
-                    &state,
-                    scheme,
-                    source_bytes,
-                    owner,
-                    self,
-                    &environment,
-                    meter
-                )
-                .map_err(|problem| super::Error::at(
+                let relation = match &environment {
+                    Cow::Borrowed(borrowed) => symbolic::check(
+                        &tree,
+                        &state,
+                        scheme,
+                        source_bytes,
+                        owner,
+                        self,
+                        borrowed,
+                        meter,
+                    ),
+                    Cow::Owned(owned) => symbolic::check(
+                        &tree,
+                        &state,
+                        scheme,
+                        source_bytes,
+                        owner,
+                        self,
+                        owned,
+                        meter,
+                    ),
+                };
+                Some(attempt!(relation.map_err(|problem| super::Error::at(
                     super::Stage::Check,
                     problem
                 ))))
@@ -357,16 +352,71 @@ impl super::Session {
         }
         match &self.bindings {
             Some(bindings) => Ok(Cow::Owned(bindings.environment.clone())),
-            None if self.calculator => noble_kernel::contracts::calculator_environment()
-                .map(Cow::Owned)
-                .map_err(|_| crate::internal(crate::Span { start: 0, end: 0 })),
-            None if self.checked_i64 => super::checked_i64_environment().map(Cow::Owned),
-            None if self.text_cursor => noble_kernel::contracts::text_cursor_environment()
-                .map(Cow::Owned)
-                .map_err(|_| crate::internal(crate::Span { start: 0, end: 0 })),
-            None if self.live_selected.is_some() => super::live_environment().map(Cow::Owned),
-            None => super::environment().map(Cow::Owned),
+            None if self.calculator => owned_environment(
+                noble_kernel::contracts::calculator_environment()
+                    .map_err(|_| crate::internal(crate::Span { start: 0, end: 0 })),
+            ),
+            None if self.checked_i64 => owned_environment(super::checked_i64_environment()),
+            None if self.text_cursor => owned_environment(
+                noble_kernel::contracts::text_cursor_environment()
+                    .map_err(|_| crate::internal(crate::Span { start: 0, end: 0 })),
+            ),
+            None if self.live_selected.is_some() => owned_environment(super::live_environment()),
+            None => owned_environment(super::environment()),
         }
+    }
+
+    /// An actual unpublished owner interface occupies this transaction's
+    /// prospective Env row while its body is checked. It is never installed
+    /// into the committed namespace or exposed as a raw graph self edge.
+    fn prospective_owner<'e>(
+        &self,
+        environment: Cow<'e, noble_kernel::contracts::Env>,
+        tree: &super::Tree,
+        signature: Option<&noble_kernel::words::Scheme>,
+        is_signed_owner: bool,
+        meter: &mut crate::Meter,
+    ) -> Result<
+        (
+            Cow<'e, noble_kernel::contracts::Env>,
+            Option<noble_kernel::contracts::Definition>,
+        ),
+        super::Error,
+    > {
+        if !is_signed_owner
+            || crate::scan::find_first(&tree.nodes, |node| {
+                matches!(node.kind, super::Kind::Call(super::Target::SelfOwner))
+            })
+            .is_none()
+        {
+            return Ok((environment, None));
+        }
+        let Some(scheme) = signature else {
+            return Err(super::Error::at(
+                super::Stage::Check,
+                crate::invalid(tree.span, "signed owner has no signature"),
+            ));
+        };
+        let Some(owner) = self.declared.as_ref().and_then(|context| context.owner) else {
+            return Err(super::Error::at(
+                super::Stage::Check,
+                crate::invalid(tree.span, "signed owner has no module"),
+            ));
+        };
+        let (mut environment, rows) = environment_rows(environment);
+        let def = noble_kernel::contracts::Definition(attempt!(crate::index(rows, tree.span)
+            .map_err(|problem| super::Error::at(super::Stage::Check, problem))));
+        attempt!(meter
+            .node(tree.span)
+            .map_err(|problem| super::Error::at(super::Stage::Check, problem)));
+        // Copy-on-write: only a signed declaration pays for an owned
+        // prospective environment row.
+        let owned = environment.to_mut();
+        owned.defs.push(scheme.clone());
+        owned.kinds.push(noble_kernel::contracts::Behavior::Named);
+        owned.deps.push(alloc::vec::Vec::new());
+        owned.definition_owners.push(Some(owner));
+        Ok((environment, Some(def)))
     }
 
     #[expect(
@@ -395,6 +445,31 @@ impl super::Session {
     }
 }
 
+/// An owned environment as the copy-on-write environment.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the owned environment Result has a destructor, which a const fn cannot evaluate."
+)]
+fn owned_environment<'e>(
+    environment: Result<noble_kernel::contracts::Env, crate::Diagnostic>,
+) -> Result<Cow<'e, noble_kernel::contracts::Env>, crate::Diagnostic> {
+    match environment {
+        Ok(environment) => Ok(Cow::Owned(environment)),
+        Err(error) => Err(error),
+    }
+}
+
+/// The environment's row count, returned with the unchanged environment.
+const fn environment_rows(
+    environment: Cow<'_, noble_kernel::contracts::Env>,
+) -> (Cow<'_, noble_kernel::contracts::Env>, usize) {
+    let rows = match &environment {
+        Cow::Borrowed(borrowed) => borrowed.defs.len(),
+        Cow::Owned(owned) => owned.defs.len(),
+    };
+    (environment, rows)
+}
+
 /// Preserve exact source node ordinals before resolution erases spellings.
 /// Only current outside aliases on a top-level named body are mutable;
 /// module-local imports belong to that module's immutable source snapshot.
@@ -402,10 +477,6 @@ impl super::Session {
     tigerstyle::assertion_density,
     tigerstyle::unbounded_collection_growth,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; growth is bounded by the checked input or admission limits that drive the loop."
-)]
-#[expect(
-    tigerstyle::raw_arithmetic_overflow,
-    reason = "Owner: noble-contracts; an alias length is a String length below isize::MAX, so alias.len() + 1 cannot overflow usize."
 )]
 fn alias_candidates(
     tree: &super::Tree,
@@ -419,30 +490,80 @@ fn alias_candidates(
         return Ok(alloc::vec::Vec::new());
     }
     let mut candidates = alloc::vec::Vec::new();
-    for (node_index, node) in tree.nodes.iter().enumerate() {
-        attempt!(meter.charge(1, node.span));
-        let super::Kind::Word(word) = &node.kind else {
-            continue;
-        };
-        for (alias_index, (alias, _)) in context.aliases.iter().enumerate() {
-            attempt!(meter.charge(1, node.span));
-            if word.len() > alias.len() + 1
-                && word.starts_with(alias.as_bytes())
-                && word[alias.len()] == b'.'
-            {
-                candidates.push((attempt!(crate::index(node_index, node.span)), alias_index));
-                break;
-            }
+    let mut node_index = 0;
+    let mut failure = None;
+    while failure.is_none() && node_index < tree.nodes.len() {
+        match alias_candidate(&tree.nodes[node_index], node_index, &context.aliases, meter) {
+            Ok(Some(candidate)) => candidates.push(candidate),
+            Ok(None) => {}
+            Err(problem) => failure = Some(problem),
         }
+        node_index += 1;
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
     }
     Ok(candidates)
 }
 
+/// Charge one source node and return the first alias its word qualifies.
+fn alias_candidate(
+    node: &super::Node,
+    node_index: usize,
+    aliases: &[(alloc::string::String, u64)],
+    meter: &mut crate::Meter,
+) -> Result<Option<(u32, usize)>, crate::Diagnostic> {
+    attempt!(meter.charge(1, node.span));
+    let super::Kind::Word(word) = &node.kind else {
+        return Ok(None);
+    };
+    if let Some(alias_index) = attempt!(first_alias(word, aliases, node.span, meter)) {
+        return Ok(Some((
+            attempt!(crate::index(node_index, node.span)),
+            alias_index,
+        )));
+    }
+    Ok(None)
+}
+
+/// The first alias `word` qualifies as `alias.name`, charging one unit per alias tried.
 #[expect(
     tigerstyle::assertion_density,
-    tigerstyle::fragile_exhaustive_enum_match,
-    tigerstyle::unbounded_collection_growth,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added; growth is bounded by the checked input or admission limits that drive the loop."
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; an alias length is a String length below isize::MAX, so alias.len() + 1 cannot overflow usize."
+)]
+fn first_alias(
+    word: &[u8],
+    aliases: &[(alloc::string::String, u64)],
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<Option<usize>, crate::Diagnostic> {
+    let mut alias_index = 0;
+    let mut found = None;
+    let mut charged = Ok(());
+    while charged.is_ok() && found.is_none() && alias_index < aliases.len() {
+        charged = meter.charge(1, span);
+        if charged.is_ok() {
+            let alias = &aliases[alias_index].0;
+            if word.len() > alias.len() + 1
+                && word.starts_with(alias.as_bytes())
+                && word[alias.len()] == b'.'
+            {
+                found = Some(alias_index);
+            }
+        }
+        alias_index += 1;
+    }
+    attempt!(charged);
+    Ok(found)
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
 fn checked_alias_uses(
     tree: &super::Tree,
@@ -455,58 +576,91 @@ fn checked_alias_uses(
         .as_ref()
         .ok_or_else(|| crate::internal(tree.span))?;
     let mut uses: alloc::vec::Vec<super::AliasUse> = alloc::vec::Vec::new();
-    for &(node_index, alias_index) in candidates {
-        let node = tree
-            .nodes
-            .get(attempt!(crate::offset(node_index, tree.span)))
-            .ok_or_else(|| crate::internal(tree.span))?;
-        let (alias, owner) = context
-            .aliases
-            .get(alias_index)
-            .ok_or_else(|| crate::internal(node.span))?;
-        let super::Kind::Call(target) = &node.kind else {
-            return Err(crate::invalid(
-                node.span,
-                "checked import alias lost its source word",
-            ));
-        };
-        match *target {
-            super::Target::Named(index) => {
-                let definition = session
-                    .definitions
-                    .get(attempt!(crate::offset(index, node.span)))
-                    .ok_or_else(|| crate::internal(node.span))?;
-                if definition.owner != Some(*owner) {
-                    return Err(crate::invalid(
-                        node.span,
-                        "checked alias call has a foreign module owner",
-                    ));
-                }
-            }
-            super::Target::Builtin(_) => {}
-            super::Target::SelfOwner | super::Target::SlotInvoke(_) => {
+    let mut at = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && at < candidates.len() {
+        outcome = checked_alias_use(
+            tree,
+            session,
+            &context.aliases,
+            candidates[at],
+            &mut uses,
+            meter,
+        );
+        at += 1;
+    }
+    attempt!(outcome);
+    Ok(uses)
+}
+
+/// Check one alias candidate's resolved call and record it under its spelling.
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::borrowed_argument_types,
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the step appends to the owned alias-use list, so it needs the Vec rather than a slice; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added."
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
+fn checked_alias_use(
+    tree: &super::Tree,
+    session: &super::Session,
+    aliases: &[(alloc::string::String, u64)],
+    candidate: (u32, usize),
+    uses: &mut alloc::vec::Vec<super::AliasUse>,
+    meter: &mut crate::Meter,
+) -> Result<(), crate::Diagnostic> {
+    let (node_index, alias_index) = candidate;
+    let node = tree
+        .nodes
+        .get(attempt!(crate::offset(node_index, tree.span)))
+        .ok_or_else(|| crate::internal(tree.span))?;
+    let (alias, owner) = aliases
+        .get(alias_index)
+        .ok_or_else(|| crate::internal(node.span))?;
+    let super::Kind::Call(target) = &node.kind else {
+        return Err(crate::invalid(
+            node.span,
+            "checked import alias lost its source word",
+        ));
+    };
+    match *target {
+        super::Target::Named(index) => {
+            let definition = session
+                .definitions
+                .get(attempt!(crate::offset(index, node.span)))
+                .ok_or_else(|| crate::internal(node.span))?;
+            if definition.owner != Some(*owner) {
                 return Err(crate::invalid(
                     node.span,
-                    "checked alias call has an unsupported target",
+                    "checked alias call has a foreign module owner",
                 ));
             }
         }
-        attempt!(meter.charge(1, node.span));
-        if let Some(existing) = uses
-            .iter_mut()
-            .find(|entry| entry.spelling == alias.as_str() && entry.owner == *owner)
-        {
-            existing.nodes.push((node_index, *target));
-        } else {
-            attempt!(meter.node(node.span));
-            uses.push(super::AliasUse {
-                spelling: alias.clone(),
-                owner: *owner,
-                nodes: alloc::vec![(node_index, *target)],
-            });
+        super::Target::Builtin(_) => {}
+        super::Target::SelfOwner | super::Target::SlotInvoke(_) => {
+            return Err(crate::invalid(
+                node.span,
+                "checked alias call has an unsupported target",
+            ));
         }
     }
-    Ok(uses)
+    attempt!(meter.charge(1, node.span));
+    if let Some(existing) = crate::scan::find_first_mut(uses, |entry| {
+        entry.spelling == alias.as_str() && entry.owner == *owner
+    }) {
+        existing.nodes.push((node_index, *target));
+    } else {
+        attempt!(meter.node(node.span));
+        uses.push(super::AliasUse {
+            spelling: alias.clone(),
+            owner: *owner,
+            nodes: alloc::vec![(node_index, *target)],
+        });
+    }
+    Ok(())
 }
 #[expect(
     tigerstyle::assertion_density,

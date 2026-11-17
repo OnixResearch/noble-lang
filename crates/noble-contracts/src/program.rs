@@ -360,7 +360,7 @@ fn check_with_owner(
                     word,
                     expected_stack: required,
                     actual_stack: actual,
-                    constraint: "eligibility:Data",
+                    constraint: alloc::string::String::from("eligibility:Data"),
                     value_origin: None,
                     difference: None,
                 });
