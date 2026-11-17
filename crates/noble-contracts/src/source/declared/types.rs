@@ -45,14 +45,15 @@ fn parse_with_depth(
         span,
         names: types,
         families,
-        environment,
         depth,
         pending: alloc::vec::Vec::new(),
         value: None,
     }
-    .parse()
+    .parse(environment)
 }
 
+/// The type-word parser state. The optional environment is passed beside it,
+/// not stored in it, so no loop threads an optional borrow inside a struct.
 struct Parser<'a> {
     text: &'a [u8],
     at: usize,
@@ -60,7 +61,6 @@ struct Parser<'a> {
     span: crate::Span,
     names: &'a [(alloc::string::String, noble_kernel::types::Ty)],
     families: &'a [(alloc::string::String, noble_kernel::types::NominalTypeId)],
-    environment: Option<&'a noble_kernel::contracts::Env>,
     depth: u32,
     pending: alloc::vec::Vec<Frame>,
     value: Option<noble_kernel::types::Ty>,
@@ -78,12 +78,15 @@ enum Frame {
 }
 
 impl Parser<'_> {
-    fn parse(mut self) -> Result<ParsedType, crate::Diagnostic> {
+    fn parse(
+        mut self,
+        environment: Option<&noble_kernel::contracts::Env>,
+    ) -> Result<ParsedType, crate::Diagnostic> {
         let span = self.span;
         let mut completed = None;
         let mut failure = None;
         while completed.is_none() {
-            match self.parse_step() {
+            match self.parse_step(environment) {
                 Ok((next, result)) => {
                     self = next;
                     completed = result;
@@ -100,17 +103,23 @@ impl Parser<'_> {
         completed.ok_or_else(|| crate::internal(span))
     }
 
-    fn parse_step(mut self) -> Result<(Self, Option<ParsedType>), crate::Diagnostic> {
+    fn parse_step(
+        mut self,
+        environment: Option<&noble_kernel::contracts::Env>,
+    ) -> Result<(Self, Option<ParsedType>), crate::Diagnostic> {
         if self.value.is_none() {
-            self = attempt!(self.read_type());
+            self = attempt!(self.read_type(environment));
         }
         if let Some(ty) = self.value.take() {
-            return self.fold(ty);
+            return self.fold(ty, environment);
         }
         Ok((self, None))
     }
 
-    fn read_type(mut self) -> Result<Self, crate::Diagnostic> {
+    fn read_type(
+        mut self,
+        environment: Option<&noble_kernel::contracts::Env>,
+    ) -> Result<Self, crate::Diagnostic> {
         if self.pending.len() >= 64 || self.nodes >= 256 {
             return Err(crate::invalid(self.span, "type constructor limit exceeded"));
         }
@@ -127,7 +136,7 @@ impl Parser<'_> {
         if self.text.get(self.at) == Some(&b'<') {
             self.at += 1;
             if name == "Program" || name == "LiveRef" {
-                self = attempt!(self.read_callable(name == "LiveRef"));
+                self = attempt!(self.read_callable(name == "LiveRef", environment));
             } else if name == "Resource" {
                 let kind = b"test.counter";
                 if self.text.get(self.at..self.at.saturating_add(kind.len()))
@@ -180,12 +189,12 @@ impl Parser<'_> {
         Ok(self)
     }
 
-    fn read_callable(mut self, live_ref: bool) -> Result<Self, crate::Diagnostic> {
-        if live_ref
-            && !self
-                .environment
-                .is_some_and(|environment| environment.live_slots)
-        {
+    fn read_callable(
+        mut self,
+        live_ref: bool,
+        environment: Option<&noble_kernel::contracts::Env>,
+    ) -> Result<Self, crate::Diagnostic> {
+        if live_ref && !environment.is_some_and(|environment| environment.live_slots) {
             return Err(crate::invalid(
                 self.span,
                 "LiveRef requires the live-slot profile",
@@ -225,7 +234,7 @@ impl Parser<'_> {
             &fields[0],
             self.names,
             self.families,
-            self.environment,
+            environment,
             self.span,
             nested,
         ));
@@ -233,15 +242,11 @@ impl Parser<'_> {
             &fields[1],
             self.names,
             self.families,
-            self.environment,
+            environment,
             self.span,
             nested,
         ));
-        let effects = attempt!(parse_callable_effects(
-            &fields[2],
-            self.environment,
-            self.span,
-        ));
+        let effects = attempt!(parse_callable_effects(&fields[2], environment, self.span,));
         self.nodes = self
             .nodes
             .saturating_add(input_nodes)
@@ -267,6 +272,7 @@ impl Parser<'_> {
     fn fold(
         mut self,
         ty: noble_kernel::types::Ty,
+        environment: Option<&noble_kernel::contracts::Env>,
     ) -> Result<(Self, Option<ParsedType>), crate::Diagnostic> {
         match self.pending.pop() {
             Some(Frame::List) => {
@@ -292,8 +298,7 @@ impl Parser<'_> {
             Some(Frame::GenericRight(id, left)) => {
                 attempt!(self.expect(b'>'));
                 self.at += 1;
-                self.value = Some(attempt!(self
-                    .environment
+                self.value = Some(attempt!(environment
                     .and_then(|environment| environment.generic_instance(id, [left, ty]))
                     .ok_or_else(|| crate::invalid(
                         self.span,

@@ -123,7 +123,7 @@ fn word(
 
 pub(super) fn name(name: &str) -> bool {
     let bytes = name.as_bytes();
-    matches!(bytes.first(), Some(&(b'a'..=b'z' | b'A'..=b'Z' | b'_')))
+    starts_identifier(bytes)
         && super::position_first(&bytes[1..], |c| !(c.is_ascii_alphanumeric() || *c == b'_'))
             .is_none()
         && !reserved_name(name)
@@ -133,12 +133,21 @@ pub(super) fn name(name: &str) -> bool {
 // without widening ordinary definition, type, module, or alias identifiers.
 pub(super) fn logical_name(name: &str) -> bool {
     let bytes = name.as_bytes();
-    matches!(bytes.first(), Some(&(b'a'..=b'z' | b'A'..=b'Z' | b'_')))
+    starts_identifier(bytes)
         && super::position_first(&bytes[1..], |c| {
-            !(c.is_ascii_alphanumeric() || matches!(*c, b'_' | b'-'))
+            !(c.is_ascii_alphanumeric() || *c == b'_' || *c == b'-')
         })
         .is_none()
         && !reserved_name(name)
+}
+
+/// Whether `bytes` begins with an ASCII letter or underscore.
+fn starts_identifier(bytes: &[u8]) -> bool {
+    if bytes.is_empty() {
+        return false;
+    }
+    let first = bytes[0];
+    first.is_ascii_alphabetic() || first == b'_'
 }
 
 fn reserved_name(name: &str) -> bool {

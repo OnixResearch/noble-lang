@@ -37,10 +37,6 @@ fn invalid(reason: &str) -> crate::source::Error {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
-#[expect(
-    tigerstyle::nested_conditionals,
-    reason = "Owner: noble-contracts; the guard chain states the admission rule verbatim; extracting it would obscure the predicate it states"
-)]
 pub(super) fn families<'a>(
     session: &'a super::ModuleSession,
     names: &'a [super::Schema],
@@ -50,86 +46,122 @@ pub(super) fn families<'a>(
     let mut ordinal = 0usize;
     let mut is_full = false;
     while !is_full && ordinal < names.len() {
-        let schema = &names[ordinal];
-        if let super::SchemaKind::Variant { parameters, .. } = &schema.kind {
-            if !parameters.is_empty() {
-                let id = noble_kernel::types::NominalTypeId {
-                    module: identity,
-                    ordinal: ordinal as u32,
-                };
-                if let Some(context) = &session.source.declared {
-                    if let Some(declaration) = context.environment.generic_variant(id) {
-                        // At most one family per local schema.
-                        if result.len() >= names.len() {
-                            is_full = true;
-                        } else {
-                            result.push((schema.name.clone(), id, declaration.payload_params));
-                        }
-                    }
-                }
+        let id = noble_kernel::types::NominalTypeId {
+            module: identity,
+            ordinal: ordinal as u32,
+        };
+        if let Some(payload_params) = local_family(session, &names[ordinal], id) {
+            // At most one family per local schema.
+            if result.len() >= names.len() {
+                is_full = true;
+            } else {
+                result.push((names[ordinal].name.clone(), id, payload_params));
             }
         }
         ordinal += 1;
     }
     let mut module_slot = 0usize;
     while module_slot < session.modules.len() {
-        let module = &session.modules[module_slot];
-        // At most one family per exported item of this module.
-        let module_bound = result.len().saturating_add(module.exports.len());
-        let mut export_slot = 0usize;
-        let mut is_module_full = false;
-        while !is_module_full && export_slot < module.exports.len() {
-            let export = &module.exports[export_slot];
-            if let Some(id) = export.generic {
-                if let Some(context) = &session.source.declared {
-                    if let Some(declaration) = context.environment.generic_variant(id) {
-                        if result.len() >= module_bound {
-                            is_module_full = true;
-                        } else {
-                            result.push((
-                                alloc::format!(
-                                    "{}@{}.{}",
-                                    module.name,
-                                    module.version,
-                                    export.name
-                                ),
-                                id,
-                                declaration.payload_params,
-                            ));
-                        }
-                    }
-                }
-            }
-            export_slot += 1;
-        }
+        result = module_families(session, &session.modules[module_slot], result);
         module_slot += 1;
     }
-    #[expect(
-        clippy::manual_map,
-        reason = "Owner: noble-contracts; the pinned Aeneas refuses a closure that returns a borrow, so the borrowed environment is selected by match"
-    )]
-    let environment = match &session.source.declared {
-        Some(context) => Some(&context.environment),
-        None => None,
-    };
     Families {
         generic: result,
         modules: &session.modules,
         local: names,
         identity,
-        environment,
+        environment: declared_environment(session),
     }
 }
 
+/// One named generic family with its nominal identity and payload parameters.
+type Family = (String, noble_kernel::types::NominalTypeId, [u8; 2]);
+
+/// The declared-source environment of `session`, if it has one. Selected by
+/// match: the pinned Aeneas refuses a closure that returns a borrow.
+fn declared_environment(session: &super::ModuleSession) -> Option<&noble_kernel::contracts::Env> {
+    match &session.source.declared {
+        Some(context) => Some(&context.environment),
+        None => None,
+    }
+}
+
+/// The payload parameters of the generic variant family declared by a local schema.
+fn local_family(
+    session: &super::ModuleSession,
+    schema: &super::Schema,
+    id: noble_kernel::types::NominalTypeId,
+) -> Option<[u8; 2]> {
+    let super::SchemaKind::Variant { parameters, .. } = &schema.kind else {
+        return None;
+    };
+    if parameters.is_empty() {
+        return None;
+    }
+    generic_payload_params(session, id)
+}
+
+/// The payload parameters of the registered generic variant family `id`.
+fn generic_payload_params(
+    session: &super::ModuleSession,
+    id: noble_kernel::types::NominalTypeId,
+) -> Option<[u8; 2]> {
+    let Some(context) = &session.source.declared else {
+        return None;
+    };
+    context
+        .environment
+        .generic_variant(id)
+        .map(|declaration| declaration.payload_params)
+}
+
+/// Append the exported generic families of one module, at most one per export.
+#[expect(
+    tigerstyle::nested_conditionals,
+    reason = "Owner: noble-contracts; the guard chain states the admission rule verbatim; extracting it would obscure the predicate it states"
+)]
+fn module_families(
+    session: &super::ModuleSession,
+    module: &super::Module,
+    mut result: Vec<Family>,
+) -> Vec<Family> {
+    let module_bound = result.len().saturating_add(module.exports.len());
+    let mut export_slot = 0usize;
+    let mut is_full = false;
+    while !is_full && export_slot < module.exports.len() {
+        if let Some(id) = module.exports[export_slot].generic {
+            if let Some(payload_params) = generic_payload_params(session, id) {
+                if result.len() >= module_bound {
+                    is_full = true;
+                } else {
+                    result.push((
+                        exported_family_name(module, &module.exports[export_slot]),
+                        id,
+                        payload_params,
+                    ));
+                }
+            }
+        }
+        export_slot += 1;
+    }
+    result
+}
+
+/// The qualified `module@version.Name` spelling of an exported family.
+fn exported_family_name(module: &super::Module, export: &super::Export) -> String {
+    alloc::format!("{}@{}.{}", module.name, module.version, export.name)
+}
+
 /// A copyable view of the signature families, passed by value through the
-/// parser so no loop reads through a borrowed struct of borrows.
+/// parser so no loop reads through a borrowed struct of borrows. The optional
+/// environment is passed beside it: an optional borrow stored in a struct
+/// that a loop carries is refused by the pinned Aeneas.
 #[derive(Clone, Copy)]
 struct FamilyView<'a> {
     generic: &'a [(String, noble_kernel::types::NominalTypeId, [u8; 2])],
     modules: &'a [super::Module],
     local: &'a [super::Schema],
     identity: u64,
-    environment: Option<&'a noble_kernel::contracts::Env>,
 }
 
 /// The copyable view of `families`.
@@ -139,7 +171,6 @@ fn family_view<'a>(families: &'a Families<'_>) -> FamilyView<'a> {
         modules: families.modules,
         local: families.local,
         identity: families.identity,
-        environment: families.environment,
     }
 }
 
@@ -148,7 +179,7 @@ pub(super) fn parse(
     words: &[String],
     families: &Families<'_>,
 ) -> Result<Scheme, crate::source::Error> {
-    parse_scheme(binders, words, family_view(families))
+    parse_scheme(binders, words, family_view(families), families.environment)
 }
 
 #[expect(
@@ -160,12 +191,9 @@ fn parse_scheme(
     binders: &str,
     words: &[String],
     families: FamilyView<'_>,
+    environment: Option<&noble_kernel::contracts::Env>,
 ) -> Result<Scheme, crate::source::Error> {
-    let binders = match crate::scan::strip_prefix_str(binders, "forall<") {
-        Some(text) => crate::scan::strip_suffix_str(text, ">"),
-        None => None,
-    };
-    let Some(binders) = binders else {
+    let Some(binders) = binder_list(binders) else {
         return Err(invalid("invalid source signature binder list"));
     };
     let named = attempt!(parse_binders(binders));
@@ -187,8 +215,13 @@ fn parse_scheme(
     if arrow == 0 || bang <= output_start || effect_index.checked_add(1) != Some(words.len()) {
         return Err(invalid("malformed signature stack or effect bound"));
     }
-    let input = attempt!(parse_stack(&words[..arrow], &named, families));
-    let output = attempt!(parse_stack(&words[output_start..bang], &named, families));
+    let input = attempt!(parse_stack(&words[..arrow], &named, families, environment));
+    let output = attempt!(parse_stack(
+        &words[output_start..bang],
+        &named,
+        families,
+        environment,
+    ));
     let effects = attempt!(parse_effect(&words[effect_index], &named));
     let mut var_kinds = Vec::with_capacity(named.len());
     for (_, kind) in named {
@@ -204,6 +237,12 @@ fn parse_scheme(
         .validate()
         .map_err(|_| invalid("invalid source signature scheme")));
     Ok(scheme)
+}
+
+/// The text inside `forall<` and the final `>`, as `strip_prefix` then `strip_suffix`.
+fn binder_list(text: &str) -> Option<&str> {
+    let inner = crate::scan::strip_prefix_str(text, "forall<")?;
+    crate::scan::strip_suffix_str(inner, ">")
 }
 
 /// The binders of a `forall<..>` list, one per comma-separated piece as `str::split(',')`.
@@ -350,12 +389,13 @@ fn parse_stack(
     words: &[String],
     binders: &[(String, VariableKind)],
     families: FamilyView<'_>,
+    environment: Option<&noble_kernel::contracts::Env>,
 ) -> Result<Vec<Pattern>, crate::source::Error> {
     let mut stack = Vec::new();
     let mut failure = None;
     let mut at = 0usize;
     while failure.is_none() && at < words.len() {
-        match pattern(&words[at], binders, families) {
+        match pattern(&words[at], binders, families, environment) {
             Ok(value) => stack.push(value),
             Err(problem) => failure = Some(problem),
         }
@@ -431,6 +471,7 @@ fn pattern(
     word: &str,
     binders: &[(String, VariableKind)],
     families: FamilyView<'_>,
+    environment: Option<&noble_kernel::contracts::Env>,
 ) -> Result<Pattern, crate::source::Error> {
     let mut state = Ok(PatternState {
         pending: alloc::vec![PatternStep::Parse(String::from(word), 0)],
@@ -441,7 +482,7 @@ fn pattern(
     while has_work {
         state = match state {
             Ok(mut current) => match current.pending.pop() {
-                Some(step) => pattern_step(step, binders, families, current),
+                Some(step) => pattern_step(step, binders, families, environment, current),
                 None => {
                     has_work = false;
                     Ok(current)
@@ -489,6 +530,7 @@ fn pattern_step(
     step: PatternStep,
     binders: &[(String, VariableKind)],
     families: FamilyView<'_>,
+    environment: Option<&noble_kernel::contracts::Env>,
     mut state: PatternState,
 ) -> Result<PatternState, crate::source::Error> {
     let value = match step {
@@ -512,7 +554,7 @@ fn pattern_step(
                     "I64" => Some(Pattern::I64),
                     "Text" => Some(Pattern::Text),
                     "Syntax" => Some(Pattern::Syntax),
-                    _ => match named_nominal(word, families) {
+                    _ => match named_nominal(word, families, environment) {
                         Some(nominal) => Some(nominal),
                         None => {
                             let Some((constructor, inner)) =
@@ -670,13 +712,17 @@ fn pattern_step(
 )]
 /// A bare local schema name or an exact exported `module@version.Name`
 /// resolves only to an already registered nominal declaration.
-fn named_nominal(word: &str, families: FamilyView<'_>) -> Option<Pattern> {
+fn named_nominal(
+    word: &str,
+    families: FamilyView<'_>,
+    environment: Option<&noble_kernel::contracts::Env>,
+) -> Option<Pattern> {
     if let Some(ordinal) = super::position_first(families.local, |schema| schema.name == word) {
         let id = noble_kernel::types::NominalTypeId {
             module: families.identity,
             ordinal: ordinal as u32,
         };
-        let declaration = match families.environment {
+        let declaration = match environment {
             Some(environment) => environment.nominal(id),
             None => None,
         };
@@ -687,14 +733,18 @@ fn named_nominal(word: &str, families: FamilyView<'_>) -> Option<Pattern> {
             ));
         }
     }
-    exported_nominal(word, families)
+    exported_nominal(word, families, environment)
 }
 
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
-fn exported_nominal(word: &str, families: FamilyView<'_>) -> Option<Pattern> {
+fn exported_nominal(
+    word: &str,
+    families: FamilyView<'_>,
+    environment: Option<&noble_kernel::contracts::Env>,
+) -> Option<Pattern> {
     let (qualified_module, export_name) = crate::scan::rsplit_once_byte(word, b'.')?;
     let (module_name, version) = crate::scan::rsplit_once_byte(qualified_module, b'@')?;
     let version = super::canonical_version(version)?;
@@ -707,8 +757,7 @@ fn exported_nominal(word: &str, families: FamilyView<'_>) -> Option<Pattern> {
     let noble_kernel::types::Ty::Nominal(id, shape) = ty else {
         return None;
     };
-    families
-        .environment?
+    environment?
         .nominal(*id)
         .filter(|declaration| declaration.exported)?;
     Some(Pattern::Nominal(*id, shape.clone()))
@@ -813,6 +862,7 @@ mod tests {
             "Program<Pair<I64,Bool>+List<Text>,Sum<Bool,I64>,pure>",
             &binders,
             families,
+            None,
         )
         .expect("nested program signature");
         let Pattern::Program(input, output, _) = value else {
@@ -828,12 +878,13 @@ mod tests {
             "Program<Unknown,Resource<unknown>,pure>",
             &binders,
             families,
+            None,
         )
         .expect_err("input error takes precedence");
         assert_eq!(error.diagnostic().message, "unknown signature value type");
 
         let deep = alloc::format!("{}I64{}", "List<".repeat(32), ">".repeat(32));
-        let error = pattern(&deep, &binders, families).expect_err("type depth bound");
+        let error = pattern(&deep, &binders, families, None).expect_err("type depth bound");
         assert_eq!(
             error.diagnostic().message,
             "signature type nesting limit exceeded"

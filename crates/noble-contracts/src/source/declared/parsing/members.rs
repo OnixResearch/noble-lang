@@ -392,17 +392,12 @@ fn proof(
         }
     };
     let (cursor, term) = attempt!(logical(cursor));
-    let last = match cursor.at.checked_sub(1) {
-        Some(index) => cursor.tokens.get(index),
-        None => None,
-    };
-    let Some(last) = last else {
+    let Some(end) = end_before(cursor.tokens, cursor.at) else {
         return Err(super::parse_diagnostic(
             span,
             "proof term has no closing token",
         ));
     };
-    let end = last.span.end;
     Ok((
         cursor,
         super::Member::Proof(super::Proof {
@@ -416,6 +411,16 @@ fn proof(
             },
         }),
     ))
+}
+
+/// The end offset of the token before `at`, if there is one.
+fn end_before(tokens: &[crate::source::lexer::Token], at: usize) -> Option<u32> {
+    let index = at.checked_sub(1)?;
+    if index < tokens.len() {
+        Some(tokens[index].span.end)
+    } else {
+        None
+    }
 }
 
 #[expect(
