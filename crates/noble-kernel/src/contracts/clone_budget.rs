@@ -409,6 +409,19 @@ mod tests {
     }
 
     #[test]
+    fn either_stack_beyond_128_entries_exceeds_the_bound() {
+        let scheme = |stack_in: usize, stack_out: usize| crate::words::Scheme {
+            var_kinds: alloc::vec![],
+            stack_in: alloc::vec![crate::shapes::Pattern::Unit; stack_in],
+            stack_out: alloc::vec![crate::shapes::Pattern::Unit; stack_out],
+            effects: alloc::vec![],
+        };
+        assert!(!super::stacks_exceed_bound(&scheme(128, 128)));
+        assert!(super::stacks_exceed_bound(&scheme(129, 0)));
+        assert!(super::stacks_exceed_bound(&scheme(0, 129)));
+    }
+
+    #[test]
     fn scheme_result_patterns_are_counted() {
         let scheme = |stack_out| crate::words::Scheme {
             var_kinds: alloc::vec![],

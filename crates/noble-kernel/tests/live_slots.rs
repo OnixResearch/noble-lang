@@ -430,6 +430,39 @@ fn host_registration_rejects_alias_kinds_and_guest_resource_constructors() {
 }
 
 #[test]
+fn live_slot_guest_nominals_cannot_own_registered_resources() {
+    // Kind 41 backs the host-registered account@1, so the payload is admitted
+    // by representation alone; only the live-slot ownership rule refuses it.
+    let (env, _, _) = live_environment();
+    assert_eq!(
+        env.declare_nominal(account(80, 1, 41)).err(),
+        Some(noble_kernel::contracts::NominalError::InvalidRepresentation)
+    );
+    // A guest nominal owning the fixture resource, declared before live slots
+    // are enabled, is refused once the environment carries live slots.
+    let owner = environment()
+        .expect("bootstrap")
+        .declare_nominal(account(80, 1, noble_kernel::contracts::FIXTURE_RESOURCE.0))
+        .expect("fixture resource payload before live slots")
+        .0;
+    let empty = Candidate {
+        format: CANDIDATE_FORMAT,
+        revision: SEMANTIC_REVISION,
+        nodes: vec![],
+        body: vec![],
+    };
+    let plain = request(vec![], vec![], &[]);
+    assert!(matches!(
+        check(&owner, &plain, &empty),
+        Outcome::Accepted(_)
+    ));
+    rejected(
+        check(&owner.enable_live_slots(), &plain, &empty),
+        Constraint::InvalidType,
+    );
+}
+
+#[test]
 fn core_retains_existing_non_live_resource_admission() {
     let mut env = environment().expect("bootstrap");
     let extra = ResourceKind(99);

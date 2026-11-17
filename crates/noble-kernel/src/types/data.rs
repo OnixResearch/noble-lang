@@ -138,3 +138,32 @@ impl super::NominalShape {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    fn boxed(ty: super::super::Ty) -> alloc::boxed::Box<super::super::Ty> {
+        alloc::boxed::Box::new(ty)
+    }
+
+    #[test]
+    fn a_descriptor_owns_a_resource_when_any_payload_is_not_data() {
+        let resource = || super::super::Ty::Resource(super::super::ResourceKind(0));
+        assert!(super::super::NominalShape::Opaque(boxed(resource())).owns_resource());
+        assert!(!super::super::NominalShape::Opaque(boxed(super::super::Ty::I64)).owns_resource());
+        assert!(super::super::NominalShape::Variant(
+            boxed(super::super::Ty::I64),
+            boxed(resource())
+        )
+        .owns_resource());
+        assert!(super::super::NominalShape::Variant(
+            boxed(resource()),
+            boxed(super::super::Ty::I64)
+        )
+        .owns_resource());
+        assert!(!super::super::NominalShape::Variant(
+            boxed(super::super::Ty::I64),
+            boxed(super::super::Ty::Text)
+        )
+        .owns_resource());
+    }
+}
