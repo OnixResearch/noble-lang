@@ -172889,174 +172889,6 @@
       "disposition": "open",
       "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:30800:30802",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:34526:34528",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:40327:40331",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:44530:44532",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:47354:47356",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:53455:53466",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:55034:55036",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:55417:55419",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:56502:56515",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:57382:57384",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:58805:58817",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:58962:58993",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:59245:59257",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:59402:59433",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:61829:61831",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:62882:62884",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:63315:63317",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:65610:65612",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:66212:66223",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:66925:66936",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:67887:67889",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
       "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/acceptance.rs:12957:12967",
       "refinement": "open"
     },
@@ -173170,286 +173002,6 @@
       "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-contracts",
       "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/acceptance.rs:9287:9295",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:10886:10889",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:11554:11557",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:12219:12221",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:12619:12621",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:13163:13166",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:16939:16941",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:17005:17007",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:17074:17076",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:17146:17148",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:17206:17208",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:17258:17260",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:59019:59022",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:60620:60622",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:61022:61025",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:61768:61776",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:61902:61916",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:63088:63094",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:63155:63170",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:6380:6383",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:66287:66289",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:67092:67094",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:70869:70874",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:71917:71919",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:72677:72679",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:7451:7454",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:7775:7778",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:80336:80338",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:80561:80563",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:80766:80783",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:81063:81065",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:81291:81293",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:81505:81507",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:81712:81714",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:8798:8800",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 12: #131 owner-verified procedure evidence acceptance from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:9166:9168",
       "refinement": "open"
     },
     {
@@ -174779,6 +174331,510 @@
       "package": "noble-ngraph",
       "qualified_path": "noble_ngraph::specialize::cache::tests::resources::two_subject_session",
       "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:30917:30919",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:35050:35052",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:40851:40855",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:45054:45056",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:47878:47880",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:54209:54211",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:56500:56502",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:56883:56885",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:58294:58307",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:59174:59176",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:60597:60609",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:60754:60785",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:61037:61049",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:61194:61225",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:63621:63623",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:64674:64676",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:65107:65109",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:67402:67404",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:68004:68015",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:68717:68728",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures.rs:69679:69681",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:10900:10903",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:11568:11571",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:12233:12235",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:12633:12635",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:13177:13180",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:16953:16955",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:17019:17021",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:17088:17090",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:17160:17162",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:17220:17222",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:17272:17274",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:59033:59036",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:60634:60636",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:61036:61039",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:61782:61790",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:61916:61930",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:63102:63108",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:63169:63184",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:6394:6397",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:66357:66359",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:67162:67164",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:70939:70944",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:71987:71989",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:72747:72749",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:7465:7468",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:7789:7792",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:80406:80408",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:80631:80633",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:80836:80853",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:81133:81135",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:81361:81363",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:81575:81577",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:81782:81784",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:8812:8814",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source/procedures/persistence.rs:9180:9182",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed procedure-history-validation-2026-11-17: declaration-only compiler kind (module); accounting only, with no body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::procedures::persistence::history",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::procedures::persistence::history::record_position",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::procedures::persistence::history::validate",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::procedures::persistence::history::validate_publish",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::procedures::persistence::history::validate_retained_record",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed procedure-history-validation-2026-11-17 from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::procedures::persistence::history::validate_unique_records",
+      "refinement": "open"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed procedure-history-validation-2026-11-17: declaration-only compiler kind (other); accounting only, with no body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble_contracts::source::procedures::persistence::history::{use#0}",
+      "refinement": "not-applicable"
     }
   ],
   "test_subjects": [
@@ -177664,6 +177720,12 @@
     "editor::<procedures::reload_negative::RecordOffsets as std::fmt::Debug>",
     "editor::<procedures::reload_negative::RecordOffsets as std::fmt::Debug>::fmt",
     "editor::<procedures::reload_negative::RecordOffsets as std::marker::Copy>",
+    "editor::<procedures::reload_negative::lineage::history::GenerationOffsets as std::clone::Clone>",
+    "editor::<procedures::reload_negative::lineage::history::GenerationOffsets as std::clone::Clone>::clone",
+    "editor::<procedures::reload_negative::lineage::history::GenerationOffsets as std::clone::TrivialClone>",
+    "editor::<procedures::reload_negative::lineage::history::GenerationOffsets as std::fmt::Debug>",
+    "editor::<procedures::reload_negative::lineage::history::GenerationOffsets as std::fmt::Debug>::fmt",
+    "editor::<procedures::reload_negative::lineage::history::GenerationOffsets as std::marker::Copy>",
     "editor::<procedures::support::verifier::OwnerLedger as noble_contracts::source::procedures::EvidenceVerifier>",
     "editor::<procedures::support::verifier::OwnerLedger as noble_contracts::source::procedures::EvidenceVerifier>::verify",
     "editor::<procedures::support::verifier::OwnerLedger as std::fmt::Debug>",
@@ -178182,12 +178244,37 @@
     "editor::procedures::composition::{use#9}",
     "editor::procedures::generations",
     "editor::procedures::generations::identities",
+    "editor::procedures::generations::lineage",
+    "editor::procedures::generations::lineage::admission_cannot_forge_or_rewrite_replacement_predecessors",
+    "editor::procedures::generations::lineage::assert_records",
+    "editor::procedures::generations::lineage::replacement_must_not_fork_live_successors",
+    "editor::procedures::generations::lineage::replacement_pair",
+    "editor::procedures::generations::lineage::replacing_current_successor_should_support_a_linear_chain",
+    "editor::procedures::generations::lineage::replacing_with_an_existing_independent_record_retires_the_target",
+    "editor::procedures::generations::lineage::test",
+    "editor::procedures::generations::lineage::{use#0}",
+    "editor::procedures::generations::lineage::{use#10}",
+    "editor::procedures::generations::lineage::{use#11}",
+    "editor::procedures::generations::lineage::{use#12}",
+    "editor::procedures::generations::lineage::{use#1}",
+    "editor::procedures::generations::lineage::{use#2}",
+    "editor::procedures::generations::lineage::{use#3}",
+    "editor::procedures::generations::lineage::{use#4}",
+    "editor::procedures::generations::lineage::{use#5}",
+    "editor::procedures::generations::lineage::{use#6}",
+    "editor::procedures::generations::lineage::{use#7}",
+    "editor::procedures::generations::lineage::{use#8}",
+    "editor::procedures::generations::lineage::{use#9}",
     "editor::procedures::generations::replacements_and_rollback_append_exact_history",
     "editor::procedures::generations::test",
     "editor::procedures::generations::{use#0}",
     "editor::procedures::generations::{use#10}",
     "editor::procedures::generations::{use#11}",
     "editor::procedures::generations::{use#12}",
+    "editor::procedures::generations::{use#13}",
+    "editor::procedures::generations::{use#14}",
+    "editor::procedures::generations::{use#15}",
+    "editor::procedures::generations::{use#16}",
     "editor::procedures::generations::{use#1}",
     "editor::procedures::generations::{use#2}",
     "editor::procedures::generations::{use#3}",
@@ -178292,11 +178379,11 @@
     "editor::procedures::reload_negative::Cursor<'_>",
     "editor::procedures::reload_negative::DEPENDENCY_EDGE_BYTES",
     "editor::procedures::reload_negative::ENCODER_REVISION_OFFSET_BYTES",
+    "editor::procedures::reload_negative::ENCODER_STATE_BYTES",
     "editor::procedures::reload_negative::GENERATION_STATE_BYTES",
     "editor::procedures::reload_negative::I64_LAST_BYTE_OFFSET",
     "editor::procedures::reload_negative::LIBRARY_HEADER_BYTES",
     "editor::procedures::reload_negative::PROCEDURE_STATE_BYTES",
-    "editor::procedures::reload_negative::PROVENANCE_BYTES",
     "editor::procedures::reload_negative::RECEIPT_BINDING_BYTES",
     "editor::procedures::reload_negative::RECEIPT_HEAD_BYTES",
     "editor::procedures::reload_negative::REVISION_PAIR_BYTES",
@@ -178313,6 +178400,45 @@
     "editor::procedures::reload_negative::dependency_order::{use#0}",
     "editor::procedures::reload_negative::evidence",
     "editor::procedures::reload_negative::library_dependency",
+    "editor::procedures::reload_negative::lineage",
+    "editor::procedures::reload_negative::lineage::change_predecessor",
+    "editor::procedures::reload_negative::lineage::history",
+    "editor::procedures::reload_negative::lineage::history::GenerationOffsets",
+    "editor::procedures::reload_negative::lineage::history::append_pair",
+    "editor::procedures::reload_negative::lineage::history::assert_round_trip",
+    "editor::procedures::reload_negative::lineage::history::duplicate_independent_head",
+    "editor::procedures::reload_negative::lineage::history::generation_offsets",
+    "editor::procedures::reload_negative::lineage::history::refuses_rebound_duplicate_independent_identities",
+    "editor::procedures::reload_negative::lineage::history::refuses_rebound_swapped_existing_predecessors",
+    "editor::procedures::reload_negative::lineage::history::refuses_rollback_parent_with_a_different_retained_closure",
+    "editor::procedures::reload_negative::lineage::history::test",
+    "editor::procedures::reload_negative::lineage::history::{use#0}",
+    "editor::procedures::reload_negative::lineage::history::{use#10}",
+    "editor::procedures::reload_negative::lineage::history::{use#11}",
+    "editor::procedures::reload_negative::lineage::history::{use#12}",
+    "editor::procedures::reload_negative::lineage::history::{use#13}",
+    "editor::procedures::reload_negative::lineage::history::{use#1}",
+    "editor::procedures::reload_negative::lineage::history::{use#2}",
+    "editor::procedures::reload_negative::lineage::history::{use#3}",
+    "editor::procedures::reload_negative::lineage::history::{use#4}",
+    "editor::procedures::reload_negative::lineage::history::{use#5}",
+    "editor::procedures::reload_negative::lineage::history::{use#6}",
+    "editor::procedures::reload_negative::lineage::history::{use#7}",
+    "editor::procedures::reload_negative::lineage::history::{use#8}",
+    "editor::procedures::reload_negative::lineage::history::{use#9}",
+    "editor::procedures::reload_negative::lineage::rebind_head",
+    "editor::procedures::reload_negative::lineage::refuses_rebound_forks_cycles_and_dangling_replacement_links",
+    "editor::procedures::reload_negative::lineage::test",
+    "editor::procedures::reload_negative::lineage::wire_digest",
+    "editor::procedures::reload_negative::lineage::{use#0}",
+    "editor::procedures::reload_negative::lineage::{use#1}",
+    "editor::procedures::reload_negative::lineage::{use#2}",
+    "editor::procedures::reload_negative::lineage::{use#3}",
+    "editor::procedures::reload_negative::lineage::{use#4}",
+    "editor::procedures::reload_negative::lineage::{use#5}",
+    "editor::procedures::reload_negative::lineage::{use#6}",
+    "editor::procedures::reload_negative::lineage::{use#7}",
+    "editor::procedures::reload_negative::lineage::{use#8}",
     "editor::procedures::reload_negative::record_offsets",
     "editor::procedures::reload_negative::{use#0}",
     "editor::procedures::reload_negative::{use#10}",
@@ -178330,6 +178456,7 @@
     "editor::procedures::reload_negative::{use#21}",
     "editor::procedures::reload_negative::{use#22}",
     "editor::procedures::reload_negative::{use#23}",
+    "editor::procedures::reload_negative::{use#24}",
     "editor::procedures::reload_negative::{use#2}",
     "editor::procedures::reload_negative::{use#3}",
     "editor::procedures::reload_negative::{use#4}",
@@ -183149,22 +183276,60 @@
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/composition/retrieval.rs:5903:5910",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/composition/retrieval.rs:5970:5977",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/composition/retrieval.rs:670:677",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:1045:1052",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:1158:1165",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:1284:1291",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:1824:1831",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:1943:1950",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:2097:2104",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:2638:2645",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:3144:3151",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:3572:3579",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:3978:3985",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:4396:4403",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:4813:4820",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:5724:5731",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:6038:6045",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:678:6145",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:922:929",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:1108:1115",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:1221:1228",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:1347:1354",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:1887:1894",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:2006:2013",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:2160:2167",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:2701:2708",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:3207:3214",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:3635:3642",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:4041:4048",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:4459:4466",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:4876:4883",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:5787:5794",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:6101:6108",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:741:6208",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations.rs:985:992",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:1526:2778",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:1712:1719",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:2129:2136",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:2529:2536",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:2788:6464",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:3158:3165",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:3217:3224",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:3852:3859",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:4067:4074",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:4126:4133",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:4514:4521",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:4629:4636",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:4772:4779",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:4893:4900",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:501:508",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:5469:5476",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:5591:5598",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:560:567",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:5742:5749",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:5870:5877",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:6116:6123",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:6237:6244",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:6474:8408",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:6700:6707",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:6828:6835",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:6902:6909",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:7125:7132",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:7366:7373",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:751:758",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:7816:7823",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:8071:8078",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:810:817",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:8342:8349",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:8418:9364",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:8680:8687",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:8772:8779",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:8911:8918",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/generations/lineage.rs:9041:9048",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/identity.rs:1077:1084",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/identity.rs:1795:1802",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/identity.rs:2204:2211",
@@ -183230,9 +183395,9 @@
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/metrics/schema.rs:9504:9511",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/metrics/schema.rs:9722:9729",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/metrics/schema/support.rs:759:765",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative.rs:1748:1765",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative.rs:1828:1830",
-    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative.rs:2953:2956",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative.rs:1860:1877",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative.rs:1940:1942",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative.rs:3065:3068",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/body-mutation.rs:1582:1589",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/body-mutation.rs:2070:2084",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/body-mutation.rs:23:5448",
@@ -183259,6 +183424,44 @@
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/dependency-order.rs:284:291",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/dependency-order.rs:3581:3588",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/dependency-order.rs:398:405",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:1412:1421",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:1546:1563",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:4058:4066",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:4503:7121",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:4838:4845",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:4897:4904",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:5088:5095",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:5147:5154",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:5338:5345",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:5397:5404",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:5572:5579",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:5631:5638",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:5706:5713",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:5994:6001",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:7040:7047",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage.rs:839:851",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:2263:2270",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:2386:2393",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:2546:2553",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:2736:2743",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:3026:3033",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:3123:3130",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:3198:5094",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:3611:3618",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:3670:3677",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:3789:3796",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:4103:4110",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:5027:5034",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:5104:6351",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:5540:5547",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:6284:6291",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:7489:8834",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:7736:7743",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:7861:7868",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:7953:7960",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:8083:8090",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:8302:8309",
+    "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/reload-negative/lineage/history.rs:8767:8774",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/retrieval.rs:1056:1063",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/retrieval.rs:1143:1150",
     "noble-contracts::closure@crates/noble-contracts/tests/editor/procedures/retrieval.rs:1220:1227",
