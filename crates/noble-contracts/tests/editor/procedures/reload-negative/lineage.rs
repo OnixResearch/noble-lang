@@ -180,3 +180,6 @@ fn refuses_rebound_forks_cycles_and_dangling_replacement_links() -> Result<(), S
     }
     Ok(())
 }
+
+#[path = "lineage/history.rs"]
+mod history;
