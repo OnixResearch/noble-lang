@@ -5,6 +5,11 @@
 
 mod task;
 
+// Runtime fragments are named constants so that their large literal text
+// stays out of the branching emitter that selects them.
+const RUNTIME: &str = include_str!("runtime.wat");
+const ASYNC: &str = include_str!("async.wat");
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; independently admitted imports, plans and data segments are emitted in their fixed order; every bounded sink failure propagates a diagnostic, and asserting on producer-derived contents would replace required refusals."
@@ -31,9 +36,9 @@ pub(super) fn module(
     if world.is_async() {
         attempt!(async_imports(plans, &mut buffer));
     }
-    attempt!(buffer.append(include_str!("runtime.wat").as_bytes()));
+    attempt!(buffer.append(RUNTIME.as_bytes()));
     if world.is_async() {
-        attempt!(buffer.append(include_str!("async.wat").as_bytes()));
+        attempt!(buffer.append(ASYNC.as_bytes()));
     }
     at = 0;
     let plan_count = plans.len();

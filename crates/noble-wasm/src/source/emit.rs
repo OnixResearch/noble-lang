@@ -253,14 +253,6 @@ fn function_element(
     out.number(u64::from(function))
 }
 
-#[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
-)]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; the admitted layout bounds every function, segment and type descriptor before emission; the private sink propagates output exhaustion and returns bytes only after all fragments succeed, without asserting on input."
-)]
 pub(super) fn module(
     plan: &super::plan::Layout,
     generation: u32,
@@ -276,10 +268,61 @@ pub(super) fn module(
         crate::OUTPUT_BYTE_LIMIT
     };
     let mut out = crate::output::Buffer::with_limit(32_768, cap);
-    attempt!(imports::write(&mut out, plan));
-    attempt!(imports::entry::runtime(&mut out, plan));
-    attempt!(plan.types.emit(&mut out, plan.calculator));
-    attempt!(programs(&mut out, &plan.programs, plan.calculator));
+    attempt!(sections(
+        &mut out,
+        plan,
+        generation,
+        signature_base,
+        signature_keys
+    ));
+    Ok(out.finish())
+}
+
+/// Every module section in its fixed order. Each section is its own short
+/// function: Aeneas joins the symbolic state after every continuing branch,
+/// and one long sequence of optional sections multiplies its paths. A
+/// live-slot module ends after its live exports.
+fn sections(
+    out: &mut crate::output::Buffer,
+    plan: &super::plan::Layout,
+    generation: u32,
+    signature_base: usize,
+    signature_keys: &[alloc::vec::Vec<u8>],
+) -> Result<(), crate::Diagnostic> {
+    attempt!(prelude(out, plan, generation));
+    attempt!(segments(out, plan, signature_base, signature_keys));
+    attempt!(initialize::write(out, plan, generation));
+    attempt!(metadata::stack_check(
+        out,
+        b"$check_input",
+        &plan.input_types
+    ));
+    attempt!(metadata::stack_check(
+        out,
+        b"$check_output",
+        &plan.output_types
+    ));
+    if plan.live_slots {
+        return live_exports(out, plan, generation);
+    }
+    attempt!(profile_exports(out, plan, generation));
+    attempt!(submit(out, plan, generation));
+    if plan.type_directed_experimental {
+        attempt!(type_directed_report(out, plan));
+    }
+    Ok(())
+}
+
+/// Imports, the runtime, type predicates, Program globals and code tables.
+fn prelude(
+    out: &mut crate::output::Buffer,
+    plan: &super::plan::Layout,
+    generation: u32,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(imports::write(out, plan));
+    attempt!(imports::entry::runtime(out, plan));
+    attempt!(plan.types.emit(out, plan.calculator));
+    attempt!(programs(out, &plan.programs, plan.calculator));
     if generation == 0 {
         if plan.calculator {
             attempt!(out.append(
@@ -292,12 +335,26 @@ pub(super) fn module(
         }
     }
     if plan.functions > plan.first_function {
-        attempt!(code_elements(&mut out, plan));
+        attempt!(code_elements(out, plan));
     }
+    Ok(())
+}
+
+/// Literal data segments, then the signature descriptor tables.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; the admitted layout bounds every function, segment and type descriptor before emission; the private sink propagates output exhaustion and returns bytes only after all fragments succeed, without asserting on input."
+)]
+fn segments(
+    out: &mut crate::output::Buffer,
+    plan: &super::plan::Layout,
+    signature_base: usize,
+    signature_keys: &[alloc::vec::Vec<u8>],
+) -> Result<(), crate::Diagnostic> {
     let mut index = 0usize;
     let mut failure = None;
     while index < plan.data.len() {
-        match metadata::data_segment(&mut out, index, &plan.data[index].1) {
+        match metadata::data_segment(out, index, &plan.data[index].1) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);
@@ -318,74 +375,90 @@ pub(super) fn module(
         return Err(crate::Diagnostic::Defective);
     }
     if plan.calculator {
-        attempt!(signature_segments(&mut out, signature_base, signature_keys));
-    }
-    attempt!(metadata::descriptors(
-        &mut out,
-        &plan.descriptors,
-        if plan.calculator {
+        attempt!(signature_segments(out, signature_base, signature_keys));
+        attempt!(metadata::descriptors(
+            out,
+            &plan.descriptors,
             Some((signature_base, signature_keys))
-        } else {
-            None
-        },
-    ));
+        ));
+    } else {
+        attempt!(metadata::descriptors(out, &plan.descriptors, None));
+    }
     if plan.core_live {
         // Core live shares one signature catalogue with its runtime bridge.
-        attempt!(metadata::signature_count(&mut out, plan.descriptors.len()));
+        attempt!(metadata::signature_count(out, plan.descriptors.len()));
     }
-    attempt!(initialize::write(&mut out, plan, generation));
-    attempt!(metadata::stack_check(
-        &mut out,
-        b"$check_input",
-        &plan.input_types
-    ));
-    attempt!(metadata::stack_check(
-        &mut out,
-        b"$check_output",
-        &plan.output_types
-    ));
-    if plan.live_slots {
-        attempt!(live::sites(&mut out, &plan.live_sites));
-        attempt!(live::root_check(&mut out, &plan.borrowed_input_positions));
-        attempt!(live::program_accessors(&mut out, plan.programs.len()));
-        attempt!(live::exports(&mut out, plan, generation));
-        attempt!(out.append(b")\n"));
-        return Ok(out.finish());
-    }
+    Ok(())
+}
+
+/// The live-slot module's dispatch sites, borrow checks, accessors and
+/// exports, then its closing parenthesis.
+fn live_exports(
+    out: &mut crate::output::Buffer,
+    plan: &super::plan::Layout,
+    generation: u32,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(live::sites(out, &plan.live_sites));
+    attempt!(live::root_check(out, &plan.borrowed_input_positions));
+    attempt!(live::program_accessors(out, plan.programs.len()));
+    attempt!(live::exports(out, plan, generation));
+    out.append(b")\n")
+}
+
+/// The worker, Core-live and declared-text profiles' extra exports.
+fn profile_exports(
+    out: &mut crate::output::Buffer,
+    plan: &super::plan::Layout,
+    generation: u32,
+) -> Result<(), crate::Diagnostic> {
     if plan.worker_inputs {
-        attempt!(worker::exports(&mut out, plan, generation));
+        attempt!(worker::exports(out, plan, generation));
     }
     if plan.core_live {
-        attempt!(core_live::release_module_roots(
-            &mut out,
-            plan.programs.len()
-        ));
+        attempt!(core_live::release_module_roots(out, plan.programs.len()));
     }
     if plan.declared_text {
-        attempt!(out.append(b"(func (export \"module_program_count\") (result i32) "));
-        attempt!(out.i32(attempt!(
-            u32::try_from(plan.programs.len()).map_err(|_| crate::Diagnostic::Exhausted)
-        )));
-        attempt!(out.append(
-            b")\n(func (export \"module_program_handle\") (param $index i32) (result i32)\n"
-        ));
-        attempt!(program_handle_cases(&mut out, plan.programs.len()));
-        attempt!(out
-            .append(b"(i32.const 0))\n(func (export \"release_module_programs\") (result i32)\n"));
-        attempt!(release_programs(&mut out, plan.programs.len()));
-        // An idle signed/Text worker may retire its source epoch only with no
-        // failure, operand, continuation, recipe or observed Program root.
-        attempt!(out.append(
-            b"(i32.const 0))\n\
+        attempt!(declared_text_exports(out, plan));
+    }
+    Ok(())
+}
+
+/// The declared-text module's Program handle accessors and epoch retirement.
+fn declared_text_exports(
+    out: &mut crate::output::Buffer,
+    plan: &super::plan::Layout,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(func (export \"module_program_count\") (result i32) "));
+    attempt!(out.i32(attempt!(
+        u32::try_from(plan.programs.len()).map_err(|_| crate::Diagnostic::Exhausted)
+    )));
+    attempt!(out
+        .append(b")\n(func (export \"module_program_handle\") (param $index i32) (result i32)\n"));
+    attempt!(program_handle_cases(out, plan.programs.len()));
+    attempt!(
+        out.append(b"(i32.const 0))\n(func (export \"release_module_programs\") (result i32)\n")
+    );
+    attempt!(release_programs(out, plan.programs.len()));
+    // An idle signed/Text worker may retire its source epoch only with no
+    // failure, operand, continuation, recipe or observed Program root.
+    out.append(
+        b"(i32.const 0))\n\
 (func (export \"retire_source_epoch\") (result i32)\n\
  (if (i32.or (global.get $failure) (global.get $sp)) (then (return (i32.const 4))))\n\
  (if (i32.or (global.get $cp) (global.get $rp)) (then (return (i32.const 4))))\n\
  (if (global.get $observed_program) (then (return (i32.const 4))))\n\
  (call $rollback (i32.const 0))\n\
  (global.set $heap_baseline (i32.const 0))\n\
- (i32.const 0))\n"
-        ));
-    }
+ (i32.const 0))\n",
+    )
+}
+
+/// The one-shot submit entry.
+fn submit(
+    out: &mut crate::output::Buffer,
+    plan: &super::plan::Layout,
+    generation: u32,
+) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(func (export \"submit\") (result i32)\n(if (global.get $failure) (then (return (global.get $failure))))\n(if (i32.or (global.get $cp) (i32.ne (global.get $generation) "));
     // A calculator module does not bake its preparation generation into its
     // bytes: the trusted engine binds the exact compiler generation that the
@@ -405,20 +478,24 @@ pub(super) fn module(
         attempt!(out.append(b"(call $type_certificate_reset)\n"));
     }
     attempt!(out.append(b"(call $check_input)\n(if (global.get $failure) (then (return (global.get $failure))))\n(global.set $phase (i32.const 0))\n(call $initialize)\n(if (global.get $failure) (then (return (global.get $failure))))\n(global.set $phase (i32.const 1))\n(call $enqueue_program "));
-    attempt!(get_global(&mut out, plan.root));
+    attempt!(get_global(out, plan.root));
     attempt!(out.append(b")\n(call $dispatch)\n(if (i32.eqz (global.get $failure)) (then (call $check_output)))\n(if (i32.eqz (global.get $failure)) (then\n (global.set $generation (i32.add (global.get $generation) (i32.const 1)))\n"));
     if plan.core_live {
         attempt!(out.append(b" (global.set $core_live_module_installed (i32.const 1))\n (i32.store (i32.const 61440) (i32.const 0))\n"));
     }
-    attempt!(out.append(b"))\n(global.get $failure))\n)\n"));
-    if plan.type_directed_experimental {
-        attempt!(out.append(b";; noble-type-directed-report:v1 specialized-known-sum-cases="));
-        attempt!(out.number(plan.type_directed_specializations));
-        attempt!(out.append(b" baseline-fallback-operations="));
-        attempt!(out.number(plan.type_directed_fallback_operations));
-        attempt!(out.append(b"\n"));
-    }
-    Ok(out.finish())
+    out.append(b"))\n(global.get $failure))\n)\n")
+}
+
+/// The experimental type-directed lowering's counters.
+fn type_directed_report(
+    out: &mut crate::output::Buffer,
+    plan: &super::plan::Layout,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b";; noble-type-directed-report:v1 specialized-known-sum-cases="));
+    attempt!(out.number(plan.type_directed_specializations));
+    attempt!(out.append(b" baseline-fallback-operations="));
+    attempt!(out.number(plan.type_directed_fallback_operations));
+    out.append(b"\n")
 }
 
 #[cfg(test)]

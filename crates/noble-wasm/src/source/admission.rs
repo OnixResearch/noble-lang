@@ -130,26 +130,49 @@ fn checked_live_site(
 ) -> Result<(), crate::Diagnostic> {
     let position = usize::try_from(site.root_logical_input_position)
         .map_err(|_| crate::Diagnostic::Invalid)?;
-    let Some(noble_kernel::types::Ty::LiveRef(input, output, ceiling)) =
-        expected.stack_in.get(position)
-    else {
+    let Some(root) = expected.stack_in.get(position) else {
         return Err(crate::Diagnostic::Invalid);
     };
-    let preceding_refs = live_refs_before(&expected.stack_in, position);
-    let is_ordinal_mismatch = match u32::try_from(preceding_refs) {
-        Ok(refs) => refs != site.ref_ordinal,
-        Err(_) => true,
-    };
-    let has_site_shape_mismatch = is_ordinal_mismatch
-        || site.stack_in.as_slice() != input.as_slice()
-        || site.stack_out.as_slice() != output.as_slice()
-        || site.allowed_effects.as_slice() != ceiling.as_slice();
-    if has_site_shape_mismatch
-        || has_forwarded_mismatch(&expected.stack_in, input, &site.forwarded_ref_ordinals)
+    if !matches!(root, noble_kernel::types::Ty::LiveRef(_, _, _)) {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    if is_ordinal_mismatch(&expected.stack_in, position, site.ref_ordinal)
+        || is_root_mismatch(&expected.stack_in, root, site)
     {
         return Err(crate::Diagnostic::Invalid);
     }
     Ok(())
+}
+
+/// Whether the site's reference ordinal differs from the number of borrowed
+/// references before its root input `position`.
+fn is_ordinal_mismatch(
+    stack_in: &[noble_kernel::types::Ty],
+    position: usize,
+    ref_ordinal: u32,
+) -> bool {
+    match u32::try_from(live_refs_before(stack_in, position)) {
+        Ok(refs) => refs != ref_ordinal,
+        Err(_) => true,
+    }
+}
+
+/// Whether the site's interface differs from its live root reference `root`
+/// or forwards other root inputs than the root's borrowed formals name.
+fn is_root_mismatch(
+    stack_in: &[noble_kernel::types::Ty],
+    root: &noble_kernel::types::Ty,
+    site: &noble_kernel::untrusted::LiveSite,
+) -> bool {
+    match root {
+        noble_kernel::types::Ty::LiveRef(input, output, ceiling) => {
+            site.stack_in.as_slice() != input.as_slice()
+                || site.stack_out.as_slice() != output.as_slice()
+                || site.allowed_effects.as_slice() != ceiling.as_slice()
+                || has_forwarded_mismatch(stack_in, input, &site.forwarded_ref_ordinals)
+        }
+        _ => true,
+    }
 }
 
 /// The number of borrowed live references among the first `position`

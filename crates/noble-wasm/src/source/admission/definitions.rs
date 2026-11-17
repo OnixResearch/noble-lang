@@ -202,17 +202,19 @@ fn is_ambient_forbidden(
     let mut index = 0usize;
     let mut is_forbidden = false;
     while !is_forbidden && index < body.candidate.nodes.len() {
-        match &body.candidate.nodes[index] {
-            noble_kernel::untrusted::Node::Invocation { def, .. } if def.0 == 22 => {
-                is_forbidden = true;
-            }
-            noble_kernel::untrusted::Node::Invocation { .. }
-            | noble_kernel::untrusted::Node::SignedSelf { .. }
-            | noble_kernel::untrusted::Node::Literal { .. }
-            | noble_kernel::untrusted::Node::Quotation { .. }
-            | noble_kernel::untrusted::Node::SlotInvoke { .. } => {}
-        }
+        is_forbidden = is_ambient_emit(&body.candidate.nodes[index]);
         index += 1;
     }
     is_forbidden
+}
+
+/// Whether `node` invokes the fixed ambient host emit operation.
+fn is_ambient_emit(node: &noble_kernel::untrusted::Node) -> bool {
+    match node {
+        noble_kernel::untrusted::Node::Invocation { def, .. } => def.0 == 22,
+        noble_kernel::untrusted::Node::SignedSelf { .. }
+        | noble_kernel::untrusted::Node::Literal { .. }
+        | noble_kernel::untrusted::Node::Quotation { .. }
+        | noble_kernel::untrusted::Node::SlotInvoke { .. } => false,
+    }
 }

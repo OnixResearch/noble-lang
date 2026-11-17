@@ -74,7 +74,6 @@ fn literal(
 
 #[expect(
     tigerstyle::missing_const_fn,
-    tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; checked text lowering resolves borrowed metadata and clones the one retained data segment before writing the allocating bounded sink; address overflow and heap overlap remain diagnostics."
 )]
 fn text(

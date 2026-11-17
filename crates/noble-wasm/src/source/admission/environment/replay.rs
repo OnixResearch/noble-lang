@@ -89,19 +89,10 @@ impl Cursor {
                 self = attempt!(self.append_non_nominal(env, index));
             }
         }
-        let has_matching_contract = self.fixed.kinds.get(index).copied()
-            == env.kinds.get(index).copied()
-            && super::same_scheme(&self.fixed.defs[index], &env.defs[index]);
-        let has_matching_owner =
-            self.fixed.definition_owners[index] == env.definition_owners[index];
-        let has_matching_dependencies = env.kinds[index]
-            == noble_kernel::contracts::Behavior::Named
-            || env.deps[index] == self.fixed.deps[index];
-        if !has_matching_contract || !has_matching_owner || !has_matching_dependencies {
+        if !is_replayed_row(env, &self.fixed, index) {
             return Err(crate::Diagnostic::Invalid);
         }
-        if env.kinds[index] == noble_kernel::contracts::Behavior::Named && index >= expected.prefix
-        {
+        if is_counted_row(env, expected, index) {
             self.named += 1;
         }
         Ok(self)
@@ -302,4 +293,28 @@ impl Cursor {
         self.next_generic += 1;
         Ok(self)
     }
+}
+
+/// Whether replayed row `index` has the supplied row's exact kind, scheme
+/// and owner and, unless it is a named definition, its exact dependencies.
+fn is_replayed_row(
+    env: &noble_kernel::contracts::Env,
+    fixed: &noble_kernel::contracts::Env,
+    index: usize,
+) -> bool {
+    let has_matching_contract = fixed.kinds.get(index).copied() == env.kinds.get(index).copied()
+        && super::same_scheme(&fixed.defs[index], &env.defs[index]);
+    let has_matching_owner = fixed.definition_owners[index] == env.definition_owners[index];
+    let has_matching_dependencies = env.kinds[index] == noble_kernel::contracts::Behavior::Named
+        || env.deps[index] == fixed.deps[index];
+    has_matching_contract && has_matching_owner && has_matching_dependencies
+}
+
+/// Whether row `index` is a named definition after the canonical prefix.
+fn is_counted_row(
+    env: &noble_kernel::contracts::Env,
+    expected: &ExpectedRows,
+    index: usize,
+) -> bool {
+    env.kinds[index] == noble_kernel::contracts::Behavior::Named && index >= expected.prefix
 }
