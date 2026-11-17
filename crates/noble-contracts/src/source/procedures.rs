@@ -1635,10 +1635,11 @@ impl ProcedureLibrary {
         index: usize,
         successors: &mut [Option<usize>],
     ) -> Result<(), Refusal> {
-        let Some(replaced_id) = records[index].supersedes else {
+        let record = &records[index];
+        let Some(replaced_id) = record.supersedes else {
             return Ok(());
         };
-        let old_index = position_first(records, move |old| {
+        let old_index = position_first(records, |old| {
             old.procedure_id == replaced_id && old.status == Status::Superseded
         })
         .ok_or_else(|| {
