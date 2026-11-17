@@ -36,35 +36,71 @@ fn atom(
     out.append(b"))\n")
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; the checked layout contains bounded table/data spans and topologically ordered programs; initialization emits runtime quota checks in source order while sink exhaustion returns a diagnostic, not an assertion."
-)]
+/// The initializer: tables, data segments and programs, in that order. Each
+/// part is emitted by its own helper, so no branch here rejoins another.
 pub(super) fn write(
     out: &mut crate::output::Buffer,
     plan: &super::super::plan::Layout,
     generation: u32,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(func $initialize (local $recipe i32) (local $atom i32)\n"));
+    attempt!(storage_init(out, plan, generation));
+    attempt!(core_table(out, plan, generation));
+    attempt!(code_table(out, plan));
+    attempt!(memory_segments(out, plan));
+    attempt!(programs(out, plan));
+    out.append(b")\n")
+}
+
+/// A live-slot heap is initialized once, by the first generation.
+fn storage_init(
+    out: &mut crate::output::Buffer,
+    plan: &super::super::plan::Layout,
+    generation: u32,
+) -> Result<(), crate::Diagnostic> {
     if plan.live_slots && generation == 0 {
-        attempt!(
-            out.append(b"(if (i32.eqz (global.get $heap_cursor)) (then (call $storage_init)))\n")
-        );
+        return out
+            .append(b"(if (i32.eqz (global.get $heap_cursor)) (then (call $storage_init)))\n");
     }
-    if generation == 0 {
-        if plan.calculator {
-            attempt!(out.append(b"(table.init $core (i32.const 0) (i32.const 0) (i32.const 5))\n"));
-        } else {
-            attempt!(out.append(b"(table.init $core (i32.const 0) (i32.const 0) (i32.const 4))\n"));
-        }
+    Ok(())
+}
+
+/// The first generation fills the fixed core table.
+fn core_table(
+    out: &mut crate::output::Buffer,
+    plan: &super::super::plan::Layout,
+    generation: u32,
+) -> Result<(), crate::Diagnostic> {
+    if generation != 0 {
+        return Ok(());
     }
-    if plan.functions > plan.first_function {
-        attempt!(out.append(b"(table.init $code "));
-        attempt!(out.i32(plan.first_function));
-        attempt!(out.append(b" (i32.const 0) "));
-        attempt!(out.i32(plan.functions.saturating_sub(plan.first_function)));
-        attempt!(out.append(b")\n"));
+    if plan.calculator {
+        out.append(b"(table.init $core (i32.const 0) (i32.const 0) (i32.const 5))\n")
+    } else {
+        out.append(b"(table.init $core (i32.const 0) (i32.const 0) (i32.const 4))\n")
     }
+}
+
+/// The generated functions' table span, when there is one.
+fn code_table(
+    out: &mut crate::output::Buffer,
+    plan: &super::super::plan::Layout,
+) -> Result<(), crate::Diagnostic> {
+    if plan.functions <= plan.first_function {
+        return Ok(());
+    }
+    attempt!(out.append(b"(table.init $code "));
+    attempt!(out.i32(plan.first_function));
+    attempt!(out.append(b" (i32.const 0) "));
+    attempt!(out.i32(plan.functions.saturating_sub(plan.first_function)));
+    out.append(b")\n")
+}
+
+/// Every data segment, in layout order.
+fn memory_segments(
+    out: &mut crate::output::Buffer,
+    plan: &super::super::plan::Layout,
+) -> Result<(), crate::Diagnostic> {
     let mut segment = 0usize;
     let mut failure = None;
     while segment < plan.data.len() {
@@ -76,9 +112,17 @@ pub(super) fn write(
             }
         }
     }
-    if let Some(problem) = failure {
-        return Err(problem);
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
     }
+}
+
+/// Every program, in topological order.
+fn programs(
+    out: &mut crate::output::Buffer,
+    plan: &super::super::plan::Layout,
+) -> Result<(), crate::Diagnostic> {
     let mut at = 0usize;
     let mut failure = None;
     while at < plan.order.len() {
@@ -92,7 +136,7 @@ pub(super) fn write(
     }
     match failure {
         Some(problem) => Err(problem),
-        None => out.append(b")\n"),
+        None => Ok(()),
     }
 }
 

@@ -133,54 +133,48 @@ fn push_type(
     extended: bool,
     compact: bool,
 ) -> Result<(), crate::Diagnostic> {
-    if !extended && effects::unavailable_in_core(&ty) {
+    if is_core_unavailable(&ty, extended) {
         return Err(crate::Diagnostic::Unsupported);
     }
-    let is_pair = matches!(&ty, noble_kernel::types::Ty::Pair(_, _));
+    // Every arm finishes the step itself, so no arm rejoins another.
     match ty {
-        noble_kernel::types::Ty::Unit => attempt!(out.append(if compact { b"u" } else { b"Unit" })),
-        noble_kernel::types::Ty::Bool => attempt!(out.append(if compact { b"b" } else { b"Bool" })),
-        noble_kernel::types::Ty::I64 => attempt!(out.append(if compact { b"i" } else { b"I64" })),
-        noble_kernel::types::Ty::Text => attempt!(out.append(if compact { b"t" } else { b"Text" })),
-        noble_kernel::types::Ty::Syntax => {
-            attempt!(out.append(if compact { b"x" } else { b"Syntax" }))
-        }
-        noble_kernel::types::Ty::Contract => {
-            attempt!(out.append(if compact { b"c" } else { b"Contract" }))
-        }
-        noble_kernel::types::Ty::Evidence => {
-            attempt!(out.append(if compact { b"e" } else { b"Evidence" }))
-        }
-        noble_kernel::types::Ty::Certified => {
-            attempt!(out.append(if compact { b"f" } else { b"Certified" }))
-        }
+        noble_kernel::types::Ty::Unit => spell(out, compact, b"u", b"Unit"),
+        noble_kernel::types::Ty::Bool => spell(out, compact, b"b", b"Bool"),
+        noble_kernel::types::Ty::I64 => spell(out, compact, b"i", b"I64"),
+        noble_kernel::types::Ty::Text => spell(out, compact, b"t", b"Text"),
+        noble_kernel::types::Ty::Syntax => spell(out, compact, b"x", b"Syntax"),
+        noble_kernel::types::Ty::Contract => spell(out, compact, b"c", b"Contract"),
+        noble_kernel::types::Ty::Evidence => spell(out, compact, b"e", b"Evidence"),
+        noble_kernel::types::Ty::Certified => spell(out, compact, b"f", b"Certified"),
         noble_kernel::types::Ty::Resource(kind) => {
             if !extended {
                 return Err(crate::Diagnostic::Unsupported);
             }
-            attempt!(out.append(if compact { b"R(" } else { b"Resource(" }));
+            attempt!(spell(out, compact, b"R(", b"Resource("));
             attempt!(out.number(u64::from(kind.0)));
-            attempt!(out.append(b")"));
+            out.append(b")")
         }
         noble_kernel::types::Ty::Nominal(id, shape) => {
-            attempt!(out.append(if compact { b"N(" } else { b"Nominal(" }));
+            attempt!(spell(out, compact, b"N(", b"Nominal("));
             attempt!(out.number(id.module));
             attempt!(out.append(b":"));
             attempt!(out.number(u64::from(id.ordinal)));
             match *shape {
                 noble_kernel::types::NominalShape::Opaque(value) => {
-                    attempt!(out.append(if compact { b",O(" } else { b",Opaque(" }));
+                    attempt!(spell(out, compact, b",O(", b",Opaque("));
                     work.push(Step::Byte(b')'));
                     work.push(Step::Byte(b')'));
                     work.push(Step::Type(*value));
+                    Ok(())
                 }
                 noble_kernel::types::NominalShape::Variant(left, right) => {
-                    attempt!(out.append(if compact { b",V(" } else { b",Variant(" }));
+                    attempt!(spell(out, compact, b",V(", b",Variant("));
                     work.push(Step::Byte(b')'));
                     work.push(Step::Byte(b')'));
                     work.push(Step::Type(*right));
                     work.push(Step::Byte(b','));
                     work.push(Step::Type(*left));
+                    Ok(())
                 }
             }
         }
@@ -188,10 +182,10 @@ fn push_type(
             // The selected descriptor adds up to seven queued steps beyond
             // the ordinary argument walk. Keep the owned queue bounded even
             // when a deeply nested but otherwise valid type reaches it.
-            if compact && work.len() > WORK_LIMIT - 11 {
+            if is_descriptor_queue_full(work.len(), compact) {
                 return Err(crate::Diagnostic::Exhausted);
             }
-            attempt!(out.append(if compact { b"G(" } else { b"GenericNominal(" }));
+            attempt!(spell(out, compact, b"G(", b"GenericNominal("));
             attempt!(out.number(id.module));
             attempt!(out.append(b":"));
             attempt!(out.number(u64::from(id.ordinal)));
@@ -227,31 +221,32 @@ fn push_type(
                     }
                 }
             }
+            Ok(())
         }
-        noble_kernel::types::Ty::Pair(left, right) | noble_kernel::types::Ty::Sum(left, right) => {
-            attempt!(out.append(if compact {
-                if is_pair {
-                    b"P("
-                } else {
-                    b"S("
-                }
-            } else if is_pair {
-                b"Pair("
-            } else {
-                b"Sum("
-            }));
+        noble_kernel::types::Ty::Pair(left, right) => {
+            attempt!(spell(out, compact, b"P(", b"Pair("));
             work.push(Step::Byte(b')'));
             work.push(Step::Type(*right));
             work.push(Step::Byte(b','));
             work.push(Step::Type(*left));
+            Ok(())
+        }
+        noble_kernel::types::Ty::Sum(left, right) => {
+            attempt!(spell(out, compact, b"S(", b"Sum("));
+            work.push(Step::Byte(b')'));
+            work.push(Step::Type(*right));
+            work.push(Step::Byte(b','));
+            work.push(Step::Type(*left));
+            Ok(())
         }
         noble_kernel::types::Ty::List(item) => {
-            attempt!(out.append(if compact { b"L(" } else { b"List(" }));
+            attempt!(spell(out, compact, b"L(", b"List("));
             work.push(Step::Byte(b')'));
             work.push(Step::Type(*item));
+            Ok(())
         }
         noble_kernel::types::Ty::Program(input_stack, output_stack, effects) => {
-            attempt!(out.append(if compact { b"Q(" } else { b"Program(" }));
+            attempt!(spell(out, compact, b"Q(", b"Program("));
             work.push(Step::Byte(b')'));
             if !effects.is_empty() {
                 work.push(Step::Effects(effects));
@@ -260,6 +255,7 @@ fn push_type(
             work.push(Step::Byte(b'>'));
             work.push(Step::Byte(b'-'));
             work.push(Step::Stack(*input_stack));
+            Ok(())
         }
         noble_kernel::types::Ty::LiveRef(input_stack, output_stack, effects) => {
             attempt!(out.append(b"LiveRef("));
@@ -271,9 +267,37 @@ fn push_type(
             work.push(Step::Byte(b'>'));
             work.push(Step::Byte(b'-'));
             work.push(Step::Stack(*input_stack));
+            Ok(())
         }
     }
-    Ok(())
+}
+
+/// Core (non-extended) signatures cannot spell this type.
+fn is_core_unavailable(ty: &noble_kernel::types::Ty, extended: bool) -> bool {
+    !extended && effects::unavailable_in_core(ty)
+}
+
+/// A generic descriptor queues up to seven steps beyond the argument walk.
+const fn is_descriptor_queue_full(queued: usize, compact: bool) -> bool {
+    compact && queued > WORK_LIMIT - 11
+}
+
+/// Append the compact or the descriptive spelling of one type token.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; this appends one fixed spelling to the walk's private output sink; the chosen spelling depends only on the compact flag."
+)]
+fn spell(
+    out: &mut crate::output::Buffer,
+    compact: bool,
+    short: &[u8],
+    long: &[u8],
+) -> Result<(), crate::Diagnostic> {
+    if compact {
+        out.append(short)
+    } else {
+        out.append(long)
+    }
 }
 
 #[path = "walk/effects.rs"]

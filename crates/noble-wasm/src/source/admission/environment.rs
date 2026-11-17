@@ -87,11 +87,7 @@ pub(super) fn check(
     declared_text: bool,
 ) -> Result<(), crate::Diagnostic> {
     let env = &submission.environment;
-    let definition_cap = if calculator {
-        super::super::CALCULATOR_DEFINITION_LIMIT
-    } else {
-        super::super::DEFINITION_LIMIT
-    };
+    let definition_cap = definition_ceiling(calculator);
     let maximum_rows =
         super::super::maximum_rows(calculator, text_cursor, declared_text, checked_i64);
     if env.defs.len() > maximum_rows || submission.definitions.len() > definition_cap {
@@ -109,48 +105,37 @@ pub(super) fn check(
     if env.definition_owners.len() != env.defs.len() {
         return Err(crate::Diagnostic::Invalid);
     }
-    let has_excess_definitions = env.nominals.len() > definition_cap
-        || env.generic_variants.len() > definition_cap
-        || env.bound_adapters.len() > definition_cap
-        || env.live_resource_nominals.len() > super::super::DEFINITION_LIMIT
-        || env.resource_kinds.len() > super::super::DEFINITION_LIMIT.saturating_add(1);
-    if has_excess_definitions {
+    // Each pure admission rule is decided by its own predicate, so this
+    // sequence never rejoins the branches of a compound condition.
+    if has_excess_definitions(env, definition_cap) {
         return Err(crate::Diagnostic::Invalid);
     }
-    let has_session_shape_mismatch = env.live_slots != live_slots
-        || (env.live_test_hosts && !live_slots)
-        || (live_slots && (live || text_cursor || !env.declared_modules))
-        || env.text_cursor != text_cursor
-        || (text_cursor && (live || env.declared_modules != declared_text))
-        || (declared_text
-            && (!text_cursor
-                || calculator
-                || !env.declared_modules
-                || !env.bound_adapters.is_empty()
-                || env.live_slots))
-        || env.calculator != calculator
-        || (calculator && (!env.declared_modules || !env.bound_adapters.is_empty()))
-        || env.has_checked_i64() != checked_i64
-        || (checked_i64
-            && (live
-                || live_slots
-                || text_cursor
-                || calculator
-                || declared_text
-                || env.declared_modules
-                || !env.bound_adapters.is_empty()))
-        || (!live_slots && !env.live_resource_nominals.is_empty());
-    if has_session_shape_mismatch {
+    if has_live_slot_mismatch(env, live, live_slots, text_cursor) {
         return Err(crate::Diagnostic::Invalid);
     }
-    let has_noncanonical_core_declarations = !env.declared_modules
-        && (!env.nominals.is_empty()
-            || !env.generic_variants.is_empty()
-            || !env.bound_adapters.is_empty());
-    let has_invalid_metadata = !env.schemas.is_empty()
-        || env.caller_module.is_some()
-        || (!live_slots && env.resource_kinds != [noble_kernel::contracts::FIXTURE_RESOURCE]);
-    if has_invalid_metadata || has_noncanonical_core_declarations {
+    if has_text_cursor_mismatch(env, live, text_cursor, declared_text) {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    if has_declared_text_mismatch(env, text_cursor, calculator, declared_text) {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    if has_calculator_mismatch(env, calculator) {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    if has_checked_i64_mismatch(
+        env,
+        checked_i64,
+        has_other_profile(live, live_slots, text_cursor, calculator, declared_text),
+    ) {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    if has_resource_nominals_without_slots(env, live_slots) {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    if has_invalid_metadata(env, live_slots) {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    if has_noncanonical_core_declarations(env) {
         return Err(crate::Diagnostic::Invalid);
     }
     let (fixed, count) = attempt!(canonical_prefix(
@@ -165,7 +150,7 @@ pub(super) fn check(
     if !exact_effects(env, count, live_slots) {
         return Err(crate::Diagnostic::Invalid);
     }
-    if live && has_non_live_effect(submission) {
+    if has_live_effect_mismatch(submission, live) {
         return Err(crate::Diagnostic::Invalid);
     }
     let expected = replay::ExpectedRows {
@@ -192,6 +177,119 @@ pub(super) fn check(
     } else {
         replay::check(env, fixed, expected)
     }
+}
+
+/// The definition ceiling of the selected profile.
+const fn definition_ceiling(calculator: bool) -> usize {
+    if calculator {
+        super::super::CALCULATOR_DEFINITION_LIMIT
+    } else {
+        super::super::DEFINITION_LIMIT
+    }
+}
+
+/// Whether a declaration table exceeds what the selected profile admits.
+fn has_excess_definitions(env: &noble_kernel::contracts::Env, definition_cap: usize) -> bool {
+    env.nominals.len() > definition_cap
+        || env.generic_variants.len() > definition_cap
+        || env.bound_adapters.len() > definition_cap
+        || env.live_resource_nominals.len() > super::super::DEFINITION_LIMIT
+        || env.resource_kinds.len() > super::super::DEFINITION_LIMIT.saturating_add(1)
+}
+
+/// Whether the live-slot session shape disagrees with the environment.
+fn has_live_slot_mismatch(
+    env: &noble_kernel::contracts::Env,
+    live: bool,
+    live_slots: bool,
+    text_cursor: bool,
+) -> bool {
+    env.live_slots != live_slots
+        || (env.live_test_hosts && !live_slots)
+        || (live_slots && (live || text_cursor || !env.declared_modules))
+}
+
+/// Whether the text-cursor session shape disagrees with the environment.
+fn has_text_cursor_mismatch(
+    env: &noble_kernel::contracts::Env,
+    live: bool,
+    text_cursor: bool,
+    declared_text: bool,
+) -> bool {
+    env.text_cursor != text_cursor
+        || (text_cursor && (live || env.declared_modules != declared_text))
+}
+
+/// Whether the declared-text session shape disagrees with the environment.
+fn has_declared_text_mismatch(
+    env: &noble_kernel::contracts::Env,
+    text_cursor: bool,
+    calculator: bool,
+    declared_text: bool,
+) -> bool {
+    declared_text
+        && (!text_cursor
+            || calculator
+            || !env.declared_modules
+            || !env.bound_adapters.is_empty()
+            || env.live_slots)
+}
+
+/// Whether the calculator session shape disagrees with the environment.
+fn has_calculator_mismatch(env: &noble_kernel::contracts::Env, calculator: bool) -> bool {
+    env.calculator != calculator
+        || (calculator && (!env.declared_modules || !env.bound_adapters.is_empty()))
+}
+
+/// Whether any profile other than checked i64 arithmetic is selected.
+const fn has_other_profile(
+    live: bool,
+    live_slots: bool,
+    text_cursor: bool,
+    calculator: bool,
+    declared_text: bool,
+) -> bool {
+    live || live_slots || text_cursor || calculator || declared_text
+}
+
+/// Whether the checked-i64 session shape disagrees with the environment;
+/// checked i64 arithmetic excludes every other profile.
+fn has_checked_i64_mismatch(
+    env: &noble_kernel::contracts::Env,
+    checked_i64: bool,
+    has_other_profile: bool,
+) -> bool {
+    env.has_checked_i64() != checked_i64
+        || (checked_i64
+            && (has_other_profile || env.declared_modules || !env.bound_adapters.is_empty()))
+}
+
+/// Whether host resource descriptors appear without live slots.
+fn has_resource_nominals_without_slots(
+    env: &noble_kernel::contracts::Env,
+    live_slots: bool,
+) -> bool {
+    !live_slots && !env.live_resource_nominals.is_empty()
+}
+
+/// Whether schema, caller or resource metadata is outside the fixed contract.
+fn has_invalid_metadata(env: &noble_kernel::contracts::Env, live_slots: bool) -> bool {
+    !env.schemas.is_empty()
+        || env.caller_module.is_some()
+        || (!live_slots && env.resource_kinds != [noble_kernel::contracts::FIXTURE_RESOURCE])
+}
+
+/// Whether an environment without declared modules carries declarations.
+fn has_noncanonical_core_declarations(env: &noble_kernel::contracts::Env) -> bool {
+    !env.declared_modules
+        && (!env.nominals.is_empty()
+            || !env.generic_variants.is_empty()
+            || !env.bound_adapters.is_empty())
+}
+
+/// Whether a live session allows an effect other than the live operations'.
+fn has_live_effect_mismatch(submission: &noble_kernel::execution::Submission, live: bool) -> bool {
+    live && has_non_live_effect(submission)
 }
 
 /// Whether the root request or any named definition allows an effect other

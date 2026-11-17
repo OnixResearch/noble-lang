@@ -68,172 +68,270 @@ impl Encoding {
                 literal(&mut self.out, lit, body, node)
             }
             noble_kernel::untrusted::Node::SignedSelf { def, .. } => {
-                if owner != Some(*def) {
-                    return Err(crate::Diagnostic::Invalid);
-                }
-                let index = attempt!(super::definition_index(submission, *def));
-                attempt!(self.out.append(b"S"));
-                attempt!(self.out.number(submission.definitions[index].identity));
-                self.out.append(b";")
+                self.signed_self(submission, owner, *def)
             }
             noble_kernel::untrusted::Node::Invocation { def, .. } => {
-                let is_byte_cursor =
-                    submission.environment.text_cursor || submission.environment.calculator;
-                if is_byte_cursor && matches!(def.0, 22..=25) {
-                    return Err(crate::Diagnostic::Invalid);
-                }
-                if is_byte_cursor && def.0 == 26 {
-                    if submission.environment.kind(*def)
-                        != Some(noble_kernel::contracts::Behavior::TextByte)
-                    {
-                        return Err(crate::Diagnostic::Invalid);
-                    }
-                    attempt!(self.out.append(b"b26"));
-                } else if submission.environment.text_cursor
-                    && !submission.environment.calculator
-                    && def.0 == 27
-                {
-                    if !submission.environment.declared_modules
-                        || submission.environment.kind(*def)
-                            != Some(noble_kernel::contracts::Behavior::I64Less)
-                    {
-                        return Err(crate::Diagnostic::Invalid);
-                    }
-                    attempt!(self.out.append(b"b27"));
-                } else if def.0 < super::super::builtin_count(&submission.environment) {
-                    attempt!(self.out.append(b"b"));
-                    attempt!(self.out.number(u64::from(def.0)));
-                } else {
-                    let behavior = submission.environment.kind(*def);
-                    match behavior {
-                        Some(noble_kernel::contracts::Behavior::Named) => {
-                            attempt!(self.out.append(b"d"));
-                            let index = attempt!(super::definition_index(submission, *def));
-                            attempt!(self.out.number(submission.definitions[index].identity));
-                        }
-                        Some(
-                            noble_kernel::contracts::Behavior::BoundEmit(slot)
-                            | noble_kernel::contracts::Behavior::BoundClock(slot)
-                            | noble_kernel::contracts::Behavior::BoundCodeExport(slot)
-                            | noble_kernel::contracts::Behavior::BoundSend(slot),
-                        ) => {
-                            let found = crate::scan::find_first(
-                                &submission.environment.bound_adapters,
-                                |row| row.definition == *def && row.adapter_slot == slot,
-                            );
-                            let binding = match found {
-                                Some(binding) => binding,
-                                None => return Err(crate::Diagnostic::Invalid),
-                            };
-                            attempt!(work.entries(binding.adapter_identity.len()));
-                            let marker = match behavior {
-                                Some(noble_kernel::contracts::Behavior::BoundClock(_)) => b"c",
-                                Some(noble_kernel::contracts::Behavior::BoundCodeExport(_)) => b"e",
-                                // "s" already prefixes Text literals.
-                                Some(noble_kernel::contracts::Behavior::BoundSend(_)) => b"o",
-                                Some(_) | None => b"a",
-                            };
-                            attempt!(self.out.append(marker));
-                            attempt!(self.out.number(u64::from(slot)));
-                            attempt!(self.out.append(b":"));
-                            attempt!(self.out.index(binding.adapter_identity.len()));
-                            attempt!(self.out.append(b":"));
-                            attempt!(self.out.append(binding.adapter_identity.as_bytes()));
-                        }
-                        Some(kind) => {
-                            let (tag, id) = match kind {
-                                noble_kernel::contracts::Behavior::NominalNew(id) => (b'N', id),
-                                noble_kernel::contracts::Behavior::NominalInto(id) => (b'I', id),
-                                noble_kernel::contracts::Behavior::NominalLeft(id) => (b'L', id),
-                                noble_kernel::contracts::Behavior::NominalRight(id) => (b'R', id),
-                                noble_kernel::contracts::Behavior::NominalMatch(id) => (b'M', id),
-                                noble_kernel::contracts::Behavior::GenericLeft(id) => (b'l', id),
-                                noble_kernel::contracts::Behavior::GenericRight(id) => (b'r', id),
-                                noble_kernel::contracts::Behavior::GenericMatch(id) => (b'm', id),
-                                noble_kernel::contracts::Behavior::Dup
-                                | noble_kernel::contracts::Behavior::Drop
-                                | noble_kernel::contracts::Behavior::Swap
-                                | noble_kernel::contracts::Behavior::Dip
-                                | noble_kernel::contracts::Behavior::Arith
-                                | noble_kernel::contracts::Behavior::Equals
-                                | noble_kernel::contracts::Behavior::Quote
-                                | noble_kernel::contracts::Behavior::Compose
-                                | noble_kernel::contracts::Behavior::Run
-                                | noble_kernel::contracts::Behavior::Reflect
-                                | noble_kernel::contracts::Behavior::Unit
-                                | noble_kernel::contracts::Behavior::Pair
-                                | noble_kernel::contracts::Behavior::Unpair
-                                | noble_kernel::contracts::Behavior::Inl
-                                | noble_kernel::contracts::Behavior::Inr
-                                | noble_kernel::contracts::Behavior::Case
-                                | noble_kernel::contracts::Behavior::If
-                                | noble_kernel::contracts::Behavior::Nil
-                                | noble_kernel::contracts::Behavior::Cons
-                                | noble_kernel::contracts::Behavior::ListCase
-                                | noble_kernel::contracts::Behavior::TestEmit
-                                | noble_kernel::contracts::Behavior::Reserved
-                                | noble_kernel::contracts::Behavior::TextByte
-                                | noble_kernel::contracts::Behavior::I64Less
-                                | noble_kernel::contracts::Behavior::CheckedI64Add
-                                | noble_kernel::contracts::Behavior::CheckedI64Sub
-                                | noble_kernel::contracts::Behavior::CheckedI64Mul
-                                | noble_kernel::contracts::Behavior::CheckedI64Neg
-                                | noble_kernel::contracts::Behavior::CheckedI64Abs
-                                | noble_kernel::contracts::Behavior::CheckedI64Less
-                                | noble_kernel::contracts::Behavior::CheckedI64DivRem
-                                | noble_kernel::contracts::Behavior::CalculatorIterate
-                                | noble_kernel::contracts::Behavior::CalculatorCompare
-                                | noble_kernel::contracts::Behavior::CalculatorDivRem
-                                | noble_kernel::contracts::Behavior::CalculatorTextFromAscii
-                                | noble_kernel::contracts::Behavior::CalculatorTextLength
-                                | noble_kernel::contracts::Behavior::Named
-                                | noble_kernel::contracts::Behavior::BoundEmit(_)
-                                | noble_kernel::contracts::Behavior::BoundClock(_)
-                                | noble_kernel::contracts::Behavior::BoundCodeExport(_)
-                                | noble_kernel::contracts::Behavior::BoundSend(_) => {
-                                    return Err(crate::Diagnostic::Invalid);
-                                }
-                            };
-                            attempt!(self.out.append(&[tag]));
-                            attempt!(self.out.number(id.module));
-                            attempt!(self.out.append(b":"));
-                            attempt!(self.out.number(u64::from(id.ordinal)));
-                        }
-                        None => return Err(crate::Diagnostic::Invalid),
-                    }
-                }
-                self.out.append(b";")
+                self.invocation(submission, *def, work)
             }
             noble_kernel::untrusted::Node::SlotInvoke {
                 ref_ordinal,
                 forwarded_ref_ordinals,
                 ..
-            } => {
-                if !submission.environment.live_slots {
-                    return Err(crate::Diagnostic::Unsupported);
-                }
-                // Only typed formal positions shape generic caller identity.
-                // Node-local site IDs, slot names, target versions and issued
-                // root credentials never enter the immutable recipe.
-                attempt!(self.out.append(b"slot("));
-                attempt!(self.out.number(u64::from(*ref_ordinal)));
-                attempt!(self.out.append(b":"));
-                attempt!(work.entries(forwarded_ref_ordinals.len()));
-                attempt!(forwarded_ordinals(&mut self.out, forwarded_ref_ordinals));
-                self.out.append(b");")
-            }
-            noble_kernel::untrusted::Node::Quotation { body, .. } => {
-                attempt!(self.out.append(b"["));
-                self.todo.reserve(body.len().saturating_add(1));
-                self.todo.push(None);
-                let mut index = body.len();
-                while index != 0 {
-                    index -= 1;
-                    self.todo.push(Some(body[index]));
-                }
-                Ok(())
-            }
+            } => self.slot_invoke(submission, *ref_ordinal, forwarded_ref_ordinals, work),
+            noble_kernel::untrusted::Node::Quotation { body, .. } => self.quotation(body),
         }
+    }
+
+    /// A signed self-reference: only the owner's own definition may appear.
+    fn signed_self(
+        &mut self,
+        submission: &noble_kernel::execution::Submission,
+        owner: Option<noble_kernel::contracts::Definition>,
+        def: noble_kernel::contracts::Definition,
+    ) -> Result<(), crate::Diagnostic> {
+        if owner != Some(def) {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        let index = attempt!(super::definition_index(submission, def));
+        attempt!(self.out.append(b"S"));
+        attempt!(self.out.number(submission.definitions[index].identity));
+        self.out.append(b";")
+    }
+
+    /// An invocation's callee token, `;`-terminated.
+    fn invocation(
+        &mut self,
+        submission: &noble_kernel::execution::Submission,
+        def: noble_kernel::contracts::Definition,
+        work: &mut super::super::Work,
+    ) -> Result<(), crate::Diagnostic> {
+        attempt!(self.callee(submission, def, work));
+        self.out.append(b";")
+    }
+
+    /// The callee token: a byte-cursor builtin, another builtin, or a
+    /// supplied definition. Every case ends here, so no branch rejoins.
+    fn callee(
+        &mut self,
+        submission: &noble_kernel::execution::Submission,
+        def: noble_kernel::contracts::Definition,
+        work: &mut super::super::Work,
+    ) -> Result<(), crate::Diagnostic> {
+        let environment = &submission.environment;
+        if is_reserved_cursor_builtin(environment, def) {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        if is_text_byte_builtin(environment, def) {
+            if environment.kind(def) != Some(noble_kernel::contracts::Behavior::TextByte) {
+                return Err(crate::Diagnostic::Invalid);
+            }
+            return self.out.append(b"b26");
+        }
+        if is_i64_less_builtin(environment, def) {
+            if !environment.declared_modules
+                || environment.kind(def) != Some(noble_kernel::contracts::Behavior::I64Less)
+            {
+                return Err(crate::Diagnostic::Invalid);
+            }
+            return self.out.append(b"b27");
+        }
+        if def.0 < super::super::builtin_count(environment) {
+            attempt!(self.out.append(b"b"));
+            return self.out.number(u64::from(def.0));
+        }
+        self.supplied(submission, def, work)
+    }
+
+    /// A supplied definition's token, chosen once by its behaviour.
+    fn supplied(
+        &mut self,
+        submission: &noble_kernel::execution::Submission,
+        def: noble_kernel::contracts::Definition,
+        work: &mut super::super::Work,
+    ) -> Result<(), crate::Diagnostic> {
+        match submission.environment.kind(def) {
+            Some(noble_kernel::contracts::Behavior::Named) => {
+                attempt!(self.out.append(b"d"));
+                let index = attempt!(super::definition_index(submission, def));
+                self.out.number(submission.definitions[index].identity)
+            }
+            Some(noble_kernel::contracts::Behavior::BoundEmit(slot)) => {
+                self.bound(submission, def, slot, b'a', work)
+            }
+            Some(noble_kernel::contracts::Behavior::BoundClock(slot)) => {
+                self.bound(submission, def, slot, b'c', work)
+            }
+            Some(noble_kernel::contracts::Behavior::BoundCodeExport(slot)) => {
+                self.bound(submission, def, slot, b'e', work)
+            }
+            // "s" already prefixes Text literals.
+            Some(noble_kernel::contracts::Behavior::BoundSend(slot)) => {
+                self.bound(submission, def, slot, b'o', work)
+            }
+            Some(kind) => self.nominal(kind),
+            None => Err(crate::Diagnostic::Invalid),
+        }
+    }
+
+    /// A bound operation's token: its marker, slot and adapter identity.
+    fn bound(
+        &mut self,
+        submission: &noble_kernel::execution::Submission,
+        def: noble_kernel::contracts::Definition,
+        slot: u32,
+        marker: u8,
+        work: &mut super::super::Work,
+    ) -> Result<(), crate::Diagnostic> {
+        let found = crate::scan::find_first(&submission.environment.bound_adapters, |row| {
+            row.definition == def && row.adapter_slot == slot
+        });
+        let binding = match found {
+            Some(binding) => binding,
+            None => return Err(crate::Diagnostic::Invalid),
+        };
+        attempt!(work.entries(binding.adapter_identity.len()));
+        attempt!(self.out.append(&[marker]));
+        attempt!(self.out.number(u64::from(slot)));
+        attempt!(self.out.append(b":"));
+        attempt!(self.out.index(binding.adapter_identity.len()));
+        attempt!(self.out.append(b":"));
+        self.out.append(binding.adapter_identity.as_bytes())
+    }
+
+    /// A nominal or generic-family operation's token; no other behaviour
+    /// may be supplied as a definition.
+    fn nominal(
+        &mut self,
+        kind: noble_kernel::contracts::Behavior,
+    ) -> Result<(), crate::Diagnostic> {
+        let (tag, id) = match nominal_tag(kind) {
+            Some(token) => token,
+            None => return Err(crate::Diagnostic::Invalid),
+        };
+        attempt!(self.out.append(&[tag]));
+        attempt!(self.out.number(id.module));
+        attempt!(self.out.append(b":"));
+        self.out.number(u64::from(id.ordinal))
+    }
+
+    /// A live-slot invocation: only its typed formal positions.
+    fn slot_invoke(
+        &mut self,
+        submission: &noble_kernel::execution::Submission,
+        ref_ordinal: u32,
+        forwarded_ref_ordinals: &[u32],
+        work: &mut super::super::Work,
+    ) -> Result<(), crate::Diagnostic> {
+        if !submission.environment.live_slots {
+            return Err(crate::Diagnostic::Unsupported);
+        }
+        // Only typed formal positions shape generic caller identity.
+        // Node-local site IDs, slot names, target versions and issued
+        // root credentials never enter the immutable recipe.
+        attempt!(self.out.append(b"slot("));
+        attempt!(self.out.number(u64::from(ref_ordinal)));
+        attempt!(self.out.append(b":"));
+        attempt!(work.entries(forwarded_ref_ordinals.len()));
+        attempt!(forwarded_ordinals(&mut self.out, forwarded_ref_ordinals));
+        self.out.append(b");")
+    }
+
+    /// Open a quotation and queue its body, then its closing marker.
+    fn quotation(
+        &mut self,
+        body: &[noble_kernel::untrusted::NodeId],
+    ) -> Result<(), crate::Diagnostic> {
+        attempt!(self.out.append(b"["));
+        self.todo.reserve(body.len().saturating_add(1));
+        self.todo.push(None);
+        let mut index = body.len();
+        while index != 0 {
+            index -= 1;
+            self.todo.push(Some(body[index]));
+        }
+        Ok(())
+    }
+}
+
+/// Byte-cursor environments reserve builtins 22 to 25.
+const fn is_reserved_cursor_builtin(
+    environment: &noble_kernel::contracts::Env,
+    def: noble_kernel::contracts::Definition,
+) -> bool {
+    (environment.text_cursor || environment.calculator) && matches!(def.0, 22..=25)
+}
+
+/// Byte-cursor environments expose the text-byte builtin as definition 26.
+const fn is_text_byte_builtin(
+    environment: &noble_kernel::contracts::Env,
+    def: noble_kernel::contracts::Definition,
+) -> bool {
+    (environment.text_cursor || environment.calculator) && def.0 == 26
+}
+
+/// Text-cursor environments without the calculator expose the i64 comparison
+/// builtin as definition 27.
+const fn is_i64_less_builtin(
+    environment: &noble_kernel::contracts::Env,
+    def: noble_kernel::contracts::Definition,
+) -> bool {
+    environment.text_cursor && !environment.calculator && def.0 == 27
+}
+
+/// The tag and nominal identity of a nominal or generic-family operation.
+const fn nominal_tag(
+    kind: noble_kernel::contracts::Behavior,
+) -> Option<(u8, noble_kernel::types::NominalTypeId)> {
+    match kind {
+        noble_kernel::contracts::Behavior::NominalNew(id) => Some((b'N', id)),
+        noble_kernel::contracts::Behavior::NominalInto(id) => Some((b'I', id)),
+        noble_kernel::contracts::Behavior::NominalLeft(id) => Some((b'L', id)),
+        noble_kernel::contracts::Behavior::NominalRight(id) => Some((b'R', id)),
+        noble_kernel::contracts::Behavior::NominalMatch(id) => Some((b'M', id)),
+        noble_kernel::contracts::Behavior::GenericLeft(id) => Some((b'l', id)),
+        noble_kernel::contracts::Behavior::GenericRight(id) => Some((b'r', id)),
+        noble_kernel::contracts::Behavior::GenericMatch(id) => Some((b'm', id)),
+        noble_kernel::contracts::Behavior::Dup
+        | noble_kernel::contracts::Behavior::Drop
+        | noble_kernel::contracts::Behavior::Swap
+        | noble_kernel::contracts::Behavior::Dip
+        | noble_kernel::contracts::Behavior::Arith
+        | noble_kernel::contracts::Behavior::Equals
+        | noble_kernel::contracts::Behavior::Quote
+        | noble_kernel::contracts::Behavior::Compose
+        | noble_kernel::contracts::Behavior::Run
+        | noble_kernel::contracts::Behavior::Reflect
+        | noble_kernel::contracts::Behavior::Unit
+        | noble_kernel::contracts::Behavior::Pair
+        | noble_kernel::contracts::Behavior::Unpair
+        | noble_kernel::contracts::Behavior::Inl
+        | noble_kernel::contracts::Behavior::Inr
+        | noble_kernel::contracts::Behavior::Case
+        | noble_kernel::contracts::Behavior::If
+        | noble_kernel::contracts::Behavior::Nil
+        | noble_kernel::contracts::Behavior::Cons
+        | noble_kernel::contracts::Behavior::ListCase
+        | noble_kernel::contracts::Behavior::TestEmit
+        | noble_kernel::contracts::Behavior::Reserved
+        | noble_kernel::contracts::Behavior::TextByte
+        | noble_kernel::contracts::Behavior::I64Less
+        | noble_kernel::contracts::Behavior::CheckedI64Add
+        | noble_kernel::contracts::Behavior::CheckedI64Sub
+        | noble_kernel::contracts::Behavior::CheckedI64Mul
+        | noble_kernel::contracts::Behavior::CheckedI64Neg
+        | noble_kernel::contracts::Behavior::CheckedI64Abs
+        | noble_kernel::contracts::Behavior::CheckedI64Less
+        | noble_kernel::contracts::Behavior::CheckedI64DivRem
+        | noble_kernel::contracts::Behavior::CalculatorIterate
+        | noble_kernel::contracts::Behavior::CalculatorCompare
+        | noble_kernel::contracts::Behavior::CalculatorDivRem
+        | noble_kernel::contracts::Behavior::CalculatorTextFromAscii
+        | noble_kernel::contracts::Behavior::CalculatorTextLength
+        | noble_kernel::contracts::Behavior::Named
+        | noble_kernel::contracts::Behavior::BoundEmit(_)
+        | noble_kernel::contracts::Behavior::BoundClock(_)
+        | noble_kernel::contracts::Behavior::BoundCodeExport(_)
+        | noble_kernel::contracts::Behavior::BoundSend(_) => None,
     }
 }
 

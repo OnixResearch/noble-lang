@@ -54,56 +54,88 @@ impl Cursor {
         outcome
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; pinned const trials fail on Vec indexing, NominalTypeId comparison and owned Cursor destruction (March E0277/E0493, August E0015/E0658/E0493); reassess when these operations become const-capable."
-    )]
     fn check_row(
-        mut self,
+        self,
         env: &noble_kernel::contracts::Env,
         expected: &ExpectedRows,
         index: usize,
     ) -> Result<Self, crate::Diagnostic> {
-        if index >= self.fixed.defs.len() {
-            if let noble_kernel::contracts::Behavior::NominalNew(id)
-            | noble_kernel::contracts::Behavior::NominalLeft(id) = env.kinds[index]
-            {
-                let decl = match env.nominals.get(self.next_nominal) {
-                    Some(decl) => decl,
-                    None => return Err(crate::Diagnostic::Invalid),
-                };
-                if decl.id != id {
-                    return Err(crate::Diagnostic::Invalid);
-                }
-                self = attempt!(self.append_nominal(decl));
-            } else if let noble_kernel::contracts::Behavior::GenericLeft(id) = env.kinds[index] {
-                let decl = match env.generic_variants.get(self.next_generic) {
-                    Some(decl) => decl,
-                    None => return Err(crate::Diagnostic::Invalid),
-                };
-                if decl.id != id {
-                    return Err(crate::Diagnostic::Invalid);
-                }
-                self = attempt!(self.append_generic_variant(decl));
-            } else {
-                self = attempt!(self.append_non_nominal(env, index));
-            }
-        }
-        if !is_replayed_row(env, &self.fixed, index) {
+        let mut cursor = attempt!(self.grow(env, index));
+        if !is_replayed_row(env, &cursor.fixed, index) {
             return Err(crate::Diagnostic::Invalid);
         }
         if is_counted_row(env, expected, index) {
-            self.named += 1;
+            cursor.named += 1;
         }
-        Ok(self)
+        Ok(cursor)
+    }
+
+    /// Replay supplied row `index` when it lies beyond the rows already
+    /// replayed. The kind is read once, so every later test of it is decided
+    /// by the first.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; pinned const trials fail on Vec indexing, NominalTypeId comparison and owned Cursor destruction (March E0277/E0493, August E0015/E0658/E0493); reassess when these operations become const-capable."
+    )]
+    fn grow(
+        self,
+        env: &noble_kernel::contracts::Env,
+        index: usize,
+    ) -> Result<Self, crate::Diagnostic> {
+        if index < self.fixed.defs.len() {
+            return Ok(self);
+        }
+        let kind = env.kinds[index];
+        if let noble_kernel::contracts::Behavior::NominalNew(id)
+        | noble_kernel::contracts::Behavior::NominalLeft(id) = kind
+        {
+            return self.replay_nominal(env, id);
+        }
+        if let noble_kernel::contracts::Behavior::GenericLeft(id) = kind {
+            return self.replay_generic_variant(env, id);
+        }
+        self.append_non_nominal(env, index, kind)
+    }
+
+    /// Replay the next supplied nominal declaration, which must declare `id`.
+    fn replay_nominal(
+        self,
+        env: &noble_kernel::contracts::Env,
+        id: noble_kernel::types::NominalTypeId,
+    ) -> Result<Self, crate::Diagnostic> {
+        let decl = match env.nominals.get(self.next_nominal) {
+            Some(decl) => decl,
+            None => return Err(crate::Diagnostic::Invalid),
+        };
+        if decl.id != id {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        self.append_nominal(decl)
+    }
+
+    /// Replay the next supplied generic family, which must declare `id`.
+    fn replay_generic_variant(
+        self,
+        env: &noble_kernel::contracts::Env,
+        id: noble_kernel::types::NominalTypeId,
+    ) -> Result<Self, crate::Diagnostic> {
+        let decl = match env.generic_variants.get(self.next_generic) {
+            Some(decl) => decl,
+            None => return Err(crate::Diagnostic::Invalid),
+        };
+        if decl.id != id {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        self.append_generic_variant(decl)
     }
 
     fn append_non_nominal(
         mut self,
         env: &noble_kernel::contracts::Env,
         index: usize,
+        kind: noble_kernel::contracts::Behavior,
     ) -> Result<Self, crate::Diagnostic> {
-        if let noble_kernel::contracts::Behavior::Named = env.kinds[index] {
+        if let noble_kernel::contracts::Behavior::Named = kind {
             self.fixed.defs.push(env.defs[index].clone());
             self.fixed
                 .kinds
@@ -114,16 +146,16 @@ impl Cursor {
                 .push(env.definition_owners[index]);
             return Ok(self);
         }
-        if let noble_kernel::contracts::Behavior::BoundEmit(slot) = env.kinds[index] {
+        if let noble_kernel::contracts::Behavior::BoundEmit(slot) = kind {
             return self.append_bound_emit(env, index, slot);
         }
-        if let noble_kernel::contracts::Behavior::BoundClock(slot) = env.kinds[index] {
+        if let noble_kernel::contracts::Behavior::BoundClock(slot) = kind {
             return self.append_bound_clock(env, index, slot);
         }
-        if let noble_kernel::contracts::Behavior::BoundCodeExport(slot) = env.kinds[index] {
+        if let noble_kernel::contracts::Behavior::BoundCodeExport(slot) = kind {
             return self.append_bound_code_export(env, index, slot);
         }
-        if let noble_kernel::contracts::Behavior::BoundSend(slot) = env.kinds[index] {
+        if let noble_kernel::contracts::Behavior::BoundSend(slot) = kind {
             return self.append_bound_send(env, index, slot);
         }
         // Builtins and derived nominal/family operations cannot begin a declaration.
