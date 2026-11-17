@@ -173,6 +173,32 @@ test('whitespace inside reviewed variant suffix refuses review', () => {
   error => error.message === `M4-SOURCE-FILTER: ${intrinsicFile}: unreviewed Charon annotation set`);
 });
 
+test('macro-fed conditional metadata refuses unreviewed source selection', () => {
+  for (const control of ['cfg(any())', 'cfg_attr(all(), cfg(any()))']) {
+    const changed = `${effectOracleSource}
+macro_rules! extraction_hidden {
+    ($attribute:meta) => {
+        #[$attribute]
+        pub fn unaccounted_function() -> bool { false }
+    };
+}
+extraction_hidden!(${control});
+`;
+    assert.throws(() => sourcePolicy({ ...annotationFiles, [effectOracleFile]: hash(changed) },
+      file => file === effectOracleFile ? changed : readAnnotationSource(file)),
+    error => error.message.startsWith(`M4-SOURCE-FILTER: ${effectOracleFile}:`));
+  }
+});
+
+test('spaced conditional metadata refuses unreviewed source selection', () => {
+  for (const control of ['cfg(any())', 'cfg_attr(all(), cfg(any()))']) {
+    const changed = `${effectOracleSource}\n# [${control}]\npub fn unaccounted_function() -> bool { false }`;
+    assert.throws(() => sourcePolicy({ ...annotationFiles, [effectOracleFile]: hash(changed) },
+      file => file === effectOracleFile ? changed : readAnnotationSource(file)),
+    error => error.message.startsWith(`M4-SOURCE-FILTER: ${effectOracleFile}:`));
+  }
+});
+
 for (const item of ['enum Code {', 'enum Sort {', 'enum Proposition {']) {
   test(`missing or production-selected Debug derive refuses review: ${item}`, () => {
     const source = annotationSources[intrinsicFile];
@@ -189,7 +215,13 @@ for (const item of ['enum Code {', 'enum Sort {', 'enum Proposition {']) {
 }
 
 test('comments and string contents cannot introduce source-selection attributes', () => {
-  const changed = `${effectOracleSource}\n// #[charon::opaque]\nconst TEXT: &str = "#[cfg(feature = \\\"hidden\\\")]";`;
-  assert.doesNotThrow(() => sourcePolicy(annotationFiles,
+  const changed = `${effectOracleSource}
+// #[charon::opaque]
+// cfg(any()) cfg_attr(all(), cfg(any()))
+const TEXT: &str = "#[cfg(feature = \\\"hidden\\\")]";
+const CONDITIONAL_TEXT: &str = r#"cfg(any()) cfg_attr(all(), cfg(any()))"#;
+const RUNTIME_CFG: bool = cfg!(any());
+`;
+  assert.doesNotThrow(() => sourcePolicy({ ...annotationFiles, [effectOracleFile]: hash(changed) },
     file => file === effectOracleFile ? changed : readAnnotationSource(file)));
 });

@@ -102,6 +102,14 @@ The reviewed item first line, complete extent and SHA-256 remain checked.
 Annotation normalization preserves the bytes inside quoted arguments:
 `variants_suffix("Co de")` is not the reviewed `variants_suffix("Code")`.
 
+The same occurrence-attribution requirement applies to live `cfg(...)` and
+`cfg_attr(...)` source-selection metadata, including metadata passed through
+macro arguments or written with a spaced `# [`. The existing exact test-only
+exceptions remain unchanged. Runtime `cfg!(...)` macros are not item-selection
+metadata; comments and literal contents remain ignored.
+
+### Initial Charon controls and observed results
+
 The permanent controls are in `verification/m4/opaque-model-review.test.mjs`:
 
 | Control name | Mutation |
@@ -114,11 +122,36 @@ At tests-only commit `09f6ffd`, with accounting unchanged, the selected Node 24
 run of these three controls exited 1: 0 passed, 3 failed, each with
 `Missing expected exception`. After the accounting fix at `5c4ddbd`, the
 selected Node 24 run of the full suite reported 70 tests, 70 passed, 0 failed.
+That result applies to the initial Charon fix, before the conditional-metadata
+controls were added; it is not a result for the expanded suite.
 The full-suite command is:
 
 ```sh
 SELECTED_NODE --test verification/m4/opaque-model-review.test.mjs
 ```
+
+### Expanded conditional controls and direct API smoke
+
+The expanded suite adds `macro-fed conditional metadata refuses unreviewed source selection`
+and `spaced conditional metadata refuses unreviewed source selection`. Each
+checks both `cfg` and `cfg_attr` metadata with recomputed source hashes. At
+`a2947e5`, the full suite reported 72 passed, 0 failed.
+
+A separate direct `sourcePolicy` API smoke also ran at `a2947e5`, recomputing
+the source SHA-256 values for every mutation. The canonical reviewed sources
+were accepted, and all five malformed cases were refused:
+
+| Direct API case | Result |
+|---|---|
+| Macro-fed `charon::exclude` | Refused |
+| Spaced `# [charon::exclude]` | Refused |
+| Quoted suffix `Code` changed to `Co de` | Refused |
+| Macro-fed `cfg(any())` | Refused |
+| Spaced `# [cfg(any())]` | Refused |
+
+The direct smoke summary was `malformed=5 accepted=0`, exit 0. Before the
+conditional-metadata fix, the same smoke accepted the two malformed `cfg`
+cases and exited 1 with `malformed=5 accepted=2`.
 
 These are source-selection admission controls over mutated source strings,
 not executions of those Rust fixtures through Charon/Aeneas. They establish

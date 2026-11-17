@@ -493,7 +493,9 @@ export function sourcePolicy(sourceFiles, readSource) {
     // cannot select production bodies, and test-only derives add no production
     // impl. Every other cfg branch needs review.
     const debugDerives = [];
+    const conditionalControls = new Set();
     for (const match of code.matchAll(/#\[\s*(cfg(?:_attr)?)\s*\(([^\n]*)/g)) {
+      conditionalControls.add(match.index + match[0].indexOf(match[1]));
       const exact = text.slice(match.index, match.index + match[0].length);
       const following = code.slice(match.index + match[0].length).split('\n').slice(1)
         .map(line => line.trim()).find(line => line && !line.startsWith('#['));
@@ -510,6 +512,13 @@ export function sourcePolicy(sourceFiles, readSource) {
       if (!allowed) fail('SOURCE-FILTER', `${file}: unreviewed conditional source selection`);
       if (file === 'crates/noble-contracts/src/intrinsic.rs' && exact === '#[cfg_attr(test, derive(Debug))]') {
         debugDerives.push(following);
+      }
+    }
+    // Conditional metadata must have the same exact attribution as Charon
+    // controls. Runtime cfg!(...) macros are not item-selection metadata.
+    for (const match of code.matchAll(/\bcfg(?:_attr)?\s*\(/g)) {
+      if (!conditionalControls.delete(match.index)) {
+        fail('SOURCE-FILTER', `${file}: unreviewed conditional source-selection token`);
       }
     }
     if (file === 'crates/noble-contracts/src/intrinsic.rs') {
