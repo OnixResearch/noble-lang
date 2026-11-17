@@ -35,6 +35,27 @@ fn global(out: &mut crate::output::Buffer, id: usize) -> Result<(), crate::Diagn
     out.index(id)
 }
 
+/// Split `haystack` around the first occurrence of `needle`, as
+/// `str::split_once` does for a string needle, on the underlying bytes.
+///
+/// The pinned Aeneas cannot translate `core::str::pattern::Pattern`, so the
+/// fixed WAT fragments are split here with plain byte comparisons. A match
+/// starts and ends at the needle's own UTF-8 boundaries, so both halves are
+/// exactly the bytes of the halves `str::split_once` returns.
+fn split_once_bytes<'a>(haystack: &'a [u8], needle: &[u8]) -> Option<(&'a [u8], &'a [u8])> {
+    let mut start = 0usize;
+    let mut found = None;
+    while found.is_none() && needle.len() <= haystack.len() - start {
+        if haystack[start..start + needle.len()] == *needle {
+            found = Some(start);
+        } else {
+            start += 1;
+        }
+    }
+    let at = found?;
+    Some((&haystack[..at], &haystack[at + needle.len()..]))
+}
+
 fn get_global(out: &mut crate::output::Buffer, id: usize) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(global.get "));
     attempt!(global(out, id));
@@ -289,4 +310,35 @@ pub(super) fn module(
         attempt!(out.append(b"\n"));
     }
     Ok(out.finish())
+}
+
+#[cfg(test)]
+mod split_tests {
+    #[test]
+    fn split_once_bytes_matches_str_split_once() {
+        let cases = [
+            ("abcabc", "bc"),
+            ("abc", ""),
+            ("", ""),
+            ("", "a"),
+            ("abc", "abcd"),
+            ("aaa", "aa"),
+            ("abc", "c"),
+            ("abc", "x"),
+            (
+                "x(func $tick (result i32)y(func $tick (result i32)",
+                "(func $tick (result i32)",
+            ),
+            ("\u{e9}(a)\u{e9}", "(a)"),
+        ];
+        for (haystack, needle) in cases {
+            let expected = haystack
+                .split_once(needle)
+                .map(|(before, after)| (before.as_bytes(), after.as_bytes()));
+            assert_eq!(
+                super::split_once_bytes(haystack.as_bytes(), needle.as_bytes()),
+                expected
+            );
+        }
+    }
 }

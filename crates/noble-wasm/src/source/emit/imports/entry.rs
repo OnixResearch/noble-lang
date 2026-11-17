@@ -270,12 +270,14 @@ fn accounting(
     if !interruptible {
         return super::fragment(out, ACCOUNTING);
     }
-    let Some((before, after)) = ACCOUNTING.split_once(CHARGING_TICK) else {
+    let Some((before, after)) =
+        super::super::split_once_bytes(ACCOUNTING.as_bytes(), CHARGING_TICK.as_bytes())
+    else {
         return Err(crate::Diagnostic::Defective);
     };
-    attempt!(out.append(before.as_bytes()));
+    attempt!(out.append(before));
     attempt!(out.append(b"(func $runtime_charge (result i32)"));
-    attempt!(out.append(after.as_bytes()));
+    attempt!(out.append(after));
     attempt!(out.append(b"\n"));
     super::fragment(
         out,
