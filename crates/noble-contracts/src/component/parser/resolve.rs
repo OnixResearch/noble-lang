@@ -149,21 +149,28 @@ fn any_unsupported_checked_export(
     let mut is_found = false;
     let mut at = 0;
     while !is_found && at < exports.len() {
-        let operation = &exports[at];
-        is_found = uses_checked_u64(operation)
-            && (is_async_world
-                || operation.asynchronous
-                || operation.parameters.len() != 1
-                || operation.results.len() != 1
-                || any_type(&operation.parameters, |ty| {
-                    ty != crate::component::Type::CheckedU64
-                })
-                || any_type(&operation.results, |ty| {
-                    ty != crate::component::Type::CheckedU64
-                }));
+        is_found = is_unsupported_checked_export(is_async_world, &exports[at]);
         at += 1;
     }
     is_found
+}
+
+/// Whether `operation` uses a WIT u64 outside a synchronous scalar `u64 -> u64` shape.
+fn is_unsupported_checked_export(
+    is_async_world: bool,
+    operation: &crate::component::Operation,
+) -> bool {
+    if !uses_checked_u64(operation) {
+        return false;
+    }
+    if is_async_world || operation.asynchronous {
+        return true;
+    }
+    if operation.parameters.len() != 1 || operation.results.len() != 1 {
+        return true;
+    }
+    any_type(&operation.parameters, |ty| ty != crate::component::Type::CheckedU64)
+        || any_type(&operation.results, |ty| ty != crate::component::Type::CheckedU64)
 }
 
 /// Whether `operation` repeats the word or export name of an earlier operation.

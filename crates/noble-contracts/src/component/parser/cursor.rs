@@ -77,7 +77,7 @@ impl<'a> super::Cursor<'a> {
                 "WIT requires an exact major.minor.patch version",
             ));
         }
-        if token.len() > 1 && matches!(token.as_bytes().first(), Some(b'0')) {
+        if token.len() > 1 && token.as_bytes().first() == Some(&b'0') {
             return Err(crate::component::unsupported(
                 "WIT requires an exact major.minor.patch version",
             ));
@@ -119,7 +119,7 @@ fn is_ascii_digits(bytes: &[u8]) -> bool {
     reason = "Owner: noble-maintainers; escaping, reserved names, byte length, character classes and kebab boundaries are explicit fallible checks on WIT input, not assertion preconditions."
 )]
 fn identifier(token: &str) -> Result<alloc::string::String, crate::component::Error> {
-    let is_escaped = matches!(token.as_bytes().first(), Some(b'%'));
+    let is_escaped = token.as_bytes().first() == Some(&b'%');
     let start = if is_escaped { 1 } else { 0 };
     let name = match token.get(start..) {
         Some(name) => name,
@@ -134,7 +134,7 @@ fn identifier(token: &str) -> Result<alloc::string::String, crate::component::Er
     if bytes.is_empty() || bytes.len() > super::MAX_NAME_BYTES {
         return Err(crate::component::invalid("invalid WIT identifier"));
     }
-    if !bytes[0].is_ascii_lowercase() || matches!(bytes.last(), Some(b'-')) {
+    if !bytes[0].is_ascii_lowercase() || bytes.last() == Some(&b'-') {
         return Err(crate::component::invalid("invalid WIT identifier"));
     }
     let mut at = 0usize;

@@ -263,10 +263,8 @@ pub(crate) fn check_signed_structure_with_work(
 }
 
 #[expect(
-    tigerstyle::assertion_density,
-    tigerstyle::function_length,
     tigerstyle::too_many_parameters,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
 fn check_with_owner(
     env: &noble_kernel::contracts::Env,
@@ -282,93 +280,11 @@ fn check_with_owner(
     Result<noble_kernel::untrusted::Checked, crate::Diagnostic>,
     u32,
 ) {
-    let (outcome, work_used) = match owner {
-        Some((owner, owner_inst)) => {
-            let (outcome, work_used) = noble_kernel::acceptance::check_signed_structure_with_work(
-                env, request, candidate, owner, owner_inst,
-            );
-            (outcome, work_used)
-        }
-        None => noble_kernel::acceptance::check_with_work(env, request, candidate),
-    };
+    let (outcome, work_used) = kernel_outcome(env, candidate, request, owner);
     let result = match outcome {
         noble_kernel::untrusted::Outcome::Accepted(checked) => Ok(checked),
         noble_kernel::untrusted::Outcome::Invalid(diagnostic) => {
-            let at = match diagnostic.node {
-                Some(node) => {
-                    let index = match crate::offset(node.0, span) {
-                        Ok(index) => index,
-                        Err(problem) => return (Err(problem), work_used),
-                    };
-                    match spans.get(index) {
-                        Some(at) => *at,
-                        None => span,
-                    }
-                }
-                None => span,
-            };
-            let message = match diagnostic.constraint {
-                noble_kernel::untrusted::Constraint::StackJoin
-                | noble_kernel::untrusted::Constraint::StackOrder => {
-                    "kernel rejected a program stack join or output interface"
-                }
-                noble_kernel::untrusted::Constraint::Eligibility(_) => {
-                    "kernel rejected a non-capturable value"
-                }
-                noble_kernel::untrusted::Constraint::CyclicWitness => {
-                    "kernel rejected a cyclic witness"
-                }
-                noble_kernel::untrusted::Constraint::InvalidType => {
-                    "kernel rejected an unregistered or mismatched nominal type"
-                }
-                noble_kernel::untrusted::Constraint::InvalidContract => {
-                    "kernel rejected a changed module operation or adapter contract"
-                }
-                noble_kernel::untrusted::Constraint::PrivateDefinition(_) => {
-                    "kernel rejected a private module operation"
-                }
-                noble_kernel::untrusted::Constraint::BorrowProvenance => {
-                    "kernel rejected a missing, mistyped, or incorrectly forwarded borrowed live input"
-                }
-                noble_kernel::untrusted::Constraint::SlotSite => {
-                    "kernel rejected a live slot site that differs from its checked source node"
-                }
-                noble_kernel::untrusted::Constraint::EffectInclusion(_)
-                | noble_kernel::untrusted::Constraint::UnknownEffect(_)
-                | noble_kernel::untrusted::Constraint::InstantiationKind
-                | noble_kernel::untrusted::Constraint::InstantiationArity
-                | noble_kernel::untrusted::Constraint::MalformedReference(_)
-                | noble_kernel::untrusted::Constraint::UnknownDefinition(_) => {
-                    "kernel rejected the ordinary typing witness"
-                }
-            };
-            let mut problem = crate::invalid(at, message);
-            if let (Some(definition), noble_kernel::untrusted::Constraint::Eligibility(ty)) =
-                (diagnostic.def, &diagnostic.constraint)
-            {
-                let mut word = alloc::string::String::new();
-                append_bootstrap_spelling(definition, &mut word);
-                let required = alloc::string::String::from("S Data");
-                let actual = alloc::format!("S {ty:?}");
-                problem.message.push_str("; word ");
-                problem.message.push_str(&word);
-                problem.message.push_str("; required ");
-                problem.message.push_str(&required);
-                problem.message.push_str("; actual ");
-                problem.message.push_str(&actual);
-                problem = problem.join_with(crate::JoinDiagnostic {
-                    word,
-                    expected_stack: required,
-                    actual_stack: actual,
-                    constraint: alloc::string::String::from("eligibility:Data"),
-                    value_origin: None,
-                    difference: None,
-                });
-            } else if let Ok(shapes) = rejection_shapes(&diagnostic, request, at) {
-                problem.message.push_str("; ");
-                problem.message.push_str(&shapes);
-            }
-            Err(problem)
+            Err(invalid_rejection(&diagnostic, request, spans, span))
         }
         noble_kernel::untrusted::Outcome::Unsupported(_) => Err(crate::Diagnostic::new(
             crate::DiagnosticKind::Unsupported,
@@ -383,6 +299,140 @@ fn check_with_owner(
         noble_kernel::untrusted::Outcome::InternalFailure => Err(crate::internal(span)),
     };
     (result, work_used)
+}
+
+/// Run the kernel checker, with the signed-structure owner when one is given.
+fn kernel_outcome(
+    env: &noble_kernel::contracts::Env,
+    candidate: &noble_kernel::untrusted::Candidate,
+    request: &noble_kernel::untrusted::Request,
+    owner: Option<(
+        noble_kernel::contracts::Definition,
+        &noble_kernel::words::Inst,
+    )>,
+) -> (noble_kernel::untrusted::Outcome, u32) {
+    match owner {
+        Some((owner, owner_inst)) => noble_kernel::acceptance::check_signed_structure_with_work(
+            env, request, candidate, owner, owner_inst,
+        ),
+        None => noble_kernel::acceptance::check_with_work(env, request, candidate),
+    }
+}
+
+/// The frontend diagnostic for one kernel rejection: its node's source span,
+/// the constraint's message, and either the eligibility detail or the
+/// rendered stack shapes.
+fn invalid_rejection(
+    diagnostic: &noble_kernel::untrusted::Diagnostic,
+    request: &noble_kernel::untrusted::Request,
+    spans: &[crate::Span],
+    span: crate::Span,
+) -> crate::Diagnostic {
+    let at = match rejection_span(diagnostic.node, spans, span) {
+        Ok(at) => at,
+        Err(problem) => return problem,
+    };
+    let problem = crate::invalid(at, rejection_message(&diagnostic.constraint));
+    if let Some(definition) = diagnostic.def {
+        if let noble_kernel::untrusted::Constraint::Eligibility(ty) = &diagnostic.constraint {
+            return with_eligibility(problem, definition, ty);
+        }
+    }
+    with_shapes(problem, diagnostic, request, at)
+}
+
+/// The source span of the rejected node, or `span` when it has none.
+fn rejection_span(
+    node: Option<noble_kernel::untrusted::NodeId>,
+    spans: &[crate::Span],
+    span: crate::Span,
+) -> Result<crate::Span, crate::Diagnostic> {
+    let node = match node {
+        Some(node) => node,
+        None => return Ok(span),
+    };
+    let index = attempt!(crate::offset(node.0, span));
+    match spans.get(index) {
+        Some(at) => Ok(*at),
+        None => Ok(span),
+    }
+}
+
+/// The frontend message for one kernel constraint.
+fn rejection_message(constraint: &noble_kernel::untrusted::Constraint) -> &'static str {
+    match constraint {
+        noble_kernel::untrusted::Constraint::StackJoin
+        | noble_kernel::untrusted::Constraint::StackOrder => {
+            "kernel rejected a program stack join or output interface"
+        }
+        noble_kernel::untrusted::Constraint::Eligibility(_) => {
+            "kernel rejected a non-capturable value"
+        }
+        noble_kernel::untrusted::Constraint::CyclicWitness => "kernel rejected a cyclic witness",
+        noble_kernel::untrusted::Constraint::InvalidType => {
+            "kernel rejected an unregistered or mismatched nominal type"
+        }
+        noble_kernel::untrusted::Constraint::InvalidContract => {
+            "kernel rejected a changed module operation or adapter contract"
+        }
+        noble_kernel::untrusted::Constraint::PrivateDefinition(_) => {
+            "kernel rejected a private module operation"
+        }
+        noble_kernel::untrusted::Constraint::BorrowProvenance => {
+            "kernel rejected a missing, mistyped, or incorrectly forwarded borrowed live input"
+        }
+        noble_kernel::untrusted::Constraint::SlotSite => {
+            "kernel rejected a live slot site that differs from its checked source node"
+        }
+        noble_kernel::untrusted::Constraint::EffectInclusion(_)
+        | noble_kernel::untrusted::Constraint::UnknownEffect(_)
+        | noble_kernel::untrusted::Constraint::InstantiationKind
+        | noble_kernel::untrusted::Constraint::InstantiationArity
+        | noble_kernel::untrusted::Constraint::MalformedReference(_)
+        | noble_kernel::untrusted::Constraint::UnknownDefinition(_) => {
+            "kernel rejected the ordinary typing witness"
+        }
+    }
+}
+
+/// Attach the word, required and actual stacks of a non-capturable value.
+fn with_eligibility(
+    mut problem: crate::Diagnostic,
+    definition: noble_kernel::contracts::Definition,
+    ty: &noble_kernel::types::Ty,
+) -> crate::Diagnostic {
+    let mut word = alloc::string::String::new();
+    append_bootstrap_spelling(definition, &mut word);
+    let required = alloc::string::String::from("S Data");
+    let actual = alloc::format!("S {:?}", *ty);
+    problem.message.push_str("; word ");
+    problem.message.push_str(&word);
+    problem.message.push_str("; required ");
+    problem.message.push_str(&required);
+    problem.message.push_str("; actual ");
+    problem.message.push_str(&actual);
+    problem.join_with(crate::JoinDiagnostic {
+        word,
+        expected_stack: required,
+        actual_stack: actual,
+        constraint: alloc::string::String::from("eligibility:Data"),
+        value_origin: None,
+        difference: None,
+    })
+}
+
+/// Append the rendered expected and actual stacks when they render.
+fn with_shapes(
+    mut problem: crate::Diagnostic,
+    diagnostic: &noble_kernel::untrusted::Diagnostic,
+    request: &noble_kernel::untrusted::Request,
+    at: crate::Span,
+) -> crate::Diagnostic {
+    if let Ok(shapes) = rejection_shapes(diagnostic, request, at) {
+        problem.message.push_str("; ");
+        problem.message.push_str(&shapes);
+    }
+    problem
 }
 
 fn rejection_shapes(
