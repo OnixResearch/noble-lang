@@ -14,10 +14,7 @@ impl BoundedProgramBytes {
     }
 
     fn append(&mut self, part: &[u8]) -> Result<(), Refusal> {
-        let should_add_separator = !self.bytes.is_empty()
-            && self.bytes.last() != Some(&b' ')
-            && !part.is_empty()
-            && part.first() != Some(&b' ');
+        let should_add_separator = needs_separator(&self.bytes, part);
         let separator_bytes = if should_add_separator { 1usize } else { 0usize };
         let next_len = self
             .bytes
@@ -61,6 +58,14 @@ impl BoundedProgramBytes {
     fn into_bytes(self) -> Vec<u8> {
         self.bytes
     }
+}
+
+/// Whether appending `part` after `bytes` needs one separating space.
+fn needs_separator(bytes: &[u8], part: &[u8]) -> bool {
+    !bytes.is_empty()
+        && bytes.last() != Some(&b' ')
+        && !part.is_empty()
+        && part.first() != Some(&b' ')
 }
 
 #[derive(Clone, Debug, PartialEq)]

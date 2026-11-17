@@ -1086,36 +1086,10 @@ impl ProcedureLibrary {
         existing: &ProcedureRecord,
         mut incoming: ProcedureRecord,
     ) -> Result<ProcedureRecord, Refusal> {
-        for evidence in existing.evidence.iter() {
-            if !incoming.evidence.contains(evidence) {
-                incoming.evidence.push(evidence.clone());
-            }
-        }
-        // Retained claims keep the receipts the library minted for them.
-        for receipt in existing.verified.iter() {
-            if !incoming.verified.contains(receipt) {
-                incoming.verified.push(receipt.clone());
-            }
-        }
-        if existing.status.rank() < incoming.status.rank() && incoming.status != Status::Superseded
-        {
-            incoming.status = existing.status;
-        }
-        if incoming.status == Status::Candidate && existing.status != Status::Candidate {
-            incoming.status = existing.status;
-        }
-        if incoming.promotion.is_none() {
-            incoming.promotion = existing.promotion.clone();
-        }
-        if incoming.supersedes.is_none() {
-            incoming.supersedes = existing.supersedes;
-        }
-        if incoming.alias_of.is_none() {
-            incoming.alias_of.clone_from(&existing.alias_of);
-        }
-        if incoming.cost == Cost::default() {
-            incoming.cost = existing.cost;
-        }
+        Self::merge_claims(existing, &mut incoming);
+        incoming.status = Self::merged_status(existing.status, incoming.status);
+        Self::inherit_promotion_and_supersession(existing, &mut incoming);
+        Self::inherit_alias_and_cost(existing, &mut incoming);
         incoming.retrieval = retrieval::signature(&incoming);
         if incoming.evidence.len() > MAX_EVIDENCE {
             return Err(Refusal::new(
@@ -1127,6 +1101,59 @@ impl ProcedureLibrary {
             ));
         }
         Ok(incoming)
+    }
+
+    /// Add the retained claims, and the receipts minted for them, that
+    /// `incoming` lacks.
+    fn merge_claims(existing: &ProcedureRecord, incoming: &mut ProcedureRecord) {
+        for evidence in existing.evidence.iter() {
+            if !incoming.evidence.contains(evidence) {
+                incoming.evidence.push(evidence.clone());
+            }
+        }
+        // Retained claims keep the receipts the library minted for them.
+        for receipt in existing.verified.iter() {
+            if !incoming.verified.contains(receipt) {
+                incoming.verified.push(receipt.clone());
+            }
+        }
+    }
+
+    /// The merged status: a better-ranked retained status wins unless the
+    /// incoming record is superseded, and a retained status never falls back
+    /// to candidate.
+    fn merged_status(existing: Status, incoming: Status) -> Status {
+        let mut status = incoming;
+        if existing.rank() < status.rank() && status != Status::Superseded {
+            status = existing;
+        }
+        if status == Status::Candidate && existing != Status::Candidate {
+            status = existing;
+        }
+        status
+    }
+
+    /// Keep the retained promotion and supersession link that `incoming` omits.
+    fn inherit_promotion_and_supersession(
+        existing: &ProcedureRecord,
+        incoming: &mut ProcedureRecord,
+    ) {
+        if incoming.promotion.is_none() {
+            incoming.promotion = existing.promotion.clone();
+        }
+        if incoming.supersedes.is_none() {
+            incoming.supersedes = existing.supersedes;
+        }
+    }
+
+    /// Keep the retained alias claim and cost that `incoming` omits.
+    fn inherit_alias_and_cost(existing: &ProcedureRecord, incoming: &mut ProcedureRecord) {
+        if incoming.alias_of.is_none() {
+            incoming.alias_of.clone_from(&existing.alias_of);
+        }
+        if incoming.cost == Cost::default() {
+            incoming.cost = existing.cost;
+        }
     }
 
     fn canonicalize_evidence(records: &mut [ProcedureRecord]) -> Result<(), Refusal> {
@@ -1230,6 +1257,11 @@ impl ProcedureLibrary {
         if record.retrieval != retrieval::signature(record) {
             return Err(Refusal::new(RefusalKind::Invalid, Diagnostic { field: "retrieval", message: "retrieval signature differs from recomputed interface, status and integer cost" }));
         }
+        Self::validate_each_claim(record)
+    }
+
+    /// Every evidence claim of `record`, in order, up to the first refusal.
+    fn validate_each_claim(record: &ProcedureRecord) -> Result<(), Refusal> {
         let mut outcome = Ok(());
         let mut index = 0;
         while outcome.is_ok() && index < record.evidence.len() {
@@ -1714,7 +1746,7 @@ impl ProcedureLibrary {
         Self::check_dependencies(admitted, record)?;
         library
             .admit(namespace, record.chunk.clone())
-            .map_err(Refusal::from_chunk)?;
+            .map_err(|refusal: chunks::Refusal| Refusal::from_chunk(refusal))?;
         admitted.push(record.clone());
         Ok(())
     }

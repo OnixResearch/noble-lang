@@ -357,9 +357,7 @@ fn validate_receipt(record: &ProcedureRecord, index: usize) -> Result<(), Refusa
         ));
     }
     let claim = cited_claim(record, receipt, position)?;
-    let is_answer = receipt.obligation == claim.obligation
-        && receipt.class == claim.class
-        && receipt.policy_revision == claim.policy_revision;
+    let is_answer = answers(receipt, claim);
     let is_repeated = crate::scan::find_first(&record.verified[..index], |earlier| {
         earlier.claim_digest == receipt.claim_digest
     })
@@ -378,6 +376,14 @@ fn validate_receipt(record: &ProcedureRecord, index: usize) -> Result<(), Refusa
     debug_assert_eq!(receipt.class, claim.class);
     debug_assert_eq!(receipt.policy_revision, claim.policy_revision);
     Ok(())
+}
+
+/// Whether `receipt` answers `claim`: the same obligation, class and policy
+/// revision.
+fn answers(receipt: &VerifiedEvidence, claim: &EvidenceRecord) -> bool {
+    receipt.obligation == claim.obligation
+        && receipt.class == claim.class
+        && receipt.policy_revision == claim.policy_revision
 }
 
 /// Replace every receipt `record` carries with the library's own decision.
