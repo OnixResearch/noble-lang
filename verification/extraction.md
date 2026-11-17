@@ -102,6 +102,14 @@ The reviewed item first line, complete extent and SHA-256 remain checked.
 Annotation normalization preserves the bytes inside quoted arguments:
 `variants_suffix("Co de")` is not the reviewed `variants_suffix("Code")`.
 
+The same occurrence-attribution requirement applies to live `cfg(...)` and
+`cfg_attr(...)` source-selection metadata, including metadata passed through
+macro arguments or written with a spaced `# [`. The existing exact test-only
+exceptions remain unchanged. Runtime `cfg!(...)` macros are not item-selection
+metadata; comments and literal contents remain ignored.
+
+### Initial Charon controls and observed results
+
 The permanent controls are in `verification/m4/opaque-model-review.test.mjs`:
 
 | Control name | Mutation |
@@ -114,6 +122,8 @@ At tests-only commit `09f6ffd`, with accounting unchanged, the selected Node 24
 run of these three controls exited 1: 0 passed, 3 failed, each with
 `Missing expected exception`. After the accounting fix at `5c4ddbd`, the
 selected Node 24 run of the full suite reported 70 tests, 70 passed, 0 failed.
+That result applies to the initial Charon fix, before the conditional-metadata
+controls were added; it is not a result for the expanded suite.
 The full-suite command is:
 
 ```sh
