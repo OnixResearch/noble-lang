@@ -156,10 +156,7 @@ fn semantic_count(tree: &Tree) -> Result<usize, crate::Diagnostic> {
     // The declared `def name [ ... ]` parser retains its final syntactic
     // quotation node after moving its children into Tree.body, leaving its
     // quotation children empty. It has no executable inference Draft.
-    if !matches!(&outer.kind, Kind::Quotation(children) if children.is_empty())
-        || outer.span.start == 0
-        || outer.span.end > tree.span.end
-    {
+    if !is_empty_quotation(&outer.kind) || outer.span.start == 0 || outer.span.end > tree.span.end {
         return Err(refused(tree.span));
     }
     Ok(tree.nodes.len() - 1)
@@ -192,9 +189,7 @@ fn reachable(
     let mut index = 0;
     let mut stray = None;
     while stray.is_none() && index < seen.len() {
-        if !seen[index] && !is_empty_quotation(&tree.nodes[index].kind) {
-            stray = Some(tree.nodes[index].span);
-        }
+        stray = stray_span(seen[index], &tree.nodes[index]);
         index += 1;
     }
     if let Some(span) = stray {
@@ -204,14 +199,10 @@ fn reachable(
     let mut index = 0;
     let mut failure = None;
     while failure.is_none() && index < seen.len() && index < tree.nodes.len() {
-        let node = &tree.nodes[index];
-        if let Err(problem) = meter.charge(1, node.span) {
-            failure = Some(problem);
-        } else if matches!(node.kind, Kind::Call(Target::SelfOwner)) {
-            match crate::index(index, node.span) {
-                Ok(position) => self_nodes.push(position),
-                Err(problem) => failure = Some(problem),
-            }
+        match self_node(&tree.nodes[index], index, meter) {
+            Ok(Some(position)) => self_nodes.push(position),
+            Ok(None) => {}
+            Err(problem) => failure = Some(problem),
         }
         index += 1;
     }
@@ -222,6 +213,33 @@ fn reachable(
         return Err(refused(tree.span));
     }
     Ok((seen, self_nodes))
+}
+
+/// The span of an unreached node, unless it is the retained empty outer quotation.
+fn stray_span(is_seen: bool, node: &crate::source::Node) -> Option<crate::Span> {
+    if is_seen || is_empty_quotation(&node.kind) {
+        None
+    } else {
+        Some(node.span)
+    }
+}
+
+/// Charge one node of the self-call scan; its ordinal when it is a signed self call.
+fn self_node(
+    node: &crate::source::Node,
+    index: usize,
+    meter: &mut crate::Meter,
+) -> Result<Option<u32>, crate::Diagnostic> {
+    attempt!(meter.charge(1, node.span));
+    if !is_self_call(&node.kind) {
+        return Ok(None);
+    }
+    Ok(Some(attempt!(crate::index(index, node.span))))
+}
+
+/// Whether a node kind is a signed self call.
+const fn is_self_call(kind: &Kind) -> bool {
+    matches!(kind, Kind::Call(Target::SelfOwner))
 }
 
 /// Visit one pending source node: mark it reached and queue its quotation children.
@@ -421,10 +439,11 @@ struct Pairing {
 }
 
 /// Compare one parsed source node with its retained lexical original.
+///
+/// The checks run in their admission order, each refusing on its own.
 #[expect(
     tigerstyle::assertion_density,
-    tigerstyle::compound_condition,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
 #[expect(
     tigerstyle::missing_const_fn,
@@ -440,24 +459,28 @@ fn lexical_node(
     let (source, raw) = nodes;
     let (parsed_name, source_bytes) = lexical;
     attempt!(meter.charge(16, source.span));
-    if source.span != raw.span
-        || (source.span.start >= source.span.end
-            && !matches!(
-                (&source.kind, &raw.kind),
-                (
-                    Kind::Call(Target::Builtin(_)),
-                    Kind::Call(Target::Builtin(_))
-                )
-            ))
-        || !lexical_kind(source, raw, parsed_name, source_bytes)
-        || !attempt!(named_token_matches(source, raw, session, meter))
-    {
+    if source.span != raw.span {
+        return Err(refused(source.span));
+    }
+    if source.span.start >= source.span.end && !both_builtin(&source.kind, &raw.kind) {
+        return Err(refused(source.span));
+    }
+    if !lexical_kind(source, raw, parsed_name, source_bytes) {
+        return Err(refused(source.span));
+    }
+    if !attempt!(named_token_matches(source, raw, session, meter)) {
         return Err(refused(source.span));
     }
     if !is_live && !is_empty_quotation(&source.kind) {
         return Err(refused(source.span));
     }
     Ok(())
+}
+
+/// Whether both node kinds are builtin calls.
+const fn both_builtin(source: &Kind, raw: &Kind) -> bool {
+    matches!(source, Kind::Call(Target::Builtin(_)))
+        && matches!(raw, Kind::Call(Target::Builtin(_)))
 }
 
 /// Pair every reached source occurrence with exactly one inferred draft.
@@ -582,10 +605,6 @@ fn drafts_match_reach(live: &[bool], source_to_draft: &[Option<u32>]) -> bool {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-contracts; the entry charges the shared meter and resolves draft IDs through checked lookups that construct diagnostics."
-)]
 fn relation_node(
     source: &crate::source::Node,
     slot: Option<u32>,
@@ -614,11 +633,16 @@ fn relation_node(
     Ok(Some(SymbolicNode {
         draft: draft_id,
         span: source.span,
-        target: match &source.kind {
-            Kind::Call(target) => Some(*target),
-            _ => None,
-        },
+        target: call_target(&source.kind),
     }))
+}
+
+/// The call target of a node kind, if it is a call.
+const fn call_target(kind: &Kind) -> Option<Target> {
+    match kind {
+        Kind::Call(target) => Some(*target),
+        _ => None,
+    }
 }
 
 /// The draft a source node is paired with, if any.
@@ -649,10 +673,6 @@ fn same_edges(
     is_same
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
-)]
 fn named_token_matches(
     source: &crate::source::Node,
     raw: &crate::source::Node,
@@ -667,13 +687,24 @@ fn named_token_matches(
     let Some(context) = session.declared.as_ref() else {
         return Ok(false);
     };
-    // Words are matched from the last binding backwards.
-    let mut remaining = context.words.len();
+    bound_word(&context.words, word, *index, source.span, meter)
+}
+
+/// Whether the last namespace word spelling `word` binds `Named(index)`.
+/// Words are matched from the last binding backwards, each one charged.
+fn bound_word(
+    words: &[(alloc::string::String, Target)],
+    word: &[u8],
+    index: u32,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<bool, crate::Diagnostic> {
+    let mut remaining = words.len();
     let mut found = None;
     let mut failure = None;
     while failure.is_none() && found.is_none() && remaining > 0 {
         remaining -= 1;
-        match word_binding(&context.words[remaining], word, *index, source.span, meter) {
+        match word_binding(&words[remaining], word, index, span, meter) {
             Ok(binding) => found = binding,
             Err(problem) => failure = Some(problem),
         }
@@ -753,9 +784,8 @@ fn lexical_kind(
 )]
 #[expect(
     tigerstyle::assertion_density,
-    tigerstyle::function_length,
     tigerstyle::too_many_parameters,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
 #[expect(
     tigerstyle::missing_const_fn,
@@ -777,87 +807,185 @@ fn draft_matches(
         reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
     )]
     use crate::source::inference::DraftKind;
+    // Each occurrence kind is compared by its own helper, so the arms join only booleans.
     let is_same = match (&source.kind, &draft.kind) {
-        (Kind::Literal(a), DraftKind::Literal(b)) => {
-            a == b
-                && draft.text.is_none()
-                && draft.variables.len() == 1
-                && matches!(draft.variables[0], crate::inference::Variable::Stack(_))
-        }
+        (Kind::Literal(a), DraftKind::Literal(b)) => literal_draft(a, b, draft),
         (Kind::Text(bytes), DraftKind::Literal(noble_kernel::untrusted::Lit::Text)) => {
-            draft.text.as_deref() == Some(bytes.as_slice())
-                && draft.variables.len() == 1
-                && matches!(draft.variables[0], crate::inference::Variable::Stack(_))
+            text_draft(bytes, draft)
         }
         (Kind::Call(Target::Builtin(id)), DraftKind::Invocation(def)) => {
-            let expected = Definition(*id);
-            *def == expected
-                && environment
-                    .scheme(expected)
-                    .is_some_and(|scheme| witness_shape(&scheme.var_kinds, &draft.variables))
-                && draft.text.is_none()
+            builtin_draft((Definition(*id), *def), draft, environment)
         }
         (Kind::Call(Target::Named(index)), DraftKind::Invocation(def)) => {
-            let target = session
-                .definitions
-                .get(attempt!(crate::offset(*index, source.span)));
-            let position = usize::try_from(def.0)
-                .ok()
-                .and_then(|id| id.checked_sub(state.definition_base))
-                .and_then(|offset| offset.checked_add(1));
-            let body = match position {
-                Some(position) => state.bodies.get(position),
-                None => None,
-            };
-            match (target, body) {
-                (Some(target), Some(body)) => {
-                    let is_exact_variables = if crate::scan::find_first(&body.nodes, |node| {
-                        matches!(node.kind, DraftKind::SignedSelf(_))
-                    })
-                    .is_some()
-                    {
-                        target.signed.is_some()
-                            && target.signature.as_ref().is_some_and(|scheme| {
-                                witness_shape(&scheme.var_kinds, &draft.variables)
-                            })
-                            && body.owner_variables.as_ref().is_some_and(|variables| {
-                                draft.variables.len() == variables.len()
-                                    && same_prefix(&draft.variables, variables)
-                            })
-                    } else {
-                        draft.variables.is_empty()
-                    };
-                    body.span == source.span
-                        && body.owner_slot == Some(*index)
-                        && body.identity == Some(target.identity)
-                        && body.owner == target.owner
-                        && is_exact_variables
-                        && draft.text.is_none()
-                }
-                _ => false,
-            }
+            attempt!(named_draft(
+                (*index, *def),
+                source.span,
+                draft,
+                state,
+                session
+            ))
         }
         (Kind::Call(Target::SelfOwner), DraftKind::SignedSelf(def)) => {
-            *def == owner
-                && draft.variables.len() == scheme.var_kinds.len()
-                && same_prefix(&draft.variables, owner_variables)
-                && draft.text.is_none()
+            self_draft(*def == owner, draft, scheme, owner_variables)
         }
-        (Kind::Quotation(_), DraftKind::Quotation(_)) => {
-            draft.text.is_none()
-                && draft.variables.len() == 4
-                && matches!(draft.variables[0], crate::inference::Variable::Stack(_))
-                && matches!(draft.variables[1], crate::inference::Variable::Stack(_))
-                && matches!(draft.variables[2], crate::inference::Variable::Stack(_))
-                && matches!(
-                    draft.variables[3],
-                    crate::inference::Variable::EffectValue(_)
-                )
-        }
+        (Kind::Quotation(_), DraftKind::Quotation(_)) => quotation_draft(draft),
         _ => false,
     };
     attempt!(meter.charge(1, source.span));
     Ok(is_same)
+}
+
+/// Whether a literal draft instantiates its literal occurrence at one stack variable.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; derived literal equality is a non-const PartialEq call."
+)]
+fn literal_draft(
+    source: &noble_kernel::untrusted::Lit,
+    inferred: &noble_kernel::untrusted::Lit,
+    draft: &crate::source::inference::Draft,
+) -> bool {
+    source == inferred && draft.text.is_none() && single_stack(draft)
+}
+
+/// Whether a text literal draft carries exactly the occurrence's bytes at one stack variable.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; byte-slice equality is not const."
+)]
+fn text_draft(bytes: &[u8], draft: &crate::source::inference::Draft) -> bool {
+    draft.text.as_deref() == Some(bytes) && single_stack(draft)
+}
+
+/// Whether a draft has exactly one variable, a stack variable.
+const fn single_stack(draft: &crate::source::inference::Draft) -> bool {
+    let variables = draft.variables.as_slice();
+    variables.len() == 1 && matches!(variables[0], crate::inference::Variable::Stack(_))
+}
+
+/// Whether an invocation draft calls the builtin `expected` at its scheme's variable shape.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the scheme lookup and witness walk are non-const calls."
+)]
+fn builtin_draft(
+    definitions: (Definition, Definition),
+    draft: &crate::source::inference::Draft,
+    environment: &noble_kernel::contracts::Env,
+) -> bool {
+    let (expected, def) = definitions;
+    def == expected
+        && environment
+            .scheme(expected)
+            .is_some_and(|scheme| witness_shape(&scheme.var_kinds, &draft.variables))
+        && draft.text.is_none()
+}
+
+/// Whether an invocation draft instantiates the named target's own inferred body.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the comparison resolves definitions and bodies through non-const lookups."
+)]
+fn named_draft(
+    call: (u32, Definition),
+    span: crate::Span,
+    draft: &crate::source::inference::Draft,
+    state: &crate::source::inference::State,
+    session: &crate::source::Session,
+) -> Result<bool, crate::Diagnostic> {
+    let (index, def) = call;
+    let target = session
+        .definitions
+        .get(attempt!(crate::offset(index, span)));
+    let position = usize::try_from(def.0)
+        .ok()
+        .and_then(|id| id.checked_sub(state.definition_base))
+        .and_then(|offset| offset.checked_add(1));
+    let body = match position {
+        Some(position) => state.bodies.get(position),
+        None => None,
+    };
+    let (Some(target), Some(body)) = (target, body) else {
+        return Ok(false);
+    };
+    let is_exact_variables = if crate::scan::find_first(&body.nodes, |node| {
+        matches!(
+            node.kind,
+            crate::source::inference::DraftKind::SignedSelf(_)
+        )
+    })
+    .is_some()
+    {
+        signed_variables(target, body, draft)
+    } else {
+        draft.variables.is_empty()
+    };
+    Ok(body.span == span
+        && body.owner_slot == Some(index)
+        && body.identity == Some(target.identity)
+        && body.owner == target.owner
+        && is_exact_variables
+        && draft.text.is_none())
+}
+
+/// Whether a draft's variables exactly instantiate a signed target's rigid owner body.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the witness and prefix walks are non-const calls."
+)]
+fn signed_variables(
+    target: &crate::source::Named,
+    body: &crate::source::inference::Body,
+    draft: &crate::source::inference::Draft,
+) -> bool {
+    if target.signed.is_none() {
+        return false;
+    }
+    let is_shaped = match target.signature.as_ref() {
+        Some(scheme) => witness_shape(&scheme.var_kinds, &draft.variables),
+        None => false,
+    };
+    if !is_shaped {
+        return false;
+    }
+    match body.owner_variables.as_ref() {
+        Some(variables) => {
+            draft.variables.len() == variables.len() && same_prefix(&draft.variables, variables)
+        }
+        None => false,
+    }
+}
+
+/// Whether a signed self draft calls its owner at the owner's rigid variables.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the prefix walk is a non-const call."
+)]
+fn self_draft(
+    is_owner: bool,
+    draft: &crate::source::inference::Draft,
+    scheme: &Scheme,
+    owner_variables: &[crate::inference::Variable],
+) -> bool {
+    is_owner
+        && draft.variables.len() == scheme.var_kinds.len()
+        && same_prefix(&draft.variables, owner_variables)
+        && draft.text.is_none()
+}
+
+/// Whether a quotation draft carries three stack variables and an effect variable.
+const fn quotation_draft(draft: &crate::source::inference::Draft) -> bool {
+    let variables = draft.variables.as_slice();
+    draft.text.is_none()
+        && variables.len() == 4
+        && matches!(variables[0], crate::inference::Variable::Stack(_))
+        && matches!(variables[1], crate::inference::Variable::Stack(_))
+        && matches!(variables[2], crate::inference::Variable::Stack(_))
+        && matches!(variables[3], crate::inference::Variable::EffectValue(_))
 }
 
 /// Whether two variable lists agree pairwise over their common prefix.
@@ -969,13 +1097,7 @@ fn verified_node(
     let Some(binding) = slot else {
         return Ok(None);
     };
-    if binding.span != node.span
-        || binding.target
-            != (match &node.kind {
-                Kind::Call(target) => Some(*target),
-                _ => None,
-            })
-    {
+    if binding.span != node.span || binding.target != call_target(&node.kind) {
         return Err(refused(node.span));
     }
     let draft = attempt!(crate::offset(binding.draft, node.span));
@@ -986,7 +1108,7 @@ fn verified_node(
         return Err(refused(node.span));
     }
     *visited = true;
-    if matches!(node.kind, Kind::Call(Target::SelfOwner)) {
+    if is_self_call(&node.kind) {
         return Ok(Some(attempt!(crate::index(index, node.span))));
     }
     Ok(None)

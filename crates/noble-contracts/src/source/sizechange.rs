@@ -468,7 +468,7 @@ impl<'a> Walker<'a> {
         if self.stack.len() <= 1 {
             return self.fail(Unsupported::PrefixTouched, span);
         }
-        if matches!(self.stack.as_slice().last(), Some(Value::Prefix)) {
+        if ends_with_prefix(self.stack.as_slice()) {
             return self.fail(Unsupported::PrefixTouched, span);
         }
         match self.stack.pop() {
@@ -542,7 +542,7 @@ impl<'a> Walker<'a> {
     /// Record one self-call site and replace the frame with the declared result.
     fn self_call(&mut self, span: crate::Span) -> Step {
         let measures = self.measures;
-        if !matches!(self.stack.first(), Some(Value::Prefix)) {
+        if !starts_with_prefix(self.stack.as_slice()) {
             return self.fail(Unsupported::PrefixTouched, span);
         }
         if self.stack.len() != measures.len().saturating_add(1) {
@@ -1059,18 +1059,26 @@ fn split_frame(scheme: &noble_kernel::words::Scheme) -> Option<(usize, usize)> {
 
 /// The number of fixed positions after a scheme stack's single prefix variable.
 fn concrete_positions(stack: &[noble_kernel::shapes::Pattern]) -> Option<usize> {
-    let (prefix, fixed) = stack.split_first()?;
-    if !matches!(prefix, noble_kernel::shapes::Pattern::StackVar(_)) {
+    let prefix = stack.first()?;
+    if !is_stack_variable(prefix) {
         return None;
     }
-    if crate::scan::find_first(fixed, |pattern| {
-        matches!(pattern, noble_kernel::shapes::Pattern::StackVar(_))
-    })
-    .is_some()
-    {
-        return None;
+    let mut at = 1;
+    let mut is_fixed = true;
+    while is_fixed && at < stack.len() {
+        is_fixed = !is_stack_variable(&stack[at]);
+        at += 1;
     }
-    Some(fixed.len())
+    if is_fixed {
+        Some(stack.len().saturating_sub(1))
+    } else {
+        None
+    }
+}
+
+/// Whether one scheme stack pattern is a stack variable.
+const fn is_stack_variable(pattern: &noble_kernel::shapes::Pattern) -> bool {
+    matches!(pattern, noble_kernel::shapes::Pattern::StackVar(_))
 }
 
 #[octet::sealed_enum]
@@ -1135,11 +1143,10 @@ pub fn evidence(
     definition: &crate::source::Named,
     environment: &noble_kernel::contracts::Env,
 ) -> Evidence {
-    let profile = match definition.signature.as_ref() {
-        Some(scheme) => measures_of(scheme),
-        None => Err(ProfileError::Outside),
+    let Some(scheme) = definition.signature.as_ref() else {
+        return profile_refusal(definition, ProfileError::Outside);
     };
-    let (measures, result_frame) = match profile {
+    let (measures, result_frame) = match measures_of(scheme) {
         Ok(profile) => profile,
         Err(error) => return profile_refusal(definition, error),
     };
@@ -1240,11 +1247,32 @@ const fn final_shape(walker: &Walker<'_>) -> Option<(Unsupported, crate::Span)> 
     if walker.stack.len() != walker.result_frame.saturating_add(1) {
         return Some((Unsupported::FinalFrameMismatch, walker.tree.span));
     }
-    if !matches!(walker.stack.as_slice().first(), Some(Value::Prefix)) {
+    if !starts_with_prefix(walker.stack.as_slice()) {
         return Some((Unsupported::PrefixTouched, walker.tree.span));
     }
     debug_assert!(!walker.measures.is_empty());
     None
+}
+
+/// Whether a walked stack's bottom cell is the opaque prefix.
+const fn starts_with_prefix(stack: &[Value]) -> bool {
+    match stack.first() {
+        Some(value) => is_prefix(value),
+        None => false,
+    }
+}
+
+/// Whether a walked stack's top cell is the opaque prefix.
+const fn ends_with_prefix(stack: &[Value]) -> bool {
+    match stack.last() {
+        Some(value) => is_prefix(value),
+        None => false,
+    }
+}
+
+/// Whether one walked value is the opaque prefix.
+const fn is_prefix(value: &Value) -> bool {
+    matches!(value, Value::Prefix)
 }
 
 /// Sequential composition matches the four-relation model's absorbing unknown.
@@ -1580,15 +1608,20 @@ fn first_non_decreasing(sites: &[Site], index: usize) -> Option<usize> {
     let mut at = 0;
     let mut found = None;
     while found.is_none() && at < sites.len() {
-        if !matches!(
-            sites[at].arguments.get(index),
-            Some(Argument::Predecessor | Argument::Tail)
-        ) {
+        if !decreases(&sites[at], index) {
             found = Some(at);
         }
         at += 1;
     }
     found
+}
+
+/// Whether `site` passes a decrease for measure `index`.
+fn decreases(site: &Site, index: usize) -> bool {
+    matches!(
+        site.arguments.get(index).copied(),
+        Some(Argument::Predecessor | Argument::Tail)
+    )
 }
 
 fn append_named_index(
@@ -1731,7 +1764,7 @@ fn graph_position(closure: &[ClosureEntry], graph: &Graph) -> Option<usize> {
     let mut at = 0;
     let mut found = None;
     while found.is_none() && at < closure.len() {
-        if same_graph(&closure[at].graph, graph) {
+        if same_graph(&closure[at], graph) {
             found = Some(at);
         }
         at += 1;
@@ -1739,13 +1772,13 @@ fn graph_position(closure: &[ClosureEntry], graph: &Graph) -> Option<usize> {
     found
 }
 
-/// Graph equality, kept out of loop bodies for extraction.
+/// Whether a closure entry's matrix equals `graph`, kept out of loop bodies for extraction.
 #[expect(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; derived Graph equality is a non-const PartialEq call."
 )]
-fn same_graph(left: &Graph, right: &Graph) -> bool {
-    left == right
+fn same_graph(entry: &ClosureEntry, graph: &Graph) -> bool {
+    entry.graph == *graph
 }
 
 const fn closure_dimensions_valid(
@@ -2110,6 +2143,10 @@ fn append_accepted_head(
     output
 }
 
+#[expect(
+    clippy::single_char_add_str,
+    reason = "Owner: noble-contracts; the pinned Aeneas cannot translate a non-ASCII char literal, so each bracket is pushed as a string literal"
+)]
 fn append_strict_witnesses(
     mut output: alloc::string::String,
     name: &str,
@@ -2119,11 +2156,11 @@ fn append_strict_witnesses(
         if witness_index > 0 {
             output.push_str(", ");
         }
-        output.push('⟨');
+        output.push_str("⟨");
         output = append_named_u32(output, name, witness.closure_entry);
         output.push_str(", ");
         output = append_u32(output, witness.measure);
-        output.push('⟩');
+        output.push_str("⟩");
     }
     output
 }

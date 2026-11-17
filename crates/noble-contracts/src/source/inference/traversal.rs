@@ -15,7 +15,7 @@ pub(super) fn visit(
     mut frame: super::Frame,
     parents: &mut alloc::vec::Vec<super::Frame>,
     state: &mut super::State,
-    scope: &super::Scope<'_>,
+    scope: super::Scope<'_>,
     editor_analysis: bool,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
@@ -28,9 +28,12 @@ pub(super) fn visit(
     };
     let node = attempt!(tree.node(id));
     frame.at = frame.at.saturating_add(1);
+    // Every arm returns, so no arm's borrows are joined with another's.
     match &node.kind {
         crate::source::Kind::Literal(_) | crate::source::Kind::Text(_) => {
             attempt!(super::operations::literal(node, &mut frame, state, meter));
+            parents.push(frame);
+            Ok(())
         }
         crate::source::Kind::Call(crate::source::Target::Builtin(id)) => {
             attempt!(super::operations::builtin(
@@ -43,14 +46,18 @@ pub(super) fn visit(
                 scope.environment,
                 meter
             ));
+            parents.push(frame);
+            Ok(())
         }
         crate::source::Kind::Call(crate::source::Target::SelfOwner) => {
             attempt!(super::operations::signed_self(
                 node.span, &mut frame, state, scope, meter
             ));
+            parents.push(frame);
+            Ok(())
         }
         crate::source::Kind::Call(crate::source::Target::SlotInvoke(ordinal)) => {
-            if !matches!(frame.origin, super::Origin::Root) {
+            if !is_root(frame.origin) {
                 return Err(crate::invalid(
                     node.span,
                     "slot.invoke cannot capture a borrowed reference in a quotation or definition",
@@ -59,6 +66,8 @@ pub(super) fn visit(
             attempt!(super::operations::slot_invoke(
                 *ordinal, node.span, &mut frame, state, meter,
             ));
+            parents.push(frame);
+            Ok(())
         }
         crate::source::Kind::Call(crate::source::Target::Named(_))
         | crate::source::Kind::Quotation(_) => {
@@ -66,12 +75,12 @@ pub(super) fn visit(
                 attempt!(crate::index(parents.len().saturating_add(1), node.span)),
                 node.span
             ));
-            let child = attempt!(child((id, node), &frame, state, scope, meter));
+            let child = attempt!(child((id, node), &frame, state, &scope, meter));
             attempt!(meter.node(node.span));
             parents.reserve(2);
             parents.push(frame);
             parents.push(child);
-            return Ok(());
+            Ok(())
         }
         crate::source::Kind::EditorHole => {
             if !editor_analysis {
@@ -98,11 +107,16 @@ pub(super) fn visit(
                 attempt!(state
                     .arena
                     .effect_union(frame.effect, effect, node.span, meter));
+            parents.push(frame);
+            Ok(())
         }
-        crate::source::Kind::Word(_) => return Err(crate::internal(node.span)),
+        crate::source::Kind::Word(_) => Err(crate::internal(node.span)),
     }
-    parents.push(frame);
-    Ok(())
+}
+
+/// Whether a frame belongs to the submitted root rather than a quotation or definition.
+const fn is_root(origin: super::Origin) -> bool {
+    matches!(origin, super::Origin::Root)
 }
 
 #[expect(

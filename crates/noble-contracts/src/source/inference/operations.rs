@@ -135,35 +135,54 @@ pub(super) fn builtin(
 /// A signed occurrence uses the already instantiated owner body's variables.
 /// In particular, a quotation cannot choose a fresh stack row or effect for
 /// its recursive call; that would silently admit polymorphic recursion.
+///
+/// Each owner-signature source continues in its own arm, so no borrowed
+/// scheme is joined across the two sources.
 #[expect(
-    tigerstyle::assertion_density,
     tigerstyle::fragile_exhaustive_enum_match,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added."
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added."
 )]
 pub(super) fn signed_self(
     span: crate::Span,
     frame: &mut super::Frame,
     state: &mut super::State,
-    scope: &super::Scope<'_>,
+    scope: super::Scope<'_>,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
-    let scheme = match frame.tree {
-        super::TreeKey::Root => scope.root_signature,
-        super::TreeKey::Named(index) => match scope
-            .session
-            .definitions
-            .get(attempt!(crate::offset(index, span)))
-        {
-            Some(definition) => definition.signature.as_ref(),
-            None => None,
+    match frame.tree {
+        super::TreeKey::Root => match scope.root_signature {
+            Some(scheme) => signed_self_with(scheme, span, frame, state, meter),
+            None => Err(unsigned_owner(span)),
         },
-    };
-    let Some(scheme) = scheme else {
-        return Err(crate::invalid(
-            span,
-            "signed self requires its owner signature",
-        ));
-    };
+        super::TreeKey::Named(index) => {
+            let at = attempt!(crate::offset(index, span));
+            match scope.session.definitions.get(at) {
+                Some(definition) => match definition.signature.as_ref() {
+                    Some(scheme) => signed_self_with(scheme, span, frame, state, meter),
+                    None => Err(unsigned_owner(span)),
+                },
+                None => Err(unsigned_owner(span)),
+            }
+        }
+    }
+}
+
+fn unsigned_owner(span: crate::Span) -> crate::Diagnostic {
+    crate::invalid(span, "signed self requires its owner signature")
+}
+
+/// Instantiate a signed self occurrence against its owner's `scheme`.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+fn signed_self_with(
+    scheme: &noble_kernel::words::Scheme,
+    span: crate::Span,
+    frame: &mut super::Frame,
+    state: &mut super::State,
+    meter: &mut crate::Meter,
+) -> Result<(), crate::Diagnostic> {
     let Some(body) = state.bodies.get(frame.body) else {
         return Err(crate::internal(span));
     };
@@ -429,22 +448,12 @@ fn forwarded_refs(
 }
 
 /// The logical position of the only borrowed input of type `formal`, if exactly one exists.
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; an absent or ambiguous borrowed input is an ordinary incompatible candidate, not an invariant violation."
-)]
 fn unique_position(borrows: &[super::Borrowed], formal: &noble_kernel::types::Ty) -> Option<u32> {
     let mut first = None;
     let mut is_unique = true;
     let mut at = 0;
     while is_unique && at < borrows.len() {
-        if same_ty(&borrows[at].ty, formal) {
-            if first.is_some() {
-                is_unique = false;
-            } else {
-                first = Some(borrows[at].logical_position);
-            }
-        }
+        (first, is_unique) = unique_step(first, matching_position(&borrows[at], formal));
         at += 1;
     }
     if is_unique {
@@ -454,10 +463,25 @@ fn unique_position(borrows: &[super::Borrowed], formal: &noble_kernel::types::Ty
     }
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
-)]
+/// The logical position of `borrowed` when its type is `formal`.
+fn matching_position(borrowed: &super::Borrowed, formal: &noble_kernel::types::Ty) -> Option<u32> {
+    if same_ty(&borrowed.ty, formal) {
+        Some(borrowed.logical_position)
+    } else {
+        None
+    }
+}
+
+/// Fold one candidate position into the first match so far: the next first
+/// match, and whether the match is still unique.
+const fn unique_step(first: Option<u32>, position: Option<u32>) -> (Option<u32>, bool) {
+    match (first, position) {
+        (Some(_), Some(_)) => (first, false),
+        (None, Some(_)) => (position, true),
+        (_, None) => (first, true),
+    }
+}
+
 fn mismatched_literal_origin(
     frame: &super::Frame,
     state: &super::State,
@@ -473,21 +497,31 @@ fn mismatched_literal_origin(
         return None;
     };
     let expected = scheme.stack_in.last()?;
-    let is_matches = match (expected, literal) {
-        (noble_kernel::shapes::Pattern::I64, noble_kernel::untrusted::Lit::I64(_))
-        | (noble_kernel::shapes::Pattern::Bool, noble_kernel::untrusted::Lit::Bool(_))
-        | (noble_kernel::shapes::Pattern::Text, noble_kernel::untrusted::Lit::Text)
-        | (noble_kernel::shapes::Pattern::Unit, noble_kernel::untrusted::Lit::Unit) => true,
-        (
-            noble_kernel::shapes::Pattern::I64
-            | noble_kernel::shapes::Pattern::Bool
-            | noble_kernel::shapes::Pattern::Text
-            | noble_kernel::shapes::Pattern::Unit,
-            _,
-        ) => false,
-        _ => return None,
-    };
+    let is_matches = literal_matches(expected, literal)?;
     (!is_matches).then_some(draft.span)
+}
+
+/// Whether `literal` has the scalar type `expected` names; `None` when
+/// `expected` is not one of the four literal types.
+const fn literal_matches(
+    expected: &noble_kernel::shapes::Pattern,
+    literal: &noble_kernel::untrusted::Lit,
+) -> Option<bool> {
+    match expected {
+        noble_kernel::shapes::Pattern::I64 => {
+            Some(matches!(literal, noble_kernel::untrusted::Lit::I64(_)))
+        }
+        noble_kernel::shapes::Pattern::Bool => {
+            Some(matches!(literal, noble_kernel::untrusted::Lit::Bool(_)))
+        }
+        noble_kernel::shapes::Pattern::Text => {
+            Some(matches!(literal, noble_kernel::untrusted::Lit::Text))
+        }
+        noble_kernel::shapes::Pattern::Unit => {
+            Some(matches!(literal, noble_kernel::untrusted::Lit::Unit))
+        }
+        _ => None,
+    }
 }
 
 #[expect(

@@ -64,10 +64,9 @@ impl super::Session {
         self.declared.as_ref()?.request_work.as_ref()
     }
 
-    #[expect(
-        tigerstyle::platform_dependent_cast,
-        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
-    )]
+    /// Session flags and pure scans are read before any branch and metered
+    /// steps decide their own applicability, so every branch the pinned
+    /// Aeneas joins differs only in plain values.
     pub(super) fn prepare_signed_metered(
         &self,
         source_bytes: &[u8],
@@ -85,44 +84,35 @@ impl super::Session {
             Ok(parsed) => parsed,
             Err(error) => return Err(super::Error::at(super::Stage::Parse, error)),
         };
-        if self.live_slots.is_some()
-            || self
-                .declared
-                .as_ref()
-                .is_some_and(|context| context.declared_text)
-        {
+        let is_named = name.is_some();
+        let has_live_slots = self.live_slots.is_some();
+        let is_declared_text = self
+            .declared
+            .as_ref()
+            .is_some_and(|context| context.declared_text);
+        let is_signed_self = self
+            .declared
+            .as_ref()
+            .is_some_and(|context| context.signed_self);
+        if has_live_slots || is_declared_text {
             attempt!(super::locals::lower(&mut tree, meter)
                 .map_err(|error| super::Error::at(super::Stage::Resolve, error)));
         }
-        let alias_candidates = if name.is_some() {
-            attempt!(alias_candidates(&tree, self, meter)
-                .map_err(|error| super::Error::at(super::Stage::Resolve, error)))
-        } else {
-            alloc::vec::Vec::new()
-        };
-        let is_signed_owner = signature.is_some()
-            && self
-                .declared
-                .as_ref()
-                .is_some_and(|context| context.signed_self);
+        let alias_candidates = attempt!(alias_candidates(&tree, self, is_named, meter)
+            .map_err(|error| super::Error::at(super::Stage::Resolve, error)));
+        let is_signed_owner = signed_owner(signature, is_signed_self);
         if let Err(error) =
             super::resolution::resolve(&mut tree, name.as_deref(), self, is_signed_owner, meter)
         {
             return Err(super::Error::at(super::Stage::Resolve, error));
         }
-        let alias_uses = if alias_candidates.is_empty() {
-            alloc::vec::Vec::new()
-        } else {
-            attempt!(checked_alias_uses(&tree, self, &alias_candidates, meter)
-                .map_err(|error| super::Error::at(super::Stage::Check, error)))
-        };
-        if name.is_some()
-            && self.live_slots.is_some()
-            && crate::scan::find_first(&tree.nodes, |node| {
-                matches!(node.kind, super::Kind::Call(super::Target::SlotInvoke(_)))
-            })
-            .is_some()
-        {
+        let alias_uses = attempt!(checked_alias_uses(&tree, self, &alias_candidates, meter)
+            .map_err(|error| super::Error::at(super::Stage::Check, error)));
+        let has_borrowed_dispatch = crate::scan::find_first(&tree.nodes, |node| {
+            matches!(node.kind, super::Kind::Call(super::Target::SlotInvoke(_)))
+        })
+        .is_some();
+        if is_named && has_live_slots && has_borrowed_dispatch {
             return Err(super::Error::at(
                 super::Stage::Check,
                 crate::invalid(
@@ -134,29 +124,8 @@ impl super::Session {
         if let Err(error) = super::preflight::check(inputs, self, tree.span, meter) {
             return Err(super::Error::at(super::Stage::Check, error));
         }
-        let selected_root = if tree.body.len() == 1 {
-            tree.nodes
-                .get(tree.body[0] as usize)
-                .and_then(|node| match &node.kind {
-                    super::Kind::Call(super::Target::Named(index)) => Some(*index),
-                    _ => None,
-                })
-        } else {
-            None
-        };
-        let (extra, mode) = if name.is_some() {
-            (
-                attempt!(source_bytes.len().checked_add(4).ok_or_else(|| {
-                    super::Error::at(
-                        super::Stage::Check,
-                        super::exhausted(tree.span, "retained definition source length overflows"),
-                    )
-                })),
-                super::inference::Mode::Declaration,
-            )
-        } else {
-            (0, super::inference::Mode::Submission)
-        };
+        let selected_root = lone_named_root(&tree);
+        let (extra, mode) = attempt!(retention(is_named, source_bytes.len(), tree.span));
         if let Err(error) = self.retained(extra, retained_bytes, tree.span, meter) {
             return Err(super::Error::at(super::Stage::Check, error));
         }
@@ -166,157 +135,74 @@ impl super::Session {
         };
         let (environment, prospective_owner) =
             attempt!(self.prospective_owner(environment, &tree, signature, is_signed_owner, meter));
-        // The environment is read through an explicit match on its
-        // copy-on-write state; the pinned Aeneas cannot translate `Cow`'s Deref.
-        let inferred = match &environment {
-            Cow::Borrowed(borrowed) => super::inference::infer(
-                super::inference::Scope {
-                    root: &tree,
-                    session: self,
-                    environment: borrowed,
-                    root_signature: signature,
-                    prospective_owner,
-                },
+        let (environment, inferred) = self.infer_signed(
+            environment,
+            Inference {
+                tree: &tree,
+                signature,
+                prospective_owner,
                 mode,
                 inputs,
-                meter,
-            ),
-            Cow::Owned(owned) => super::inference::infer(
-                super::inference::Scope {
-                    root: &tree,
-                    session: self,
-                    environment: owned,
-                    root_signature: signature,
-                    prospective_owner,
+                source_bytes,
+            },
+            meter,
+        );
+        let (state, signed_relation) = attempt!(inferred);
+        let Some(name) = name else {
+            let environment = attempt!(emission_environment(environment, tree.span, meter));
+            let (submission, checked, output) = attempt!(super::emission::emit(
+                state,
+                environment,
+                &self.definitions,
+                source_bytes.len(),
+                meter
+            ));
+            return Ok(self.prepared(
+                Parts {
+                    definition: None,
+                    addition: alloc::vec::Vec::new(),
+                    submission: Some(submission),
+                    checked: Some(checked),
+                    output,
                 },
-                mode,
-                inputs,
-                meter,
-            ),
+                selected_root,
+                meter.limits,
+            ));
         };
-        let state = match inferred {
-            Ok(state) => state,
+        let (definition, addition) = match declaration(
+            tree,
+            name,
+            source_bytes,
+            signature,
+            signed_relation,
+            alias_uses,
+            self,
+            meter,
+        ) {
+            Ok(declared) => declared,
             Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
         };
-        let signed_relation = match prospective_owner {
-            Some(owner) => {
-                let scheme = signature.ok_or_else(|| {
-                    super::Error::at(
-                        super::Stage::Check,
-                        crate::invalid(tree.span, "signed owner has no signature"),
-                    )
-                })?;
-                let relation = match &environment {
-                    Cow::Borrowed(borrowed) => symbolic::check(
-                        &tree,
-                        &state,
-                        scheme,
-                        source_bytes,
-                        owner,
-                        self,
-                        borrowed,
-                        meter,
-                    ),
-                    Cow::Owned(owned) => symbolic::check(
-                        &tree,
-                        &state,
-                        scheme,
-                        source_bytes,
-                        owner,
-                        self,
-                        owned,
-                        meter,
-                    ),
-                };
-                Some(attempt!(relation.map_err(|problem| super::Error::at(
-                    super::Stage::Check,
-                    problem
-                ))))
-            }
-            None => None,
-        };
-        let mut addition = alloc::vec::Vec::new();
-        let (definition, submission, checked, output) = match name {
-            Some(name) => {
-                let definition = match declaration(
-                    tree,
-                    name,
-                    source_bytes,
-                    signature,
-                    signed_relation,
-                    alias_uses,
-                    self,
-                    meter,
-                ) {
-                    Ok((definition, bytes)) => {
-                        addition = bytes;
-                        definition
-                    }
-                    Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
-                };
-                (Some(definition), None, None, inputs.to_vec())
-            }
-            None => {
-                if let Cow::Borrowed(borrowed) = &environment {
-                    if borrowed.defs.len()
-                        > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
-                    {
-                        return Err(super::Error::at(
-                            super::Stage::Check,
-                            super::exhausted(
-                                tree.span,
-                                "calculator environment row limit exceeded",
-                            ),
-                        ));
-                    }
-                    let budget = match borrowed.calculator_clone_budget() {
-                        Some(budget) => budget,
-                        None => {
-                            return Err(super::Error::at(
-                                super::Stage::Check,
-                                super::exhausted(
-                                    tree.span,
-                                    "calculator environment clone bound exceeded",
-                                ),
-                            ))
-                        }
-                    };
-                    if budget.reserved_bytes > u64::from(meter.limits.work) {
-                        return Err(super::Error::at(
-                            super::Stage::Check,
-                            super::exhausted(
-                                tree.span,
-                                "calculator environment clone work exceeded",
-                            ),
-                        ));
-                    }
-                    let bytes = match u32::try_from(budget.bytes) {
-                        Ok(bytes) => bytes,
-                        Err(_) => {
-                            return Err(super::Error::at(
-                                super::Stage::Check,
-                                super::exhausted(
-                                    tree.span,
-                                    "calculator environment clone work exceeded",
-                                ),
-                            ))
-                        }
-                    };
-                    if let Err(error) = meter.charge(bytes, tree.span) {
-                        return Err(super::Error::at(super::Stage::Check, error));
-                    }
-                }
-                let (submission, checked, output) = attempt!(super::emission::emit(
-                    state,
-                    environment.into_owned(),
-                    &self.definitions,
-                    source_bytes.len(),
-                    meter
-                ));
-                (None, Some(submission), Some(checked), output)
-            }
-        };
-        Ok(super::Prepared {
+        Ok(self.prepared(
+            Parts {
+                definition: Some(definition),
+                addition,
+                submission: None,
+                checked: None,
+                output: inputs.to_vec(),
+            },
+            selected_root,
+            meter.limits,
+        ))
+    }
+
+    /// The prepared transaction: this session's identity with the checked parts.
+    fn prepared(
+        &self,
+        parts: Parts,
+        selected_root: Option<u32>,
+        limits: crate::Limits,
+    ) -> super::Prepared {
+        super::Prepared {
             generation: self.generation,
             history: self.history.clone(),
             hosts: self.hosts,
@@ -324,18 +210,18 @@ impl super::Session {
             live_selected: self.live_selected.clone(),
             live_slots: self.live_slots.is_some(),
             live_slot_owner: self.live_slots.as_ref().map(|slots| slots.owner.clone()),
-            limits: meter.limits,
+            limits,
             calculator: self.calculator,
             checked_i64: self.checked_i64,
             boundary: self.bindings.as_ref().map(|bindings| bindings.key.clone()),
-            definition,
+            definition: parts.definition,
             selected_root,
-            addition,
-            submission,
-            checked,
+            addition: parts.addition,
+            submission: parts.submission,
+            checked: parts.checked,
             work_used: 0,
-            output,
-        })
+            output: parts.output,
+        }
     }
 
     pub(super) fn environment(
@@ -419,6 +305,83 @@ impl super::Session {
         Ok((environment, Some(def)))
     }
 
+    /// Infer the parsed root and, for a signed owner, relate its body to its
+    /// lexical source; the copy-on-write environment is returned unchanged.
+    ///
+    /// The environment is consumed by value and each copy-on-write state
+    /// returns from its own arm; the pinned Aeneas cannot translate `Cow`'s
+    /// Deref nor join borrows of the two states.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; inference charges the shared meter and builds owned state through non-const calls."
+    )]
+    fn infer_signed<'e>(
+        &self,
+        environment: Cow<'e, noble_kernel::contracts::Env>,
+        inference: Inference<'_>,
+        meter: &mut crate::Meter,
+    ) -> (Cow<'e, noble_kernel::contracts::Env>, Inferred) {
+        match environment {
+            Cow::Borrowed(borrowed) => {
+                let inferred = self.infer_with(borrowed, inference, meter);
+                (Cow::Borrowed(borrowed), inferred)
+            }
+            Cow::Owned(owned) => {
+                let inferred = self.infer_with(&owned, inference, meter);
+                (Cow::Owned(owned), inferred)
+            }
+        }
+    }
+
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; inference charges the shared meter and builds owned state through non-const calls."
+    )]
+    fn infer_with(
+        &self,
+        environment: &noble_kernel::contracts::Env,
+        inference: Inference<'_>,
+        meter: &mut crate::Meter,
+    ) -> Inferred {
+        let state = match super::inference::infer(
+            super::inference::Scope {
+                root: inference.tree,
+                session: self,
+                environment,
+                root_signature: inference.signature,
+                prospective_owner: inference.prospective_owner,
+            },
+            inference.mode,
+            inference.inputs,
+            meter,
+        ) {
+            Ok(state) => state,
+            Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
+        };
+        let Some(owner) = inference.prospective_owner else {
+            return Ok((state, None));
+        };
+        let Some(scheme) = inference.signature else {
+            return Err(super::Error::at(
+                super::Stage::Check,
+                crate::invalid(inference.tree.span, "signed owner has no signature"),
+            ));
+        };
+        match symbolic::check(
+            inference.tree,
+            &state,
+            scheme,
+            inference.source_bytes,
+            owner,
+            self,
+            environment,
+            meter,
+        ) {
+            Ok(relation) => Ok((state, Some(relation))),
+            Err(problem) => Err(super::Error::at(super::Stage::Check, problem)),
+        }
+    }
+
     #[expect(
         tigerstyle::missing_const_fn,
         reason = "Owner: noble-maintainers; retained-byte admission uses checked conversions and metering whose rejection paths construct owned diagnostics."
@@ -443,6 +406,135 @@ impl super::Session {
         }
         meter.charge(history_bytes, span)
     }
+}
+
+/// The borrowed inputs of one inference over a parsed root.
+#[derive(Clone, Copy)]
+struct Inference<'a> {
+    tree: &'a super::Tree,
+    signature: Option<&'a noble_kernel::words::Scheme>,
+    prospective_owner: Option<noble_kernel::contracts::Definition>,
+    mode: super::inference::Mode,
+    inputs: &'a [noble_kernel::types::Ty],
+    source_bytes: &'a [u8],
+}
+
+/// One inference's checked state and, for a signed owner, its symbolic relation.
+type Inferred = Result<(super::inference::State, Option<super::SignedRelation>), super::Error>;
+
+/// What preparing one source produced: a declaration or a submission.
+struct Parts {
+    definition: Option<super::Named>,
+    addition: alloc::vec::Vec<u8>,
+    submission: Option<noble_kernel::execution::Submission>,
+    checked: Option<noble_kernel::untrusted::Checked>,
+    output: alloc::vec::Vec<noble_kernel::types::Ty>,
+}
+
+/// Whether a signed-self session checks this source as a signed owner: it
+/// carries its declared signature.
+const fn signed_owner(
+    signature: Option<&noble_kernel::words::Scheme>,
+    is_signed_self: bool,
+) -> bool {
+    match signature {
+        Some(_) => is_signed_self,
+        None => false,
+    }
+}
+
+/// The definition a root consisting of one named call selects.
+#[expect(
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the node lookup goes through Vec's non-const Deref."
+)]
+fn lone_named_root(tree: &super::Tree) -> Option<u32> {
+    if tree.body.len() != 1 {
+        return None;
+    }
+    match tree.nodes.get(tree.body[0] as usize) {
+        Some(node) => match &node.kind {
+            super::Kind::Call(super::Target::Named(index)) => Some(*index),
+            _ => None,
+        },
+        None => None,
+    }
+}
+
+/// The retained bytes a declaration adds (its source and a four-byte
+/// header) and the inference mode of the source.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the overflow refusal constructs an owned diagnostic, which a const fn cannot."
+)]
+fn retention(
+    is_named: bool,
+    source_len: usize,
+    span: crate::Span,
+) -> Result<(usize, super::inference::Mode), super::Error> {
+    if !is_named {
+        return Ok((0, super::inference::Mode::Submission));
+    }
+    match source_len.checked_add(4) {
+        Some(extra) => Ok((extra, super::inference::Mode::Declaration)),
+        None => Err(super::Error::at(
+            super::Stage::Check,
+            super::exhausted(span, "retained definition source length overflows"),
+        )),
+    }
+}
+
+/// The owned environment a submission emits. Cloning a borrowed calculator
+/// environment is first bounded and charged; an owned one is moved.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the clone admission charges the shared meter and clones the environment through non-const calls."
+)]
+fn emission_environment(
+    environment: Cow<'_, noble_kernel::contracts::Env>,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<noble_kernel::contracts::Env, super::Error> {
+    let borrowed = match environment {
+        Cow::Borrowed(borrowed) => borrowed,
+        Cow::Owned(owned) => return Ok(owned),
+    };
+    if borrowed.defs.len() > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT {
+        return Err(super::Error::at(
+            super::Stage::Check,
+            super::exhausted(span, "calculator environment row limit exceeded"),
+        ));
+    }
+    let Some(budget) = borrowed.calculator_clone_budget() else {
+        return Err(super::Error::at(
+            super::Stage::Check,
+            super::exhausted(span, "calculator environment clone bound exceeded"),
+        ));
+    };
+    if budget.reserved_bytes > u64::from(meter.limits.work) {
+        return Err(super::Error::at(
+            super::Stage::Check,
+            super::exhausted(span, "calculator environment clone work exceeded"),
+        ));
+    }
+    let Ok(bytes) = u32::try_from(budget.bytes) else {
+        return Err(super::Error::at(
+            super::Stage::Check,
+            super::exhausted(span, "calculator environment clone work exceeded"),
+        ));
+    };
+    if let Err(error) = meter.charge(bytes, span) {
+        return Err(super::Error::at(super::Stage::Check, error));
+    }
+    Ok(borrowed.clone())
 }
 
 /// An owned environment as the copy-on-write environment.
@@ -481,8 +573,12 @@ const fn environment_rows(
 fn alias_candidates(
     tree: &super::Tree,
     session: &super::Session,
+    is_named: bool,
     meter: &mut crate::Meter,
 ) -> Result<alloc::vec::Vec<(u32, usize)>, crate::Diagnostic> {
+    if !is_named {
+        return Ok(alloc::vec::Vec::new());
+    }
     let Some(context) = session.declared.as_ref() else {
         return Ok(alloc::vec::Vec::new());
     };
@@ -527,14 +623,6 @@ fn alias_candidate(
 }
 
 /// The first alias `word` qualifies as `alias.name`, charging one unit per alias tried.
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
-)]
-#[expect(
-    tigerstyle::raw_arithmetic_overflow,
-    reason = "Owner: noble-contracts; an alias length is a String length below isize::MAX, so alias.len() + 1 cannot overflow usize."
-)]
 fn first_alias(
     word: &[u8],
     aliases: &[(alloc::string::String, u64)],
@@ -546,19 +634,29 @@ fn first_alias(
     let mut charged = Ok(());
     while charged.is_ok() && found.is_none() && alias_index < aliases.len() {
         charged = meter.charge(1, span);
-        if charged.is_ok() {
-            let alias = &aliases[alias_index].0;
-            if word.len() > alias.len() + 1
-                && word.starts_with(alias.as_bytes())
-                && word[alias.len()] == b'.'
-            {
-                found = Some(alias_index);
-            }
+        // The pure test runs unconditionally; a failed charge ends the walk.
+        let is_qualified = qualifies(word, &aliases[alias_index]);
+        if charged.is_ok() && is_qualified {
+            found = Some(alias_index);
         }
         alias_index += 1;
     }
     attempt!(charged);
     Ok(found)
+}
+
+/// Whether `word` is a member qualified by `alias`: the alias, a dot, and a nonempty member.
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; an alias length is a String length below isize::MAX, so alias.len() + 1 cannot overflow usize."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; byte-slice prefix comparison is not const."
+)]
+fn qualifies(word: &[u8], alias: &(alloc::string::String, u64)) -> bool {
+    let (alias, _) = alias;
+    word.len() > alias.len() + 1 && word.starts_with(alias.as_bytes()) && word[alias.len()] == b'.'
 }
 
 #[expect(
@@ -571,6 +669,9 @@ fn checked_alias_uses(
     candidates: &[(u32, usize)],
     meter: &mut crate::Meter,
 ) -> Result<alloc::vec::Vec<super::AliasUse>, crate::Diagnostic> {
+    if candidates.is_empty() {
+        return Ok(alloc::vec::Vec::new());
+    }
     let context = session
         .declared
         .as_ref()

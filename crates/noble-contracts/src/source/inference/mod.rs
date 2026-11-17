@@ -104,6 +104,9 @@ struct Frame {
     signature: Option<(u32, u32, bool)>,
 }
 
+/// The read-only inputs of one inference. It is a copy of borrows, passed by
+/// value so the pinned Aeneas never reads a borrow stored behind a borrow.
+#[derive(Clone, Copy)]
 pub(super) struct Scope<'a> {
     pub(super) root: &'a super::Tree,
     pub(super) session: &'a super::Session,
@@ -220,7 +223,7 @@ pub(super) fn infer(
             frame,
             &mut frames,
             &mut state,
-            &scope,
+            scope,
             matches!(mode, Mode::EditorAnalysis),
             meter,
         ) {
