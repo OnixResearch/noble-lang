@@ -187,19 +187,14 @@ impl Traversal {
                 }
             }
             noble_kernel::types::Ty::Nominal(id, shape) => {
-                let environment = session
-                    .declared
-                    .as_ref()
-                    .map(|context| &context.environment)
-                    .or_else(|| {
-                        session
-                            .live_slots
-                            .as_ref()
-                            .map(|profile| &profile.environment)
-                    });
-                if environment
-                    .is_some_and(|env| env.nominal(*id).is_some_and(|decl| decl.shape == **shape))
-                {
+                let is_registered = match nominal_environment(session) {
+                    Some(env) => match env.nominal(*id) {
+                        Some(decl) => decl.shape == **shape,
+                        None => false,
+                    },
+                    None => false,
+                };
+                if is_registered {
                     Ok(())
                 } else {
                     Err(crate::invalid(
@@ -209,18 +204,11 @@ impl Traversal {
                 }
             }
             noble_kernel::types::Ty::GenericNominal(_, _, _) => {
-                if session
-                    .declared
-                    .as_ref()
-                    .map(|context| &context.environment)
-                    .or_else(|| {
-                        session
-                            .live_slots
-                            .as_ref()
-                            .map(|profile| &profile.environment)
-                    })
-                    .is_some_and(|env| env.valid_generic_instance(ty))
-                {
+                let is_valid = match nominal_environment(session) {
+                    Some(env) => env.valid_generic_instance(ty),
+                    None => false,
+                };
+                if is_valid {
                     Ok(())
                 } else {
                     Err(crate::invalid(
@@ -380,5 +368,16 @@ fn host_effects(
     match failure {
         Some(problem) => Err(problem),
         None => Ok(()),
+    }
+}
+
+/// The registered schema environment of a declared or live-slot session.
+const fn nominal_environment(session: &super::Session) -> Option<&noble_kernel::contracts::Env> {
+    match &session.declared {
+        Some(context) => Some(&context.environment),
+        None => match &session.live_slots {
+            Some(profile) => Some(&profile.environment),
+            None => None,
+        },
     }
 }

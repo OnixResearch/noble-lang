@@ -63,20 +63,43 @@ pub struct CheckedSelectedTarget<'a> {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CheckedGeneratedWitness {
-    generation: &'static str,
+    generation: GenerationName,
     occurrence_node: Option<u32>,
     binder_node: Option<u32>,
 }
 
 impl CheckedGeneratedWitness {
     pub const fn generation(&self) -> &'static str {
-        self.generation
+        self.generation.as_str()
     }
     pub const fn occurrence_node(&self) -> Option<u32> {
         self.occurrence_node
     }
     pub const fn binder_node(&self) -> Option<u32> {
         self.binder_node
+    }
+}
+
+/// A generated node's generation, stored as its kind rather than as a
+/// `&'static str` (which the pinned Aeneas cannot carry in a type). Distinct
+/// generations have distinct spellings, so equality is unchanged, and `Debug`
+/// renders the spelling exactly as the former string field did.
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct GenerationName(super::locals::Generation);
+
+impl GenerationName {
+    const fn as_str(self) -> &'static str {
+        self.0.as_str()
+    }
+}
+
+impl core::fmt::Debug for GenerationName {
+    #[allow(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; the standard Debug trait requires a mutable caller-owned Formatter; this performs no ambient observation or semantic state mutation."
+    )]
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(self.as_str(), f)
     }
 }
 
@@ -101,9 +124,7 @@ pub struct CheckedOperationSite {
 #[expect(
     tigerstyle::assertion_density,
     tigerstyle::mutating_input_in_pure,
-    tigerstyle::platform_dependent_cast,
-    tigerstyle::unbounded_collection_growth,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless; growth is bounded by the checked input or admission limits that drive the loop."
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
 )]
 fn candidate_to_lexical(
     candidate: &noble_kernel::untrusted::Candidate,
@@ -112,29 +133,86 @@ fn candidate_to_lexical(
 ) -> Result<alloc::vec::Vec<u32>, SourceProofRefusal> {
     #[expect(
         tigerstyle::non_trait_imports,
-        reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
-    )]
-    use noble_kernel::untrusted::Node;
-    #[expect(
-        tigerstyle::non_trait_imports,
         tigerstyle::renamed_imports,
         reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency; the short local alias keeps the refusal constructors readable within this function."
     )]
     use SourceProofRefusal as Refusal;
-    let mut mapping = alloc::vec![u32::MAX; candidate.nodes.len()];
-    let mut pairs = alloc::vec::Vec::new();
+    let mut map = LexicalMap {
+        mapping: alloc::vec![u32::MAX; candidate.nodes.len()],
+        pairs: alloc::vec::Vec::new(),
+    };
     if candidate.body.len() != tree.body.len() {
         return Err(Refusal::MismatchedSource);
     }
-    pairs.extend(
-        candidate
-            .body
-            .iter()
-            .zip(&tree.body)
-            .map(|(checked, source)| (checked.0, *source)),
-    );
-    while let Some((checked, lexical)) = pairs.pop() {
-        let slot = mapping
+    map.queue(&candidate.body, &tree.body);
+    let mut outcome = Ok(());
+    while outcome.is_ok() {
+        match map.pairs.pop() {
+            Some((checked, lexical)) => {
+                outcome = map.pair(candidate, tree, meter, checked, lexical)
+            }
+            None => break,
+        }
+    }
+    outcome?;
+    if map.mapping.contains(&u32::MAX) {
+        return Err(Refusal::MismatchedSource);
+    }
+    Ok(map.mapping)
+}
+
+/// The checked-to-lexical node map under construction and its pending pairs.
+struct LexicalMap {
+    mapping: alloc::vec::Vec<u32>,
+    pairs: alloc::vec::Vec<(u32, u32)>,
+}
+
+impl LexicalMap {
+    /// Queue checked/lexical node pairs in body order, as `extend(zip(..))` did.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it grows only the private worklist owned by candidate_to_lexical."
+    )]
+    fn queue(&mut self, checked: &[noble_kernel::untrusted::NodeId], lexical: &[u32]) {
+        let count = checked.len().min(lexical.len());
+        self.pairs.reserve(count);
+        let mut at = 0;
+        while at < count {
+            self.pairs.push((checked[at].0, lexical[at]));
+            at += 1;
+        }
+    }
+
+    /// Map one checked node to its lexical node, charging the lexical node and
+    /// queueing the children of a matching quotation.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    #[expect(
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless."
+    )]
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the checked and lexical node IDs are the two coordinates of one popped pair, named at the single call site."
+    )]
+    fn pair(
+        &mut self,
+        candidate: &noble_kernel::untrusted::Candidate,
+        tree: &super::Tree,
+        meter: &mut crate::Meter,
+        checked: u32,
+        lexical: u32,
+    ) -> Result<(), SourceProofRefusal> {
+        #[expect(
+            tigerstyle::non_trait_imports,
+            tigerstyle::renamed_imports,
+            reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency; the short local alias keeps the refusal constructors readable within this function."
+        )]
+        use SourceProofRefusal as Refusal;
+        let slot = self
+            .mapping
             .get_mut(usize::try_from(checked).map_err(|_| Refusal::MismatchedSource)?)
             .ok_or(Refusal::MismatchedSource)?;
         if *slot != u32::MAX {
@@ -149,35 +227,60 @@ fn candidate_to_lexical(
             .nodes
             .get(checked as usize)
             .ok_or(Refusal::MismatchedSource)?;
-        match (&source.kind, checked) {
-            (super::Kind::Literal(a), Node::Literal { lit: b, .. }) if a == b => {}
-            (
-                super::Kind::Text(_),
-                Node::Literal {
-                    lit: noble_kernel::untrusted::Lit::Text,
-                    ..
-                },
-            ) => {}
-            (super::Kind::Call(super::Target::Builtin(a)), Node::Invocation { def, .. })
-                if *a == def.0 => {}
-            (super::Kind::Call(super::Target::Named(_)), Node::Invocation { .. }) => {}
-            (super::Kind::Call(super::Target::SelfOwner), Node::SignedSelf { .. }) => {}
-            (super::Kind::Quotation(source_body), Node::Quotation { body, .. })
-                if source_body.len() == body.len() =>
-            {
-                pairs.extend(
-                    body.iter()
-                        .zip(source_body)
-                        .map(|(checked, source)| (checked.0, *source)),
-                );
-            }
-            _ => return Err(Refusal::MismatchedSource),
+        if !kinds_correspond(&source.kind, checked) {
+            return Err(Refusal::MismatchedSource);
         }
+        if let (
+            super::Kind::Quotation(source_body),
+            noble_kernel::untrusted::Node::Quotation { body, .. },
+        ) = (&source.kind, checked)
+        {
+            self.queue(body, source_body);
+        }
+        Ok(())
     }
-    if mapping.contains(&u32::MAX) {
-        return Err(Refusal::MismatchedSource);
+}
+
+/// Whether a replayed lexical node has the shape of its checked node: equal
+/// literals and builtins, a named call, the signed self, or quotations of
+/// equal length (whose children are compared separately).
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; this is a total shape comparison of two checked nodes; a mismatch is reported to the caller rather than asserted."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; literal comparison uses non-const PartialEq."
+)]
+fn kinds_correspond(source: &super::Kind, checked: &noble_kernel::untrusted::Node) -> bool {
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
+    )]
+    use noble_kernel::untrusted::Node;
+    match (source, checked) {
+        (super::Kind::Literal(a), Node::Literal { lit: b, .. }) if a == b => true,
+        (
+            super::Kind::Text(_),
+            Node::Literal {
+                lit: noble_kernel::untrusted::Lit::Text,
+                ..
+            },
+        ) => true,
+        (super::Kind::Call(super::Target::Builtin(a)), Node::Invocation { def, .. })
+            if *a == def.0 =>
+        {
+            true
+        }
+        (super::Kind::Call(super::Target::Named(_)), Node::Invocation { .. }) => true,
+        (super::Kind::Call(super::Target::SelfOwner), Node::SignedSelf { .. }) => true,
+        (super::Kind::Quotation(source_body), Node::Quotation { body, .. })
+            if source_body.len() == body.len() =>
+        {
+            true
+        }
+        _ => false,
     }
-    Ok(mapping)
 }
 
 /// The replayed lexical span, its generated witnesses and their node map.
@@ -244,16 +347,47 @@ fn replay_lexical_source(
         return Err(Refusal::MismatchedSource);
     }
     let generated_count = end.checked_sub(original).ok_or(Refusal::MismatchedSource)?;
-    if witnesses.len() != generated_count as usize
-        || witnesses
-            .iter()
-            .enumerate()
-            .any(|(ordinal, witness)| witness.node != original + ordinal as u32)
-    {
+    if witnesses.len() != generated_count as usize || !witnesses_follow(&witnesses, original) {
         return Err(Refusal::MismatchedSource);
     }
     let mapping = candidate_to_lexical(candidate, &replay, &mut meter)?;
     Ok((original..end, witnesses, mapping))
+}
+
+/// Whether each witness names the generated node at its own ordinal after
+/// `original`, tested in order up to the first mismatch.
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; witness ordinals are compared only after witnesses.len() equals end - original, so original + ordinal stays below end."
+)]
+fn witnesses_follow(witnesses: &[super::locals::GeneratedWitness], original: u32) -> bool {
+    let mut at = 0;
+    while at < witnesses.len() && witnesses[at].node == original + at as u32 {
+        at += 1;
+    }
+    at == witnesses.len()
+}
+
+/// Positions of the first two items satisfying `predicate`, testing in order
+/// and stopping at the second, as two `filter(..).next()` calls.
+fn first_two<T>(
+    items: &[T],
+    mut predicate: impl FnMut(&T) -> bool,
+) -> (Option<usize>, Option<usize>) {
+    let mut first = None;
+    let mut second = None;
+    let mut at = 0;
+    while second.is_none() && at < items.len() {
+        if predicate(&items[at]) {
+            if first.is_none() {
+                first = Some(at);
+            } else {
+                second = Some(at);
+            }
+        }
+        at += 1;
+    }
+    (first, second)
 }
 
 impl CheckedSelectedTarget<'_> {
@@ -315,7 +449,7 @@ impl CheckedSelectedTarget<'_> {
         let at = node.checked_sub(self.generated.start)?;
         let witness = self.witnesses.get(at as usize)?;
         (witness.node == node).then_some(CheckedGeneratedWitness {
-            generation: witness.generation.as_str(),
+            generation: GenerationName(witness.generation),
             occurrence_node: witness.occurrence_node,
             binder_node: witness.binder_node,
         })
@@ -371,10 +505,11 @@ impl CheckedSelectedTarget<'_> {
             .tree
             .node(lexical_node)
             .map_err(|_| SourceProofRefusal::MismatchedSource)?;
-        let checked = usize::try_from(node.0)
-            .ok()
-            .and_then(|index| candidate.nodes.get(index))
-            .ok_or(SourceProofRefusal::MismatchedSource)?;
+        let checked = match usize::try_from(node.0) {
+            Ok(index) => candidate.nodes.get(index),
+            Err(_) => None,
+        }
+        .ok_or(SourceProofRefusal::MismatchedSource)?;
         let start =
             usize::try_from(source.span.start).map_err(|_| SourceProofRefusal::MismatchedSource)?;
         let end =
@@ -383,7 +518,7 @@ impl CheckedSelectedTarget<'_> {
         let bytes = if is_generated {
             // A replayed projection or cleanup has no corresponding authored
             // token. The entire immutable lowering was compared at selection.
-            &[][..]
+            &self.source[..0]
         } else {
             self.source
                 .get(start..end)
@@ -420,24 +555,15 @@ impl CheckedSelectedTarget<'_> {
             (super::Kind::Quotation(source_body), Node::Quotation { body, .. }) => {
                 (is_generated || (bytes.first() == Some(&b'[') && bytes.last() == Some(&b']')))
                     && source_body.len() == body.len()
-                    && source_body
-                        .iter()
-                        .zip(body)
-                        .all(|(a, b)| Some(*a) == self.lexical_source_node(*b))
+                    && self.maps_quotation(source_body, body)
             }
             _ => false,
         };
         if !is_valid {
             return Err(SourceProofRefusal::MismatchedSource);
         }
-        if self
-            .body
-            .derivations
-            .iter()
-            .filter(|item| item.node == node)
-            .count()
-            != 1
-        {
+        let (first, second) = first_two(&self.body.derivations, |item| item.node == node);
+        if first.is_none() || second.is_some() {
             return Err(SourceProofRefusal::IndependentCheckFailed);
         }
         Ok(CheckedOperationSite {
@@ -445,6 +571,30 @@ impl CheckedSelectedTarget<'_> {
             authored_span: (!is_generated).then_some(source.span),
             generated_witness: self.lexical_witness(lexical_node),
         })
+    }
+
+    /// Whether each lexical child of a quotation is the replayed source of its
+    /// checked child, compared pairwise in order.
+    fn maps_quotation(
+        &self,
+        source_body: &[u32],
+        body: &[noble_kernel::untrusted::NodeId],
+    ) -> bool {
+        let count = source_body.len().min(body.len());
+        let mut at = 0;
+        while at < count && self.is_lexical_source(body[at], source_body[at]) {
+            at += 1;
+        }
+        at == count
+    }
+
+    /// Whether `lexical` is the replayed lexical source of checked `node`.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the lookup reads the runtime candidate-to-lexical table and is not const."
+    )]
+    fn is_lexical_source(&self, node: noble_kernel::untrusted::NodeId, lexical: u32) -> bool {
+        self.lexical_source_node(node) == Some(lexical)
     }
 
     #[expect(
@@ -469,29 +619,25 @@ impl CheckedSelectedTarget<'_> {
             .tree
             .node(site.lexical_node)
             .map_err(|_| SourceProofRefusal::MismatchedSource)?;
+        let checked = match usize::try_from(node.0) {
+            Ok(index) => candidate.nodes.get(index),
+            Err(_) => None,
+        };
         let (
             super::Kind::Call(super::Target::Builtin(8)),
             Some(Node::Invocation {
                 def: Definition(8), ..
             }),
-        ) = (
-            &source_node.kind,
-            usize::try_from(node.0)
-                .ok()
-                .and_then(|index| candidate.nodes.get(index)),
-        )
+        ) = (&source_node.kind, checked)
         else {
             return Err(SourceProofRefusal::UnsupportedProfile);
         };
-        let mut derivations = self
-            .body
-            .derivations
-            .iter()
-            .filter(|item| item.node == node);
-        let derived = derivations
-            .next()
-            .ok_or(SourceProofRefusal::IndependentCheckFailed)?;
-        if derivations.next().is_some()
+        let (first, second) = first_two(&self.body.derivations, |item| item.node == node);
+        let Some(first) = first else {
+            return Err(SourceProofRefusal::IndependentCheckFailed);
+        };
+        let derived = &self.body.derivations[first];
+        if second.is_some()
             || !matches!(
                 derived.interface.stack_in.last(),
                 Some(Ty::I64 | Ty::Program(..))
@@ -591,12 +737,17 @@ impl SourceCorrespondenceCandidate<'_> {
     /// The MC1 theorem has no captured inputs or external premises. A nonempty
     /// capture or dependency is refused before this candidate can be returned.
     pub const fn captures(&self) -> &[crate::companion::CaptureBinding] {
-        &[]
+        &NO_CAPTURES
     }
     pub const fn assumptions(&self) -> &[crate::intrinsic::ProofDependency] {
-        &[]
+        &NO_ASSUMPTIONS
     }
 }
+
+// A promoted `&[]` literal returned from a function is refused by the pinned
+// Aeneas; these named empty tables are the same empty slices.
+static NO_CAPTURES: [crate::companion::CaptureBinding; 0] = [];
+static NO_ASSUMPTIONS: [crate::intrinsic::ProofDependency; 0] = [];
 
 impl super::Session {
     #[expect(
@@ -635,39 +786,42 @@ impl super::Session {
         if !self.is_current_namespace(prepared) {
             return Err(Refusal::StaleContext);
         }
-        let (retained_index, retained) = self
-            .definitions
-            .iter()
-            .enumerate()
-            .rev()
-            .find(|(_, definition)| definition.name == name)
+        let retained_index = self
+            .last_definition_named(name)
             .ok_or(Refusal::MissingTarget)?;
+        let retained = &self.definitions[retained_index];
         let source = self
             .definition_source(retained_index)
             .map_err(|_| Refusal::MismatchedSource)?;
         let submission = prepared.submission().ok_or(Refusal::MissingTarget)?;
         // A selected root calls one named body, whose checked dependency closure
         // may also contain earlier retained definitions.
-        let [Node::Invocation { def: root_def, .. }] = submission.body.candidate.nodes.as_slice()
-        else {
+        let root_nodes = submission.body.candidate.nodes.as_slice();
+        if root_nodes.len() != 1 {
+            return Err(Refusal::MismatchedDefinition);
+        }
+        let Node::Invocation { def: root_def, .. } = &root_nodes[0] else {
             return Err(Refusal::MismatchedDefinition);
         };
-        let mut selected = submission
-            .definitions
-            .iter()
-            .filter(|definition| definition.definition == *root_def);
-        let definition = selected.next().ok_or(Refusal::MismatchedDefinition)?;
-        if selected.next().is_some() {
+        let (first, second) = first_two(&submission.definitions, |definition| {
+            definition.definition == *root_def
+        });
+        let Some(first) = first else {
+            return Err(Refusal::MismatchedDefinition);
+        };
+        let definition = &submission.definitions[first];
+        if second.is_some() {
             return Err(Refusal::MismatchedDefinition);
         }
         let index = u32::try_from(retained_index).map_err(|_| Refusal::MismatchedDefinition)?;
+        let owner = match usize::try_from(definition.definition.0) {
+            Ok(slot) => submission.environment.definition_owners.get(slot),
+            Err(_) => None,
+        };
         if prepared.selected_root != Some(index)
             || definition.identity != retained.identity
             || submission.environment.kind(definition.definition) != Some(Behavior::Named)
-            || usize::try_from(definition.definition.0)
-                .ok()
-                .and_then(|slot| submission.environment.definition_owners.get(slot))
-                != Some(&None)
+            || owner != Some(&None)
             || !submission.body.texts.is_empty()
             || submission.body.candidate.body.len() != 1
             || submission.body.candidate.body[0] != noble_kernel::untrusted::NodeId(0)

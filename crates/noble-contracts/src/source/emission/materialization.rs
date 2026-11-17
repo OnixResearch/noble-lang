@@ -127,6 +127,8 @@ impl Nodes {
         let node_id =
             noble_kernel::untrusted::NodeId(attempt!(crate::index(self.nodes.len(), draft.span)));
         let variables = core::mem::take(&mut draft.variables);
+        // Closures below capture this copy, not a field behind `draft`.
+        let span = draft.span;
         let inst = if matches!(
             &draft.kind,
             crate::source::inference::DraftKind::SlotInvoke { .. }
@@ -139,25 +141,25 @@ impl Nodes {
             crate::source::inference::DraftKind::Literal(lit) => {
                 noble_kernel::untrusted::Node::Literal {
                     lit: *lit,
-                    inst: inst.ok_or_else(|| crate::internal(draft.span))?,
+                    inst: inst.ok_or_else(|| crate::internal(span))?,
                 }
             }
             crate::source::inference::DraftKind::Invocation(def) => {
                 noble_kernel::untrusted::Node::Invocation {
                     def: *def,
-                    inst: inst.ok_or_else(|| crate::internal(draft.span))?,
+                    inst: inst.ok_or_else(|| crate::internal(span))?,
                 }
             }
             crate::source::inference::DraftKind::SignedSelf(def) => {
                 noble_kernel::untrusted::Node::SignedSelf {
                     def: *def,
-                    inst: inst.ok_or_else(|| crate::internal(draft.span))?,
+                    inst: inst.ok_or_else(|| crate::internal(span))?,
                 }
             }
             crate::source::inference::DraftKind::Quotation(body) => {
                 noble_kernel::untrusted::Node::Quotation {
                     body: core::mem::take(body),
-                    inst: inst.ok_or_else(|| crate::internal(draft.span))?,
+                    inst: inst.ok_or_else(|| crate::internal(span))?,
                 }
             }
             crate::source::inference::DraftKind::SlotInvoke {

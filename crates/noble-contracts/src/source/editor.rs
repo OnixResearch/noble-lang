@@ -62,6 +62,57 @@ struct Emitter {
     meter: crate::Meter,
 }
 
+/// One open editor node list on the explicit work stack: its own index in the
+/// enclosing list, the next node to emit, the generated offset of its opening
+/// bracket, its depth and the first value it contributes. A frame holds no
+/// borrow; its list is found again from the root through the frame indexes.
+struct Frame {
+    index: u32,
+    next: usize,
+    start: u32,
+    depth: u32,
+    value_start: usize,
+}
+
+/// The node list of the innermost of `path`: the root list followed down
+/// through each enclosing quotation by its index. The first frame is the node
+/// list itself rather than an editor node, so callers pass the frames below
+/// it; the depth meter bounds their number before any frame is pushed.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the walk follows the frame path, whose length the configured depth limit bounds before each frame is pushed; the pinned Aeneas accepts no loop that carries a borrow into the editor tree, and a frame stack that holds borrows is refused too."
+)]
+#[expect(
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-contracts; the operand is a u32 node index and the cast is a widening that cannot fail where usize is at least 32 bits."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; checked slice lookup is not const."
+)]
+fn frame_nodes<'a>(nodes: &'a [Node], path: &[Frame]) -> Option<&'a [Node]> {
+    match path.split_first() {
+        None => Some(nodes),
+        Some((frame, rest)) => match nodes.get(frame.index as usize) {
+            Some(Node::Quotation(children)) => frame_nodes(children, rest),
+            _ => None,
+        },
+    }
+}
+
+/// The editor path of a node: the indexes of the frames below the root list,
+/// then its own index.
+fn frame_path(frames: &[Frame], index: u32) -> Vec<u32> {
+    let mut path = Vec::with_capacity(frames.len());
+    let mut at = 1;
+    while at < frames.len() {
+        path.push(frames[at].index);
+        at += 1;
+    }
+    path.push(index);
+    path
+}
+
 impl Emitter {
     fn append(mut self, bytes: &[u8]) -> Result<Self, crate::Diagnostic> {
         let builder = &mut self.builder;
@@ -85,165 +136,204 @@ impl Emitter {
     }
 
     fn body(mut self, nodes: &[Node]) -> Result<(Self, Vec<u32>), crate::Diagnostic> {
-        struct Frame<'a> {
-            nodes: &'a [Node],
-            next: usize,
-            index: u32,
-            start: u32,
-            depth: u32,
-            value_start: usize,
-        }
-        // The first frame is the node list itself rather than an editor node, so
-        // an editor path is the per-level node indexes below it.
-        fn ancestors(frames: &[Frame<'_>]) -> Vec<u32> {
-            let mut path = Vec::with_capacity(frames.len());
-            for frame in frames.iter().skip(1) {
-                path.push(frame.index);
-            }
-            path
-        }
         let span = self.builder.tree.span;
         attempt!(self.meter.depth(0, span));
         let mut frames = alloc::vec![Frame {
-            nodes,
-            next: 0,
             index: 0,
+            next: 0,
             start: 0,
             depth: 0,
             value_start: 0,
         }];
         let mut values = Vec::new();
-        loop {
-            let Some(frame) = frames.last_mut() else {
-                return Err(crate::internal(span));
-            };
-            if frame.next == frame.nodes.len() {
-                let Some(frame) = frames.pop() else {
-                    return Err(crate::internal(span));
-                };
-                let mut quotation_path = ancestors(frames.as_slice());
-                quotation_path.push(frame.index);
-                let Some(parent) = frames.last_mut() else {
-                    return Ok((self, values));
-                };
-                self = attempt!(self.append(b"]"));
-                let id = attempt!(crate::index(self.builder.tree.nodes.len(), span));
-                let end = attempt!(crate::index(self.builder.source.len(), span));
-                let quotation_span = crate::Span {
-                    start: frame.start,
-                    end,
-                };
-                self.builder.paths.push((quotation_span, quotation_path));
-                self.builder.tree.nodes.push(super::Node {
-                    kind: super::Kind::Quotation(values.split_off(frame.value_start)),
-                    span: quotation_span,
-                });
-                let Some(parent_items) = values.len().checked_sub(parent.value_start) else {
-                    return Err(crate::internal(span));
-                };
-                if parent_items >= parent.nodes.len() {
-                    return Err(super::exhausted(span, "editor node limit exceeded"));
-                }
-                if values.len() >= self.builder.tree.nodes.len() {
-                    return Err(crate::internal(span));
-                }
-                values.push(id);
-                continue;
-            }
-            let node = &frame.nodes[frame.next];
-            frame.next += 1;
-            attempt!(self.meter.node(self.builder.tree.span));
-            let start = attempt!(crate::index(
-                self.builder.source.len(),
-                self.builder.tree.span
-            ));
-            let kind = match node {
-                Node::Integer(value) => {
-                    let text = alloc::format!("{value}");
-                    self = attempt!(self.append(text.as_bytes()));
-                    super::Kind::Literal(noble_kernel::untrusted::Lit::I64(*value))
-                }
-                Node::Boolean(value) => {
-                    self = attempt!(self.append(if *value { b"true" } else { b"false" }));
-                    super::Kind::Literal(noble_kernel::untrusted::Lit::Bool(*value))
-                }
-                Node::Word(word) => {
-                    let span = crate::Span { start, end: start };
-                    if !matches!(
-                        attempt!(super::lexer::tokens::classify(
-                            word.as_bytes(),
-                            span,
-                            &mut self.meter,
-                            false
-                        )),
-                        super::lexer::TokenKind::Word(_)
-                    ) {
-                        return Err(crate::invalid(
-                            span,
-                            "editor word is not source word syntax",
-                        ));
-                    }
-                    self = attempt!(self.append(word.as_bytes()));
-                    super::Kind::Word(word.as_bytes().to_vec())
-                }
-                Node::Hole => {
-                    self.builder.holes += 1;
-                    self = attempt!(self.append(b"@editor-hole"));
-                    super::Kind::EditorHole
-                }
-                Node::Quotation(children) => {
-                    let depth = frame.depth.saturating_add(1);
-                    let index = frame.next.saturating_sub(1) as u32;
-                    self = attempt!(self.append(b"["));
-                    attempt!(self.meter.depth(depth, span));
-                    frames.push(Frame {
-                        nodes: children,
-                        next: 0,
-                        index,
-                        start,
-                        depth,
-                        value_start: values.len(),
-                    });
-                    continue;
-                }
-            };
-            let id = attempt!(crate::index(
-                self.builder.tree.nodes.len(),
-                self.builder.tree.span
-            ));
-            let end = attempt!(crate::index(
-                self.builder.source.len(),
-                self.builder.tree.span
-            ));
-            // The node budget is charged above, and each input contributes at
-            // most one body entry; do not reserve for rejected candidates.
-            let Some(body_items) = values.len().checked_sub(frame.value_start) else {
-                return Err(crate::internal(span));
-            };
-            if body_items >= frame.nodes.len() {
-                return Err(super::exhausted(
-                    self.builder.tree.span,
-                    "editor node limit exceeded",
-                ));
-            }
-            if matches!(kind, super::Kind::EditorHole) && self.builder.first_hole.is_none() {
-                self.builder.first_hole = Some(crate::Span { start, end });
-            }
-            let own_index = frame.next.saturating_sub(1) as u32;
-            let mut leaf_path = ancestors(frames.as_slice());
-            leaf_path.push(own_index);
-            self.builder
-                .paths
-                .push((crate::Span { start, end }, leaf_path));
-            self.builder.tree.nodes.push(super::Node {
-                kind,
-                span: crate::Span { start, end },
-            });
-            if values.len() >= self.builder.tree.nodes.len() {
-                return Err(crate::internal(span));
-            }
-            values.push(id);
+        let mut current = Ok((self, false));
+        while let Ok((emitter, false)) = current {
+            current = emitter.step(nodes, &mut frames, &mut values);
         }
+        match current {
+            Ok((emitter, _)) => Ok((emitter, values)),
+            Err(problem) => Err(problem),
+        }
+    }
+
+    /// One step of the explicit work stack: emit the next node of the
+    /// innermost list, open a nested quotation, or close a finished list.
+    /// Returns whether the root list is complete.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; the frame stack and the emitted value list grow and shrink with Vec push, pop and split_off, so they need growable vectors."
+    )]
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it advances only the frame stack and value list owned by Emitter::body for this bounded pass."
+    )]
+    fn step(
+        mut self,
+        nodes: &[Node],
+        frames: &mut Vec<Frame>,
+        values: &mut Vec<u32>,
+    ) -> Result<(Self, bool), crate::Diagnostic> {
+        let span = self.builder.tree.span;
+        let Some(frame) = frames.last() else {
+            return Err(crate::internal(span));
+        };
+        let Some(list) = frame_nodes(nodes, &frames[1..]) else {
+            return Err(crate::internal(span));
+        };
+        if frame.next == list.len() {
+            return self.close(nodes, frames, values);
+        }
+        let at = frame.next;
+        let frame_depth = frame.depth;
+        let value_start = frame.value_start;
+        let node = &list[at];
+        if let Some(top) = frames.last_mut() {
+            top.next += 1;
+        }
+        attempt!(self.meter.node(self.builder.tree.span));
+        let start = attempt!(crate::index(
+            self.builder.source.len(),
+            self.builder.tree.span
+        ));
+        let kind = match node {
+            Node::Integer(value) => {
+                let text = alloc::format!("{value}");
+                self = attempt!(self.append(text.as_bytes()));
+                super::Kind::Literal(noble_kernel::untrusted::Lit::I64(*value))
+            }
+            Node::Boolean(value) => {
+                self = attempt!(self.append(if *value { b"true" } else { b"false" }));
+                super::Kind::Literal(noble_kernel::untrusted::Lit::Bool(*value))
+            }
+            Node::Word(word) => {
+                let span = crate::Span { start, end: start };
+                if !matches!(
+                    attempt!(super::lexer::tokens::classify(
+                        word.as_bytes(),
+                        span,
+                        &mut self.meter,
+                        false
+                    )),
+                    super::lexer::TokenKind::Word(_)
+                ) {
+                    return Err(crate::invalid(
+                        span,
+                        "editor word is not source word syntax",
+                    ));
+                }
+                self = attempt!(self.append(word.as_bytes()));
+                super::Kind::Word(word.as_bytes().to_vec())
+            }
+            Node::Hole => {
+                self.builder.holes += 1;
+                self = attempt!(self.append(b"@editor-hole"));
+                super::Kind::EditorHole
+            }
+            Node::Quotation(_) => {
+                let depth = frame_depth.saturating_add(1);
+                let index = at as u32;
+                self = attempt!(self.append(b"["));
+                attempt!(self.meter.depth(depth, span));
+                frames.push(Frame {
+                    index,
+                    next: 0,
+                    start,
+                    depth,
+                    value_start: values.len(),
+                });
+                return Ok((self, false));
+            }
+        };
+        let id = attempt!(crate::index(
+            self.builder.tree.nodes.len(),
+            self.builder.tree.span
+        ));
+        let end = attempt!(crate::index(
+            self.builder.source.len(),
+            self.builder.tree.span
+        ));
+        // The node budget is charged above, and each input contributes at
+        // most one body entry; do not reserve for rejected candidates.
+        let Some(body_items) = values.len().checked_sub(value_start) else {
+            return Err(crate::internal(span));
+        };
+        if body_items >= list.len() {
+            return Err(super::exhausted(
+                self.builder.tree.span,
+                "editor node limit exceeded",
+            ));
+        }
+        if matches!(kind, super::Kind::EditorHole) && self.builder.first_hole.is_none() {
+            self.builder.first_hole = Some(crate::Span { start, end });
+        }
+        let leaf_path = frame_path(frames, at as u32);
+        self.builder
+            .paths
+            .push((crate::Span { start, end }, leaf_path));
+        self.builder.tree.nodes.push(super::Node {
+            kind,
+            span: crate::Span { start, end },
+        });
+        if values.len() >= self.builder.tree.nodes.len() {
+            return Err(crate::internal(span));
+        }
+        values.push(id);
+        Ok((self, false))
+    }
+
+    /// Close the innermost finished list: pop its frame and, unless it is the
+    /// root list, emit its closing bracket, record its node and path, and count
+    /// it as one value of the enclosing list. Returns whether the root list
+    /// is complete.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; the frame stack and the emitted value list grow and shrink with Vec push, pop and split_off, so they need growable vectors."
+    )]
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it advances only the frame stack and value list owned by Emitter::body for this bounded pass."
+    )]
+    fn close(
+        mut self,
+        nodes: &[Node],
+        frames: &mut Vec<Frame>,
+        values: &mut Vec<u32>,
+    ) -> Result<(Self, bool), crate::Diagnostic> {
+        let span = self.builder.tree.span;
+        let Some(frame) = frames.pop() else {
+            return Err(crate::internal(span));
+        };
+        let quotation_path = frame_path(frames, frame.index);
+        let Some(parent) = frames.last() else {
+            return Ok((self, true));
+        };
+        let parent_value_start = parent.value_start;
+        let Some(parent_list) = frame_nodes(nodes, &frames[1..]) else {
+            return Err(crate::internal(span));
+        };
+        self = attempt!(self.append(b"]"));
+        let id = attempt!(crate::index(self.builder.tree.nodes.len(), span));
+        let end = attempt!(crate::index(self.builder.source.len(), span));
+        let quotation_span = crate::Span {
+            start: frame.start,
+            end,
+        };
+        self.builder.paths.push((quotation_span, quotation_path));
+        self.builder.tree.nodes.push(super::Node {
+            kind: super::Kind::Quotation(values.split_off(frame.value_start)),
+            span: quotation_span,
+        });
+        let Some(parent_items) = values.len().checked_sub(parent_value_start) else {
+            return Err(crate::internal(span));
+        };
+        if parent_items >= parent_list.len() {
+            return Err(super::exhausted(span, "editor node limit exceeded"));
+        }
+        if values.len() >= self.builder.tree.nodes.len() {
+            return Err(crate::internal(span));
+        }
+        values.push(id);
+        Ok((self, false))
     }
 }
 
@@ -335,88 +425,7 @@ impl super::Session {
         limits: crate::Limits,
     ) -> Result<(Analysis, u32), super::Error> {
         let (mut builder, mut meter) = attempt!(candidate.build(limits));
-        let result = (|| {
-            if let Err(error) =
-                super::resolution::resolve(&mut builder.tree, None, self, false, &mut meter)
-            {
-                return Err(super::Error::at(super::Stage::Resolve, error));
-            }
-            if let Err(error) = super::preflight::check(inputs, self, builder.tree.span, &mut meter)
-            {
-                return Err(super::Error::at(super::Stage::Check, error));
-            }
-            let environment = attempt!(self
-                .environment()
-                .map_err(|error| super::Error::at(super::Stage::Check, error)));
-            let scope = super::inference::Scope {
-                root: &builder.tree,
-                session: self,
-                environment: &environment,
-                root_signature: None,
-                prospective_owner: None,
-            };
-            let state = attempt!(super::inference::infer(
-                scope,
-                super::inference::Mode::EditorAnalysis,
-                inputs,
-                &mut meter
-            )
-            .map_err(|error| super::Error::at(super::Stage::Check, error)));
-            let mut holes = Vec::with_capacity(state.holes.len());
-            for hole in &state.holes {
-                let input_stack = attempt!(state
-                    .arena
-                    .describe_stack(hole.input, hole.span, &mut meter)
-                    .map_err(|error| super::Error::at(super::Stage::Check, error)));
-                let output_stack = attempt!(state
-                    .arena
-                    .describe_stack(hole.output, hole.span, &mut meter)
-                    .map_err(|error| super::Error::at(super::Stage::Check, error)));
-                let incoming = attempt!(state
-                    .arena
-                    .editor_stack_suffix(hole.input, hole.span, &mut meter)
-                    .map_err(|error| super::Error::at(super::Stage::Check, error)));
-                let outgoing = attempt!(state
-                    .arena
-                    .editor_stack_suffix(hole.output, hole.span, &mut meter)
-                    .map_err(|error| super::Error::at(super::Stage::Check, error)));
-                let common = incoming
-                    .iter()
-                    .zip(&outgoing)
-                    .take_while(|(left, right)| left == right)
-                    .count();
-                let required_output_suffix = outgoing[common..].to_vec();
-                let (known_effects, unresolved_effect) = attempt!(state
-                    .arena
-                    .editor_effect(hole.effect, hole.span, &mut meter)
-                    .map_err(|error| super::Error::at(super::Stage::Check, error)));
-                holes.push(HoleConstraint {
-                    input_stack,
-                    output_stack,
-                    required_output_suffix,
-                    known_effects,
-                    unresolved_effect,
-                });
-            }
-            let root = match state.bodies.first() {
-                Some(root) => root,
-                None => {
-                    return Err(super::Error::at(
-                        super::Stage::Check,
-                        crate::internal(builder.tree.span),
-                    ))
-                }
-            };
-            let (known_effects, unresolved_effect) = attempt!(state
-                .arena
-                .editor_effect(root.effect, root.span, &mut meter)
-                .map_err(|error| super::Error::at(super::Stage::Check, error)));
-            Ok(Analysis {
-                holes,
-                known_effects,
-                unresolved_effect,
-            })
-        })();
+        let result = self.analyze_built(&mut builder, inputs, &mut meter);
         let work_used = meter.spent();
         match result {
             Ok(analysis) => Ok((analysis, work_used)),
@@ -426,6 +435,169 @@ impl super::Session {
             }
         }
     }
+
+    /// Resolve, preflight and infer one built editor tree, then describe each
+    /// hole and the root effect in source order.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it resolves only the freshly built editor tree and charges the analysis-owned meter."
+    )]
+    fn analyze_built(
+        &self,
+        builder: &mut Builder,
+        inputs: &[noble_kernel::types::Ty],
+        meter: &mut crate::Meter,
+    ) -> Result<Analysis, super::Error> {
+        if let Err(error) = super::resolution::resolve(&mut builder.tree, None, self, false, meter)
+        {
+            return Err(super::Error::at(super::Stage::Resolve, error));
+        }
+        if let Err(error) = super::preflight::check(inputs, self, builder.tree.span, meter) {
+            return Err(super::Error::at(super::Stage::Check, error));
+        }
+        let environment = attempt!(self
+            .environment()
+            .map_err(|error| super::Error::at(super::Stage::Check, error)));
+        let inferred = match &environment {
+            alloc::borrow::Cow::Borrowed(environment) => {
+                self.infer_editor(&builder.tree, environment, inputs, meter)
+            }
+            alloc::borrow::Cow::Owned(environment) => {
+                self.infer_editor(&builder.tree, environment, inputs, meter)
+            }
+        };
+        let state = attempt!(inferred);
+        let mut holes = Vec::with_capacity(state.holes.len());
+        let mut at = 0;
+        let mut failure = None;
+        while at < state.holes.len() {
+            match hole_constraint(&state, &state.holes[at], meter) {
+                Ok(constraint) => holes.push(constraint),
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
+                }
+            }
+            at += 1;
+        }
+        if let Some(problem) = failure {
+            return Err(problem);
+        }
+        let root = match state.bodies.first() {
+            Some(root) => root,
+            None => {
+                return Err(super::Error::at(
+                    super::Stage::Check,
+                    crate::internal(builder.tree.span),
+                ))
+            }
+        };
+        let (known_effects, unresolved_effect) = attempt!(state
+            .arena
+            .editor_effect(root.effect, root.span, meter)
+            .map_err(|error| super::Error::at(super::Stage::Check, error)));
+        Ok(Analysis {
+            holes,
+            known_effects,
+            unresolved_effect,
+        })
+    }
+
+    /// Infer the editor tree in the session environment.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it charges only the analysis-owned meter."
+    )]
+    fn infer_editor(
+        &self,
+        root: &super::Tree,
+        environment: &noble_kernel::contracts::Env,
+        inputs: &[noble_kernel::types::Ty],
+        meter: &mut crate::Meter,
+    ) -> Result<super::inference::State, super::Error> {
+        let scope = super::inference::Scope {
+            root,
+            session: self,
+            environment,
+            root_signature: None,
+            prospective_owner: None,
+        };
+        super::inference::infer(scope, super::inference::Mode::EditorAnalysis, inputs, meter)
+            .map_err(|error| super::Error::at(super::Stage::Check, error))
+    }
+}
+
+/// Describe one hole: both stacks, the output suffix beyond the incoming
+/// suffix it shares, and its effect.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; each description step returns its typed checker diagnostic rather than asserting."
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it charges only the analysis-owned meter."
+)]
+fn hole_constraint(
+    state: &super::inference::State,
+    hole: &super::inference::Hole,
+    meter: &mut crate::Meter,
+) -> Result<HoleConstraint, super::Error> {
+    let input_stack = attempt!(state
+        .arena
+        .describe_stack(hole.input, hole.span, meter)
+        .map_err(|error| super::Error::at(super::Stage::Check, error)));
+    let output_stack = attempt!(state
+        .arena
+        .describe_stack(hole.output, hole.span, meter)
+        .map_err(|error| super::Error::at(super::Stage::Check, error)));
+    let incoming = attempt!(state
+        .arena
+        .editor_stack_suffix(hole.input, hole.span, meter)
+        .map_err(|error| super::Error::at(super::Stage::Check, error)));
+    let outgoing = attempt!(state
+        .arena
+        .editor_stack_suffix(hole.output, hole.span, meter)
+        .map_err(|error| super::Error::at(super::Stage::Check, error)));
+    let common = common_prefix(&incoming, &outgoing);
+    let required_output_suffix = outgoing[common..].to_vec();
+    let (known_effects, unresolved_effect) = attempt!(state
+        .arena
+        .editor_effect(hole.effect, hole.span, meter)
+        .map_err(|error| super::Error::at(super::Stage::Check, error)));
+    Ok(HoleConstraint {
+        input_stack,
+        output_stack,
+        required_output_suffix,
+        known_effects,
+        unresolved_effect,
+    })
+}
+
+/// The number of leading entries two stack descriptions share, as
+/// `zip(..).take_while(equal).count()`.
+fn common_prefix(left: &[String], right: &[String]) -> usize {
+    let mut common = 0;
+    while common < left.len()
+        && common < right.len()
+        && same_text(left[common].as_str(), right[common].as_str())
+    {
+        common += 1;
+    }
+    common
+}
+
+/// Text equality, called from `common_prefix` so that its loop compares no
+/// indexed element directly.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; str comparison is not const."
+)]
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; equality is symmetric, so the two descriptions cannot be swapped by accident."
+)]
+fn same_text(left: &str, right: &str) -> bool {
+    left == right
 }
 
 #[cfg(test)]

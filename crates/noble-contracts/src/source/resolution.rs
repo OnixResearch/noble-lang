@@ -141,7 +141,7 @@ fn lookup(
             if suffix.is_empty()
                 || suffix.len() > 10
                 || (suffix.len() > 1 && suffix[0] == b'0')
-                || !suffix.iter().all(u8::is_ascii_digit)
+                || !super::every_byte(suffix, |byte| byte.is_ascii_digit())
             {
                 return Err(crate::invalid(span, "invalid borrowed input ordinal"));
             }

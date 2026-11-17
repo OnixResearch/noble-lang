@@ -99,30 +99,18 @@ fn lower_inner(
     meter: &mut crate::Meter,
     witnesses: Option<&mut Vec<GeneratedWitness>>,
 ) -> Result<(), crate::Diagnostic> {
-    if !tree
-        .nodes
-        .iter()
-        .any(|node| matches!(&node.kind, super::Kind::Word(word) if word == b"let"))
-    {
+    if crate::scan::find_first(&tree.nodes, |node| is_let(&node.kind)).is_none() {
         return Ok(());
     }
     // A declaration's final, unreferenced quotation is its syntactic `def`
     // envelope, not an executable node. Keep it last when the lowering adds
     // checked operations, so signed owner certificates can distinguish it
     // from every generated executable node without trusting source spans.
-    let envelope = tree
-        .nodes
-        .len()
-        .checked_sub(1)
-        .filter(|index| {
-            matches!(&tree.nodes[*index].kind,
-            super::Kind::Quotation(children) if children.is_empty())
-                && !tree
-                    .body
-                    .iter()
-                    .any(|id| usize::try_from(*id).ok() == Some(*index))
-        })
-        .and_then(|_| tree.nodes.pop());
+    let has_envelope = match tree.nodes.len().checked_sub(1) {
+        Some(last) => is_envelope(tree, last),
+        None => false,
+    };
+    let envelope = if has_envelope { tree.nodes.pop() } else { None };
     let body = core::mem::take(&mut tree.body);
     let mut lower = Lower {
         nodes: &mut tree.nodes,
@@ -137,18 +125,37 @@ fn lower_inner(
     Ok(())
 }
 
+/// Whether node `last` is an empty quotation the body never references.
+fn is_envelope(tree: &super::Tree, last: usize) -> bool {
+    if !matches!(&tree.nodes[last].kind, super::Kind::Quotation(children) if children.is_empty()) {
+        return false;
+    }
+    let mut at = 0;
+    while at < tree.body.len() && !matches!(usize::try_from(tree.body[at]), Ok(id) if id == last) {
+        at += 1;
+    }
+    at == tree.body.len()
+}
+
+/// Whether a node is the `let` binding keyword.
 #[expect(
     tigerstyle::missing_const_fn,
-    reason = "Owner: noble-contracts; iterator adapters and slice comparisons in the body are not const."
+    reason = "Owner: noble-contracts; byte-vector comparison is not const."
+)]
+fn is_let(kind: &super::Kind) -> bool {
+    matches!(kind, super::Kind::Word(word) if word == b"let")
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the byte scan helper and slice comparisons in the body are not const."
 )]
 fn name(bytes: &[u8]) -> bool {
     let Some((&first, rest)) = bytes.split_first() else {
         return false;
     };
     matches!(first, b'a'..=b'z' | b'A'..=b'Z' | b'_')
-        && rest
-            .iter()
-            .all(|byte| byte.is_ascii_alphanumeric() || *byte == b'_')
+        && super::every_byte(rest, |byte| byte.is_ascii_alphanumeric() || byte == b'_')
         && bytes != b"let"
 }
 
@@ -175,17 +182,12 @@ fn source_node(
 #[expect(
     tigerstyle::assertion_density,
     tigerstyle::mutating_input_in_pure,
-    tigerstyle::no_recursion,
     tigerstyle::too_many_parameters,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the recursion follows the structure of an already checked, size-bounded input; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
 #[expect(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-contracts; the shadow scope stack is pushed and popped while names are freed, so it needs the growable vector."
-)]
-#[expect(
-    tigerstyle::raw_arithmetic_overflow,
-    reason = "Owner: noble-contracts; at is an in-bounds body index, so at + 1 is at most the body length and cannot overflow usize."
 )]
 fn free(
     nodes: &[super::Node],
@@ -198,62 +200,184 @@ fn free(
     span: crate::Span,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(meter.depth(depth, span));
-    let scope = shadow.len();
+    let level = FreeLevel {
+        nodes,
+        body,
+        outer,
+        scope: shadow.len(),
+        depth,
+        span,
+    };
     let mut at = 0;
-    while at < body.len() {
-        attempt!(meter.charge(1, span));
-        let node = attempt!(source_node(nodes, body[at], span));
-        match &node.kind {
-            super::Kind::Word(word) if word == b"let" => {
-                let next = body
-                    .get(at + 1)
-                    .copied()
-                    .ok_or_else(|| crate::invalid(node.span, "let requires a local name"))?;
-                let bind = attempt!(source_node(nodes, next, node.span));
-                let super::Kind::Word(name_bytes) = &bind.kind else {
-                    return Err(crate::invalid(bind.span, "let requires a local name"));
-                };
-                if !name(name_bytes) || shadow[scope..].iter().any(|known| known == name_bytes) {
-                    return Err(crate::invalid(bind.span, "duplicate or invalid local name"));
-                }
-                attempt!(meter.node(bind.span));
-                shadow.push(name_bytes.clone());
-                at += 2;
-                continue;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && at < body.len() {
+        match free_entry(level, at, shadow, used, meter) {
+            Ok(true) => at += 2,
+            Ok(false) => at += 1,
+            Err(problem) => outcome = Err(problem),
+        }
+    }
+    attempt!(outcome);
+    shadow.truncate(level.scope);
+    Ok(())
+}
+
+/// One quotation level of the `free` walk: its tables, its body and the
+/// shadow height at which the level's own binders start.
+#[derive(Clone, Copy)]
+struct FreeLevel<'a> {
+    nodes: &'a [super::Node],
+    body: &'a [u32],
+    outer: &'a [Bound],
+    scope: usize,
+    depth: u32,
+    span: crate::Span,
+}
+
+/// Check one body entry of a `free` level: a `let` binder with its name, a
+/// word occurrence or a nested quotation. Returns whether a binder consumed
+/// two entries.
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the shadow scope stack is pushed and popped while names are freed, so it needs the growable vector."
+)]
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; at is an in-bounds body index, so at + 1 is at most the body length and cannot overflow usize."
+)]
+fn free_entry(
+    level: FreeLevel<'_>,
+    at: usize,
+    shadow: &mut Vec<Vec<u8>>,
+    used: &mut [bool],
+    meter: &mut crate::Meter,
+) -> Result<bool, crate::Diagnostic> {
+    attempt!(meter.charge(1, level.span));
+    let node = attempt!(source_node(level.nodes, level.body[at], level.span));
+    if is_let(&node.kind) {
+        let next = level
+            .body
+            .get(at + 1)
+            .copied()
+            .ok_or_else(|| crate::invalid(node.span, "let requires a local name"))?;
+        let bind = attempt!(source_node(level.nodes, next, node.span));
+        let super::Kind::Word(name_bytes) = &bind.kind else {
+            return Err(crate::invalid(bind.span, "let requires a local name"));
+        };
+        if !name(name_bytes)
+            || crate::scan::find_first(&shadow[level.scope..], |known| known == name_bytes)
+                .is_some()
+        {
+            return Err(crate::invalid(bind.span, "duplicate or invalid local name"));
+        }
+        attempt!(meter.node(bind.span));
+        shadow.push(name_bytes.clone());
+        return Ok(true);
+    }
+    match &node.kind {
+        super::Kind::Word(word) => {
+            if !attempt!(shadowed(shadow, word, meter, node.span)) {
+                attempt!(mark_outer_use(level.outer, word, used, meter, node.span));
             }
-            super::Kind::Word(word) => {
-                let mut is_hidden = false;
-                for local in shadow.iter().rev() {
-                    attempt!(meter.charge(1, node.span));
-                    if local == word {
-                        is_hidden = true;
-                        break;
-                    }
-                }
-                if !is_hidden {
-                    for (index, local) in outer.iter().enumerate() {
-                        attempt!(meter.charge(1, node.span));
-                        if local.name == *word {
-                            used[index] = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            super::Kind::Quotation(nested) => {
-                let deeper = depth
-                    .checked_add(1)
-                    .ok_or_else(|| crate::invalid(node.span, "lexical quotation depth overflow"))?;
-                attempt!(free(
-                    nodes, nested, outer, shadow, used, meter, deeper, node.span
-                ));
-            }
-            _ => {}
+            Ok(false)
+        }
+        super::Kind::Quotation(nested) => {
+            let deeper = level
+                .depth
+                .checked_add(1)
+                .ok_or_else(|| crate::invalid(node.span, "lexical quotation depth overflow"))?;
+            attempt!(free(
+                level.nodes,
+                nested,
+                level.outer,
+                shadow,
+                used,
+                meter,
+                deeper,
+                node.span
+            ));
+            Ok(false)
+        }
+        _ => Ok(false),
+    }
+}
+
+/// Whether a binder of the quoted body hides `word`, searching from the newest
+/// and charging one unit per binder inspected.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it charges only the caller-owned work meter for this bounded pass."
+)]
+fn shadowed(
+    shadow: &[Vec<u8>],
+    word: &[u8],
+    meter: &mut crate::Meter,
+    span: crate::Span,
+) -> Result<bool, crate::Diagnostic> {
+    let mut at = shadow.len();
+    let mut is_hidden = false;
+    let mut failure = None;
+    while !is_hidden && at > 0 {
+        at -= 1;
+        if let Err(problem) = meter.charge(1, span) {
+            failure = Some(problem);
+            break;
+        }
+        is_hidden = same_bytes(&shadow[at], word);
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(is_hidden),
+    }
+}
+
+/// Mark the first outer binder named `word` as used, charging one unit per
+/// binder inspected.
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
+fn mark_outer_use(
+    outer: &[Bound],
+    word: &[u8],
+    used: &mut [bool],
+    meter: &mut crate::Meter,
+    span: crate::Span,
+) -> Result<(), crate::Diagnostic> {
+    let mut at = 0;
+    let mut is_found = false;
+    let mut failure = None;
+    while !is_found && at < outer.len() {
+        if let Err(problem) = meter.charge(1, span) {
+            failure = Some(problem);
+            break;
+        }
+        if same_bytes(&outer[at].name, word) {
+            used[at] = true;
+            is_found = true;
         }
         at += 1;
     }
-    shadow.truncate(scope);
-    Ok(())
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+/// Byte equality, called from the binder scans so that no loop compares a
+/// field of an indexed element directly.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; slice comparison is not const."
+)]
+fn same_bytes(left: &[u8], right: &[u8]) -> bool {
+    left == right
 }
 
 impl Lower<'_> {
@@ -310,10 +434,6 @@ impl Lower<'_> {
         tigerstyle::too_many_parameters,
         reason = "Owner: noble-contracts; the same-typed parameters are positional coordinates at each checked call site; a newtype would not change the call shape; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
     )]
-    #[expect(
-        tigerstyle::sentinel_fallback,
-        reason = "Owner: noble-contracts; an unrepresentable depth maps to usize::MAX, whose following checked_add fails closed."
-    )]
     fn wrapped(
         &mut self,
         id: u32,
@@ -323,36 +443,67 @@ impl Lower<'_> {
         span: crate::Span,
         occurrence_node: u32,
     ) -> Result<Vec<u32>, crate::Diagnostic> {
-        let mut code = alloc::vec![id];
-        for layer in 0..hidden {
-            let count = usize::try_from(depth)
-                .unwrap_or(usize::MAX)
-                .checked_add(layer)
-                .and_then(|value| value.checked_add(1))
-                .and_then(|value| u32::try_from(value).ok())
-                .ok_or_else(|| crate::invalid(span, "lexical quotation depth overflow"))?;
-            attempt!(self.meter.depth(count, span));
-            let binder_node = locals
-                .get(layer)
-                .map(|bound| bound.binder_node)
-                .ok_or_else(|| crate::internal(span))?;
-            let quotation = attempt!(self.node(
-                super::Kind::Quotation(code),
-                span,
-                Generation::WrapQuotation,
-                Some(occurrence_node),
-                Some(binder_node)
-            ));
-            let dip = attempt!(self.builtin(
-                3,
-                span,
-                Generation::WrapDip,
-                Some(occurrence_node),
-                Some(binder_node)
-            ));
-            code = alloc::vec![quotation, dip];
+        let mut code = Ok(alloc::vec![id]);
+        let mut layer = 0;
+        while code.is_ok() && layer < hidden {
+            code = match code {
+                Ok(current) => {
+                    self.wrap_layer(current, layer, locals, depth, span, occurrence_node)
+                }
+                Err(problem) => Err(problem),
+            };
+            layer += 1;
         }
-        Ok(code)
+        code
+    }
+
+    /// Wrap `code` beneath one more hidden binder: quote it and run it under
+    /// `dip`, as one layer of `wrapped`.
+    #[expect(
+        tigerstyle::ambiguous_params,
+        tigerstyle::mutating_input_in_pure,
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional coordinates at each checked call site; a newtype would not change the call shape; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    )]
+    #[expect(
+        tigerstyle::sentinel_fallback,
+        reason = "Owner: noble-contracts; an unrepresentable depth maps to usize::MAX, whose following checked_add fails closed."
+    )]
+    fn wrap_layer(
+        &mut self,
+        code: Vec<u32>,
+        layer: usize,
+        locals: &[Bound],
+        depth: u32,
+        span: crate::Span,
+        occurrence_node: u32,
+    ) -> Result<Vec<u32>, crate::Diagnostic> {
+        let count = usize::try_from(depth)
+            .unwrap_or(usize::MAX)
+            .checked_add(layer)
+            .and_then(|value| value.checked_add(1))
+            .and_then(|value| u32::try_from(value).ok())
+            .ok_or_else(|| crate::invalid(span, "lexical quotation depth overflow"))?;
+        attempt!(self.meter.depth(count, span));
+        let binder_node = locals
+            .get(layer)
+            .map(|bound| bound.binder_node)
+            .ok_or_else(|| crate::internal(span))?;
+        let quotation = attempt!(self.node(
+            super::Kind::Quotation(code),
+            span,
+            Generation::WrapQuotation,
+            Some(occurrence_node),
+            Some(binder_node)
+        ));
+        let dip = attempt!(self.builtin(
+            3,
+            span,
+            Generation::WrapDip,
+            Some(occurrence_node),
+            Some(binder_node)
+        ));
+        Ok(alloc::vec![quotation, dip])
     }
 
     #[expect(
@@ -409,13 +560,23 @@ impl Lower<'_> {
         word: &[u8],
         span: crate::Span,
     ) -> Result<Option<usize>, crate::Diagnostic> {
-        for (index, local) in locals.iter().enumerate() {
-            attempt!(meter.charge(1, span));
-            if local.name == word {
-                return Ok(Some(index));
+        let mut at = 0;
+        let mut found = None;
+        let mut failure = None;
+        while found.is_none() && at < locals.len() {
+            if let Err(problem) = meter.charge(1, span) {
+                failure = Some(problem);
+                break;
             }
+            if same_bytes(&locals[at].name, word) {
+                found = Some(at);
+            }
+            at += 1;
         }
-        Ok(None)
+        match failure {
+            Some(problem) => Err(problem),
+            None => Ok(found),
+        }
     }
 
     /// Project a local at physical index `which` below *all* hidden values.
@@ -458,24 +619,30 @@ impl Lower<'_> {
             occurrence_node,
             binder_node
         ));
-        for older in 0..(locals.len() - which - 1) {
-            let hidden = which
+        let older_count = locals.len() - which - 1;
+        let mut older = 0;
+        let mut outcome = Ok(());
+        while outcome.is_ok() && older < older_count {
+            outcome = match which
                 .checked_add(1)
                 .and_then(|count| count.checked_add(older))
-                .ok_or_else(|| crate::internal(span))?;
-            attempt!(self.operation(
-                code,
-                2,
-                locals,
-                hidden,
-                depth,
-                span,
-                Generation::ProjectionSwap,
-                occurrence_node,
-                binder_node
-            ));
+            {
+                Some(hidden) => self.operation(
+                    code,
+                    2,
+                    locals,
+                    hidden,
+                    depth,
+                    span,
+                    Generation::ProjectionSwap,
+                    occurrence_node,
+                    binder_node,
+                ),
+                None => Err(crate::internal(span)),
+            };
+            older += 1;
         }
-        Ok(())
+        outcome
     }
 
     #[expect(
@@ -516,36 +683,47 @@ impl Lower<'_> {
             span
         ));
         let mut captured = Vec::new();
-        for (index, local) in outer.iter().enumerate() {
+        let mut index = 0;
+        let mut failure = None;
+        while index < outer.len() {
             if used[index] {
-                attempt!(self.meter.node(span));
-                captured.push(Bound {
-                    name: local.name.clone(),
-                    binder_node: local.binder_node,
-                });
+                if let Err(problem) = self.meter.node(span) {
+                    failure = Some(problem);
+                    break;
+                }
+                captured.push(copy_bound(&outer[index]));
             }
+            index += 1;
+        }
+        if let Some(problem) = failure {
+            return Err(problem);
         }
         let mut lowered = Vec::new();
         let mut is_first = true;
         // `outer[0]` is the newest/top binder. Capture oldest first, so
         // replaying the composed programs reconstructs that same stack order.
-        for index in (0..used.len()).rev() {
+        let mut index = used.len();
+        let mut outcome = Ok(());
+        while outcome.is_ok() && index > 0 {
+            index -= 1;
             if used[index] {
                 let binder_node = Some(outer[index].binder_node);
-                attempt!(self.read(&mut lowered, index, outer, depth, span, id));
-                attempt!(self.operation(
-                    &mut lowered,
-                    8,
-                    outer,
-                    outer.len(),
-                    depth,
-                    span,
-                    Generation::CaptureQuote,
-                    id,
-                    binder_node
-                ));
-                if !is_first {
-                    attempt!(self.operation(
+                outcome = self.read(&mut lowered, index, outer, depth, span, id);
+                if outcome.is_ok() {
+                    outcome = self.operation(
+                        &mut lowered,
+                        8,
+                        outer,
+                        outer.len(),
+                        depth,
+                        span,
+                        Generation::CaptureQuote,
+                        id,
+                        binder_node,
+                    );
+                }
+                if outcome.is_ok() && !is_first {
+                    outcome = self.operation(
                         &mut lowered,
                         9,
                         outer,
@@ -554,12 +732,13 @@ impl Lower<'_> {
                         span,
                         Generation::CaptureCompose,
                         id,
-                        binder_node
-                    ));
+                        binder_node,
+                    );
                 }
                 is_first = false;
             }
         }
+        attempt!(outcome);
         let body = attempt!(self.body(&nested, captured, deeper));
         let node = self
             .nodes
@@ -591,124 +770,199 @@ impl Lower<'_> {
     }
 
     #[expect(
-        tigerstyle::allocation_in_loop,
         tigerstyle::mutating_input_in_pure,
-        tigerstyle::unbounded_collection_growth,
-        reason = "Owner: noble-contracts; each iteration's buffer is bounded by the checked input that drives the loop; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; growth is bounded by the checked input or admission limits that drive the loop."
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    fn body(
+        &mut self,
+        source: &[u32],
+        locals: Vec<Bound>,
+        depth: u32,
+    ) -> Result<Vec<u32>, crate::Diagnostic> {
+        let mut state = BodyState {
+            code: Vec::new(),
+            locals,
+            introduced: 0,
+        };
+        let mut at = 0usize;
+        let mut outcome = Ok(());
+        while outcome.is_ok() && at < source.len() {
+            match self.body_entry(source, at, &mut state, depth) {
+                Ok(true) => at += 2,
+                Ok(false) => at += 1,
+                Err(problem) => outcome = Err(problem),
+            }
+        }
+        attempt!(outcome);
+        let mut index = 0;
+        let mut failure = None;
+        while index < state.locals.len() {
+            match self.builtin(
+                1,
+                crate::Span { start: 0, end: 0 },
+                Generation::CleanupDrop,
+                None,
+                Some(state.locals[index].binder_node),
+            ) {
+                Ok(drop) => state.code.push(drop),
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
+                }
+            }
+            index += 1;
+        }
+        match failure {
+            Some(problem) => Err(problem),
+            None => Ok(state.code),
+        }
+    }
+
+    /// Lower one source entry: a `let` binding (with its name) or a local
+    /// read, quotation or other word. Returns whether a binding consumed two
+    /// entries.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    fn body_entry(
+        &mut self,
+        source: &[u32],
+        at: usize,
+        state: &mut BodyState,
+        depth: u32,
+    ) -> Result<bool, crate::Diagnostic> {
+        let id = source[at];
+        let node = attempt!(source_node(
+            self.nodes,
+            id,
+            crate::Span { start: 0, end: 0 }
+        ));
+        let span = node.span;
+        if is_let(&node.kind) {
+            attempt!(self.binding(source, at, state, depth, span));
+            return Ok(true);
+        }
+        let local = match &node.kind {
+            super::Kind::Word(word) => {
+                attempt!(Self::lookup(self.meter, &state.locals, word, span))
+            }
+            _ => None,
+        };
+        if let Some(which) = local {
+            self.nodes[attempt!(crate::offset(id, span))].kind = super::Kind::Quotation(Vec::new());
+            attempt!(self.read(&mut state.code, which, &state.locals, depth, span, id));
+        } else if matches!(&node.kind, super::Kind::Quotation(_)) {
+            state
+                .code
+                .extend(attempt!(self.quote(id, &state.locals, depth, span)));
+        } else {
+            state.code.extend(attempt!(self.wrapped(
+                id,
+                &state.locals,
+                state.locals.len(),
+                depth,
+                span,
+                id
+            )));
+        }
+        Ok(false)
+    }
+
+    /// Install the `let` binder at `at`: check its name, move the bound value
+    /// above the hidden locals and record it as the newest binder.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
     )]
     #[expect(
         tigerstyle::raw_arithmetic_overflow,
         reason = "Owner: noble-contracts; at is an in-bounds source index, so at + 1 is at most the source length and cannot overflow usize; a Vec length is below isize::MAX, so locals.len() + 1 cannot overflow usize."
     )]
-    fn body(
+    fn binding(
         &mut self,
         source: &[u32],
-        mut locals: Vec<Bound>,
+        at: usize,
+        state: &mut BodyState,
         depth: u32,
-    ) -> Result<Vec<u32>, crate::Diagnostic> {
-        let mut code = Vec::new();
-        let mut introduced = 0usize;
-        let mut at = 0usize;
-        while at < source.len() {
-            let id = source[at];
-            let node = attempt!(source_node(
-                self.nodes,
-                id,
-                crate::Span { start: 0, end: 0 }
+        span: crate::Span,
+    ) -> Result<(), crate::Diagnostic> {
+        let id = source[at];
+        let next = source
+            .get(at + 1)
+            .copied()
+            .ok_or_else(|| crate::invalid(span, "let requires a local name"))?;
+        let target = attempt!(source_node(self.nodes, next, span));
+        let super::Kind::Word(name_bytes) = &target.kind else {
+            return Err(crate::invalid(target.span, "let requires a local name"));
+        };
+        if !name(name_bytes)
+            || crate::scan::find_first(&state.locals[..state.introduced], |prior| {
+                prior.name == *name_bytes
+            })
+            .is_some()
+        {
+            return Err(crate::invalid(
+                target.span,
+                "duplicate or invalid local name",
             ));
-            let span = node.span;
-            let is_binding = matches!(&node.kind, super::Kind::Word(word) if word == b"let");
-            if is_binding {
-                let next = source
-                    .get(at + 1)
-                    .copied()
-                    .ok_or_else(|| crate::invalid(span, "let requires a local name"))?;
-                let target = attempt!(source_node(self.nodes, next, span));
-                let super::Kind::Word(name_bytes) = &target.kind else {
-                    return Err(crate::invalid(target.span, "let requires a local name"));
-                };
-                if !name(name_bytes)
-                    || locals[..introduced]
-                        .iter()
-                        .any(|prior| prior.name == *name_bytes)
-                {
-                    return Err(crate::invalid(
-                        target.span,
-                        "duplicate or invalid local name",
-                    ));
-                }
-                attempt!(self.meter.depth(
-                    u32::try_from(locals.len() + 1)
-                        .map_err(|_| crate::invalid(span, "lexical binding depth overflow"))?,
-                    span
-                ));
-                // The new value is just below the previously hidden locals.
-                // Move it above them before installing it as the newest
-                // binder; `swap` moves ownership without copying or dropping.
-                for hidden in (0..locals.len()).rev() {
-                    attempt!(self.operation(
-                        &mut code,
-                        2,
-                        &locals,
-                        hidden,
-                        depth,
-                        span,
-                        Generation::BindingSwap,
-                        id,
-                        Some(next)
-                    ));
-                }
-                let bound = core::mem::replace(
-                    &mut self.nodes[attempt!(crate::offset(next, span))].kind,
-                    super::Kind::Quotation(Vec::new()),
-                );
-                let super::Kind::Word(name_bytes) = bound else {
-                    return Err(crate::internal(span));
-                };
-                self.nodes[attempt!(crate::offset(id, span))].kind =
-                    super::Kind::Quotation(Vec::new());
-                locals.insert(
-                    0,
-                    Bound {
-                        name: name_bytes,
-                        binder_node: next,
-                    },
-                );
-                introduced += 1;
-                at += 2;
-                continue;
-            }
-            let local = match &node.kind {
-                super::Kind::Word(word) => attempt!(Self::lookup(self.meter, &locals, word, span)),
-                _ => None,
-            };
-            if let Some(which) = local {
-                self.nodes[attempt!(crate::offset(id, span))].kind =
-                    super::Kind::Quotation(Vec::new());
-                attempt!(self.read(&mut code, which, &locals, depth, span, id));
-            } else if matches!(&node.kind, super::Kind::Quotation(_)) {
-                code.extend(attempt!(self.quote(id, &locals, depth, span)));
-            } else {
-                code.extend(attempt!(self.wrapped(
-                    id,
-                    &locals,
-                    locals.len(),
-                    depth,
-                    span,
-                    id
-                )));
-            }
-            at += 1;
         }
-        for local in &locals {
-            code.push(attempt!(self.builtin(
-                1,
-                crate::Span { start: 0, end: 0 },
-                Generation::CleanupDrop,
-                None,
-                Some(local.binder_node)
-            )));
+        attempt!(self.meter.depth(
+            u32::try_from(state.locals.len() + 1)
+                .map_err(|_| crate::invalid(span, "lexical binding depth overflow"))?,
+            span
+        ));
+        // The new value is just below the previously hidden locals.
+        // Move it above them before installing it as the newest
+        // binder; `swap` moves ownership without copying or dropping.
+        let mut hidden = state.locals.len();
+        let mut outcome = Ok(());
+        while outcome.is_ok() && hidden > 0 {
+            hidden -= 1;
+            outcome = self.operation(
+                &mut state.code,
+                2,
+                &state.locals,
+                hidden,
+                depth,
+                span,
+                Generation::BindingSwap,
+                id,
+                Some(next),
+            );
         }
-        Ok(code)
+        attempt!(outcome);
+        let bound = core::mem::replace(
+            &mut self.nodes[attempt!(crate::offset(next, span))].kind,
+            super::Kind::Quotation(Vec::new()),
+        );
+        let super::Kind::Word(name_bytes) = bound else {
+            return Err(crate::internal(span));
+        };
+        self.nodes[attempt!(crate::offset(id, span))].kind = super::Kind::Quotation(Vec::new());
+        state.locals.insert(
+            0,
+            Bound {
+                name: name_bytes,
+                binder_node: next,
+            },
+        );
+        state.introduced += 1;
+        Ok(())
+    }
+}
+
+/// The code, binders and binder count of one `Lower::body` walk.
+struct BodyState {
+    code: Vec<u32>,
+    locals: Vec<Bound>,
+    introduced: usize,
+}
+
+/// A copy of one binder, as captured by a quotation.
+fn copy_bound(bound: &Bound) -> Bound {
+    Bound {
+        name: bound.name.clone(),
+        binder_node: bound.binder_node,
     }
 }

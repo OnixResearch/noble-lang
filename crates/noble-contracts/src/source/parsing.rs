@@ -92,9 +92,7 @@ fn scan_tokens(
     } else {
         frame.body
     };
-    debug_assert!(body.iter().all(|index| usize::try_from(*index)
-        .ok()
-        .is_some_and(|node| node < state.nodes.len())));
+    debug_assert!(body_in_bounds(&body, state.nodes.len()));
     Ok((
         super::Tree {
             nodes: state.nodes,
@@ -103,6 +101,15 @@ fn scan_tokens(
         },
         name,
     ))
+}
+
+/// Whether every body entry names an existing arena node, checked in order.
+fn body_in_bounds(body: &[u32], nodes: usize) -> bool {
+    let mut at = 0;
+    while at < body.len() && matches!(usize::try_from(body[at]), Ok(node) if node < nodes) {
+        at += 1;
+    }
+    at == body.len()
 }
 
 fn advance(
