@@ -2050,7 +2050,7 @@ def types.EffSet.as_slice
   ok (alloc.vec.Vec.deref self)
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 559:8-566:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 556:8-563:5
     Visibility: public -/
 @[rust_loop_body]
 def contracts.Env.knows_effect_loop.body
@@ -2071,7 +2071,7 @@ def contracts.Env.knows_effect_loop.body
   else ok (done false)
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 559:8-566:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 556:8-563:5
     Visibility: public -/
 @[rust_loop]
 def contracts.Env.knows_effect_loop
@@ -2083,7 +2083,7 @@ def contracts.Env.knows_effect_loop
     index
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 557:4-566:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 554:4-563:5
     Visibility: public -/
 @[reducible]
 def contracts.Env.knows_effect
@@ -2766,7 +2766,7 @@ def contracts.nominal.generic_descriptor_matches
     else ok false
 
 /-- [noble_kernel::contracts::nominal::type::walk::is_shape_leaf]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 335:0-348:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 330:0-343:1 -/
 def contracts.nominal.type.walk.is_shape_leaf
   (ty : types.Ty) : Result Bool := do
   match ty with
@@ -2912,7 +2912,7 @@ def contracts.nominal.type.walk.work.State.with_program
   ok { self with pending := v2 }
 
 /-- [noble_kernel::contracts::nominal::type::walk::enqueue_shape]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 322:0-333:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 317:0-328:1 -/
 def contracts.nominal.type.walk.enqueue_shape
   (ty : types.Ty) (state : contracts.nominal.type.walk.work.State) :
   Result (Option contracts.nominal.type.walk.work.State)
@@ -2970,7 +2970,7 @@ def contracts.nominal.type.walk.enqueue_shape
     contracts.nominal.type.walk.work.State.with_generic state args nested
 
 /-- [noble_kernel::contracts::nominal::type::walk::program_children_fit]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 310:0-316:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 305:0-311:1 -/
 def contracts.nominal.type.walk.program_children_fit
   (ty : types.Ty) (max_nodes : Std.U32) : Result Bool := do
   match ty with
@@ -2998,7 +2998,7 @@ def contracts.nominal.type.walk.program_children_fit
   | types.Ty.GenericNominalType _ _ _ => ok true
 
 /-- [noble_kernel::contracts::nominal::type::walk::bounded_step]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 293:0-308:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 288:0-303:1 -/
 def contracts.nominal.type.walk.bounded_step
   (state : contracts.nominal.type.walk.work.State) (max_nodes : Std.U32) :
   Result contracts.nominal.type.walk.ShapeStep
@@ -3038,7 +3038,7 @@ def contracts.nominal.type.walk.work.State.for_descriptor
     { pending := v, visited := 0#u32 } shape false
 
 /-- [noble_kernel::contracts::nominal::type::walk::bounded_shape]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 270:4-279:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 265:4-274:5 -/
 @[rust_loop_body]
 def contracts.nominal.type.walk.bounded_shape_loop.body
   (max_nodes : Std.U32) (state : Option contracts.nominal.type.walk.work.State)
@@ -3058,7 +3058,7 @@ def contracts.nominal.type.walk.bounded_shape_loop.body
     | contracts.nominal.type.walk.ShapeStep.Failed => ok (cont (none, false))
 
 /-- [noble_kernel::contracts::nominal::type::walk::bounded_shape]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 270:4-279:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 265:4-274:5 -/
 @[rust_loop]
 def contracts.nominal.type.walk.bounded_shape_loop
   (state : Option contracts.nominal.type.walk.work.State) (max_nodes : Std.U32)
@@ -3072,7 +3072,7 @@ def contracts.nominal.type.walk.bounded_shape_loop
     (state, is_bounded)
 
 /-- [noble_kernel::contracts::nominal::type::walk::bounded_shape]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 264:0-281:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 259:0-276:1 -/
 def contracts.nominal.type.walk.bounded_shape
   (shape : types.NominalShape) (max_nodes : Std.U32) : Result Bool := do
   let o ← contracts.nominal.type.walk.work.State.for_descriptor shape
@@ -6755,7 +6755,7 @@ def words.Scheme.check_inst
     | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::effect_count]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 578:4-580:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 575:4-577:5
     Visibility: public -/
 def contracts.Env.effect_count
   (self : contracts.Env) : Result (Option Std.U64) := do
@@ -7476,7 +7476,7 @@ def acceptance.frames.complete_frame
 @[global_simps, irreducible] def untrusted.CANDIDATE_FORMAT : Std.U32 := 1#u32
 
 /-- [noble_kernel::contracts::index]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 588:0-590:1 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 585:0-587:1 -/
 def contracts.index
   («def» : contracts.Definition) : Result (Option Std.Usize) := do
   let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from «def»
@@ -7506,7 +7506,7 @@ def contracts.Behavior.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::kind]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 549:4-554:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 546:4-551:5
     Visibility: public -/
 def contracts.Env.kind
   (self : contracts.Env) («def» : contracts.Definition) :
@@ -7524,7 +7524,7 @@ def contracts.Env.kind
       o1
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::scheme]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 541:4-546:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 538:4-543:5
     Visibility: public -/
 def contracts.Env.scheme
   (self : contracts.Env) («def» : contracts.Definition) :
@@ -15037,7 +15037,7 @@ def words.Scheme.Insts.CoreCloneClone : core.clone.Clone words.Scheme := {
 }
 
 /-- [noble_kernel::contracts::environment]: loop body 1:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 613:4-621:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 610:4-618:5
     Visibility: public -/
 @[rust_loop_body]
 def contracts.environment_loop0_loop0.body
@@ -15064,7 +15064,7 @@ def contracts.environment_loop0_loop0.body
   else ok (done (defs, deps))
 
 /-- [noble_kernel::contracts::environment]: loop 1:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 613:4-621:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 610:4-618:5
     Visibility: public -/
 @[rust_loop]
 def contracts.environment_loop0_loop0
@@ -15081,7 +15081,7 @@ def contracts.environment_loop0_loop0
     (defs, deps, table_index)
 
 /-- [noble_kernel::contracts::environment]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 603:4-641:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 600:4-638:1
     Visibility: public -/
 @[rust_loop_body]
 def contracts.environment_loop0.body
@@ -15144,7 +15144,7 @@ def contracts.environment_loop0.body
       }))
 
 /-- [noble_kernel::contracts::environment]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 603:4-641:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 600:4-638:1
     Visibility: public -/
 @[rust_loop]
 def contracts.environment_loop0
@@ -15161,7 +15161,7 @@ def contracts.environment_loop0
     (kinds, index)
 
 /-- [noble_kernel::contracts::environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 597:0-641:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 594:0-638:1
     Visibility: public -/
 def contracts.environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -15216,7 +15216,7 @@ def P.Insts.CoreOpsFunctionFnMutTupleVecDefinition : core.ops.function.FnMut
 }
 
 /-- [noble_kernel::contracts::text_cursor_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 649:0-690:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 646:0-687:1
     Visibility: public -/
 def contracts.text_cursor_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -15349,7 +15349,7 @@ def contracts.text_cursor_environment
       contracts.Env (core.convert.FromSame shapes.Defect) residual
 
 /-- [noble_kernel::contracts::calculator_environment]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 841:4-852:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 838:4-849:1
     Visibility: public -/
 @[rust_loop_body]
 def contracts.calculator_environment_loop.body
@@ -15431,7 +15431,7 @@ def contracts.calculator_environment_loop.body
       ok (done r1)
 
 /-- [noble_kernel::contracts::calculator_environment]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 841:4-852:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 838:4-849:1
     Visibility: public -/
 @[rust_loop]
 def contracts.calculator_environment_loop
@@ -15455,7 +15455,7 @@ def contracts.calculator_environment_loop
     (iter, v, v1)
 
 /-- [noble_kernel::contracts::calculator_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 761:0-852:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 758:0-849:1
     Visibility: public -/
 def contracts.calculator_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -15753,7 +15753,7 @@ def contracts.nominal.validation.calculator_prefix_matches
   | core.result.Result.Err _ => ok false
 
 /-- [noble_kernel::contracts::declared_text_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 861:0-881:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 858:0-878:1
     Visibility: public -/
 def contracts.declared_text_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -19156,6 +19156,21 @@ def acceptance.preflight.nominal_budget
       ok (core.result.Result.Err (acceptance.Fail.Exhausted
         untrusted.LimitKind.Work))
 
+/-- [noble_kernel::types::data::{noble_kernel::types::NominalShape}::owns_resource]:
+    Source: 'crates/noble-kernel/src/types/data.rs', lines 134:4-139:5 -/
+def types.data.NominalShape.owns_resource
+  (self : types.NominalShape) : Result Bool := do
+  match self with
+  | types.NominalShape.Opaque representation =>
+    let b ← types.data.Ty.is_data representation
+    ok (¬ b)
+  | types.NominalShape.Variant left right =>
+    let b ← types.data.Ty.is_data left
+    if b
+    then let b1 ← types.data.Ty.is_data right
+         ok (¬ b1)
+    else ok true
+
 /-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::validate_decl]: loop body 0:
     Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 235:8-237:9 -/
 @[rust_loop_body]
@@ -19193,7 +19208,7 @@ def contracts.nominal.type.walk.Env.validate_decl_loop
     prior
 
 /-- [noble_kernel::contracts::nominal::type::walk::{noble_kernel::contracts::Env}::validate_decl]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 229:4-260:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 229:4-255:5 -/
 def contracts.nominal.type.walk.Env.validate_decl
   (self : contracts.Env) (index : Std.Usize) (max_nodes : Std.U32) :
   Result Bool
@@ -19239,34 +19254,19 @@ def contracts.nominal.type.walk.Env.validate_decl
                   true index none
               else ok false
           else
-            let (ns, is_owns_resource) ←
-              match decl1.shape with
-              | types.NominalShape.Opaque representation =>
-                do
-                let b2 ← types.data.Ty.is_data representation
-                ok (decl1.shape, ¬ b2)
-              | types.NominalShape.Variant left right =>
-                do
-                let b2 ← types.data.Ty.is_data left
-                let b3 ←
-                  if b2
-                  then do
-                       let b4 ← types.data.Ty.is_data right
-                       ok (¬ b4)
-                  else ok true
-                ok (decl1.shape, b3)
-            if is_owns_resource
+            let b2 ← types.data.NominalShape.owns_resource decl1.shape
+            if b2
             then ok false
             else
-              match ns with
+              match decl1.shape with
               | types.NominalShape.Opaque ty =>
                 contracts.nominal.type.walk.Env.walk_type self ty max_nodes
                   true index none
               | types.NominalShape.Variant left right =>
-                let b2 ←
+                let b3 ←
                   contracts.nominal.type.walk.Env.walk_type self left max_nodes
                     true index none
-                if b2
+                if b3
                 then
                   contracts.nominal.type.walk.Env.walk_type self right
                     max_nodes true index none
@@ -35771,8 +35771,18 @@ def contracts.clone_budget.DEPTH_LIMIT : Std.Usize := 64#usize
 @[global_simps, irreducible]
 def contracts.clone_budget.NODE_LIMIT : Std.Usize := 512#usize
 
+/-- [noble_kernel::contracts::clone_budget::stacks_exceed_bound]:
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 26:0-28:1 -/
+def contracts.clone_budget.stacks_exceed_bound
+  (scheme : words.Scheme) : Result Bool := do
+  let i := alloc.vec.Vec.len scheme.stack_in
+  if i > 128#usize
+  then ok true
+  else let i1 := alloc.vec.Vec.len scheme.stack_out
+       ok (i1 > 128#usize)
+
 /-- [noble_kernel::contracts::clone_budget::{impl core::clone::Clone for noble_kernel::contracts::clone_budget::CloneBudget}::clone]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 22:9-22:14
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 31:9-31:14
     Visibility: public -/
 def contracts.clone_budget.CloneBudget.Insts.CoreCloneClone.clone
   (self : contracts.clone_budget.CloneBudget) :
@@ -35781,7 +35791,7 @@ def contracts.clone_budget.CloneBudget.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [noble_kernel::contracts::clone_budget::{impl core::clone::Clone for noble_kernel::contracts::clone_budget::CloneBudget}]
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 22:9-22:14 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 31:9-31:14 -/
 @[reducible]
 def contracts.clone_budget.CloneBudget.Insts.CoreCloneClone : core.clone.Clone
   contracts.clone_budget.CloneBudget := {
@@ -35789,7 +35799,7 @@ def contracts.clone_budget.CloneBudget.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::contracts::clone_budget::{impl core::marker::Copy for noble_kernel::contracts::clone_budget::CloneBudget}]
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 22:16-22:20 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 31:16-31:20 -/
 @[reducible]
 def contracts.clone_budget.CloneBudget.Insts.CoreMarkerCopy : core.marker.Copy
   contracts.clone_budget.CloneBudget := {
@@ -35797,7 +35807,7 @@ def contracts.clone_budget.CloneBudget.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::contracts::clone_budget::{impl core::fmt::Debug for noble_kernel::contracts::clone_budget::CloneBudget}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 22:22-22:27
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 31:22-31:27
     Visibility: public -/
 def contracts.clone_budget.CloneBudget.Insts.CoreFmtDebug.fmt
   (self : contracts.clone_budget.CloneBudget) (f : core.fmt.Formatter) :
@@ -35811,7 +35821,7 @@ def contracts.clone_budget.CloneBudget.Insts.CoreFmtDebug.fmt
     "bytes") dyn (toStr "allocations") dyn1 (toStr "reserved_bytes") dyn2
 
 /-- Trait implementation: [noble_kernel::contracts::clone_budget::{impl core::fmt::Debug for noble_kernel::contracts::clone_budget::CloneBudget}]
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 22:22-22:27 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 31:22-31:27 -/
 @[reducible]
 def contracts.clone_budget.CloneBudget.Insts.CoreFmtDebug : core.fmt.Debug
   contracts.clone_budget.CloneBudget := {
@@ -35819,14 +35829,14 @@ def contracts.clone_budget.CloneBudget.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_kernel::contracts::clone_budget::{impl core::marker::StructuralPartialEq for noble_kernel::contracts::clone_budget::CloneBudget}]
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 22:29-22:38 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 31:29-31:38 -/
 @[reducible]
 def contracts.clone_budget.CloneBudget.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq contracts.clone_budget.CloneBudget := {
 }
 
 /-- [noble_kernel::contracts::clone_budget::{impl core::cmp::PartialEq<noble_kernel::contracts::clone_budget::CloneBudget> for noble_kernel::contracts::clone_budget::CloneBudget}::eq]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 22:29-22:38
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 31:29-31:38
     Visibility: public -/
 def contracts.clone_budget.CloneBudget.Insts.CoreCmpPartialEqCloneBudget.eq
   (self : contracts.clone_budget.CloneBudget)
@@ -35841,7 +35851,7 @@ def contracts.clone_budget.CloneBudget.Insts.CoreCmpPartialEqCloneBudget.eq
   else ok false
 
 /-- Trait implementation: [noble_kernel::contracts::clone_budget::{impl core::cmp::PartialEq<noble_kernel::contracts::clone_budget::CloneBudget> for noble_kernel::contracts::clone_budget::CloneBudget}]
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 22:29-22:38 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 31:29-31:38 -/
 @[reducible]
 impl_def contracts.clone_budget.CloneBudget.Insts.CoreCmpPartialEqCloneBudget :
   core.cmp.PartialEq contracts.clone_budget.CloneBudget
@@ -35852,14 +35862,14 @@ impl_def contracts.clone_budget.CloneBudget.Insts.CoreCmpPartialEqCloneBudget :
 }
 
 /-- [noble_kernel::contracts::clone_budget::{impl core::cmp::Eq for noble_kernel::contracts::clone_budget::CloneBudget}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 22:40-22:42
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 31:40-31:42
     Visibility: public -/
 def contracts.clone_budget.CloneBudget.Insts.CoreCmpEq.assert_fields_are_eq
   (self : contracts.clone_budget.CloneBudget) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::contracts::clone_budget::{impl core::cmp::Eq for noble_kernel::contracts::clone_budget::CloneBudget}]
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 22:40-22:42 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 31:40-31:42 -/
 @[reducible]
 def contracts.clone_budget.CloneBudget.Insts.CoreCmpEq : core.cmp.Eq
   contracts.clone_budget.CloneBudget := {
@@ -35870,7 +35880,7 @@ def contracts.clone_budget.CloneBudget.Insts.CoreCmpEq : core.cmp.Eq
 }
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::bytes]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 43:4-46:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 52:4-55:5 -/
 def contracts.clone_budget.Counter.impl.bytes
   (self : contracts.clone_budget.Counter) (bytes : Std.U64) :
   Result ((Option Unit) × contracts.clone_budget.Counter)
@@ -35889,7 +35899,7 @@ def contracts.clone_budget.Counter.impl.bytes
     ok (o1, self)
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::allocation]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 48:4-51:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 57:4-60:5 -/
 def contracts.clone_budget.Counter.allocation
   (self : contracts.clone_budget.Counter) :
   Result ((Option Unit) × contracts.clone_budget.Counter)
@@ -35906,7 +35916,7 @@ def contracts.clone_budget.Counter.allocation
     ok (o1, self)
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::vector]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 53:4-63:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 62:4-72:5 -/
 def contracts.clone_budget.Counter.vector
   (T : Type _) (self : contracts.clone_budget.Counter) (len : Std.Usize) :
   Result ((Option Unit) × contracts.clone_budget.Counter)
@@ -35965,7 +35975,7 @@ def contracts.clone_budget.Counter.vector
     ok (o1, self)
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::node]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 65:4-67:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 74:4-76:5 -/
 def contracts.clone_budget.Counter.node
   (T : Type _) (self : contracts.clone_budget.Counter) :
   Result ((Option Unit) × contracts.clone_budget.Counter)
@@ -35986,7 +35996,7 @@ def contracts.clone_budget.Counter.node
 mutual
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::boxed_type]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 166:4-174:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 183:4-191:5 -/
 def contracts.clone_budget.Counter.boxed_type
   (self : contracts.clone_budget.Counter) (value : types.Ty)
   (depth : Std.Usize) (nodes : Std.Usize) :
@@ -36004,61 +36014,35 @@ def contracts.clone_budget.Counter.boxed_type
     ok (o1, self1, nodes)
 partial_fixpoint
 
-/-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::types]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 179:8-183:5 -/
-@[rust_loop]
-def contracts.clone_budget.Counter.types_loop
-  (iter : core.slice.iter.Iter types.Ty)
-  (self : contracts.clone_budget.Counter) (depth : Std.Usize)
-  (nodes : Std.Usize) :
+/-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::types]:
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 200:4-212:5 -/
+def contracts.clone_budget.Counter.types
+  (self : contracts.clone_budget.Counter) (items : Slice types.Ty)
+  (index : Std.Usize) (depth : Std.Usize) (nodes : Std.Usize) :
   Result ((Option Unit) × contracts.clone_budget.Counter × Std.Usize)
   := do
-  loop
-    (fun (iter1, self1, nodes1) =>
-      contracts.clone_budget.Counter.types_loop.body depth iter1 self1 nodes1)
-    (iter, self, nodes)
-partial_fixpoint
-
-/-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::types]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 179:8-183:5 -/
-@[rust_loop_body]
-def contracts.clone_budget.Counter.types_loop.body
-  (depth : Std.Usize) (iter : core.slice.iter.Iter types.Ty)
-  (self : contracts.clone_budget.Counter) (nodes : Std.Usize) :
-  Result (ControlFlow ((core.slice.iter.Iter types.Ty) ×
-    contracts.clone_budget.Counter × Std.Usize) ((Option Unit) ×
-    contracts.clone_budget.Counter × Std.Usize))
-  := do
-  let (o, iter1) ← core.slice.iter.IteratorSliceIter.next iter
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice types.Ty) items
+      index
   match o with
-  | none => ok (done (some (), self, nodes))
+  | none => ok (some (), self, nodes)
   | some item =>
     let (o1, self1, nodes1) ←
       contracts.clone_budget.Counter.ty self item depth nodes
     let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o1
     match cf with
     | core.ops.control_flow.ControlFlow.Continue _ =>
-      ok (cont (iter1, self1, nodes1))
+      let i ← lift (core.num.Usize.saturating_add index 1#usize)
+      contracts.clone_budget.Counter.types self1 items i depth nodes1
     | core.ops.control_flow.ControlFlow.Break residual =>
       let o2 ←
         core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
           Unit residual
-      ok (done (o2, self1, nodes1))
-partial_fixpoint
-
-/-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::types]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 178:4-183:5 -/
-def contracts.clone_budget.Counter.types
-  (self : contracts.clone_budget.Counter) (items : Slice types.Ty)
-  (depth : Std.Usize) (nodes : Std.Usize) :
-  Result ((Option Unit) × contracts.clone_budget.Counter × Std.Usize)
-  := do
-  let iter ← core.slice.Slice.iter items
-  contracts.clone_budget.Counter.types_loop iter self depth nodes
+      ok (o2, self1, nodes1)
 partial_fixpoint
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::nominal]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 185:4-199:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 214:4-228:5 -/
 def contracts.clone_budget.Counter.nominal
   (self : contracts.clone_budget.Counter) (shape : types.NominalShape)
   (depth : Std.Usize) (nodes : Std.Usize) :
@@ -36102,7 +36086,7 @@ def contracts.clone_budget.Counter.nominal
 partial_fixpoint
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::ty]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 205:4-264:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 234:4-293:5 -/
 def contracts.clone_budget.Counter.ty
   (self : contracts.clone_budget.Counter) (value : types.Ty)
   (depth : Std.Usize) (nodes : Std.Usize) :
@@ -36242,8 +36226,8 @@ def contracts.clone_budget.Counter.ty
                               lift (core.num.Usize.saturating_add depth
                                 1#usize)
                             let (o5, self5, nodes2) ←
-                              contracts.clone_budget.Counter.types self4 s1 i4
-                                nodes1
+                              contracts.clone_budget.Counter.types self4 s1
+                                0#usize i4 nodes1
                             let cf5 ←
                               core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                 o5
@@ -36255,7 +36239,7 @@ def contracts.clone_budget.Counter.ty
                                   1#usize)
                               let (o6, self6, nodes3) ←
                                 contracts.clone_budget.Counter.types self5 s2
-                                  i5 nodes2
+                                  0#usize i5 nodes2
                               let cf6 ←
                                 core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                   o6
@@ -36303,7 +36287,7 @@ def contracts.clone_budget.Counter.ty
                                   1#usize)
                               let (o6, self6, nodes2) ←
                                 contracts.clone_budget.Counter.types self5 s1
-                                  i4 nodes1
+                                  0#usize i4 nodes1
                               let cf6 ←
                                 core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                   o6
@@ -36315,7 +36299,7 @@ def contracts.clone_budget.Counter.ty
                                     1#usize)
                                 let (o7, self7, nodes3) ←
                                   contracts.clone_budget.Counter.types self6 s2
-                                    i5 nodes2
+                                    0#usize i5 nodes2
                                 let cf7 ←
                                   core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                     o7
@@ -36373,7 +36357,7 @@ def contracts.clone_budget.Counter.ty
                                   1#usize)
                               let (o6, self6, nodes2) ←
                                 contracts.clone_budget.Counter.types self5 s1
-                                  i4 nodes1
+                                  0#usize i4 nodes1
                               let cf6 ←
                                 core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                   o6
@@ -36385,7 +36369,7 @@ def contracts.clone_budget.Counter.ty
                                     1#usize)
                                 let (o7, self7, nodes3) ←
                                   contracts.clone_budget.Counter.types self6 s2
-                                    i5 nodes2
+                                    0#usize i5 nodes2
                                 let cf7 ←
                                   core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                     o7
@@ -36434,7 +36418,7 @@ def contracts.clone_budget.Counter.ty
                                     1#usize)
                                 let (o7, self7, nodes2) ←
                                   contracts.clone_budget.Counter.types self6 s1
-                                    i4 nodes1
+                                    0#usize i4 nodes1
                                 let cf7 ←
                                   core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                     o7
@@ -36447,7 +36431,7 @@ def contracts.clone_budget.Counter.ty
                                       1#usize)
                                   let (o8, self8, nodes3) ←
                                     contracts.clone_budget.Counter.types self7
-                                      s2 i5 nodes2
+                                      s2 0#usize i5 nodes2
                                   let cf8 ←
                                     core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                       o8
@@ -36628,7 +36612,7 @@ end
 mutual
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::boxed_pattern]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 69:4-77:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 78:4-86:5 -/
 def contracts.clone_budget.Counter.boxed_pattern
   (self : contracts.clone_budget.Counter) (value : shapes.Pattern)
   (depth : Std.Usize) (nodes : Std.Usize) :
@@ -36646,62 +36630,35 @@ def contracts.clone_budget.Counter.boxed_pattern
     ok (o1, self1, nodes)
 partial_fixpoint
 
-/-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::patterns]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 91:8-95:5 -/
-@[rust_loop]
-def contracts.clone_budget.Counter.patterns_loop
-  (iter : core.slice.iter.Iter shapes.Pattern)
-  (self : contracts.clone_budget.Counter) (depth : Std.Usize)
-  (nodes : Std.Usize) :
+/-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::patterns]:
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 100:4-112:5 -/
+def contracts.clone_budget.Counter.patterns
+  (self : contracts.clone_budget.Counter) (items : Slice shapes.Pattern)
+  (index : Std.Usize) (depth : Std.Usize) (nodes : Std.Usize) :
   Result ((Option Unit) × contracts.clone_budget.Counter × Std.Usize)
   := do
-  loop
-    (fun (iter1, self1, nodes1) =>
-      contracts.clone_budget.Counter.patterns_loop.body depth iter1 self1
-      nodes1)
-    (iter, self, nodes)
-partial_fixpoint
-
-/-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::patterns]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 91:8-95:5 -/
-@[rust_loop_body]
-def contracts.clone_budget.Counter.patterns_loop.body
-  (depth : Std.Usize) (iter : core.slice.iter.Iter shapes.Pattern)
-  (self : contracts.clone_budget.Counter) (nodes : Std.Usize) :
-  Result (ControlFlow ((core.slice.iter.Iter shapes.Pattern) ×
-    contracts.clone_budget.Counter × Std.Usize) ((Option Unit) ×
-    contracts.clone_budget.Counter × Std.Usize))
-  := do
-  let (o, iter1) ← core.slice.iter.IteratorSliceIter.next iter
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice shapes.Pattern)
+      items index
   match o with
-  | none => ok (done (some (), self, nodes))
+  | none => ok (some (), self, nodes)
   | some item =>
     let (o1, self1, nodes1) ←
       contracts.clone_budget.Counter.pattern self item depth nodes
     let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o1
     match cf with
     | core.ops.control_flow.ControlFlow.Continue _ =>
-      ok (cont (iter1, self1, nodes1))
+      let i ← lift (core.num.Usize.saturating_add index 1#usize)
+      contracts.clone_budget.Counter.patterns self1 items i depth nodes1
     | core.ops.control_flow.ControlFlow.Break residual =>
       let o2 ←
         core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
           Unit residual
-      ok (done (o2, self1, nodes1))
-partial_fixpoint
-
-/-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::patterns]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 85:4-95:5 -/
-def contracts.clone_budget.Counter.patterns
-  (self : contracts.clone_budget.Counter) (items : Slice shapes.Pattern)
-  (depth : Std.Usize) (nodes : Std.Usize) :
-  Result ((Option Unit) × contracts.clone_budget.Counter × Std.Usize)
-  := do
-  let iter ← core.slice.Slice.iter items
-  contracts.clone_budget.Counter.patterns_loop iter self depth nodes
+      ok (o2, self1, nodes1)
 partial_fixpoint
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::pattern]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 101:4-164:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 118:4-181:5 -/
 def contracts.clone_budget.Counter.pattern
   (self : contracts.clone_budget.Counter) (value : shapes.Pattern)
   (depth : Std.Usize) (nodes : Std.Usize) :
@@ -36852,7 +36809,7 @@ def contracts.clone_budget.Counter.pattern
                                   1#usize)
                               let (o6, self6, nodes2) ←
                                 contracts.clone_budget.Counter.patterns self5 s
-                                  i4 nodes1
+                                  0#usize i4 nodes1
                               let cf6 ←
                                 core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                   o6
@@ -36864,7 +36821,7 @@ def contracts.clone_budget.Counter.pattern
                                     1#usize)
                                 let (o7, self7, nodes3) ←
                                   contracts.clone_budget.Counter.patterns self6
-                                    s1 i5 nodes2
+                                    s1 0#usize i5 nodes2
                                 let cf7 ←
                                   core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                     o7
@@ -36914,7 +36871,7 @@ def contracts.clone_budget.Counter.pattern
                                     1#usize)
                                 let (o7, self7, nodes2) ←
                                   contracts.clone_budget.Counter.patterns self6
-                                    s i4 nodes1
+                                    s 0#usize i4 nodes1
                                 let cf7 ←
                                   core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                     o7
@@ -36927,7 +36884,7 @@ def contracts.clone_budget.Counter.pattern
                                       1#usize)
                                   let (o8, self8, nodes3) ←
                                     contracts.clone_budget.Counter.patterns
-                                      self7 s1 i5 nodes2
+                                      self7 s1 0#usize i5 nodes2
                                   let cf8 ←
                                     core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                       o8
@@ -36986,7 +36943,7 @@ def contracts.clone_budget.Counter.pattern
                                     1#usize)
                                 let (o7, self7, nodes2) ←
                                   contracts.clone_budget.Counter.patterns self6
-                                    s i4 nodes1
+                                    s 0#usize i4 nodes1
                                 let cf7 ←
                                   core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                     o7
@@ -36999,7 +36956,7 @@ def contracts.clone_budget.Counter.pattern
                                       1#usize)
                                   let (o8, self8, nodes3) ←
                                     contracts.clone_budget.Counter.patterns
-                                      self7 s1 i5 nodes2
+                                      self7 s1 0#usize i5 nodes2
                                   let cf8 ←
                                     core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                       o8
@@ -37049,7 +37006,7 @@ def contracts.clone_budget.Counter.pattern
                                       1#usize)
                                   let (o8, self8, nodes2) ←
                                     contracts.clone_budget.Counter.patterns
-                                      self7 s i4 nodes1
+                                      self7 s 0#usize i4 nodes1
                                   let cf8 ←
                                     core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                       o8
@@ -37062,7 +37019,7 @@ def contracts.clone_budget.Counter.pattern
                                         1#usize)
                                     let (o9, self9, nodes3) ←
                                       contracts.clone_budget.Counter.patterns
-                                        self8 s1 i5 nodes2
+                                        self8 s1 0#usize i5 nodes2
                                     let cf9 ←
                                       core.option.Option.Insts.CoreOpsTry_traitTry.branch
                                         o9
@@ -37203,7 +37160,7 @@ partial_fixpoint
 end
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::scheme_stack]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 290:8-294:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 319:8-323:5 -/
 @[rust_loop_body]
 def contracts.clone_budget.Counter.scheme_stack_loop.body
   (iter : core.slice.iter.Iter shapes.Pattern)
@@ -37228,7 +37185,7 @@ def contracts.clone_budget.Counter.scheme_stack_loop.body
       ok (done (o2, self1))
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::scheme_stack]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 290:8-294:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 319:8-323:5 -/
 @[rust_loop]
 def contracts.clone_budget.Counter.scheme_stack_loop
   (iter : core.slice.iter.Iter shapes.Pattern)
@@ -37241,7 +37198,7 @@ def contracts.clone_budget.Counter.scheme_stack_loop
     (iter, self)
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::scheme_stack]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 289:4-294:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 318:4-323:5 -/
 def contracts.clone_budget.Counter.scheme_stack
   (self : contracts.clone_budget.Counter) (stack : Slice shapes.Pattern) :
   Result ((Option Unit) × contracts.clone_budget.Counter)
@@ -37250,19 +37207,14 @@ def contracts.clone_budget.Counter.scheme_stack
   contracts.clone_budget.Counter.scheme_stack_loop iter self
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::scheme]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 266:4-284:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 295:4-313:5 -/
 def contracts.clone_budget.Counter.scheme
   (self : contracts.clone_budget.Counter) (scheme : words.Scheme) :
   Result ((Option Unit) × contracts.clone_budget.Counter)
   := do
   let i := alloc.vec.Vec.len scheme.var_kinds
   let i1 := alloc.vec.Vec.len scheme.effects
-  let i2 := alloc.vec.Vec.len scheme.stack_in
-  let has_too_many_stacks ←
-    if i2 > 128#usize
-    then ok true
-    else let i3 := alloc.vec.Vec.len scheme.stack_out
-         ok (i3 > 128#usize)
+  let has_too_many_stacks ← contracts.clone_budget.stacks_exceed_bound scheme
   if i > 8#usize
   then ok (none, self)
   else
@@ -37272,15 +37224,15 @@ def contracts.clone_budget.Counter.scheme
       if has_too_many_stacks
       then ok (none, self)
       else
-        let i3 := alloc.vec.Vec.len scheme.var_kinds
+        let i2 := alloc.vec.Vec.len scheme.var_kinds
         let (o, self1) ←
-          contracts.clone_budget.Counter.vector words.VariableKind self i3
+          contracts.clone_budget.Counter.vector words.VariableKind self i2
         let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
         match cf with
         | core.ops.control_flow.ControlFlow.Continue _ =>
-          let i4 := alloc.vec.Vec.len scheme.effects
+          let i3 := alloc.vec.Vec.len scheme.effects
           let (o1, self2) ←
-            contracts.clone_budget.Counter.vector shapes.EffectSlot self1 i4
+            contracts.clone_budget.Counter.vector shapes.EffectSlot self1 i3
           let cf1 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o1
           match cf1 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -37441,7 +37393,7 @@ def contracts.clone_budget.Counter.scheme
           ok (o1, self1)
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 325:8-328:9
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 354:8-357:9
     Visibility: public -/
 @[rust_loop_body]
 def contracts.clone_budget.Env.calculator_clone_budget_loop0.body
@@ -37469,7 +37421,7 @@ def contracts.clone_budget.Env.calculator_clone_budget_loop0.body
   else ok (done (cost, walked))
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 325:8-328:9
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 354:8-357:9
     Visibility: public -/
 @[rust_loop]
 def contracts.clone_budget.Env.calculator_clone_budget_loop0
@@ -37485,7 +37437,7 @@ def contracts.clone_budget.Env.calculator_clone_budget_loop0
     (cost, index, walked)
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget]: loop body 1:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 332:8-335:9
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 361:8-364:9
     Visibility: public -/
 @[rust_loop_body]
 def contracts.clone_budget.Env.calculator_clone_budget_loop1.body
@@ -37510,7 +37462,7 @@ def contracts.clone_budget.Env.calculator_clone_budget_loop1.body
   else ok (done (cost, walked))
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget]: loop 1:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 332:8-335:9
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 361:8-364:9
     Visibility: public -/
 @[rust_loop]
 def contracts.clone_budget.Env.calculator_clone_budget_loop1
@@ -37525,7 +37477,7 @@ def contracts.clone_budget.Env.calculator_clone_budget_loop1
     (cost, index, walked)
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget]: loop body 2:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 339:8-342:9
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 368:8-371:9
     Visibility: public -/
 @[rust_loop_body]
 def contracts.clone_budget.Env.calculator_clone_budget_loop2.body
@@ -37552,7 +37504,7 @@ def contracts.clone_budget.Env.calculator_clone_budget_loop2.body
   else ok (done (cost, walked))
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget]: loop 2:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 339:8-342:9
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 368:8-371:9
     Visibility: public -/
 @[rust_loop]
 def contracts.clone_budget.Env.calculator_clone_budget_loop2
@@ -37568,7 +37520,7 @@ def contracts.clone_budget.Env.calculator_clone_budget_loop2
     (cost, index, walked)
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 303:4-353:5
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 332:4-382:5
     Visibility: public -/
 def contracts.clone_budget.Env.calculator_clone_budget
   (self : contracts.Env) :
@@ -40577,39 +40529,24 @@ def contracts.Env.valid_generic_instance
     contracts.Env.generic_instance_matches self ty id
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_nominal]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 483:4-492:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 483:4-489:5
     Visibility: public -/
 def contracts.Env.declare_nominal
   (self : contracts.Env) (decl : contracts.NominalDecl) :
   Result (core.result.Result (contracts.Env × contracts.NominalOps)
     contracts.NominalError)
   := do
-  let (ns, is_resource_payload) ←
-    match decl.shape with
-    | types.NominalShape.Opaque inner =>
-      do
-      let b ← types.data.Ty.is_data inner
-      ok (decl.shape, ¬ b)
-    | types.NominalShape.Variant left right =>
-      do
-      let b ← types.data.Ty.is_data left
-      let b1 ←
-        if b
-        then do
-             let b2 ← types.data.Ty.is_data right
-             ok (¬ b2)
-        else ok true
-      ok (decl.shape, b1)
+  let is_resource_payload ← types.data.NominalShape.owns_resource decl.shape
   if self.live_slots
   then
     if is_resource_payload
     then
       ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
-    else contracts.nominal.register self { decl with shape := ns }
-  else contracts.nominal.register self { decl with shape := ns }
+    else contracts.nominal.register self decl
+  else contracts.nominal.register self decl
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_generic_variant]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 496:4-501:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 493:4-498:5
     Visibility: public -/
 def contracts.Env.declare_generic_variant
   (self : contracts.Env) (decl : contracts.GenericVariantDecl) :
@@ -40619,7 +40556,7 @@ def contracts.Env.declare_generic_variant
   contracts.nominal.register_generic_variant self decl
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_emit]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 506:4-511:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 503:4-508:5
     Visibility: public -/
 def contracts.Env.declare_bound_emit
   (self : contracts.Env) (registration : contracts.BoundEmitRegistration) :
@@ -40629,7 +40566,7 @@ def contracts.Env.declare_bound_emit
   contracts.nominal.register_bound_emit self registration
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_clock]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 515:4-520:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 512:4-517:5
     Visibility: public -/
 def contracts.Env.declare_bound_clock
   (self : contracts.Env) (registration : contracts.BoundClockRegistration) :
@@ -40639,7 +40576,7 @@ def contracts.Env.declare_bound_clock
   contracts.nominal.register_bound_clock self registration
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_code_export]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 524:4-529:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 521:4-526:5
     Visibility: public -/
 def contracts.Env.declare_bound_code_export
   (self : contracts.Env) (registration : contracts.BoundCodeExportRegistration)
@@ -40650,7 +40587,7 @@ def contracts.Env.declare_bound_code_export
   contracts.nominal.register_bound_code_export self registration
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_send]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 533:4-538:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 530:4-535:5
     Visibility: public -/
 def contracts.Env.declare_bound_send
   (self : contracts.Env) (registration : contracts.BoundSendRegistration) :
@@ -40660,7 +40597,7 @@ def contracts.Env.declare_bound_send
   contracts.nominal.register_bound_send self registration
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::len]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 569:4-571:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 566:4-568:5
     Visibility: public -/
 def contracts.Env.len (self : contracts.Env) : Result (Option Std.U64) := do
   let i := alloc.vec.Vec.len self.defs
@@ -40668,14 +40605,14 @@ def contracts.Env.len (self : contracts.Env) : Result (Option Std.U64) := do
   core.result.Result.ok r
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::is_empty]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 583:4-585:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 580:4-582:5
     Visibility: public -/
 def contracts.Env.is_empty (self : contracts.Env) : Result Bool := do
   let i := alloc.vec.Vec.len self.defs
   ok (i = 0#usize)
 
 /-- [noble_kernel::contracts::checked_i64_environment::{impl core::ops::function::Fn<(noble_kernel::shapes::Pattern,), noble_kernel::words::Scheme> for noble_kernel::contracts::checked_i64_environment::{closure#1}<'_0>}::call]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 722:16-727:5 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 719:16-724:5 -/
 def
   contracts.checked_i64_environment.closure_1.Insts.CoreOpsFunctionFnTuplePatternScheme.call
   (c : contracts.checked_i64_environment.closure_1)
@@ -40705,7 +40642,7 @@ def
     }
 
 /-- [noble_kernel::contracts::checked_i64_environment::{impl core::ops::function::Fn<(noble_kernel::shapes::Pattern,), noble_kernel::words::Scheme> for noble_kernel::contracts::checked_i64_environment::{closure}<'_0>}::call]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 712:17-721:5 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 709:17-718:5 -/
 def
   contracts.checked_i64_environment.closure.Insts.CoreOpsFunctionFnTuplePatternScheme.call
   (c : contracts.checked_i64_environment.closure)
@@ -40736,7 +40673,7 @@ def
     }
 
 /-- [noble_kernel::contracts::checked_i64_environment]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 742:4-749:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 739:4-746:1
     Visibility: public -/
 @[rust_loop_body]
 def contracts.checked_i64_environment_loop.body
@@ -40798,7 +40735,7 @@ def contracts.checked_i64_environment_loop.body
       ok (done r1)
 
 /-- [noble_kernel::contracts::checked_i64_environment]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 742:4-749:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 739:4-746:1
     Visibility: public -/
 @[rust_loop]
 def contracts.checked_i64_environment_loop
@@ -40823,7 +40760,7 @@ def contracts.checked_i64_environment_loop
     (iter, v, v1, v8)
 
 /-- [noble_kernel::contracts::checked_i64_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 698:0-749:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 695:0-746:1
     Visibility: public -/
 def contracts.checked_i64_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do

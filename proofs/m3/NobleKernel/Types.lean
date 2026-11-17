@@ -527,7 +527,7 @@ structure contracts.nominal.type.walk.work.State where
   visited : Std.U32
 
 /-- [noble_kernel::contracts::nominal::type::walk::ShapeStep]
-    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 283:0-287:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/type/walk.rs', lines 278:0-282:1 -/
 @[discriminant isize]
 inductive contracts.nominal.type.walk.ShapeStep where
 | Continue :
@@ -1585,7 +1585,7 @@ structure authority.report.UntrustedReceipt where
   description : authority.report.ReceiptDescription
 
 /-- [noble_kernel::contracts::clone_budget::CloneBudget]
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 27:0-31:1
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 36:0-40:1
     Visibility: public -/
 structure contracts.clone_budget.CloneBudget where
   bytes : Std.U64
@@ -1593,7 +1593,7 @@ structure contracts.clone_budget.CloneBudget where
   reserved_bytes : Std.U64
 
 /-- [noble_kernel::contracts::clone_budget::Counter]
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 33:0-36:1 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 42:0-45:1 -/
 structure contracts.clone_budget.Counter where
   bytes : Std.U64
   allocations : Std.U64
@@ -1694,12 +1694,12 @@ structure contracts.ClockPlan where
   script : Slice Std.I64
 
 /-- [noble_kernel::contracts::checked_i64_environment::{closure#1}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 722:16-727:5 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 719:16-724:5 -/
 @[reducible]
 def contracts.checked_i64_environment.closure_1 := shapes.Pattern
 
 /-- [noble_kernel::contracts::checked_i64_environment::{closure}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 712:17-721:5 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 709:17-718:5 -/
 @[reducible]
 def contracts.checked_i64_environment.closure := shapes.Pattern
 
