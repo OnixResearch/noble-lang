@@ -324,18 +324,22 @@ resolves.
 
 ### 7.1 External models
 
-`NobleKernel/FunsExternal.lean` and `TypesExternal.lean` define exactly the
-template's 66 functions and 6 types, plus the five `#[charon::opaque]`
-helpers; they are byte-identical to the `proofs/m2` copies. New models:
+`NobleKernel/FunsExternal.lean` and `TypesExternal.lean` define the
+template's 66 functions and 6 types, the five `#[charon::opaque]` helpers,
+and three further functions described below; they are byte-identical to the
+`proofs/m2` copies. New models:
 `Option`'s `Try::branch` and `FromResidual::from_residual` (mirroring the
 library's `Result` models), `[T; N]::into_iter` with the array `IntoIter`
 and its `next`, `repeat_n`/`RepeatN::next` and `repeat_with`/`RepeatWith::next`
 (following the pinned std bodies, including which items are clones),
 `slice::first`, `TryFrom<u64>` for `u32`, `TryFrom<i64>` for `usize` and
 `String != &str`. The `Option` `Clone` model carries the template's new name
-pattern. `Option::map` and `Result::unwrap_or` are now library definitions,
-so their local copies, which shadowed them, were removed, together with the
-unused `debug_c_like_enum_write_str`.
+pattern. The template no longer lists `Option::map` and `Result::unwrap_or`,
+which the library now defines, or `Formatter::debug_c_like_enum_write_str`,
+which the kernel no longer calls. The three models are kept because the MC1
+and M3-Wasm `StdModels` delegate to them by name; inside `noble_kernel` the
+generated calls to the first two resolve to these copies, which compute the
+library functions' results.
 
 `core::mem::size_of::<T>` is modelled as a failure (`fail .undef`), with the
 review note in the file header. The generated `Counter::vector::<T>` and
@@ -411,13 +415,14 @@ With the selected Lean 4.35.0 first on `PATH`:
 ### 7.5 The coverage record
 
 `verification/m3-coverage.json` was re-derived from the regenerated subject
-with `m3-coverage-join.mjs emit`: 2,340 functions, 2,269 generated and 71
+with `m3-coverage-join.mjs emit`: 2,343 functions, 2,269 generated and 74
 external. Every generated definition is `extracted` except
 `acceptance.check`, which stays `fixture-checked` with its 29 citations
 (26 fixtures and 3 conditional handoffs). Since the checker carries the
 literal-size axioms of §7.3, all 29 now have the `native` axiom class; the
-entry's note says so. The external definitions are 66 `modeled` template
-externals and the five `excepted` `#[charon::opaque]` helpers.
+entry's note says so. The external definitions are 69 `modeled` models (the
+template's 66 and the three of §7.1) and the five `excepted`
+`#[charon::opaque]` helpers.
 
 The regenerated module has four `mutual` blocks closed by
 `partial_fixpoint`, and Lean names each block's packed fixpoint

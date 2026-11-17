@@ -1,6 +1,6 @@
 {
   "record_version": 1,
-  "subject": "M3 kernel extraction at Aeneas 1238879f (whole noble-kernel crate, Rust subject acf98da0; a re-extraction at cffcad64 is byte-identical): 2,269 generated and 71 external definitions; re-derived 2026-11-16 for #97. Generated definitions are extracted except the fixture-checked acceptance::check, whose citations were re-verified against the regenerated subject; external definitions are modeled except the five #[charon::opaque] helpers.",
+  "subject": "M3 kernel extraction at Aeneas 1238879f (whole noble-kernel crate, Rust subject acf98da0; a re-extraction at cffcad64 is byte-identical): 2,269 generated and 74 external definitions; re-derived 2026-11-16 for #97. Generated definitions are extracted except the fixture-checked acceptance::check, whose citations were re-verified against the regenerated subject; external definitions are modeled except the five #[charon::opaque] helpers.",
   "functions": [
     {
       "lean": "noble_kernel.Array.Insts.CoreCmpPartialEqArray",
@@ -21529,7 +21529,7 @@
       "kind": "def",
       "rust": "core::array::equality::{core::cmp::PartialEq<&'0 [@T], [@U; @N]>}::eq",
       "file": "FunsExternal.lean",
-      "line": 92,
+      "line": 95,
       "status": "modeled"
     },
     {
@@ -21537,7 +21537,7 @@
       "kind": "def",
       "rust": "core::array::equality::{core::cmp::PartialEq<&'0 [@T], [@U; @N]>}::ne",
       "file": "FunsExternal.lean",
-      "line": 101,
+      "line": 104,
       "status": "modeled"
     },
     {
@@ -21545,7 +21545,7 @@
       "kind": "def",
       "rust": "core::array::iter::{core::iter::traits::collect::IntoIterator<[@T; @N], @T, core::array::iter::IntoIter<@T, @N>>}::into_iter",
       "file": "FunsExternal.lean",
-      "line": 112,
+      "line": 115,
       "status": "modeled"
     },
     {
@@ -21553,7 +21553,7 @@
       "kind": "def",
       "rust": "core::array::iter::{core::iter::traits::iterator::Iterator<core::array::iter::IntoIter<@T, @N>, @T>}::next",
       "file": "FunsExternal.lean",
-      "line": 124,
+      "line": 127,
       "status": "modeled"
     },
     {
@@ -21561,7 +21561,7 @@
       "kind": "def",
       "rust": "core::bool::{bool}::then_some",
       "file": "FunsExternal.lean",
-      "line": 142,
+      "line": 145,
       "status": "modeled"
     },
     {
@@ -21569,7 +21569,7 @@
       "kind": "def",
       "rust": "core::cmp::impls::{core::cmp::PartialEq<bool, bool>}::ne",
       "file": "FunsExternal.lean",
-      "line": 151,
+      "line": 154,
       "status": "modeled"
     },
     {
@@ -21577,7 +21577,7 @@
       "kind": "def",
       "rust": "core::convert::num::ptr_try_from_impls::{core::convert::TryFrom<usize, u32, core::num::error::TryFromIntError>}::try_from",
       "file": "FunsExternal.lean",
-      "line": 164,
+      "line": 167,
       "status": "modeled"
     },
     {
@@ -21585,7 +21585,7 @@
       "kind": "def",
       "rust": "core::convert::num::ptr_try_from_impls::{core::convert::TryFrom<u64, usize, core::num::error::TryFromIntError>}::try_from",
       "file": "FunsExternal.lean",
-      "line": 173,
+      "line": 176,
       "status": "modeled"
     },
     {
@@ -21593,7 +21593,7 @@
       "kind": "def",
       "rust": "core::convert::num::ptr_try_from_impls::{core::convert::TryFrom<usize, i64, core::num::error::TryFromIntError>}::try_from",
       "file": "FunsExternal.lean",
-      "line": 186,
+      "line": 189,
       "status": "modeled"
     },
     {
@@ -21601,7 +21601,15 @@
       "kind": "def",
       "rust": "core::convert::num::{core::convert::TryFrom<u32, u64, core::num::error::TryFromIntError>}::try_from",
       "file": "FunsExternal.lean",
-      "line": 197,
+      "line": 200,
+      "status": "modeled"
+    },
+    {
+      "lean": "noble_kernel.core.fmt.Formatter.debug_c_like_enum_write_str",
+      "kind": "def",
+      "rust": "core::fmt::{core::fmt::Formatter<'a>}::debug_c_like_enum_write_str",
+      "file": "FunsExternal.lean",
+      "line": 213,
       "status": "modeled"
     },
     {
@@ -21609,7 +21617,7 @@
       "kind": "def",
       "rust": "core::fmt::{core::fmt::Formatter<'a>}::debug_tuple_field2_finish",
       "file": "FunsExternal.lean",
-      "line": 206,
+      "line": 221,
       "status": "modeled"
     },
     {
@@ -21617,7 +21625,7 @@
       "kind": "def",
       "rust": "core::option::{core::fmt::Debug<core::option::Option<@T>>}::fmt",
       "file": "FunsExternal.lean",
-      "line": 225,
+      "line": 240,
       "status": "modeled"
     },
     {
@@ -21625,7 +21633,7 @@
       "kind": "def",
       "rust": "core::iter::sources::repeat_n::repeat_n",
       "file": "FunsExternal.lean",
-      "line": 249,
+      "line": 264,
       "status": "modeled"
     },
     {
@@ -21633,7 +21641,7 @@
       "kind": "def",
       "rust": "core::iter::sources::repeat_n::{core::iter::traits::iterator::Iterator<core::iter::sources::repeat_n::RepeatN<@A>, @A>}::next",
       "file": "FunsExternal.lean",
-      "line": 263,
+      "line": 278,
       "status": "modeled"
     },
     {
@@ -21641,7 +21649,7 @@
       "kind": "def",
       "rust": "core::iter::sources::repeat_with::repeat_with",
       "file": "FunsExternal.lean",
-      "line": 281,
+      "line": 296,
       "status": "modeled"
     },
     {
@@ -21649,7 +21657,7 @@
       "kind": "def",
       "rust": "core::iter::sources::repeat_with::{core::iter::traits::iterator::Iterator<core::iter::sources::repeat_with::RepeatWith<@F>, @A>}::next",
       "file": "FunsExternal.lean",
-      "line": 293,
+      "line": 308,
       "status": "modeled"
     },
     {
@@ -21657,7 +21665,7 @@
       "kind": "def",
       "rust": "core::mem::size_of",
       "file": "FunsExternal.lean",
-      "line": 307,
+      "line": 322,
       "status": "modeled"
     },
     {
@@ -21665,7 +21673,7 @@
       "kind": "def",
       "rust": "core::num::{u8}::is_ascii_alphanumeric",
       "file": "FunsExternal.lean",
-      "line": 315,
+      "line": 330,
       "status": "modeled"
     },
     {
@@ -21673,7 +21681,7 @@
       "kind": "def",
       "rust": "core::num::{u64}::count_ones",
       "file": "FunsExternal.lean",
-      "line": 324,
+      "line": 339,
       "status": "modeled"
     },
     {
@@ -21681,7 +21689,7 @@
       "kind": "def",
       "rust": "core::num::{usize}::saturating_mul",
       "file": "FunsExternal.lean",
-      "line": 333,
+      "line": 348,
       "status": "modeled"
     },
     {
@@ -21689,7 +21697,7 @@
       "kind": "def",
       "rust": "core::option::{core::option::Option<@T>}::is_none_or",
       "file": "FunsExternal.lean",
-      "line": 342,
+      "line": 357,
       "status": "modeled"
     },
     {
@@ -21697,7 +21705,7 @@
       "kind": "def",
       "rust": "core::option::{core::option::Option<@T>}::as_ref",
       "file": "FunsExternal.lean",
-      "line": 351,
+      "line": 366,
       "status": "modeled"
     },
     {
@@ -21705,7 +21713,7 @@
       "kind": "def",
       "rust": "core::option::{core::cmp::PartialEq<core::option::Option<@T>, core::option::Option<@T>>}::eq",
       "file": "FunsExternal.lean",
-      "line": 357,
+      "line": 372,
       "status": "modeled"
     },
     {
@@ -21713,7 +21721,7 @@
       "kind": "def",
       "rust": "core::option::{core::option::Option<@T>}::and_then",
       "file": "FunsExternal.lean",
-      "line": 367,
+      "line": 382,
       "status": "modeled"
     },
     {
@@ -21721,7 +21729,7 @@
       "kind": "def",
       "rust": "core::option::{core::option::Option<@T>}::zip",
       "file": "FunsExternal.lean",
-      "line": 377,
+      "line": 392,
       "status": "modeled"
     },
     {
@@ -21729,7 +21737,7 @@
       "kind": "def",
       "rust": "core::option::{core::option::Option<&'0 @T>}::copied",
       "file": "FunsExternal.lean",
-      "line": 387,
+      "line": 402,
       "status": "modeled"
     },
     {
@@ -21737,7 +21745,7 @@
       "kind": "def",
       "rust": "core::option::{core::clone::Clone<core::option::Option<@T>>}::clone",
       "file": "FunsExternal.lean",
-      "line": 396,
+      "line": 411,
       "status": "modeled"
     },
     {
@@ -21745,7 +21753,7 @@
       "kind": "def",
       "rust": "core::option::{core::default::Default<core::option::Option<@T>>}::default",
       "file": "FunsExternal.lean",
-      "line": 410,
+      "line": 425,
       "status": "modeled"
     },
     {
@@ -21753,7 +21761,7 @@
       "kind": "def",
       "rust": "core::option::{core::ops::try_trait::Try<core::option::Option<@T>>}::branch",
       "file": "FunsExternal.lean",
-      "line": 420,
+      "line": 435,
       "status": "modeled"
     },
     {
@@ -21761,7 +21769,15 @@
       "kind": "def",
       "rust": "core::option::{core::ops::try_trait::FromResidual<core::option::Option<@T>, core::option::Option<!>>}::from_residual",
       "file": "FunsExternal.lean",
-      "line": 431,
+      "line": 446,
+      "status": "modeled"
+    },
+    {
+      "lean": "noble_kernel.core.option.Option.map",
+      "kind": "def",
+      "rust": "core::option::{core::option::Option<@T>}::map",
+      "file": "FunsExternal.lean",
+      "line": 458,
       "status": "modeled"
     },
     {
@@ -21769,7 +21785,7 @@
       "kind": "def",
       "rust": "core::result::{core::result::Result<@T, @E>}::is_ok_and",
       "file": "FunsExternal.lean",
-      "line": 442,
+      "line": 475,
       "status": "modeled"
     },
     {
@@ -21777,7 +21793,7 @@
       "kind": "def",
       "rust": "core::result::{core::fmt::Debug<core::result::Result<@T, @E>>}::fmt",
       "file": "FunsExternal.lean",
-      "line": 456,
+      "line": 489,
       "status": "modeled"
     },
     {
@@ -21785,7 +21801,7 @@
       "kind": "def",
       "rust": "core::result::{core::cmp::PartialEq<core::result::Result<@T, @E>, core::result::Result<@T, @E>>}::eq",
       "file": "FunsExternal.lean",
-      "line": 468,
+      "line": 501,
       "status": "modeled"
     },
     {
@@ -21793,7 +21809,7 @@
       "kind": "def",
       "rust": "core::result::{core::result::Result<@T, @E>}::is_err",
       "file": "FunsExternal.lean",
-      "line": 478,
+      "line": 511,
       "status": "modeled"
     },
     {
@@ -21801,7 +21817,7 @@
       "kind": "def",
       "rust": "core::result::{core::result::Result<@T, @E>}::ok",
       "file": "FunsExternal.lean",
-      "line": 489,
+      "line": 522,
       "status": "modeled"
     },
     {
@@ -21809,7 +21825,15 @@
       "kind": "def",
       "rust": "core::result::{core::result::Result<@T, @E>}::map_or",
       "file": "FunsExternal.lean",
-      "line": 499,
+      "line": 532,
+      "status": "modeled"
+    },
+    {
+      "lean": "noble_kernel.core.result.Result.unwrap_or",
+      "kind": "def",
+      "rust": "core::result::{core::result::Result<@T, @E>}::unwrap_or",
+      "file": "FunsExternal.lean",
+      "line": 546,
       "status": "modeled"
     },
     {
@@ -21817,7 +21841,7 @@
       "kind": "def",
       "rust": "core::slice::{[@T]}::first",
       "file": "FunsExternal.lean",
-      "line": 512,
+      "line": 559,
       "status": "modeled"
     },
     {
@@ -21825,7 +21849,7 @@
       "kind": "def",
       "rust": "core::slice::{[@T]}::last",
       "file": "FunsExternal.lean",
-      "line": 519,
+      "line": 566,
       "status": "modeled"
     },
     {
@@ -21833,7 +21857,7 @@
       "kind": "def",
       "rust": "core::str::{str}::len",
       "file": "FunsExternal.lean",
-      "line": 526,
+      "line": 573,
       "status": "modeled"
     },
     {
@@ -21841,7 +21865,7 @@
       "kind": "def",
       "rust": "core::str::{str}::is_empty",
       "file": "FunsExternal.lean",
-      "line": 531,
+      "line": 578,
       "status": "modeled"
     },
     {
@@ -21849,7 +21873,7 @@
       "kind": "def",
       "rust": "core::str::converts::from_utf8",
       "file": "FunsExternal.lean",
-      "line": 536,
+      "line": 583,
       "status": "modeled"
     },
     {
@@ -21857,7 +21881,7 @@
       "kind": "def",
       "rust": "core::str::traits::{core::cmp::PartialEq<str, str>}::eq",
       "file": "FunsExternal.lean",
-      "line": 546,
+      "line": 593,
       "status": "modeled"
     },
     {
@@ -21865,7 +21889,7 @@
       "kind": "def",
       "rust": "core::fmt::{core::fmt::Debug<str>}::fmt",
       "file": "FunsExternal.lean",
-      "line": 553,
+      "line": 600,
       "status": "modeled"
     },
     {
@@ -21873,7 +21897,7 @@
       "kind": "def",
       "rust": "core::str::{str}::as_bytes",
       "file": "FunsExternal.lean",
-      "line": 560,
+      "line": 607,
       "status": "modeled"
     },
     {
@@ -21881,7 +21905,7 @@
       "kind": "def",
       "rust": "alloc::boxed::{core::cmp::PartialEq<Box<@T>, Box<@T>>}::ne",
       "file": "FunsExternal.lean",
-      "line": 567,
+      "line": 614,
       "status": "modeled"
     },
     {
@@ -21889,7 +21913,7 @@
       "kind": "def",
       "rust": "alloc::boxed::{core::fmt::Debug<Box<@T>>}::fmt",
       "file": "FunsExternal.lean",
-      "line": 575,
+      "line": 622,
       "status": "modeled"
     },
     {
@@ -21897,7 +21921,7 @@
       "kind": "def",
       "rust": "alloc::boxed::{core::convert::AsRef<Box<@T>, @T>}::as_ref",
       "file": "FunsExternal.lean",
-      "line": 584,
+      "line": 631,
       "status": "modeled"
     },
     {
@@ -21905,7 +21929,7 @@
       "kind": "def",
       "rust": "alloc::string::{core::cmp::PartialEq<alloc::string::String, alloc::string::String>}::eq",
       "file": "FunsExternal.lean",
-      "line": 593,
+      "line": 640,
       "status": "modeled"
     },
     {
@@ -21913,7 +21937,7 @@
       "kind": "def",
       "rust": "alloc::string::{alloc::string::String}::is_empty",
       "file": "FunsExternal.lean",
-      "line": 599,
+      "line": 646,
       "status": "modeled"
     },
     {
@@ -21921,7 +21945,7 @@
       "kind": "def",
       "rust": "alloc::string::{core::clone::Clone<alloc::string::String>}::clone",
       "file": "FunsExternal.lean",
-      "line": 605,
+      "line": 652,
       "status": "modeled"
     },
     {
@@ -21929,7 +21953,7 @@
       "kind": "def",
       "rust": "alloc::string::{core::cmp::PartialEq<alloc::string::String, &'0 str>}::eq",
       "file": "FunsExternal.lean",
-      "line": 612,
+      "line": 659,
       "status": "modeled"
     },
     {
@@ -21937,7 +21961,7 @@
       "kind": "def",
       "rust": "alloc::string::{core::cmp::PartialEq<alloc::string::String, &'0 str>}::ne",
       "file": "FunsExternal.lean",
-      "line": 623,
+      "line": 670,
       "status": "modeled"
     },
     {
@@ -21945,7 +21969,7 @@
       "kind": "def",
       "rust": "alloc::string::{core::fmt::Debug<alloc::string::String>}::fmt",
       "file": "FunsExternal.lean",
-      "line": 632,
+      "line": 679,
       "status": "modeled"
     },
     {
@@ -21953,7 +21977,7 @@
       "kind": "def",
       "rust": "alloc::string::{core::ops::deref::Deref<alloc::string::String, str>}::deref",
       "file": "FunsExternal.lean",
-      "line": 640,
+      "line": 687,
       "status": "modeled"
     },
     {
@@ -21961,7 +21985,7 @@
       "kind": "def",
       "rust": "alloc::string::{core::convert::From<alloc::string::String, &'0 str>}::from",
       "file": "FunsExternal.lean",
-      "line": 655,
+      "line": 702,
       "status": "modeled"
     },
     {
@@ -21969,7 +21993,7 @@
       "kind": "def",
       "rust": "alloc::vec::{alloc::vec::Vec<@T>}::reserve",
       "file": "FunsExternal.lean",
-      "line": 666,
+      "line": 713,
       "status": "modeled"
     },
     {
@@ -21977,7 +22001,7 @@
       "kind": "def",
       "rust": "alloc::vec::{alloc::vec::Vec<@T>}::try_reserve_exact",
       "file": "FunsExternal.lean",
-      "line": 676,
+      "line": 723,
       "status": "modeled"
     },
     {
@@ -21985,7 +22009,7 @@
       "kind": "def",
       "rust": "alloc::vec::{alloc::vec::Vec<@T>}::truncate",
       "file": "FunsExternal.lean",
-      "line": 687,
+      "line": 734,
       "status": "modeled"
     },
     {
@@ -21993,7 +22017,7 @@
       "kind": "def",
       "rust": "alloc::vec::{alloc::vec::Vec<@T>}::as_slice",
       "file": "FunsExternal.lean",
-      "line": 699,
+      "line": 746,
       "status": "modeled"
     },
     {
@@ -22001,7 +22025,7 @@
       "kind": "def",
       "rust": "alloc::vec::{alloc::vec::Vec<@T>}::swap_remove",
       "file": "FunsExternal.lean",
-      "line": 709,
+      "line": 756,
       "status": "modeled"
     },
     {
@@ -22009,7 +22033,7 @@
       "kind": "def",
       "rust": "alloc::vec::{alloc::vec::Vec<@T>}::remove",
       "file": "FunsExternal.lean",
-      "line": 730,
+      "line": 777,
       "status": "modeled"
     },
     {
@@ -22017,7 +22041,7 @@
       "kind": "def",
       "rust": "alloc::vec::{alloc::vec::Vec<@T>}::clear",
       "file": "FunsExternal.lean",
-      "line": 745,
+      "line": 792,
       "status": "modeled"
     },
     {
@@ -22025,7 +22049,7 @@
       "kind": "def",
       "rust": "alloc::vec::{alloc::vec::Vec<@T>}::pop",
       "file": "FunsExternal.lean",
-      "line": 751,
+      "line": 798,
       "status": "modeled"
     },
     {
@@ -22033,7 +22057,7 @@
       "kind": "def",
       "rust": "alloc::vec::{alloc::vec::Vec<@T>}::is_empty",
       "file": "FunsExternal.lean",
-      "line": 767,
+      "line": 814,
       "status": "modeled"
     },
     {
@@ -22041,7 +22065,7 @@
       "kind": "def",
       "rust": "alloc::vec::{core::default::Default<alloc::vec::Vec<@T>>}::default",
       "file": "FunsExternal.lean",
-      "line": 774,
+      "line": 821,
       "status": "modeled"
     },
     {
@@ -22049,7 +22073,7 @@
       "kind": "def",
       "rust": "alloc::vec::{core::iter::traits::collect::Extend<alloc::vec::Vec<@T>, @T>}::extend",
       "file": "FunsExternal.lean",
-      "line": 789,
+      "line": 836,
       "status": "modeled"
     },
     {
@@ -22057,7 +22081,7 @@
       "kind": "def",
       "rust": "noble_kernel::types::impls::clone_stack",
       "file": "FunsExternal.lean",
-      "line": 812,
+      "line": 859,
       "status": "excepted",
       "note": "Crate function declared #[charon::opaque] in the Rust source (disclosed extraction exception: Aeneas cannot functionalize the loop inside the trait-instance mutual block); a faithful total model is implemented in FunsExternal.lean. Carries no checker decision (copying/formatting step)."
     },
@@ -22066,7 +22090,7 @@
       "kind": "def",
       "rust": "noble_kernel::shapes::impls::clone_parts",
       "file": "FunsExternal.lean",
-      "line": 818,
+      "line": 865,
       "status": "excepted",
       "note": "Crate function declared #[charon::opaque] in the Rust source (disclosed extraction exception: Aeneas cannot functionalize the loop inside the trait-instance mutual block); a faithful total model is implemented in FunsExternal.lean. Carries no checker decision (copying/formatting step)."
     },
@@ -22075,7 +22099,7 @@
       "kind": "def",
       "rust": "noble_kernel::shapes::impls::debug_slots",
       "file": "FunsExternal.lean",
-      "line": 826,
+      "line": 873,
       "status": "excepted",
       "note": "Crate function declared #[charon::opaque] in the Rust source (disclosed extraction exception: Aeneas cannot functionalize the loop inside the trait-instance mutual block); a faithful total model is implemented in FunsExternal.lean. Carries no checker decision (copying/formatting step)."
     },
@@ -22084,7 +22108,7 @@
       "kind": "def",
       "rust": "noble_kernel::shapes::impls::debug_parts",
       "file": "FunsExternal.lean",
-      "line": 834,
+      "line": 881,
       "status": "excepted",
       "note": "Crate function declared #[charon::opaque] in the Rust source (disclosed extraction exception: Aeneas cannot functionalize the loop inside the trait-instance mutual block); a faithful total model is implemented in FunsExternal.lean. Carries no checker decision (copying/formatting step)."
     },
@@ -22093,7 +22117,7 @@
       "kind": "def",
       "rust": "noble_kernel::types::impls::debug_stack",
       "file": "FunsExternal.lean",
-      "line": 842,
+      "line": 889,
       "status": "excepted",
       "note": "Crate function declared #[charon::opaque] in the Rust source (disclosed extraction exception: Aeneas cannot functionalize the loop inside the trait-instance mutual block); a faithful total model is implemented in FunsExternal.lean. Carries no checker decision (copying/formatting step)."
     }
