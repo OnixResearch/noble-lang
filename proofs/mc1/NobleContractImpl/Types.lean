@@ -8887,31 +8887,31 @@ structure source.procedures.ProcedureDiagnostic where
   message : Str
 
 /-- [noble_contracts::source::procedures::persistence::Writer]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 218:0-220:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 220:0-222:1 -/
 structure source.procedures.persistence.Writer where
   bytes : alloc.vec.Vec Std.U8
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::bounded_count::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 301:64-309:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 303:64-311:9 -/
 @[reducible]
 def source.procedures.persistence.Writer.bounded_count.closure_1 (MaximumItems
   : Type _) (Clause0_Error : Type _) :=
   Str
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::bounded_count::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 292:66-300:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 294:66-302:9 -/
 @[reducible]
 def source.procedures.persistence.Writer.bounded_count.closure (MaximumItems :
   Type _) (Clause0_Error : Type _) :=
   Str
 
 /-- [noble_contracts::source::procedures::persistence::write_types::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 661:47-661:87 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 663:47-663:87 -/
 @[reducible]
 def source.procedures.persistence.write_types.closure := Unit
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::sized::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 256:62-264:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 258:62-266:9 -/
 @[reducible]
 def source.procedures.persistence.Writer.sized.closure := Str
 
@@ -9281,91 +9281,91 @@ def source.procedures.composition.ProcedureLibrary.bind_companion_evidence.closu
   Array Std.U8 32#usize
 
 /-- [noble_contracts::source::procedures::persistence::JsonLimit]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 29:0-32:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 31:0-34:1 -/
 @[discriminant isize]
 inductive source.procedures.persistence.JsonLimit where
 | Manifest : source.procedures.persistence.JsonLimit
 | Metrics : source.procedures.persistence.JsonLimit
 
 /-- [noble_contracts::source::procedures::persistence::BoundedJson]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 52:0-56:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 54:0-58:1 -/
 structure source.procedures.persistence.BoundedJson where
   text : String
   maximum_bytes : Std.Usize
   exceeded_limit : Bool
 
 /-- [noble_contracts::source::procedures::persistence::Reader]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 324:0-327:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 326:0-329:1 -/
 structure source.procedures.persistence.Reader where
   bytes : Slice Std.U8
   byte_offset_bytes : Std.Usize
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::read::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 350:24-358:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 352:24-360:13 -/
 @[reducible]
 def source.procedures.persistence.Reader.read.closure_1 (N : Std.Usize) := Str
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::read::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 338:85-346:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 340:85-348:9 -/
 @[reducible]
 def source.procedures.persistence.Reader.read.closure (N : Std.Usize) := Str
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::count::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 426:44-434:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 428:44-436:9 -/
 @[reducible]
 def source.procedures.persistence.Reader.count.closure_1 (MaximumItems :
   Type _) (Clause0_Error : Type _) :=
   Str
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::count::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 407:66-415:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 409:66-417:9 -/
 @[reducible]
 def source.procedures.persistence.Reader.count.closure (MaximumItems : Type _)
   (Clause0_Error : Type _) :=
   Str
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::sized::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 458:24-466:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 460:24-468:13 -/
 @[reducible]
 def source.procedures.persistence.Reader.sized.closure_1 := Str
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::sized::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 446:24-454:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 448:24-456:13 -/
 @[reducible]
 def source.procedures.persistence.Reader.sized.closure := Str
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::string::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 473:56-481:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 475:56-483:9 -/
 @[reducible]
 def source.procedures.persistence.Reader.string.closure := Str
 
 /-- [noble_contracts::source::procedures::persistence::compare_evidence::{closure#5}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 619:19-619:70 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 621:19-621:70 -/
 def source.procedures.persistence.compare_evidence.closure_5 :=
   source.procedures.EvidenceRecord × source.procedures.EvidenceRecord
 
 /-- [noble_contracts::source::procedures::persistence::compare_evidence::{closure#4}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 618:19-618:50 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 620:19-620:50 -/
 def source.procedures.persistence.compare_evidence.closure_4 :=
   source.procedures.EvidenceRecord × source.procedures.EvidenceRecord
 
 /-- [noble_contracts::source::procedures::persistence::compare_evidence::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 617:19-617:58 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 619:19-619:58 -/
 def source.procedures.persistence.compare_evidence.closure_3 :=
   source.procedures.EvidenceRecord × source.procedures.EvidenceRecord
 
 /-- [noble_contracts::source::procedures::persistence::compare_evidence::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 616:19-616:70 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 618:19-618:70 -/
 def source.procedures.persistence.compare_evidence.closure_2 :=
   source.procedures.EvidenceRecord × source.procedures.EvidenceRecord
 
 /-- [noble_contracts::source::procedures::persistence::compare_evidence::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 615:19-615:67 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 617:19-617:67 -/
 def source.procedures.persistence.compare_evidence.closure_1 :=
   source.procedures.EvidenceRecord × source.procedures.EvidenceRecord
 
 /-- [noble_contracts::source::procedures::persistence::compare_evidence::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 614:19-614:64 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 616:19-616:64 -/
 def source.procedures.persistence.compare_evidence.closure :=
   source.procedures.EvidenceRecord × source.procedures.EvidenceRecord
 
@@ -9476,7 +9476,7 @@ def source.procedures.ProcedureLibrary.link_successor.closure :=
   Array Std.U8 32#usize
 
 /-- [noble_contracts::source::procedures::persistence::check_loaded_record::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2330:49-2330:89 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2333:49-2333:89 -/
 @[reducible]
 def source.procedures.persistence.check_loaded_record.closure := Unit
 
@@ -9506,22 +9506,22 @@ def source.procedures.retrieval.compare_records.closure :=
   source.procedures.ProcedureRecord × source.procedures.ProcedureRecord
 
 /-- [noble_contracts::source::procedures::persistence::is_loaded_generation::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2268:42-2268:96 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2271:42-2271:96 -/
 @[reducible]
 def source.procedures.persistence.is_loaded_generation.closure := Std.Usize
 
 /-- [noble_contracts::source::procedures::persistence::check_generation_ancestry::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2229:61-2237:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2232:61-2240:9 -/
 @[reducible]
 def source.procedures.persistence.check_generation_ancestry.closure_1 := Unit
 
 /-- [noble_contracts::source::procedures::persistence::check_generation_ancestry::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2220:61-2228:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2223:61-2231:9 -/
 @[reducible]
 def source.procedures.persistence.check_generation_ancestry.closure := Unit
 
 /-- [noble_contracts::source::procedures::persistence::GenerationLinks]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2182:0-2187:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2185:0-2190:1 -/
 structure source.procedures.persistence.GenerationLinks where
   parent_generation : Option Std.U32
   rollback_of : Option Std.U32
@@ -9529,48 +9529,48 @@ structure source.procedures.persistence.GenerationLinks where
   has_no_records : Bool
 
 /-- [noble_contracts::source::procedures::persistence::check_generation::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2117:56-2125:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2119:56-2127:5 -/
 @[reducible]
 def source.procedures.persistence.check_generation.closure := Unit
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2479:20-2487:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2482:20-2490:9 -/
 @[reducible]
 def source.procedures.persistence.ProcedureLibrary.load_with.closure_2 := Unit
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2476:60-2478:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2479:60-2481:9 -/
 @[reducible]
 def source.procedures.persistence.ProcedureLibrary.load_with.closure_1 :=
   Std.U32
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2458:80-2466:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2461:80-2469:9 -/
 @[reducible]
 def source.procedures.persistence.ProcedureLibrary.load_with.closure := Unit
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#6}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2831:24-2831:71 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2834:24-2834:71 -/
 @[reducible]
 def source.procedures.persistence.ArmAggregate.add.closure_6 := Unit
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#5}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2827:24-2827:72 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2830:24-2830:72 -/
 @[reducible]
 def source.procedures.persistence.ArmAggregate.add.closure_5 := Unit
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#4}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2823:24-2823:76 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2826:24-2826:76 -/
 @[reducible]
 def source.procedures.persistence.ArmAggregate.add.closure_4 := Unit
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2819:24-2819:78 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2822:24-2822:78 -/
 @[reducible]
 def source.procedures.persistence.ArmAggregate.add.closure_3 := Unit
 
 /-- [noble_contracts::source::procedures::persistence::ArmMetrics]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2738:0-2759:1
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2741:0-2762:1
     Visibility: public -/
 structure source.procedures.persistence.ArmMetrics where
   arm : String
@@ -9595,23 +9595,23 @@ structure source.procedures.persistence.ArmMetrics where
   break_even_reason : String
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2812:42-2814:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2815:42-2817:17 -/
 @[reducible]
 def source.procedures.persistence.ArmAggregate.add.closure_2 :=
   source.procedures.persistence.ArmMetrics
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2809:24-2809:76 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2812:24-2812:76 -/
 @[reducible]
 def source.procedures.persistence.ArmAggregate.add.closure_1 := Unit
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2805:24-2805:75 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2808:24-2808:75 -/
 @[reducible]
 def source.procedures.persistence.ArmAggregate.add.closure := Unit
 
 /-- [noble_contracts::source::procedures::persistence::ArmAggregate]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2769:0-2777:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2772:0-2780:1 -/
 structure source.procedures.persistence.ArmAggregate where
   retrieval_queries : Std.U32
   retrieval_examined : Std.U32
@@ -9622,7 +9622,7 @@ structure source.procedures.persistence.ArmAggregate where
   teacher_calls : Std.U32
 
 /-- [noble_contracts::source::procedures::persistence::Metrics]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2727:0-2735:1
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2730:0-2738:1
     Visibility: public -/
 structure source.procedures.persistence.Metrics where
   index_build_steps : Std.U32
@@ -9634,7 +9634,7 @@ structure source.procedures.persistence.Metrics where
   assumptions : String
 
 /-- [noble_contracts::source::procedures::persistence::ArmSection]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2645:0-2651:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2648:0-2654:1 -/
 @[discriminant isize]
 inductive source.procedures.persistence.ArmSection where
 | Acquisition : source.procedures.persistence.ArmSection
@@ -9644,31 +9644,31 @@ inductive source.procedures.persistence.ArmSection where
 | Arms : source.procedures.persistence.ArmSection
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#4}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2617:51-2617:84 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2620:51-2620:84 -/
 @[reducible]
 def source.procedures.persistence.ProcedureLibrary.metrics_record.closure_4 :=
 Unit
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2603:71-2605:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2606:71-2608:9 -/
 @[reducible]
 def source.procedures.persistence.ProcedureLibrary.metrics_record.closure_3 :=
 Unit
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2586:55-2594:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2589:55-2597:9 -/
 @[reducible]
 def source.procedures.persistence.ProcedureLibrary.metrics_record.closure_2 :=
 Unit
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2568:71-2576:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2571:71-2579:9 -/
 @[reducible]
 def source.procedures.persistence.ProcedureLibrary.metrics_record.closure_1 :=
 Unit
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2546:50-2546:93 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2549:50-2549:93 -/
 @[reducible]
 def source.procedures.persistence.ProcedureLibrary.metrics_record.closure :=
 Unit

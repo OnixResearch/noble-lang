@@ -167545,7 +167545,7 @@ def source.procedures.Refusal.new
 def source.procedures.MAX_LIBRARY_DEPENDENCIES : Std.Usize := 16#usize
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::raw]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 251:4-253:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 253:4-255:5 -/
 def source.procedures.persistence.Writer.raw
   (self : source.procedures.persistence.Writer) (value : Slice Std.U8) :
   Result source.procedures.persistence.Writer
@@ -167554,7 +167554,7 @@ def source.procedures.persistence.Writer.raw
   ok { bytes := v }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::u32]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 239:4-241:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 241:4-243:5 -/
 def source.procedures.persistence.Writer.u32
   (self : source.procedures.persistence.Writer) (value : Std.U32) :
   Result source.procedures.persistence.Writer
@@ -167565,7 +167565,7 @@ def source.procedures.persistence.Writer.u32
   ok { bytes := v }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::byte]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 227:4-229:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 229:4-231:5 -/
 def source.procedures.persistence.Writer.byte
   (self : source.procedures.persistence.Writer) (value : Std.U8) :
   Result source.procedures.persistence.Writer
@@ -167574,7 +167574,7 @@ def source.procedures.persistence.Writer.byte
   ok { bytes := v }
 
 /-- [noble_contracts::source::procedures::persistence::write_provenance]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1183:0-1205:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1185:0-1207:1 -/
 def source.procedures.persistence.write_provenance
   (writer : source.procedures.persistence.Writer)
   (provenance : source.procedures.Provenance) :
@@ -167647,7 +167647,7 @@ def source.procedures.persistence.write_provenance
       ok (core.result.Result.Ok (), writer5)
 
 /-- [noble_contracts::source::procedures::persistence::write_op]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 725:0-736:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 727:0-738:1 -/
 def source.procedures.persistence.write_op
   (writer : source.procedures.persistence.Writer) (op : source.chunks.Op) :
   Result source.procedures.persistence.Writer
@@ -167671,7 +167671,7 @@ def source.procedures.persistence.write_op
     source.procedures.persistence.Writer.byte writer 7#u8
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::bounded_count::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::bounded_count::{closure#1}<'_0, MaximumItems, Clause0_Error>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 301:64-309:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 303:64-311:9 -/
 def
   source.procedures.persistence.Writer.bounded_count.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorRefusal.call_once
   {MaximumItems : Type _} {Clause0_Error : Type _}
@@ -167686,7 +167686,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::bounded_count::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::bounded_count::{closure#1}<'_0, MaximumItems, Clause0_Error>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 301:64-309:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 303:64-311:9 -/
 @[reducible]
 def
   source.procedures.persistence.Writer.bounded_count.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorRefusal
@@ -167701,7 +167701,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::bounded_count::{impl core::ops::function::FnOnce<(Clause0_Error,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::bounded_count::{closure}<'_0, MaximumItems, Clause0_Error>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 292:66-300:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 294:66-302:9 -/
 def
   source.procedures.persistence.Writer.bounded_count.closure.Insts.CoreOpsFunctionFnOnceTupleClause0_ErrorRefusal.call_once
   {MaximumItems : Type _} {Clause0_Error : Type _}
@@ -167718,7 +167718,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::bounded_count::{impl core::ops::function::FnOnce<(Clause0_Error,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::bounded_count::{closure}<'_0, MaximumItems, Clause0_Error>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 292:66-300:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 294:66-302:9 -/
 @[reducible]
 def
   source.procedures.persistence.Writer.bounded_count.closure.Insts.CoreOpsFunctionFnOnceTupleClause0_ErrorRefusal
@@ -167733,7 +167733,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::bounded_count]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 283:4-321:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 285:4-323:5 -/
 def source.procedures.persistence.Writer.bounded_count
   {MaximumItems : Type _} {Clause0_Error : Type _}
   (coreconvertTryIntoMaximumItemsU64Clause0_ErrorInst : core.convert.TryInto
@@ -167784,7 +167784,7 @@ def source.procedures.persistence.Writer.bounded_count
     ok (r2, self)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::i64]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 247:4-249:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 249:4-251:5 -/
 def source.procedures.persistence.Writer.i64
   (self : source.procedures.persistence.Writer) (value : Std.I64) :
   Result source.procedures.persistence.Writer
@@ -167795,7 +167795,7 @@ def source.procedures.persistence.Writer.i64
   ok { bytes := v }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::u16]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 235:4-237:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 237:4-239:5 -/
 def source.procedures.persistence.Writer.u16
   (self : source.procedures.persistence.Writer) (value : Std.U16) :
   Result source.procedures.persistence.Writer
@@ -167806,7 +167806,7 @@ def source.procedures.persistence.Writer.u16
   ok { bytes := v }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::bool]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 231:4-233:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 233:4-235:5 -/
 def source.procedures.persistence.Writer.bool
   (self : source.procedures.persistence.Writer) (value : Bool) :
   Result source.procedures.persistence.Writer
@@ -167815,13 +167815,13 @@ def source.procedures.persistence.Writer.bool
   source.procedures.persistence.Writer.byte self i
 
 /-- [noble_contracts::source::procedures::persistence::MAX_RECIPE_NODES]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 20:0-20:55 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 22:0-22:55 -/
 @[global_simps, irreducible]
 def source.procedures.persistence.MAX_RECIPE_NODES : Std.U32 :=
   source.chunks.MAX_RECIPE_NODES
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_body_node]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 917:12-919:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 919:12-921:13 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_chunk_body_node_loop.body
   (iter : core.slice.iter.Iter Std.U32)
@@ -167837,7 +167837,7 @@ def source.procedures.persistence.write_chunk_body_node_loop.body
     ok (cont (iter1, writer1))
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_body_node]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 917:12-919:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 919:12-921:13 -/
 @[rust_loop]
 def source.procedures.persistence.write_chunk_body_node_loop
   (iter : core.slice.iter.Iter Std.U32)
@@ -167851,7 +167851,7 @@ def source.procedures.persistence.write_chunk_body_node_loop
     (iter, writer)
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_body_node]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 884:0-924:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 886:0-926:1 -/
 def source.procedures.persistence.write_chunk_body_node
   (writer : source.procedures.persistence.Writer) (node : source.chunks.Node) :
   Result ((core.result.Result Unit source.procedures.Refusal) ×
@@ -167909,7 +167909,7 @@ def source.procedures.persistence.write_chunk_body_node
       ok (r1, writer2)
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_body]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 871:4-874:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 873:4-876:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_chunk_body_loop0.body
   (v : alloc.vec.Vec source.chunks.Node)
@@ -167937,7 +167937,7 @@ def source.procedures.persistence.write_chunk_body_loop0.body
   else ok (done (writer, outcome))
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_body]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 871:4-874:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 873:4-876:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_chunk_body_loop0
   (writer : source.procedures.persistence.Writer)
@@ -167953,7 +167953,7 @@ def source.procedures.persistence.write_chunk_body_loop0
     (writer, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_body]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 877:4-879:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 879:4-881:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_chunk_body_loop1.body
   (iter : core.slice.iter.Iter Std.U32)
@@ -167969,7 +167969,7 @@ def source.procedures.persistence.write_chunk_body_loop1.body
     ok (cont (iter1, writer1))
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_body]: loop 1:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 877:4-879:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 879:4-881:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_chunk_body_loop1
   (iter : core.slice.iter.Iter Std.U32)
@@ -167982,7 +167982,7 @@ def source.procedures.persistence.write_chunk_body_loop1
     (iter, writer)
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_body]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 867:0-881:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 869:0-883:1 -/
 def source.procedures.persistence.write_chunk_body
   (writer : source.procedures.persistence.Writer)
   (chunk : source.chunks.Envelope) :
@@ -168037,7 +168037,7 @@ def source.procedures.persistence.write_chunk_body
     ok (r1, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::variable_kind_tag]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 804:0-821:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 806:0-823:1 -/
 def source.procedures.persistence.variable_kind_tag
   (kind : noble_kernel.words.VariableKind) :
   Result (core.result.Result Std.U8 source.procedures.Refusal)
@@ -168071,7 +168071,7 @@ def source.procedures.persistence.variable_kind_tag
         ok (core.result.Result.Err r)
 
 /-- [noble_contracts::source::procedures::persistence::write_type]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 629:0-644:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 631:0-646:1 -/
 def source.procedures.persistence.write_type
   (writer : source.procedures.persistence.Writer) (ty : noble_kernel.types.Ty)
   :
@@ -168213,7 +168213,7 @@ def source.procedures.persistence.write_type
     ok (core.result.Result.Err r, writer)
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_binding]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 861:0-865:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 863:0-867:1 -/
 def source.procedures.persistence.write_chunk_binding
   (writer : source.procedures.persistence.Writer)
   (binding : source.chunks.Binding) :
@@ -168235,12 +168235,12 @@ def source.procedures.persistence.write_chunk_binding
     ok (r1, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::MAX_BINDINGS]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 19:0-19:29 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 21:0-21:29 -/
 @[global_simps, irreducible]
 def source.procedures.persistence.MAX_BINDINGS : Std.U32 := 16#u32
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_instantiation]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 853:4-856:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 855:4-858:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_chunk_instantiation_loop.body
   (v : alloc.vec.Vec source.chunks.Binding)
@@ -168267,7 +168267,7 @@ def source.procedures.persistence.write_chunk_instantiation_loop.body
   else ok (done (outcome, writer))
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_instantiation]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 853:4-856:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 855:4-858:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_chunk_instantiation_loop
   (writer : source.procedures.persistence.Writer)
@@ -168283,7 +168283,7 @@ def source.procedures.persistence.write_chunk_instantiation_loop
     (writer, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_instantiation]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 842:0-858:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 844:0-860:1 -/
 def source.procedures.persistence.write_chunk_instantiation
   (writer : source.procedures.persistence.Writer)
   (instantiation : source.chunks.Instantiation) :
@@ -168309,7 +168309,7 @@ def source.procedures.persistence.write_chunk_instantiation
     ok (outcome, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_instantiations]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 834:4-837:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 836:4-839:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_chunk_instantiations_loop.body
   (v : alloc.vec.Vec source.chunks.Instantiation)
@@ -168336,7 +168336,7 @@ def source.procedures.persistence.write_chunk_instantiations_loop.body
   else ok (done (outcome, writer))
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_instantiations]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 834:4-837:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 836:4-839:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_chunk_instantiations_loop
   (writer : source.procedures.persistence.Writer)
@@ -168352,7 +168352,7 @@ def source.procedures.persistence.write_chunk_instantiations_loop
     (writer, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_instantiations]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 823:0-839:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 825:0-841:1 -/
 def source.procedures.persistence.write_chunk_instantiations
   (writer : source.procedures.persistence.Writer)
   (chunk : source.chunks.Envelope) :
@@ -168378,7 +168378,7 @@ def source.procedures.persistence.write_chunk_instantiations
     ok (outcome, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::write_scalar]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 698:0-709:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 700:0-711:1 -/
 def source.procedures.persistence.write_scalar
   (writer : source.procedures.persistence.Writer)
   (scalar : source.chunks.Scalar) :
@@ -168393,7 +168393,7 @@ def source.procedures.persistence.write_scalar
     source.procedures.persistence.Writer.bool writer1 value
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::u64]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 243:4-245:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 245:4-247:5 -/
 def source.procedures.persistence.Writer.u64
   (self : source.procedures.persistence.Writer) (value : Std.U64) :
   Result source.procedures.persistence.Writer
@@ -168404,7 +168404,7 @@ def source.procedures.persistence.Writer.u64
   ok { bytes := v }
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_captures_and_dependencies]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 786:4-789:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 788:4-791:5 -/
 @[rust_loop_body]
 def
   source.procedures.persistence.write_chunk_captures_and_dependencies_loop0.body
@@ -168424,7 +168424,7 @@ def
     ok (cont (iter1, writer2))
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_captures_and_dependencies]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 786:4-789:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 788:4-791:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_chunk_captures_and_dependencies_loop0
   (iter : core.slice.iter.Iter source.chunks.Capture)
@@ -168438,7 +168438,7 @@ def source.procedures.persistence.write_chunk_captures_and_dependencies_loop0
     (iter, writer)
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_captures_and_dependencies]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 795:4-800:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 797:4-802:5 -/
 @[rust_loop_body]
 def
   source.procedures.persistence.write_chunk_captures_and_dependencies_loop1.body
@@ -168463,7 +168463,7 @@ def
     ok (cont (iter1, writer4))
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_captures_and_dependencies]: loop 1:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 795:4-800:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 797:4-802:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_chunk_captures_and_dependencies_loop1
   (iter : core.slice.iter.Iter source.chunks.DefinitionRef)
@@ -168477,7 +168477,7 @@ def source.procedures.persistence.write_chunk_captures_and_dependencies_loop1
     (iter, writer)
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk_captures_and_dependencies]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 781:0-802:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 783:0-804:1 -/
 def source.procedures.persistence.write_chunk_captures_and_dependencies
   (writer : source.procedures.persistence.Writer)
   (chunk : source.chunks.Envelope) :
@@ -168527,13 +168527,13 @@ def source.procedures.persistence.write_chunk_captures_and_dependencies
     ok (r1, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::MAX_DEPTH_LIST]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 21:0-21:53 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 23:0-23:53 -/
 @[global_simps, irreducible]
 def source.procedures.persistence.MAX_DEPTH_LIST : Std.U32 :=
   source.chunks.MAX_STACK_HEIGHT
 
 /-- [noble_contracts::source::procedures::persistence::write_types::{impl core::ops::function::FnOnce<(u32,), bool> for noble_contracts::source::procedures::persistence::write_types::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 661:47-661:87 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 663:47-663:87 -/
 def
   source.procedures.persistence.write_types.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool.call_once
   (c : source.procedures.persistence.write_types.closure)
@@ -168543,7 +168543,7 @@ def
   ok (tupled_args > source.procedures.persistence.MAX_DEPTH_LIST)
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::write_types::{impl core::ops::function::FnOnce<(u32,), bool> for noble_contracts::source::procedures::persistence::write_types::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 661:47-661:87 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 663:47-663:87 -/
 @[reducible]
 def
   source.procedures.persistence.write_types.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool
@@ -168554,7 +168554,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::write_types]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 673:4-676:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 675:4-678:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_types_loop.body
   (types : Slice noble_kernel.types.Ty)
@@ -168579,7 +168579,7 @@ def source.procedures.persistence.write_types_loop.body
   else ok (done (outcome, writer))
 
 /-- [noble_contracts::source::procedures::persistence::write_types]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 673:4-676:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 675:4-678:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_types_loop
   (writer : source.procedures.persistence.Writer)
@@ -168595,7 +168595,7 @@ def source.procedures.persistence.write_types_loop
     (writer, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::write_types]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 660:0-678:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 662:0-680:1 -/
 def source.procedures.persistence.write_types
   (writer : source.procedures.persistence.Writer)
   (types : Slice noble_kernel.types.Ty) :
@@ -168636,7 +168636,7 @@ def source.procedures.persistence.write_types
       ok (outcome, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::sized::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::sized::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 256:62-264:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 258:62-266:9 -/
 def
   source.procedures.persistence.Writer.sized.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorRefusal.call_once
   (c : source.procedures.persistence.Writer.sized.closure)
@@ -168647,7 +168647,7 @@ def
     { field := c, message := (toStr "string exceeds canonical record limit") }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::sized::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::sized::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 256:62-264:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 258:62-266:9 -/
 @[reducible]
 def
   source.procedures.persistence.Writer.sized.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorRefusal
@@ -168658,7 +168658,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::sized]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 255:4-277:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 257:4-279:5 -/
 def source.procedures.persistence.Writer.sized
   (self : source.procedures.persistence.Writer) (value : Slice Std.U8)
   (maximum_bytes : Std.U32) (field : Str) :
@@ -168691,12 +168691,12 @@ def source.procedures.persistence.Writer.sized
     ok (r2, self)
 
 /-- [noble_contracts::source::procedures::persistence::MAX_STRING_BYTES]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 17:0-17:36 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 19:0-19:36 -/
 @[global_simps, irreducible]
 def source.procedures.persistence.MAX_STRING_BYTES : Std.U32 := 4096#u32
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::string]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 279:4-281:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 281:4-283:5 -/
 def source.procedures.persistence.Writer.string
   (self : source.procedures.persistence.Writer) (value : Str) :
   Result ((core.result.Result Unit source.procedures.Refusal) ×
@@ -168708,7 +168708,7 @@ def source.procedures.persistence.Writer.string
     "serialization.string")
 
 /-- [noble_contracts::source::procedures::persistence::write_chunk]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 758:0-779:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 760:0-781:1 -/
 def source.procedures.persistence.write_chunk
   (writer : source.procedures.persistence.Writer)
   (chunk : source.chunks.Envelope) :
@@ -168795,7 +168795,7 @@ def source.procedures.persistence.write_chunk
     ok (r1, writer3)
 
 /-- [noble_contracts::source::procedures::persistence::write_encoder]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 622:0-627:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 624:0-629:1 -/
 def source.procedures.persistence.write_encoder
   (writer : source.procedures.persistence.Writer)
   (encoder : source.procedures.Encoder) :
@@ -168820,13 +168820,13 @@ def source.procedures.persistence.write_encoder
     ok (r1, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Writer}::new]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 223:4-225:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 225:4-227:5 -/
 def source.procedures.persistence.Writer.new
   : Result source.procedures.persistence.Writer := do
   ok { bytes := (alloc.vec.Vec.new Std.U8) }
 
 /-- [noble_contracts::source::procedures::persistence::subject_bytes]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 549:4-553:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 551:4-555:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.subject_bytes_loop.body
   (iter : core.slice.iter.Iter source.procedures.LibraryDependency)
@@ -168848,7 +168848,7 @@ def source.procedures.persistence.subject_bytes_loop.body
     ok (cont (iter1, writer3))
 
 /-- [noble_contracts::source::procedures::persistence::subject_bytes]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 549:4-553:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 551:4-555:5 -/
 @[rust_loop]
 def source.procedures.persistence.subject_bytes_loop
   (iter : core.slice.iter.Iter source.procedures.LibraryDependency)
@@ -168861,7 +168861,7 @@ def source.procedures.persistence.subject_bytes_loop
     (iter, writer)
 
 /-- [noble_contracts::source::procedures::persistence::subject_bytes]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 523:0-555:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 525:0-557:1 -/
 def source.procedures.persistence.subject_bytes
   (encoder : source.procedures.Encoder) (semantic_revision : Std.U32)
   (chunk : source.chunks.Envelope) (provenance : source.procedures.Provenance)
@@ -168932,7 +168932,7 @@ def source.procedures.persistence.subject_bytes
         source.procedures.Refusal) residual
 
 /-- [noble_contracts::source::procedures::persistence::identity_bytes]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 513:0-521:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 515:0-523:1 -/
 def source.procedures.persistence.identity_bytes
   (record : source.procedures.ProcedureRecord) :
   Result (core.result.Result (alloc.vec.Vec Std.U8) source.procedures.Refusal)
@@ -169204,12 +169204,12 @@ def source.procedures.acceptance.VerifiedEvidence.impl.input_digest
   ok self.input_digest
 
 /-- [noble_contracts::source::procedures::persistence::MAX_TOOLCHAINS]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 18:0-18:31 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 20:0-20:31 -/
 @[global_simps, irreducible]
 def source.procedures.persistence.MAX_TOOLCHAINS : Std.U32 := 16#u32
 
 /-- [noble_contracts::source::procedures::persistence::write_toolchain]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1390:4-1393:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1392:4-1395:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_toolchain_loop.body
   (toolchain : Slice String) (writer : source.procedures.persistence.Writer)
@@ -169235,7 +169235,7 @@ def source.procedures.persistence.write_toolchain_loop.body
   else ok (done (outcome, writer))
 
 /-- [noble_contracts::source::procedures::persistence::write_toolchain]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1390:4-1393:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1392:4-1395:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_toolchain_loop
   (writer : source.procedures.persistence.Writer) (toolchain : Slice String)
@@ -169251,7 +169251,7 @@ def source.procedures.persistence.write_toolchain_loop
     (writer, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::write_toolchain]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1386:0-1395:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1388:0-1397:1 -/
 def source.procedures.persistence.write_toolchain
   (writer : source.procedures.persistence.Writer) (toolchain : Slice String)
   (field : Str) :
@@ -169276,7 +169276,7 @@ def source.procedures.persistence.write_toolchain
     ok (outcome, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::write_outcome]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1264:0-1276:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1266:0-1278:1 -/
 def source.procedures.persistence.write_outcome
   (writer : source.procedures.persistence.Writer)
   (outcome : source.procedures.EvidenceOutcome) :
@@ -169316,7 +169316,7 @@ def source.procedures.EvidenceClass.rank
   | source.procedures.EvidenceClass.Assumption => ok 6#u8
 
 /-- [noble_contracts::source::procedures::persistence::write_evidence_class]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1241:0-1243:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1243:0-1245:1 -/
 def source.procedures.persistence.write_evidence_class
   (writer : source.procedures.persistence.Writer)
   («class» : source.procedures.EvidenceClass) :
@@ -169326,7 +169326,7 @@ def source.procedures.persistence.write_evidence_class
   source.procedures.persistence.Writer.byte writer i
 
 /-- [noble_contracts::source::procedures::persistence::write_evidence_record]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1368:0-1383:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1370:0-1385:1 -/
 def source.procedures.persistence.write_evidence_record
   (writer : source.procedures.persistence.Writer)
   (evidence : source.procedures.EvidenceRecord) :
@@ -169388,7 +169388,7 @@ def source.procedures.persistence.write_evidence_record
     ok (r1, writer4)
 
 /-- [noble_contracts::source::procedures::persistence::digest32]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 503:4-509:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 505:4-511:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.digest32_loop.body
   (bytes : Slice Std.U8) (lane_domains : Array Std.U64 4#usize)
@@ -169419,7 +169419,7 @@ def source.procedures.persistence.digest32_loop.body
   else ok (done output)
 
 /-- [noble_contracts::source::procedures::persistence::digest32]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 503:4-509:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 505:4-511:5 -/
 @[rust_loop]
 def source.procedures.persistence.digest32_loop
   (bytes : Slice Std.U8) (output : Array Std.U8 32#usize)
@@ -169432,7 +169432,7 @@ def source.procedures.persistence.digest32_loop
     (output, lane)
 
 /-- [noble_contracts::source::procedures::persistence::digest32]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 494:0-511:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 496:0-513:1 -/
 def source.procedures.persistence.digest32
   (domain : Std.U64) (bytes : Slice Std.U8) :
   Result (Array Std.U8 32#usize)
@@ -169445,13 +169445,13 @@ def source.procedures.persistence.digest32
     (Array.make 4#usize [ domain, i, i1, i2 ]) 0#usize
 
 /-- [noble_contracts::source::procedures::persistence::DOMAIN_CLAIM]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 16:0-16:52 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 18:0-18:52 -/
 @[global_simps, irreducible]
 def source.procedures.persistence.DOMAIN_CLAIM : Std.U64 :=
   5643100833475198981#u64
 
 /-- [noble_contracts::source::procedures::persistence::claim_digest]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 605:0-609:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 607:0-611:1 -/
 def source.procedures.persistence.claim_digest
   (evidence : source.procedures.EvidenceRecord) :
   Result (core.result.Result (Array Std.U8 32#usize) source.procedures.Refusal)
@@ -172921,13 +172921,13 @@ def source.procedures.alias.normalize
       source.procedures.Refusal) residual
 
 /-- [noble_contracts::source::procedures::persistence::DOMAIN_ALIAS_CLOSURE]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 15:0-15:60 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 17:0-17:60 -/
 @[global_simps, irreducible]
 def source.procedures.persistence.DOMAIN_ALIAS_CLOSURE : Std.U64 :=
   5643100833475198980#u64
 
 /-- [noble_contracts::source::procedures::persistence::empty_alias_closure_digest]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 580:0-582:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 582:0-584:1 -/
 def source.procedures.persistence.empty_alias_closure_digest
   : Result (Array Std.U8 32#usize) := do
   let s ← lift (Array.to_slice (Std.Array.empty Std.U8))
@@ -175232,32 +175232,603 @@ def source.procedures.composition.ProcedureLibrary.compose_certified
         }
     ok (core.result.Result.Err r, companion_core)
 
+/-- [noble_contracts::source::procedures::persistence::history::matching_position]:
+    Source: 'crates/noble-contracts/src/source/procedures/persistence/history.rs', lines 3:0-13:1 -/
+def source.procedures.persistence.history.matching_position
+  (record : source.procedures.ProcedureRecord)
+  (procedure_id : Array Std.U8 32#usize) (index1 : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  let b ←
+    core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8
+      record.procedure_id procedure_id
+  if b
+  then ok (some index1)
+  else ok none
+
+/-- [noble_contracts::source::procedures::persistence::history::record_position]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/procedures/persistence/history.rs', lines 18:4-21:5 -/
+@[rust_loop_body]
+def source.procedures.persistence.history.record_position_loop.body
+  (records : Slice source.procedures.ProcedureRecord)
+  (procedure_id : Array Std.U8 32#usize) (index1 : Std.Usize)
+  (found : Option Std.Usize) :
+  Result (ControlFlow (Std.Usize × (Option Std.Usize)) (Option Std.Usize))
+  := do
+  let i := Slice.len records
+  if index1 < i
+  then
+    let b := core.option.Option.is_none found
+    if b
+    then
+      let pr ← Slice.index_usize records index1
+      let found1 ←
+        source.procedures.persistence.history.matching_position pr procedure_id
+          index1
+      let index2 ← index1 + 1#usize
+      ok (cont (index2, found1))
+    else ok (done found)
+  else ok (done found)
+
+/-- [noble_contracts::source::procedures::persistence::history::record_position]: loop 0:
+    Source: 'crates/noble-contracts/src/source/procedures/persistence/history.rs', lines 18:4-21:5 -/
+@[rust_loop]
+def source.procedures.persistence.history.record_position_loop
+  (records : Slice source.procedures.ProcedureRecord)
+  (procedure_id : Array Std.U8 32#usize) (index1 : Std.Usize)
+  (found : Option Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun (index2, found1) =>
+      source.procedures.persistence.history.record_position_loop.body records
+      procedure_id index2 found1)
+    (index1, found)
+
+/-- [noble_contracts::source::procedures::persistence::history::record_position]:
+    Source: 'crates/noble-contracts/src/source/procedures/persistence/history.rs', lines 15:0-23:1 -/
+@[reducible]
+def source.procedures.persistence.history.record_position
+  (records : Slice source.procedures.ProcedureRecord)
+  (procedure_id : Array Std.U8 32#usize) :
+  Result (Option Std.Usize)
+  := do
+  source.procedures.persistence.history.record_position_loop records
+    procedure_id 0#usize none
+
+/-- [noble_contracts::source::procedures::persistence::history::check_unique_record]:
+    Source: 'crates/noble-contracts/src/source/procedures/persistence/history.rs', lines 25:0-38:1 -/
+def source.procedures.persistence.history.check_unique_record
+  (records : Slice source.procedures.ProcedureRecord) (index1 : Std.Usize) :
+  Result (core.result.Result Unit source.procedures.Refusal)
+  := do
+  let record ← Slice.index_usize records index1
+  let s ←
+    core.slice.index.Slice.index (core.slice.index.SliceIndexRangeToUsizeSlice
+      source.procedures.ProcedureRecord) records { «end» := index1 }
+  let o ←
+    source.procedures.persistence.history.record_position s record.procedure_id
+  let b := core.option.Option.is_some o
+  if b
+  then
+    let i ← lift (UScalar.cast .U32 index1)
+    let r ←
+      source.procedures.Refusal.at source.procedures.RefusalKind.Invalid
+        {
+          field := (toStr "procedure_id"),
+          message :=
+            (toStr
+              "a generation cannot retain the same procedure identity twice")
+        } i
+    ok (core.result.Result.Err r)
+  else ok (core.result.Result.Ok ())
+
+/-- [noble_contracts::source::procedures::persistence::history::validate_unique_records]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/procedures/persistence/history.rs', lines 43:4-46:5 -/
+@[rust_loop_body]
+def source.procedures.persistence.history.validate_unique_records_loop.body
+  (records : Slice source.procedures.ProcedureRecord) (index1 : Std.Usize)
+  (result : core.result.Result Unit source.procedures.Refusal) :
+  Result (ControlFlow (Std.Usize × (core.result.Result Unit
+    source.procedures.Refusal)) (core.result.Result Unit
+    source.procedures.Refusal))
+  := do
+  let i := Slice.len records
+  if index1 < i
+  then
+    let b ← core.result.Result.is_ok result
+    if b
+    then
+      let result1 ←
+        source.procedures.persistence.history.check_unique_record records
+          index1
+      let index2 ← index1 + 1#usize
+      ok (cont (index2, result1))
+    else ok (done result)
+  else ok (done result)
+
+/-- [noble_contracts::source::procedures::persistence::history::validate_unique_records]: loop 0:
+    Source: 'crates/noble-contracts/src/source/procedures/persistence/history.rs', lines 43:4-46:5 -/
+@[rust_loop]
+def source.procedures.persistence.history.validate_unique_records_loop
+  (records : Slice source.procedures.ProcedureRecord) (index1 : Std.Usize)
+  (result : core.result.Result Unit source.procedures.Refusal) :
+  Result (core.result.Result Unit source.procedures.Refusal)
+  := do
+  loop
+    (fun (index2, result1) =>
+      source.procedures.persistence.history.validate_unique_records_loop.body
+      records index2 result1)
+    (index1, result)
+
+/-- [noble_contracts::source::procedures::persistence::history::validate_unique_records]:
+    Source: 'crates/noble-contracts/src/source/procedures/persistence/history.rs', lines 40:0-48:1 -/
+@[reducible]
+def source.procedures.persistence.history.validate_unique_records
+  (records : Slice source.procedures.ProcedureRecord) :
+  Result (core.result.Result Unit source.procedures.Refusal)
+  := do
+  source.procedures.persistence.history.validate_unique_records_loop records
+    0#usize (core.result.Result.Ok ())
+
+/-- [noble_contracts::source::procedures::persistence::history::validate_retained_record]:
+    Source: 'crates/noble-contracts/src/source/procedures/persistence/history.rs', lines 50:0-76:1 -/
+def source.procedures.persistence.history.validate_retained_record
+  (retained : source.procedures.ProcedureRecord)
+  (records : Slice source.procedures.ProcedureRecord) :
+  Result (core.result.Result Unit source.procedures.Refusal)
+  := do
+  let o ←
+    source.procedures.persistence.history.record_position records
+      retained.procedure_id
+  match o with
+  | none =>
+    let r ←
+      source.procedures.Refusal.new source.procedures.RefusalKind.Invalid
+        {
+          field := (toStr "generation.closure"),
+          message :=
+            (toStr
+              "a publication must retain every subject from its parent generation")
+        }
+    ok (core.result.Result.Err r)
+  | some index1 =>
+    let record ← Slice.index_usize records index1
+    let b := core.option.Option.is_some retained.supersedes
+    if b
+    then
+      let b1 ←
+        core.cmp.PartialEq.ne.trait_default
+          (core.option.Option.Insts.CoreCmpPartialEqOption
+          (Array.Insts.CoreCmpPartialEqArray 32#usize core.cmp.PartialEqU8))
+          record.supersedes retained.supersedes
+      if b1
+      then
+        let r ←
+          source.procedures.Refusal.new source.procedures.RefusalKind.Invalid
+            {
+              field := (toStr "supersedes"),
+              message :=
+                (toStr
+                  "a publication cannot rewrite a retained replacement predecessor")
+            }
+        ok (core.result.Result.Err r)
+      else ok (core.result.Result.Ok ())
+    else ok (core.result.Result.Ok ())
+
+/-- [noble_contracts::source::procedures::persistence::history::validate_publish]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/procedures/persistence/history.rs', lines 81:4-84:5 -/
+@[rust_loop_body]
+def source.procedures.persistence.history.validate_publish_loop.body
+  (parent : source.procedures.Snapshot) (snapshot : source.procedures.Snapshot)
+  (index1 : Std.Usize)
+  (result : core.result.Result Unit source.procedures.Refusal) :
+  Result (ControlFlow (Std.Usize × (core.result.Result Unit
+    source.procedures.Refusal)) (core.result.Result Unit
+    source.procedures.Refusal))
+  := do
+  let i := alloc.vec.Vec.len parent.records
+  if index1 < i
+  then
+    let b ← core.result.Result.is_ok result
+    if b
+    then
+      let pr ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.procedures.ProcedureRecord) parent.records index1
+      let s := alloc.vec.Vec.deref snapshot.records
+      let result1 ←
+        source.procedures.persistence.history.validate_retained_record pr s
+      let index2 ← index1 + 1#usize
+      ok (cont (index2, result1))
+    else ok (done result)
+  else ok (done result)
+
+/-- [noble_contracts::source::procedures::persistence::history::validate_publish]: loop 0:
+    Source: 'crates/noble-contracts/src/source/procedures/persistence/history.rs', lines 81:4-84:5 -/
+@[rust_loop]
+def source.procedures.persistence.history.validate_publish_loop
+  (parent : source.procedures.Snapshot) (snapshot : source.procedures.Snapshot)
+  (index1 : Std.Usize)
+  (result : core.result.Result Unit source.procedures.Refusal) :
+  Result (core.result.Result Unit source.procedures.Refusal)
+  := do
+  loop
+    (fun (index2, result1) =>
+      source.procedures.persistence.history.validate_publish_loop.body parent
+      snapshot index2 result1)
+    (index1, result)
+
+/-- [noble_contracts::source::procedures::persistence::history::validate_publish]:
+    Source: 'crates/noble-contracts/src/source/procedures/persistence/history.rs', lines 78:0-86:1 -/
+@[reducible]
+def source.procedures.persistence.history.validate_publish
+  (parent : source.procedures.Snapshot) (snapshot : source.procedures.Snapshot)
+  :
+  Result (core.result.Result Unit source.procedures.Refusal)
+  := do
+  source.procedures.persistence.history.validate_publish_loop parent snapshot
+    0#usize (core.result.Result.Ok ())
+
+/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Alias> for noble_contracts::source::procedures::Alias}::eq]:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 260:23-260:32
+    Visibility: public -/
+def source.procedures.Alias.Insts.CoreCmpPartialEqAlias.eq
+  (self : source.procedures.Alias) (other : source.procedures.Alias) :
+  Result Bool
+  := do
+  let b ←
+    core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8
+      self.procedure_id other.procedure_id
+  if b
+  then
+    source.procedures.alias.Certificate.Insts.CoreCmpPartialEqCertificate.eq
+      self.certificate other.certificate
+  else ok false
+
+/-- Trait implementation: [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Alias> for noble_contracts::source::procedures::Alias}]
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 260:23-260:32 -/
+@[reducible]
+impl_def source.procedures.Alias.Insts.CoreCmpPartialEqAlias :
+  core.cmp.PartialEq source.procedures.Alias source.procedures.Alias := {
+  eq := source.procedures.Alias.Insts.CoreCmpPartialEqAlias.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.procedures.Alias.Insts.CoreCmpPartialEqAlias
+}
+
+/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Cost> for noble_contracts::source::procedures::Cost}::eq]:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 234:38-234:47
+    Visibility: public -/
+def source.procedures.Cost.Insts.CoreCmpPartialEqCost.eq
+  (self : source.procedures.Cost) (other : source.procedures.Cost) :
+  Result Bool
+  := do
+  if self.expanded_nodes = other.expanded_nodes
+  then
+    if self.emitted_source_bytes = other.emitted_source_bytes
+    then ok (self.evaluation_steps = other.evaluation_steps)
+    else ok false
+  else ok false
+
+/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Promotion> for noble_contracts::source::procedures::Promotion}::eq]:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 228:23-228:32
+    Visibility: public -/
+def source.procedures.Promotion.Insts.CoreCmpPartialEqPromotion.eq
+  (self : source.procedures.Promotion) (other : source.procedures.Promotion) :
+  Result Bool
+  := do
+  if self.policy_revision = other.policy_revision
+  then
+    alloc.vec.partial_eq.PartialEqVec.eq core.cmp.PartialEqU32 self.obligations
+      other.obligations
+  else ok false
+
+/-- Trait implementation: [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Promotion> for noble_contracts::source::procedures::Promotion}]
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 228:23-228:32 -/
+@[reducible]
+impl_def source.procedures.Promotion.Insts.CoreCmpPartialEqPromotion :
+  core.cmp.PartialEq source.procedures.Promotion source.procedures.Promotion
+  := {
+  eq := source.procedures.Promotion.Insts.CoreCmpPartialEqPromotion.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.procedures.Promotion.Insts.CoreCmpPartialEqPromotion
+}
+
+/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Status> for noble_contracts::source::procedures::Status}::eq]:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 200:29-200:38
+    Visibility: public -/
+def source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq
+  (self : source.procedures.Status) (other : source.procedures.Status) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::LibraryDependency> for noble_contracts::source::procedures::LibraryDependency}::eq]:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 94:29-94:38
+    Visibility: public -/
+def
+  source.procedures.LibraryDependency.Insts.CoreCmpPartialEqLibraryDependency.eq
+  (self : source.procedures.LibraryDependency)
+  (other : source.procedures.LibraryDependency) :
+  Result Bool
+  := do
+  let b ←
+    core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8
+      self.procedure_id other.procedure_id
+  if b
+  then
+    let b1 ←
+      core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8 self.chunk_id
+        other.chunk_id
+    if b1
+    then
+      core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8
+        self.source_revision other.source_revision
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::LibraryDependency> for noble_contracts::source::procedures::LibraryDependency}]
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 94:29-94:38 -/
+@[reducible]
+impl_def
+  source.procedures.LibraryDependency.Insts.CoreCmpPartialEqLibraryDependency :
+  core.cmp.PartialEq source.procedures.LibraryDependency
+  source.procedures.LibraryDependency := {
+  eq :=
+    source.procedures.LibraryDependency.Insts.CoreCmpPartialEqLibraryDependency.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.procedures.LibraryDependency.Insts.CoreCmpPartialEqLibraryDependency
+}
+
+/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Producer> for noble_contracts::source::procedures::Producer}::eq]:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 79:29-79:38
+    Visibility: public -/
+def source.procedures.Producer.Insts.CoreCmpPartialEqProducer.eq
+  (self : source.procedures.Producer) (other : source.procedures.Producer) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Provenance> for noble_contracts::source::procedures::Provenance}::eq]:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 86:23-86:32
+    Visibility: public -/
+def source.procedures.Provenance.Insts.CoreCmpPartialEqProvenance.eq
+  (self : source.procedures.Provenance) (other : source.procedures.Provenance)
+  :
+  Result Bool
+  := do
+  if self.producer_tool_revision = other.producer_tool_revision
+  then
+    let b ←
+      source.procedures.Producer.Insts.CoreCmpPartialEqProducer.eq
+        self.producer other.producer
+    if b
+    then
+      let b1 ←
+        core.option.Option.Insts.CoreCmpPartialEqOption.eq
+          (Array.Insts.CoreCmpPartialEqArray 32#usize core.cmp.PartialEqU8)
+          self.task_id other.task_id
+      if b1
+      then
+        core.option.Option.Insts.CoreCmpPartialEqOption.eq
+          core.cmp.PartialEqU32 self.grammar_revision other.grammar_revision
+      else ok false
+    else ok false
+  else ok false
+
+/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Encoder> for noble_contracts::source::procedures::Encoder}::eq]:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 61:23-61:32
+    Visibility: public -/
+def source.procedures.Encoder.Insts.CoreCmpPartialEqEncoder.eq
+  (self : source.procedures.Encoder) (other : source.procedures.Encoder) :
+  Result Bool
+  := do
+  if self.encoding_revision = other.encoding_revision
+  then
+    if self.experimental = other.experimental
+    then alloc.string.String.Insts.CoreCmpPartialEqString.eq self.id other.id
+    else ok false
+  else ok false
+
+/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::ProcedureRecord> for noble_contracts::source::procedures::ProcedureRecord}::eq]:
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 266:23-266:32
+    Visibility: public -/
+def source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
+  (self : source.procedures.ProcedureRecord)
+  (other : source.procedures.ProcedureRecord) :
+  Result Bool
+  := do
+  if self.format = other.format
+  then
+    if self.semantic_revision = other.semantic_revision
+    then
+      let b ←
+        source.procedures.Encoder.Insts.CoreCmpPartialEqEncoder.eq self.encoder
+          other.encoder
+      if b
+      then
+        let b1 ←
+          core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8
+            self.procedure_id other.procedure_id
+        if b1
+        then
+          let b2 ←
+            source.chunks.Envelope.Insts.CoreCmpPartialEqEnvelope.eq 
+              self.chunk other.chunk
+          if b2
+          then
+            let b3 ←
+              source.procedures.Provenance.Insts.CoreCmpPartialEqProvenance.eq
+                self.provenance other.provenance
+            if b3
+            then
+              let b4 ←
+                alloc.vec.partial_eq.PartialEqVec.eq
+                  source.procedures.LibraryDependency.Insts.CoreCmpPartialEqLibraryDependency
+                  self.library_dependencies other.library_dependencies
+              if b4
+              then
+                let b5 ←
+                  alloc.vec.partial_eq.PartialEqVec.eq
+                    source.procedures.EvidenceRecord.Insts.CoreCmpPartialEqEvidenceRecord
+                    self.evidence other.evidence
+                if b5
+                then
+                  let b6 ←
+                    alloc.vec.partial_eq.PartialEqVec.eq
+                      source.procedures.acceptance.VerifiedEvidence.Insts.CoreCmpPartialEqVerifiedEvidence
+                      self.verified other.verified
+                  if b6
+                  then
+                    let b7 ←
+                      source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq
+                        self.status other.status
+                    if b7
+                    then
+                      let b8 ←
+                        core.option.Option.Insts.CoreCmpPartialEqOption.eq
+                          source.procedures.Promotion.Insts.CoreCmpPartialEqPromotion
+                          self.promotion other.promotion
+                      if b8
+                      then
+                        let b9 ←
+                          source.procedures.Cost.Insts.CoreCmpPartialEqCost.eq
+                            self.cost other.cost
+                        if b9
+                        then
+                          let b10 ←
+                            source.procedures.RetrievalSignature.Insts.CoreCmpPartialEqRetrievalSignature.eq
+                              self.retrieval other.retrieval
+                          if b10
+                          then
+                            let b11 ←
+                              core.option.Option.Insts.CoreCmpPartialEqOption.eq
+                                (Array.Insts.CoreCmpPartialEqArray 32#usize
+                                core.cmp.PartialEqU8) self.supersedes
+                                other.supersedes
+                            if b11
+                            then
+                              core.option.Option.Insts.CoreCmpPartialEqOption.eq
+                                source.procedures.Alias.Insts.CoreCmpPartialEqAlias
+                                self.alias_of other.alias_of
+                            else ok false
+                          else ok false
+                        else ok false
+                      else ok false
+                    else ok false
+                  else ok false
+                else ok false
+              else ok false
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::ProcedureRecord> for noble_contracts::source::procedures::ProcedureRecord}]
+    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 266:23-266:32 -/
+@[reducible]
+impl_def
+  source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord :
+  core.cmp.PartialEq source.procedures.ProcedureRecord
+  source.procedures.ProcedureRecord := {
+  eq :=
+    source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord
+}
+
+/-- [noble_contracts::source::procedures::persistence::history::validate]:
+    Source: 'crates/noble-contracts/src/source/procedures/persistence/history.rs', lines 88:0-126:1 -/
+def source.procedures.persistence.history.validate
+  (generations : Slice source.procedures.Snapshot)
+  (snapshot : source.procedures.Snapshot) :
+  Result (core.result.Result Unit source.procedures.Refusal)
+  := do
+  let s := alloc.vec.Vec.deref snapshot.records
+  let r ← source.procedures.persistence.history.validate_unique_records s
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue _ =>
+    match snapshot.record.parent_generation with
+    | none => ok (core.result.Result.Ok ())
+    | some parent_generation =>
+      let r1 ←
+        Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from
+          parent_generation
+      let parent ←
+        match r1 with
+        | core.result.Result.Ok index1 =>
+          core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+            source.procedures.Snapshot) generations index1
+        | core.result.Result.Err _ => ok none
+      match parent with
+      | none =>
+        let r2 ←
+          source.procedures.Refusal.new source.procedures.RefusalKind.Invalid
+            {
+              field := (toStr "generation.parent"),
+              message := (toStr "generation parent is not retained")
+            }
+        ok (core.result.Result.Err r2)
+      | some parent1 =>
+        match snapshot.record.kind with
+        | source.procedures.GenerationKind.Publish =>
+          source.procedures.persistence.history.validate_publish parent1
+            snapshot
+        | source.procedures.GenerationKind.Rollback =>
+          let b ←
+            alloc.vec.partial_eq.PartialEqVec.ne
+              source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord
+              snapshot.records parent1.records
+          if b
+          then
+            let r2 ←
+              source.procedures.Refusal.new
+                source.procedures.RefusalKind.Invalid
+                {
+                  field := (toStr "generation.closure"),
+                  message :=
+                    (toStr
+                      "rollback must reproduce the exact records of its named parent")
+                }
+            ok (core.result.Result.Err r2)
+          else ok (core.result.Result.Ok ())
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+      Unit (core.convert.FromSame source.procedures.Refusal) residual
+
 /-- [noble_contracts::source::procedures::persistence::DOMAIN_ID]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 12:0-12:49 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 14:0-14:49 -/
 @[global_simps, irreducible]
 def source.procedures.persistence.DOMAIN_ID : Std.U64 :=
   5643100833475198977#u64
 
 /-- [noble_contracts::source::procedures::persistence::DOMAIN_STATE]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 13:0-13:52 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 15:0-15:52 -/
 @[global_simps, irreducible]
 def source.procedures.persistence.DOMAIN_STATE : Std.U64 :=
   5643100833475198978#u64
 
 /-- [noble_contracts::source::procedures::persistence::DOMAIN_LIBRARY]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 14:0-14:54 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 16:0-16:54 -/
 @[global_simps, irreducible]
 def source.procedures.persistence.DOMAIN_LIBRARY : Std.U64 :=
   5643100833475198979#u64
 
 /-- [noble_contracts::source::procedures::persistence::MAGIC]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 24:0-24:36 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 26:0-26:36 -/
 @[global_simps, irreducible]
 def source.procedures.persistence.MAGIC : Array Std.U8 8#usize :=
   Array.make 8#usize [ 78#u8, 80#u8, 76#u8, 73#u8, 66#u8, 48#u8, 48#u8, 50#u8 ]
 
 /-- [noble_contracts::source::procedures::persistence::{impl core::clone::Clone for noble_contracts::source::procedures::persistence::JsonLimit}::clone]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 27:9-27:14
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 29:9-29:14
     Visibility: public -/
 def source.procedures.persistence.JsonLimit.Insts.CoreCloneClone.clone
   (self : source.procedures.persistence.JsonLimit) :
@@ -175266,7 +175837,7 @@ def source.procedures.persistence.JsonLimit.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::clone::Clone for noble_contracts::source::procedures::persistence::JsonLimit}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 27:9-27:14 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 29:9-29:14 -/
 @[reducible]
 impl_def source.procedures.persistence.JsonLimit.Insts.CoreCloneClone :
   core.clone.Clone source.procedures.persistence.JsonLimit := {
@@ -175276,7 +175847,7 @@ impl_def source.procedures.persistence.JsonLimit.Insts.CoreCloneClone :
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::marker::Copy for noble_contracts::source::procedures::persistence::JsonLimit}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 27:16-27:20 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 29:16-29:20 -/
 @[reducible]
 def source.procedures.persistence.JsonLimit.Insts.CoreMarkerCopy :
   core.marker.Copy source.procedures.persistence.JsonLimit := {
@@ -175284,7 +175855,7 @@ def source.procedures.persistence.JsonLimit.Insts.CoreMarkerCopy :
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::JsonLimit}::field]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 36:4-41:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 38:4-43:5 -/
 def source.procedures.persistence.JsonLimit.field
   (self : source.procedures.persistence.JsonLimit) : Result Str := do
   match self with
@@ -175294,7 +175865,7 @@ def source.procedures.persistence.JsonLimit.field
     ok (toStr "metrics.bytes")
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::JsonLimit}::message]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 44:4-49:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 46:4-51:5 -/
 def source.procedures.persistence.JsonLimit.message
   (self : source.procedures.persistence.JsonLimit) : Result Str := do
   match self with
@@ -175304,7 +175875,7 @@ def source.procedures.persistence.JsonLimit.message
     ok (toStr "metrics record exceeds its bound")
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::new]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 59:4-65:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 61:4-67:5 -/
 def source.procedures.persistence.BoundedJson.new
   (maximum_bytes : Std.Usize) :
   Result source.procedures.persistence.BoundedJson
@@ -175313,7 +175884,7 @@ def source.procedures.persistence.BoundedJson.new
   ok { text := s, maximum_bytes, exceeded_limit := false }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_str]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 67:4-80:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 69:4-82:5 -/
 def source.procedures.persistence.BoundedJson.push_str
   (self : source.procedures.persistence.BoundedJson) (value : Str) :
   Result source.procedures.persistence.BoundedJson
@@ -175334,7 +175905,7 @@ def source.procedures.persistence.BoundedJson.push_str
         ok { self with text := s }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 82:4-95:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 84:4-97:5 -/
 def source.procedures.persistence.BoundedJson.push
   (self : source.procedures.persistence.BoundedJson) (value : Char) :
   Result source.procedures.persistence.BoundedJson
@@ -175355,7 +175926,7 @@ def source.procedures.persistence.BoundedJson.push
         ok { self with text := s }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_u64]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 101:8-112:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 103:8-114:9 -/
 @[rust_loop_body]
 def source.procedures.persistence.BoundedJson.push_u64_loop0.body
   (value : Std.U64) (digits : Array Std.U8 20#usize) (start : Std.Usize) :
@@ -175383,7 +175954,7 @@ def source.procedures.persistence.BoundedJson.push_u64_loop0.body
   | core.result.Result.Err _ => ok (done (digits, start1, false))
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_u64]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 101:8-112:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 103:8-114:9 -/
 @[rust_loop]
 def source.procedures.persistence.BoundedJson.push_u64_loop0
   (value : Std.U64) (digits : Array Std.U8 20#usize) (start : Std.Usize) :
@@ -175396,7 +175967,7 @@ def source.procedures.persistence.BoundedJson.push_u64_loop0
     (value, digits, start)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_u64]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 118:8-121:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 120:8-123:9 -/
 @[rust_loop_body]
 def source.procedures.persistence.BoundedJson.push_u64_loop1.body
   (digits : Array Std.U8 20#usize)
@@ -175416,7 +175987,7 @@ def source.procedures.persistence.BoundedJson.push_u64_loop1.body
   else ok (done self)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_u64]: loop 1:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 118:8-121:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 120:8-123:9 -/
 @[rust_loop]
 def source.procedures.persistence.BoundedJson.push_u64_loop1
   (self : source.procedures.persistence.BoundedJson)
@@ -175430,7 +176001,7 @@ def source.procedures.persistence.BoundedJson.push_u64_loop1
     (self, index1)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_u64]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 97:4-122:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 99:4-124:5 -/
 def source.procedures.persistence.BoundedJson.push_u64
   (self : source.procedures.persistence.BoundedJson) (value : Std.U64) :
   Result source.procedures.persistence.BoundedJson
@@ -175447,7 +176018,7 @@ def source.procedures.persistence.BoundedJson.push_u64
   else ok { self with exceeded_limit := true }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_u32]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 124:4-126:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 126:4-128:5 -/
 def source.procedures.persistence.BoundedJson.push_u32
   (self : source.procedures.persistence.BoundedJson) (value : Std.U32) :
   Result source.procedures.persistence.BoundedJson
@@ -175456,7 +176027,7 @@ def source.procedures.persistence.BoundedJson.push_u32
   source.procedures.persistence.BoundedJson.push_u64 self i
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_usize]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 128:4-133:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 130:4-135:5 -/
 def source.procedures.persistence.BoundedJson.push_usize
   (self : source.procedures.persistence.BoundedJson) (value : Std.Usize) :
   Result source.procedures.persistence.BoundedJson
@@ -175468,7 +176039,7 @@ def source.procedures.persistence.BoundedJson.push_usize
   | core.result.Result.Err _ => ok { self with exceeded_limit := true }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_bool]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 135:4-137:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 137:4-139:5 -/
 def source.procedures.persistence.BoundedJson.push_bool
   (self : source.procedures.persistence.BoundedJson) (value : Bool) :
   Result source.procedures.persistence.BoundedJson
@@ -175478,7 +176049,7 @@ def source.procedures.persistence.BoundedJson.push_bool
   else source.procedures.persistence.BoundedJson.push_str self (toStr "false")
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_hex::DIGITS]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 140:8-140:54 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 142:8-142:54 -/
 @[global_simps, irreducible]
 def source.procedures.persistence.BoundedJson.push_hex.DIGITS
   : Array Std.U8 16#usize :=
@@ -175488,7 +176059,7 @@ def source.procedures.persistence.BoundedJson.push_hex.DIGITS
     ]
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_hex]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 142:8-151:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 144:8-153:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.BoundedJson.push_hex_loop.body
   (bytes : Slice Std.U8) (self : source.procedures.persistence.BoundedJson)
@@ -175522,7 +176093,7 @@ def source.procedures.persistence.BoundedJson.push_hex_loop.body
   else ok (done self)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_hex]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 142:8-151:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 144:8-153:5 -/
 @[rust_loop]
 def source.procedures.persistence.BoundedJson.push_hex_loop
   (self : source.procedures.persistence.BoundedJson) (bytes : Slice Std.U8)
@@ -175536,7 +176107,7 @@ def source.procedures.persistence.BoundedJson.push_hex_loop
     (self, index1)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_hex]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 139:4-151:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 141:4-153:5 -/
 @[reducible]
 def source.procedures.persistence.BoundedJson.push_hex
   (self : source.procedures.persistence.BoundedJson) (bytes : Slice Std.U8) :
@@ -175545,7 +176116,7 @@ def source.procedures.persistence.BoundedJson.push_hex
   source.procedures.persistence.BoundedJson.push_hex_loop self bytes 0#usize
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_json_string]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 162:8-194:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 164:8-196:9 -/
 @[rust_loop_body]
 def source.procedures.persistence.BoundedJson.push_json_string_loop.body
   (value : Str) (bytes : Slice Std.U8)
@@ -175608,7 +176179,7 @@ def source.procedures.persistence.BoundedJson.push_json_string_loop.body
   else ok (done self)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_json_string]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 162:8-194:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 164:8-196:9 -/
 @[rust_loop]
 def source.procedures.persistence.BoundedJson.push_json_string_loop
   (self : source.procedures.persistence.BoundedJson) (value : Str)
@@ -175622,7 +176193,7 @@ def source.procedures.persistence.BoundedJson.push_json_string_loop
     (self, index1)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::push_json_string]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 158:4-196:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 160:4-198:5 -/
 def source.procedures.persistence.BoundedJson.push_json_string
   (self : source.procedures.persistence.BoundedJson) (value : Str) :
   Result source.procedures.persistence.BoundedJson
@@ -175635,7 +176206,7 @@ def source.procedures.persistence.BoundedJson.push_json_string
   source.procedures.persistence.BoundedJson.push self2 '"'
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::ensure_within_limit]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 198:4-210:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 200:4-212:5 -/
 def source.procedures.persistence.BoundedJson.ensure_within_limit
   (self : source.procedures.persistence.BoundedJson)
   (limit : source.procedures.persistence.JsonLimit) :
@@ -175652,7 +176223,7 @@ def source.procedures.persistence.BoundedJson.ensure_within_limit
   else ok (core.result.Result.Ok ())
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::BoundedJson}::finish]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 212:4-215:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 214:4-217:5 -/
 def source.procedures.persistence.BoundedJson.finish
   (self : source.procedures.persistence.BoundedJson)
   (limit : source.procedures.persistence.JsonLimit) :
@@ -175671,13 +176242,13 @@ def source.procedures.persistence.BoundedJson.finish
       residual
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::new]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 330:4-335:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 332:4-337:5 -/
 def source.procedures.persistence.Reader.new
   (bytes : Slice Std.U8) : Result source.procedures.persistence.Reader := do
   ok { bytes, byte_offset_bytes := 0#usize }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::read::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::read::{closure#1}<'a, '_1, N>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 350:24-358:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 352:24-360:13 -/
 def
   source.procedures.persistence.Reader.read.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   {N : Std.Usize} (c : source.procedures.persistence.Reader.read.closure_1 N)
@@ -175688,7 +176259,7 @@ def
     { field := c, message := (toStr "truncated canonical record") }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::read::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::read::{closure#1}<'a, '_1, N>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 350:24-358:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 352:24-360:13 -/
 @[reducible]
 def
   source.procedures.persistence.Reader.read.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -175700,7 +176271,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::read::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::read::{closure}<'a, '_1, N>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 338:85-346:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 340:85-348:9 -/
 def
   source.procedures.persistence.Reader.read.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   {N : Std.Usize} (c : source.procedures.persistence.Reader.read.closure N)
@@ -175711,7 +176282,7 @@ def
     { field := c, message := (toStr "canonical offset overflow") }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::read::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::read::{closure}<'a, '_1, N>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 338:85-346:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 340:85-348:9 -/
 @[reducible]
 def
   source.procedures.persistence.Reader.read.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -175723,7 +176294,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::read]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 337:4-363:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 339:4-365:5 -/
 def source.procedures.persistence.Reader.read
   (N : Std.Usize) (self : source.procedures.persistence.Reader) (field : Str) :
   Result ((core.result.Result (Array Std.U8 N) source.procedures.Refusal) ×
@@ -175766,7 +176337,7 @@ def source.procedures.persistence.Reader.read
     ok (r1, self)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::byte]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 365:4-367:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 367:4-369:5 -/
 def source.procedures.persistence.Reader.byte
   (self : source.procedures.persistence.Reader) (field : Str) :
   Result ((core.result.Result Std.U8 source.procedures.Refusal) ×
@@ -175786,7 +176357,7 @@ def source.procedures.persistence.Reader.byte
     ok (r1, self1)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::bool]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 369:4-381:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 371:4-383:5 -/
 def source.procedures.persistence.Reader.bool
   (self : source.procedures.persistence.Reader) (field : Str) :
   Result ((core.result.Result Bool source.procedures.Refusal) ×
@@ -175811,7 +176382,7 @@ def source.procedures.persistence.Reader.bool
     ok (r1, self1)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::u16]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 383:4-385:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 385:4-387:5 -/
 def source.procedures.persistence.Reader.u16
   (self : source.procedures.persistence.Reader) (field : Str) :
   Result ((core.result.Result Std.U16 source.procedures.Refusal) ×
@@ -175831,7 +176402,7 @@ def source.procedures.persistence.Reader.u16
     ok (r1, self1)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::u32]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 387:4-389:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 389:4-391:5 -/
 def source.procedures.persistence.Reader.u32
   (self : source.procedures.persistence.Reader) (field : Str) :
   Result ((core.result.Result Std.U32 source.procedures.Refusal) ×
@@ -175851,7 +176422,7 @@ def source.procedures.persistence.Reader.u32
     ok (r1, self1)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::u64]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 391:4-393:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 393:4-395:5 -/
 def source.procedures.persistence.Reader.u64
   (self : source.procedures.persistence.Reader) (field : Str) :
   Result ((core.result.Result Std.U64 source.procedures.Refusal) ×
@@ -175871,7 +176442,7 @@ def source.procedures.persistence.Reader.u64
     ok (r1, self1)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::i64]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 395:4-397:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 397:4-399:5 -/
 def source.procedures.persistence.Reader.i64
   (self : source.procedures.persistence.Reader) (field : Str) :
   Result ((core.result.Result Std.I64 source.procedures.Refusal) ×
@@ -175891,7 +176462,7 @@ def source.procedures.persistence.Reader.i64
     ok (r1, self1)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::count::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::count::{closure#1}<'a, '_1, MaximumItems, Clause0_Error>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 426:44-434:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 428:44-436:9 -/
 def
   source.procedures.persistence.Reader.count.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorRefusal.call_once
   {MaximumItems : Type _} {Clause0_Error : Type _}
@@ -175905,7 +176476,7 @@ def
     { field := c, message := (toStr "count cannot fit host index") }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::count::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::count::{closure#1}<'a, '_1, MaximumItems, Clause0_Error>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 426:44-434:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 428:44-436:9 -/
 @[reducible]
 def
   source.procedures.persistence.Reader.count.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorRefusal
@@ -175920,7 +176491,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::count::{impl core::ops::function::FnOnce<(Clause0_Error,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::count::{closure}<'a, '_1, MaximumItems, Clause0_Error>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 407:66-415:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 409:66-417:9 -/
 def
   source.procedures.persistence.Reader.count.closure.Insts.CoreOpsFunctionFnOnceTupleClause0_ErrorRefusal.call_once
   {MaximumItems : Type _} {Clause0_Error : Type _}
@@ -175937,7 +176508,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::count::{impl core::ops::function::FnOnce<(Clause0_Error,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::count::{closure}<'a, '_1, MaximumItems, Clause0_Error>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 407:66-415:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 409:66-417:9 -/
 @[reducible]
 def
   source.procedures.persistence.Reader.count.closure.Insts.CoreOpsFunctionFnOnceTupleClause0_ErrorRefusal
@@ -175952,7 +176523,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::count]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 399:4-435:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 401:4-437:5 -/
 def source.procedures.persistence.Reader.count
   {MaximumItems : Type _} {Clause0_Error : Type _}
   (coreconvertTryIntoMaximumItemsU64Clause0_ErrorInst : core.convert.TryInto
@@ -176006,7 +176577,7 @@ def source.procedures.persistence.Reader.count
     ok (r2, self)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::raw]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 437:4-439:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 439:4-441:5 -/
 def source.procedures.persistence.Reader.raw
   (N : Std.Usize) (self : source.procedures.persistence.Reader) (field : Str) :
   Result ((core.result.Result (Array Std.U8 N) source.procedures.Refusal) ×
@@ -176015,7 +176586,7 @@ def source.procedures.persistence.Reader.raw
   source.procedures.persistence.Reader.read N self field
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::sized::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::sized::{closure#1}<'a, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 458:24-466:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 460:24-468:13 -/
 def
   source.procedures.persistence.Reader.sized.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.persistence.Reader.sized.closure_1) (_ : Unit) :
@@ -176025,7 +176596,7 @@ def
     { field := c, message := (toStr "truncated canonical byte string") }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::sized::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::sized::{closure#1}<'a, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 458:24-466:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 460:24-468:13 -/
 @[reducible]
 def
   source.procedures.persistence.Reader.sized.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -176037,7 +176608,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::sized::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::sized::{closure}<'a, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 446:24-454:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 448:24-456:13 -/
 def
   source.procedures.persistence.Reader.sized.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.persistence.Reader.sized.closure) (_ : Unit) :
@@ -176047,7 +176618,7 @@ def
     { field := c, message := (toStr "canonical offset overflow") }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::sized::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::sized::{closure}<'a, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 446:24-454:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 448:24-456:13 -/
 @[reducible]
 def
   source.procedures.persistence.Reader.sized.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -176058,7 +176629,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::sized]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 441:4-469:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 443:4-471:5 -/
 def source.procedures.persistence.Reader.sized
   (self : source.procedures.persistence.Reader) (field : Str)
   (maximum_bytes : Std.U32) :
@@ -176113,7 +176684,7 @@ def source.procedures.persistence.Reader.sized
     ok (r1, self1)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::string::{impl core::ops::function::FnOnce<(core::str::error::Utf8Error,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::string::{closure}<'a, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 473:56-481:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 475:56-483:9 -/
 def
   source.procedures.persistence.Reader.string.closure.Insts.CoreOpsFunctionFnOnceTupleUtf8ErrorRefusal.call_once
   (c : source.procedures.persistence.Reader.string.closure)
@@ -176124,7 +176695,7 @@ def
     { field := c, message := (toStr "canonical string is not UTF-8") }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::string::{impl core::ops::function::FnOnce<(core::str::error::Utf8Error,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::string::{closure}<'a, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 473:56-481:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 475:56-483:9 -/
 @[reducible]
 def
   source.procedures.persistence.Reader.string.closure.Insts.CoreOpsFunctionFnOnceTupleUtf8ErrorRefusal
@@ -176136,7 +176707,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::string]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 471:4-483:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 473:4-485:5 -/
 def source.procedures.persistence.Reader.string
   (self : source.procedures.persistence.Reader) (field : Str) :
   Result ((core.result.Result String source.procedures.Refusal) ×
@@ -176170,14 +176741,14 @@ def source.procedures.persistence.Reader.string
     ok (r1, self1)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::Reader<'a>}::finished]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 485:4-487:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 487:4-489:5 -/
 def source.procedures.persistence.Reader.finished
   (self : source.procedures.persistence.Reader) : Result Bool := do
   let i := Slice.len self.bytes
   ok (self.byte_offset_bytes = i)
 
 /-- [noble_contracts::source::procedures::persistence::identity]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 557:0-568:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 559:0-570:1 -/
 def source.procedures.persistence.identity
   (encoder : source.procedures.Encoder) (semantic_revision : Std.U32)
   (chunk : source.chunks.Envelope) (provenance : source.procedures.Provenance)
@@ -176201,7 +176772,7 @@ def source.procedures.persistence.identity
       residual
 
 /-- [noble_contracts::source::procedures::persistence::write_alias_polynomial]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1524:4-1527:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1526:4-1529:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_alias_polynomial_loop.body
   (iter : core.slice.iter.Iter source.procedures.alias.Monomial)
@@ -176221,7 +176792,7 @@ def source.procedures.persistence.write_alias_polynomial_loop.body
     ok (cont (iter1, writer2))
 
 /-- [noble_contracts::source::procedures::persistence::write_alias_polynomial]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1524:4-1527:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1526:4-1529:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_alias_polynomial_loop
   (iter : core.slice.iter.Iter source.procedures.alias.Monomial)
@@ -176235,7 +176806,7 @@ def source.procedures.persistence.write_alias_polynomial_loop
     (iter, writer)
 
 /-- [noble_contracts::source::procedures::persistence::write_alias_polynomial]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1522:0-1529:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1524:0-1531:1 -/
 def source.procedures.persistence.write_alias_polynomial
   (writer : source.procedures.persistence.Writer)
   (polynomial : source.procedures.alias.Polynomial) :
@@ -176264,7 +176835,7 @@ def source.procedures.persistence.write_alias_polynomial
     ok (r1, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::write_alias_form]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1514:4-1517:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1516:4-1519:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_alias_form_loop.body
   (form : Slice source.procedures.alias.Polynomial)
@@ -176289,7 +176860,7 @@ def source.procedures.persistence.write_alias_form_loop.body
   else ok (done (outcome, writer))
 
 /-- [noble_contracts::source::procedures::persistence::write_alias_form]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1514:4-1517:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1516:4-1519:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_alias_form_loop
   (writer : source.procedures.persistence.Writer)
@@ -176305,7 +176876,7 @@ def source.procedures.persistence.write_alias_form_loop
     (writer, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::write_alias_form]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1510:0-1519:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1512:0-1521:1 -/
 def source.procedures.persistence.write_alias_form
   (writer : source.procedures.persistence.Writer)
   (form : Slice source.procedures.alias.Polynomial) :
@@ -176330,7 +176901,7 @@ def source.procedures.persistence.write_alias_form
     ok (outcome, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::write_alias]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1484:0-1508:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1486:0-1510:1 -/
 def source.procedures.persistence.write_alias
   (writer : source.procedures.persistence.Writer)
   («alias» : Option source.procedures.Alias) :
@@ -176383,7 +176954,7 @@ def source.procedures.persistence.write_alias
         ok (r1, writer5)
 
 /-- [noble_contracts::source::procedures::persistence::write_supersedes]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1474:0-1482:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1476:0-1484:1 -/
 def source.procedures.persistence.write_supersedes
   (writer : source.procedures.persistence.Writer)
   (supersedes : Option (Array Std.U8 32#usize)) :
@@ -176397,7 +176968,7 @@ def source.procedures.persistence.write_supersedes
     source.procedures.persistence.Writer.raw writer1 s
 
 /-- [noble_contracts::source::procedures::persistence::write_retrieval_signature]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1468:4-1470:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1470:4-1472:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_retrieval_signature_loop.body
   (iter : core.slice.iter.Iter Std.U32)
@@ -176413,7 +176984,7 @@ def source.procedures.persistence.write_retrieval_signature_loop.body
     ok (cont (iter1, writer1))
 
 /-- [noble_contracts::source::procedures::persistence::write_retrieval_signature]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1468:4-1470:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1470:4-1472:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_retrieval_signature_loop
   (iter : core.slice.iter.Iter Std.U32)
@@ -176427,7 +176998,7 @@ def source.procedures.persistence.write_retrieval_signature_loop
     (iter, writer)
 
 /-- [noble_contracts::source::procedures::persistence::write_retrieval_signature]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1451:0-1472:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1453:0-1474:1 -/
 def source.procedures.persistence.write_retrieval_signature
   (writer : source.procedures.persistence.Writer)
   (retrieval : source.procedures.RetrievalSignature) :
@@ -176478,7 +177049,7 @@ def source.procedures.persistence.write_retrieval_signature
     ok (r1, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::write_cost]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1445:0-1449:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1447:0-1451:1 -/
 def source.procedures.persistence.write_cost
   (writer : source.procedures.persistence.Writer)
   (cost : source.procedures.Cost) :
@@ -176491,7 +177062,7 @@ def source.procedures.persistence.write_cost
   source.procedures.persistence.Writer.u32 writer2 cost.evaluation_steps
 
 /-- [noble_contracts::source::procedures::persistence::write_promotion]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1436:12-1438:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1438:12-1440:13 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_promotion_loop.body
   (iter : core.slice.iter.Iter Std.U32)
@@ -176507,7 +177078,7 @@ def source.procedures.persistence.write_promotion_loop.body
     ok (cont (iter1, writer1))
 
 /-- [noble_contracts::source::procedures::persistence::write_promotion]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1436:12-1438:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1438:12-1440:13 -/
 @[rust_loop]
 def source.procedures.persistence.write_promotion_loop
   (iter : core.slice.iter.Iter Std.U32)
@@ -176520,7 +177091,7 @@ def source.procedures.persistence.write_promotion_loop
     (iter, writer)
 
 /-- [noble_contracts::source::procedures::persistence::write_promotion]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1426:0-1443:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1428:0-1445:1 -/
 def source.procedures.persistence.write_promotion
   (writer : source.procedures.persistence.Writer)
   (promotion : Option source.procedures.Promotion) :
@@ -176558,7 +177129,7 @@ def source.procedures.persistence.write_promotion
       ok (r1, writer3)
 
 /-- [noble_contracts::source::procedures::persistence::write_verified_receipt]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1412:0-1424:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1414:0-1426:1 -/
 def source.procedures.persistence.write_verified_receipt
   (writer : source.procedures.persistence.Writer)
   (receipt : source.procedures.acceptance.VerifiedEvidence) :
@@ -176607,7 +177178,7 @@ def source.procedures.persistence.write_verified_receipt
     ok (r1, writer7)
 
 /-- [noble_contracts::source::procedures::persistence::write_verified_evidence]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1404:4-1407:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1406:4-1409:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_verified_evidence_loop.body
   (receipts : Slice source.procedures.acceptance.VerifiedEvidence)
@@ -176632,7 +177203,7 @@ def source.procedures.persistence.write_verified_evidence_loop.body
   else ok (done (outcome, writer))
 
 /-- [noble_contracts::source::procedures::persistence::write_verified_evidence]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1404:4-1407:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1406:4-1409:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_verified_evidence_loop
   (writer : source.procedures.persistence.Writer)
@@ -176649,7 +177220,7 @@ def source.procedures.persistence.write_verified_evidence_loop
     (writer, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::write_verified_evidence]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1397:0-1409:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1399:0-1411:1 -/
 def source.procedures.persistence.write_verified_evidence
   (writer : source.procedures.persistence.Writer)
   (receipts : Slice source.procedures.acceptance.VerifiedEvidence) :
@@ -176674,7 +177245,7 @@ def source.procedures.persistence.write_verified_evidence
     ok (outcome, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::write_evidence_records]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1361:4-1364:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1363:4-1366:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_evidence_records_loop.body
   (evidence_records : Slice source.procedures.EvidenceRecord)
@@ -176699,7 +177270,7 @@ def source.procedures.persistence.write_evidence_records_loop.body
   else ok (done (outcome, writer))
 
 /-- [noble_contracts::source::procedures::persistence::write_evidence_records]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1361:4-1364:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1363:4-1366:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_evidence_records_loop
   (writer : source.procedures.persistence.Writer)
@@ -176716,7 +177287,7 @@ def source.procedures.persistence.write_evidence_records_loop
     (writer, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::write_evidence_records]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1354:0-1366:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1356:0-1368:1 -/
 def source.procedures.persistence.write_evidence_records
   (writer : source.procedures.persistence.Writer)
   (evidence_records : Slice source.procedures.EvidenceRecord) :
@@ -176741,7 +177312,7 @@ def source.procedures.persistence.write_evidence_records
     ok (outcome, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::write_library_dependencies]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1346:4-1350:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1348:4-1352:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_library_dependencies_loop.body
   (iter : core.slice.iter.Iter source.procedures.LibraryDependency)
@@ -176763,7 +177334,7 @@ def source.procedures.persistence.write_library_dependencies_loop.body
     ok (cont (iter1, writer3))
 
 /-- [noble_contracts::source::procedures::persistence::write_library_dependencies]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1346:4-1350:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1348:4-1352:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_library_dependencies_loop
   (iter : core.slice.iter.Iter source.procedures.LibraryDependency)
@@ -176777,7 +177348,7 @@ def source.procedures.persistence.write_library_dependencies_loop
     (iter, writer)
 
 /-- [noble_contracts::source::procedures::persistence::write_library_dependencies]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1337:0-1352:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1339:0-1354:1 -/
 def source.procedures.persistence.write_library_dependencies
   (writer : source.procedures.persistence.Writer)
   (dependencies : Slice source.procedures.LibraryDependency) :
@@ -176807,7 +177378,7 @@ def source.procedures.persistence.write_library_dependencies
     ok (r1, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::write_status]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1299:0-1306:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1301:0-1308:1 -/
 def source.procedures.persistence.write_status
   (writer : source.procedures.persistence.Writer)
   (status : source.procedures.Status) :
@@ -176824,7 +177395,7 @@ def source.procedures.persistence.write_status
     source.procedures.persistence.Writer.byte writer 3#u8
 
 /-- [noble_contracts::source::procedures::persistence::write_state]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1324:0-1335:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1326:0-1337:1 -/
 def source.procedures.persistence.write_state
   (writer : source.procedures.persistence.Writer)
   (record : source.procedures.ProcedureRecord) :
@@ -176908,7 +177479,7 @@ def source.procedures.persistence.write_state
     ok (r1, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::state_digest]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 570:0-574:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 572:0-576:1 -/
 def source.procedures.persistence.state_digest
   (record : source.procedures.ProcedureRecord) :
   Result (core.result.Result (Array Std.U8 32#usize) source.procedures.Refusal)
@@ -176929,7 +177500,7 @@ def source.procedures.persistence.state_digest
       residual
 
 /-- [noble_contracts::source::procedures::persistence::empty_procedure_revision]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 576:0-578:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 578:0-580:1 -/
 def source.procedures.persistence.empty_procedure_revision
   : Result (Array Std.U8 32#usize) := do
   let s ← lift (Array.to_slice (Std.Array.empty Std.U8))
@@ -176937,7 +177508,7 @@ def source.procedures.persistence.empty_procedure_revision
     source.procedures.persistence.DOMAIN_LIBRARY s
 
 /-- [noble_contracts::source::procedures::persistence::write_revision_entry]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 597:0-601:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 599:0-603:1 -/
 def source.procedures.persistence.write_revision_entry
   (writer : source.procedures.persistence.Writer)
   (record : source.procedures.ProcedureRecord) :
@@ -176960,7 +177531,7 @@ def source.procedures.persistence.write_revision_entry
     ok (r1, writer1)
 
 /-- [noble_contracts::source::procedures::persistence::procedure_revision]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 588:4-591:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 590:4-593:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.procedure_revision_loop.body
   (records : Slice source.procedures.ProcedureRecord)
@@ -176986,7 +177557,7 @@ def source.procedures.persistence.procedure_revision_loop.body
   else ok (done (writer, outcome))
 
 /-- [noble_contracts::source::procedures::persistence::procedure_revision]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 588:4-591:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 590:4-593:5 -/
 @[rust_loop]
 def source.procedures.persistence.procedure_revision_loop
   (records : Slice source.procedures.ProcedureRecord)
@@ -177002,7 +177573,7 @@ def source.procedures.persistence.procedure_revision_loop
     (writer, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::procedure_revision]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 584:0-594:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 586:0-596:1 -/
 def source.procedures.persistence.procedure_revision
   (records : Slice source.procedures.ProcedureRecord) :
   Result (core.result.Result (Array Std.U8 32#usize) source.procedures.Refusal)
@@ -177025,7 +177596,7 @@ def source.procedures.persistence.procedure_revision
       residual
 
 /-- [noble_contracts::source::procedures::persistence::compare_evidence::{impl core::ops::function::FnOnce<(), core::cmp::Ordering> for noble_contracts::source::procedures::persistence::compare_evidence::{closure#5}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 619:19-619:70 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 621:19-621:70 -/
 def
   source.procedures.persistence.compare_evidence.closure_5.Insts.CoreOpsFunctionFnOnceTupleOrdering.call_once
   (c : source.procedures.persistence.compare_evidence.closure_5) (_ : Unit) :
@@ -177036,7 +177607,7 @@ def
     er1.subject_binding
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::compare_evidence::{impl core::ops::function::FnOnce<(), core::cmp::Ordering> for noble_contracts::source::procedures::persistence::compare_evidence::{closure#5}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 619:19-619:70 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 621:19-621:70 -/
 @[reducible]
 def
   source.procedures.persistence.compare_evidence.closure_5.Insts.CoreOpsFunctionFnOnceTupleOrdering
@@ -177047,7 +177618,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::compare_evidence::{impl core::ops::function::FnOnce<(), core::cmp::Ordering> for noble_contracts::source::procedures::persistence::compare_evidence::{closure#4}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 618:19-618:50 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 620:19-620:50 -/
 def
   source.procedures.persistence.compare_evidence.closure_4.Insts.CoreOpsFunctionFnOnceTupleOrdering.call_once
   (c : source.procedures.persistence.compare_evidence.closure_4) (_ : Unit) :
@@ -177057,7 +177628,7 @@ def
   alloc.string.String.Insts.CoreCmpOrd.cmp er.claim er1.claim
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::compare_evidence::{impl core::ops::function::FnOnce<(), core::cmp::Ordering> for noble_contracts::source::procedures::persistence::compare_evidence::{closure#4}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 618:19-618:50 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 620:19-620:50 -/
 @[reducible]
 def
   source.procedures.persistence.compare_evidence.closure_4.Insts.CoreOpsFunctionFnOnceTupleOrdering
@@ -177068,7 +177639,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::compare_evidence::{impl core::ops::function::FnOnce<(), core::cmp::Ordering> for noble_contracts::source::procedures::persistence::compare_evidence::{closure#3}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 617:19-617:58 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 619:19-619:58 -/
 def
   source.procedures.persistence.compare_evidence.closure_3.Insts.CoreOpsFunctionFnOnceTupleOrdering.call_once
   (c : source.procedures.persistence.compare_evidence.closure_3) (_ : Unit) :
@@ -177079,7 +177650,7 @@ def
     alloc.string.String.Insts.CoreCmpOrd er.toolchain er1.toolchain
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::compare_evidence::{impl core::ops::function::FnOnce<(), core::cmp::Ordering> for noble_contracts::source::procedures::persistence::compare_evidence::{closure#3}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 617:19-617:58 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 619:19-619:58 -/
 @[reducible]
 def
   source.procedures.persistence.compare_evidence.closure_3.Insts.CoreOpsFunctionFnOnceTupleOrdering
@@ -177090,7 +177661,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::compare_evidence::{impl core::ops::function::FnOnce<(), core::cmp::Ordering> for noble_contracts::source::procedures::persistence::compare_evidence::{closure#2}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 616:19-616:70 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 618:19-618:70 -/
 def
   source.procedures.persistence.compare_evidence.closure_2.Insts.CoreOpsFunctionFnOnceTupleOrdering.call_once
   (c : source.procedures.persistence.compare_evidence.closure_2) (_ : Unit) :
@@ -177100,7 +177671,7 @@ def
   ok (core.cmp.impls.OrdU32.cmp er.policy_revision er1.policy_revision)
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::compare_evidence::{impl core::ops::function::FnOnce<(), core::cmp::Ordering> for noble_contracts::source::procedures::persistence::compare_evidence::{closure#2}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 616:19-616:70 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 618:19-618:70 -/
 @[reducible]
 def
   source.procedures.persistence.compare_evidence.closure_2.Insts.CoreOpsFunctionFnOnceTupleOrdering
@@ -177111,7 +177682,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::compare_evidence::{impl core::ops::function::FnOnce<(), core::cmp::Ordering> for noble_contracts::source::procedures::persistence::compare_evidence::{closure#1}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 615:19-615:67 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 617:19-617:67 -/
 def
   source.procedures.persistence.compare_evidence.closure_1.Insts.CoreOpsFunctionFnOnceTupleOrdering.call_once
   (c : source.procedures.persistence.compare_evidence.closure_1) (_ : Unit) :
@@ -177123,7 +177694,7 @@ def
   Str.Insts.CoreCmpOrd.cmp s s1
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::compare_evidence::{impl core::ops::function::FnOnce<(), core::cmp::Ordering> for noble_contracts::source::procedures::persistence::compare_evidence::{closure#1}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 615:19-615:67 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 617:19-617:67 -/
 @[reducible]
 def
   source.procedures.persistence.compare_evidence.closure_1.Insts.CoreOpsFunctionFnOnceTupleOrdering
@@ -177134,7 +177705,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::compare_evidence::{impl core::ops::function::FnOnce<(), core::cmp::Ordering> for noble_contracts::source::procedures::persistence::compare_evidence::{closure}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 614:19-614:64 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 616:19-616:64 -/
 def
   source.procedures.persistence.compare_evidence.closure.Insts.CoreOpsFunctionFnOnceTupleOrdering.call_once
   (c : source.procedures.persistence.compare_evidence.closure) (_ : Unit) :
@@ -177146,7 +177717,7 @@ def
   ok (core.cmp.impls.OrdU8.cmp i i1)
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::compare_evidence::{impl core::ops::function::FnOnce<(), core::cmp::Ordering> for noble_contracts::source::procedures::persistence::compare_evidence::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 614:19-614:64 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 616:19-616:64 -/
 @[reducible]
 def
   source.procedures.persistence.compare_evidence.closure.Insts.CoreOpsFunctionFnOnceTupleOrdering
@@ -177157,7 +177728,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::compare_evidence]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 611:0-620:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 613:0-622:1 -/
 def source.procedures.persistence.compare_evidence
   (left : source.procedures.EvidenceRecord)
   (right : source.procedures.EvidenceRecord) :
@@ -177189,7 +177760,7 @@ def source.procedures.persistence.compare_evidence
     o5 (left, right)
 
 /-- [noble_contracts::source::procedures::persistence::read_type]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 646:0-658:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 648:0-660:1 -/
 def source.procedures.persistence.read_type
   (reader : source.procedures.persistence.Reader) (field : Str) :
   Result ((core.result.Result noble_kernel.types.Ty source.procedures.Refusal)
@@ -177217,7 +177788,7 @@ def source.procedures.persistence.read_type
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_types]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 685:4-691:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 687:4-693:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_types_loop.body
   (field : Str) (count : Std.Usize)
@@ -177248,7 +177819,7 @@ def source.procedures.persistence.read_types_loop.body
   else ok (done (reader.bytes, reader.byte_offset_bytes, types, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_types]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 685:4-691:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 687:4-693:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_types_loop
   (reader : source.procedures.persistence.Reader) (field : Str)
@@ -177264,7 +177835,7 @@ def source.procedures.persistence.read_types_loop
     (reader, types, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_types]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 680:0-696:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 682:0-698:1 -/
 def source.procedures.persistence.read_types
   (reader : source.procedures.persistence.Reader) (field : Str) :
   Result ((core.result.Result (alloc.vec.Vec noble_kernel.types.Ty)
@@ -177296,7 +177867,7 @@ def source.procedures.persistence.read_types
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_scalar]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 711:0-723:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 713:0-725:1 -/
 def source.procedures.persistence.read_scalar
   (reader : source.procedures.persistence.Reader) (field : Str) :
   Result ((core.result.Result source.chunks.Scalar source.procedures.Refusal)
@@ -177348,7 +177919,7 @@ def source.procedures.persistence.read_scalar
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_op]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 738:0-756:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 740:0-758:1 -/
 def source.procedures.persistence.read_op
   (reader : source.procedures.persistence.Reader) (field : Str) :
   Result ((core.result.Result source.chunks.Op source.procedures.Refusal) ×
@@ -177380,7 +177951,7 @@ def source.procedures.persistence.read_op
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_u32_list]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1170:4-1176:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1172:4-1178:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_u32_list_loop.body
   (item_field : Str) (item_count : Std.Usize)
@@ -177412,7 +177983,7 @@ def source.procedures.persistence.read_u32_list_loop.body
   else ok (done (reader.bytes, reader.byte_offset_bytes, items, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_u32_list]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1170:4-1176:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1172:4-1178:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_u32_list_loop
   (reader : source.procedures.persistence.Reader) (item_field : Str)
@@ -177428,7 +177999,7 @@ def source.procedures.persistence.read_u32_list_loop
     (reader, items, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_u32_list]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1157:0-1181:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1159:0-1183:1 -/
 def source.procedures.persistence.read_u32_list
   {MaximumItems : Type _} {Clause0_Error : Type _}
   (coreconvertTryIntoMaximumItemsU64Clause0_ErrorInst : core.convert.TryInto
@@ -177463,7 +178034,7 @@ def source.procedures.persistence.read_u32_list
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_body_node]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1111:0-1149:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1113:0-1151:1 -/
 def source.procedures.persistence.read_chunk_body_node
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.chunks.Node source.procedures.Refusal) ×
@@ -177619,7 +178190,7 @@ def source.procedures.persistence.read_chunk_body_node
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_body_nodes]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1097:4-1103:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1099:4-1105:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_chunk_body_nodes_loop.body
   (node_count : Std.Usize) (reader : source.procedures.persistence.Reader)
@@ -177650,7 +178221,7 @@ def source.procedures.persistence.read_chunk_body_nodes_loop.body
   else ok (done (reader.bytes, reader.byte_offset_bytes, nodes, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_body_nodes]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1097:4-1103:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1099:4-1105:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_chunk_body_nodes_loop
   (reader : source.procedures.persistence.Reader) (node_count : Std.Usize)
@@ -177666,7 +178237,7 @@ def source.procedures.persistence.read_chunk_body_nodes_loop
     (reader, nodes, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_body_nodes]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1092:0-1108:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1094:0-1110:1 -/
 def source.procedures.persistence.read_chunk_body_nodes
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result (alloc.vec.Vec source.chunks.Node)
@@ -177698,7 +178269,7 @@ def source.procedures.persistence.read_chunk_body_nodes
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_body]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1081:0-1090:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1083:0-1092:1 -/
 def source.procedures.persistence.read_chunk_body
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.chunks.Recipe source.procedures.Refusal)
@@ -177733,7 +178304,7 @@ def source.procedures.persistence.read_chunk_body
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_binding]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1061:0-1079:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1063:0-1081:1 -/
 def source.procedures.persistence.read_chunk_binding
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.chunks.Binding source.procedures.Refusal)
@@ -177831,7 +178402,7 @@ def source.procedures.persistence.read_chunk_binding
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_instantiation]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1047:4-1053:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1049:4-1055:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_chunk_instantiation_loop.body
   (binding_count : Std.Usize) (reader : source.procedures.persistence.Reader)
@@ -177862,7 +178433,7 @@ def source.procedures.persistence.read_chunk_instantiation_loop.body
   else ok (done (reader.bytes, reader.byte_offset_bytes, bindings, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_instantiation]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1047:4-1053:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1049:4-1055:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_chunk_instantiation_loop
   (reader : source.procedures.persistence.Reader) (binding_count : Std.Usize)
@@ -177878,7 +178449,7 @@ def source.procedures.persistence.read_chunk_instantiation_loop
     (reader, bindings, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_instantiation]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1042:0-1058:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1044:0-1060:1 -/
 def source.procedures.persistence.read_chunk_instantiation
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.chunks.Instantiation
@@ -177911,7 +178482,7 @@ def source.procedures.persistence.read_chunk_instantiation
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_instantiations]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1028:4-1034:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1030:4-1036:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_chunk_instantiations_loop.body
   (instantiation_count : Std.Usize)
@@ -177947,7 +178518,7 @@ def source.procedures.persistence.read_chunk_instantiations_loop.body
     ok (done (reader.bytes, reader.byte_offset_bytes, instantiations, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_instantiations]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1028:4-1034:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1030:4-1036:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_chunk_instantiations_loop
   (reader : source.procedures.persistence.Reader)
@@ -177964,7 +178535,7 @@ def source.procedures.persistence.read_chunk_instantiations_loop
     (reader, instantiations, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_instantiations]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1021:0-1039:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1023:0-1041:1 -/
 def source.procedures.persistence.read_chunk_instantiations
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result (alloc.vec.Vec source.chunks.Instantiation)
@@ -177998,7 +178569,7 @@ def source.procedures.persistence.read_chunk_instantiations
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_dependency]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1012:0-1019:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1014:0-1021:1 -/
 def source.procedures.persistence.read_chunk_dependency
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.chunks.DefinitionRef
@@ -178061,7 +178632,7 @@ def source.procedures.persistence.read_chunk_dependency
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_dependencies]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 998:4-1004:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1000:4-1006:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_chunk_dependencies_loop.body
   (dependency_count : Std.Usize)
@@ -178095,7 +178666,7 @@ def source.procedures.persistence.read_chunk_dependencies_loop.body
     ok (done (reader.bytes, reader.byte_offset_bytes, dependencies, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_dependencies]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 998:4-1004:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1000:4-1006:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_chunk_dependencies_loop
   (reader : source.procedures.persistence.Reader)
@@ -178112,7 +178683,7 @@ def source.procedures.persistence.read_chunk_dependencies_loop
     (reader, dependencies, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_dependencies]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 993:0-1009:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 995:0-1011:1 -/
 def source.procedures.persistence.read_chunk_dependencies
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result (alloc.vec.Vec source.chunks.DefinitionRef)
@@ -178145,7 +178716,7 @@ def source.procedures.persistence.read_chunk_dependencies
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_capture]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 986:0-991:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 988:0-993:1 -/
 def source.procedures.persistence.read_chunk_capture
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.chunks.Capture source.procedures.Refusal)
@@ -178178,7 +178749,7 @@ def source.procedures.persistence.read_chunk_capture
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_captures]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 972:4-978:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 974:4-980:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_chunk_captures_loop.body
   (capture_count : Std.Usize) (reader : source.procedures.persistence.Reader)
@@ -178209,7 +178780,7 @@ def source.procedures.persistence.read_chunk_captures_loop.body
   else ok (done (reader.bytes, reader.byte_offset_bytes, captures, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_captures]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 972:4-978:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 974:4-980:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_chunk_captures_loop
   (reader : source.procedures.persistence.Reader) (capture_count : Std.Usize)
@@ -178225,7 +178796,7 @@ def source.procedures.persistence.read_chunk_captures_loop
     (reader, captures, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk_captures]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 967:0-983:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 969:0-985:1 -/
 def source.procedures.persistence.read_chunk_captures
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result (alloc.vec.Vec source.chunks.Capture)
@@ -178258,7 +178829,7 @@ def source.procedures.persistence.read_chunk_captures
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_chunk]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 926:0-965:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 928:0-967:1 -/
 def source.procedures.persistence.read_chunk
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.chunks.Envelope source.procedures.Refusal)
@@ -178444,7 +179015,7 @@ def source.procedures.persistence.read_chunk
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_provenance]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1207:0-1239:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1209:0-1241:1 -/
 def source.procedures.persistence.read_provenance
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.procedures.Provenance
@@ -178839,7 +179410,7 @@ def source.procedures.persistence.read_provenance
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_evidence_class]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1245:0-1262:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1247:0-1264:1 -/
 def source.procedures.persistence.read_evidence_class
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.procedures.EvidenceClass
@@ -178885,7 +179456,7 @@ def source.procedures.persistence.read_evidence_class
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_outcome]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1278:0-1297:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1280:0-1299:1 -/
 def source.procedures.persistence.read_outcome
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.procedures.EvidenceOutcome
@@ -178940,7 +179511,7 @@ def source.procedures.persistence.read_outcome
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_status]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1308:0-1322:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1310:0-1324:1 -/
 def source.procedures.persistence.read_status
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.procedures.Status
@@ -178973,7 +179544,7 @@ def source.procedures.persistence.read_status
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_alias_term]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1823:0-1828:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1825:0-1830:1 -/
 def source.procedures.persistence.read_alias_term
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.procedures.alias.Monomial
@@ -179007,7 +179578,7 @@ def source.procedures.persistence.read_alias_term
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_alias_polynomial]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1809:4-1815:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1811:4-1817:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_alias_polynomial_loop.body
   (term_count : Std.Usize) (reader : source.procedures.persistence.Reader)
@@ -179037,7 +179608,7 @@ def source.procedures.persistence.read_alias_polynomial_loop.body
   else ok (done (reader.bytes, reader.byte_offset_bytes, terms, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_alias_polynomial]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1809:4-1815:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1811:4-1817:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_alias_polynomial_loop
   (reader : source.procedures.persistence.Reader) (term_count : Std.Usize)
@@ -179053,7 +179624,7 @@ def source.procedures.persistence.read_alias_polynomial_loop
     (reader, terms, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_alias_polynomial]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1804:0-1820:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1806:0-1822:1 -/
 def source.procedures.persistence.read_alias_polynomial
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.procedures.alias.Polynomial
@@ -179086,7 +179657,7 @@ def source.procedures.persistence.read_alias_polynomial
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_alias_form]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1790:4-1796:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1792:4-1798:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_alias_form_loop.body
   (output_count : Std.Usize) (reader : source.procedures.persistence.Reader)
@@ -179117,7 +179688,7 @@ def source.procedures.persistence.read_alias_form_loop.body
   else ok (done (reader.bytes, reader.byte_offset_bytes, form, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_alias_form]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1790:4-1796:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1792:4-1798:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_alias_form_loop
   (reader : source.procedures.persistence.Reader) (output_count : Std.Usize)
@@ -179133,7 +179704,7 @@ def source.procedures.persistence.read_alias_form_loop
     (reader, form, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_alias_form]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1785:0-1801:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1787:0-1803:1 -/
 def source.procedures.persistence.read_alias_form
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result (alloc.vec.Vec
@@ -179166,7 +179737,7 @@ def source.procedures.persistence.read_alias_form
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_alias]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1756:0-1783:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1758:0-1785:1 -/
 def source.procedures.persistence.read_alias
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result (Option source.procedures.Alias)
@@ -179297,7 +179868,7 @@ def source.procedures.persistence.read_alias
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_supersedes]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1747:0-1754:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1749:0-1756:1 -/
 def source.procedures.persistence.read_supersedes
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result (Option (Array Std.U8 32#usize))
@@ -179333,7 +179904,7 @@ def source.procedures.persistence.read_supersedes
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_retrieval_signature]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1720:0-1745:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1722:0-1747:1 -/
 def source.procedures.persistence.read_retrieval_signature
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.procedures.RetrievalSignature
@@ -179446,7 +180017,7 @@ def source.procedures.persistence.read_retrieval_signature
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_cost]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1712:0-1718:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1714:0-1720:1 -/
 def source.procedures.persistence.read_cost
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.procedures.Cost source.procedures.Refusal)
@@ -179496,7 +180067,7 @@ def source.procedures.persistence.read_cost
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_promotion]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1694:0-1710:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1696:0-1712:1 -/
 def source.procedures.persistence.read_promotion
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result (Option source.procedures.Promotion)
@@ -179548,7 +180119,7 @@ def source.procedures.persistence.read_promotion
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_toolchain]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1633:4-1639:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1635:4-1641:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_toolchain_loop.body
   (name_field : Str) (toolchain_count : Std.Usize)
@@ -179580,7 +180151,7 @@ def source.procedures.persistence.read_toolchain_loop.body
   else ok (done (reader.bytes, reader.byte_offset_bytes, toolchain, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_toolchain]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1633:4-1639:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1635:4-1641:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_toolchain_loop
   (reader : source.procedures.persistence.Reader) (name_field : Str)
@@ -179596,7 +180167,7 @@ def source.procedures.persistence.read_toolchain_loop
     (reader, toolchain, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_toolchain]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1624:0-1644:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1626:0-1646:1 -/
 def source.procedures.persistence.read_toolchain
   (reader : source.procedures.persistence.Reader) (count_field : Str)
   (name_field : Str) :
@@ -179630,7 +180201,7 @@ def source.procedures.persistence.read_toolchain
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_verified_receipt]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1667:0-1692:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1669:0-1694:1 -/
 def source.procedures.persistence.read_verified_receipt
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.procedures.acceptance.VerifiedEvidence
@@ -179772,7 +180343,7 @@ def source.procedures.persistence.read_verified_receipt
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_verified_evidence]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1653:4-1659:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1655:4-1661:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_verified_evidence_loop.body
   (receipt_count : Std.Usize) (reader : source.procedures.persistence.Reader)
@@ -179804,7 +180375,7 @@ def source.procedures.persistence.read_verified_evidence_loop.body
   else ok (done (reader.bytes, reader.byte_offset_bytes, receipts, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_verified_evidence]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1653:4-1659:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1655:4-1661:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_verified_evidence_loop
   (reader : source.procedures.persistence.Reader) (receipt_count : Std.Usize)
@@ -179821,7 +180392,7 @@ def source.procedures.persistence.read_verified_evidence_loop
     (reader, receipts, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_verified_evidence]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1648:0-1664:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1650:0-1666:1 -/
 def source.procedures.persistence.read_verified_evidence
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result (alloc.vec.Vec
@@ -179856,7 +180427,7 @@ def source.procedures.persistence.read_verified_evidence
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_evidence_record]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1589:0-1616:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1591:0-1618:1 -/
 def source.procedures.persistence.read_evidence_record
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.procedures.EvidenceRecord
@@ -179981,7 +180552,7 @@ def source.procedures.persistence.read_evidence_record
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_evidence_records]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1576:4-1582:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1578:4-1584:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_evidence_records_loop.body
   (evidence_count : Std.Usize) (reader : source.procedures.persistence.Reader)
@@ -180012,7 +180583,7 @@ def source.procedures.persistence.read_evidence_records_loop.body
   else ok (done (reader.bytes, reader.byte_offset_bytes, evidence, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_evidence_records]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1576:4-1582:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1578:4-1584:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_evidence_records_loop
   (reader : source.procedures.persistence.Reader) (evidence_count : Std.Usize)
@@ -180028,7 +180599,7 @@ def source.procedures.persistence.read_evidence_records_loop
     (reader, evidence, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_evidence_records]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1571:0-1587:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1573:0-1589:1 -/
 def source.procedures.persistence.read_evidence_records
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result (alloc.vec.Vec source.procedures.EvidenceRecord)
@@ -180061,7 +180632,7 @@ def source.procedures.persistence.read_evidence_records
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_library_dependency]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1563:0-1569:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1565:0-1571:1 -/
 def source.procedures.persistence.read_library_dependency
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.procedures.LibraryDependency
@@ -180108,7 +180679,7 @@ def source.procedures.persistence.read_library_dependency
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_library_dependencies]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1549:4-1555:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1551:4-1557:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_library_dependencies_loop.body
   (dependency_count : Std.Usize)
@@ -180143,7 +180714,7 @@ def source.procedures.persistence.read_library_dependencies_loop.body
     ok (done (reader.bytes, reader.byte_offset_bytes, dependencies, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_library_dependencies]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1549:4-1555:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1551:4-1557:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_library_dependencies_loop
   (reader : source.procedures.persistence.Reader)
@@ -180160,7 +180731,7 @@ def source.procedures.persistence.read_library_dependencies_loop
     (reader, dependencies, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_library_dependencies]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1544:0-1560:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1546:0-1562:1 -/
 def source.procedures.persistence.read_library_dependencies
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result (alloc.vec.Vec
@@ -180194,7 +180765,7 @@ def source.procedures.persistence.read_library_dependencies
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_state]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1531:0-1542:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1533:0-1544:1 -/
 def source.procedures.persistence.read_state
   (reader : source.procedures.persistence.Reader)
   (record : source.procedures.ProcedureRecord) :
@@ -180366,7 +180937,7 @@ def source.procedures.persistence.read_state
     ok (r1, reader1, record)
 
 /-- [noble_contracts::source::procedures::persistence::write_record]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1830:0-1838:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1832:0-1840:1 -/
 def source.procedures.persistence.write_record
   (writer : source.procedures.persistence.Writer)
   (record : source.procedures.ProcedureRecord) :
@@ -180433,7 +181004,7 @@ def source.procedures.Cost.Insts.CoreDefaultDefault.default
     }
 
 /-- [noble_contracts::source::procedures::persistence::read_record]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1840:0-1877:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1842:0-1879:1 -/
 def source.procedures.persistence.read_record
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.procedures.ProcedureRecord
@@ -180612,7 +181183,7 @@ def source.procedures.GenerationKind.code
 def source.procedures.MAX_RECORDS : Std.Usize := 64#usize
 
 /-- [noble_contracts::source::procedures::persistence::write_generation]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1900:4-1903:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1902:4-1905:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_generation_loop0.body
   (iter : core.slice.iter.Iter source.procedures.ClosureEntry)
@@ -180631,7 +181202,7 @@ def source.procedures.persistence.write_generation_loop0.body
     ok (cont (iter1, writer2))
 
 /-- [noble_contracts::source::procedures::persistence::write_generation]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1900:4-1903:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1902:4-1905:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_generation_loop0
   (iter : core.slice.iter.Iter source.procedures.ClosureEntry)
@@ -180644,7 +181215,7 @@ def source.procedures.persistence.write_generation_loop0
     (iter, writer)
 
 /-- [noble_contracts::source::procedures::persistence::write_generation]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1907:4-1910:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1909:4-1912:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_generation_loop1.body
   (v : alloc.vec.Vec source.procedures.ProcedureRecord)
@@ -180671,7 +181242,7 @@ def source.procedures.persistence.write_generation_loop1.body
   else ok (done (outcome, writer))
 
 /-- [noble_contracts::source::procedures::persistence::write_generation]: loop 1:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1907:4-1910:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1909:4-1912:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_generation_loop1
   (writer : source.procedures.persistence.Writer)
@@ -180687,7 +181258,7 @@ def source.procedures.persistence.write_generation_loop1
     (writer, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::write_generation]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1879:0-1912:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1881:0-1914:1 -/
 def source.procedures.persistence.write_generation
   (writer : source.procedures.persistence.Writer)
   (snapshot : source.procedures.Snapshot) :
@@ -180771,7 +181342,7 @@ def source.procedures.MAX_GENERATIONS : Std.Usize := 16#usize
 def source.procedures.RECORD_FORMAT : Std.U32 := 1#u32
 
 /-- [noble_contracts::source::procedures::persistence::encode_parts]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1936:4-1939:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1938:4-1941:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.encode_parts_loop.body
   (generations : Slice source.procedures.Snapshot)
@@ -180797,7 +181368,7 @@ def source.procedures.persistence.encode_parts_loop.body
   else ok (done (writer, outcome))
 
 /-- [noble_contracts::source::procedures::persistence::encode_parts]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1936:4-1939:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1938:4-1941:5 -/
 @[rust_loop]
 def source.procedures.persistence.encode_parts_loop
   (generations : Slice source.procedures.Snapshot)
@@ -180813,7 +181384,7 @@ def source.procedures.persistence.encode_parts_loop
     (writer, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::encode_parts]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1914:0-1951:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1916:0-1953:1 -/
 def source.procedures.persistence.encode_parts
   (chunk_revision : Array Std.U8 32#usize)
   (generations : Slice source.procedures.Snapshot) (current : Std.U32) :
@@ -180876,7 +181447,7 @@ def source.procedures.persistence.encode_parts
         source.procedures.Refusal) residual
 
 /-- [noble_contracts::source::procedures::persistence::read_generation_records]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2029:4-2035:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2031:4-2037:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_generation_records_loop.body
   (record_count : Std.Usize) (reader : source.procedures.persistence.Reader)
@@ -180906,7 +181477,7 @@ def source.procedures.persistence.read_generation_records_loop.body
   else ok (done (reader.bytes, reader.byte_offset_bytes, records, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_generation_records]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2029:4-2035:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2031:4-2037:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_generation_records_loop
   (reader : source.procedures.persistence.Reader) (record_count : Std.Usize)
@@ -180922,7 +181493,7 @@ def source.procedures.persistence.read_generation_records_loop
     (reader, records, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_generation_records]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2024:0-2040:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2026:0-2042:1 -/
 def source.procedures.persistence.read_generation_records
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result (alloc.vec.Vec source.procedures.ProcedureRecord)
@@ -180955,7 +181526,7 @@ def source.procedures.persistence.read_generation_records
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_closure_entry]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2016:0-2021:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2018:0-2023:1 -/
 def source.procedures.persistence.read_closure_entry
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.procedures.ClosureEntry
@@ -180989,7 +181560,7 @@ def source.procedures.persistence.read_closure_entry
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_closure]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2002:4-2008:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2004:4-2010:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_closure_loop.body
   (closure_count : Std.Usize) (reader : source.procedures.persistence.Reader)
@@ -181020,7 +181591,7 @@ def source.procedures.persistence.read_closure_loop.body
   else ok (done (reader.bytes, reader.byte_offset_bytes, closure, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_closure]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2002:4-2008:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2004:4-2010:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_closure_loop
   (reader : source.procedures.persistence.Reader) (closure_count : Std.Usize)
@@ -181036,7 +181607,7 @@ def source.procedures.persistence.read_closure_loop
     (reader, closure, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_closure]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1997:0-2013:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1999:0-2015:1 -/
 def source.procedures.persistence.read_closure
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result (alloc.vec.Vec source.procedures.ClosureEntry)
@@ -181069,7 +181640,7 @@ def source.procedures.persistence.read_closure
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_generation]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1953:0-1994:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 1955:0-1996:1 -/
 def source.procedures.persistence.read_generation
   (reader : source.procedures.persistence.Reader) :
   Result ((core.result.Result source.procedures.Snapshot
@@ -181771,7 +182342,7 @@ def source.procedures.persistence.read_generation
     ok (r1, reader1)
 
 /-- [noble_contracts::source::procedures::persistence::read_generations]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2047:4-2053:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2049:4-2055:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.read_generations_loop.body
   (count : Std.Usize) (s : Slice Std.U8) (i : Std.Usize)
@@ -181804,7 +182375,7 @@ def source.procedures.persistence.read_generations_loop.body
   else ok (done (s, i, generations, failure))
 
 /-- [noble_contracts::source::procedures::persistence::read_generations]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2047:4-2053:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2049:4-2055:5 -/
 @[rust_loop]
 def source.procedures.persistence.read_generations_loop
   (s : Slice Std.U8) (i : Std.Usize) (count : Std.Usize)
@@ -181820,7 +182391,7 @@ def source.procedures.persistence.read_generations_loop
     (s, i, generations, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::read_generations]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2043:0-2058:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2045:0-2060:1 -/
 def source.procedures.persistence.read_generations
   (reader : source.procedures.persistence.Reader) (count : Std.Usize) :
   Result ((core.result.Result (alloc.vec.Vec source.procedures.Snapshot)
@@ -181839,7 +182410,7 @@ def source.procedures.persistence.read_generations
     ok (core.result.Result.Err refusal, { bytes := s, byte_offset_bytes := i })
 
 /-- [noble_contracts::source::procedures::persistence::confirm_records]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2352:4-2359:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2355:4-2362:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.confirm_records_loop.body
   (verifier : Option source.procedures.acceptance.OwnerVerifier)
@@ -181873,7 +182444,7 @@ def source.procedures.persistence.confirm_records_loop.body
   else ok (done (confirmed, failure))
 
 /-- [noble_contracts::source::procedures::persistence::confirm_records]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2352:4-2359:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2355:4-2362:5 -/
 @[rust_loop]
 def source.procedures.persistence.confirm_records_loop
   (verifier : Option source.procedures.acceptance.OwnerVerifier)
@@ -181890,7 +182461,7 @@ def source.procedures.persistence.confirm_records_loop
     (confirmed, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::confirm_records]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2345:0-2364:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2348:0-2367:1 -/
 def source.procedures.persistence.confirm_records
   (verifier : Option source.procedures.acceptance.OwnerVerifier)
   (records : Slice source.procedures.ProcedureRecord)
@@ -185099,17 +185670,6 @@ def source.procedures.ProcedureLibrary.check_retained
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
       Unit (core.convert.FromSame source.procedures.Refusal) residual
 
-/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Status> for noble_contracts::source::procedures::Status}::eq]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 200:29-200:38
-    Visibility: public -/
-def source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq
-  (self : source.procedures.Status) (other : source.procedures.Status) :
-  Result Bool
-  := do
-  let self1 := read_discriminant self
-  let other1 := read_discriminant other
-  ok (self1 = other1)
-
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureLibrary}::rooted_path]: loop body 0:
     Source: 'crates/noble-contracts/src/source/procedures.rs', lines 1689:8-1692:9 -/
 @[rust_loop_body]
@@ -185647,7 +186207,7 @@ def source.procedures.ProcedureLibrary.rebuild_chunks
         residual
 
 /-- [noble_contracts::source::procedures::persistence::check_loaded_record::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::EvidenceRecord,), bool> for noble_contracts::source::procedures::persistence::check_loaded_record::{closure}}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2330:49-2330:89 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2333:49-2333:89 -/
 def
   source.procedures.persistence.check_loaded_record.closure.Insts.CoreOpsFunctionFnMutTupleShared0EvidenceRecordBool.call_mut
   (c : source.procedures.persistence.check_loaded_record.closure)
@@ -185658,7 +186218,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::procedures::persistence::check_loaded_record::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::EvidenceRecord,), bool> for noble_contracts::source::procedures::persistence::check_loaded_record::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2330:49-2330:89 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2333:49-2333:89 -/
 def
   source.procedures.persistence.check_loaded_record.closure.Insts.CoreOpsFunctionFnOnceTupleShared0EvidenceRecordBool.call_once
   (c : source.procedures.persistence.check_loaded_record.closure)
@@ -185671,7 +186231,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::check_loaded_record::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::EvidenceRecord,), bool> for noble_contracts::source::procedures::persistence::check_loaded_record::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2330:49-2330:89 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2333:49-2333:89 -/
 @[reducible]
 def
   source.procedures.persistence.check_loaded_record.closure.Insts.CoreOpsFunctionFnOnceTupleShared0EvidenceRecordBool
@@ -185683,7 +186243,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::check_loaded_record::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::EvidenceRecord,), bool> for noble_contracts::source::procedures::persistence::check_loaded_record::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2330:49-2330:89 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2333:49-2333:89 -/
 @[reducible]
 def
   source.procedures.persistence.check_loaded_record.closure.Insts.CoreOpsFunctionFnMutTupleShared0EvidenceRecordBool
@@ -185697,7 +186257,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::check_loaded_record]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2300:0-2341:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2303:0-2344:1 -/
 def source.procedures.persistence.check_loaded_record
   (records : Slice source.procedures.ProcedureRecord)
   (record : source.procedures.ProcedureRecord) :
@@ -185773,7 +186333,7 @@ def source.procedures.persistence.check_loaded_record
       Unit (core.convert.FromSame source.procedures.Refusal) residual
 
 /-- [noble_contracts::source::procedures::persistence::check_loaded_records]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2291:4-2294:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2294:4-2297:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.check_loaded_records_loop.body
   (records : Slice source.procedures.ProcedureRecord) (index1 : Std.Usize)
@@ -185797,7 +186357,7 @@ def source.procedures.persistence.check_loaded_records_loop.body
   else ok (done outcome)
 
 /-- [noble_contracts::source::procedures::persistence::check_loaded_records]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2291:4-2294:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2294:4-2297:5 -/
 @[rust_loop]
 def source.procedures.persistence.check_loaded_records_loop
   (records : Slice source.procedures.ProcedureRecord) (index1 : Std.Usize)
@@ -185811,7 +186371,7 @@ def source.procedures.persistence.check_loaded_records_loop
     (index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::check_loaded_records]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2288:0-2296:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2291:0-2299:1 -/
 @[reducible]
 def source.procedures.persistence.check_loaded_records
   (records : Slice source.procedures.ProcedureRecord) :
@@ -186047,7 +186607,7 @@ def source.procedures.retrieval.compare_records
     o4 (left, right)
 
 /-- [noble_contracts::source::procedures::persistence::has_unordered_records]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2279:11-2281:32 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2282:11-2284:32 -/
 @[rust_loop_body]
 def source.procedures.persistence.has_unordered_records_loop.body
   (records : Slice source.procedures.ProcedureRecord) (is_unordered : Bool)
@@ -186071,7 +186631,7 @@ def source.procedures.persistence.has_unordered_records_loop.body
     else ok (done is_unordered)
 
 /-- [noble_contracts::source::procedures::persistence::has_unordered_records]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2279:11-2281:32 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2282:11-2284:32 -/
 @[rust_loop]
 def source.procedures.persistence.has_unordered_records_loop
   (records : Slice source.procedures.ProcedureRecord) (is_unordered : Bool)
@@ -186085,7 +186645,7 @@ def source.procedures.persistence.has_unordered_records_loop
     (is_unordered, index1)
 
 /-- [noble_contracts::source::procedures::persistence::has_unordered_records]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2276:0-2285:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2279:0-2288:1 -/
 @[reducible]
 def source.procedures.persistence.has_unordered_records
   (records : Slice source.procedures.ProcedureRecord) : Result Bool := do
@@ -186093,7 +186653,7 @@ def source.procedures.persistence.has_unordered_records
     1#usize
 
 /-- [noble_contracts::source::procedures::persistence::is_loaded_generation::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::source::procedures::persistence::is_loaded_generation::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2268:42-2268:96 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2271:42-2271:96 -/
 def
   source.procedures.persistence.is_loaded_generation.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
   (c : source.procedures.persistence.is_loaded_generation.closure)
@@ -186103,7 +186663,7 @@ def
   ok (tupled_args < c)
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::is_loaded_generation::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::source::procedures::persistence::is_loaded_generation::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2268:42-2268:96 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2271:42-2271:96 -/
 @[reducible]
 def
   source.procedures.persistence.is_loaded_generation.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool
@@ -186115,7 +186675,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::is_loaded_generation]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2267:0-2269:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2270:0-2272:1 -/
 def source.procedures.persistence.is_loaded_generation
   (generation : Std.U32) (generation_count : Std.Usize) : Result Bool := do
   let r ←
@@ -186125,7 +186685,7 @@ def source.procedures.persistence.is_loaded_generation
     r generation_count
 
 /-- [noble_contracts::source::procedures::persistence::check_generation_ancestry::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::check_generation_ancestry::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2229:61-2237:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2232:61-2240:9 -/
 def
   source.procedures.persistence.check_generation_ancestry.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorRefusal.call_once
   (c : source.procedures.persistence.check_generation_ancestry.closure_1)
@@ -186139,7 +186699,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::check_generation_ancestry::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::check_generation_ancestry::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2229:61-2237:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2232:61-2240:9 -/
 @[reducible]
 def
   source.procedures.persistence.check_generation_ancestry.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorRefusal
@@ -186151,7 +186711,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::check_generation_ancestry::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::check_generation_ancestry::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2220:61-2228:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2223:61-2231:9 -/
 def
   source.procedures.persistence.check_generation_ancestry.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.persistence.check_generation_ancestry.closure)
@@ -186165,7 +186725,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::check_generation_ancestry::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::check_generation_ancestry::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2220:61-2228:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2223:61-2231:9 -/
 @[reducible]
 def
   source.procedures.persistence.check_generation_ancestry.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -186177,7 +186737,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::check_generation_ancestry]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2194:0-2264:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2197:0-2267:1 -/
 def source.procedures.persistence.check_generation_ancestry
   (links : source.procedures.persistence.GenerationLinks) (index1 : Std.Usize)
   (generation_index : Std.U32) (generation_count : Std.Usize) :
@@ -186273,7 +186833,7 @@ def source.procedures.persistence.check_generation_ancestry
         Unit (core.convert.FromSame source.procedures.Refusal) residual
 
 /-- [noble_contracts::source::procedures::persistence::check_generation::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::check_generation::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2117:56-2125:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2119:56-2127:5 -/
 def
   source.procedures.persistence.check_generation.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorRefusal.call_once
   (c : source.procedures.persistence.check_generation.closure)
@@ -186287,7 +186847,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::check_generation::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::check_generation::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2117:56-2125:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2119:56-2127:5 -/
 @[reducible]
 def
   source.procedures.persistence.check_generation.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorRefusal
@@ -186299,7 +186859,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::check_generation]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2110:0-2177:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2112:0-2180:1 -/
 def source.procedures.persistence.check_generation
   (generations : Slice source.procedures.Snapshot) (index1 : Std.Usize)
   (chunk_revision : Array Std.U8 32#usize) («namespace» : source.Session) :
@@ -186376,30 +186936,41 @@ def source.procedures.persistence.check_generation
               let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r4
               match cf3 with
               | core.ops.control_flow.ControlFlow.Continue _ =>
-                let s2 := alloc.vec.Vec.deref snapshot.records
                 let r5 ←
-                  source.procedures.ProcedureLibrary.rebuild_chunks
-                    «namespace» chunk_revision s2
+                  source.procedures.persistence.history.validate generations
+                    snapshot
                 let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r5
                 match cf4 with
-                | core.ops.control_flow.ControlFlow.Continue val1 =>
-                  let a ← source.chunks.Library.impl.revision val1
-                  let b3 ←
-                    core.array.equality.PartialEqArray.ne core.cmp.PartialEqU8
-                      a snapshot.record.chunk_library_revision
-                  if b3
-                  then
-                    let r6 ←
-                      source.procedures.Refusal.at
-                        source.procedures.RefusalKind.Invalid
-                        {
-                          field := (toStr "chunk_library_revision"),
-                          message :=
-                            (toStr
-                              "#73 chunk view does not reproduce the retained revision")
-                        } val
-                    ok (core.result.Result.Err r6)
-                  else ok (core.result.Result.Ok ())
+                | core.ops.control_flow.ControlFlow.Continue _ =>
+                  let s2 := alloc.vec.Vec.deref snapshot.records
+                  let r6 ←
+                    source.procedures.ProcedureLibrary.rebuild_chunks
+                      «namespace» chunk_revision s2
+                  let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r6
+                  match cf5 with
+                  | core.ops.control_flow.ControlFlow.Continue val1 =>
+                    let a ← source.chunks.Library.impl.revision val1
+                    let b3 ←
+                      core.array.equality.PartialEqArray.ne
+                        core.cmp.PartialEqU8 a
+                        snapshot.record.chunk_library_revision
+                    if b3
+                    then
+                      let r7 ←
+                        source.procedures.Refusal.at
+                          source.procedures.RefusalKind.Invalid
+                          {
+                            field := (toStr "chunk_library_revision"),
+                            message :=
+                              (toStr
+                                "#73 chunk view does not reproduce the retained revision")
+                          } val
+                      ok (core.result.Result.Err r7)
+                    else ok (core.result.Result.Ok ())
+                  | core.ops.control_flow.ControlFlow.Break residual =>
+                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                      Unit (core.convert.FromSame source.procedures.Refusal)
+                      residual
                 | core.ops.control_flow.ControlFlow.Break residual =>
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                     Unit (core.convert.FromSame source.procedures.Refusal)
@@ -186419,7 +186990,7 @@ def source.procedures.persistence.check_generation
       Unit (core.convert.FromSame source.procedures.Refusal) residual
 
 /-- [noble_contracts::source::procedures::persistence::confirm_generation]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2096:0-2106:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2098:0-2108:1 -/
 def source.procedures.persistence.confirm_generation
   (generations : Slice source.procedures.Snapshot) (index1 : Std.Usize)
   (chunk_revision : Array Std.U8 32#usize) («namespace» : source.Session)
@@ -186443,7 +187014,7 @@ def source.procedures.persistence.confirm_generation
       (core.convert.FromSame source.procedures.Refusal) residual
 
 /-- [noble_contracts::source::procedures::persistence::confirm_generations]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2071:4-2084:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2073:4-2086:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.confirm_generations_loop.body
   (generations : Slice source.procedures.Snapshot)
@@ -186478,7 +187049,7 @@ def source.procedures.persistence.confirm_generations_loop.body
   else ok (done failure)
 
 /-- [noble_contracts::source::procedures::persistence::confirm_generations]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2071:4-2084:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2073:4-2086:5 -/
 @[rust_loop]
 def source.procedures.persistence.confirm_generations_loop
   (generations : Slice source.procedures.Snapshot)
@@ -186495,7 +187066,7 @@ def source.procedures.persistence.confirm_generations_loop
     (confirmed, failure, index1)
 
 /-- [noble_contracts::source::procedures::persistence::confirm_generations]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2062:0-2089:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2064:0-2091:1 -/
 def source.procedures.persistence.confirm_generations
   (generations : Slice source.procedures.Snapshot)
   (chunk_revision : Array Std.U8 32#usize) («namespace» : source.Session)
@@ -186511,7 +187082,7 @@ def source.procedures.persistence.confirm_generations
   | some refusal => ok (core.result.Result.Err refusal)
 
 /-- [noble_contracts::source::procedures::persistence::{impl core::clone::Clone for noble_contracts::source::procedures::persistence::GenerationLinks}::clone]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2181:9-2181:14
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2184:9-2184:14
     Visibility: public -/
 def source.procedures.persistence.GenerationLinks.Insts.CoreCloneClone.clone
   (self : source.procedures.persistence.GenerationLinks) :
@@ -186520,7 +187091,7 @@ def source.procedures.persistence.GenerationLinks.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::clone::Clone for noble_contracts::source::procedures::persistence::GenerationLinks}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2181:9-2181:14 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2184:9-2184:14 -/
 @[reducible]
 impl_def source.procedures.persistence.GenerationLinks.Insts.CoreCloneClone :
   core.clone.Clone source.procedures.persistence.GenerationLinks := {
@@ -186531,7 +187102,7 @@ impl_def source.procedures.persistence.GenerationLinks.Insts.CoreCloneClone :
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::marker::Copy for noble_contracts::source::procedures::persistence::GenerationLinks}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2181:16-2181:20 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2184:16-2184:20 -/
 @[reducible]
 def source.procedures.persistence.GenerationLinks.Insts.CoreMarkerCopy :
   core.marker.Copy source.procedures.persistence.GenerationLinks := {
@@ -186540,7 +187111,7 @@ def source.procedures.persistence.GenerationLinks.Insts.CoreMarkerCopy :
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::encode]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2367:4-2373:5
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2370:4-2376:5
     Visibility: public -/
 def source.procedures.persistence.ProcedureLibrary.encode
   (self : source.procedures.ProcedureLibrary) :
@@ -186551,7 +187122,7 @@ def source.procedures.persistence.ProcedureLibrary.encode
     self.current_generation
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{closure#2}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2479:20-2487:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2482:20-2490:9 -/
 def
   source.procedures.persistence.ProcedureLibrary.load_with.closure_2.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.persistence.ProcedureLibrary.load_with.closure_2)
@@ -186565,7 +187136,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{closure#2}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2479:20-2487:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2482:20-2490:9 -/
 @[reducible]
 def
   source.procedures.persistence.ProcedureLibrary.load_with.closure_2.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -186577,7 +187148,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::Snapshot,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{closure#1}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2476:60-2478:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2479:60-2481:9 -/
 def
   source.procedures.persistence.ProcedureLibrary.load_with.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1SnapshotBool.call_mut
   (c : source.procedures.persistence.ProcedureLibrary.load_with.closure_1)
@@ -186588,7 +187159,7 @@ def
   ok (tupled_args.record.generation = c, c)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::Snapshot,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2476:60-2478:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2479:60-2481:9 -/
 def
   source.procedures.persistence.ProcedureLibrary.load_with.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1SnapshotBool.call_once
   (c : source.procedures.persistence.ProcedureLibrary.load_with.closure_1)
@@ -186601,7 +187172,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::procedures::Snapshot,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2476:60-2478:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2479:60-2481:9 -/
 @[reducible]
 def
   source.procedures.persistence.ProcedureLibrary.load_with.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1SnapshotBool
@@ -186613,7 +187184,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::procedures::Snapshot,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2476:60-2478:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2479:60-2481:9 -/
 @[reducible]
 def
   source.procedures.persistence.ProcedureLibrary.load_with.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1SnapshotBool
@@ -186627,7 +187198,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2458:80-2466:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2461:80-2469:9 -/
 def
   source.procedures.persistence.ProcedureLibrary.load_with.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.persistence.ProcedureLibrary.load_with.closure)
@@ -186641,7 +187212,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2458:80-2466:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2461:80-2469:9 -/
 @[reducible]
 def
   source.procedures.persistence.ProcedureLibrary.load_with.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -186653,7 +187224,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load_with]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2402:4-2497:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2405:4-2500:5 -/
 def source.procedures.persistence.ProcedureLibrary.load_with
   (bytes : Slice Std.U8) («namespace» : source.Session)
   (verifier : Option source.procedures.acceptance.OwnerVerifier) :
@@ -186879,7 +187450,7 @@ def source.procedures.persistence.ProcedureLibrary.load_with
         source.procedures.Refusal) residual
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::load]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2377:4-2379:5
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2380:4-2382:5
     Visibility: public -/
 def source.procedures.persistence.ProcedureLibrary.load
   (bytes : Slice Std.U8) («namespace» : source.Session) :
@@ -186896,7 +187467,7 @@ def source.procedures.persistence.ProcedureLibrary.load
 def source.procedures.MAX_MANIFEST_BYTES : Std.Usize := 262144#usize
 
 /-- [noble_contracts::source::procedures::persistence::generation_kind_code]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3122:0-3127:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3125:0-3130:1 -/
 def source.procedures.persistence.generation_kind_code
   (kind : source.procedures.GenerationKind) : Result Str := do
   match kind with
@@ -186904,7 +187475,7 @@ def source.procedures.persistence.generation_kind_code
   | source.procedures.GenerationKind.Rollback => ok (toStr "rollback")
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_retrieval_order]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2884:4-2891:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2887:4-2894:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_manifest_retrieval_order_loop.body
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -186934,7 +187505,7 @@ def source.procedures.persistence.write_manifest_retrieval_order_loop.body
     ok (cont (iter1, out4))
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_retrieval_order]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2884:4-2891:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2887:4-2894:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_manifest_retrieval_order_loop
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -186949,7 +187520,7 @@ def source.procedures.persistence.write_manifest_retrieval_order_loop
     (iter, out)
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_retrieval_order]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2883:0-2892:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2886:0-2895:1 -/
 def source.procedures.persistence.write_manifest_retrieval_order
   (out : source.procedures.persistence.BoundedJson)
   (records : Slice source.procedures.ProcedureRecord) :
@@ -186963,7 +187534,7 @@ def source.procedures.persistence.write_manifest_retrieval_order
   source.procedures.persistence.write_manifest_retrieval_order_loop iter out
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_alias_form]: loop body 2:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3109:12-3114:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3112:12-3117:13 -/
 @[rust_loop_body]
 def
   source.procedures.persistence.write_manifest_alias_form_loop0_loop0_loop0.body
@@ -186990,7 +187561,7 @@ def
     ok (cont (iter1, out2))
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_alias_form]: loop 2:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3109:12-3114:13 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3112:12-3117:13 -/
 @[rust_loop]
 def source.procedures.persistence.write_manifest_alias_form_loop0_loop0_loop0
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter Std.U8))
@@ -187004,7 +187575,7 @@ def source.procedures.persistence.write_manifest_alias_form_loop0_loop0_loop0
     (iter, out)
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_alias_form]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3102:8-3116:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3105:8-3119:9 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_manifest_alias_form_loop0_loop0.body
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -187048,7 +187619,7 @@ def source.procedures.persistence.write_manifest_alias_form_loop0_loop0.body
     ok (cont (iter1, out6))
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_alias_form]: loop 1:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3102:8-3116:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3105:8-3119:9 -/
 @[rust_loop]
 def source.procedures.persistence.write_manifest_alias_form_loop0_loop0
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -187063,7 +187634,7 @@ def source.procedures.persistence.write_manifest_alias_form_loop0_loop0
     (iter, out)
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_alias_form]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3097:4-3118:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3100:4-3121:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_manifest_alias_form_loop0.body
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -187100,7 +187671,7 @@ def source.procedures.persistence.write_manifest_alias_form_loop0.body
     ok (cont (iter1, out4))
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_alias_form]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3097:4-3118:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3100:4-3121:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_manifest_alias_form_loop0
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -187115,7 +187686,7 @@ def source.procedures.persistence.write_manifest_alias_form_loop0
     (iter, out)
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_alias_form]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3095:0-3120:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3098:0-3123:1 -/
 def source.procedures.persistence.write_manifest_alias_form
   (out : source.procedures.persistence.BoundedJson)
   (form : Slice source.procedures.alias.Polynomial) :
@@ -187132,7 +187703,7 @@ def source.procedures.persistence.write_manifest_alias_form
   source.procedures.persistence.BoundedJson.push out2 ']'
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_cost_and_links]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3052:0-3093:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3055:0-3096:1 -/
 def source.procedures.persistence.write_manifest_cost_and_links
   (out : source.procedures.persistence.BoundedJson)
   (record : source.procedures.ProcedureRecord) :
@@ -187230,7 +187801,7 @@ def source.procedures.EvidenceClass.code
   | source.procedures.EvidenceClass.Assumption => ok (toStr "assumption")
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_verified_evidence]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3037:8-3042:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3040:8-3045:9 -/
 @[rust_loop_body]
 def
   source.procedures.persistence.write_manifest_verified_evidence_loop0_loop0.body
@@ -187258,7 +187829,7 @@ def
     ok (cont (iter1, out2))
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_verified_evidence]: loop 1:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3037:8-3042:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3040:8-3045:9 -/
 @[rust_loop]
 def source.procedures.persistence.write_manifest_verified_evidence_loop0_loop0
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter String))
@@ -187272,7 +187843,7 @@ def source.procedures.persistence.write_manifest_verified_evidence_loop0_loop0
     (iter, out)
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_verified_evidence]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3018:4-3048:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3021:4-3051:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_manifest_verified_evidence_loop0.body
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -187362,7 +187933,7 @@ def source.procedures.persistence.write_manifest_verified_evidence_loop0.body
     ok (cont (iter1, out22))
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_verified_evidence]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3018:4-3048:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3021:4-3051:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_manifest_verified_evidence_loop0
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -187377,7 +187948,7 @@ def source.procedures.persistence.write_manifest_verified_evidence_loop0
     (iter, out)
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_verified_evidence]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3016:0-3050:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3019:0-3053:1 -/
 def source.procedures.persistence.write_manifest_verified_evidence
   (out : source.procedures.persistence.BoundedJson)
   (record : source.procedures.ProcedureRecord) :
@@ -187398,7 +187969,7 @@ def source.procedures.persistence.write_manifest_verified_evidence
   source.procedures.persistence.BoundedJson.push out2 ']'
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_evidence]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2999:8-3004:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3002:8-3007:9 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_manifest_evidence_loop0_loop0.body
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter String))
@@ -187425,7 +187996,7 @@ def source.procedures.persistence.write_manifest_evidence_loop0_loop0.body
     ok (cont (iter1, out2))
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_evidence]: loop 1:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2999:8-3004:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3002:8-3007:9 -/
 @[rust_loop]
 def source.procedures.persistence.write_manifest_evidence_loop0_loop0
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter String))
@@ -187439,7 +188010,7 @@ def source.procedures.persistence.write_manifest_evidence_loop0_loop0
     (iter, out)
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_evidence]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2988:4-3012:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2991:4-3015:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_manifest_evidence_loop0.body
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -187513,7 +188084,7 @@ def source.procedures.persistence.write_manifest_evidence_loop0.body
     ok (cont (iter1, out16))
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_evidence]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2988:4-3012:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2991:4-3015:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_manifest_evidence_loop0
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -187528,7 +188099,7 @@ def source.procedures.persistence.write_manifest_evidence_loop0
     (iter, out)
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_evidence]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2986:0-3014:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2989:0-3017:1 -/
 def source.procedures.persistence.write_manifest_evidence
   (out : source.procedures.persistence.BoundedJson)
   (record : source.procedures.ProcedureRecord) :
@@ -187548,7 +188119,7 @@ def source.procedures.persistence.write_manifest_evidence
   source.procedures.persistence.BoundedJson.push out2 ']'
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_promotion]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2974:8-2979:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2977:8-2982:9 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_manifest_promotion_loop.body
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -187574,7 +188145,7 @@ def source.procedures.persistence.write_manifest_promotion_loop.body
     ok (cont (iter1, out2))
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_promotion]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2974:8-2979:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2977:8-2982:9 -/
 @[rust_loop]
 def source.procedures.persistence.write_manifest_promotion_loop
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -187588,7 +188159,7 @@ def source.procedures.persistence.write_manifest_promotion_loop
     (iter, out)
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_promotion]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2968:0-2984:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2971:0-2987:1 -/
 def source.procedures.persistence.write_manifest_promotion
   (out : source.procedures.persistence.BoundedJson)
   (record : source.procedures.ProcedureRecord) :
@@ -187631,7 +188202,7 @@ def source.procedures.Status.code
   | source.procedures.Status.Superseded => ok (toStr "superseded")
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_dependencies]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2952:4-2963:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2955:4-2966:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_manifest_dependencies_loop.body
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -187674,7 +188245,7 @@ def source.procedures.persistence.write_manifest_dependencies_loop.body
     ok (cont (iter1, out8))
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_dependencies]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2952:4-2963:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2955:4-2966:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_manifest_dependencies_loop
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -187689,7 +188260,7 @@ def source.procedures.persistence.write_manifest_dependencies_loop
     (iter, out)
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_dependencies]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2950:0-2966:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2953:0-2969:1 -/
 def source.procedures.persistence.write_manifest_dependencies
   (out : source.procedures.persistence.BoundedJson)
   (record : source.procedures.ProcedureRecord) :
@@ -187713,7 +188284,7 @@ def source.procedures.persistence.write_manifest_dependencies
   source.procedures.persistence.BoundedJson.push_json_string out3 s1
 
 /-- [noble_contracts::source::procedures::persistence::producer_code]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3161:0-3167:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3164:0-3170:1 -/
 def source.procedures.persistence.producer_code
   (producer : source.procedures.Producer) : Result Str := do
   match producer with
@@ -187722,7 +188293,7 @@ def source.procedures.persistence.producer_code
   | source.procedures.Producer.Composition => ok (toStr "composition")
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_provenance]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2930:0-2948:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2933:0-2951:1 -/
 def source.procedures.persistence.write_manifest_provenance
   (out : source.procedures.persistence.BoundedJson)
   (record : source.procedures.ProcedureRecord) :
@@ -187765,7 +188336,7 @@ def source.procedures.persistence.write_manifest_provenance
     source.procedures.persistence.BoundedJson.push_u32 out6 revision
 
 /-- [noble_contracts::source::procedures::persistence::write_type_tag]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3143:0-3159:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3146:0-3162:1 -/
 def source.procedures.persistence.write_type_tag
   (out : source.procedures.persistence.BoundedJson)
   (ty : noble_kernel.types.Ty) :
@@ -187801,7 +188372,7 @@ def source.procedures.persistence.write_type_tag
       ok (core.result.Result.Err r, out)
 
 /-- [noble_contracts::source::procedures::persistence::write_type_tags]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3132:4-3138:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3135:4-3141:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_type_tags_loop.body
   (types : Slice noble_kernel.types.Ty)
@@ -187831,7 +188402,7 @@ def source.procedures.persistence.write_type_tags_loop.body
   else ok (done (outcome, out))
 
 /-- [noble_contracts::source::procedures::persistence::write_type_tags]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3132:4-3138:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3135:4-3141:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_type_tags_loop
   (out : source.procedures.persistence.BoundedJson)
@@ -187847,7 +188418,7 @@ def source.procedures.persistence.write_type_tags_loop
     (out, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::write_type_tags]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3129:0-3140:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 3132:0-3143:1 -/
 @[reducible]
 def source.procedures.persistence.write_type_tags
   (out : source.procedures.persistence.BoundedJson)
@@ -187859,7 +188430,7 @@ def source.procedures.persistence.write_type_tags
     (core.result.Result.Ok ())
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_identity]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2906:0-2928:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2909:0-2931:1 -/
 def source.procedures.persistence.write_manifest_identity
   (out : source.procedures.persistence.BoundedJson)
   (record : source.procedures.ProcedureRecord) :
@@ -187938,7 +188509,7 @@ def source.procedures.persistence.write_manifest_identity
     ok (r1, out14)
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_record]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2894:0-2904:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2897:0-2907:1 -/
 def source.procedures.persistence.write_manifest_record
   (out : source.procedures.persistence.BoundedJson)
   (record : source.procedures.ProcedureRecord) :
@@ -187972,7 +188543,7 @@ def source.procedures.persistence.write_manifest_record
     ok (r1, out1)
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_entries]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2872:4-2878:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2875:4-2881:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_manifest_entries_loop.body
   (records : Slice source.procedures.ProcedureRecord)
@@ -188002,7 +188573,7 @@ def source.procedures.persistence.write_manifest_entries_loop.body
   else ok (done (outcome, out))
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_entries]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2872:4-2878:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2875:4-2881:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_manifest_entries_loop
   (out : source.procedures.persistence.BoundedJson)
@@ -188018,7 +188589,7 @@ def source.procedures.persistence.write_manifest_entries_loop
     (out, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_entries]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2866:0-2880:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2869:0-2883:1 -/
 @[reducible]
 def source.procedures.persistence.write_manifest_entries
   (out : source.procedures.persistence.BoundedJson)
@@ -188030,7 +188601,7 @@ def source.procedures.persistence.write_manifest_entries
     (core.result.Result.Ok ())
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_closure]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2853:4-2862:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2856:4-2865:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_manifest_closure_loop.body
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -188068,7 +188639,7 @@ def source.procedures.persistence.write_manifest_closure_loop.body
     ok (cont (iter1, out6))
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_closure]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2853:4-2862:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2856:4-2865:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_manifest_closure_loop
   (iter : core.iter.adapters.enumerate.Enumerate (core.slice.iter.Iter
@@ -188083,7 +188654,7 @@ def source.procedures.persistence.write_manifest_closure_loop
     (iter, out)
 
 /-- [noble_contracts::source::procedures::persistence::write_manifest_closure]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2852:0-2863:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2855:0-2866:1 -/
 def source.procedures.persistence.write_manifest_closure
   (out : source.procedures.persistence.BoundedJson)
   (closure : Slice source.procedures.ClosureEntry) :
@@ -188097,7 +188668,7 @@ def source.procedures.persistence.write_manifest_closure
   source.procedures.persistence.write_manifest_closure_loop iter out
 
 /-- [noble_contracts::source::procedures::persistence::push_encoder_id]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2847:0-2849:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2850:0-2852:1 -/
 def source.procedures.persistence.push_encoder_id
   (out : source.procedures.persistence.BoundedJson) :
   Result source.procedures.persistence.BoundedJson
@@ -188106,7 +188677,7 @@ def source.procedures.persistence.push_encoder_id
     source.procedures.ENCODER_ID
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::identity_manifest]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2499:4-2534:5
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2502:4-2537:5
     Visibility: public -/
 def source.procedures.persistence.ProcedureLibrary.identity_manifest
   (self : source.procedures.ProcedureLibrary) :
@@ -188210,14 +188781,14 @@ def source.procedures.persistence.ProcedureLibrary.identity_manifest
 def source.procedures.MAX_METRICS_BYTES : Std.Usize := 65536#usize
 
 /-- [noble_contracts::source::procedures::persistence::metric_sum_overflow]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2836:0-2844:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2839:0-2847:1 -/
 def source.procedures.persistence.metric_sum_overflow
   (field : Str) : Result source.procedures.Refusal := do
   source.procedures.Refusal.new source.procedures.RefusalKind.Exhausted
     { field, message := (toStr "transfer metric total exceeds u32") }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#6}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2831:24-2831:71 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2834:24-2834:71 -/
 def
   source.procedures.persistence.ArmAggregate.add.closure_6.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.persistence.ArmAggregate.add.closure_6) (_ : Unit) :
@@ -188227,7 +188798,7 @@ def
     "metrics.teacher_calls")
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#6}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2831:24-2831:71 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2834:24-2834:71 -/
 @[reducible]
 def
   source.procedures.persistence.ArmAggregate.add.closure_6.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -188239,7 +188810,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#5}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2827:24-2827:72 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2830:24-2830:72 -/
 def
   source.procedures.persistence.ArmAggregate.add.closure_5.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.persistence.ArmAggregate.add.closure_5) (_ : Unit) :
@@ -188249,7 +188820,7 @@ def
     "metrics.proposer_calls")
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#5}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2827:24-2827:72 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2830:24-2830:72 -/
 @[reducible]
 def
   source.procedures.persistence.ArmAggregate.add.closure_5.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -188261,7 +188832,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#4}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2823:24-2823:76 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2826:24-2826:76 -/
 def
   source.procedures.persistence.ArmAggregate.add.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.persistence.ArmAggregate.add.closure_4) (_ : Unit) :
@@ -188271,7 +188842,7 @@ def
     "metrics.growth_bytes_added")
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#4}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2823:24-2823:76 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2826:24-2826:76 -/
 @[reducible]
 def
   source.procedures.persistence.ArmAggregate.add.closure_4.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -188283,7 +188854,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#3}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2819:24-2819:78 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2822:24-2822:78 -/
 def
   source.procedures.persistence.ArmAggregate.add.closure_3.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.persistence.ArmAggregate.add.closure_3) (_ : Unit) :
@@ -188293,7 +188864,7 @@ def
     "metrics.growth_entries_added")
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#3}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2819:24-2819:78 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2822:24-2822:78 -/
 @[reducible]
 def
   source.procedures.persistence.ArmAggregate.add.closure_3.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -188305,7 +188876,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{impl core::ops::function::FnOnce<(u32,), u32> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2812:42-2814:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2815:42-2817:17 -/
 def
   source.procedures.persistence.ArmAggregate.add.closure_2.Insts.CoreOpsFunctionFnOnceTupleU32U32.call_once
   (c : source.procedures.persistence.ArmAggregate.add.closure_2)
@@ -188315,7 +188886,7 @@ def
   ok (core.cmp.impls.OrdU32.max tupled_args c.max_examined)
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{impl core::ops::function::FnOnce<(u32,), u32> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2812:42-2814:17 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2815:42-2817:17 -/
 @[reducible]
 def
   source.procedures.persistence.ArmAggregate.add.closure_2.Insts.CoreOpsFunctionFnOnceTupleU32U32
@@ -188326,7 +188897,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2809:24-2809:76 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2812:24-2812:76 -/
 def
   source.procedures.persistence.ArmAggregate.add.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.persistence.ArmAggregate.add.closure_1) (_ : Unit) :
@@ -188336,7 +188907,7 @@ def
     "metrics.retrieval_examined")
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2809:24-2809:76 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2812:24-2812:76 -/
 @[reducible]
 def
   source.procedures.persistence.ArmAggregate.add.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -188348,7 +188919,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2805:24-2805:75 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2808:24-2808:75 -/
 def
   source.procedures.persistence.ArmAggregate.add.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.persistence.ArmAggregate.add.closure) (_ : Unit) :
@@ -188358,7 +188929,7 @@ def
     "metrics.retrieval_queries")
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2805:24-2805:75 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2808:24-2808:75 -/
 @[reducible]
 def
   source.procedures.persistence.ArmAggregate.add.closure.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -188370,7 +188941,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::add]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2801:4-2833:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2804:4-2836:5 -/
 def source.procedures.persistence.ArmAggregate.add
   (self : source.procedures.persistence.ArmAggregate)
   (arm : source.procedures.persistence.ArmMetrics) :
@@ -188512,7 +189083,7 @@ def source.procedures.persistence.ArmAggregate.add
     ok (r1, self)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::from_arms]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2792:8-2795:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2795:8-2798:9 -/
 @[rust_loop_body]
 def source.procedures.persistence.ArmAggregate.from_arms_loop.body
   (arms : Slice source.procedures.persistence.ArmMetrics)
@@ -188538,7 +189109,7 @@ def source.procedures.persistence.ArmAggregate.from_arms_loop.body
   else ok (done (aggregate, outcome))
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::from_arms]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2792:8-2795:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2795:8-2798:9 -/
 @[rust_loop]
 def source.procedures.persistence.ArmAggregate.from_arms_loop
   (arms : Slice source.procedures.persistence.ArmMetrics)
@@ -188554,7 +189125,7 @@ def source.procedures.persistence.ArmAggregate.from_arms_loop
     (aggregate, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmAggregate}::from_arms]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2780:4-2798:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2783:4-2801:5 -/
 def source.procedures.persistence.ArmAggregate.from_arms
   (arms : Slice source.procedures.persistence.ArmMetrics) :
   Result (core.result.Result source.procedures.persistence.ArmAggregate
@@ -188581,7 +189152,7 @@ def source.procedures.persistence.ArmAggregate.from_arms
       source.procedures.Refusal) residual
 
 /-- [noble_contracts::source::procedures::persistence::write_arm_entry]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2673:0-2724:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2676:0-2727:1 -/
 def source.procedures.persistence.write_arm_entry
   (out : source.procedures.persistence.BoundedJson)
   (arm : source.procedures.persistence.ArmMetrics)
@@ -188703,7 +189274,7 @@ def source.procedures.persistence.write_arm_entry
   source.procedures.persistence.BoundedJson.push out5 '}'
 
 /-- [noble_contracts::source::procedures::persistence::write_arm_section]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2661:4-2668:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2664:4-2671:5 -/
 @[rust_loop_body]
 def source.procedures.persistence.write_arm_section_loop.body
   (arms : Slice source.procedures.persistence.ArmMetrics)
@@ -188737,7 +189308,7 @@ def source.procedures.persistence.write_arm_section_loop.body
   else ok (done (outcome, out))
 
 /-- [noble_contracts::source::procedures::persistence::write_arm_section]: loop 0:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2661:4-2668:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2664:4-2671:5 -/
 @[rust_loop]
 def source.procedures.persistence.write_arm_section_loop
   (out : source.procedures.persistence.BoundedJson)
@@ -188754,7 +189325,7 @@ def source.procedures.persistence.write_arm_section_loop
     (out, index1, outcome)
 
 /-- [noble_contracts::source::procedures::persistence::write_arm_section]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2654:0-2670:1 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2657:0-2673:1 -/
 @[reducible]
 def source.procedures.persistence.write_arm_section
   (out : source.procedures.persistence.BoundedJson)
@@ -188767,7 +189338,7 @@ def source.procedures.persistence.write_arm_section
     0#usize (core.result.Result.Ok ())
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::persistence::ArmMetrics,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#4}}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2617:51-2617:84 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2620:51-2620:84 -/
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure_4.Insts.CoreOpsFunctionFnMutTupleShared0ArmMetricsBool.call_mut
   (c : source.procedures.persistence.ProcedureLibrary.metrics_record.closure_4)
@@ -188778,7 +189349,7 @@ def
   ok (¬ tupled_args.restart_identity_match, c)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::persistence::ArmMetrics,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#4}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2617:51-2617:84 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2620:51-2620:84 -/
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure_4.Insts.CoreOpsFunctionFnOnceTupleShared0ArmMetricsBool.call_once
   (c : source.procedures.persistence.ProcedureLibrary.metrics_record.closure_4)
@@ -188791,7 +189362,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::persistence::ArmMetrics,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#4}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2617:51-2617:84 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2620:51-2620:84 -/
 @[reducible]
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure_4.Insts.CoreOpsFunctionFnOnceTupleShared0ArmMetricsBool
@@ -188803,7 +189374,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::persistence::ArmMetrics,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#4}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2617:51-2617:84 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2620:51-2620:84 -/
 @[reducible]
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure_4.Insts.CoreOpsFunctionFnMutTupleShared0ArmMetricsBool
@@ -188817,7 +189388,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::persistence::ArmMetrics,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#3}}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2603:71-2605:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2606:71-2608:9 -/
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure_3.Insts.CoreOpsFunctionFnMutTupleShared0ArmMetricsBool.call_mut
   (c : source.procedures.persistence.ProcedureLibrary.metrics_record.closure_3)
@@ -188830,7 +189401,7 @@ def
   else ok (tupled_args.teacher_calls != 0#u32, c)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::persistence::ArmMetrics,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#3}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2603:71-2605:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2606:71-2608:9 -/
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure_3.Insts.CoreOpsFunctionFnOnceTupleShared0ArmMetricsBool.call_once
   (c : source.procedures.persistence.ProcedureLibrary.metrics_record.closure_3)
@@ -188843,7 +189414,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::persistence::ArmMetrics,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#3}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2603:71-2605:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2606:71-2608:9 -/
 @[reducible]
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure_3.Insts.CoreOpsFunctionFnOnceTupleShared0ArmMetricsBool
@@ -188855,7 +189426,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::persistence::ArmMetrics,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#3}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2603:71-2605:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2606:71-2608:9 -/
 @[reducible]
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure_3.Insts.CoreOpsFunctionFnMutTupleShared0ArmMetricsBool
@@ -188869,7 +189440,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#2}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2586:55-2594:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2589:55-2597:9 -/
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure_2.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.persistence.ProcedureLibrary.metrics_record.closure_2)
@@ -188884,7 +189455,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#2}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2586:55-2594:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2589:55-2597:9 -/
 @[reducible]
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure_2.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -188896,7 +189467,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2568:71-2576:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2571:71-2579:9 -/
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal.call_once
   (c : source.procedures.persistence.ProcedureLibrary.metrics_record.closure_1)
@@ -188910,7 +189481,7 @@ def
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnOnce<(), noble_contracts::source::procedures::Refusal> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2568:71-2576:9 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2571:71-2579:9 -/
 @[reducible]
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure_1.Insts.CoreOpsFunctionFnOnceTupleRefusal
@@ -188922,7 +189493,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::persistence::ArmMetrics}::has_consistent_transfer_counts]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2762:4-2766:5 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2765:4-2769:5 -/
 def source.procedures.persistence.ArmMetrics.has_consistent_transfer_counts
   (self : source.procedures.persistence.ArmMetrics) : Result Bool := do
   if self.transfer_passed <= self.held_out_tasks
@@ -188933,7 +189504,7 @@ def source.procedures.persistence.ArmMetrics.has_consistent_transfer_counts
   else ok false
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::persistence::ArmMetrics,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure}}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2546:50-2546:93 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2549:50-2549:93 -/
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure.Insts.CoreOpsFunctionFnMutTupleShared0ArmMetricsBool.call_mut
   (c : source.procedures.persistence.ProcedureLibrary.metrics_record.closure)
@@ -188947,7 +189518,7 @@ def
   ok (¬ b, c)
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::persistence::ArmMetrics,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2546:50-2546:93 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2549:50-2549:93 -/
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure.Insts.CoreOpsFunctionFnOnceTupleShared0ArmMetricsBool.call_once
   (c : source.procedures.persistence.ProcedureLibrary.metrics_record.closure)
@@ -188960,7 +189531,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::procedures::persistence::ArmMetrics,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2546:50-2546:93 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2549:50-2549:93 -/
 @[reducible]
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure.Insts.CoreOpsFunctionFnOnceTupleShared0ArmMetricsBool
@@ -188972,7 +189543,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::procedures::persistence::ArmMetrics,), bool> for noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record::{closure}}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2546:50-2546:93 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2549:50-2549:93 -/
 @[reducible]
 def
   source.procedures.persistence.ProcedureLibrary.metrics_record.closure.Insts.CoreOpsFunctionFnMutTupleShared0ArmMetricsBool
@@ -188986,7 +189557,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{noble_contracts::source::procedures::ProcedureLibrary}::metrics_record]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2536:4-2639:5
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2539:4-2642:5
     Visibility: public -/
 def source.procedures.persistence.ProcedureLibrary.metrics_record
   (self : source.procedures.ProcedureLibrary)
@@ -189930,7 +190501,7 @@ def source.procedures.persistence.ProcedureLibrary.metrics_record
           source.procedures.Refusal) residual
 
 /-- [noble_contracts::source::procedures::persistence::{impl core::clone::Clone for noble_contracts::source::procedures::persistence::ArmSection}::clone]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2643:9-2643:14
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2646:9-2646:14
     Visibility: public -/
 def source.procedures.persistence.ArmSection.Insts.CoreCloneClone.clone
   (self : source.procedures.persistence.ArmSection) :
@@ -189939,7 +190510,7 @@ def source.procedures.persistence.ArmSection.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::clone::Clone for noble_contracts::source::procedures::persistence::ArmSection}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2643:9-2643:14 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2646:9-2646:14 -/
 @[reducible]
 impl_def source.procedures.persistence.ArmSection.Insts.CoreCloneClone :
   core.clone.Clone source.procedures.persistence.ArmSection := {
@@ -189949,7 +190520,7 @@ impl_def source.procedures.persistence.ArmSection.Insts.CoreCloneClone :
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::marker::Copy for noble_contracts::source::procedures::persistence::ArmSection}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2643:16-2643:20 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2646:16-2646:20 -/
 @[reducible]
 def source.procedures.persistence.ArmSection.Insts.CoreMarkerCopy :
   core.marker.Copy source.procedures.persistence.ArmSection := {
@@ -189957,7 +190528,7 @@ def source.procedures.persistence.ArmSection.Insts.CoreMarkerCopy :
 }
 
 /-- [noble_contracts::source::procedures::persistence::{impl core::clone::Clone for noble_contracts::source::procedures::persistence::ArmMetrics}::clone]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2737:9-2737:14
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2740:9-2740:14
     Visibility: public -/
 def source.procedures.persistence.ArmMetrics.Insts.CoreCloneClone.clone
   (self : source.procedures.persistence.ArmMetrics) :
@@ -190011,7 +190582,7 @@ def source.procedures.persistence.ArmMetrics.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::clone::Clone for noble_contracts::source::procedures::persistence::ArmMetrics}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2737:9-2737:14 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2740:9-2740:14 -/
 @[reducible]
 impl_def source.procedures.persistence.ArmMetrics.Insts.CoreCloneClone :
   core.clone.Clone source.procedures.persistence.ArmMetrics := {
@@ -190021,7 +190592,7 @@ impl_def source.procedures.persistence.ArmMetrics.Insts.CoreCloneClone :
 }
 
 /-- [noble_contracts::source::procedures::persistence::{impl core::clone::Clone for noble_contracts::source::procedures::persistence::Metrics}::clone]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2726:9-2726:14
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2729:9-2729:14
     Visibility: public -/
 def source.procedures.persistence.Metrics.Insts.CoreCloneClone.clone
   (self : source.procedures.persistence.Metrics) :
@@ -190050,7 +190621,7 @@ def source.procedures.persistence.Metrics.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::clone::Clone for noble_contracts::source::procedures::persistence::Metrics}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2726:9-2726:14 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2729:9-2729:14 -/
 @[reducible]
 impl_def source.procedures.persistence.Metrics.Insts.CoreCloneClone :
   core.clone.Clone source.procedures.persistence.Metrics := {
@@ -190060,7 +190631,7 @@ impl_def source.procedures.persistence.Metrics.Insts.CoreCloneClone :
 }
 
 /-- [noble_contracts::source::procedures::persistence::{impl core::fmt::Debug for noble_contracts::source::procedures::persistence::ArmMetrics}::fmt]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2737:16-2737:21
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2740:16-2740:21
     Visibility: public -/
 def source.procedures.persistence.ArmMetrics.Insts.CoreFmtDebug.fmt
   (self : source.procedures.persistence.ArmMetrics) (f : core.fmt.Formatter) :
@@ -190112,7 +190683,7 @@ def source.procedures.persistence.ArmMetrics.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "ArmMetrics") s values
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::fmt::Debug for noble_contracts::source::procedures::persistence::ArmMetrics}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2737:16-2737:21 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2740:16-2740:21 -/
 @[reducible]
 def source.procedures.persistence.ArmMetrics.Insts.CoreFmtDebug :
   core.fmt.Debug source.procedures.persistence.ArmMetrics := {
@@ -190120,7 +190691,7 @@ def source.procedures.persistence.ArmMetrics.Insts.CoreFmtDebug :
 }
 
 /-- [noble_contracts::source::procedures::persistence::{impl core::fmt::Debug for noble_contracts::source::procedures::persistence::Metrics}::fmt]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2726:16-2726:21
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2729:16-2729:21
     Visibility: public -/
 def source.procedures.persistence.Metrics.Insts.CoreFmtDebug.fmt
   (self : source.procedures.persistence.Metrics) (f : core.fmt.Formatter) :
@@ -190153,7 +190724,7 @@ def source.procedures.persistence.Metrics.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "Metrics") s values
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::fmt::Debug for noble_contracts::source::procedures::persistence::Metrics}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2726:16-2726:21 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2729:16-2729:21 -/
 @[reducible]
 def source.procedures.persistence.Metrics.Insts.CoreFmtDebug : core.fmt.Debug
   source.procedures.persistence.Metrics := {
@@ -190161,14 +190732,14 @@ def source.procedures.persistence.Metrics.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::marker::StructuralPartialEq for noble_contracts::source::procedures::persistence::Metrics}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2726:23-2726:32 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2729:23-2729:32 -/
 @[reducible]
 def source.procedures.persistence.Metrics.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.procedures.persistence.Metrics := {
 }
 
 /-- [noble_contracts::source::procedures::persistence::{impl core::cmp::PartialEq<noble_contracts::source::procedures::persistence::ArmMetrics> for noble_contracts::source::procedures::persistence::ArmMetrics}::eq]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2737:23-2737:32
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2740:23-2740:32
     Visibility: public -/
 def
   source.procedures.persistence.ArmMetrics.Insts.CoreCmpPartialEqArmMetrics.eq
@@ -190248,7 +190819,7 @@ def
   else ok false
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::cmp::PartialEq<noble_contracts::source::procedures::persistence::ArmMetrics> for noble_contracts::source::procedures::persistence::ArmMetrics}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2737:23-2737:32 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2740:23-2740:32 -/
 @[reducible]
 impl_def
   source.procedures.persistence.ArmMetrics.Insts.CoreCmpPartialEqArmMetrics :
@@ -190261,7 +190832,7 @@ impl_def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{impl core::cmp::PartialEq<noble_contracts::source::procedures::persistence::Metrics> for noble_contracts::source::procedures::persistence::Metrics}::eq]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2726:23-2726:32
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2729:23-2729:32
     Visibility: public -/
 def source.procedures.persistence.Metrics.Insts.CoreCmpPartialEqMetrics.eq
   (self : source.procedures.persistence.Metrics)
@@ -190303,7 +190874,7 @@ def source.procedures.persistence.Metrics.Insts.CoreCmpPartialEqMetrics.eq
   else ok false
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::cmp::PartialEq<noble_contracts::source::procedures::persistence::Metrics> for noble_contracts::source::procedures::persistence::Metrics}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2726:23-2726:32 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2729:23-2729:32 -/
 @[reducible]
 impl_def source.procedures.persistence.Metrics.Insts.CoreCmpPartialEqMetrics :
   core.cmp.PartialEq source.procedures.persistence.Metrics
@@ -190314,14 +190885,14 @@ impl_def source.procedures.persistence.Metrics.Insts.CoreCmpPartialEqMetrics :
 }
 
 /-- [noble_contracts::source::procedures::persistence::{impl core::cmp::Eq for noble_contracts::source::procedures::persistence::Metrics}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2726:34-2726:36
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2729:34-2729:36
     Visibility: public -/
 def source.procedures.persistence.Metrics.Insts.CoreCmpEq.assert_fields_are_eq
   (self : source.procedures.persistence.Metrics) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::cmp::Eq for noble_contracts::source::procedures::persistence::Metrics}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2726:34-2726:36 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2729:34-2729:36 -/
 @[reducible]
 def source.procedures.persistence.Metrics.Insts.CoreCmpEq : core.cmp.Eq
   source.procedures.persistence.Metrics := {
@@ -190332,7 +190903,7 @@ def source.procedures.persistence.Metrics.Insts.CoreCmpEq : core.cmp.Eq
 }
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::marker::StructuralPartialEq for noble_contracts::source::procedures::persistence::ArmMetrics}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2737:23-2737:32 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2740:23-2740:32 -/
 @[reducible]
 def
   source.procedures.persistence.ArmMetrics.Insts.CoreMarkerStructuralPartialEq
@@ -190341,7 +190912,7 @@ def
 }
 
 /-- [noble_contracts::source::procedures::persistence::{impl core::cmp::Eq for noble_contracts::source::procedures::persistence::ArmMetrics}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2737:34-2737:36
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2740:34-2740:36
     Visibility: public -/
 def
   source.procedures.persistence.ArmMetrics.Insts.CoreCmpEq.assert_fields_are_eq
@@ -190349,7 +190920,7 @@ def
   ok ()
 
 /-- Trait implementation: [noble_contracts::source::procedures::persistence::{impl core::cmp::Eq for noble_contracts::source::procedures::persistence::ArmMetrics}]
-    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2737:34-2737:36 -/
+    Source: 'crates/noble-contracts/src/source/procedures/persistence.rs', lines 2740:34-2740:36 -/
 @[reducible]
 def source.procedures.persistence.ArmMetrics.Insts.CoreCmpEq : core.cmp.Eq
   source.procedures.persistence.ArmMetrics := {
@@ -192134,20 +192705,6 @@ def source.procedures.Encoder.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.procedures.Encoder := {
 }
 
-/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Encoder> for noble_contracts::source::procedures::Encoder}::eq]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 61:23-61:32
-    Visibility: public -/
-def source.procedures.Encoder.Insts.CoreCmpPartialEqEncoder.eq
-  (self : source.procedures.Encoder) (other : source.procedures.Encoder) :
-  Result Bool
-  := do
-  if self.encoding_revision = other.encoding_revision
-  then
-    if self.experimental = other.experimental
-    then alloc.string.String.Insts.CoreCmpPartialEqString.eq self.id other.id
-    else ok false
-  else ok false
-
 /-- Trait implementation: [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Encoder> for noble_contracts::source::procedures::Encoder}]
     Source: 'crates/noble-contracts/src/source/procedures.rs', lines 61:23-61:32 -/
 @[reducible]
@@ -192214,17 +192771,6 @@ def source.procedures.Producer.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.procedures.Producer := {
 }
 
-/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Producer> for noble_contracts::source::procedures::Producer}::eq]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 79:29-79:38
-    Visibility: public -/
-def source.procedures.Producer.Insts.CoreCmpPartialEqProducer.eq
-  (self : source.procedures.Producer) (other : source.procedures.Producer) :
-  Result Bool
-  := do
-  let self1 := read_discriminant self
-  let other1 := read_discriminant other
-  ok (self1 = other1)
-
 /-- Trait implementation: [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Producer> for noble_contracts::source::procedures::Producer}]
     Source: 'crates/noble-contracts/src/source/procedures.rs', lines 79:29-79:38 -/
 @[reducible]
@@ -192261,33 +192807,6 @@ impl_def source.procedures.Provenance.Insts.CoreCloneClone : core.clone.Clone
 def source.procedures.Provenance.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.procedures.Provenance := {
 }
-
-/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Provenance> for noble_contracts::source::procedures::Provenance}::eq]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 86:23-86:32
-    Visibility: public -/
-def source.procedures.Provenance.Insts.CoreCmpPartialEqProvenance.eq
-  (self : source.procedures.Provenance) (other : source.procedures.Provenance)
-  :
-  Result Bool
-  := do
-  if self.producer_tool_revision = other.producer_tool_revision
-  then
-    let b ←
-      source.procedures.Producer.Insts.CoreCmpPartialEqProducer.eq
-        self.producer other.producer
-    if b
-    then
-      let b1 ←
-        core.option.Option.Insts.CoreCmpPartialEqOption.eq
-          (Array.Insts.CoreCmpPartialEqArray 32#usize core.cmp.PartialEqU8)
-          self.task_id other.task_id
-      if b1
-      then
-        core.option.Option.Insts.CoreCmpPartialEqOption.eq
-          core.cmp.PartialEqU32 self.grammar_revision other.grammar_revision
-      else ok false
-    else ok false
-  else ok false
 
 /-- Trait implementation: [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Provenance> for noble_contracts::source::procedures::Provenance}]
     Source: 'crates/noble-contracts/src/source/procedures.rs', lines 86:23-86:32 -/
@@ -192331,43 +192850,6 @@ def source.procedures.LibraryDependency.Insts.CoreMarkerCopy : core.marker.Copy
 @[reducible]
 def source.procedures.LibraryDependency.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.procedures.LibraryDependency := {
-}
-
-/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::LibraryDependency> for noble_contracts::source::procedures::LibraryDependency}::eq]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 94:29-94:38
-    Visibility: public -/
-def
-  source.procedures.LibraryDependency.Insts.CoreCmpPartialEqLibraryDependency.eq
-  (self : source.procedures.LibraryDependency)
-  (other : source.procedures.LibraryDependency) :
-  Result Bool
-  := do
-  let b ←
-    core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8
-      self.procedure_id other.procedure_id
-  if b
-  then
-    let b1 ←
-      core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8 self.chunk_id
-        other.chunk_id
-    if b1
-    then
-      core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8
-        self.source_revision other.source_revision
-    else ok false
-  else ok false
-
-/-- Trait implementation: [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::LibraryDependency> for noble_contracts::source::procedures::LibraryDependency}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 94:29-94:38 -/
-@[reducible]
-impl_def
-  source.procedures.LibraryDependency.Insts.CoreCmpPartialEqLibraryDependency :
-  core.cmp.PartialEq source.procedures.LibraryDependency
-  source.procedures.LibraryDependency := {
-  eq :=
-    source.procedures.LibraryDependency.Insts.CoreCmpPartialEqLibraryDependency.eq
-  ne := core.cmp.PartialEq.ne.trait_default
-    source.procedures.LibraryDependency.Insts.CoreCmpPartialEqLibraryDependency
 }
 
 /-- [noble_contracts::source::procedures::{impl core::cmp::Eq for noble_contracts::source::procedures::LibraryDependency}::assert_fields_are_eq]:
@@ -192556,30 +193038,6 @@ def source.procedures.Promotion.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.procedures.Promotion := {
 }
 
-/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Promotion> for noble_contracts::source::procedures::Promotion}::eq]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 228:23-228:32
-    Visibility: public -/
-def source.procedures.Promotion.Insts.CoreCmpPartialEqPromotion.eq
-  (self : source.procedures.Promotion) (other : source.procedures.Promotion) :
-  Result Bool
-  := do
-  if self.policy_revision = other.policy_revision
-  then
-    alloc.vec.partial_eq.PartialEqVec.eq core.cmp.PartialEqU32 self.obligations
-      other.obligations
-  else ok false
-
-/-- Trait implementation: [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Promotion> for noble_contracts::source::procedures::Promotion}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 228:23-228:32 -/
-@[reducible]
-impl_def source.procedures.Promotion.Insts.CoreCmpPartialEqPromotion :
-  core.cmp.PartialEq source.procedures.Promotion source.procedures.Promotion
-  := {
-  eq := source.procedures.Promotion.Insts.CoreCmpPartialEqPromotion.eq
-  ne := core.cmp.PartialEq.ne.trait_default
-    source.procedures.Promotion.Insts.CoreCmpPartialEqPromotion
-}
-
 /-- [noble_contracts::source::procedures::{impl core::cmp::Eq for noble_contracts::source::procedures::Promotion}::assert_fields_are_eq]:
     Source: 'crates/noble-contracts/src/source/procedures.rs', lines 228:34-228:36
     Visibility: public -/
@@ -192629,20 +193087,6 @@ def source.procedures.Cost.Insts.CoreDefaultDefault : core.default.Default
 def source.procedures.Cost.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.procedures.Cost := {
 }
-
-/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Cost> for noble_contracts::source::procedures::Cost}::eq]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 234:38-234:47
-    Visibility: public -/
-def source.procedures.Cost.Insts.CoreCmpPartialEqCost.eq
-  (self : source.procedures.Cost) (other : source.procedures.Cost) :
-  Result Bool
-  := do
-  if self.expanded_nodes = other.expanded_nodes
-  then
-    if self.emitted_source_bytes = other.emitted_source_bytes
-    then ok (self.evaluation_steps = other.evaluation_steps)
-    else ok false
-  else ok false
 
 /-- Trait implementation: [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Cost> for noble_contracts::source::procedures::Cost}]
     Source: 'crates/noble-contracts/src/source/procedures.rs', lines 234:38-234:47 -/
@@ -192695,32 +193139,6 @@ def source.procedures.Alias.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.procedures.Alias := {
 }
 
-/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Alias> for noble_contracts::source::procedures::Alias}::eq]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 260:23-260:32
-    Visibility: public -/
-def source.procedures.Alias.Insts.CoreCmpPartialEqAlias.eq
-  (self : source.procedures.Alias) (other : source.procedures.Alias) :
-  Result Bool
-  := do
-  let b ←
-    core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8
-      self.procedure_id other.procedure_id
-  if b
-  then
-    source.procedures.alias.Certificate.Insts.CoreCmpPartialEqCertificate.eq
-      self.certificate other.certificate
-  else ok false
-
-/-- Trait implementation: [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::Alias> for noble_contracts::source::procedures::Alias}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 260:23-260:32 -/
-@[reducible]
-impl_def source.procedures.Alias.Insts.CoreCmpPartialEqAlias :
-  core.cmp.PartialEq source.procedures.Alias source.procedures.Alias := {
-  eq := source.procedures.Alias.Insts.CoreCmpPartialEqAlias.eq
-  ne := core.cmp.PartialEq.ne.trait_default
-    source.procedures.Alias.Insts.CoreCmpPartialEqAlias
-}
-
 /-- [noble_contracts::source::procedures::{impl core::cmp::Eq for noble_contracts::source::procedures::Alias}::assert_fields_are_eq]:
     Source: 'crates/noble-contracts/src/source/procedures.rs', lines 260:34-260:36
     Visibility: public -/
@@ -192753,115 +193171,6 @@ impl_def source.procedures.ProcedureRecord.Insts.CoreCloneClone :
 @[reducible]
 def source.procedures.ProcedureRecord.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.procedures.ProcedureRecord := {
-}
-
-/-- [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::ProcedureRecord> for noble_contracts::source::procedures::ProcedureRecord}::eq]:
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 266:23-266:32
-    Visibility: public -/
-def source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
-  (self : source.procedures.ProcedureRecord)
-  (other : source.procedures.ProcedureRecord) :
-  Result Bool
-  := do
-  if self.format = other.format
-  then
-    if self.semantic_revision = other.semantic_revision
-    then
-      let b ←
-        source.procedures.Encoder.Insts.CoreCmpPartialEqEncoder.eq self.encoder
-          other.encoder
-      if b
-      then
-        let b1 ←
-          core.array.equality.PartialEqArray.eq core.cmp.PartialEqU8
-            self.procedure_id other.procedure_id
-        if b1
-        then
-          let b2 ←
-            source.chunks.Envelope.Insts.CoreCmpPartialEqEnvelope.eq 
-              self.chunk other.chunk
-          if b2
-          then
-            let b3 ←
-              source.procedures.Provenance.Insts.CoreCmpPartialEqProvenance.eq
-                self.provenance other.provenance
-            if b3
-            then
-              let b4 ←
-                alloc.vec.partial_eq.PartialEqVec.eq
-                  source.procedures.LibraryDependency.Insts.CoreCmpPartialEqLibraryDependency
-                  self.library_dependencies other.library_dependencies
-              if b4
-              then
-                let b5 ←
-                  alloc.vec.partial_eq.PartialEqVec.eq
-                    source.procedures.EvidenceRecord.Insts.CoreCmpPartialEqEvidenceRecord
-                    self.evidence other.evidence
-                if b5
-                then
-                  let b6 ←
-                    alloc.vec.partial_eq.PartialEqVec.eq
-                      source.procedures.acceptance.VerifiedEvidence.Insts.CoreCmpPartialEqVerifiedEvidence
-                      self.verified other.verified
-                  if b6
-                  then
-                    let b7 ←
-                      source.procedures.Status.Insts.CoreCmpPartialEqStatus.eq
-                        self.status other.status
-                    if b7
-                    then
-                      let b8 ←
-                        core.option.Option.Insts.CoreCmpPartialEqOption.eq
-                          source.procedures.Promotion.Insts.CoreCmpPartialEqPromotion
-                          self.promotion other.promotion
-                      if b8
-                      then
-                        let b9 ←
-                          source.procedures.Cost.Insts.CoreCmpPartialEqCost.eq
-                            self.cost other.cost
-                        if b9
-                        then
-                          let b10 ←
-                            source.procedures.RetrievalSignature.Insts.CoreCmpPartialEqRetrievalSignature.eq
-                              self.retrieval other.retrieval
-                          if b10
-                          then
-                            let b11 ←
-                              core.option.Option.Insts.CoreCmpPartialEqOption.eq
-                                (Array.Insts.CoreCmpPartialEqArray 32#usize
-                                core.cmp.PartialEqU8) self.supersedes
-                                other.supersedes
-                            if b11
-                            then
-                              core.option.Option.Insts.CoreCmpPartialEqOption.eq
-                                source.procedures.Alias.Insts.CoreCmpPartialEqAlias
-                                self.alias_of other.alias_of
-                            else ok false
-                          else ok false
-                        else ok false
-                      else ok false
-                    else ok false
-                  else ok false
-                else ok false
-              else ok false
-            else ok false
-          else ok false
-        else ok false
-      else ok false
-    else ok false
-  else ok false
-
-/-- Trait implementation: [noble_contracts::source::procedures::{impl core::cmp::PartialEq<noble_contracts::source::procedures::ProcedureRecord> for noble_contracts::source::procedures::ProcedureRecord}]
-    Source: 'crates/noble-contracts/src/source/procedures.rs', lines 266:23-266:32 -/
-@[reducible]
-impl_def
-  source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord :
-  core.cmp.PartialEq source.procedures.ProcedureRecord
-  source.procedures.ProcedureRecord := {
-  eq :=
-    source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord.eq
-  ne := core.cmp.PartialEq.ne.trait_default
-    source.procedures.ProcedureRecord.Insts.CoreCmpPartialEqProcedureRecord
 }
 
 /-- [noble_contracts::source::procedures::{noble_contracts::source::procedures::ProcedureRecord}::candidate_with_dependencies]:
