@@ -90,6 +90,40 @@ The entry point always regenerates Charon and Aeneas output into a fresh artifac
 Freshness rejection, unsupported-body rejection, edited-output rejection, and proof-required rejection belong to task 3.2.
 The generated Lean module compiles against the pinned backend; this does not establish refinement, Wasm correspondence, or cache authenticity.
 
+## Whole-crate M4 annotation admission (#97)
+
+The separate whole-crate route in `verification/m4/implementation.mjs` uses
+`verification/m4/accounting.mjs` to admit only its reviewed source annotations.
+Every live `charon::` control path, after masking Rust comments and literal
+contents, must belong to exactly one recognized attribute occurrence. A path
+fed through a macro argument, or a legal alternative spelling such as
+`# [charon::exclude]`, is refused rather than treated as an absent annotation.
+The reviewed item first line, complete extent and SHA-256 remain checked.
+Annotation normalization preserves the bytes inside quoted arguments:
+`variants_suffix("Co de")` is not the reviewed `variants_suffix("Code")`.
+
+The permanent controls are in `verification/m4/opaque-model-review.test.mjs`:
+
+| Control name | Mutation |
+|---|---|
+| `macro-fed Charon exclusion refuses unreviewed source selection` | A macro receives `charon::exclude` as a metadata argument and emits an attributed function. |
+| `spaced Charon exclusion refuses unreviewed source selection` | An unreviewed function uses `# [charon::exclude]`. |
+| `whitespace inside reviewed variant suffix refuses review` | The reviewed suffix `Code` becomes `Co de` without changing the enum item bytes. |
+
+At tests-only commit `09f6ffd`, with accounting unchanged, the selected Node 24
+run of these three controls exited 1: 0 passed, 3 failed, each with
+`Missing expected exception`. After the accounting fix at `5c4ddbd`, the
+selected Node 24 run of the full suite reported 70 tests, 70 passed, 0 failed.
+The full-suite command is:
+
+```sh
+SELECTED_NODE --test verification/m4/opaque-model-review.test.mjs
+```
+
+These are source-selection admission controls over mutated source strings,
+not executions of those Rust fixtures through Charon/Aeneas. They establish
+neither Rust/Lean refinement nor fresh extraction evidence or M4 acceptance.
+
 ## Allocators at this boundary (#121)
 
 This route erases the allocator, so it cannot report on one. Charon sets `hide_allocator: true` under

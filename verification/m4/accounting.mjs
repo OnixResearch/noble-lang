@@ -406,9 +406,10 @@ function rustCode(text, file) {
 // decorates (after further attributes, comments and blank lines), and the
 // complete item text from that line through the end of its body.
 export function annotatedItem(text, start, file, code = rustCode(text, file)) {
-  const matched = text.slice(start).match(/^charon\s*::\s*([A-Za-z_][A-Za-z_0-9]*(?:\s*\(\s*"[^"\n]*"\s*\))?)\s*\]/);
+  const matched = text.slice(start).match(/^charon\s*::\s*([A-Za-z_][A-Za-z_0-9]*)(?:\s*\(\s*("[^"\n]*")\s*\))?\s*\]/);
   if (!matched) fail('SOURCE-FILTER', `${file}: unsupported Charon annotation`);
-  const annotation = matched[1].replace(/\s+/g, '');
+  // Normalize syntax around the argument, never bytes inside its quotes.
+  const annotation = matched[1] + (matched[2] === undefined ? '' : `(${matched[2]})`);
   let at = start + matched[0].length;
   while (at < code.length) {
     if (/\s/.test(code[at])) { at++; continue; }
@@ -461,12 +462,22 @@ export function sourcePolicy(sourceFiles, readSource) {
     const text = readSource(file);
     const code = rustCode(text, file);
     const annotations = [];
+    const annotationControls = new Set();
     for (const match of code.matchAll(/#\[\s*(charon\s*::\s*([A-Za-z_][A-Za-z_0-9]*))/g)) {
+      const start = match.index + match[0].indexOf('charon');
+      annotationControls.add(start);
       if (match[2] === 'opaque' && inheritedOpaqueSources[file]) continue;
       if (!['rename', 'opaque', 'exclude', 'variants_suffix'].includes(match[2])) {
         fail('SOURCE-FILTER', `${file}: unreviewed Charon annotation ${match[1]}`);
       }
-      annotations.push(annotatedItem(text, match.index + match[0].indexOf('charon'), file, code));
+      annotations.push(annotatedItem(text, start, file, code));
+    }
+    // Every live control path must own one recognized attribute occurrence.
+    // Macro-fed paths and alternative attribute spellings are not absences.
+    for (const match of code.matchAll(/\bcharon\s*::/g)) {
+      if (!annotationControls.delete(match.index)) {
+        fail('SOURCE-FILTER', `${file}: unreviewed Charon control token`);
+      }
     }
     const reviewed = reviewedAnnotations[file] ?? [];
     equal(annotations.map(({ annotation, item }) => ({ annotation, item })),

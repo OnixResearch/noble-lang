@@ -142,6 +142,37 @@ test('new opaque items and changed variant suffixes are not blanket exemptions',
   error => error.message === `M4-SOURCE-FILTER: ${intrinsicFile}: unreviewed Charon annotation set`);
 });
 
+test('macro-fed Charon exclusion refuses unreviewed source selection', () => {
+  const changed = `${effectOracleSource}
+macro_rules! extraction_hidden {
+    ($attribute:meta) => {
+        #[$attribute]
+        pub fn unaccounted_function() -> bool { false }
+    };
+}
+extraction_hidden!(charon::exclude);
+`;
+  assert.throws(() => sourcePolicy(annotationFiles,
+    file => file === effectOracleFile ? changed : readAnnotationSource(file)),
+  error => error.message.startsWith(`M4-SOURCE-FILTER: ${effectOracleFile}:`));
+});
+
+test('spaced Charon exclusion refuses unreviewed source selection', () => {
+  const changed = `${effectOracleSource}\n# [charon::exclude]\npub fn unaccounted_function() -> bool { false }`;
+  assert.throws(() => sourcePolicy(annotationFiles,
+    file => file === effectOracleFile ? changed : readAnnotationSource(file)),
+  error => error.message.startsWith(`M4-SOURCE-FILTER: ${effectOracleFile}:`));
+});
+
+test('whitespace inside reviewed variant suffix refuses review', () => {
+  const source = annotationSources[intrinsicFile];
+  const changed = source.replace('variants_suffix("Code")', 'variants_suffix("Co de")');
+  assert.notEqual(changed, source);
+  assert.throws(() => sourcePolicy(annotationFiles,
+    file => file === intrinsicFile ? changed : readAnnotationSource(file)),
+  error => error.message === `M4-SOURCE-FILTER: ${intrinsicFile}: unreviewed Charon annotation set`);
+});
+
 for (const item of ['enum Code {', 'enum Sort {', 'enum Proposition {']) {
   test(`missing or production-selected Debug derive refuses review: ${item}`, () => {
     const source = annotationSources[intrinsicFile];
