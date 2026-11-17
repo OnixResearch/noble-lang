@@ -17,11 +17,7 @@ use crate::{Diagnostic, Limits, Span};
     tigerstyle::non_trait_imports,
     reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
 )]
-use alloc::{
-    format,
-    string::{String, ToString},
-    vec::Vec,
-};
+use alloc::{string::String, vec::Vec};
 #[expect(
     tigerstyle::non_trait_imports,
     reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
@@ -1168,11 +1164,89 @@ fn bytes(mut out: String, source: &[u8]) -> String {
             out.push(',');
         }
         out.push_str("(UInt8.ofNat ");
-        out.push_str(&byte.to_string());
+        crate::rendering::number(&mut out, u64::from(*byte));
         out.push(')');
     }
     out.push(']');
     out
+}
+/// `out` with `text` appended exactly as `format!("{text:?}")` renders it.
+/// Escaping a non-ASCII character depends on Unicode printability tables, so
+/// non-ASCII text is refused: `verify` has already reparsed every module and
+/// definition name rendered here as an ASCII identifier.
+fn debug_name(mut out: String, text: &str, span: Span) -> Result<String, Diagnostic> {
+    let bytes = text.as_bytes();
+    let mut ascii = 0;
+    while ascii < bytes.len() && bytes[ascii] < 0x80 {
+        ascii += 1;
+    }
+    if ascii != bytes.len() {
+        return Err(invalid(span, "named provenance name is not ASCII"));
+    }
+    out.push('"');
+    let mut index = 0;
+    while index < bytes.len() {
+        out = debug_ascii(out, bytes[index]);
+        index += 1;
+    }
+    out.push('"');
+    Ok(out)
+}
+/// `out` with one ASCII byte appended as `str`'s `Debug` writes it: the six
+/// backslash escapes, `\u{..}` in lowercase hexadecimal for every other
+/// control byte and DEL, and the byte itself otherwise, a single quote included.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper appends through non-const String pushes, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; this total escape table accepts every byte its only caller passes, ASCII checked by debug_name, and the unit tests pin all 128 renderings"
+)]
+fn debug_ascii(mut out: String, byte: u8) -> String {
+    match byte {
+        0 => out.push_str("\\0"),
+        b'\t' => out.push_str("\\t"),
+        b'\n' => out.push_str("\\n"),
+        b'\r' => out.push_str("\\r"),
+        b'"' => out.push_str("\\\""),
+        b'\\' => out.push_str("\\\\"),
+        _ => {
+            if byte < 0x20 || byte == 0x7f {
+                out.push_str("\\u{");
+                if byte >= 0x10 {
+                    out.push(hex_digit(byte / 16));
+                }
+                out.push(hex_digit(byte % 16));
+                out.push('}');
+            } else {
+                out.push(char::from(byte));
+            }
+        }
+    }
+    out
+}
+/// The lowercase hexadecimal digit of `value`, which is below sixteen; the
+/// last arm is fifteen.
+const fn hex_digit(value: u8) -> char {
+    match value {
+        0 => '0',
+        1 => '1',
+        2 => '2',
+        3 => '3',
+        4 => '4',
+        5 => '5',
+        6 => '6',
+        7 => '7',
+        8 => '8',
+        9 => '9',
+        10 => 'a',
+        11 => 'b',
+        12 => 'c',
+        13 => 'd',
+        14 => 'e',
+        _ => 'f',
+    }
 }
 #[expect(
     tigerstyle::assertion_density,
@@ -1189,16 +1263,16 @@ fn provenance(
         .get(origin.module_index)
         .ok_or_else(|| invalid(origin.definition_span, "named module is absent"))?;
     out.push_str("{ moduleName := ");
-    out.push_str(&format!("{:?}", module.module));
-    out.push_str(&format!(
-        ", moduleVersion := {}, moduleSource := ",
-        module.version
-    ));
+    out = debug_name(out, &module.module, origin.definition_span)?;
+    out.push_str(", moduleVersion := ");
+    crate::rendering::number(&mut out, u64::from(module.version));
+    out.push_str(", moduleSource := ");
     out = bytes(out, &module.full_source);
-    out.push_str(&format!(
-        ", definitionSlot := {}, definitionName := {:?}, definitionSource := ",
-        origin.definition_ordinal, origin.definition_name
-    ));
+    out.push_str(", definitionSlot := ");
+    crate::rendering::number(&mut out, u64::from(origin.definition_ordinal));
+    out.push_str(", definitionName := ");
+    out = debug_name(out, &origin.definition_name, origin.definition_span)?;
+    out.push_str(", definitionSource := ");
     out = bytes(out, at(origin.definition_span, &module.full_source)?);
     out.push_str(" }");
     Ok(out)
@@ -1256,9 +1330,18 @@ fn use_entry(mut out: String, name: &str, record: &NamedUseOrigin) -> Result<Str
     let occurrence = record
         .source_node
         .ok_or_else(|| invalid(record.definition_span, "named source occurrence is absent"))?;
-    out.push_str(&format!("\ndef use{name} : Use := {{ slot := {}, occurrence := {}, caller, origin := callee, input := [.i64], output := [.i64] }}",
-        record.definition.0, occurrence));
-    out.push_str(&format!("\ndef entry{name} : Entry := {{ slot := {}, origin := callee, input := [.i64], output := [.i64], body := [.lit (.i64 1), .word 4], dependencies := [], rank := 0 }}",record.definition.0));
+    out.push_str("\ndef use");
+    out.push_str(name);
+    out.push_str(" : Use := { slot := ");
+    crate::rendering::number(&mut out, u64::from(record.definition.0));
+    out.push_str(", occurrence := ");
+    crate::rendering::number(&mut out, u64::from(occurrence));
+    out.push_str(", caller, origin := callee, input := [.i64], output := [.i64] }");
+    out.push_str("\ndef entry");
+    out.push_str(name);
+    out.push_str(" : Entry := { slot := ");
+    crate::rendering::number(&mut out, u64::from(record.definition.0));
+    out.push_str(", origin := callee, input := [.i64], output := [.i64], body := [.lit (.i64 1), .word 4], dependencies := [], rank := 0 }");
     Ok(out)
 }
 #[expect(
@@ -1389,5 +1472,246 @@ mod tests {
     fn subject_and_claim_match_the_literal_templates() {
         let emitted = super::subject_and_claim(alloc::string::String::from("prefix\n"));
         assert_eq!(emitted, alloc::format!("prefix\n{SUBJECT}{CLAIM}"));
+    }
+
+    const LIMITS: crate::Limits = crate::Limits {
+        bytes: 65_536,
+        nodes: 16_384,
+        depth: 64,
+        work: 2_000_000,
+    };
+
+    /// The named v2 contract goal of the `tests/named_v2.rs` fixture: a
+    /// subject calling one imported step twice.
+    fn goal() -> Option<super::ContractGoal> {
+        let limit = crate::source::RetainedSourceLimit::new(65_536)?;
+        let mut session = crate::source::ModuleSession::new(&[], limit).ok()?;
+        for source in [
+            b"module Definitions@5 [ export step def step [ 1 + ] ]".as_slice(),
+            b"import Definitions@5 as d".as_slice(),
+        ] {
+            let prepared = session.prepare(source, &[], LIMITS).ok()?;
+            let (next, committed) = session.commit(prepared);
+            committed.ok()?;
+            session = next;
+        }
+        let prepared = session.prepare(b"module Subject@3 [ def twice [ d.step d.step ] contract 2 twice-law [ subject twice input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 2)) ] ] proof 2 twice-correct for twice-law [ (export-named-unary-I64 (pc-named-call 0 (exec-literal-1) (exec-add)) (pc-named-call 1 (exec-literal-1) (exec-add)) (by-exact-tail) (named-true-eq-wrap)) ] ]", &[], LIMITS).ok()?;
+        match &prepared.proof_obligations()?.obligations.first()?.goal {
+            super::super::PendingGoal::Contract { contract } => Some(contract.as_ref().clone()),
+            super::super::PendingGoal::Pure { .. } => None,
+        }
+    }
+
+    /// `bytes` as it was written with `to_string`, kept as the oracle.
+    fn formatted_bytes(mut out: alloc::string::String, source: &[u8]) -> alloc::string::String {
+        out.push('[');
+        for (index, byte) in source.iter().enumerate() {
+            if index != 0 {
+                out.push(',');
+            }
+            out.push_str("(UInt8.ofNat ");
+            out.push_str(&alloc::string::ToString::to_string(byte));
+            out.push(')');
+        }
+        out.push(']');
+        out
+    }
+
+    /// `provenance` as it was written with `format!`, kept as the oracle.
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; the oracle is the replaced implementation verbatim, checked by the tests that compare against it"
+    )]
+    fn formatted_provenance(
+        mut out: alloc::string::String,
+        goal: &super::ContractGoal,
+        origin: &super::NamedUseOrigin,
+    ) -> Result<alloc::string::String, crate::Diagnostic> {
+        let module = goal
+            .subject
+            .source_dependencies
+            .get(origin.module_index)
+            .ok_or_else(|| super::invalid(origin.definition_span, "named module is absent"))?;
+        out.push_str("{ moduleName := ");
+        out.push_str(&alloc::format!("{:?}", module.module));
+        out.push_str(&alloc::format!(
+            ", moduleVersion := {}, moduleSource := ",
+            module.version
+        ));
+        out = formatted_bytes(out, &module.full_source);
+        out.push_str(&alloc::format!(
+            ", definitionSlot := {}, definitionName := {:?}, definitionSource := ",
+            origin.definition_ordinal,
+            origin.definition_name
+        ));
+        out = formatted_bytes(out, super::at(origin.definition_span, &module.full_source)?);
+        out.push_str(" }");
+        Ok(out)
+    }
+
+    /// `use_entry` as it was written with `format!`, kept as the oracle.
+    fn formatted_use_entry(
+        mut out: alloc::string::String,
+        name: &str,
+        record: &super::NamedUseOrigin,
+    ) -> Result<alloc::string::String, crate::Diagnostic> {
+        let occurrence = record.source_node.ok_or_else(|| {
+            super::invalid(record.definition_span, "named source occurrence is absent")
+        })?;
+        out.push_str(&alloc::format!("\ndef use{name} : Use := {{ slot := {}, occurrence := {}, caller, origin := callee, input := [.i64], output := [.i64] }}",
+            record.definition.0, occurrence));
+        out.push_str(&alloc::format!("\ndef entry{name} : Entry := {{ slot := {}, origin := callee, input := [.i64], output := [.i64], body := [.lit (.i64 1), .word 4], dependencies := [], rank := 0 }}",record.definition.0));
+        Ok(out)
+    }
+
+    /// Every ASCII character alone, all of them together, and the names the
+    /// fixture's reparse admits.
+    fn ascii_texts() -> alloc::vec::Vec<alloc::string::String> {
+        let mut texts: alloc::vec::Vec<_> = (0u8..0x80)
+            .map(|byte| alloc::string::String::from(char::from(byte)))
+            .collect();
+        texts.push((0u8..0x80).map(char::from).collect());
+        texts.push(alloc::string::String::new());
+        texts.push(alloc::string::String::from("Definitions_9"));
+        texts.push(alloc::string::String::from(
+            "it's \"quoted\"\\\t\r\n\u{1b}\u{7f}",
+        ));
+        texts
+    }
+
+    #[test]
+    fn debug_name_matches_the_formatted_ascii_rendering() {
+        let span = crate::Span { start: 0, end: 0 };
+        for text in ascii_texts() {
+            assert_eq!(
+                super::debug_name(alloc::string::String::from("<"), &text, span).ok(),
+                Some(alloc::format!("<{text:?}"))
+            );
+        }
+        for text in ["\u{e9}", "a\u{301}", "\u{200b}", "ok\u{80}"] {
+            assert!(super::debug_name(alloc::string::String::new(), text, span).is_err());
+        }
+    }
+
+    #[test]
+    fn bytes_matches_the_formatted_rendering() {
+        let every: alloc::vec::Vec<u8> = (0..=u8::MAX).collect();
+        for source in [&[][..], &[0][..], &[255, 10, 9][..], every.as_slice()] {
+            assert_eq!(
+                super::bytes(alloc::string::String::from("x"), source),
+                formatted_bytes(alloc::string::String::from("x"), source)
+            );
+        }
+    }
+
+    #[test]
+    fn provenance_and_uses_match_the_formatted_rendering() {
+        let goal = goal();
+        assert!(goal.is_some(), "named v2 fixture");
+        let Some(goal) = goal else { return };
+        assert!(super::prepare_named_contract(&goal, LIMITS).is_ok());
+        let mut origins = goal.subject.named_uses.clone();
+        for (index, text) in ascii_texts().into_iter().enumerate() {
+            let mut origin = goal.subject.named_uses[index % 3].clone();
+            origin.definition_name = text;
+            origin.definition_ordinal = [0, 7, u32::MAX][index % 3];
+            origin.definition = noble_kernel::contracts::Definition([0, 12, u32::MAX][index % 3]);
+            origin.source_node = [Some(0), Some(u32::MAX), None][index % 3];
+            origins.push(origin);
+        }
+        let mut goals = alloc::vec![goal.clone()];
+        for (version, name) in [(0, "M"), (u32::MAX, "it's \"q\"\\\n")] {
+            let mut changed = goal.clone();
+            for module in &mut changed.subject.source_dependencies {
+                module.version = version;
+                module.module = alloc::string::String::from(name);
+            }
+            goals.push(changed);
+        }
+        for goal in &goals {
+            for origin in &origins {
+                let prefix = || alloc::string::String::from("prefix ");
+                assert_eq!(
+                    super::provenance(prefix(), goal, origin).ok(),
+                    formatted_provenance(prefix(), goal, origin).ok()
+                );
+                for name in ["A", "B"] {
+                    assert_eq!(
+                        super::use_entry(prefix(), name, origin).ok(),
+                        formatted_use_entry(prefix(), name, origin).ok()
+                    );
+                }
+            }
+        }
+        let mut foreign = goal.subject.named_uses[0].clone();
+        foreign.definition_name = alloc::string::String::from("\u{e9}");
+        assert!(formatted_provenance(alloc::string::String::new(), &goal, &foreign).is_ok());
+        assert!(super::provenance(alloc::string::String::new(), &goal, &foreign).is_err());
+    }
+
+    /// The MC1 contract text of `prepare_checked_contract` as it was written
+    /// with `format!`, kept as the oracle.
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the oracle keeps the replaced builder's parameter order, checked by the test that compares against it"
+    )]
+    fn formatted_contract_text(
+        contract: &super::ContractGoal,
+        body: &str,
+        requires: &str,
+        ensures: &str,
+    ) -> alloc::string::String {
+        let mut text = alloc::format!("(contract 1 {} (input", contract.contract_name);
+        for (name, ty) in &contract.inputs {
+            text.push_str(&alloc::format!(" ({name} {ty})"));
+        }
+        text.push_str(") (output");
+        for (name, ty) in &contract.outputs {
+            text.push_str(&alloc::format!(" ({name} {ty})"));
+        }
+        text.push_str(&alloc::format!(
+            ") (program {body}) (requires {requires}) (ensures {ensures}))"
+        ));
+        text
+    }
+
+    #[test]
+    fn contract_text_matches_the_formatted_rendering() {
+        let goal = goal();
+        assert!(goal.is_some(), "named v2 fixture");
+        let Some(goal) = goal else { return };
+        let binding = |name: &str, ty: &str| {
+            (
+                alloc::string::String::from(name),
+                alloc::string::String::from(ty),
+            )
+        };
+        let mut contracts = alloc::vec![goal.clone()];
+        let mut empty = goal.clone();
+        empty.inputs.clear();
+        empty.outputs.clear();
+        empty.contract_name.clear();
+        contracts.push(empty);
+        let mut wide = goal;
+        wide.contract_name = alloc::string::String::from("law-\u{e9} {x}");
+        wide.inputs = alloc::vec![
+            binding("x", "I64"),
+            binding("flag", "Bool"),
+            binding("", "")
+        ];
+        wide.outputs = alloc::vec![binding("y", "List<I64>"), binding("{z}", "\"Text\"")];
+        contracts.push(wide);
+        for contract in &contracts {
+            for (body, requires, ensures) in [
+                ("1 +", "(true)", "(eq (out y) (add (in x) 1))"),
+                ("", "", ""),
+                ("{} {{", "\u{2227}", "\\n"),
+            ] {
+                assert_eq!(
+                    super::super::contract_text(contract, body, requires, ensures),
+                    formatted_contract_text(contract, body, requires, ensures)
+                );
+            }
+        }
     }
 }
