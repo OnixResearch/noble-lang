@@ -3606,10 +3606,10 @@ mod origin_operand_debug_tests {
         let recipes = recipes();
         for left in &recipes {
             for right in &recipes {
-                let expected = mirrored_recipe(left) == mirrored_recipe(right);
-                assert_eq!(**left == **right, expected, "{left:?} == {right:?}");
-                assert_eq!(left == right, expected, "Rc {left:?} == {right:?}");
-                assert_eq!(**left != **right, !expected, "{left:?} != {right:?}");
+                let is_expected = mirrored_recipe(left) == mirrored_recipe(right);
+                assert_eq!(**left == **right, is_expected, "{left:?} == {right:?}");
+                assert_eq!(left == right, is_expected, "Rc {left:?} == {right:?}");
+                assert_eq!(**left != **right, !is_expected, "{left:?} != {right:?}");
             }
         }
         assert!(

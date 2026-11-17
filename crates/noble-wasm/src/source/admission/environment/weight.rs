@@ -375,7 +375,8 @@ fn roots(
 }
 
 // Test harness only: the recursive reference definition and its generators
-// recurse over fixture trees, and fixture literals are the readable form.
+// recurse over fixture trees, fixture literals are the readable form, and
+// every fixture choice divides by a non-zero literal bound.
 #[cfg(test)]
 #[allow(
     tigerstyle::assertion_density,
@@ -386,8 +387,9 @@ fn roots(
     tigerstyle::platform_dependent_cast,
     tigerstyle::raw_arithmetic_overflow,
     tigerstyle::unbounded_collection_growth,
+    tigerstyle::unchecked_division,
     tigerstyle::unchecked_narrowing,
-    reason = "Owner: noble-wasm-maintainers; test harness: the recursive reference walk and fixture generators recurse over bounded fixture trees, and their literal seeds and shapes are the readable form."
+    reason = "Owner: noble-wasm-maintainers; test harness: the recursive reference walk and fixture generators recurse over bounded fixture trees, their literal seeds and shapes are the readable form, and every `below` call passes a non-zero literal bound."
 )]
 mod tests {
     use crate::source::Work;

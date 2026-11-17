@@ -22,7 +22,8 @@ impl super::super::Arena {
     /// remaining entries as `build_stack_ty` does.
     #[expect(
         tigerstyle::borrowed_argument_types,
-        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express."
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express, and charges the non-const work meter while allocating arena terms."
     )]
     pub(in crate::inference) fn build_stack_pattern(
         &mut self,
@@ -81,7 +82,8 @@ impl super::super::Arena {
     /// refusal.
     #[expect(
         tigerstyle::borrowed_argument_types,
-        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express."
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express, and charges the non-const work meter while allocating arena terms."
     )]
     #[expect(
         tigerstyle::no_recursion,
@@ -108,7 +110,8 @@ impl super::super::Arena {
     /// first refusal.
     #[expect(
         tigerstyle::borrowed_argument_types,
-        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express."
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express, and charges the non-const work meter while allocating arena terms."
     )]
     #[expect(
         tigerstyle::no_recursion,

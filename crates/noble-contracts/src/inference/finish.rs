@@ -382,6 +382,10 @@ fn reserve_ty(
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; each call consumes one entry, and every entry is a node counted against TYPE_NODE_CAP before it is walked, so the depth stays within the node cap; recursion instead of a loop keeps the reservation cycle free of loops, which the pinned Aeneas cannot prove monotone."
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the reservation charges the non-const work meter for every node."
+)]
 /// Reserve every type of a stack in order, stopping at the first refusal.
 fn reserve_stack(
     items: &[noble_kernel::types::Ty],
@@ -815,10 +819,8 @@ mod tests {
         // The recursion over a stack's entries is bounded the same way: a
         // Program with cap - 1 inputs owns exactly cap nodes.
         let widest = |inputs: u32| {
-            let mut stack = alloc::vec::Vec::new();
-            for _ in 0..inputs {
-                stack.push(Ty::I64);
-            }
+            let count = usize::try_from(inputs).expect("the input count fits usize");
+            let stack = alloc::vec![Ty::I64; count];
             NominalShape::Opaque(alloc::boxed::Box::new(Ty::program(
                 stack,
                 alloc::vec::Vec::new(),

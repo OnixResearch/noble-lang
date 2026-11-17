@@ -139,12 +139,28 @@ pub(super) fn logical_name(name: &str) -> bool {
 
 /// Whether `byte` cannot continue an ordinary name.
 const fn outside_name(byte: u8) -> bool {
-    !(byte.is_ascii_alphanumeric() || byte == b'_')
+    // An if/else chain rather than a negated disjunction: the pinned Aeneas
+    // binds the disjunction so that the negation elaborates as a Prop.
+    if byte.is_ascii_alphanumeric() {
+        false
+    } else {
+        byte != b'_'
+    }
 }
 
 /// Whether `byte` cannot continue a logical name.
+#[expect(
+    clippy::if_same_then_else,
+    reason = "Owner: noble-contracts; the branches stay separate so the pinned Aeneas never binds a disjunction whose negation elaborates as a Prop"
+)]
 const fn outside_logical_name(byte: u8) -> bool {
-    !(byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
+    if byte.is_ascii_alphanumeric() {
+        false
+    } else if byte == b'_' {
+        false
+    } else {
+        byte != b'-'
+    }
 }
 
 /// Whether `bytes` begins with an ASCII letter or underscore.
@@ -511,4 +527,21 @@ fn token_slots(limits: crate::Limits, source_bytes: usize) -> Result<usize, crat
                 "token limit exceeds the host address space",
             )
         })
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn name_byte_predicates_match_the_negated_disjunctions_on_every_byte() {
+        for byte in 0..=u8::MAX {
+            assert_eq!(
+                super::outside_name(byte),
+                !(byte.is_ascii_alphanumeric() || byte == b'_')
+            );
+            assert_eq!(
+                super::outside_logical_name(byte),
+                !(byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
+            );
+        }
+    }
 }

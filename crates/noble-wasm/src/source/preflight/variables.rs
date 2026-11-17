@@ -257,14 +257,14 @@ fn stack_patterns(
     let Some(item) = patterns.get(index) else {
         return Ok(total);
     };
-    let size = attempt!(pattern(
+    let cost = attempt!(pattern(
         item,
         pricing.sizes,
         pricing.depth,
         pricing.lookup_rows,
         work
     ));
-    let total = attempt!(add(total, size));
+    let total = attempt!(add(total, cost));
     stack_patterns(patterns, index + 1, total, pricing, work)
 }
 
@@ -1273,10 +1273,8 @@ pub(super) fn check(
 )]
 #[cfg(test)]
 mod appearance_tests {
-    use super::super::super::Work;
-
-    fn budget(remaining: u64) -> Work {
-        Work {
+    fn budget(remaining: u64) -> super::super::super::Work {
+        super::super::super::Work {
             remaining,
             issued: remaining,
             calculator_preflight: false,
@@ -1286,14 +1284,14 @@ mod appearance_tests {
     }
 
     /// The replaced recursive walk of one appearance and its quotation body.
-    fn appearance(
+    fn recursive_visit(
         walk: super::Walk<'_>,
         id: noble_kernel::untrusted::NodeId,
         depth: usize,
         frame: &mut u64,
         frame_height: &mut u64,
         largest: &mut u64,
-        work: &mut Work,
+        work: &mut super::super::super::Work,
     ) -> Result<(), crate::Diagnostic> {
         if depth > super::super::PATH_LIMIT {
             return Err(crate::Diagnostic::Exhausted);
@@ -1320,7 +1318,7 @@ mod appearance_tests {
             let mut child_frame = cost.quotation_input;
             let mut child_height = cost.quotation_input_height;
             for child in children {
-                appearance(
+                recursive_visit(
                     walk,
                     *child,
                     depth + 1,
@@ -1355,12 +1353,12 @@ mod appearance_tests {
         frame: u64,
         frame_height: u64,
         largest: &mut u64,
-        work: &mut Work,
+        work: &mut super::super::super::Work,
     ) -> Result<(u64, u64), crate::Diagnostic> {
         let mut frame = frame;
         let mut frame_height = frame_height;
         for root in &walk.body.candidate.body {
-            appearance(walk, *root, 0, &mut frame, &mut frame_height, largest, work)?;
+            recursive_visit(walk, *root, 0, &mut frame, &mut frame_height, largest, work)?;
         }
         Ok((frame, frame_height))
     }

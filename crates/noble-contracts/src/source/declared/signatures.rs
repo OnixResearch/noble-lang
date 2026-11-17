@@ -992,24 +992,32 @@ mod tests {
         assert_eq!(error.message, "unregistered or duplicate callable effect");
     }
 
+    fn parse_type(word: &str) -> Result<super::super::types::ParsedType, crate::Diagnostic> {
+        let span = crate::Span { start: 0, end: 1 };
+        super::super::types::parse_with_families(word, &[], &[], None, span)
+    }
+
+    fn refusal(word: &str) -> String {
+        parse_type(word)
+            .err()
+            .map(|error| error.message)
+            .expect("refused type")
+    }
+
     #[test]
     fn nested_callable_types_resume_their_parent_in_order() {
-        use noble_kernel::types::Ty;
-        let span = crate::Span { start: 0, end: 1 };
-        let parse_type =
-            |word: &str| super::super::types::parse_with_families(word, &[], &[], None, span);
-        let message = |word: &str| {
-            parse_type(word)
-                .err()
-                .map(|error| error.message)
-                .expect("refused type")
-        };
         let parsed = parse_type("Program<Program<I64,Bool,pure>+Text,empty,pure>").expect("nested");
         assert_eq!(parsed.nodes, 5);
-        let Ty::Program(inputs, outputs, _) = parsed.ty else {
+        let noble_kernel::types::Ty::Program(inputs, outputs, _) = parsed.ty else {
             panic!("expected a program");
         };
-        assert!(matches!(inputs.as_slice(), [Ty::Program(..), Ty::Text]));
+        assert!(matches!(
+            inputs.as_slice(),
+            [
+                noble_kernel::types::Ty::Program(..),
+                noble_kernel::types::Ty::Text
+            ]
+        ));
         assert!(outputs.is_empty());
         assert_eq!(
             parse_type("List<Program<I64,empty,pure>>")
@@ -1019,28 +1027,32 @@ mod tests {
         );
         let pair = parse_type("Pair<Program<I64,empty,pure>,Bool>").expect("pair");
         assert_eq!(pair.nodes, 4);
-        assert!(matches!(pair.ty, Ty::Pair(..)));
+        assert!(matches!(pair.ty, noble_kernel::types::Ty::Pair(..)));
         let grouped = parse_type("Program<Pair<I64,Bool>,List<Text>,pure>").expect("grouped");
         assert_eq!(grouped.nodes, 6);
         assert_eq!(
-            message("Program<I64,Text,pure>x"),
+            refusal("Program<I64,Text,pure>x"),
             "trailing characters in type word"
         );
+    }
+
+    #[test]
+    fn callable_type_refusals_keep_their_order_and_limits() {
         assert_eq!(
-            message("Program<I64,Unknown,pure>"),
+            refusal("Program<I64,Unknown,pure>"),
             "unknown or cyclic nominal type"
         );
         assert_eq!(
-            message("Program<Unknown,Text,bogus>"),
+            refusal("Program<Unknown,Text,bogus>"),
             "unknown or cyclic nominal type"
         );
         assert_eq!(
-            message("LiveRef<I64,empty,pure>"),
+            refusal("LiveRef<I64,empty,pure>"),
             "LiveRef requires the live-slot profile"
         );
-        assert_eq!(message("Program<I64,Text,pure"), "unclosed Program type");
+        assert_eq!(refusal("Program<I64,Text,pure"), "unclosed Program type");
         assert_eq!(
-            message("Program<I64,Text>"),
+            refusal("Program<I64,Text>"),
             "Program requires input, output and effects"
         );
         let nest = |levels: usize| {
@@ -1052,14 +1064,14 @@ mod tests {
         };
         assert_eq!(parse_type(&nest(31)).expect("31 levels").nodes, 32);
         assert_eq!(
-            message(&nest(32)),
+            refusal(&nest(32)),
             "type constructor nesting limit exceeded"
         );
         let stack = |height: usize| {
             alloc::format!("Program<{},empty,pure>", ["I64"; 300][..height].join("+"))
         };
-        assert_eq!(message(&stack(257)), "Program stack height limit exceeded");
-        assert_eq!(message(&stack(256)), "type constructor limit exceeded");
+        assert_eq!(refusal(&stack(257)), "Program stack height limit exceeded");
+        assert_eq!(refusal(&stack(256)), "type constructor limit exceeded");
         assert_eq!(parse_type(&stack(255)).expect("255 inputs").nodes, 256);
     }
 

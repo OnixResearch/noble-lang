@@ -527,141 +527,200 @@ fn fixed_dimensions(recipe: &OriginFixedExpression) -> (usize, usize) {
     }
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "Owner: noble-wasm-maintainers; the bounded origin interpreter threads its program table, layout, value stack, recursion guard, depth, static cache and step meter explicitly through each recursive step."
-)]
+/// The replay's state: the value stack, the static-program cache, the step
+/// meter, the recursion guard and the open program frames, innermost last.
+struct Machine {
+    stack: Vec<Value>,
+    static_programs: Vec<Option<Rc<OriginProgramValue>>>,
+    steps: usize,
+    active: [usize; MAX_ORIGIN_DEPTH],
+    frames: Vec<Frame>,
+}
+
+/// One open program of the replay: its index, its recursion level, the next
+/// operation position, and the value a `dip` set aside to restore at its end.
+struct Frame {
+    index: usize,
+    level: usize,
+    next: usize,
+    hidden: Option<Value>,
+}
+
+/// What applying one replayed operation asks of the replay driver.
+enum Applied {
+    /// The operation's stack effect is complete.
+    Done,
+    /// A `dip` runs static program `child` with `hidden` set aside above it.
+    Dip { child: usize, hidden: Value },
+}
+
+// One loop replays program `index` and every `dip` it runs, depth-first over
+// an explicit frame stack, so each operation is metered, applied, checked and
+// refused in exactly the order of a recursive replay, without a loop inside a
+// recursive call.
 #[expect(
     tigerstyle::mutating_input_in_pure,
-    tigerstyle::too_many_parameters,
-    reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
-)]
-#[expect(
-    tigerstyle::borrowed_argument_types,
-    reason = "Owner: noble-wasm-maintainers; the replayed operand stack is pushed and popped, so it needs the growable vector."
+    reason = "Owner: noble-wasm-maintainers; it mutates only the caller-owned replay machine for this bounded pass; checked inputs stay immutable."
 )]
 fn execute(
     programs: &[OriginProgram],
     plan: &Layout,
     index: usize,
-    stack: &mut Vec<Value>,
-    active: &mut [usize; MAX_ORIGIN_DEPTH],
-    level: usize,
-    static_programs: &mut [Option<Rc<OriginProgramValue>>],
-    steps: &mut usize,
+    machine: &mut Machine,
 ) -> Option<()> {
-    if level >= MAX_ORIGIN_DEPTH || active[..level].contains(&index) {
-        return None;
+    enter_program(programs, index, 0, None, machine)?;
+    let mut is_running = true;
+    let mut is_refused = false;
+    while is_running {
+        match replay_step(programs, plan, machine) {
+            Some(is_open) => is_running = is_open,
+            None => {
+                is_refused = true;
+                is_running = false;
+            }
+        }
     }
-    active[level] = index;
-    let named = programs.get(index)?;
-    let mut at = 0usize;
-    let mut outcome = Some(());
-    while outcome.is_some() && at < named.operations.len() {
-        outcome = execute_operation(
-            programs,
-            plan,
-            &named.operations[at],
-            stack,
-            active,
-            level,
-            static_programs,
-            steps,
-        );
-        at += 1;
-    }
-    outcome
-}
-
-/// Replay one operation of the program at `level` against the value stack.
-#[expect(
-    clippy::too_many_arguments,
-    reason = "Owner: noble-wasm-maintainers; the bounded origin interpreter threads its program table, layout, value stack, recursion guard, depth, static cache and step meter explicitly through each recursive step."
-)]
-#[expect(
-    tigerstyle::mutating_input_in_pure,
-    tigerstyle::too_many_parameters,
-    reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
-)]
-#[expect(
-    tigerstyle::borrowed_argument_types,
-    reason = "Owner: noble-wasm-maintainers; the replayed operand stack is pushed and popped, so it needs the growable vector."
-)]
-fn execute_operation(
-    programs: &[OriginProgram],
-    plan: &Layout,
-    operation: &OriginOperation,
-    stack: &mut Vec<Value>,
-    active: &mut [usize; MAX_ORIGIN_DEPTH],
-    level: usize,
-    static_programs: &mut [Option<Rc<OriginProgramValue>>],
-    steps: &mut usize,
-) -> Option<()> {
-    *steps = (*steps).checked_add(1)?;
-    if *steps > MAX_REPLAY_STEPS {
-        return None;
-    }
-    apply_operation(
-        programs,
-        plan,
-        operation,
-        stack,
-        active,
-        level,
-        static_programs,
-        steps,
-    )?;
-    if stack.len() > MAX_ORIGIN_OPERATIONS {
+    if is_refused {
         return None;
     }
     Some(())
 }
 
-/// Apply the stack effect of one replayed operation; every arm ends the function.
+/// Open program `index` at `level`: refuse a level past the depth bound, a
+/// program already running on the current path, or an unknown program.
 #[expect(
-    clippy::too_many_arguments,
-    reason = "Owner: noble-wasm-maintainers; the bounded origin interpreter threads its program table, layout, value stack, recursion guard, depth, static cache and step meter explicitly through each recursive step."
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-wasm-maintainers; it mutates only the caller-owned replay machine for this bounded pass; checked inputs stay immutable."
 )]
+fn enter_program(
+    programs: &[OriginProgram],
+    index: usize,
+    level: usize,
+    hidden: Option<Value>,
+    machine: &mut Machine,
+) -> Option<()> {
+    if level >= MAX_ORIGIN_DEPTH || machine.active[..level].contains(&index) {
+        return None;
+    }
+    machine.active[level] = index;
+    if index >= programs.len() {
+        return None;
+    }
+    machine.frames.push(Frame {
+        index,
+        level,
+        next: 0,
+        hidden,
+    });
+    Some(())
+}
+
+/// Advance the replay by one event: replay the innermost frame's next
+/// operation, or close that frame once its operations are done. `Some(false)`
+/// once the root program has finished.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-wasm-maintainers; it mutates only the caller-owned replay machine for this bounded pass; checked inputs stay immutable."
+)]
+fn replay_step(programs: &[OriginProgram], plan: &Layout, machine: &mut Machine) -> Option<bool> {
+    let top = machine.frames.len() - 1;
+    let index = machine.frames[top].index;
+    let level = machine.frames[top].level;
+    let position = machine.frames[top].next;
+    let program_ops = &programs[index].operations;
+    if position >= program_ops.len() {
+        return close_frame(machine);
+    }
+    machine.frames[top].next += 1;
+    match execute_operation(plan, &program_ops[position], machine)? {
+        Applied::Done => Some(true),
+        Applied::Dip { child, hidden } => {
+            enter_program(programs, child, level + 1, Some(hidden), machine)?;
+            Some(true)
+        }
+    }
+}
+
+/// Close the innermost frame. The root frame ends the replay; a `dip` frame
+/// restores the value set aside above it, then applies the stack bound its
+/// `dip` operation checks once the dipped program has run.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-wasm-maintainers; it mutates only the caller-owned replay machine for this bounded pass; checked inputs stay immutable."
+)]
+fn close_frame(machine: &mut Machine) -> Option<bool> {
+    let Some(frame) = machine.frames.pop() else {
+        return Some(false);
+    };
+    let Some(hidden) = frame.hidden else {
+        return Some(false);
+    };
+    machine.stack.push(hidden);
+    if machine.stack.len() > MAX_ORIGIN_OPERATIONS {
+        return None;
+    }
+    Some(true)
+}
+
+/// Replay one operation against the value stack. A `dip` checks the stack
+/// bound only after its program has run, when its frame closes.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-wasm-maintainers; it mutates only the caller-owned replay machine for this bounded pass; checked inputs stay immutable."
+)]
+fn execute_operation(
+    plan: &Layout,
+    operation: &OriginOperation,
+    machine: &mut Machine,
+) -> Option<Applied> {
+    machine.steps = machine.steps.checked_add(1)?;
+    if machine.steps > MAX_REPLAY_STEPS {
+        return None;
+    }
+    match apply_operation(plan, operation, machine)? {
+        Applied::Done => {
+            if machine.stack.len() > MAX_ORIGIN_OPERATIONS {
+                return None;
+            }
+            Some(Applied::Done)
+        }
+        Applied::Dip { child, hidden } => Some(Applied::Dip { child, hidden }),
+    }
+}
+
+/// Apply the stack effect of one replayed operation; every arm ends the
+/// function. A `dip` hands its program and set-aside value to the driver.
 #[expect(
     tigerstyle::function_length,
     tigerstyle::mutating_input_in_pure,
-    tigerstyle::too_many_parameters,
-    reason = "Owner: noble-wasm-maintainers; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
-)]
-#[expect(
-    tigerstyle::borrowed_argument_types,
-    reason = "Owner: noble-wasm-maintainers; the replayed operand stack is pushed and popped, so it needs the growable vector."
+    reason = "Owner: noble-wasm-maintainers; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; it mutates only the caller-owned replay machine for this bounded pass; checked inputs stay immutable."
 )]
 #[expect(
     clippy::question_mark,
     reason = "Owner: noble-wasm-maintainers; an explicit match moves the mutable slot out of its Option, which the pinned extractor supports where `?` on Option<&mut> is not."
 )]
 fn apply_operation(
-    programs: &[OriginProgram],
     plan: &Layout,
     operation: &OriginOperation,
-    stack: &mut Vec<Value>,
-    active: &mut [usize; MAX_ORIGIN_DEPTH],
-    level: usize,
-    static_programs: &mut [Option<Rc<OriginProgramValue>>],
-    steps: &mut usize,
-) -> Option<()> {
+    machine: &mut Machine,
+) -> Option<Applied> {
+    let stack = &mut machine.stack;
     match operation.action {
         OriginAction::I64(value) => {
             stack.push(Value::I64(OriginI64::Fixed {
                 value,
                 recipe: Rc::new(OriginFixedExpression::Literal(value)),
             }));
-            Some(())
+            Some(Applied::Done)
         }
         OriginAction::Dup => {
             let top = stack.last()?.clone();
             stack.push(top);
-            Some(())
+            Some(Applied::Done)
         }
         OriginAction::Drop => {
             stack.pop()?;
-            Some(())
+            Some(Applied::Done)
         }
         OriginAction::Swap => {
             let len = stack.len();
@@ -669,7 +728,7 @@ fn apply_operation(
                 return None;
             }
             stack.swap(len - 1, len - 2);
-            Some(())
+            Some(Applied::Done)
         }
         OriginAction::Dip => {
             let (helper, _) = program_value(stack.pop()?)?;
@@ -677,18 +736,10 @@ fn apply_operation(
                 return None;
             };
             let hidden = stack.pop()?;
-            execute(
-                programs,
-                plan,
-                *program_index,
-                stack,
-                active,
-                level + 1,
-                static_programs,
-                steps,
-            )?;
-            stack.push(hidden);
-            Some(())
+            Some(Applied::Dip {
+                child: *program_index,
+                hidden,
+            })
         }
         OriginAction::Add | OriginAction::Sub | OriginAction::Mul => {
             let Value::I64(OriginI64::Fixed {
@@ -723,10 +774,10 @@ fn apply_operation(
                     depth,
                 }),
             }));
-            Some(())
+            Some(Applied::Done)
         }
         OriginAction::StaticProgram(program_index) => {
-            let slot = match static_programs.get_mut(program_index) {
+            let slot = match machine.static_programs.get_mut(program_index) {
                 Some(slot) => slot,
                 None => return None,
             };
@@ -743,7 +794,7 @@ fn apply_operation(
                 })
                 .clone();
             stack.push(Value::Program { result, depth });
-            Some(())
+            Some(Applied::Done)
         }
         OriginAction::Quote {
             program_operand, ..
@@ -760,7 +811,7 @@ fn apply_operation(
                 }),
                 depth,
             });
-            Some(())
+            Some(Applied::Done)
         }
         OriginAction::Compose => {
             let (right, rdepth) = program_value(stack.pop()?)?;
@@ -778,7 +829,7 @@ fn apply_operation(
                 }),
                 depth,
             });
-            Some(())
+            Some(Applied::Done)
         }
         // Run and the selected call are never replayed, so the origin is refused.
         _ => None,
@@ -865,20 +916,15 @@ fn replay_outputs(
     if is_refused {
         return None;
     }
-    let mut steps = 0;
-    let mut static_programs: [Option<Rc<OriginProgramValue>>; MAX_ORIGIN_PROGRAMS] =
-        core::array::from_fn(|_| None);
-    let mut active = [0; MAX_ORIGIN_DEPTH];
-    execute(
-        programs,
-        plan,
-        named_index,
-        &mut stack,
-        &mut active,
-        0,
-        &mut static_programs[..programs.len()],
-        &mut steps,
-    )?;
+    let mut machine = Machine {
+        stack,
+        static_programs: alloc::vec![None; programs.len()],
+        steps: 0,
+        active: [0; MAX_ORIGIN_DEPTH],
+        frames: Vec::with_capacity(MAX_ORIGIN_DEPTH),
+    };
+    execute(programs, plan, named_index, &mut machine)?;
+    let stack = machine.stack;
     if stack.len() != outputs.len() {
         return None;
     }
@@ -1002,6 +1048,9 @@ fn bounded_graph_cells(
     ) -> bool {
         prior.as_ref().is_some_and(|prior| Rc::ptr_eq(prior, value))
     }
+    /// Count every static body reachable from program `index` once, depth-first
+    /// over an explicit frame stack in the order of the recursive count, so no
+    /// loop sits inside a recursive call.
     #[expect(
         tigerstyle::mutating_input_in_pure,
         reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
@@ -1012,39 +1061,87 @@ fn bounded_graph_cells(
         seen: &mut [bool],
         total: &mut usize,
     ) -> Option<()> {
-        if *seen.get(index)? {
+        if !static_enter(index, programs, seen, total)? {
             return Some(());
+        }
+        let mut frames = StaticFrames {
+            frames: Vec::with_capacity(MAX_ORIGIN_PROGRAMS),
+        };
+        frames.frames.push((index, 0));
+        let mut is_walking = true;
+        let mut is_refused = false;
+        while is_walking {
+            match static_step(programs, seen, total, &mut frames) {
+                Some(is_open) => is_walking = is_open,
+                None => {
+                    is_refused = true;
+                    is_walking = false;
+                }
+            }
+        }
+        if is_refused {
+            return None;
+        }
+        Some(())
+    }
+    /// The open static bodies of the count, innermost last: each program
+    /// index with the position of its next operation.
+    struct StaticFrames {
+        frames: Vec<(usize, usize)>,
+    }
+    /// Enter static program `index`: `false` when it was already counted,
+    /// otherwise mark it and charge its cell and its operation graph.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    fn static_enter(
+        index: usize,
+        programs: &[OriginProgram],
+        seen: &mut [bool],
+        total: &mut usize,
+    ) -> Option<bool> {
+        if *seen.get(index)? {
+            return Some(false);
         }
         match seen.get_mut(index) {
             Some(is_seen) => *is_seen = true,
             None => return None,
         }
         charge(total, 1)?;
-        let operations = &programs.get(index)?.operations;
-        charge(total, operations.len().checked_mul(2)?.checked_sub(1)?)?;
-        let mut at = 0usize;
-        let mut outcome = Some(());
-        while outcome.is_some() && at < operations.len() {
-            outcome = static_child(operations[at].action, programs, seen, total);
-            at += 1;
-        }
-        outcome
+        let program_ops = &programs.get(index)?.operations;
+        charge(total, program_ops.len().checked_mul(2)?.checked_sub(1)?)?;
+        Some(true)
     }
-    /// Count the static body a static-program operation installs, if it is one.
+    /// Advance the count by one event: enter the static program the innermost
+    /// body's next operation installs, or close that body once it is done.
+    /// `Some(false)` once the first body has closed.
     #[expect(
         tigerstyle::mutating_input_in_pure,
         reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
     )]
-    fn static_child(
-        action: OriginAction,
+    fn static_step(
         programs: &[OriginProgram],
         seen: &mut [bool],
         total: &mut usize,
-    ) -> Option<()> {
-        match action {
-            OriginAction::StaticProgram(child) => static_body(child, programs, seen, total),
-            _ => Some(()),
+        frames: &mut StaticFrames,
+    ) -> Option<bool> {
+        let top = frames.frames.len() - 1;
+        let (index, position) = frames.frames[top];
+        let program_ops = &programs[index].operations;
+        if position >= program_ops.len() {
+            frames.frames.truncate(top);
+            return Some(top != 0);
         }
+        frames.frames[top].1 += 1;
+        let action = program_ops[position].action;
+        let OriginAction::StaticProgram(child) = action else {
+            return Some(true);
+        };
+        if static_enter(child, programs, seen, total)? {
+            frames.frames.push((child, 0));
+        }
+        Some(true)
     }
     #[expect(
         tigerstyle::mutating_input_in_pure,
@@ -1188,4 +1285,380 @@ pub(super) fn build(
         programs,
         outputs,
     })
+}
+
+// Test harness only: the recursive forms that the explicit-stack walks
+// replaced are kept as differential oracles, and fixtures are built inline.
+#[allow(
+    tigerstyle::function_length,
+    tigerstyle::no_recursion,
+    tigerstyle::numeric_units,
+    reason = "Owner: noble-wasm-maintainers; test harness: the oracles are the replaced recursive walks, and fixture tables are spelled out in full."
+)]
+#[cfg(test)]
+mod walk_order_tests {
+    fn operation(action: super::OriginAction) -> super::OriginOperation {
+        super::OriginOperation {
+            node: noble_kernel::untrusted::NodeId(1),
+            lexical_node: None,
+            authored_span: None,
+            generated: false,
+            generated_witness: None,
+            ordinal: 0,
+            table_entry: 3,
+            input_signature: 0,
+            output_signature: 0,
+            effect_mask: 0,
+            action,
+        }
+    }
+
+    fn table(
+        bodies: &[alloc::vec::Vec<super::OriginAction>],
+    ) -> alloc::vec::Vec<super::OriginProgram> {
+        let mut programs = alloc::vec::Vec::with_capacity(bodies.len());
+        for (program_index, body) in bodies.iter().enumerate() {
+            programs.push(super::OriginProgram {
+                source_artifact: super::OriginSource::Definition,
+                program_index,
+                body_node: None,
+                entry: 0,
+                input_signature: 0,
+                output_signature: 0,
+                effect_mask: 0,
+                operations: body.iter().map(|action| operation(*action)).collect(),
+            });
+        }
+        programs
+    }
+
+    /// A real lowered layout with 41 programs, so every fixture program index
+    /// has an installed depth to read.
+    fn layout() -> super::Layout {
+        let mut text = alloc::string::String::new();
+        for _ in 0..40 {
+            text.push_str("[ 1 ] drop ");
+        }
+        let limits = noble_contracts::Limits {
+            bytes: 262_144,
+            nodes: 524_288,
+            depth: 64,
+            work: 512_000_000,
+        };
+        let session = noble_contracts::source::Session::new();
+        let prepared = session
+            .prepare(text.as_bytes(), &[], limits)
+            .unwrap_or_else(|_| panic!("fixture source refused"));
+        let submission = prepared
+            .submission()
+            .unwrap_or_else(|| panic!("missing fixture submission"));
+        let compiler = super::super::Compiler::new();
+        let (_, plan) = compiler
+            .prepare_layout(submission, compiler.functions, false, false, false)
+            .unwrap_or_else(|_| panic!("fixture lowering refused"));
+        assert!(
+            plan.programs.len() > 40,
+            "the fixture layout has 41 programs"
+        );
+        plan
+    }
+
+    fn machine(programs: &[super::OriginProgram]) -> super::Machine {
+        super::Machine {
+            stack: alloc::vec![
+                super::Value::I64(super::OriginI64::RootInput(0)),
+                super::Value::I64(super::OriginI64::RootInput(1)),
+            ],
+            static_programs: alloc::vec![None; programs.len()],
+            steps: 0,
+            active: [0; super::MAX_ORIGIN_DEPTH],
+            frames: alloc::vec::Vec::with_capacity(super::MAX_ORIGIN_DEPTH),
+        }
+    }
+
+    fn rendered(machine: &super::Machine) -> alloc::string::String {
+        let mut text = alloc::string::String::new();
+        for value in &machine.stack {
+            match value {
+                super::Value::I64(value) => text.push_str(&alloc::format!("I64({value:?}) ")),
+                super::Value::Program { result, depth } => {
+                    text.push_str(&alloc::format!("Program({result:?}, {depth}) "));
+                }
+            }
+        }
+        text.push_str(&alloc::format!(
+            "| steps {} | active {:?} | cache {:?}",
+            machine.steps,
+            machine.active,
+            machine.static_programs
+        ));
+        text
+    }
+
+    /// The replaced recursive replay: a `dip` runs its program as a nested
+    /// call, then restores the set-aside value and checks the stack bound.
+    fn recursive_execute(
+        programs: &[super::OriginProgram],
+        plan: &super::Layout,
+        index: usize,
+        level: usize,
+        machine: &mut super::Machine,
+    ) -> Option<()> {
+        if level >= super::MAX_ORIGIN_DEPTH || machine.active[..level].contains(&index) {
+            return None;
+        }
+        machine.active[level] = index;
+        let named = programs.get(index)?;
+        for operation in &named.operations {
+            machine.steps = machine.steps.checked_add(1)?;
+            if machine.steps > super::MAX_REPLAY_STEPS {
+                return None;
+            }
+            match super::apply_operation(plan, operation, machine)? {
+                super::Applied::Done => {}
+                super::Applied::Dip { child, hidden } => {
+                    recursive_execute(programs, plan, child, level + 1, machine)?;
+                    machine.stack.push(hidden);
+                }
+            }
+            if machine.stack.len() > super::MAX_ORIGIN_OPERATIONS {
+                return None;
+            }
+        }
+        Some(())
+    }
+
+    /// Both replays agree on the result and the whole machine state; returns the result.
+    fn assert_replays_agree(
+        name: &str,
+        plan: &super::Layout,
+        bodies: &[alloc::vec::Vec<super::OriginAction>],
+        root: usize,
+    ) -> Option<()> {
+        let programs = table(bodies);
+        let mut expected = machine(&programs);
+        let expected_result = recursive_execute(&programs, plan, root, 0, &mut expected);
+        let mut actual = machine(&programs);
+        let actual_result = super::execute(&programs, plan, root, &mut actual);
+        assert_eq!(actual_result, expected_result, "{name}: result");
+        assert_eq!(rendered(&actual), rendered(&expected), "{name}: state");
+        actual_result
+    }
+
+    #[test]
+    fn explicit_frame_replay_matches_the_recursive_replay() {
+        let int = super::OriginAction::I64;
+        let install = super::OriginAction::StaticProgram;
+        let dip = super::OriginAction::Dip;
+        let discard = super::OriginAction::Drop;
+        let add = super::OriginAction::Add;
+        let dup = super::OriginAction::Dup;
+        let swap = super::OriginAction::Swap;
+        let compose = super::OriginAction::Compose;
+        let plan = layout();
+        let quote = super::OriginAction::Quote {
+            input: 0,
+            output: 0,
+            witness: 0,
+            program_operand: false,
+        };
+        let completed = [
+            assert_replays_agree("arithmetic", &plan, &[alloc::vec![int(1), int(2), add]], 0),
+            assert_replays_agree(
+                "dip",
+                &plan,
+                &[
+                    alloc::vec![int(5), install(1), dip, dup],
+                    alloc::vec![int(7), int(8), add, swap],
+                ],
+                0,
+            ),
+            assert_replays_agree(
+                "nested dips",
+                &plan,
+                &[
+                    alloc::vec![int(1), install(1), dip, int(9)],
+                    alloc::vec![int(2), install(2), dip, int(3)],
+                    alloc::vec![int(4), install(3), install(3), compose],
+                    alloc::vec![int(6)],
+                ],
+                0,
+            ),
+            assert_replays_agree(
+                "repeated dip of one program",
+                &plan,
+                &[
+                    alloc::vec![int(1), install(1), dip, int(2), install(1), dip, discard],
+                    alloc::vec![int(3), discard],
+                ],
+                0,
+            ),
+        ];
+        assert!(
+            completed.iter().all(Option::is_some),
+            "the well-formed fixtures replay to completion"
+        );
+        let mut refused = alloc::vec![assert_replays_agree(
+            "dip cycle",
+            &plan,
+            &[
+                alloc::vec![int(1), install(1), dip],
+                alloc::vec![int(2), install(1), dip],
+            ],
+            0,
+        )];
+        let mut chain = alloc::vec::Vec::with_capacity(35);
+        for index in 0..34 {
+            chain.push(alloc::vec![int(index), install(index as usize + 1), dip]);
+        }
+        chain.push(alloc::vec![int(0)]);
+        refused.push(assert_replays_agree("depth bound", &plan, &chain, 0));
+        let mut busy = alloc::vec::Vec::with_capacity(200);
+        for _ in 0..50 {
+            busy.extend_from_slice(&[int(1), install(1), dip, discard]);
+        }
+        let mut body = alloc::vec::Vec::with_capacity(200);
+        for _ in 0..100 {
+            body.extend_from_slice(&[int(1), discard]);
+        }
+        refused.push(assert_replays_agree("step bound", &plan, &[busy, body], 0));
+        let mut tall = alloc::vec::Vec::with_capacity(127);
+        for value in 0..124 {
+            tall.push(int(value));
+        }
+        tall.extend_from_slice(&[int(1), install(1), dip]);
+        refused.push(assert_replays_agree(
+            "stack bound after a dip",
+            &plan,
+            &[tall, alloc::vec![int(2), int(3)]],
+            0,
+        ));
+        let mut overfull = alloc::vec::Vec::with_capacity(130);
+        for value in 0..130 {
+            overfull.push(int(value));
+        }
+        refused.push(assert_replays_agree("stack bound", &plan, &[overfull], 0));
+        refused.push(assert_replays_agree(
+            "non-static dip helper",
+            &plan,
+            &[alloc::vec![int(1), int(2), quote, dip]],
+            0,
+        ));
+        refused.push(assert_replays_agree(
+            "refusal inside a dip",
+            &plan,
+            &[alloc::vec![int(1), install(1), dip], alloc::vec![add]],
+            0,
+        ));
+        refused.push(assert_replays_agree(
+            "unknown root",
+            &plan,
+            &[alloc::vec![int(1)]],
+            1,
+        ));
+        assert!(
+            refused.iter().all(Option::is_none),
+            "every bound, cycle and malformed fixture is refused"
+        );
+    }
+
+    /// The replaced recursive static count over the same cell cap.
+    fn recursive_static(
+        index: usize,
+        programs: &[super::OriginProgram],
+        seen: &mut [bool],
+        total: &mut usize,
+    ) -> Option<()> {
+        fn charge(total: &mut usize, cells: usize) -> Option<()> {
+            *total = total.checked_add(cells)?;
+            (*total <= super::MAX_ORIGIN_PROGRAMS).then_some(())
+        }
+        if *seen.get(index)? {
+            return Some(());
+        }
+        seen[index] = true;
+        charge(total, 1)?;
+        let program_ops = &programs.get(index)?.operations;
+        charge(total, program_ops.len().checked_mul(2)?.checked_sub(1)?)?;
+        for operation in program_ops {
+            if let super::OriginAction::StaticProgram(child) = operation.action {
+                recursive_static(child, programs, seen, total)?;
+            }
+        }
+        Some(())
+    }
+
+    /// Both counts agree on the result, the seen set and the cells; returns the result.
+    fn assert_counts_agree(
+        name: &str,
+        bodies: &[alloc::vec::Vec<super::OriginAction>],
+    ) -> Option<()> {
+        let programs = table(bodies);
+        let mut expected_seen = alloc::vec![false; programs.len()];
+        let mut expected_total = 0usize;
+        let expected = recursive_static(0, &programs, &mut expected_seen, &mut expected_total);
+        let mut seen = alloc::vec![false; programs.len()];
+        let mut total = 0usize;
+        let mut constructed: [Option<alloc::rc::Rc<super::OriginProgramValue>>;
+            super::MAX_ORIGIN_PROGRAMS] = core::array::from_fn(|_| None);
+        let mut constructed_count = 0usize;
+        let mut fixed_nodes = 0usize;
+        let root = alloc::rc::Rc::new(super::OriginProgramValue::Static {
+            node: noble_kernel::untrusted::NodeId(1),
+            program_index: 0,
+        });
+        let actual = super::bounded_graph_cells(
+            &root,
+            &programs,
+            &mut constructed,
+            &mut constructed_count,
+            &mut seen,
+            &mut total,
+            &mut fixed_nodes,
+        );
+        assert_eq!(actual, expected, "{name}: result");
+        assert_eq!(seen, expected_seen, "{name}: seen");
+        assert_eq!(total, expected_total, "{name}: cells");
+        actual
+    }
+
+    #[test]
+    fn explicit_frame_static_count_matches_the_recursive_count() {
+        let int = super::OriginAction::I64;
+        let install = super::OriginAction::StaticProgram;
+        let discard = super::OriginAction::Drop;
+        let counted = [
+            assert_counts_agree("single", &[alloc::vec![int(1)]]),
+            assert_counts_agree(
+                "diamond",
+                &[
+                    alloc::vec![install(1), install(2)],
+                    alloc::vec![install(2)],
+                    alloc::vec![int(1)],
+                ],
+            ),
+            assert_counts_agree(
+                "cycle",
+                &[alloc::vec![install(1), discard], alloc::vec![install(0)]],
+            ),
+        ];
+        assert!(
+            counted.iter().all(Option::is_some),
+            "the bounded fixtures are counted"
+        );
+        let mut chain = alloc::vec::Vec::with_capacity(21);
+        for index in 0..20 {
+            chain.push(alloc::vec![install(index + 1)]);
+        }
+        chain.push(alloc::vec![int(1)]);
+        let refused = [
+            assert_counts_agree("empty body", &[alloc::vec![install(1)], alloc::vec![]]),
+            assert_counts_agree("unknown child", &[alloc::vec![int(1), install(5)]]),
+            assert_counts_agree("cell cap", &chain),
+        ];
+        assert!(
+            refused.iter().all(Option::is_none),
+            "empty, unknown and over-cap fixtures are refused"
+        );
+    }
 }

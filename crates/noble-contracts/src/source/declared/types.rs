@@ -15,6 +15,10 @@ pub(in crate::source) fn parse_with_families(
 }
 
 /// A parser for one type word at nesting `depth`, after the depth and whitespace checks.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn start_parser(
     word: alloc::string::String,
     span: crate::Span,
@@ -50,6 +54,10 @@ struct Machine {
 
 /// Drive `parser` and every nested callable component to the first failure
 /// or the complete outermost type.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn run(
     parser: Parser,
     types: &[(alloc::string::String, noble_kernel::types::Ty)],
@@ -83,6 +91,14 @@ fn run(
 
 /// Step the running parser; hand a finished component to the callable waiting
 /// for it, or report the outermost type once no callable is waiting.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; Vec pop and the parser and callable steps it calls are not const on the pinned compilers, so the const suggestion does not apply"
+)]
 fn machine_step(
     machine: Machine,
     types: &[(alloc::string::String, noble_kernel::types::Ty)],
@@ -116,6 +132,10 @@ fn machine_step(
 }
 
 /// Continue with the next component of a callable, or with its finished parent.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; Vec push and Result matching with owned Vec payloads are not const on the pinned compilers, so the const suggestion does not apply"
+)]
 fn resume(
     advanced: Result<Advance, crate::Diagnostic>,
     mut suspended: alloc::vec::Vec<Callable>,
@@ -235,6 +255,10 @@ fn start_stack(word: &str, span: crate::Span) -> Result<StackWork, crate::Diagno
 }
 
 /// The parser of the next stack component, or the finished stack.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; mem::take of a String and parser construction are not const on the pinned compilers, so the const suggestion does not apply"
+)]
 fn next_part(
     mut stack: StackWork,
     span: crate::Span,
@@ -259,6 +283,10 @@ impl Callable {
     }
 
     /// Start the next component of the current stack, or move past a finished one.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; it drops and moves owned Vec state and calls non-const stack helpers, so the const suggestion does not apply"
+    )]
     fn advance(
         mut self,
         environment: Option<&noble_kernel::contracts::Env>,
@@ -283,6 +311,10 @@ impl Callable {
     }
 
     /// Begin the output stack once the input stack is complete.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; it splits the output field into owned Strings and calls non-const stack helpers, so the const suggestion does not apply"
+    )]
     fn start_outputs(
         mut self,
         environment: Option<&noble_kernel::contracts::Env>,
@@ -352,6 +384,10 @@ enum Frame {
 }
 
 impl Parser {
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; it calls the non-const read and fold steps over owned Vec state, so the const suggestion does not apply"
+    )]
     fn parse_step(
         mut self,
         types: &[(alloc::string::String, noble_kernel::types::Ty)],

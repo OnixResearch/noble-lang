@@ -116,10 +116,6 @@ enum CopyFrame<'a> {
     reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
 )]
 #[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
-)]
-#[expect(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-contracts; the work list and the copies are the copy loop's locally owned state, borrowed only for one loop-free step"
 )]
@@ -470,10 +466,6 @@ enum DependencyCopy<'a> {
 #[expect(
     tigerstyle::fragile_exhaustive_enum_match,
     reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
-)]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 #[expect(
     tigerstyle::mutating_input_in_pure,
@@ -4676,15 +4668,15 @@ mod form_impl_tests {
             reason = "Owner: noble-contracts; the mirror's fields are read only by its derived Debug, which is the reference rendering"
         )]
         pub struct ProofDependency {
-            pub name: alloc::string::String,
-            pub module: alloc::string::String,
-            pub version: u32,
-            pub source: alloc::vec::Vec<u8>,
-            pub declaration: crate::intrinsic::ProofObligation,
-            pub exported: bool,
-            pub dependencies: alloc::vec::Vec<ProofDependency>,
-            pub model_revision: alloc::string::String,
-            pub checker_revision: alloc::string::String,
+            pub(super) name: alloc::string::String,
+            pub(super) module: alloc::string::String,
+            pub(super) version: u32,
+            pub(super) source: alloc::vec::Vec<u8>,
+            pub(super) declaration: crate::intrinsic::ProofObligation,
+            pub(super) exported: bool,
+            pub(super) dependencies: alloc::vec::Vec<ProofDependency>,
+            pub(super) model_revision: alloc::string::String,
+            pub(super) checker_revision: alloc::string::String,
         }
     }
 

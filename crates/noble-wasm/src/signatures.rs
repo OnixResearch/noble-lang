@@ -42,6 +42,14 @@ const fn index_probe_cost(entries: usize) -> usize {
     (usize::BITS - entries.leading_zeros()) as usize + 1
 }
 
+/// The candidate index key of one (fingerprint, length_bytes) class: the
+/// fingerprint fills the high 64 bits and the length the low 32, so integer
+/// order is the lexicographic (fingerprint, length_bytes) order and equal
+/// keys are exactly equal pairs.
+const fn candidate_key(hash: u64, length_bytes: u32) -> u128 {
+    ((hash as u128) << 32) | (length_bytes as u128)
+}
+
 /// The budget an interning probe charges, once per comparison or decoded
 /// record it actually visits, in visit order.
 pub(crate) trait Meter {
@@ -70,10 +78,11 @@ impl Meter for Unmetered {
 pub(crate) struct Pool {
     pub(crate) keys: alloc::vec::Vec<alloc::vec::Vec<u8>>,
     prefix_keys: alloc::vec::Vec<PrefixKey>,
-    // Compact records by (fingerprint, length_bytes), each list in ascending ID
-    // order. A lookup visits only records that could equal the key, so its
-    // metered cost does not grow with the session's accumulated pool.
-    candidates: alloc::collections::BTreeMap<(u64, u32), alloc::vec::Vec<u32>>,
+    // Compact records by (fingerprint, length_bytes) class, keyed by
+    // `candidate_key`, each list in ascending ID order. A lookup visits only
+    // records that could equal the key, so its metered cost does not grow
+    // with the session's accumulated pool.
+    candidates: alloc::collections::BTreeMap<u128, alloc::vec::Vec<u32>>,
     bytes: usize,
     expanded_bytes: usize,
     extended: bool,
@@ -293,7 +302,7 @@ impl Pool {
         let Ok(length_bytes) = u32::try_from(key.len()) else {
             return Err(crate::Diagnostic::Exhausted);
         };
-        let index_key = (hash, length_bytes);
+        let index_key = candidate_key(hash, length_bytes);
         let mut scratch = alloc::vec::Vec::new();
         // One ordered-index probe, then one unit per candidate actually
         // examined, plus every candidate block record actually decoded.
@@ -352,7 +361,7 @@ impl Pool {
             suffix: suffix.to_vec(),
         });
         self.candidates
-            .entry((hash, length_bytes))
+            .entry(candidate_key(hash, length_bytes))
             .or_default()
             .push(id);
         self.bytes = size_bytes;
@@ -621,6 +630,45 @@ mod tests {
     }
 
     #[test]
+    fn candidate_keys_keep_pair_order_and_lookups() {
+        let pairs = [
+            (0u64, 0u32),
+            (0, 1),
+            (0, u32::MAX),
+            (1, 0),
+            (1, 7),
+            (0xff, 3),
+            (0x7fff_ffff_ffff_ffff, u32::MAX),
+            (0x8000_0000_0000_0000, 5),
+            (u64::MAX, 0),
+            (u64::MAX, u32::MAX),
+        ];
+        // Insert out of order so both maps must sort.
+        let mut by_pair = alloc::collections::BTreeMap::new();
+        let mut by_key = alloc::collections::BTreeMap::new();
+        for (index, &(hash, length_bytes)) in pairs.iter().enumerate().rev() {
+            by_pair.insert((hash, length_bytes), index);
+            by_key.insert(super::candidate_key(hash, length_bytes), index);
+        }
+        // Iteration visits the classes in the same (lexicographic) order.
+        let pair_order: alloc::vec::Vec<usize> = by_pair.values().copied().collect();
+        let key_order: alloc::vec::Vec<usize> = by_key.values().copied().collect();
+        assert_eq!(pair_order, key_order);
+        assert_eq!(key_order, (0..pairs.len()).collect::<alloc::vec::Vec<_>>());
+        // Every class finds its own entry, and neighbouring classes miss.
+        for &(hash, length_bytes) in &pairs {
+            assert_eq!(
+                by_key.get(&super::candidate_key(hash, length_bytes)),
+                by_pair.get(&(hash, length_bytes))
+            );
+        }
+        for (hash, length_bytes) in [(0u64, 2u32), (2, 0), (1, 6), (u64::MAX - 1, u32::MAX)] {
+            assert_eq!(by_pair.get(&(hash, length_bytes)), None);
+            assert_eq!(by_key.get(&super::candidate_key(hash, length_bytes)), None);
+        }
+    }
+
+    #[test]
     fn ordinary_pool_charges_each_compared_key_in_order_and_stops_at_a_refusal() {
         let mut pool = super::Pool::source();
         let first = [noble_kernel::types::Ty::I64];
@@ -799,7 +847,7 @@ mod tests {
         // compare its bytes rather than trust the matching hash.
         pool.prefix_keys[0].hash = super::fingerprint(&different);
         pool.candidates
-            .entry((super::fingerprint(&different), 4))
+            .entry(super::candidate_key(super::fingerprint(&different), 4))
             .or_default()
             .push(0);
         assert_eq!(

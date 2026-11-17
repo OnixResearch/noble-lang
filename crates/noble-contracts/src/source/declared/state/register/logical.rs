@@ -1576,6 +1576,10 @@ mod tests {
         }
     }
 
+    #[expect(
+        tigerstyle::function_length,
+        reason = "Owner: noble-contracts; test: the body is a case table compared case by case against the former recursive walk in one loop; splitting it would only scatter the cases"
+    )]
     #[test]
     fn use_walk_matches_the_former_recursive_walk() {
         let session =
