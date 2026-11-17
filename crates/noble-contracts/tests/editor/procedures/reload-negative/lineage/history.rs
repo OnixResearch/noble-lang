@@ -182,10 +182,7 @@ fn duplicate_independent_head(bytes: &[u8]) -> Result<Vec<u8>, String> {
         .get(..head.revision_offset_bytes)
         .ok_or("head revision range missing")?
         .to_vec();
-    malformed.extend_from_slice(&wire_digest(
-        0x4e_50_52_4f_43_00_00_03,
-        &repeated_closure,
-    ));
+    malformed.extend_from_slice(&wire_digest(0x4e_50_52_4f_43_00_00_03, &repeated_closure));
     malformed.extend_from_slice(&2u32.to_be_bytes());
     malformed.extend_from_slice(&repeated_closure);
     malformed.extend_from_slice(&2u32.to_be_bytes());
