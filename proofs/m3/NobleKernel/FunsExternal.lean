@@ -135,6 +135,9 @@ def core.array.iter.IntoIter.Insts.CoreIterTraitsIteratorIterator.next
 
 /-! ## core::bool -/
 
+/-- [core::bool::{bool}::then_some]: `Some(value)` when the condition holds,
+    `None` otherwise; the caller has already evaluated `value` either way,
+    as Rust's eager argument does. -/
 @[rust_fun "core::bool::{bool}::then_some"]
 def core.bool.Bool.then_some {T : Type} (condition : Bool) (value : T) :
   Result (Option T) :=
@@ -332,6 +335,9 @@ def core.num.Usize.saturating_mul (x y : Usize) : Result Usize :=
 
 /-! ## core::option -/
 
+/-- [core::option::{core::option::Option<T>}::is_none_or]: `true` for `None`;
+    for `Some(v)` the predicate's result on `v` through `FnOnce::call_once`,
+    whose failure propagates. -/
 @[rust_fun "core::option::{core::option::Option<@T>}::is_none_or"]
 def core.option.Option.is_none_or {T F : Type}
   (inst : core.ops.function.FnOnce F T Bool)
@@ -355,6 +361,8 @@ def core.option.Option.Insts.CoreCmpPartialEqOption.eq {T : Type _}
   | some left, some right => partialEq.eq left right
   | _, _ => ok false
 
+/-- [core::option::{core::option::Option<T>}::and_then]: `None` stays `None`;
+    `Some(v)` becomes the function's result on `v`. -/
 @[rust_fun "core::option::{core::option::Option<@T>}::and_then"]
 def core.option.Option.and_then {T U F : Type}
   (inst : core.ops.function.FnOnce F T (Option U))
@@ -363,6 +371,8 @@ def core.option.Option.and_then {T U F : Type}
   | none => ok none
   | some payload => inst.call_once function payload
 
+/-- [core::option::{core::option::Option<T>}::zip]: `Some((a, b))` when both
+    options are `Some`, otherwise `None`. -/
 @[rust_fun "core::option::{core::option::Option<@T>}::zip"]
 def core.option.Option.zip {T U : Type} (left : Option T) (right : Option U) :
   Result (Option (T × U)) :=
@@ -393,6 +403,8 @@ def core.option.Option.Insts.CoreCloneClone.clone
       let v1 ← cloneCloneInst.clone v
       ok (some v1)
 
+/-- [core::option::{impl core::default::Default for core::option::Option<T>}::default]:
+    `None`. -/
 @[rust_fun
   "core::option::{core::default::Default<core::option::Option<@T>>}::default"]
 def core.option.Option.Insts.CoreDefaultDefault.default (T : Type) :
@@ -423,6 +435,9 @@ def core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residu
 
 /-! ## core::result -/
 
+/-- [core::result::{core::result::Result<T, E>}::is_ok_and]: `false` for
+    `Err`; for `Ok(v)` the predicate's result on `v` through
+    `FnOnce::call_once`, whose failure propagates. -/
 @[rust_fun "core::result::{core::result::Result<@T, @E>}::is_ok_and"]
 def core.result.Result.is_ok_and {T E F : Type}
   (inst : core.ops.function.FnOnce F T Bool)
@@ -478,6 +493,8 @@ def core.result.Result.ok
     | .Ok v => pure (some v)
     | .Err _ => pure none
 
+/-- [core::result::{core::result::Result<T, E>}::map_or]: the fallback for
+    `Err`; for `Ok(v)` the function's result on `v`. -/
 @[rust_fun "core::result::{core::result::Result<@T, @E>}::map_or"]
 def core.result.Result.map_or {T E U F : Type}
   (inst : core.ops.function.FnOnce F T U)
@@ -508,6 +525,8 @@ def core.slice.Slice.last {T : Type} : Slice T → Result (Option T) :=
 @[rust_fun "core::str::{str}::len"]
 def core.str.Str.len (value : Str) : Result Usize := ok value.len
 
+/-- [core::str::{str}::is_empty]: whether the byte view is empty, i.e.
+    `len() == 0`. -/
 @[rust_fun "core::str::{str}::is_empty"]
 def core.str.Str.is_empty (value : Str) : Result Bool := ok value.val.isEmpty
 
@@ -521,10 +540,15 @@ def core.str.converts.from_utf8 (value : Slice U8) :
   | some _ => ok (.Ok value)
   | none => ok (.Err .Invalid)
 
+/-- [core::str::traits::{impl core::cmp::PartialEq<str> for str}::eq]:
+    byte-wise equality of the two UTF-8 views, as Rust compares `str`. -/
 @[rust_fun "core::str::traits::{core::cmp::PartialEq<str, str>}::eq"]
 def Str.Insts.CoreCmpPartialEqStr.eq (left right : Str) : Result Bool :=
   ok (left.val == right.val)
 
+/-- [core::fmt::{impl core::fmt::Debug for str}::fmt]: a successful,
+    formatter-preserving step in the abstract formatter model (see the
+    header); the escaped text is not observable there. -/
 @[rust_fun "core::fmt::{core::fmt::Debug<str>}::fmt"]
 def Str.Insts.CoreFmtDebug.fmt (_ : Str) (formatter : core.fmt.Formatter) :
     Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) :=
@@ -544,12 +568,18 @@ def Box.Insts.CoreCmpPartialEqBox.ne {T : Type} (_A : Type)
   (inst : core.cmp.PartialEq T T) (left right : T) : Result Bool :=
   inst.ne left right
 
+/-- [alloc::boxed::{impl core::fmt::Debug for alloc::boxed::Box<T>}::fmt]:
+    Rust delegates to the payload's `Debug`; Box is its payload in the
+    value-only model. -/
 @[rust_fun "alloc::boxed::{core::fmt::Debug<Box<@T>>}::fmt"]
 def Box.Insts.CoreFmtDebug.fmt {T : Type} (_A : Type)
   (inst : core.fmt.Debug T) (value : T) (formatter : core.fmt.Formatter) :
   Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) :=
   inst.fmt value formatter
 
+/-- [alloc::boxed::{impl core::convert::AsRef<T> for alloc::boxed::Box<T>}::as_ref]:
+    a shared reference to the payload, which is the payload itself in the
+    value-only model. -/
 @[rust_fun "alloc::boxed::{core::convert::AsRef<Box<@T>, @T>}::as_ref"]
 def Box.Insts.CoreConvertAsRef.as_ref {T : Type} (_A : Type) (value : T) :
   Result T :=
@@ -557,17 +587,27 @@ def Box.Insts.CoreConvertAsRef.as_ref {T : Type} (_A : Type) (value : T) :
 
 /-! ## alloc::string -/
 
+/-- [alloc::string::{impl core::cmp::PartialEq for alloc::string::String}::eq]:
+    equality of the two strings' contents. -/
 @[rust_fun "alloc::string::{core::cmp::PartialEq<alloc::string::String, alloc::string::String>}::eq"]
 def alloc.string.String.Insts.CoreCmpPartialEqString.eq (left right : String) : Result Bool :=
   ok (left == right)
 
+/-- [alloc::string::{alloc::string::String}::is_empty]: whether the string
+    holds no bytes. -/
 @[rust_fun "alloc::string::{alloc::string::String}::is_empty"]
 def alloc.string.String.is_empty (value : String) : Result Bool :=
   ok value.isEmpty
 
+/-- [alloc::string::{impl core::clone::Clone for alloc::string::String}::clone]:
+    an equal string. -/
 @[rust_fun "alloc::string::{core::clone::Clone<alloc::string::String>}::clone"]
 def alloc.string.String.Insts.CoreCloneClone.clone (value : String) : Result String := ok value
 
+/-- [alloc::string::{impl core::cmp::PartialEq<&'_0 str> for alloc::string::String}::eq]:
+    std's `impl_eq!` compares the two `str` views byte-wise. The model
+    decodes the `Str` bytes and compares the result with the `String`; bytes
+    that are not UTF-8, which a Rust `&str` cannot hold, compare unequal. -/
 @[rust_fun "alloc::string::{core::cmp::PartialEq<alloc::string::String, &'0 str>}::eq"]
 def alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq (left : String) (right : Str) :
     Result Bool :=
@@ -585,11 +625,17 @@ def alloc.string.String.Insts.CoreCmpPartialEqShared0Str.ne (left : String) (rig
   let equal ← alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq left right
   ok (!equal)
 
+/-- [alloc::string::{impl core::fmt::Debug for alloc::string::String}::fmt]: a
+    successful, formatter-preserving step in the abstract formatter model
+    (see the header). -/
 @[rust_fun "alloc::string::{core::fmt::Debug<alloc::string::String>}::fmt"]
 def alloc.string.String.Insts.CoreFmtDebug.fmt (_ : String) (formatter : core.fmt.Formatter) :
     Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) :=
   ok (.Ok (), formatter)
 
+/-- [alloc::string::{impl core::ops::deref::Deref<str> for alloc::string::String}::deref]:
+    the string's exact UTF-8 bytes as a `Str`; a string longer than
+    `usize::MAX` bytes, which no Rust allocation holds, fails. -/
 @[rust_fun "alloc::string::{core::ops::deref::Deref<alloc::string::String, str>}::deref"]
 def alloc.string.String.Insts.CoreOpsDerefDerefStr.deref (value : String) : Result Str :=
   let bytes := value.toUTF8.toList.map (fun byte =>
@@ -602,6 +648,9 @@ def alloc.string.String.Insts.CoreOpsDerefDerefStr.deref (value : String) : Resu
   else
     fail .panic
 
+/-- [alloc::string::{impl core::convert::From<&'_0 str> for alloc::string::String}::from]:
+    the string decoded from the exact bytes; bytes that are not UTF-8, which
+    a Rust `&str` cannot hold, fail. -/
 @[rust_fun "alloc::string::{core::convert::From<alloc::string::String, &'0 str>}::from"]
 def alloc.string.String.Insts.CoreConvertFromShared0Str.from (value : Str) : Result String :=
   let bytes := ByteArray.mk (value.val.map (fun byte => UInt8.ofNat byte.val)).toArray
@@ -651,7 +700,8 @@ def alloc.vec.Vec.as_slice
   {T : Type} (A : Type) : alloc.vec.Vec T → Result (Slice T) :=
   fun v => ok v.slice
 
-/- Remove the indexed value by replacing it with the final value. The owned
+/- [alloc::vec::{alloc::vec::Vec<T>}::swap_remove]:
+    remove the indexed value by replacing it with the final value. The owned
     table never calls this with an invalid index; the external model still
     retains Rust's out-of-bounds failure for fabricated inputs. -/
 set_option Aeneas.customDoElab false in
@@ -671,8 +721,10 @@ def alloc.vec.Vec.swap_remove {T : Type} (_ : Type)
   else
     fail .arrayOutOfBounds
 
-/- Preserve the relative order of all other entries when retiring observer
-    interests and queued events. Their number is bounded by the table limit. -/
+/- [alloc::vec::{alloc::vec::Vec<T>}::remove]:
+    remove the indexed value, preserving the relative order of all other
+    entries (observer interests and queued events; their number is bounded
+    by the table limit). An invalid index fails out of bounds, as in Rust. -/
 set_option Aeneas.customDoElab false in
 @[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::remove"]
 def alloc.vec.Vec.remove {T : Type} (_ : Type)
@@ -687,6 +739,8 @@ def alloc.vec.Vec.remove {T : Type} (_ : Type)
   else
     fail .arrayOutOfBounds
 
+/-- [alloc::vec::{alloc::vec::Vec<T>}::clear]: the empty vector; spare
+    capacity is not modeled. -/
 @[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::clear"]
 def alloc.vec.Vec.clear {T : Type} (_ : Type) (_ : alloc.vec.Vec T) :
     Result (alloc.vec.Vec T) := ok (.from [] (by simp))
@@ -714,6 +768,8 @@ def alloc.vec.Vec.is_empty
   {T : Type} (A : Type) : alloc.vec.Vec T → Result Bool :=
   fun v => ok (v.val.isEmpty)
 
+/-- [alloc::vec::{impl core::default::Default for alloc::vec::Vec<T>}::default]:
+    `Vec::new()`, the empty vector. -/
 @[rust_fun "alloc::vec::{core::default::Default<alloc::vec::Vec<@T>>}::default"]
 def alloc.vec.Vec.Insts.CoreDefaultDefault.default (T : Type) :
   Result (alloc.vec.Vec T) :=
