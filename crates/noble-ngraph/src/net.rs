@@ -467,7 +467,12 @@ pub struct Plan<'a> {
     pub storage_policy: Option<StoragePolicy>,
     /// Optional upper bound for per-plan scratch bytes.
     pub max_plan_scratch_bytes: Option<u64>,
-    /// Optional upper bound for additional queue entries reserved by one plan.
+    /// Optional upper bound on the live active-pair queue length plus the entries one plan
+    /// reserves. The live length (stale entries included) depends on the selected
+    /// [`Schedule`], so a cap near it can refuse with a worklist-reservation exhaustion under
+    /// one schedule and admit the same net under another. The interaction count of a complete
+    /// reduction, which interaction fuel bounds, does not depend on the schedule
+    /// ([`InteractionGraph::expected_interactions`]).
     pub max_worklist_entries: Option<u64>,
     /// Optional observer for the exact plan bytes after independent checking.
     pub plan_observer: Option<PlanObserver<'a>>,
