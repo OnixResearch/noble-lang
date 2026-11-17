@@ -304,12 +304,20 @@ fn parameter_index(
 }
 
 /// Whether a declared type parameter is spelled `spelling`.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the predicate compares a declared parameter name with a spelled payload type, and equality is symmetric, so swapped arguments give the same result."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; str PartialEq is not a stable const trait (E0658)."
+)]
 fn is_parameter(name: &str, spelling: &str) -> bool {
     name == spelling
 }
 
 /// The declared environment of the session, when both are present.
-fn session_environment(
+const fn session_environment(
     session: &Option<crate::source::declared::ModuleSession>,
 ) -> Option<&noble_kernel::contracts::Env> {
     match session {

@@ -206,6 +206,10 @@ const fn has_capacity(count: usize, capacity: Option<usize>) -> bool {
 }
 
 /// Whether `entry` is evidence for exactly this contract, statement and subject.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; derived ContractId and Subject equality are non-const trait calls."
+)]
 fn is_evidence_for(
     entry: &crate::companion::registry::EvidenceEntry,
     contract: crate::companion::registry::ContractId,
@@ -216,6 +220,10 @@ fn is_evidence_for(
 }
 
 /// Whether `observation` was recorded for `subject`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; derived SubjectDigest equality is a non-const trait call."
+)]
 fn observes(
     observation: &crate::companion::registry::Observation,
     subject: crate::companion::SubjectDigest,

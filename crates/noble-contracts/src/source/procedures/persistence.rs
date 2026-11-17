@@ -25,6 +25,7 @@ const MAGIC: [u8; 8] = *b"NPLIB002";
 
 /// A bounded JSON export; names the refusal its overflow reports.
 #[derive(Clone, Copy)]
+#[octet::sealed_enum]
 enum JsonLimit {
     Manifest,
     Metrics,
@@ -150,6 +151,10 @@ impl BoundedJson {
     }
 
     /// Pushes `value` as a JSON string, walking it one UTF-8 sequence at a time.
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; index < bytes.len() and width is at most 4, and a str length is below isize::MAX, so index + width cannot overflow usize."
+    )]
     fn push_json_string(&mut self, value: &str) {
         self.push('"');
         let bytes = value.as_bytes();
@@ -482,6 +487,10 @@ impl<'a> Reader<'a> {
     }
 }
 
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; lane < lane_domains.len() == 4, so lane * 8 + 8 is at most 32 and cannot overflow usize."
+)]
 fn digest32(domain: u64, bytes: &[u8]) -> ProcedureId {
     let mut output = [0; 32];
     let lane_domains = [
@@ -1141,6 +1150,10 @@ fn read_chunk_body_node(reader: &mut Reader<'_>) -> Result<chunks::Node, Refusal
 
 /// Reads a bounded `u32` list: the count under `count_field`, at most
 /// `maximum_items`, then each value under `item_field`.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; count_field and item_field name two distinct wire fields, and every caller passes both as literals in wire order, count before item."
+)]
 fn read_u32_list<MaximumItems>(
     reader: &mut Reader<'_>,
     count_field: &str,
@@ -1604,6 +1617,10 @@ fn read_evidence_record(reader: &mut Reader<'_>) -> Result<EvidenceRecord, Refus
 
 /// Reads a bounded toolchain name list: the count under `count_field`, then
 /// each name under `name_field`.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; count_field and name_field name two distinct wire fields, and every caller passes them as adjacent literals in wire order, count before name."
+)]
 fn read_toolchain(
     reader: &mut Reader<'_>,
     count_field: &str,
@@ -2170,6 +2187,10 @@ struct GenerationLinks {
 }
 
 /// Checks generation `index`'s links against the append-only ancestry rules.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; index is the generation's position and generation_count the loaded generation count; the sole caller check_generation passes index and generations.len() in that order."
+)]
 fn check_generation_ancestry(
     links: GenerationLinks,
     index: usize,
@@ -2248,6 +2269,10 @@ fn is_loaded_generation(generation: u32, generation_count: usize) -> bool {
 }
 
 /// Whether some adjacent pair of `records` is out of canonical retrieval order.
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; index starts at 1 and only grows, so index - 1 cannot underflow."
+)]
 fn has_unordered_records(records: &[ProcedureRecord]) -> bool {
     let mut is_unordered = false;
     let mut index = 1;
@@ -2616,6 +2641,7 @@ impl ProcedureLibrary {
 
 /// One per-arm list of the metrics record.
 #[derive(Clone, Copy)]
+#[octet::sealed_enum]
 enum ArmSection {
     Acquisition,
     Retention,
@@ -3189,6 +3215,10 @@ mod tests {
         out.push('"');
     }
 
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; this test fixture is called with base 0 or 20 only, so every offset sum is at most 120 and cannot overflow."
+    )]
     fn arm(name: &str, base: u32) -> ArmMetrics {
         ArmMetrics {
             arm: String::from(name),
@@ -3224,6 +3254,10 @@ mod tests {
     }
 
     #[test]
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; the samples are four short literals, so sample.len() * 6 + 2 stays far below usize::MAX."
+    )]
     fn json_string_byte_walk_matches_the_char_walk_at_every_bound() {
         let samples = [
             "",

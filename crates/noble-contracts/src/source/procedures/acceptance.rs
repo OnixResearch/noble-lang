@@ -285,6 +285,10 @@ pub(super) fn has_verified_proof(
 }
 
 /// The retained claim a receipt answers, found by its exact claim digest.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; a receipt citing no retained claim is stored record content refused as a typed `invalid` refusal, and a digest failure propagates; neither is an internal invariant to assert"
+)]
 fn cited_claim<'a>(
     record: &'a ProcedureRecord,
     receipt: &VerifiedEvidence,
@@ -411,6 +415,14 @@ pub(super) fn accept(
 }
 
 /// One claim of [`accept`]: keep the retained decision or ask the owner once.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; retained and newly minted receipts are pushed onto the caller's receipt list, which needs the growable Vec, not a fixed slice"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; repeated claims, retained decisions and the owner's answer are ordinary data, digest and minting failures propagate as typed refusals, and `accept` asserts the receipt bound once for all claims"
+)]
 fn accept_claim(
     verifier: Option<&OwnerVerifier>,
     record: &ProcedureRecord,
@@ -463,6 +475,10 @@ pub(super) fn confirm(
 }
 
 /// One receipt of [`confirm`]: reuse an earlier confirmation or ask the owner.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; each re-established receipt is pushed onto the caller's confirmed list, which needs the growable Vec, not a fixed slice"
+)]
 fn confirm_receipt(
     verifier: Option<&OwnerVerifier>,
     record: &ProcedureRecord,

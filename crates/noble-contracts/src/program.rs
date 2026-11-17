@@ -266,6 +266,11 @@ pub(crate) fn check_signed_structure_with_work(
     tigerstyle::too_many_parameters,
     reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the kernel checker and diagnostic construction are non-const; invalid candidates are rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn check_with_owner(
     env: &noble_kernel::contracts::Env,
     candidate: &noble_kernel::untrusted::Candidate,
@@ -302,6 +307,10 @@ fn check_with_owner(
 }
 
 /// Run the kernel checker, with the signed-structure owner when one is given.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; both kernel acceptance entry points are non-const runtime checkers."
+)]
 fn kernel_outcome(
     env: &noble_kernel::contracts::Env,
     candidate: &noble_kernel::untrusted::Candidate,
@@ -322,6 +331,10 @@ fn kernel_outcome(
 /// The frontend diagnostic for one kernel rejection: its node's source span,
 /// the constraint's message, and either the eligibility detail or the
 /// rendered stack shapes.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; building the diagnostic allocates owned messages and renders stack shapes through non-const calls."
+)]
 fn invalid_rejection(
     diagnostic: &noble_kernel::untrusted::Diagnostic,
     request: &noble_kernel::untrusted::Request,
@@ -342,6 +355,10 @@ fn invalid_rejection(
 }
 
 /// The source span of the rejected node, or `span` when it has none.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the checked offset conversion and its diagnostic are non-const."
+)]
 fn rejection_span(
     node: Option<noble_kernel::untrusted::NodeId>,
     spans: &[crate::Span],
@@ -359,7 +376,7 @@ fn rejection_span(
 }
 
 /// The frontend message for one kernel constraint.
-fn rejection_message(constraint: &noble_kernel::untrusted::Constraint) -> &'static str {
+const fn rejection_message(constraint: &noble_kernel::untrusted::Constraint) -> &'static str {
     match constraint {
         noble_kernel::untrusted::Constraint::StackJoin
         | noble_kernel::untrusted::Constraint::StackOrder => {
@@ -396,6 +413,10 @@ fn rejection_message(constraint: &noble_kernel::untrusted::Constraint) -> &'stat
 }
 
 /// Attach the word, required and actual stacks of a non-capturable value.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; this total formatter appends the fixed eligibility detail to an already constructed diagnostic and has no precondition to assert."
+)]
 fn with_eligibility(
     mut problem: crate::Diagnostic,
     definition: noble_kernel::contracts::Definition,

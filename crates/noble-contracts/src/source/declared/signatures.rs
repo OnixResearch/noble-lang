@@ -70,7 +70,7 @@ pub(super) fn families<'a>(
         modules: &session.modules,
         local: names,
         identity,
-        environment: declared_environment(session),
+        environment: session_environment(session),
     }
 }
 
@@ -79,7 +79,9 @@ type Family = (String, noble_kernel::types::NominalTypeId, [u8; 2]);
 
 /// The declared-source environment of `session`, if it has one. Selected by
 /// match: the pinned Aeneas refuses a closure that returns a borrow.
-fn declared_environment(session: &super::ModuleSession) -> Option<&noble_kernel::contracts::Env> {
+const fn session_environment(
+    session: &super::ModuleSession,
+) -> Option<&noble_kernel::contracts::Env> {
     match &session.source.declared {
         Some(context) => Some(&context.environment),
         None => None,
@@ -117,8 +119,8 @@ fn generic_payload_params(
 
 /// Append the exported generic families of one module, at most one per export.
 #[expect(
-    tigerstyle::nested_conditionals,
-    reason = "Owner: noble-contracts; the guard chain states the admission rule verbatim; extracting it would obscure the predicate it states"
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 fn module_families(
     session: &super::ModuleSession,
@@ -126,23 +128,23 @@ fn module_families(
     mut result: Vec<Family>,
 ) -> Vec<Family> {
     let module_bound = result.len().saturating_add(module.exports.len());
-    let mut export_slot = 0usize;
+    let mut entry_slot = 0usize;
     let mut is_full = false;
-    while !is_full && export_slot < module.exports.len() {
-        if let Some(id) = module.exports[export_slot].generic {
+    while !is_full && entry_slot < module.exports.len() {
+        if let Some(id) = module.exports[entry_slot].generic {
             if let Some(payload_params) = generic_payload_params(session, id) {
                 if result.len() >= module_bound {
                     is_full = true;
                 } else {
                     result.push((
-                        exported_family_name(module, &module.exports[export_slot]),
+                        exported_family_name(module, &module.exports[entry_slot]),
                         id,
                         payload_params,
                     ));
                 }
             }
         }
-        export_slot += 1;
+        entry_slot += 1;
     }
     result
 }
@@ -246,6 +248,10 @@ fn binder_list(text: &str) -> Option<&str> {
 }
 
 /// The binders of a `forall<..>` list, one per comma-separated piece as `str::split(',')`.
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; at never exceeds the text length, itself at most isize::MAX, so at + 1 cannot overflow"
+)]
 fn parse_binders(binders: &str) -> Result<Vec<(String, VariableKind)>, crate::source::Error> {
     let bytes = binders.as_bytes();
     let mut named = Ok(Vec::new());
@@ -265,6 +271,10 @@ fn parse_binders(binders: &str) -> Result<Vec<(String, VariableKind)>, crate::so
 }
 
 /// Admit one `name:kind` binder after the binders named before it.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn push_binder(
     binding: &str,
     text_len: usize,
@@ -336,6 +346,14 @@ pub(super) fn exported(signature: &Scheme, environment: &noble_kernel::contracts
 }
 
 /// One exported-interface check: reject a hidden pattern or queue its children.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; Vec push/append, Box moves and environment lookups are not const on the pinned compilers, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn exported_step(
     pattern: Pattern,
     environment: &noble_kernel::contracts::Env,
@@ -385,6 +403,10 @@ fn exported_step(
     Some(pending)
 }
 
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; the loop pushes at most one pattern per interface word, so the stack is bounded by words.len()"
+)]
 fn parse_stack(
     words: &[String],
     binders: &[(String, VariableKind)],
@@ -497,7 +519,7 @@ fn pattern(
     let mut state = attempt!(state);
     match state.values.pop() {
         Some(value) if state.values.is_empty() => Ok(value),
-        _ => Err(invalid("invalid source signature scheme")),
+        Some(_) | None => Err(invalid("invalid source signature scheme")),
     }
 }
 
@@ -510,16 +532,8 @@ fn pattern(
     reason = "Owner: noble-contracts; the guard chain states the admission rule verbatim; extracting it would obscure the predicate it states"
 )]
 #[expect(
-    tigerstyle::foreign_enum_catch_all,
-    reason = "Owner: noble-contracts; the foreign enum is matched only to translate its known variants, and a new variant is a deliberate fail-closed default"
-)]
-#[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
-)]
-#[expect(
-    tigerstyle::catch_all_on_enum,
-    reason = "Owner: noble-contracts; the catch-all is the deliberate fail-closed arm for an enum this crate does not own"
 )]
 #[expect(
     tigerstyle::function_length,
@@ -706,10 +720,6 @@ fn pattern_step(
     Ok(state)
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
-)]
 /// A bare local schema name or an exact exported `module@version.Name`
 /// resolves only to an already registered nominal declaration.
 fn named_nominal(
@@ -736,10 +746,6 @@ fn named_nominal(
     exported_nominal(word, families, environment)
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
-)]
 fn exported_nominal(
     word: &str,
     families: FamilyView<'_>,
@@ -809,6 +815,10 @@ struct Delimited {
 }
 
 /// Classify the byte of `word` at `at`: track nesting or cut a top-level part.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn delimited_step(
     word: &str,
     separator: u8,
@@ -982,6 +992,10 @@ mod tests {
         assert_eq!(error.message, "unregistered or duplicate callable effect");
     }
 
+    #[expect(
+        tigerstyle::unbounded_collection_growth,
+        reason = "Owner: noble-contracts; the test helper collects one span per definition of a fixed literal module"
+    )]
     fn definition_spans(source: &[u8]) -> Vec<crate::Span> {
         let parsed = super::super::parsing::parse(source, crate::Limits::default(), None)
             .expect("module source");
@@ -1026,6 +1040,10 @@ mod tests {
     }
 
     #[test]
+    #[expect(
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless."
+    )]
     fn definition_origin_reparse_binds_one_definition_and_refuses_repeats() {
         let limits = crate::Limits::default();
         let source: &[u8] = b"module m@1 [ def f [ 1 ] def g [ 2 ] def g [ 3 ] ]";

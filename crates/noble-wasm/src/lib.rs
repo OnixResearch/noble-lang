@@ -80,26 +80,6 @@ pub(crate) mod scan {
         }
     }
 
-    /// The first element satisfying `predicate`, mutably, as
-    /// `items.iter_mut().find(..)`.
-    pub(crate) fn find_first_mut<T>(
-        items: &mut [T],
-        mut predicate: impl FnMut(&T) -> bool,
-    ) -> Option<&mut T> {
-        let mut index = 0;
-        let mut found = None;
-        while found.is_none() && index < items.len() {
-            if predicate(&items[index]) {
-                found = Some(index);
-            }
-            index += 1;
-        }
-        match found {
-            Some(at) => Some(&mut items[at]),
-            None => None,
-        }
-    }
-
     #[cfg(test)]
     mod tests {
         #[test]
@@ -114,12 +94,6 @@ pub(crate) mod scan {
             assert!(core::ptr::eq(found.unwrap_or(&0), &items[1]));
             assert_eq!(visited, [3, 5]);
             assert_eq!(super::find_first(&items, |item| *item == 9), None);
-            let mut mutable = items;
-            if let Some(item) = super::find_first_mut(&mut mutable, |item| *item == 5) {
-                *item = 7;
-            }
-            assert_eq!(mutable, [3, 7, 4, 5, 6]);
-            assert!(super::find_first_mut(&mut mutable, |item| *item == 9).is_none());
         }
     }
 }

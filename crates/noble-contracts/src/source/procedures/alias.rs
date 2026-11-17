@@ -212,6 +212,14 @@ fn product_powers(left: &Monomial, right: &Monomial) -> Result<[u8; MAX_ALIAS_IN
 }
 
 /// One exponent of [`product_powers`], added to the running total `degree`.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; exponent overflow and the degree bound depend on the submitted recipe and are refused as typed `exhausted` refusals, not asserted"
+)]
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the two exponents are only added, so swapping them cannot change the result"
+)]
 fn product_exponent(left: u8, right: u8, degree: &mut u16) -> Result<u8, Refusal> {
     let next = u16::from(left)
         .checked_add(u16::from(right))
@@ -521,6 +529,10 @@ fn verify_record(records: &[ProcedureRecord], record: &ProcedureRecord) -> Resul
     verify_pair(record, alias, target, certificate)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; a missing, altered or repeated own exact-pair claim is submitted record content refused as a typed `invalid` refusal, not an internal invariant"
+)]
 fn verify_evidence(record: &ProcedureRecord, alias: &Alias) -> Result<(), Refusal> {
     let evidence = alias.evidence(record.procedure_id);
     let mut first_own = None;

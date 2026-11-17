@@ -145,13 +145,13 @@ fn scalar_operations(
         attempt!(super::fragment(out, I64_LESS));
     }
     if plan.has_core_emit {
-        attempt!(core_emit(out, plan));
+        attempt!(core_text_output(out, plan));
     }
     Ok(())
 }
 
-/// The Core host emit entry.
-fn core_emit(
+/// The Core host emit entry, which hands one Text value to the host.
+fn core_text_output(
     out: &mut crate::output::Buffer,
     plan: &super::super::super::plan::Layout,
 ) -> Result<(), crate::Diagnostic> {

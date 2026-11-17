@@ -528,6 +528,10 @@ fn matching_resource(
 }
 
 /// Whether `resource` is named `identity`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String content equality is a non-const trait call."
+)]
 fn has_identity(resource: &Resource, identity: &str) -> bool {
     resource.identity == identity
 }
@@ -620,6 +624,8 @@ mod tests {
         expected.extend_from_slice(b"ns:pkg/w@1.0.0");
         expected.push(0);
         expected.extend_from_slice(b"xy");
-        assert_eq!(world.build_context(), expected);
+        let context = world.build_context();
+        assert_eq!(context.len(), expected.len());
+        assert_eq!(context, expected);
     }
 }

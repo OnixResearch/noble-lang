@@ -562,7 +562,7 @@ impl super::ModuleSession {
             }
         };
         if checked.len() != batch.obligations.len()
-            || source_claims_differ(&checked, &source_checked)
+            || claims_differ(&checked, &source_checked)
             || results_differ(&checked, &batch.obligations)
         {
             return (
@@ -831,7 +831,7 @@ fn charge_obligation(
     obligation: &crate::intrinsic::ProofObligation,
     remaining: Option<(usize, usize)>,
 ) -> Option<(usize, usize)> {
-    let mut charged = charge_batch_source(batch, remaining);
+    let mut charged = charge_batch_bytes(batch, remaining);
     let mut dependency_at = 0usize;
     while charged.is_some() && dependency_at < batch.dependencies.len() {
         let imported = &batch.dependencies[dependency_at];
@@ -863,7 +863,7 @@ fn charge_if_used(
 }
 
 /// Charges the batch source bytes and one node for an obligation.
-fn charge_batch_source(
+fn charge_batch_bytes(
     batch: &crate::intrinsic::ProofBatch,
     remaining: Option<(usize, usize)>,
 ) -> Option<(usize, usize)> {
@@ -876,7 +876,7 @@ fn charge_batch_source(
 
 /// Whether a host result's claim or term differs from its source-checked
 /// counterpart, over the shorter of the two lists.
-fn source_claims_differ(
+fn claims_differ(
     checked: &[crate::intrinsic::CheckedProof],
     source_checked: &[crate::intrinsic::CheckedProof],
 ) -> bool {
@@ -1229,6 +1229,10 @@ mod tests {
         tigerstyle::nested_conditionals,
         reason = "Owner: noble-maintainers; test harness: the reference walk is the pre-extraction body verbatim."
     )]
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the reference walk keeps the positional (dependency, remaining_bytes, remaining_nodes) signature of charge_dependency, which every comparison calls with the same arguments"
+    )]
     fn queue_charge(
         dependency: &crate::intrinsic::ProofDependency,
         remaining_bytes: usize,
@@ -1271,6 +1275,10 @@ mod tests {
         Some((bytes, nodes))
     }
 
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-contracts; the test oracle sums each fixture tree by structural recursion, independent of the walk under test; the deepest fixture is the 201-proof chain"
+    )]
     fn totals(dependency: &crate::intrinsic::ProofDependency) -> (usize, usize) {
         let mut bytes = dependency.source.len();
         let mut nodes = 1usize;
@@ -1282,6 +1290,10 @@ mod tests {
         (bytes, nodes)
     }
 
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; fan_out is zero when depth is zero, so the closure computing depth - 1 runs only for a positive depth"
+    )]
     fn generated(seed: &mut u64, depth: u32) -> crate::intrinsic::ProofDependency {
         *seed = seed
             .wrapping_mul(6_364_136_223_846_793_005)
@@ -1296,6 +1308,14 @@ mod tests {
         proof("g", source_len, children)
     }
 
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; the single assert_eq runs inside the shape, byte-budget and node-budget loops and compares both walks for every generated case"
+    )]
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; every fixture tree has at most 341 proofs of at most 6 source bytes each, so the boundary budgets derived from its totals stay in the low thousands"
+    )]
     #[test]
     fn recursive_dependency_charge_matches_the_queue_walk() {
         let leaves = |count: usize, len: usize| {
@@ -1359,6 +1379,10 @@ mod tests {
         }
     }
 
+    #[expect(
+        tigerstyle::function_length,
+        reason = "Owner: noble-contracts; the test builds one fixture of 40 imported and 30 local proofs with a term naming two thirds of them, then checks the charge, the copy order and the refusal against that same fixture"
+    )]
     #[test]
     fn dependency_selection_keeps_candidate_order_past_the_inline_slots() {
         let names = |prefix: &str, count: usize| {

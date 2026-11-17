@@ -74,6 +74,10 @@ pub(super) fn imports(
 
 /// `saved` followed by the binding of the session alias at `alias_at` when it
 /// is settled and its module is retained; an alias without a module fails.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; indexing the alias Vec, the Vec and String derefs, retained_import and the mismatch diagnostic are not const (E0277/E0015)."
+)]
 fn session_import(
     session: &crate::source::declared::ModuleSession,
     alias_at: usize,
@@ -192,6 +196,10 @@ pub(super) fn trace(
 
 /// The span of the subject definition's source tree, or an empty span when
 /// the index resolves to no definition.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; resolved_definition, a TryFrom conversion and Vec lookup, is not const (E0015)."
+)]
 fn root_span(session: &crate::source::declared::ModuleSession, index: u32) -> crate::Span {
     match super::resolved_definition(session, index) {
         Some(definition) => definition.tree.span,
@@ -200,6 +208,14 @@ fn root_span(session: &crate::source::declared::ModuleSession, index: u32) -> cr
 }
 
 /// The single body node of a named contract root and the subject it invokes.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; indexing the candidate body Vec, the node Vec deref into node_at and the mismatch diagnostics are not const (E0277/E0015)."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn root_invocation(
     submission: &noble_kernel::execution::Submission,
     span: crate::Span,
@@ -264,6 +280,10 @@ fn has_ordered_slots(definitions: &[noble_kernel::execution::Definition]) -> boo
 #[expect(
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
 /// Checks one named use against its accepted specialization and original
 /// source body. Returns the specialization's position, its origin and the
@@ -395,6 +415,14 @@ fn trace_body(
 
 /// Checks body node `position` against its accepted node and pushes the use
 /// a named call makes.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; Vec indexing, the closure map_err, Lit PartialEq and Vec::push are not const (E0277/E0015)."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn trace_node(
     walk: BodyTrace<'_>,
     position: usize,
@@ -461,6 +489,10 @@ fn same_operation(
 
 /// The absolute span of a named call: it must lie inside the original
 /// definition body and inside the retained module source.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn occurrence_span(
     original: super::SourceOrigin<'_>,
     relative: crate::Span,

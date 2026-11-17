@@ -47,6 +47,9 @@ pub enum SourceProofRefusal {
 pub struct CheckedSelectedTarget<'a> {
     id: CheckedDefinitionId,
     generation: u64,
+    // Renamed for extraction only: a Lean field named `source` would shadow the
+    // `source.*` namespace of later field types; the Rust name is unchanged.
+    #[charon::rename("source_bytes")]
     source: &'a [u8],
     submission: &'a noble_kernel::execution::Submission,
     definition: &'a noble_kernel::execution::Definition,
@@ -399,7 +402,7 @@ fn maps_quotation(
 ) -> bool {
     let count = source_body.len().min(body.len());
     let mut at = 0;
-    while at < count && is_lexical_source(candidate_to_lexical, body[at], source_body[at]) {
+    while at < count && is_lexical_origin(candidate_to_lexical, body[at], source_body[at]) {
         at += 1;
     }
     at == count
@@ -543,7 +546,7 @@ const fn is_bracketed(bytes: &[u8]) -> bool {
     tigerstyle::platform_dependent_cast,
     reason = "Owner: noble-contracts; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless."
 )]
-fn is_lexical_source(
+fn is_lexical_origin(
     candidate_to_lexical: &[u32],
     node: noble_kernel::untrusted::NodeId,
     lexical: u32,

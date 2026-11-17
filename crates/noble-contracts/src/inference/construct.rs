@@ -4,6 +4,10 @@ impl super::Arena {
         reason = "Owner: noble-maintainers; child types are built by direct post-order recursion, each step charged to the work meter in the original worklist order; a borrowed work stack is untranslatable by the pinned Aeneas."
     )]
     /// Charge one step, then build `ty` after its children and push its term.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express."
+    )]
     pub(super) fn build_ty(
         &mut self,
         ty: &noble_kernel::types::Ty,
@@ -122,6 +126,10 @@ impl super::Arena {
         reason = "Owner: noble-maintainers; child patterns are built by direct post-order recursion, each step charged to the work meter in the original worklist order; a borrowed work stack is untranslatable by the pinned Aeneas."
     )]
     /// Charge one step, then build `pattern` after its children and push its term.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express."
+    )]
     pub(super) fn build_pattern(
         &mut self,
         pattern: &noble_kernel::shapes::Pattern,

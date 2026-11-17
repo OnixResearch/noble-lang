@@ -2167,6 +2167,10 @@ mod symbolic_owner_tests {
     /// The closure walk draws one unit of the shared request budget per node
     /// of each visited definition, then one per reached definition row: every
     /// smaller budget refuses as exhaustion and the exact budget is spent.
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; the fixture module has two definitions of a few nodes each, so its node count plus its definition rows is a small number far below usize::MAX"
+    )]
     #[test]
     fn closure_walk_charges_each_visited_node_and_reached_row() {
         let limits = crate::Limits {
@@ -2199,14 +2203,12 @@ mod symbolic_owner_tests {
         };
         assert!(charge > 2, "both definitions have nodes");
         for budget in 0..=charge {
-            let pool = alloc::rc::Rc::new(core::cell::Cell::new(budget));
-            prepared
-                .staged
-                .source
-                .declared
-                .as_mut()
-                .expect("declared context")
-                .request_work = Some(alloc::rc::Rc::clone(&pool));
+            prepared.staged.share_request_work(budget);
+            assert_eq!(
+                prepared.staged.remaining_request_work(),
+                Some(budget),
+                "the declared context shares the request budget"
+            );
             let walked = prepared.checked_program_closure("root");
             if budget < charge {
                 assert_eq!(
@@ -2216,7 +2218,11 @@ mod symbolic_owner_tests {
                 );
             } else {
                 assert_eq!(walked.map(|closure| closure.len()), Ok(2));
-                assert_eq!(pool.get(), 0, "the exact budget is spent");
+                assert_eq!(
+                    prepared.staged.remaining_request_work(),
+                    Some(0),
+                    "the exact budget is spent"
+                );
             }
         }
     }

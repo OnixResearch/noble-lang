@@ -241,7 +241,7 @@ impl<'a> Schedule<'a> {
 }
 
 /// Whether the session's declared source selects its signed self owner.
-fn is_signed_self(session: &Option<crate::source::declared::ModuleSession>) -> bool {
+const fn is_signed_self(session: &Option<crate::source::declared::ModuleSession>) -> bool {
     match session {
         Some(session) => match &session.source.declared {
             Some(context) => context.signed_self,
@@ -252,6 +252,10 @@ fn is_signed_self(session: &Option<crate::source::declared::ModuleSession>) -> b
 }
 
 /// Whether the pending definition at `position` has a source signature.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; crate::scan::find_first and its closure predicate are not const (E0015)."
+)]
 fn is_signed_definition(
     pending: &[Option<super::Definition>],
     signatures: &[(alloc::string::String, noble_kernel::words::Scheme)],

@@ -35,7 +35,7 @@ pub(super) fn write(
     plan: &super::super::plan::Layout,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(module\n(type $entry (func (param i32)))\n"));
-    attempt!(memory_imports(out, plan));
+    attempt!(memory_and_table(out, plan));
     attempt!(host_functions(out, plan));
     attempt!(globals(out));
     attempt!(module_globals(out, plan));
@@ -46,7 +46,7 @@ pub(super) fn write(
 }
 
 /// The memory and table imports, plus the live-slot host imports.
-fn memory_imports(
+fn memory_and_table(
     out: &mut crate::output::Buffer,
     plan: &super::super::plan::Layout,
 ) -> Result<(), crate::Diagnostic> {
@@ -272,9 +272,5 @@ pub(super) fn bridge_runtime(
     fragment(out, SOURCE)
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; immutable manifest-root runtime fragments are appended in their required order to the private bounded sink; output exhaustion propagates a diagnostic and no producer invariant needs an assertion."
-)]
 #[path = "imports/entry.rs"]
 pub(in crate::source::emit) mod entry;

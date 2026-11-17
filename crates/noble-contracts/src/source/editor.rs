@@ -95,7 +95,11 @@ fn frame_nodes<'a>(nodes: &'a [Node], path: &[Frame]) -> Option<&'a [Node]> {
         None => Some(nodes),
         Some((frame, rest)) => match nodes.get(frame.index as usize) {
             Some(Node::Quotation(children)) => frame_nodes(children, rest),
-            _ => None,
+            Some(Node::Integer(_)) => None,
+            Some(Node::Boolean(_)) => None,
+            Some(Node::Word(_)) => None,
+            Some(Node::Hole) => None,
+            None => None,
         },
     }
 }

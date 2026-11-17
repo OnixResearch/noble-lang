@@ -122,6 +122,10 @@ fn any_type(
 }
 
 /// Whether a parameter or result of `operation` is a WIT u64.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the type scan calls a generic closure predicate, which const fn cannot do."
+)]
 fn uses_checked_u64(operation: &crate::component::Operation) -> bool {
     any_type(&operation.parameters, |ty| {
         ty == crate::component::Type::CheckedU64
@@ -156,6 +160,10 @@ fn any_unsupported_checked_export(
 }
 
 /// Whether `operation` uses a WIT u64 outside a synchronous scalar `u64 -> u64` shape.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the type scans call a generic closure predicate, which const fn cannot do."
+)]
 fn is_unsupported_checked_export(
     is_async_world: bool,
     operation: &crate::component::Operation,
@@ -191,6 +199,10 @@ fn is_duplicate_operation(
 }
 
 /// Whether two operations share a generated word or an export name.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; String content equality is a non-const trait call."
+)]
 fn collides(old: &crate::component::Operation, operation: &crate::component::Operation) -> bool {
     old.word == operation.word || old.export_name == operation.export_name
 }
@@ -209,6 +221,10 @@ fn interface_position(interfaces: &[super::Interface], name: &str) -> Option<usi
 }
 
 /// Whether `interface` is named `name`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; String content equality is a non-const trait call."
+)]
 fn is_interface_named(interface: &super::Interface, name: &str) -> bool {
     interface.name == name
 }

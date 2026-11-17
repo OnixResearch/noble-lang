@@ -138,6 +138,14 @@ pub(super) fn stage(request: Request<'_>) -> Result<Staged, crate::source::Error
 }
 
 /// Binds and prepares one contract as its staged logical goal.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; binding the subject, cloning names and forms, Vec derefs and the closure map_err calls are not const (E0277/E0015)."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn stage_contract(
     request: Request<'_>,
     contract: &crate::source::declared::parsing::Contract,
@@ -202,6 +210,10 @@ fn exported_proof(
 
 /// Resolves one proof's claim and `use` references against the staged
 /// contracts and the proofs before it.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn stage_proof(
     request: Request<'_>,
     contracts: &[crate::source::declared::LogicalContract],
@@ -257,6 +269,14 @@ fn stage_proof(
     tigerstyle::numeric_units,
     reason = "Owner: noble-contracts; the constant counts source elements, and its unit is stated by the surrounding type and call sites"
 )]
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; `total` (bytes counted so far) and `limit` (the snapshot byte budget) keep this order through the stage loop and the mutually recursive dependency_bytes/nested_dependency_bytes pair."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the Vec deref of the nested dependencies, the declared::error diagnostics and the call into nested_dependency_bytes are not const (E0277/E0015)."
+)]
 /// Adds one dependency snapshot's bytes to `total`, then those of its own
 /// dependencies in the order the former work stack popped them.
 fn dependency_bytes(
@@ -279,6 +299,14 @@ fn dependency_bytes(
     nested_dependency_bytes(&dependency.dependencies, total, limit)
 }
 
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; `total` (bytes counted so far) and `limit` (the snapshot byte budget) keep this order through the stage loop and the mutually recursive dependency_bytes/nested_dependency_bytes pair."
+)]
+#[expect(
+    tigerstyle::numeric_units,
+    reason = "Owner: noble-contracts; `limit` is the proof dependency snapshot byte budget (Limits::bytes widened to usize), in the same byte unit as `total`."
+)]
 /// Adds the snapshot bytes of `dependencies` to `total`, the last listed
 /// first, as the former work stack popped them.
 fn nested_dependency_bytes(
@@ -322,6 +350,10 @@ fn pure_type(ty: &noble_kernel::types::Ty) -> bool {
 #[expect(
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; each call visits a child of a parsed type and spends one of at most 256 visits, and plain recursion keeps a borrowed work stack out of the pinned extraction"
+)]
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; `pending` (stack slots held below the node) and `remaining` (visits left) are the two counters of the former explicit stack, threaded positionally through pure_type and the three recursive calls."
 )]
 /// Visits `ty`, then its children left first, as the former explicit stack
 /// did: `pending` right siblings wait below it and every visit spends one of
@@ -459,11 +491,22 @@ fn source_origin<'a>(
 struct OwnerModule<'a> {
     name: &'a str,
     version: u32,
+    /// Renamed in the extraction only: a Lean field named `source` would
+    /// shadow the `source.*` namespace of the later `spans` field type.
+    #[charon::rename("source_bytes")]
     source: &'a [u8],
     spans: &'a [crate::source::declared::DefinitionSource],
 }
 
 /// The module `owner`: the module being registered or an already registered one.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the Vec deref into crate::scan::find_first, its closure predicate and the declared::error diagnostic are not const (E0277/E0015)."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn origin_module(
     request: Request<'_>,
     owner: u64,
@@ -491,6 +534,14 @@ fn origin_module(
 }
 
 /// The one original definition span named `name`, with its lexical ordinal.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; `first` is the index of a matching element of `spans`, so `first + 1` is at most `spans.len()` and cannot overflow."
+)]
 fn definition_span<'a>(
     spans: &'a [crate::source::declared::DefinitionSource],
     name: &str,
@@ -680,6 +731,14 @@ fn bind_subject(
 
 /// The byte offset of the definition name in a contract subject: just past a
 /// `scope.` qualifier that names the module being registered, otherwise 0.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; crate::scan::split_once_byte and is_current are not const (E0015)."
+)]
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; `scope` is the text before a `.` byte of `subject`, so `scope.len() + 1` is at most `subject.len()` and cannot overflow."
+)]
 fn subject_name_start(request: Request<'_>, subject: &str) -> usize {
     let Some((scope, _)) = crate::scan::split_once_byte(subject, b'.') else {
         return 0;
@@ -922,6 +981,14 @@ fn resolve_uses(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-contracts; imported proof dependencies are appended with Vec::push, so the walk needs the growable vector."
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; Vec deref and indexing of the form items, the closure depth filter and the walk through visit_uses are not const (E0277/E0015)."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 /// Visits one form in pre-order: resolves a `(use name)` in place, or visits
 /// the items of any other list, which `depth` lists enclose.
 fn visit_use(
@@ -989,6 +1056,10 @@ fn visit_uses(
 }
 
 /// Whether a list is a `(use ...)` form: its first item is the atom `use`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; comparing the head atom uses str PartialEq, which is not a stable const trait (E0658)."
+)]
 fn is_use_list(items: &[crate::intrinsic::Form]) -> bool {
     match items.first() {
         Some(crate::intrinsic::Form {
@@ -1006,6 +1077,14 @@ fn is_use_list(items: &[crate::intrinsic::Form]) -> bool {
 #[expect(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-contracts; the qualifier is removed from the owned atom in place and dependencies are appended with Vec::push, so both need the growable types."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String deref and Clone, the Vec derefs into crate::scan::find_first and String::replace_range are not const (E0277/E0015)."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
 /// Resolves one `use` reference: a current-module proof keeps only its local
 /// name, in place, and an imported proof records its dependency once.
@@ -1060,6 +1139,10 @@ fn resolve_reference(
 #[cfg(test)]
 mod tests {
     /// The explicit-stack walk `pure_subtree` replaced, kept as the oracle.
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; test oracle: the former explicit-stack walk kept as it was, checked against pure_type by the test that calls it."
+    )]
     fn former_pure_type(ty: &noble_kernel::types::Ty) -> bool {
         let mut pending: [Option<&noble_kernel::types::Ty>; super::TYPE_STACK] =
             [None; super::TYPE_STACK];
@@ -1153,6 +1236,10 @@ mod tests {
     }
 
     /// The work-stack byte count `dependency_bytes` replaced, kept as the oracle.
+    #[expect(
+        tigerstyle::numeric_units,
+        reason = "Owner: noble-contracts; test oracle: `limit` is the proof dependency snapshot byte budget, in the same byte unit as dependency_bytes."
+    )]
     fn former_dependency_bytes(
         dependency: &crate::intrinsic::ProofDependency,
         limit: usize,
@@ -1171,6 +1258,10 @@ mod tests {
         Ok(total)
     }
 
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; test fixture constructor: the built dependency is data, checked by the tests that consume it."
+    )]
     fn dependency(
         bytes: usize,
         dependencies: alloc::vec::Vec<crate::intrinsic::ProofDependency>,
@@ -1255,6 +1346,10 @@ mod tests {
         }
     }
 
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; `at` is a position in `items[from..]`, so `at + from` is below `items.len()` and cannot overflow."
+    )]
     #[test]
     fn find_last_and_position_from_match_the_standard_searches() {
         let items = [3u32, 5, 4, 5, 6];

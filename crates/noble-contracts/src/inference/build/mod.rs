@@ -102,8 +102,8 @@ impl super::Arena {
     }
 
     #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; joining charges work, pops built operands and allocates the joined term, with typed internal errors for missing operands."
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; joining pops the built operands from and pushes the joined term onto the build's growable value stack, which a slice cannot express."
     )]
     /// Charge one step, pop the operands of `join` and push its new term.
     pub(super) fn join(
@@ -220,6 +220,10 @@ fn require_id(value: Option<u32>, span: crate::Span) -> Result<u32, crate::Diagn
 }
 
 /// The single built root left on the value stack.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; popping the owned value stack and dropping it are non-const."
+)]
 fn built(mut values: alloc::vec::Vec<u32>, span: crate::Span) -> Result<u32, crate::Diagnostic> {
     if values.len() != 1 {
         return Err(crate::internal(span));

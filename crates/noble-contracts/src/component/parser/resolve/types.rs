@@ -58,8 +58,8 @@ pub(super) fn resource(
 
 #[expect(
     tigerstyle::ambiguous_params,
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; this private resolver's interface and member name are separately named at both callsites and matched against their corresponding fields; iterator search, string equality and owned diagnostics are non-const."
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; this private resolver's interface and member name are separately named at both callsites and matched against their corresponding fields; an unknown resource is ordinary malformed WIT and returns a typed error rather than an assertion failure."
 )]
 fn scoped_resource(
     resources: &[crate::component::Resource],
@@ -90,10 +90,6 @@ fn scoped_resource(
     }
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; the finite immutable use scan returns an explicit ambiguity diagnostic rather than asserting namespace uniqueness on parsed input."
-)]
 fn use_index(
     selected: &super::super::RawWorld,
     name: &str,
@@ -119,7 +115,8 @@ fn use_index(
 
 #[expect(
     tigerstyle::ambiguous_params,
-    reason = "Owner: noble-maintainers; the interface and member name are matched against their corresponding fields, mirroring scoped_resource."
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the interface and member name are matched against their corresponding fields, mirroring scoped_resource; String content equality is non-const."
 )]
 /// Whether `resource` is the member `name` of `interface`.
 fn is_scoped_resource(resource: &crate::component::Resource, interface: &str, name: &str) -> bool {
@@ -127,6 +124,10 @@ fn is_scoped_resource(resource: &crate::component::Resource, interface: &str, na
 }
 
 /// Whether `item` is a `use` of the resource `name`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; String content equality is a non-const trait call."
+)]
 fn is_named_use(item: &super::super::Item, name: &str) -> bool {
     match item {
         super::super::Item::Use(usage) => usage.name == name,

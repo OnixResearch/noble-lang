@@ -172,6 +172,10 @@ fn contains_exported_word(exports: &[crate::source::declared::Export], word: &st
     has_word
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; crate::scan::find_first and its closure predicate are not const (E0015)."
+)]
 fn contains_word(words: &[(alloc::string::String, crate::source::Target)], word: &str) -> bool {
     crate::scan::find_first(words, |(name, _)| name.as_str() == word).is_some()
 }

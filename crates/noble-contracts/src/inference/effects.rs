@@ -58,6 +58,10 @@ impl super::Arena {
     }
 
     /// Charge one unit of work, then read the effect stored at `id`.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; metering and checked offset conversion are non-const and refusals construct owned diagnostics."
+    )]
     fn charged_effect(
         &self,
         id: u32,

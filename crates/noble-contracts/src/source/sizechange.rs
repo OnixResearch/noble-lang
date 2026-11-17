@@ -151,6 +151,9 @@ impl MeasureIndex {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct GraphEdge {
     /// The old measure's row.
+    // A Lean field named `source` would shadow the `source.*` namespace of the
+    // next field's type in the extracted structure; the Rust name is unchanged.
+    #[charon::rename("source_measure")]
     pub source: MeasureIndex,
     /// The new measure's column.
     pub target: MeasureIndex,

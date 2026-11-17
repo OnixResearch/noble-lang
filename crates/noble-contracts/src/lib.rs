@@ -53,6 +53,10 @@ pub(crate) mod scan {
 
     /// The first element satisfying `predicate`, mutably, as
     /// `items.iter_mut().find(..)`.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; the helper replaces `iter_mut().find(..)`: lending the caller a mutable element of its own slice is the operation, and the helper itself writes nothing"
+    )]
     pub(crate) fn find_first_mut<T>(
         items: &mut [T],
         mut predicate: impl FnMut(&T) -> bool,
@@ -107,6 +111,10 @@ pub(crate) mod scan {
     }
 
     /// `text.strip_prefix(prefix)` for a string prefix.
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the (text, prefix) order is that of the `str::strip_prefix` call each use replaces"
+    )]
     pub(crate) fn strip_prefix_str<'a>(text: &'a str, prefix: &str) -> Option<&'a str> {
         if text.as_bytes().starts_with(prefix.as_bytes()) {
             text.get(prefix.len()..)
@@ -116,6 +124,14 @@ pub(crate) mod scan {
     }
 
     /// `text.strip_suffix(suffix)` for a string suffix.
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the (text, suffix) order is that of the `str::strip_suffix` call each use replaces"
+    )]
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; the subtraction runs only after `ends_with` proved `suffix.len() <= text.len()`"
+    )]
     pub(crate) fn strip_suffix_str<'a>(text: &'a str, suffix: &str) -> Option<&'a str> {
         if text.as_bytes().ends_with(suffix.as_bytes()) {
             text.get(..text.len() - suffix.len())
@@ -126,6 +142,18 @@ pub(crate) mod scan {
 
     /// The text before and after `width` bytes matched at byte offset `at`.
     /// The match is a whole UTF-8 sequence, so both slices always exist.
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; `at` and `width` are the offset and length of the match, in the order the callers found them"
+    )]
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; `at` indexes a byte of the text and `width` is the one-byte separator, so the sum is at most the text length"
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; `str::get` with a range is not callable in a const context"
+    )]
     fn split_around(text: &str, at: usize, width: usize) -> Option<(&str, &str)> {
         match (text.get(..at), text.get(at + width..)) {
             (Some(before), Some(after)) => Some((before, after)),

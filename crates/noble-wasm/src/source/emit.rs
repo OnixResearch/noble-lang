@@ -499,7 +499,7 @@ fn type_directed_report(
 }
 
 #[cfg(test)]
-mod split_tests {
+mod separator_tests {
     #[test]
     fn split_once_bytes_matches_str_split_once() {
         let cases = [

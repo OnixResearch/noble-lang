@@ -202,6 +202,10 @@ impl Op {
 }
 
 /// Whether `word` is exactly the byte spelling `spelling`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; byte-spelling comparison uses slice equality, which is not a stable const trait"
+)]
 fn spells(word: &[u8], spelling: &[u8]) -> bool {
     *word == *spelling
 }
@@ -265,6 +269,7 @@ pub struct Envelope {
 #[derive(Clone, Debug)]
 pub struct Entry {
     envelope: Envelope,
+    #[charon::rename("source_bytes")]
     source: alloc::vec::Vec<u8>,
     interface: Interface,
     expanded_nodes: u32,
@@ -1004,7 +1009,15 @@ struct ExpansionWalk {
 }
 
 /// The envelope and reference list one expansion frame walks.
-fn segment_source<'a>(
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; segment lookups use the slice `get`, which is not a stable const fn"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; a missing owner entry or quotation node is returned as `None`, which the expansion turns into a typed refusal, so there is no invariant here to assert"
+)]
+fn segment_body<'a>(
     entries: &'a [Entry],
     root: &'a Envelope,
     segment: &Segment,
@@ -1020,7 +1033,14 @@ fn segment_source<'a>(
         None => Some((owner, owner.body.entry.as_slice())),
         Some(node) => match owner.body.nodes.get(node) {
             Some(Node::Quotation { body, .. }) => Some((owner, body.as_slice())),
-            _ => None,
+            Some(
+                Node::I64(_)
+                | Node::Bool(_)
+                | Node::Capture { .. }
+                | Node::Operation { .. }
+                | Node::Invoke { .. },
+            )
+            | None => None,
         },
     }
 }
@@ -1090,7 +1110,7 @@ fn expand_step(
             "expansion lost its frame",
         ));
     };
-    let Some((owner, body)) = segment_source(entries, envelope, frame) else {
+    let Some((owner, body)) = segment_body(entries, envelope, frame) else {
         return Err(Refusal::new(
             Class::Internal,
             at,
@@ -1332,6 +1352,10 @@ struct Emission {
 }
 
 /// Append one element's canonical spelling and its separator.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; emission appends tokens to the runtime output Vec"
+)]
 fn emit_element(emission: &mut Emission, element: &Element, at: &Location) -> Result<(), Refusal> {
     debug_assert!(encoded_len(emission.out.len()) <= u64::from(MAX_SOURCE_BYTES));
     match element {
@@ -1410,6 +1434,10 @@ fn integer_token_len(value: i64) -> u64 {
 }
 
 /// The canonical token bytes of one element; the hole contributes none.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; integer token widths come from the non-const digit counter"
+)]
 fn element_token_len(element: &Element) -> u64 {
     match element {
         Element::I64(value) => integer_token_len(*value),
@@ -1473,6 +1501,10 @@ impl Replay {
     }
 
     /// Whether the recorded boundary stack is exactly `stack`.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the recorded stack is compared with slice equality, which is not a stable const trait"
+    )]
     fn marks(&self, stack: &[Ty]) -> bool {
         match &self.mark {
             Some(mark) => *mark.as_slice() == *stack,
@@ -1731,6 +1763,10 @@ fn witness_matches(witness: Option<&Instantiation>, expected: &[(u16, Ty)]) -> b
 }
 
 /// Whether the witness binding at `index` binds the expected value variable and type.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; witness lookups use the non-const slice `get` and derived type equality"
+)]
 fn binding_matches_at(bindings: &[Binding], expected: &[(u16, Ty)], index: usize) -> bool {
     match (bindings.get(index), expected.get(index)) {
         (Some(binding), Some((variable, ty))) => {
@@ -1982,6 +2018,10 @@ pub struct CandidateScoreResponse {
 impl PartialEq for CandidateScoreResponse {
     /// Field-wise equality exactly as derived; the score compares through
     /// `f32`'s `PartialEq`, which Aeneas translates (a raw float `==` it does not).
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; a `PartialEq` impl method cannot be const because `PartialEq` is not a stable const trait"
+    )]
     fn eq(&self, other: &Self) -> bool {
         self.request_identity == other.request_identity
             && self.model_identity == other.model_identity
@@ -2220,6 +2260,7 @@ pub struct Equation {
 /// chunk identities and the equation it satisfies.
 #[derive(Clone, Debug)]
 pub struct Accepted {
+    #[charon::rename("source_bytes")]
     pub source: alloc::vec::Vec<u8>,
     pub candidate: noble_kernel::untrusted::Candidate,
     pub interface: Interface,
@@ -2815,6 +2856,10 @@ fn check_captures(envelope: &Envelope) -> Result<(), Refusal> {
 }
 
 /// The refusal for one capture slot that is not contiguous with a profile scalar.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; capture lookups use the non-const slice `get` and refusals allocate their message"
+)]
 fn capture_refusal(envelope: &Envelope, position: usize, at: &Location) -> Option<Refusal> {
     debug_assert!(position < envelope.captures.len());
     debug_assert!(encoded_len(envelope.captures.len()) <= u64::from(MAX_CAPTURES));
@@ -2915,6 +2960,10 @@ fn bindings_refusal(bindings: &[Binding], at: &Location) -> Option<Refusal> {
 }
 
 /// The refusal for one binding outside the profile, of the wrong kind or out of order.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; constructing a refusal allocates its message"
+)]
 fn binding_refusal(binding: &Binding, previous: Option<u16>, at: &Location) -> Option<Refusal> {
     if !profile_type(&binding.ty) {
         return Some(Refusal::new(
@@ -2979,6 +3028,10 @@ fn check_recipe(envelope: &Envelope) -> Result<(), Refusal> {
 }
 
 /// The refusal for one recipe entry reference outside the node arena.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; entry lookups use the non-const slice `get` and refusals allocate their message"
+)]
 fn recipe_entry_refusal(envelope: &Envelope, position: usize, at: &Location) -> Option<Refusal> {
     debug_assert!(position < envelope.body.entry.len());
     debug_assert!(!envelope.body.entry.is_empty());
@@ -3006,6 +3059,10 @@ fn recipe_entry_refusal(envelope: &Envelope, position: usize, at: &Location) -> 
 }
 
 /// Check one recipe node's references against its own arena position.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; node lookups use the non-const slice `get` and refusals allocate their message"
+)]
 fn check_recipe_position(
     envelope: &Envelope,
     position: usize,
@@ -3055,6 +3112,10 @@ fn references_precede(references: &[u32], boundary: usize) -> bool {
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; recipe references are untrusted and each invalid ordinal must return its located refusal instead of panicking"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; constructing a refusal allocates its message"
 )]
 fn check_recipe_node(
     envelope: &Envelope,
@@ -3181,6 +3242,10 @@ fn expected_bootstrap_targets(
 }
 
 /// The bootstrap definition one element must invoke, if it is a profile operation.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; bootstrap resolution calls the non-const program word table and refusals allocate their message"
+)]
 fn bootstrap_target(
     element: &Element,
     index: usize,
@@ -3214,6 +3279,10 @@ struct TargetWalk {
 }
 
 /// The node references one candidate target walk frame visits.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; quotation lookups use the slice `get`, which is not a stable const fn"
+)]
 fn candidate_frame_body<'a>(
     candidate: &'a noble_kernel::untrusted::Candidate,
     frame: &CandidateFrame,
@@ -3222,7 +3291,13 @@ fn candidate_frame_body<'a>(
         None => Some(candidate.body.as_slice()),
         Some(node) => match candidate.nodes.get(node) {
             Some(noble_kernel::untrusted::Node::Quotation { body, .. }) => Some(body.as_slice()),
-            _ => None,
+            Some(
+                noble_kernel::untrusted::Node::Literal { .. }
+                | noble_kernel::untrusted::Node::Invocation { .. }
+                | noble_kernel::untrusted::Node::SignedSelf { .. }
+                | noble_kernel::untrusted::Node::SlotInvoke { .. },
+            )
+            | None => None,
         },
     }
 }
@@ -3261,6 +3336,10 @@ fn check_invocation_targets(
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; source preparation output is checked with fail-closed located refusals and must not panic on malformed or adversarial parser output"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the target walk mutates its runtime frame Vec and refusals allocate their message"
 )]
 fn invocation_target_step(
     candidate: &noble_kernel::untrusted::Candidate,
@@ -3335,6 +3414,10 @@ fn invocation_target_step(
 }
 
 /// Whether the `next` expected bootstrap definition is exactly `def`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; target lookups use the non-const slice `get` and derived definition equality"
+)]
 fn is_expected_target(
     expected: &[noble_kernel::contracts::Definition],
     next: usize,
@@ -3527,6 +3610,10 @@ struct FlatRequest {
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; each call descends one quotation level of an editor tree whose depth the request checks bound, and direct recursion keeps a borrowed work stack out of the pinned Aeneas extraction"
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; editor node lookups use the slice `get`, which is not a stable const fn"
+)]
 fn editor_nodes_at<'a>(
     nodes: &'a [super::editor::Node],
     path: &[usize],
@@ -3535,7 +3622,13 @@ fn editor_nodes_at<'a>(
         None => Some(nodes),
         Some((first, rest)) => match nodes.get(*first) {
             Some(super::editor::Node::Quotation(children)) => editor_nodes_at(children, rest),
-            _ => None,
+            Some(
+                super::editor::Node::Integer(_)
+                | super::editor::Node::Boolean(_)
+                | super::editor::Node::Word(_)
+                | super::editor::Node::Hole,
+            )
+            | None => None,
         },
     }
 }
@@ -4800,6 +4893,10 @@ fn fixture_values_match_types(values: &[Scalar], expected: &[Ty]) -> bool {
 }
 
 /// Whether the scalar at `index` has exactly the expected profile type at `index`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; fixture lookups use the non-const slice `get` and derived type equality"
+)]
 fn scalar_has_type_at(values: &[Scalar], expected: &[Ty], index: usize) -> bool {
     match (values.get(index), expected.get(index)) {
         (Some(value), Some(ty)) => value.ty() == *ty,
@@ -4832,6 +4929,10 @@ fn check_fixtures(request: &Request) -> Result<(), Refusal> {
 }
 
 /// The refusal for one fixture case whose values do not match the task interface.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; fixture case lookups use the non-const slice `get` and refusals allocate their message"
+)]
 fn fixture_case_refusal(request: &Request, set: &FixtureSet, position: usize) -> Option<Refusal> {
     let Some(fixture) = set.cases.get(position) else {
         return Some(internal(
@@ -5452,6 +5553,10 @@ fn observe_candidate(
     }
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; binding an observed candidate digests its runtime identity and refusals allocate their message"
+)]
 fn candidate_binding(
     search: &Search<'_>,
     attempt: &CandidateAttempt<'_>,
@@ -5660,6 +5765,10 @@ fn order_index(order: &[u16], digit: u16) -> Option<u16> {
 /// Float literals, integer-to-float casts and the float `/` operator are
 /// outside the pinned Aeneas, so the ratio is built from exact conversions
 /// and the `Div` trait; the result is bit-identical to the cast quotient.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the ratio is built from `From` conversions and the `Div` trait, which are not stable const traits"
+)]
 fn feature_ratio(value: u64, maximum: u32) -> f32 {
     if maximum == 0 {
         f32::from(0_u8)
@@ -5708,6 +5817,10 @@ fn feature_type_count(stack: &[Ty], ty: Ty) -> u64 {
 }
 
 /// Whether two kernel types are equal.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; identity comparison uses the non-const derived type equality"
+)]
 fn is_same_type(left: &Ty, right: &Ty) -> bool {
     *left == *right
 }
@@ -5738,6 +5851,10 @@ fn feature_apply_interface(stack: &mut alloc::vec::Vec<Ty>, interface: &Interfac
 }
 
 /// Whether `stack` ends with exactly the interface inputs `inputs`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the suffix lookup uses the non-const slice `get` and slice equality"
+)]
 fn stack_ends_with(stack: &[Ty], inputs: &[Ty]) -> bool {
     match stack.get(stack.len().saturating_sub(inputs.len())..) {
         Some(suffix) => *suffix == *inputs,
@@ -5920,6 +6037,10 @@ fn feature_metadata_matches(
 }
 
 /// Fold the selected entry at `position` into `matches`; false when it is not retained.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; entry lookups use the non-const slice `get` and recompute runtime identities"
+)]
 fn fold_selected_metadata(
     library: &Library,
     candidate: &QueueCandidate,
@@ -5944,6 +6065,10 @@ fn fold_selected_metadata(
 }
 
 /// Fold one selected entry's recomputed identities and witness shapes into `matches`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; identity lanes invoke canonical source and envelope digest calculations at runtime"
+)]
 fn fold_entry_metadata(library: &Library, entry: &Entry, matches: &mut FeatureMetadataMatches) {
     let envelope = entry.envelope();
     let is_dependencies_match = dependencies_resolve(library, &envelope.dependencies);
@@ -5990,6 +6115,10 @@ fn bindings_are_ordered(bindings: &[Binding]) -> bool {
 }
 
 /// Whether the binding at `index` names a smaller variable than the next binding.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; binding lookups use the slice `get`, which is not a stable const fn"
+)]
 fn binding_precedes_next(bindings: &[Binding], index: usize) -> bool {
     match (bindings.get(index), bindings.get(index.saturating_add(1))) {
         (Some(left), Some(right)) => left.variable < right.variable,
@@ -6009,6 +6138,10 @@ fn bindings_are_profile(bindings: &[Binding]) -> bool {
 }
 
 /// Whether one binding is a value variable bound to a profile type.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the kind check uses the non-const derived variable-kind equality"
+)]
 fn binding_is_profile(binding: &Binding) -> bool {
     binding.kind == noble_kernel::words::VariableKind::Value && profile_type(&binding.ty)
 }
@@ -6413,6 +6546,10 @@ struct IdentityWalk {
 
 /// One editor-identity step: close the finished top frame or encode its
 /// next node. False stops the walk after a lost node.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the identity walk mutates its runtime frame Vec and appends identity bytes"
+)]
 fn identity_editor_step(
     bytes: &mut IdentityBytes,
     root: &[super::editor::Node],
@@ -6656,6 +6793,10 @@ fn identity_push_feature_revision(bytes: &mut IdentityBytes) {
 }
 
 /// Append the frozen model identity behind a presence byte.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the model identity is appended to the runtime identity byte buffer"
+)]
 fn identity_push_model(bytes: &mut IdentityBytes, model_identity: Option<[u8; REVISION_BYTES]>) {
     match model_identity {
         Some(identity) => {
@@ -6998,6 +7139,10 @@ fn complete_fixed(
 }
 
 /// Scorer-ranked completion, timed on the host clock, with its scorer status.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; completion dispatch initializes runtime search state and reads the host clock"
+)]
 fn complete_scored(
     namespace: &super::Session,
     library: &Library,
@@ -7211,6 +7356,10 @@ fn validate_and_apply_stored_order(
 }
 
 /// Validate one stored candidate identity and give it its stored position.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; stored positions are looked up and applied through non-const slice accessors"
+)]
 fn apply_stored_position(
     queue: &mut CandidateQueue,
     stored: &StoredRanking,

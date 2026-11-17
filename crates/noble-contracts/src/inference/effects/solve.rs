@@ -126,9 +126,9 @@ fn rigid_pass(
     meter: &mut crate::Meter,
 ) -> Result<bool, crate::Diagnostic> {
     attempt!(meter.charge(1, span));
-    let unions_changed = attempt!(rigid_unions(&arena.effects, facts, span, meter));
-    let equations_changed = attempt!(rigid_equations(arena, facts, span, meter));
-    Ok(unions_changed || equations_changed)
+    let has_union_changed = attempt!(rigid_unions(&arena.effects, facts, span, meter));
+    let has_equation_changed = attempt!(rigid_equations(arena, facts, span, meter));
+    Ok(has_union_changed || has_equation_changed)
 }
 
 /// Recompute every union fact in order, stopping at the first refusal.
@@ -156,6 +156,10 @@ fn rigid_unions(
 }
 
 /// Charge one effect and refresh its fact when it is a union.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; metering and symbolic-fact lookup are non-const and refusals construct owned diagnostics."
+)]
 fn rigid_union(
     effect: &super::Effect,
     at: usize,
@@ -267,6 +271,10 @@ fn rigid_equation_witness(
 #[expect(
     tigerstyle::ambiguous_params,
     reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; symbolic-fact lookup and refusal diagnostics are non-const."
 )]
 /// Refuse a body whose effect summary differs from its declared universal bound.
 fn rigid_goal(

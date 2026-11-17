@@ -387,6 +387,14 @@ fn parse_callable_effects(
 }
 
 /// One registered, not yet bound callable effect named by `word`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; str pattern matching and diagnostic construction are not const on the pinned compilers, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn callable_effect(
     word: &str,
     environment: Option<&noble_kernel::contracts::Env>,
@@ -505,6 +513,10 @@ struct TopLevel {
 }
 
 /// Classify the byte of `word` at `at`: track nesting or cut a top-level part.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn top_level_step(
     word: &str,
     separator: u8,
@@ -552,6 +564,10 @@ fn type_name_byte(text: &[u8], at: usize) -> bool {
 }
 
 /// Whether the named-type entry is spelled `name`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String-to-str equality is not const on the pinned compilers, so the const suggestion does not apply"
+)]
 fn names_type(entry: &(alloc::string::String, noble_kernel::types::Ty), name: &str) -> bool {
     entry.0 == name
 }

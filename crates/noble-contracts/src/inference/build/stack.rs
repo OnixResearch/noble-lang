@@ -1,6 +1,10 @@
 impl super::super::Arena {
     /// Charge one step, push the empty base, charge one scan per entry from
     /// the top, then build and push every entry bottom first.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express."
+    )]
     pub(in crate::inference) fn build_stack_ty(
         &mut self,
         stack: &[noble_kernel::types::Ty],
@@ -28,6 +32,10 @@ impl super::super::Arena {
 
     /// Charge one step, push the stack-variable or empty base, then build the
     /// remaining entries as `build_stack_ty` does.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express."
+    )]
     pub(in crate::inference) fn build_stack_pattern(
         &mut self,
         stack: &[noble_kernel::shapes::Pattern],
@@ -96,6 +104,10 @@ impl super::super::Arena {
     }
 
     /// Build one stack entry and push it onto the stack below it.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express."
+    )]
     fn push_ty_entry(
         &mut self,
         ty: &noble_kernel::types::Ty,
@@ -108,6 +120,10 @@ impl super::super::Arena {
     }
 
     /// Build one stack-pattern entry and push it onto the stack below it.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express."
+    )]
     fn push_pattern_entry(
         &mut self,
         pattern: &noble_kernel::shapes::Pattern,

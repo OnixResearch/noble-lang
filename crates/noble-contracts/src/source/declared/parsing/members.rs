@@ -169,6 +169,10 @@ fn logical(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; binding refuses a binding once the count reaches the token count, so the vector never outgrows the scanned token block"
+)]
 fn binding_block(
     mut cursor: super::Cursor<'_>,
 ) -> Result<(super::Cursor<'_>, alloc::vec::Vec<super::Binding>), crate::Diagnostic> {
@@ -214,6 +218,10 @@ fn binding_block(
 }
 
 /// One `name Type` stack binding after the bindings already admitted.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn binding<'a>(
     cursor: super::Cursor<'a>,
     span: crate::Span,
@@ -426,6 +434,10 @@ fn end_before(tokens: &[crate::source::lexer::Token], at: usize) -> Option<u32> 
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; signature_word refuses a word once the count reaches the token count, so the vector never outgrows the scanned token block"
 )]
 fn signature(
     cursor: super::Cursor<'_>,

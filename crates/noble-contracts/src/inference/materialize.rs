@@ -93,6 +93,12 @@ impl super::Arena {
         Ok(suffix)
     }
 
+    #[expect(
+        tigerstyle::missing_const_fn,
+        tigerstyle::numeric_units,
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; the step charges the meter, resolves links and renders a type through non-const arena calls and pushes onto the caller's String suffix, so it needs the Vec rather than a slice; work_limit is the entry count the caller derives from the meter's work limit, named as in editor_stack_suffix."
+    )]
     /// One charged step of `editor_stack_suffix`: the next stack below a push, or `None` at its base.
     fn suffix_step(
         &self,
@@ -116,7 +122,24 @@ impl super::Arena {
             super::Term::Hole(super::Sort::Stack)
             | super::Term::Empty
             | super::Term::RigidStack(_) => Ok(None),
-            _ => Err(crate::internal(span)),
+            super::Term::Hole(super::Sort::Value)
+            | super::Term::RigidValue(_)
+            | super::Term::Link(_)
+            | super::Term::Unit
+            | super::Term::Bool
+            | super::Term::I64
+            | super::Term::Text
+            | super::Term::Syntax
+            | super::Term::Contract
+            | super::Term::Evidence
+            | super::Term::Certified
+            | super::Term::Resource(_)
+            | super::Term::Nominal(_)
+            | super::Term::GenericNominal(_, _, _)
+            | super::Term::Pair(_, _)
+            | super::Term::Sum(_, _)
+            | super::Term::List(_)
+            | super::Term::Program(_, _) => Err(crate::internal(span)),
         }
     }
 
@@ -425,6 +448,10 @@ impl super::Arena {
     #[expect(
         tigerstyle::ambiguous_params,
         reason = "Owner: noble-maintainers; expected and actual are ordered IDs in the same term arena from the rejected stack equation."
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the step charges the meter, reads the term arena and renders types into owned Strings through non-const calls."
     )]
     /// One charged position of `stack_difference`: both rests when the tops render alike.
     fn difference_step(

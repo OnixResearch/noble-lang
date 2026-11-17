@@ -142,7 +142,7 @@ pub(super) fn logical_name(name: &str) -> bool {
 }
 
 /// Whether `bytes` begins with an ASCII letter or underscore.
-fn starts_identifier(bytes: &[u8]) -> bool {
+const fn starts_identifier(bytes: &[u8]) -> bool {
     if bytes.is_empty() {
         return false;
     }

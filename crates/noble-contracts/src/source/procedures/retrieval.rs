@@ -387,6 +387,10 @@ fn dependent_closure(
 }
 
 /// Queue every record that directly depends on `current`, in record order.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; dependents are pushed onto the caller's growing worklist, which needs the Vec, not a fixed slice"
+)]
 fn push_dependents(
     records: &[ProcedureRecord],
     current: ProcedureId,
@@ -404,6 +408,14 @@ fn push_dependents(
 }
 
 /// One record of [`push_dependents`]: queue it if it depends on `current`.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; a dependent record is pushed onto the caller's growing worklist, which needs the Vec, not a fixed slice"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; work-counter overflow and the closure record bound are refused as typed `exhausted` refusals, and `dependent_closure` asserts the visited bound"
+)]
 fn push_if_dependent(
     record: &ProcedureRecord,
     current: ProcedureId,
@@ -441,6 +453,10 @@ fn push_if_dependent(
 
 /// Whether `record` names `current` as a library dependency, metering one
 /// unit of `work` per dependency examined up to the first match.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the scan only meters and compares identities, and counter overflow is refused as a typed `exhausted` refusal"
+)]
 fn depends_on(
     record: &ProcedureRecord,
     current: ProcedureId,

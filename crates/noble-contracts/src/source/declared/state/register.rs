@@ -129,6 +129,10 @@ impl super::ModuleSession {
 
 /// The collected signatures parsed in order against the module's nominal
 /// families; the first failure wins.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn parsed_signatures(
     session: &super::ModuleSession,
     collected: &collection::Collected,
@@ -162,6 +166,10 @@ fn parsed_signatures(
 
 /// Parses one collected signature against the module's nominal families,
 /// refusing an exported signature that exposes a private nominal interface.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn checked_signature(
     session: &super::ModuleSession,
     collected: &collection::Collected,
@@ -217,6 +225,10 @@ fn session_import_aliases(
 }
 
 /// The import alias at `alias_at`, owned by its original module's identity.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; indexing the alias Vec, the Vec lookup of its module, cloning the spelling and building the declared::error diagnostic are not const (E0277/E0015)."
+)]
 fn import_alias(
     session: &super::ModuleSession,
     alias_at: usize,

@@ -141,11 +141,19 @@ fn export_position(exports: &[super::Operation], name: &str) -> Option<usize> {
 }
 
 /// Whether `operation` is the generated word `word`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String content equality is a non-const trait call."
+)]
 fn has_word(operation: &super::Operation, word: &str) -> bool {
     operation.word == word
 }
 
 /// Whether `operation` is exported as `name`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String content equality is a non-const trait call."
+)]
 fn has_export_name(operation: &super::Operation, name: &str) -> bool {
     operation.export_name == name
 }

@@ -61,7 +61,8 @@ impl super::World {
 
     #[expect(
         tigerstyle::borrowed_argument_types,
-        reason = "Owner: noble-maintainers; the selected boundaries are appended to the caller's growable key, which a slice cannot express."
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers; the selected boundaries are appended to the caller's growable key, which a slice cannot express; the key is build_context's freshly allocated buffer."
     )]
     /// Append the selected checked-u64, worker Program and transition bindings.
     fn append_selection(&self, key: &mut alloc::vec::Vec<u8>) {
@@ -89,7 +90,8 @@ fn binding_schema_len() -> usize {
 
 #[expect(
     tigerstyle::borrowed_argument_types,
-    reason = "Owner: noble-maintainers; the schema is appended to the caller's growable key, which a slice cannot express."
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; the schema is appended to the caller's growable key, which a slice cannot express; the key is build_context's freshly allocated buffer."
 )]
 /// Append the bounded WIT binding schema.
 fn append_binding_schema(key: &mut alloc::vec::Vec<u8>) {
@@ -103,7 +105,8 @@ fn checked_u64_schema_len() -> usize {
 
 #[expect(
     tigerstyle::borrowed_argument_types,
-    reason = "Owner: noble-maintainers; the schema is appended to the caller's growable key, which a slice cannot express."
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; the schema is appended to the caller's growable key, which a slice cannot express; the key is build_context's freshly allocated buffer."
 )]
 /// Append the checked u64 boundary schema.
 fn append_checked_u64_schema(key: &mut alloc::vec::Vec<u8>) {
@@ -111,7 +114,7 @@ fn append_checked_u64_schema(key: &mut alloc::vec::Vec<u8>) {
 }
 
 /// Length of the worker Program schema selected by `effect`.
-fn worker_schema_len(effect: Option<noble_kernel::types::EffId>) -> usize {
+const fn worker_schema_len(effect: Option<noble_kernel::types::EffId>) -> usize {
     match effect {
         Some(noble_kernel::contracts::TEST_EMIT) => {
             b"worker-program-v2:Program([I64]->[I64]!{test.emit})".len()
@@ -128,7 +131,9 @@ fn worker_schema_len(effect: Option<noble_kernel::types::EffId>) -> usize {
 
 #[expect(
     tigerstyle::borrowed_argument_types,
-    reason = "Owner: noble-maintainers; the schema is appended to the caller's growable key, which a slice cannot express."
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the schema is appended to the caller's growable key through non-const Vec growth, which a slice cannot express; the key is build_context's freshly allocated buffer."
 )]
 /// Append the worker Program schema selected by `effect`.
 fn append_worker_schema(key: &mut alloc::vec::Vec<u8>, effect: Option<noble_kernel::types::EffId>) {

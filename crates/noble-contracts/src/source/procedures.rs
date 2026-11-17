@@ -795,6 +795,10 @@ impl ProcedureLibrary {
     }
 
     /// One record of [`Self::admit_batch`], checked and merged into `candidate_records`.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; a newly admitted record is pushed onto the caller's candidate closure, which needs the growable Vec, not a fixed slice"
+    )]
     fn admit_batch_record(
         &self,
         policy: Option<&ConsumerPolicy>,
@@ -1727,6 +1731,10 @@ impl ProcedureLibrary {
     }
 
     /// Re-admit the record at `index` of [`Self::rebuild_chunks`] after its dependencies.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; each re-admitted record is pushed onto the caller's admitted closure, which needs the growable Vec, not a fixed slice"
+    )]
     fn admit_rebuilt(
         namespace: &super::Session,
         records: &[ProcedureRecord],

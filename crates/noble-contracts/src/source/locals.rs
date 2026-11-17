@@ -93,6 +93,10 @@ pub(super) fn lower_with_witness(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; it scans with a closure, pops and pushes the node arena and runs the lowering, none of which is const."
+)]
 fn lower_inner(
     tree: &mut super::Tree,
     meter: &mut crate::Meter,

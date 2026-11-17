@@ -410,18 +410,18 @@ fn core_type(ty: &noble_kernel::types::Ty) -> bool {
         Ty::Program(input, output, effects) => {
             // Explicit walks: passing `core_type` itself as a value would put
             // a closure impl into this recursion for the extraction.
-            let mut accepted = effects.as_slice().is_empty();
+            let mut is_accepted = effects.as_slice().is_empty();
             let mut index = 0;
-            while accepted && index < input.len() {
-                accepted = core_type(&input[index]);
+            while is_accepted && index < input.len() {
+                is_accepted = core_type(&input[index]);
                 index += 1;
             }
             index = 0;
-            while accepted && index < output.len() {
-                accepted = core_type(&output[index]);
+            while is_accepted && index < output.len() {
+                is_accepted = core_type(&output[index]);
                 index += 1;
             }
-            accepted
+            is_accepted
         }
         _ => false,
     }
@@ -615,15 +615,15 @@ fn replayed_kind_preserved(old: &Kind, new: &Kind, replacements: &[Option<usize>
     reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
 )]
 fn calls_affected(nodes: &[Node], affected: &[bool]) -> bool {
-    let mut found = false;
+    let mut is_found = false;
     let mut at = 0;
-    while !found && at < nodes.len() {
+    while !is_found && at < nodes.len() {
         if let Kind::Call(Target::Named(target)) = &nodes[at].kind {
-            found = affected.get(*target as usize).copied().unwrap_or(false);
+            is_found = affected.get(*target as usize).copied().unwrap_or(false);
         }
         at += 1;
     }
-    found
+    is_found
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -1114,12 +1114,12 @@ impl Session {
     /// Whether a later definition reuses the name of the one at `index`.
     fn is_shadowed(&self, index: usize) -> bool {
         let mut later = index.saturating_add(1);
-        let mut found = false;
-        while !found && later < self.definitions.len() {
-            found = self.same_name(index, later);
+        let mut is_found = false;
+        while !is_found && later < self.definitions.len() {
+            is_found = self.same_name(index, later);
             later += 1;
         }
-        found
+        is_found
     }
 
     /// Whether the definitions at `left` and `right` share a name; only the
@@ -1484,12 +1484,12 @@ impl Session {
     ) -> bool {
         let mut seen = alloc::vec![false; self.definitions.len()];
         let mut pending = alloc::vec::Vec::new();
-        let mut requires =
+        let mut needs_host_effects =
             self.nodes_require_host_effects(environment, &root.nodes, &mut seen, &mut pending);
-        while !requires {
+        while !needs_host_effects {
             match pending.pop() {
                 Some(index) => {
-                    requires = self.nodes_require_host_effects(
+                    needs_host_effects = self.nodes_require_host_effects(
                         environment,
                         &self.definitions[index].tree.nodes,
                         &mut seen,
@@ -1499,7 +1499,7 @@ impl Session {
                 None => break,
             }
         }
-        requires
+        needs_host_effects
     }
 
     /// Scan one body's nodes in order, queueing each unseen named callee.
@@ -1518,13 +1518,14 @@ impl Session {
         seen: &mut [bool],
         pending: &mut alloc::vec::Vec<usize>,
     ) -> bool {
-        let mut requires = false;
+        let mut needs_host_effects = false;
         let mut at = 0;
-        while !requires && at < nodes.len() {
-            requires = self.node_requires_host_effects(environment, &nodes[at], seen, pending);
+        while !needs_host_effects && at < nodes.len() {
+            needs_host_effects =
+                self.node_requires_host_effects(environment, &nodes[at], seen, pending);
             at += 1;
         }
-        requires
+        needs_host_effects
     }
 
     /// Whether one node needs an unavailable host effect; an unseen named
@@ -1618,17 +1619,17 @@ impl Session {
     /// Whether a builtin scheme admits an effect other than this session's
     /// scoped live effects.
     fn scheme_requires_host_effects(&self, scheme: &noble_kernel::words::Scheme) -> bool {
-        let mut requires = false;
+        let mut needs_host_effects = false;
         let mut at = 0;
-        while !requires && at < scheme.effects.len() {
-            requires = !matches!(&scheme.effects[at],
+        while !needs_host_effects && at < scheme.effects.len() {
+            needs_host_effects = !matches!(&scheme.effects[at],
                 noble_kernel::shapes::EffectSlot::Effect(
                     noble_kernel::types::EffId(3 | 4)
                 ) | noble_kernel::shapes::EffectSlot::Var(_)
                     if self.live_selected.is_some());
             at += 1;
         }
-        requires
+        needs_host_effects
     }
 
     pub(crate) fn with_bindings(bindings: crate::component::Bindings) -> Self {
@@ -2587,7 +2588,7 @@ mod tests {
 
     fn walk_tree(targets: &[Option<u32>]) -> super::Tree {
         let span = crate::Span { start: 0, end: 0 };
-        let mut nodes = alloc::vec::Vec::new();
+        let mut nodes = alloc::vec::Vec::with_capacity(targets.len());
         for target in targets {
             let kind = match target {
                 Some(index) => super::Kind::Call(super::Target::Named(*index)),
@@ -2719,7 +2720,7 @@ mod tests {
     }
 
     #[test]
-    fn live_slot_locals_and_ordinals_refuse_malformed_binders_in_source_order() {
+    fn live_slot_locals_and_ordinals_refuse_malformed_binders_in_written_order() {
         let session = Session::new_live_slots(
             noble_kernel::contracts::environment()
                 .unwrap()
@@ -2768,7 +2769,7 @@ mod tests {
     }
 
     #[test]
-    fn logical_bodies_refuse_the_first_malformed_token_in_source_order() {
+    fn logical_bodies_refuse_the_first_malformed_token_in_written_order() {
         let scan = |source: &[u8]| {
             let mut meter = crate::Meter::new(crate::Limits::default());
             let mut scanner = super::lexer::Scanner::new_declared(source, &mut meter).unwrap();

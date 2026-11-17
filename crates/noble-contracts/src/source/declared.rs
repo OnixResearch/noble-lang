@@ -62,6 +62,9 @@ struct Module {
     identity: u64,
     exports: alloc::vec::Vec<Export>,
     adapter_slot: Option<u32>,
+    // Renamed for extraction only: a Lean field named `source` would shadow the
+    // `source.*` namespace of later field types; the Rust name is unchanged.
+    #[charon::rename("source_bytes")]
     source: alloc::vec::Vec<u8>,
     definition_spans: alloc::vec::Vec<DefinitionSource>,
     /// Slots backed by at least one independently checked concrete owner
@@ -142,6 +145,10 @@ fn published_proofs_equal(left: &[PublishedProof], right: &[PublishedProof]) -> 
 }
 
 /// Equality of one published host result: its reference and checked proof.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String and Vec equality are not const on the pinned compilers, so the const suggestion does not apply"
+)]
 fn published_proof_equal(a: &PublishedProof, b: &PublishedProof) -> bool {
     a.reference.name == b.reference.name
         && a.reference.module == b.reference.module
@@ -273,6 +280,14 @@ struct OriginScan {
 #[expect(
     tigerstyle::compound_condition,
     reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String equality and diagnostic construction are not const on the pinned compilers, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 /// One member of an origin reparse: bind the subject and count lexical definitions.
 fn origin_member(
@@ -480,6 +495,14 @@ struct ExportScan {
 }
 
 /// One member of a named-export reparse: record the export and count lexical definitions.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String equality and diagnostic construction are not const on the pinned compilers, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 fn export_member(
     member: &parsing::Member,
     definition: &str,

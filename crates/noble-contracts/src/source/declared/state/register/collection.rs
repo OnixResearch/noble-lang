@@ -378,6 +378,10 @@ impl Collected {
 
     /// Whether an export names a declaration of this module: a schema (by the
     /// text before its first `.`), a definition, a contract or a proof.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the Vec derefs into crate::scan::find_first, its closure predicates and the str range slice are not const (E0277/E0015)."
+    )]
     fn declares(&self, exported: &str) -> bool {
         let schema = &exported[..schema_name_len(exported)];
         crate::scan::find_first(&self.schemas, |declared| declared.name == schema).is_some()
@@ -391,6 +395,10 @@ impl Collected {
 
 /// The byte length of the schema name an export starts with: the text before
 /// its first `.`, or the whole export.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; crate::scan::split_once_byte is not const (E0015)."
+)]
 fn schema_name_len(exported: &str) -> usize {
     match crate::scan::split_once_byte(exported, b'.') {
         Some((base, _)) => base.len(),

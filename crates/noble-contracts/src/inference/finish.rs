@@ -285,6 +285,10 @@ struct Reservation {
 
 /// Charge one work unit and count one node; record the refusal and return
 /// `false` when either limit is reached.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; metering is non-const and a refusal stores an owned diagnostic."
+)]
 fn reserve_node(walk: &mut Reservation, span: crate::Span, meter: &mut crate::Meter) -> bool {
     if let Err(problem) = meter.charge(1, span) {
         walk.failure = Some(problem);
@@ -304,6 +308,10 @@ fn reserve_node(walk: &mut Reservation, span: crate::Span, meter: &mut crate::Me
 
 /// Reserve the payload types of one nominal descriptor, in order; `false`
 /// once a refusal is recorded.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the reservation charges the non-const work meter for every node."
+)]
 fn reserve_shape(
     shape: &noble_kernel::types::NominalShape,
     walk: &mut Reservation,
@@ -327,6 +335,10 @@ fn reserve_shape(
 #[expect(
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; every node is charged and counted against TYPE_NODE_CAP before the walk descends into it; direct recursion avoids a borrowed work stack the pinned Aeneas cannot translate."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the reservation charges the non-const work meter for every node."
 )]
 /// Charge and count one node, then reserve the nodes it owns; `false` once a
 /// refusal is recorded.
@@ -775,6 +787,10 @@ mod tests {
     }
 
     #[test]
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; TYPE_NODE_CAP is the constant 4096, so cap - 1 cannot underflow."
+    )]
     fn deepest_descriptor_the_node_cap_admits_is_reserved_and_one_deeper_is_refused() {
         // Reservation counts each node before descending into it, so its
         // recursion is never deeper than TYPE_NODE_CAP + 1 nodes.
@@ -796,6 +812,10 @@ mod tests {
     }
 
     #[test]
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; TYPE_CAP is the constant 256, so TYPE_CAP - 1 cannot underflow."
+    )]
     fn deepest_admitted_type_at_the_bottom_of_a_full_stack_builds() {
         // Admitted types have at most TYPE_CAP (256) constructors and stacks
         // at most STACK_CAP (256) entries; the bottom entry is built at the

@@ -121,6 +121,10 @@ fn scan(bytes: &[u8], at: usize) -> Result<usize, super::super::Error> {
 }
 
 /// Whether the two bytes at `at` are `pair`, as `bytes.get(at..at + 2) == Some(pair)`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; range indexing through slice get and slice equality are non-const trait calls."
+)]
 fn pair_at(bytes: &[u8], at: usize, pair: &[u8; 2]) -> bool {
     match bytes.get(at..at.saturating_add(2)) {
         Some(found) => *found == *pair,

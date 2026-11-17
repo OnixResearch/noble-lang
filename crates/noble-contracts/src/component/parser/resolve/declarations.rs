@@ -98,13 +98,18 @@ fn function_name(
 
 #[expect(
     tigerstyle::ambiguous_params,
-    reason = "Owner: noble-maintainers; these two admitted indices are symmetric equality operands, so swapping them does not change the result."
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; these two admitted indices are symmetric equality operands, so swapping them does not change the result; String content equality is non-const."
 )]
 /// Whether two interfaces of `package` share a name.
 fn same_interface_name(package: &super::super::Package, left: usize, right: usize) -> bool {
     package.interfaces[left].name == package.interfaces[right].name
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; Option<String> and String content equality are non-const trait calls."
+)]
 /// Whether two functions share a method scope and a name.
 fn same_function(old: &super::super::Function, function: &super::super::Function) -> bool {
     old.method == function.method && old.name == function.name
@@ -112,7 +117,8 @@ fn same_function(old: &super::super::Function, function: &super::super::Function
 
 #[expect(
     tigerstyle::ambiguous_params,
-    reason = "Owner: noble-maintainers; the interface and world indices address different tables and are named at the single call site."
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the interface and world indices address different tables and are named at the single call site; String content equality is non-const."
 )]
 /// Whether interface `interface` of `package` is named like world `world`.
 fn interface_names_world(package: &super::super::Package, interface: usize, world: usize) -> bool {
@@ -146,10 +152,6 @@ fn world_name(package: &super::super::Package, at: usize) -> Result<(), crate::c
     world_names(&package.worlds[at])
 }
 
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; duplicate-name detection invokes runtime iterator traversal and non-const String content equality without allocating copied names."
-)]
 fn interface_world_collision(package: &super::super::Package, at: usize) -> bool {
     let mut is_found = false;
     let mut index = 0;

@@ -1,6 +1,10 @@
 //! Parse one logical S-expression from a scanner-selected bracketed body.
 //! This syntax is untrusted; independent proof/type checking happens later.
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(super) fn parse(
     tokens: &[crate::source::lexer::LogicalToken],
     span: crate::Span,
@@ -44,10 +48,6 @@ enum Logical {
     Complete(crate::intrinsic::Form),
 }
 
-#[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
-)]
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
@@ -194,6 +194,10 @@ mod tests {
     }
 
     #[test]
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; the test spans start at fixed offsets below 10, so the end offset start + 1 cannot overflow"
+    )]
     fn trailing_and_unclosed_forms_are_refused_at_their_token() {
         let span = crate::Span { start: 0, end: 9 };
         let at = |start: u32| crate::Span {

@@ -80,6 +80,9 @@ pub struct ComposeContext {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ComposedProgram {
+    // Extraction-only name: a Lean field called `source` would shadow the
+    // `source.*` namespace of the later field types. Rust is unchanged.
+    #[charon::rename("source_bytes")]
     pub source: Vec<u8>,
     pub interface: RetrievalSignature,
     pub selected: Vec<ProcedureId>,
