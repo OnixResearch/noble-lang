@@ -121,8 +121,11 @@ mutual
     | .SumType a b => .SumType (toTy a) (toTy b)
     | .ListType a => .ListType (toTy a)
     | .ProgramType i o e => .ProgramType (toTyVec i) (toTyVec o) e
+    | .LiveRefType i o e => .LiveRefType (toTyVec i) (toTyVec o) e
     | .ResourceType k => .ResourceType k
     | .NominalType id shape => .NominalType (toNominalTypeId id) (toNominalShape shape)
+    | .GenericNominalType id args shape =>
+      .GenericNominalType (toNominalTypeId id) (toTyArray args) (toNominalShape shape)
     termination_by x => sizeOf x
     decreasing_by
       all_goals
@@ -130,8 +133,19 @@ mutual
         noble_kernel.types.Ty.SumType.sizeOf_spec,
         noble_kernel.types.Ty.ListType.sizeOf_spec,
         noble_kernel.types.Ty.ProgramType.sizeOf_spec,
-        noble_kernel.types.Ty.NominalType.sizeOf_spec]
+        noble_kernel.types.Ty.LiveRefType.sizeOf_spec,
+        noble_kernel.types.Ty.NominalType.sizeOf_spec,
+        noble_kernel.types.Ty.GenericNominalType.sizeOf_spec]
         omega
+
+  def toTyArray {n : Usize} (a : Array noble_kernel.types.Ty n) :
+      Array _root_.noble_kernel.types.Ty n :=
+    match a with
+    | ⟨xs⟩ => ⟨toTyListN n.val xs⟩
+    termination_by sizeOf a
+    decreasing_by
+      simp only [Aeneas.Std.Array.mk.sizeOf_spec]
+      omega
 
   def toTyVec (v : alloc.vec.Vec noble_kernel.types.Ty) : alloc.vec.Vec _root_.noble_kernel.types.Ty :=
     match v with
@@ -184,8 +198,11 @@ mutual
     | .SumType a b => .SumType (fromTy a) (fromTy b)
     | .ListType a => .ListType (fromTy a)
     | .ProgramType i o e => .ProgramType (fromTyVec i) (fromTyVec o) e
+    | .LiveRefType i o e => .LiveRefType (fromTyVec i) (fromTyVec o) e
     | .ResourceType k => .ResourceType k
     | .NominalType id shape => .NominalType (fromNominalTypeId id) (fromNominalShape shape)
+    | .GenericNominalType id args shape =>
+      .GenericNominalType (fromNominalTypeId id) (fromTyArray args) (fromNominalShape shape)
     termination_by x => sizeOf x
     decreasing_by
       all_goals
@@ -193,8 +210,19 @@ mutual
         _root_.noble_kernel.types.Ty.SumType.sizeOf_spec,
         _root_.noble_kernel.types.Ty.ListType.sizeOf_spec,
         _root_.noble_kernel.types.Ty.ProgramType.sizeOf_spec,
-        _root_.noble_kernel.types.Ty.NominalType.sizeOf_spec]
+        _root_.noble_kernel.types.Ty.LiveRefType.sizeOf_spec,
+        _root_.noble_kernel.types.Ty.NominalType.sizeOf_spec,
+        _root_.noble_kernel.types.Ty.GenericNominalType.sizeOf_spec]
         omega
+
+  def fromTyArray {n : Usize} (a : Array _root_.noble_kernel.types.Ty n) :
+      Array noble_kernel.types.Ty n :=
+    match a with
+    | ⟨xs⟩ => ⟨fromTyListN n.val xs⟩
+    termination_by sizeOf a
+    decreasing_by
+      simp only [Aeneas.Std.Array.mk.sizeOf_spec]
+      omega
 
   def fromTyVec (v : alloc.vec.Vec _root_.noble_kernel.types.Ty) : alloc.vec.Vec noble_kernel.types.Ty :=
     match v with
@@ -264,11 +292,16 @@ mutual
       simp only [toTy, fromTy, fromTy_toTy a]
     | ProgramType i o e =>
       simp only [toTy, fromTy, fromTyVec_toTyVec i, fromTyVec_toTyVec o]
+    | LiveRefType i o e =>
+      simp only [toTy, fromTy, fromTyVec_toTyVec i, fromTyVec_toTyVec o]
     | ResourceType k =>
       simp only [toTy, fromTy]
     | NominalType id shape =>
       simp only [toTy, fromTy, fromNominalTypeId_toNominalTypeId,
         fromNominalShape_toNominalShape shape]
+    | GenericNominalType id args shape =>
+      simp only [toTy, fromTy, fromNominalTypeId_toNominalTypeId,
+        fromTyArray_toTyArray args, fromNominalShape_toNominalShape shape]
     termination_by sizeOf x
     decreasing_by
       all_goals
@@ -276,8 +309,19 @@ mutual
         noble_kernel.types.Ty.SumType.sizeOf_spec,
         noble_kernel.types.Ty.ListType.sizeOf_spec,
         noble_kernel.types.Ty.ProgramType.sizeOf_spec,
-        noble_kernel.types.Ty.NominalType.sizeOf_spec]
+        noble_kernel.types.Ty.LiveRefType.sizeOf_spec,
+        noble_kernel.types.Ty.NominalType.sizeOf_spec,
+        noble_kernel.types.Ty.GenericNominalType.sizeOf_spec]
         omega
+
+  theorem fromTyArray_toTyArray {n : Usize} (a : Array noble_kernel.types.Ty n) :
+      fromTyArray (toTyArray a) = a := by
+    cases a with
+    | mk xs => simp only [toTyArray, fromTyArray, fromTyListN_toTyListN n.val xs]
+    termination_by sizeOf a
+    decreasing_by
+      simp only [Aeneas.Std.Array.mk.sizeOf_spec]
+      omega
 
   theorem fromTyVec_toTyVec (v : alloc.vec.Vec noble_kernel.types.Ty) :
       fromTyVec (toTyVec v) = v := by
@@ -312,8 +356,8 @@ mutual
         omega
 end
 
-attribute [simp] fromNominalShape_toNominalShape fromTy_toTy fromTyVec_toTyVec
-  fromTySlice_toTySlice fromTyListN_toTyListN
+attribute [simp] fromNominalShape_toNominalShape fromTy_toTy fromTyArray_toTyArray
+  fromTyVec_toTyVec fromTySlice_toTySlice fromTyListN_toTyListN
 
 mutual
   theorem toNominalShape_fromNominalShape (x : _root_.noble_kernel.types.NominalShape) :
@@ -356,11 +400,16 @@ mutual
       simp only [fromTy, toTy, toTy_fromTy a]
     | ProgramType i o e =>
       simp only [fromTy, toTy, toTyVec_fromTyVec i, toTyVec_fromTyVec o]
+    | LiveRefType i o e =>
+      simp only [fromTy, toTy, toTyVec_fromTyVec i, toTyVec_fromTyVec o]
     | ResourceType k =>
       simp only [fromTy, toTy]
     | NominalType id shape =>
       simp only [fromTy, toTy, toNominalTypeId_fromNominalTypeId,
         toNominalShape_fromNominalShape shape]
+    | GenericNominalType id args shape =>
+      simp only [fromTy, toTy, toNominalTypeId_fromNominalTypeId,
+        toTyArray_fromTyArray args, toNominalShape_fromNominalShape shape]
     termination_by sizeOf x
     decreasing_by
       all_goals
@@ -368,8 +417,19 @@ mutual
         _root_.noble_kernel.types.Ty.SumType.sizeOf_spec,
         _root_.noble_kernel.types.Ty.ListType.sizeOf_spec,
         _root_.noble_kernel.types.Ty.ProgramType.sizeOf_spec,
-        _root_.noble_kernel.types.Ty.NominalType.sizeOf_spec]
+        _root_.noble_kernel.types.Ty.LiveRefType.sizeOf_spec,
+        _root_.noble_kernel.types.Ty.NominalType.sizeOf_spec,
+        _root_.noble_kernel.types.Ty.GenericNominalType.sizeOf_spec]
         omega
+
+  theorem toTyArray_fromTyArray {n : Usize} (a : Array _root_.noble_kernel.types.Ty n) :
+      toTyArray (fromTyArray a) = a := by
+    cases a with
+    | mk xs => simp only [fromTyArray, toTyArray, toTyListN_fromTyListN n.val xs]
+    termination_by sizeOf a
+    decreasing_by
+      simp only [Aeneas.Std.Array.mk.sizeOf_spec]
+      omega
 
   theorem toTyVec_fromTyVec (v : alloc.vec.Vec _root_.noble_kernel.types.Ty) :
       toTyVec (fromTyVec v) = v := by
@@ -404,8 +464,8 @@ mutual
         omega
 end
 
-attribute [simp] toNominalShape_fromNominalShape toTy_fromTy toTyVec_fromTyVec
-  toTySlice_fromTySlice toTyListN_fromTyListN
+attribute [simp] toNominalShape_fromNominalShape toTy_fromTy toTyArray_fromTyArray
+  toTyVec_fromTyVec toTySlice_fromTySlice toTyListN_fromTyListN
 
 def toVariableKind : noble_kernel.words.VariableKind → _root_.noble_kernel.words.VariableKind
   | .Stack => .Stack
@@ -455,9 +515,12 @@ mutual
     | .SumPattern a b => .SumPattern (toPattern a) (toPattern b)
     | .ListPattern a => .ListPattern (toPattern a)
     | .ProgramPattern i o e => .ProgramPattern (toPatternVec i) (toPatternVec o) (mapVec toEffectSlot e)
+    | .LiveRefPattern i o e => .LiveRefPattern (toPatternVec i) (toPatternVec o) (mapVec toEffectSlot e)
     | .ResourcePattern k => .ResourcePattern k
     | .NominalPattern id shape =>
       .NominalPattern (toNominalTypeId id) (toNominalShape shape)
+    | .GenericNominalPattern id args params =>
+      .GenericNominalPattern (toNominalTypeId id) (toPatternArray args) params
     | .VarPattern id => .VarPattern id
     | .StackVarPattern id => .StackVarPattern id
     termination_by x => sizeOf x
@@ -466,8 +529,19 @@ mutual
         simp only [noble_kernel.shapes.Pattern.PairPattern.sizeOf_spec,
         noble_kernel.shapes.Pattern.SumPattern.sizeOf_spec,
         noble_kernel.shapes.Pattern.ListPattern.sizeOf_spec,
-        noble_kernel.shapes.Pattern.ProgramPattern.sizeOf_spec]
+        noble_kernel.shapes.Pattern.ProgramPattern.sizeOf_spec,
+        noble_kernel.shapes.Pattern.LiveRefPattern.sizeOf_spec,
+        noble_kernel.shapes.Pattern.GenericNominalPattern.sizeOf_spec]
         omega
+
+  def toPatternArray {n : Usize} (a : Array noble_kernel.shapes.Pattern n) :
+      Array _root_.noble_kernel.shapes.Pattern n :=
+    match a with
+    | ⟨xs⟩ => ⟨toPatternListN n.val xs⟩
+    termination_by sizeOf a
+    decreasing_by
+      simp only [Aeneas.Std.Array.mk.sizeOf_spec]
+      omega
 
   def toPatternVec (v : alloc.vec.Vec noble_kernel.shapes.Pattern) : alloc.vec.Vec _root_.noble_kernel.shapes.Pattern :=
     match v with
@@ -510,9 +584,12 @@ mutual
     | .SumPattern a b => .SumPattern (fromPattern a) (fromPattern b)
     | .ListPattern a => .ListPattern (fromPattern a)
     | .ProgramPattern i o e => .ProgramPattern (fromPatternVec i) (fromPatternVec o) (mapVec fromEffectSlot e)
+    | .LiveRefPattern i o e => .LiveRefPattern (fromPatternVec i) (fromPatternVec o) (mapVec fromEffectSlot e)
     | .ResourcePattern k => .ResourcePattern k
     | .NominalPattern id shape =>
       .NominalPattern (fromNominalTypeId id) (fromNominalShape shape)
+    | .GenericNominalPattern id args params =>
+      .GenericNominalPattern (fromNominalTypeId id) (fromPatternArray args) params
     | .VarPattern id => .VarPattern id
     | .StackVarPattern id => .StackVarPattern id
     termination_by x => sizeOf x
@@ -521,8 +598,19 @@ mutual
         simp only [_root_.noble_kernel.shapes.Pattern.PairPattern.sizeOf_spec,
         _root_.noble_kernel.shapes.Pattern.SumPattern.sizeOf_spec,
         _root_.noble_kernel.shapes.Pattern.ListPattern.sizeOf_spec,
-        _root_.noble_kernel.shapes.Pattern.ProgramPattern.sizeOf_spec]
+        _root_.noble_kernel.shapes.Pattern.ProgramPattern.sizeOf_spec,
+        _root_.noble_kernel.shapes.Pattern.LiveRefPattern.sizeOf_spec,
+        _root_.noble_kernel.shapes.Pattern.GenericNominalPattern.sizeOf_spec]
         omega
+
+  def fromPatternArray {n : Usize} (a : Array _root_.noble_kernel.shapes.Pattern n) :
+      Array noble_kernel.shapes.Pattern n :=
+    match a with
+    | ⟨xs⟩ => ⟨fromPatternListN n.val xs⟩
+    termination_by sizeOf a
+    decreasing_by
+      simp only [Aeneas.Std.Array.mk.sizeOf_spec]
+      omega
 
   def fromPatternVec (v : alloc.vec.Vec _root_.noble_kernel.shapes.Pattern) : alloc.vec.Vec noble_kernel.shapes.Pattern :=
     match v with
@@ -578,11 +666,16 @@ mutual
       simp only [toPattern, fromPattern, fromPattern_toPattern a]
     | ProgramPattern i o e =>
       simp only [toPattern, fromPattern, fromPatternVec_toPatternVec i, fromPatternVec_toPatternVec o, mapVec_mapVec, fromEffectSlot_toEffectSlot, mapVec_id]
+    | LiveRefPattern i o e =>
+      simp only [toPattern, fromPattern, fromPatternVec_toPatternVec i, fromPatternVec_toPatternVec o, mapVec_mapVec, fromEffectSlot_toEffectSlot, mapVec_id]
     | ResourcePattern k =>
       simp only [toPattern, fromPattern]
     | NominalPattern id shape =>
       simp only [toPattern, fromPattern, fromNominalTypeId_toNominalTypeId,
         fromNominalShape_toNominalShape]
+    | GenericNominalPattern id args params =>
+      simp only [toPattern, fromPattern, fromNominalTypeId_toNominalTypeId,
+        fromPatternArray_toPatternArray args]
     | VarPattern id =>
       simp only [toPattern, fromPattern]
     | StackVarPattern id =>
@@ -593,8 +686,19 @@ mutual
         simp only [noble_kernel.shapes.Pattern.PairPattern.sizeOf_spec,
         noble_kernel.shapes.Pattern.SumPattern.sizeOf_spec,
         noble_kernel.shapes.Pattern.ListPattern.sizeOf_spec,
-        noble_kernel.shapes.Pattern.ProgramPattern.sizeOf_spec]
+        noble_kernel.shapes.Pattern.ProgramPattern.sizeOf_spec,
+        noble_kernel.shapes.Pattern.LiveRefPattern.sizeOf_spec,
+        noble_kernel.shapes.Pattern.GenericNominalPattern.sizeOf_spec]
         omega
+
+  theorem fromPatternArray_toPatternArray {n : Usize} (a : Array noble_kernel.shapes.Pattern n) :
+      fromPatternArray (toPatternArray a) = a := by
+    cases a with
+    | mk xs => simp only [toPatternArray, fromPatternArray, fromPatternListN_toPatternListN n.val xs]
+    termination_by sizeOf a
+    decreasing_by
+      simp only [Aeneas.Std.Array.mk.sizeOf_spec]
+      omega
 
   theorem fromPatternVec_toPatternVec (v : alloc.vec.Vec noble_kernel.shapes.Pattern) :
       fromPatternVec (toPatternVec v) = v := by
@@ -629,8 +733,8 @@ mutual
         omega
 end
 
-attribute [simp] fromPattern_toPattern fromPatternVec_toPatternVec
-  fromPatternSlice_toPatternSlice fromPatternListN_toPatternListN
+attribute [simp] fromPattern_toPattern fromPatternArray_toPatternArray
+  fromPatternVec_toPatternVec fromPatternSlice_toPatternSlice fromPatternListN_toPatternListN
 
 mutual
   theorem toPattern_fromPattern (x : _root_.noble_kernel.shapes.Pattern) : toPattern (fromPattern x) = x := by
@@ -659,11 +763,16 @@ mutual
       simp only [fromPattern, toPattern, toPattern_fromPattern a]
     | ProgramPattern i o e =>
       simp only [fromPattern, toPattern, toPatternVec_fromPatternVec i, toPatternVec_fromPatternVec o, mapVec_mapVec, toEffectSlot_fromEffectSlot, mapVec_id]
+    | LiveRefPattern i o e =>
+      simp only [fromPattern, toPattern, toPatternVec_fromPatternVec i, toPatternVec_fromPatternVec o, mapVec_mapVec, toEffectSlot_fromEffectSlot, mapVec_id]
     | ResourcePattern k =>
       simp only [fromPattern, toPattern]
     | NominalPattern id shape =>
       simp only [fromPattern, toPattern, toNominalTypeId_fromNominalTypeId,
         toNominalShape_fromNominalShape]
+    | GenericNominalPattern id args params =>
+      simp only [fromPattern, toPattern, toNominalTypeId_fromNominalTypeId,
+        toPatternArray_fromPatternArray args]
     | VarPattern id =>
       simp only [fromPattern, toPattern]
     | StackVarPattern id =>
@@ -674,8 +783,19 @@ mutual
         simp only [_root_.noble_kernel.shapes.Pattern.PairPattern.sizeOf_spec,
         _root_.noble_kernel.shapes.Pattern.SumPattern.sizeOf_spec,
         _root_.noble_kernel.shapes.Pattern.ListPattern.sizeOf_spec,
-        _root_.noble_kernel.shapes.Pattern.ProgramPattern.sizeOf_spec]
+        _root_.noble_kernel.shapes.Pattern.ProgramPattern.sizeOf_spec,
+        _root_.noble_kernel.shapes.Pattern.LiveRefPattern.sizeOf_spec,
+        _root_.noble_kernel.shapes.Pattern.GenericNominalPattern.sizeOf_spec]
         omega
+
+  theorem toPatternArray_fromPatternArray {n : Usize} (a : Array _root_.noble_kernel.shapes.Pattern n) :
+      toPatternArray (fromPatternArray a) = a := by
+    cases a with
+    | mk xs => simp only [fromPatternArray, toPatternArray, toPatternListN_fromPatternListN n.val xs]
+    termination_by sizeOf a
+    decreasing_by
+      simp only [Aeneas.Std.Array.mk.sizeOf_spec]
+      omega
 
   theorem toPatternVec_fromPatternVec (v : alloc.vec.Vec _root_.noble_kernel.shapes.Pattern) :
       toPatternVec (fromPatternVec v) = v := by
@@ -710,8 +830,8 @@ mutual
         omega
 end
 
-attribute [simp] toPattern_fromPattern toPatternVec_fromPatternVec
-  toPatternSlice_fromPatternSlice toPatternListN_fromPatternListN
+attribute [simp] toPattern_fromPattern toPatternArray_fromPatternArray
+  toPatternVec_fromPatternVec toPatternSlice_fromPatternSlice toPatternListN_fromPatternListN
 
 def toScheme (x : noble_kernel.words.Scheme) : _root_.noble_kernel.words.Scheme :=
   { var_kinds := mapVec toVariableKind x.var_kinds
@@ -757,12 +877,33 @@ def toBehavior : noble_kernel.contracts.Behavior → _root_.noble_kernel.contrac
   | .ConsBehavior => .ConsBehavior
   | .ListCaseBehavior => .ListCaseBehavior
   | .TestEmitBehavior => .TestEmitBehavior
+  | .TextByteBehavior => .TextByteBehavior
+  | .I64LessBehavior => .I64LessBehavior
+  | .CheckedI64AddBehavior => .CheckedI64AddBehavior
+  | .CheckedI64SubBehavior => .CheckedI64SubBehavior
+  | .CheckedI64MulBehavior => .CheckedI64MulBehavior
+  | .CheckedI64NegBehavior => .CheckedI64NegBehavior
+  | .CheckedI64AbsBehavior => .CheckedI64AbsBehavior
+  | .CheckedI64LessBehavior => .CheckedI64LessBehavior
+  | .CheckedI64DivRemBehavior => .CheckedI64DivRemBehavior
+  | .CalculatorIterateBehavior => .CalculatorIterateBehavior
+  | .CalculatorCompareBehavior => .CalculatorCompareBehavior
+  | .CalculatorDivRemBehavior => .CalculatorDivRemBehavior
+  | .CalculatorTextFromAsciiBehavior => .CalculatorTextFromAsciiBehavior
+  | .CalculatorTextLengthBehavior => .CalculatorTextLengthBehavior
+  | .ReservedBehavior => .ReservedBehavior
   | .BoundEmitBehavior slot => .BoundEmitBehavior slot
+  | .BoundClockBehavior slot => .BoundClockBehavior slot
+  | .BoundCodeExportBehavior slot => .BoundCodeExportBehavior slot
+  | .BoundSendBehavior slot => .BoundSendBehavior slot
   | .NominalNewBehavior id => .NominalNewBehavior (toNominalTypeId id)
   | .NominalIntoBehavior id => .NominalIntoBehavior (toNominalTypeId id)
   | .NominalLeftBehavior id => .NominalLeftBehavior (toNominalTypeId id)
   | .NominalRightBehavior id => .NominalRightBehavior (toNominalTypeId id)
   | .NominalMatchBehavior id => .NominalMatchBehavior (toNominalTypeId id)
+  | .GenericLeftBehavior id => .GenericLeftBehavior (toNominalTypeId id)
+  | .GenericRightBehavior id => .GenericRightBehavior (toNominalTypeId id)
+  | .GenericMatchBehavior id => .GenericMatchBehavior (toNominalTypeId id)
   | .NamedBehavior => .NamedBehavior
 
 def fromBehavior : _root_.noble_kernel.contracts.Behavior → noble_kernel.contracts.Behavior
@@ -787,12 +928,33 @@ def fromBehavior : _root_.noble_kernel.contracts.Behavior → noble_kernel.contr
   | .ConsBehavior => .ConsBehavior
   | .ListCaseBehavior => .ListCaseBehavior
   | .TestEmitBehavior => .TestEmitBehavior
+  | .TextByteBehavior => .TextByteBehavior
+  | .I64LessBehavior => .I64LessBehavior
+  | .CheckedI64AddBehavior => .CheckedI64AddBehavior
+  | .CheckedI64SubBehavior => .CheckedI64SubBehavior
+  | .CheckedI64MulBehavior => .CheckedI64MulBehavior
+  | .CheckedI64NegBehavior => .CheckedI64NegBehavior
+  | .CheckedI64AbsBehavior => .CheckedI64AbsBehavior
+  | .CheckedI64LessBehavior => .CheckedI64LessBehavior
+  | .CheckedI64DivRemBehavior => .CheckedI64DivRemBehavior
+  | .CalculatorIterateBehavior => .CalculatorIterateBehavior
+  | .CalculatorCompareBehavior => .CalculatorCompareBehavior
+  | .CalculatorDivRemBehavior => .CalculatorDivRemBehavior
+  | .CalculatorTextFromAsciiBehavior => .CalculatorTextFromAsciiBehavior
+  | .CalculatorTextLengthBehavior => .CalculatorTextLengthBehavior
+  | .ReservedBehavior => .ReservedBehavior
   | .BoundEmitBehavior slot => .BoundEmitBehavior slot
+  | .BoundClockBehavior slot => .BoundClockBehavior slot
+  | .BoundCodeExportBehavior slot => .BoundCodeExportBehavior slot
+  | .BoundSendBehavior slot => .BoundSendBehavior slot
   | .NominalNewBehavior id => .NominalNewBehavior (fromNominalTypeId id)
   | .NominalIntoBehavior id => .NominalIntoBehavior (fromNominalTypeId id)
   | .NominalLeftBehavior id => .NominalLeftBehavior (fromNominalTypeId id)
   | .NominalRightBehavior id => .NominalRightBehavior (fromNominalTypeId id)
   | .NominalMatchBehavior id => .NominalMatchBehavior (fromNominalTypeId id)
+  | .GenericLeftBehavior id => .GenericLeftBehavior (fromNominalTypeId id)
+  | .GenericRightBehavior id => .GenericRightBehavior (fromNominalTypeId id)
+  | .GenericMatchBehavior id => .GenericMatchBehavior (fromNominalTypeId id)
   | .NamedBehavior => .NamedBehavior
 
 @[simp] theorem fromBehavior_toBehavior (x : noble_kernel.contracts.Behavior) :
@@ -846,6 +1008,32 @@ def fromNominalDecl (x : _root_.noble_kernel.contracts.NominalDecl) :
     toNominalDecl (fromNominalDecl x) = x := by
   cases x
   simp [toNominalDecl, fromNominalDecl]
+
+def toGenericVariantDecl (x : noble_kernel.contracts.GenericVariantDecl) :
+    _root_.noble_kernel.contracts.GenericVariantDecl :=
+  { id := toNominalTypeId x.id
+    payload_params := x.payload_params
+    exported := x.exported
+    «public» := x.«public» }
+
+def fromGenericVariantDecl (x : _root_.noble_kernel.contracts.GenericVariantDecl) :
+    noble_kernel.contracts.GenericVariantDecl :=
+  { id := fromNominalTypeId x.id
+    payload_params := x.payload_params
+    exported := x.exported
+    «public» := x.«public» }
+
+@[simp] theorem fromGenericVariantDecl_toGenericVariantDecl
+    (x : noble_kernel.contracts.GenericVariantDecl) :
+    fromGenericVariantDecl (toGenericVariantDecl x) = x := by
+  cases x
+  simp [fromGenericVariantDecl, toGenericVariantDecl]
+
+@[simp] theorem toGenericVariantDecl_fromGenericVariantDecl
+    (x : _root_.noble_kernel.contracts.GenericVariantDecl) :
+    toGenericVariantDecl (fromGenericVariantDecl x) = x := by
+  cases x
+  simp [toGenericVariantDecl, fromGenericVariantDecl]
 
 def toBoundAdapter (x : noble_kernel.contracts.BoundAdapter) :
     _root_.noble_kernel.contracts.BoundAdapter :=
@@ -905,6 +1093,97 @@ def fromBoundEmitRegistration (x : _root_.noble_kernel.contracts.BoundEmitRegist
   cases x
   simp [toBoundEmitRegistration, fromBoundEmitRegistration]
 
+def toBoundClockRegistration (x : noble_kernel.contracts.BoundClockRegistration) :
+    _root_.noble_kernel.contracts.BoundClockRegistration :=
+  { adapter_identity := x.adapter_identity
+    adapter_slot := x.adapter_slot
+    owner := x.owner
+    input := toTyVec x.input
+    output := toTyVec x.output
+    effects := x.effects }
+
+def fromBoundClockRegistration (x : _root_.noble_kernel.contracts.BoundClockRegistration) :
+    noble_kernel.contracts.BoundClockRegistration :=
+  { adapter_identity := x.adapter_identity
+    adapter_slot := x.adapter_slot
+    owner := x.owner
+    input := fromTyVec x.input
+    output := fromTyVec x.output
+    effects := x.effects }
+
+@[simp] theorem fromBoundClockRegistration_toBoundClockRegistration
+    (x : noble_kernel.contracts.BoundClockRegistration) :
+    fromBoundClockRegistration (toBoundClockRegistration x) = x := by
+  cases x
+  simp [fromBoundClockRegistration, toBoundClockRegistration]
+
+@[simp] theorem toBoundClockRegistration_fromBoundClockRegistration
+    (x : _root_.noble_kernel.contracts.BoundClockRegistration) :
+    toBoundClockRegistration (fromBoundClockRegistration x) = x := by
+  cases x
+  simp [toBoundClockRegistration, fromBoundClockRegistration]
+
+def toBoundCodeExportRegistration (x : noble_kernel.contracts.BoundCodeExportRegistration) :
+    _root_.noble_kernel.contracts.BoundCodeExportRegistration :=
+  { adapter_identity := x.adapter_identity
+    adapter_slot := x.adapter_slot
+    owner := x.owner
+    input := toTyVec x.input
+    output := toTyVec x.output
+    effects := x.effects }
+
+def fromBoundCodeExportRegistration
+    (x : _root_.noble_kernel.contracts.BoundCodeExportRegistration) :
+    noble_kernel.contracts.BoundCodeExportRegistration :=
+  { adapter_identity := x.adapter_identity
+    adapter_slot := x.adapter_slot
+    owner := x.owner
+    input := fromTyVec x.input
+    output := fromTyVec x.output
+    effects := x.effects }
+
+@[simp] theorem fromBoundCodeExportRegistration_toBoundCodeExportRegistration
+    (x : noble_kernel.contracts.BoundCodeExportRegistration) :
+    fromBoundCodeExportRegistration (toBoundCodeExportRegistration x) = x := by
+  cases x
+  simp [fromBoundCodeExportRegistration, toBoundCodeExportRegistration]
+
+@[simp] theorem toBoundCodeExportRegistration_fromBoundCodeExportRegistration
+    (x : _root_.noble_kernel.contracts.BoundCodeExportRegistration) :
+    toBoundCodeExportRegistration (fromBoundCodeExportRegistration x) = x := by
+  cases x
+  simp [toBoundCodeExportRegistration, fromBoundCodeExportRegistration]
+
+def toBoundSendRegistration (x : noble_kernel.contracts.BoundSendRegistration) :
+    _root_.noble_kernel.contracts.BoundSendRegistration :=
+  { adapter_identity := x.adapter_identity
+    adapter_slot := x.adapter_slot
+    owner := x.owner
+    input := toTyVec x.input
+    output := toTyVec x.output
+    effects := x.effects }
+
+def fromBoundSendRegistration (x : _root_.noble_kernel.contracts.BoundSendRegistration) :
+    noble_kernel.contracts.BoundSendRegistration :=
+  { adapter_identity := x.adapter_identity
+    adapter_slot := x.adapter_slot
+    owner := x.owner
+    input := fromTyVec x.input
+    output := fromTyVec x.output
+    effects := x.effects }
+
+@[simp] theorem fromBoundSendRegistration_toBoundSendRegistration
+    (x : noble_kernel.contracts.BoundSendRegistration) :
+    fromBoundSendRegistration (toBoundSendRegistration x) = x := by
+  cases x
+  simp [fromBoundSendRegistration, toBoundSendRegistration]
+
+@[simp] theorem toBoundSendRegistration_fromBoundSendRegistration
+    (x : _root_.noble_kernel.contracts.BoundSendRegistration) :
+    toBoundSendRegistration (fromBoundSendRegistration x) = x := by
+  cases x
+  simp [toBoundSendRegistration, fromBoundSendRegistration]
+
 def fromNominalOps (x : _root_.noble_kernel.contracts.NominalOps) :
     noble_kernel.contracts.NominalOps :=
   { new := x.new
@@ -957,9 +1236,15 @@ def toEnv (x : noble_kernel.contracts.Env) : _root_.noble_kernel.contracts.Env :
     deps := x.deps
     schemas := mapVec toSchemaDecl x.schemas
     nominals := mapVec toNominalDecl x.nominals
+    generic_variants := mapVec toGenericVariantDecl x.generic_variants
     resource_kinds := x.resource_kinds
+    live_resource_nominals := mapVec toNominalTypeId x.live_resource_nominals
+    live_slots := x.live_slots
+    live_test_hosts := x.live_test_hosts
     caller_module := x.caller_module
     declared_modules := x.declared_modules
+    text_cursor := x.text_cursor
+    calculator := x.calculator
     definition_owners := x.definition_owners
     bound_adapters := mapVec toBoundAdapter x.bound_adapters
     effects := x.effects }
@@ -970,9 +1255,15 @@ def fromEnv (x : _root_.noble_kernel.contracts.Env) : noble_kernel.contracts.Env
     deps := x.deps
     schemas := mapVec fromSchemaDecl x.schemas
     nominals := mapVec fromNominalDecl x.nominals
+    generic_variants := mapVec fromGenericVariantDecl x.generic_variants
     resource_kinds := x.resource_kinds
+    live_resource_nominals := mapVec fromNominalTypeId x.live_resource_nominals
+    live_slots := x.live_slots
+    live_test_hosts := x.live_test_hosts
     caller_module := x.caller_module
     declared_modules := x.declared_modules
+    text_cursor := x.text_cursor
+    calculator := x.calculator
     definition_owners := x.definition_owners
     bound_adapters := mapVec fromBoundAdapter x.bound_adapters
     effects := x.effects }
@@ -1046,11 +1337,15 @@ def fromLit : _root_.noble_kernel.untrusted.Lit → noble_kernel.untrusted.Lit
 def toNode : noble_kernel.untrusted.Node → _root_.noble_kernel.untrusted.Node
   | .Literal lit inst => .Literal (toLit lit) (toInst inst)
   | .Invocation id inst => .Invocation id (toInst inst)
+  | .SignedSelf id inst => .SignedSelf id (toInst inst)
+  | .SlotInvoke site ref forwarded => .SlotInvoke site ref forwarded
   | .Quotation body inst => .Quotation body (toInst inst)
 
 def fromNode : _root_.noble_kernel.untrusted.Node → noble_kernel.untrusted.Node
   | .Literal lit inst => .Literal (fromLit lit) (fromInst inst)
   | .Invocation id inst => .Invocation id (fromInst inst)
+  | .SignedSelf id inst => .SignedSelf id (fromInst inst)
+  | .SlotInvoke site ref forwarded => .SlotInvoke site ref forwarded
   | .Quotation body inst => .Quotation body (fromInst inst)
 
 @[simp] theorem fromNode_toNode (x : noble_kernel.untrusted.Node) :
@@ -1164,8 +1459,11 @@ def fromExecutionDefinition (x : _root_.noble_kernel.execution.Definition) :
     noble_kernel.execution.Definition :=
   { definition := x.definition
     identity := x.identity
+    source_identity := x.source_identity
     body := fromBody x.body
-    expected := fromExpected x.expected }
+    expected := fromExpected x.expected
+    owner_slot := x.owner_slot
+    owner_inst := x.owner_inst.map fromInst }
 
 /-- Transport actual admitted submissions without changing definition order,
 literal bytes, candidate structure, environment, or resource limits. -/
@@ -1214,13 +1512,43 @@ def fromDerivation (x : _root_.noble_kernel.untrusted.Derivation) : noble_kernel
   cases x
   simp [toDerivation, fromDerivation]
 
+def toLiveSite (x : noble_kernel.untrusted.LiveSite) : _root_.noble_kernel.untrusted.LiveSite :=
+  { site_id := x.site_id
+    ref_ordinal := x.ref_ordinal
+    root_logical_input_position := x.root_logical_input_position
+    forwarded_ref_ordinals := x.forwarded_ref_ordinals
+    stack_in := toTyVec x.stack_in
+    stack_out := toTyVec x.stack_out
+    allowed_effects := x.allowed_effects }
+
+def fromLiveSite (x : _root_.noble_kernel.untrusted.LiveSite) : noble_kernel.untrusted.LiveSite :=
+  { site_id := x.site_id
+    ref_ordinal := x.ref_ordinal
+    root_logical_input_position := x.root_logical_input_position
+    forwarded_ref_ordinals := x.forwarded_ref_ordinals
+    stack_in := fromTyVec x.stack_in
+    stack_out := fromTyVec x.stack_out
+    allowed_effects := x.allowed_effects }
+
+@[simp] theorem fromLiveSite_toLiveSite (x : noble_kernel.untrusted.LiveSite) :
+    fromLiveSite (toLiveSite x) = x := by
+  cases x
+  simp [fromLiveSite, toLiveSite]
+
+@[simp] theorem toLiveSite_fromLiveSite (x : _root_.noble_kernel.untrusted.LiveSite) :
+    toLiveSite (fromLiveSite x) = x := by
+  cases x
+  simp [toLiveSite, fromLiveSite]
+
 def toChecked (x : noble_kernel.untrusted.Checked) : _root_.noble_kernel.untrusted.Checked :=
   { interface := toInterface x.interface
-    derivations := mapVec toDerivation x.derivations }
+    derivations := mapVec toDerivation x.derivations
+    live_sites := mapVec toLiveSite x.live_sites }
 
 def fromChecked (x : _root_.noble_kernel.untrusted.Checked) : noble_kernel.untrusted.Checked :=
   { interface := fromInterface x.interface
-    derivations := mapVec fromDerivation x.derivations }
+    derivations := mapVec fromDerivation x.derivations
+    live_sites := mapVec fromLiveSite x.live_sites }
 
 @[simp] theorem fromChecked_toChecked (x : noble_kernel.untrusted.Checked) :
     fromChecked (toChecked x) = x := by
@@ -1246,6 +1574,8 @@ def toConstraint : noble_kernel.untrusted.Constraint → _root_.noble_kernel.unt
   | .InvalidContract => .InvalidContract
   | .PrivateDefinition id => .PrivateDefinition id
   | .CyclicWitness => .CyclicWitness
+  | .BorrowProvenance => .BorrowProvenance
+  | .SlotSite => .SlotSite
 
 def fromConstraint : _root_.noble_kernel.untrusted.Constraint → noble_kernel.untrusted.Constraint
   | .StackJoin => .StackJoin
@@ -1261,6 +1591,8 @@ def fromConstraint : _root_.noble_kernel.untrusted.Constraint → noble_kernel.u
   | .InvalidContract => .InvalidContract
   | .PrivateDefinition id => .PrivateDefinition id
   | .CyclicWitness => .CyclicWitness
+  | .BorrowProvenance => .BorrowProvenance
+  | .SlotSite => .SlotSite
 
 @[simp] theorem fromConstraint_toConstraint (x : noble_kernel.untrusted.Constraint) :
     fromConstraint (toConstraint x) = x := by
@@ -1412,6 +1744,12 @@ def fromInstError : _root_.noble_kernel.words.InstError → noble_kernel.words.I
     toInstError (fromInstError x) = x := by
   cases x <;> simp [toInstError, fromInstError]
 
+def fromCloneBudget (x : _root_.noble_kernel.contracts.clone_budget.CloneBudget) :
+    noble_kernel.contracts.clone_budget.CloneBudget :=
+  { bytes := x.bytes
+    allocations := x.allocations
+    reserved_bytes := x.reserved_bytes }
+
 end KernelBridge
 
 /-! Each kernel boundary calls the inherited extraction. The outer Result bind
@@ -1428,6 +1766,43 @@ def noble_kernel.acceptance.check (env : noble_kernel.contracts.Env)
     (toEnv env) (toRequest request) (toCandidate candidate)
   ok (fromOutcome outcome)
 
+/-- The signed-owner entry of the inherited checker: the owner definition is the
+same `u32` identity on both sides and the owner instantiation is transported
+losslessly. -/
+@[rust_fun "noble_kernel::acceptance::check_signed_structure"]
+def noble_kernel.acceptance.check_signed_structure (env : noble_kernel.contracts.Env)
+    (request : noble_kernel.untrusted.Request) (candidate : noble_kernel.untrusted.Candidate)
+    (owner : noble_kernel.contracts.Definition) (inst : noble_kernel.words.Inst) :
+    Result noble_kernel.untrusted.Outcome := do
+  let outcome ← _root_.noble_kernel.acceptance.check_signed_structure
+    (toEnv env) (toRequest request) (toCandidate candidate) owner (toInst inst)
+  ok (fromOutcome outcome)
+
+@[rust_const "noble_kernel::contracts::clone_budget::CALCULATOR_ENVIRONMENT_ROW_LIMIT"]
+def noble_kernel.contracts.clone_budget.CALCULATOR_ENVIRONMENT_ROW_LIMIT : Result Usize :=
+  ok _root_.noble_kernel.contracts.clone_budget.CALCULATOR_ENVIRONMENT_ROW_LIMIT
+
+/-- The inherited constant is itself a checked shift, so its Result is reused. -/
+@[rust_const "noble_kernel::contracts::clone_budget::CALCULATOR_ENV_CLONE_FANOUT_LIMIT"]
+def noble_kernel.contracts.clone_budget.CALCULATOR_ENV_CLONE_FANOUT_LIMIT : Result U64 :=
+  _root_.noble_kernel.contracts.clone_budget.CALCULATOR_ENV_CLONE_FANOUT_LIMIT
+
+/-- The inherited clone-budget walk. It reaches the inherited `size_of` model,
+which fails with `undef` (see `NobleKernel/FunsExternal.lean`), so no successful
+budget is derivable through this boundary either. -/
+@[rust_fun "noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget"]
+def noble_kernel.contracts.clone_budget.Env.calculator_clone_budget
+    (env : noble_kernel.contracts.Env) :
+    Result (Option noble_kernel.contracts.clone_budget.CloneBudget) := do
+  let budget ← _root_.noble_kernel.contracts.clone_budget.Env.calculator_clone_budget (toEnv env)
+  ok (budget.map fromCloneBudget)
+
+@[rust_fun "noble_kernel::contracts::{core::fmt::Debug<noble_kernel::contracts::Definition>}::fmt"]
+def noble_kernel.contracts.Definition.Insts.CoreFmtDebug.fmt
+    (definition : noble_kernel.contracts.Definition) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.contracts.Definition.Insts.CoreFmtDebug.fmt definition formatter
+
 @[rust_fun "noble_kernel::contracts::{core::clone::Clone<noble_kernel::contracts::Definition>}::clone"]
 def noble_kernel.contracts.Definition.Insts.CoreCloneClone.clone
     (definition : noble_kernel.contracts.Definition) :
@@ -1443,6 +1818,33 @@ def noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq
 def noble_kernel.contracts.FIXTURE_RESOURCE : Result noble_kernel.types.ResourceKind :=
   ok _root_.noble_kernel.contracts.FIXTURE_RESOURCE
 
+@[rust_const "noble_kernel::contracts::TEST_EMIT"]
+def noble_kernel.contracts.TEST_EMIT : Result noble_kernel.types.EffId :=
+  ok _root_.noble_kernel.contracts.TEST_EMIT
+
+@[rust_const "noble_kernel::contracts::TEST_CLOCK"]
+def noble_kernel.contracts.TEST_CLOCK : Result noble_kernel.types.EffId :=
+  ok _root_.noble_kernel.contracts.TEST_CLOCK
+
+@[rust_const "noble_kernel::contracts::TEST_CODE_EXPORT"]
+def noble_kernel.contracts.TEST_CODE_EXPORT : Result noble_kernel.types.EffId :=
+  ok _root_.noble_kernel.contracts.TEST_CODE_EXPORT
+
+@[rust_const "noble_kernel::contracts::TEST_SEND"]
+def noble_kernel.contracts.TEST_SEND : Result noble_kernel.types.EffId :=
+  ok _root_.noble_kernel.contracts.TEST_SEND
+
+@[rust_const "noble_kernel::contracts::LIVE_DISPATCH"]
+def noble_kernel.contracts.LIVE_DISPATCH : Result noble_kernel.types.EffId :=
+  ok _root_.noble_kernel.contracts.LIVE_DISPATCH
+
+@[rust_fun "noble_kernel::contracts::{core::clone::Clone<noble_kernel::contracts::Behavior>}::clone"]
+def noble_kernel.contracts.Behavior.Insts.CoreCloneClone.clone
+    (behavior : noble_kernel.contracts.Behavior) : Result noble_kernel.contracts.Behavior := do
+  let cloned ← _root_.noble_kernel.contracts.Behavior.Insts.CoreCloneClone.clone
+    (toBehavior behavior)
+  ok (fromBehavior cloned)
+
 @[rust_fun "noble_kernel::contracts::{core::cmp::PartialEq<noble_kernel::contracts::Behavior, noble_kernel::contracts::Behavior>}::eq"]
 def noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq
     (left right : noble_kernel.contracts.Behavior) : Result Bool :=
@@ -1457,11 +1859,100 @@ def noble_kernel.contracts.NominalDecl.Insts.CoreCloneClone.clone
     (toNominalDecl decl)
   ok (fromNominalDecl cloned)
 
+@[rust_fun "noble_kernel::contracts::{core::fmt::Debug<noble_kernel::contracts::NominalDecl>}::fmt"]
+def noble_kernel.contracts.NominalDecl.Insts.CoreFmtDebug.fmt
+    (decl : noble_kernel.contracts.NominalDecl) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.contracts.NominalDecl.Insts.CoreFmtDebug.fmt (toNominalDecl decl) formatter
+
+@[rust_fun "noble_kernel::contracts::{core::clone::Clone<noble_kernel::contracts::GenericVariantDecl>}::clone"]
+def noble_kernel.contracts.GenericVariantDecl.Insts.CoreCloneClone.clone
+    (decl : noble_kernel.contracts.GenericVariantDecl) :
+    Result noble_kernel.contracts.GenericVariantDecl := do
+  let cloned ← _root_.noble_kernel.contracts.GenericVariantDecl.Insts.CoreCloneClone.clone
+    (toGenericVariantDecl decl)
+  ok (fromGenericVariantDecl cloned)
+
 @[rust_fun "noble_kernel::contracts::{core::clone::Clone<noble_kernel::contracts::Env>}::clone"]
 def noble_kernel.contracts.Env.Insts.CoreCloneClone.clone
     (env : noble_kernel.contracts.Env) : Result noble_kernel.contracts.Env := do
   let cloned ← _root_.noble_kernel.contracts.Env.Insts.CoreCloneClone.clone (toEnv env)
   ok (fromEnv cloned)
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::enable_live_slots"]
+def noble_kernel.contracts.Env.enable_live_slots (env : noble_kernel.contracts.Env) :
+    Result noble_kernel.contracts.Env := do
+  let enabled ← _root_.noble_kernel.contracts.Env.enable_live_slots (toEnv env)
+  ok (fromEnv enabled)
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::has_checked_i64"]
+def noble_kernel.contracts.Env.has_checked_i64 (env : noble_kernel.contracts.Env) :
+    Result Bool :=
+  _root_.noble_kernel.contracts.Env.has_checked_i64 (toEnv env)
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::register_live_resource"]
+def noble_kernel.contracts.Env.register_live_resource (env : noble_kernel.contracts.Env)
+    (decl : noble_kernel.contracts.NominalDecl) :
+    Result (core.result.Result noble_kernel.contracts.Env noble_kernel.contracts.NominalError) := do
+  let result ← _root_.noble_kernel.contracts.Env.register_live_resource
+    (toEnv env) (toNominalDecl decl)
+  match result with
+  | .Ok registered => ok (.Ok (fromEnv registered))
+  | .Err error => ok (.Err (fromNominalError error))
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_instance_matches"]
+def noble_kernel.contracts.Env.generic_instance_matches (env : noble_kernel.contracts.Env)
+    (ty : noble_kernel.types.Ty) (id : noble_kernel.types.NominalTypeId) : Result Bool :=
+  _root_.noble_kernel.contracts.Env.generic_instance_matches
+    (toEnv env) (toTy ty) (toNominalTypeId id)
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_generic_variant"]
+def noble_kernel.contracts.Env.declare_generic_variant (env : noble_kernel.contracts.Env)
+    (decl : noble_kernel.contracts.GenericVariantDecl) :
+    Result (core.result.Result
+      (noble_kernel.contracts.Env × noble_kernel.contracts.NominalOps)
+      noble_kernel.contracts.NominalError) := do
+  let result ← _root_.noble_kernel.contracts.Env.declare_generic_variant
+    (toEnv env) (toGenericVariantDecl decl)
+  match result with
+  | .Ok (registered, ops) => ok (.Ok (fromEnv registered, fromNominalOps ops))
+  | .Err error => ok (.Err (fromNominalError error))
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_clock"]
+def noble_kernel.contracts.Env.declare_bound_clock (env : noble_kernel.contracts.Env)
+    (registration : noble_kernel.contracts.BoundClockRegistration) :
+    Result (core.result.Result
+      (noble_kernel.contracts.Env × noble_kernel.contracts.Definition)
+      noble_kernel.contracts.NominalError) := do
+  let result ← _root_.noble_kernel.contracts.Env.declare_bound_clock
+    (toEnv env) (toBoundClockRegistration registration)
+  match result with
+  | .Ok (registered, definition) => ok (.Ok (fromEnv registered, definition))
+  | .Err error => ok (.Err (fromNominalError error))
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_code_export"]
+def noble_kernel.contracts.Env.declare_bound_code_export (env : noble_kernel.contracts.Env)
+    (registration : noble_kernel.contracts.BoundCodeExportRegistration) :
+    Result (core.result.Result
+      (noble_kernel.contracts.Env × noble_kernel.contracts.Definition)
+      noble_kernel.contracts.NominalError) := do
+  let result ← _root_.noble_kernel.contracts.Env.declare_bound_code_export
+    (toEnv env) (toBoundCodeExportRegistration registration)
+  match result with
+  | .Ok (registered, definition) => ok (.Ok (fromEnv registered, definition))
+  | .Err error => ok (.Err (fromNominalError error))
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_send"]
+def noble_kernel.contracts.Env.declare_bound_send (env : noble_kernel.contracts.Env)
+    (registration : noble_kernel.contracts.BoundSendRegistration) :
+    Result (core.result.Result
+      (noble_kernel.contracts.Env × noble_kernel.contracts.Definition)
+      noble_kernel.contracts.NominalError) := do
+  let result ← _root_.noble_kernel.contracts.Env.declare_bound_send
+    (toEnv env) (toBoundSendRegistration registration)
+  match result with
+  | .Ok (registered, definition) => ok (.Ok (fromEnv registered, definition))
+  | .Err error => ok (.Err (fromNominalError error))
 
 @[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::nominal"]
 def noble_kernel.contracts.Env.nominal (env : noble_kernel.contracts.Env)
@@ -1516,6 +2007,53 @@ def noble_kernel.contracts.environment :
   | .Ok env => ok (.Ok (fromEnv env))
   | .Err error => ok (.Err (fromDefect error))
 
+@[rust_fun "noble_kernel::contracts::text_cursor_environment"]
+def noble_kernel.contracts.text_cursor_environment :
+    Result (core.result.Result noble_kernel.contracts.Env noble_kernel.shapes.Defect) := do
+  let result ← _root_.noble_kernel.contracts.text_cursor_environment
+  match result with
+  | .Ok env => ok (.Ok (fromEnv env))
+  | .Err error => ok (.Err (fromDefect error))
+
+@[rust_fun "noble_kernel::contracts::checked_i64_environment"]
+def noble_kernel.contracts.checked_i64_environment :
+    Result (core.result.Result noble_kernel.contracts.Env noble_kernel.shapes.Defect) := do
+  let result ← _root_.noble_kernel.contracts.checked_i64_environment
+  match result with
+  | .Ok env => ok (.Ok (fromEnv env))
+  | .Err error => ok (.Err (fromDefect error))
+
+@[rust_fun "noble_kernel::contracts::calculator_environment"]
+def noble_kernel.contracts.calculator_environment :
+    Result (core.result.Result noble_kernel.contracts.Env noble_kernel.shapes.Defect) := do
+  let result ← _root_.noble_kernel.contracts.calculator_environment
+  match result with
+  | .Ok env => ok (.Ok (fromEnv env))
+  | .Err error => ok (.Err (fromDefect error))
+
+@[rust_fun "noble_kernel::contracts::declared_text_environment"]
+def noble_kernel.contracts.declared_text_environment :
+    Result (core.result.Result noble_kernel.contracts.Env noble_kernel.shapes.Defect) := do
+  let result ← _root_.noble_kernel.contracts.declared_text_environment
+  match result with
+  | .Ok env => ok (.Ok (fromEnv env))
+  | .Err error => ok (.Err (fromDefect error))
+
+@[rust_fun "noble_kernel::shapes::impls::{core::clone::Clone<noble_kernel::shapes::Pattern>}::clone"]
+def noble_kernel.shapes.Pattern.Insts.CoreCloneClone.clone
+    (pattern : noble_kernel.shapes.Pattern) : Result noble_kernel.shapes.Pattern := do
+  let cloned ← _root_.noble_kernel.shapes.Pattern.Insts.CoreCloneClone.clone (toPattern pattern)
+  ok (fromPattern cloned)
+
+@[rust_fun "noble_kernel::shapes::{noble_kernel::shapes::Pattern}::program"]
+def noble_kernel.shapes.Pattern.program
+    (stackIn stackOut : alloc.vec.Vec noble_kernel.shapes.Pattern)
+    (effects : alloc.vec.Vec noble_kernel.shapes.EffectSlot) :
+    Result noble_kernel.shapes.Pattern := do
+  let pattern ← _root_.noble_kernel.shapes.Pattern.program
+    (toPatternVec stackIn) (toPatternVec stackOut) (mapVec toEffectSlot effects)
+  ok (fromPattern pattern)
+
 @[rust_fun "noble_kernel::shapes::impls::{core::cmp::PartialEq<noble_kernel::shapes::Pattern, noble_kernel::shapes::Pattern>}::eq"]
 def noble_kernel.shapes.Pattern.Insts.CoreCmpPartialEqPattern.eq
     (left right : noble_kernel.shapes.Pattern) : Result Bool :=
@@ -1538,10 +2076,27 @@ def noble_kernel.types.Ty.Insts.CoreCloneClone.clone (ty : noble_kernel.types.Ty
   let cloned ← _root_.noble_kernel.types.Ty.Insts.CoreCloneClone.clone (toTy ty)
   ok (fromTy cloned)
 
+@[rust_fun "noble_kernel::types::impls::{core::fmt::Debug<noble_kernel::types::Ty>}::fmt"]
+def noble_kernel.types.Ty.Insts.CoreFmtDebug.fmt (ty : noble_kernel.types.Ty)
+    (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.types.Ty.Insts.CoreFmtDebug.fmt (toTy ty) formatter
+
 @[rust_fun "noble_kernel::types::impls::{core::cmp::PartialEq<noble_kernel::types::Ty, noble_kernel::types::Ty>}::eq"]
 def noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq
     (left right : noble_kernel.types.Ty) : Result Bool :=
   _root_.noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq (toTy left) (toTy right)
+
+@[rust_fun "noble_kernel::types::{core::clone::Clone<noble_kernel::types::ResourceKind>}::clone"]
+def noble_kernel.types.ResourceKind.Insts.CoreCloneClone.clone
+    (kind : noble_kernel.types.ResourceKind) : Result noble_kernel.types.ResourceKind :=
+  _root_.noble_kernel.types.ResourceKind.Insts.CoreCloneClone.clone kind
+
+@[rust_fun "noble_kernel::types::{core::fmt::Debug<noble_kernel::types::ResourceKind>}::fmt"]
+def noble_kernel.types.ResourceKind.Insts.CoreFmtDebug.fmt
+    (kind : noble_kernel.types.ResourceKind) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.types.ResourceKind.Insts.CoreFmtDebug.fmt kind formatter
 
 @[rust_fun "noble_kernel::types::{core::cmp::PartialEq<noble_kernel::types::ResourceKind, noble_kernel::types::ResourceKind>}::eq"]
 def noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
@@ -1570,6 +2125,17 @@ def noble_kernel.types.EffSet.Insts.CoreCloneClone.clone
     (effects : noble_kernel.types.EffSet) : Result noble_kernel.types.EffSet :=
   _root_.noble_kernel.types.EffSet.Insts.CoreCloneClone.clone effects
 
+@[rust_fun "noble_kernel::types::{core::fmt::Debug<noble_kernel::types::EffSet>}::fmt"]
+def noble_kernel.types.EffSet.Insts.CoreFmtDebug.fmt
+    (effects : noble_kernel.types.EffSet) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.types.EffSet.Insts.CoreFmtDebug.fmt effects formatter
+
+@[rust_fun "noble_kernel::types::{noble_kernel::types::EffSet}::is_subset_of"]
+def noble_kernel.types.EffSet.is_subset_of (effects other : noble_kernel.types.EffSet) :
+    Result Bool :=
+  _root_.noble_kernel.types.EffSet.is_subset_of effects other
+
 @[rust_fun "noble_kernel::types::{core::cmp::PartialEq<noble_kernel::types::EffSet, noble_kernel::types::EffSet>}::eq"]
 def noble_kernel.types.EffSet.Insts.CoreCmpPartialEqEffSet.eq
     (left right : noble_kernel.types.EffSet) : Result Bool :=
@@ -1595,6 +2161,17 @@ def noble_kernel.untrusted.CANDIDATE_FORMAT : Result U32 :=
 @[rust_const "noble_kernel::untrusted::SEMANTIC_REVISION"]
 def noble_kernel.untrusted.SEMANTIC_REVISION : Result U32 :=
   ok _root_.noble_kernel.untrusted.SEMANTIC_REVISION
+
+@[rust_fun "noble_kernel::untrusted::{core::clone::Clone<noble_kernel::untrusted::NodeId>}::clone"]
+def noble_kernel.untrusted.NodeId.Insts.CoreCloneClone.clone
+    (node : noble_kernel.untrusted.NodeId) : Result noble_kernel.untrusted.NodeId :=
+  _root_.noble_kernel.untrusted.NodeId.Insts.CoreCloneClone.clone node
+
+@[rust_fun "noble_kernel::untrusted::{core::fmt::Debug<noble_kernel::untrusted::NodeId>}::fmt"]
+def noble_kernel.untrusted.NodeId.Insts.CoreFmtDebug.fmt
+    (node : noble_kernel.untrusted.NodeId) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.untrusted.NodeId.Insts.CoreFmtDebug.fmt node formatter
 
 @[rust_fun "noble_kernel::untrusted::{core::cmp::PartialEq<noble_kernel::untrusted::NodeId, noble_kernel::untrusted::NodeId>}::eq"]
 def noble_kernel.untrusted.NodeId.Insts.CoreCmpPartialEqNodeId.eq

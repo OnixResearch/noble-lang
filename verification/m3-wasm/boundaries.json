@@ -1,0 +1,1643 @@
+{
+  "schema": "m3-wasm-boundaries/v1",
+  "scope": "Every external boundary of the noble-wasm extraction (translation.json functions that are not local, globals and types in the External templates, and local opaque functions), each with the Lean module that must define its model and the review class of that model. verification/m3-wasm/implementation.mjs refuses a translation whose boundary set differs; proofs/m3-wasm/ExtractionGate.lean refuses a model defined outside its recorded module, an axiom, or an unsafe definition.",
+  "review_classes": {
+    "kernel-delegation": "Calls the inherited kernel extraction (proofs/m3/NobleKernel) through the total, lossless KernelBridge conversions; failures and divergence propagate.",
+    "kernel-constant": "The inherited kernel extraction value of the same Rust constant.",
+    "kernel-type": "Alias of the inherited kernel type or of its reviewed external type model.",
+    "frontend-delegation": "Calls the actual extracted frontend function (proofs/mc1/NobleContractImpl) through the total, lossless ContractsBridge and KernelBridge conversions; failures and divergence propagate.",
+    "frontend-constant": "The actual extracted frontend value of the same Rust constant.",
+    "frontend-type": "Alias of the actual extracted frontend type or of its reviewed external type model.",
+    "inherited-model": "Calls the inherited kernel or frontend model of the same Rust item, already reviewed in that lane.",
+    "std-value-model": "Value model of the Rust standard-library item following the pinned std source: supplied trait implementations run in Rust order with their failures; allocation, capacity and layout are not represented (see the StdModels.lean header).",
+    "std-value-type": "Value-only representation of the standard-library type (see TypesExternal.lean).",
+    "undefined-outside-value-model": "Returns fail .undef, directly or through the inherited kernel model: the Rust value depends on allocation identity, type layout, raw-pointer provenance or hasher write splitting, which the value model cannot represent, so no ok result is claimed (see the StdModels.lean header).",
+    "opaque-rendering": "The crate's reviewed #[charon::opaque] Debug rendering, modelled as the abstract-formatter pass-through it computes (see FunsExternal.lean)."
+  },
+  "boundaries": [
+    {
+      "lean_name": "alloc.collections.btree.map.BTreeMap.entry",
+      "rust_name": "alloc::collections::btree::map::{alloc::collections::btree::map::BTreeMap<K, V, A>}::entry",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.BTreeMap.get",
+      "rust_name": "alloc::collections::btree::map::{alloc::collections::btree::map::BTreeMap<K, V, A>}::get",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.BTreeMap.insert",
+      "rust_name": "alloc::collections::btree::map::{alloc::collections::btree::map::BTreeMap<K, V, A>}::insert",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.BTreeMap.Insts.CoreCloneClone.clone",
+      "rust_name": "alloc::collections::btree::map::{impl core::clone::Clone for alloc::collections::btree::map::BTreeMap<K, V, A>}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.BTreeMap.Insts.CoreCmpPartialEqBTreeMap.eq",
+      "rust_name": "alloc::collections::btree::map::{impl core::cmp::PartialEq<alloc::collections::btree::map::BTreeMap<K, V, A>> for alloc::collections::btree::map::BTreeMap<K, V, A>}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.BTreeMap.Insts.CoreFmtDebug.fmt",
+      "rust_name": "alloc::collections::btree::map::{impl core::fmt::Debug for alloc::collections::btree::map::BTreeMap<K, V, A>}::fmt",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.BTreeMap.Insts.CoreHashHash.hash",
+      "rust_name": "alloc::collections::btree::map::{impl core::hash::Hash for alloc::collections::btree::map::BTreeMap<K, V, A>}::hash",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.BTreeMap.is_empty",
+      "rust_name": "alloc::collections::btree::map::{alloc::collections::btree::map::BTreeMap<K, V, A>}::is_empty",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.BTreeMap.keys",
+      "rust_name": "alloc::collections::btree::map::{alloc::collections::btree::map::BTreeMap<K, V, A>}::keys",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.BTreeMap.len",
+      "rust_name": "alloc::collections::btree::map::{alloc::collections::btree::map::BTreeMap<K, V, A>}::len",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.BTreeMap.values",
+      "rust_name": "alloc::collections::btree::map::{alloc::collections::btree::map::BTreeMap<K, V, A>}::values",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.BTreeMapKVGlobal.new",
+      "rust_name": "alloc::collections::btree::map::{alloc::collections::btree::map::BTreeMap<K, V, alloc::alloc::Global>}::new",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.entry.Entry.or_default",
+      "rust_name": "alloc::collections::btree::map::entry::{alloc::collections::btree::map::entry::Entry<'a, K, V, A>}::or_default",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.Keys.Insts.CoreIterTraitsIteratorIteratorSharedAK.next",
+      "rust_name": "alloc::collections::btree::map::{impl core::iter::traits::iterator::Iterator<&'a K> for alloc::collections::btree::map::Keys<'a, K, V>}::next",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.Values.Insts.CoreIterTraitsIteratorIteratorSharedAV.next",
+      "rust_name": "alloc::collections::btree::map::{impl core::iter::traits::iterator::Iterator<&'a V> for alloc::collections::btree::map::Values<'a, K, V>}::next",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.rc.Rc.Insts.CoreCloneClone.clone",
+      "rust_name": "alloc::rc::{impl core::clone::Clone for alloc::rc::Rc<T>}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.rc.Rc.Insts.CoreCmpPartialEqRc.eq",
+      "rust_name": "alloc::rc::{impl core::cmp::PartialEq<alloc::rc::Rc<T>> for alloc::rc::Rc<T>}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.rc.Rc.Insts.CoreCmpPartialEqRc.ne",
+      "rust_name": "alloc::rc::{impl core::cmp::PartialEq<alloc::rc::Rc<T>> for alloc::rc::Rc<T>}::ne",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.rc.Rc.Insts.CoreConvertAsRef.as_ref",
+      "rust_name": "alloc::rc::{impl core::convert::AsRef<T> for alloc::rc::Rc<T>}::as_ref",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.rc.Rc.Insts.CoreFmtDebug.fmt",
+      "rust_name": "alloc::rc::{impl core::fmt::Debug for alloc::rc::Rc<T>}::fmt",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.rc.Rc.Insts.CoreOpsDerefDeref.deref",
+      "rust_name": "alloc::rc::{impl core::ops::deref::Deref<T> for alloc::rc::Rc<T>}::deref",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.rc.Rc.new",
+      "rust_name": "alloc::rc::{alloc::rc::Rc<T>}::new",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.rc.Rc.ptr_eq",
+      "rust_name": "alloc::rc::{alloc::rc::Rc<T>}::ptr_eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "undefined-outside-value-model"
+    },
+    {
+      "lean_name": "alloc.string.String.as_bytes",
+      "rust_name": "alloc::string::{alloc::string::String}::as_bytes",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "alloc.string.String.Insts.CoreCloneClone.clone",
+      "rust_name": "alloc::string::{impl core::clone::Clone for alloc::string::String}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "alloc.string.String.len",
+      "rust_name": "alloc::string::{alloc::string::String}::len",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.as_slice",
+      "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::as_slice",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.clear",
+      "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::clear",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.Insts.CoreBorrowBorrowSlice.borrow",
+      "rust_name": "alloc::slice::{impl core::borrow::Borrow<[T]> for alloc::vec::Vec<T>}::borrow",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.Insts.CoreCmpOrd.cmp",
+      "rust_name": "alloc::vec::{impl core::cmp::Ord for alloc::vec::Vec<T>}::cmp",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.Insts.CoreCmpPartialEqArray.eq",
+      "rust_name": "alloc::vec::partial_eq::{impl core::cmp::PartialEq<[U; N]> for alloc::vec::Vec<T>}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.Insts.CoreCmpPartialEqArray.ne",
+      "rust_name": "alloc::vec::partial_eq::{impl core::cmp::PartialEq<[U; N]> for alloc::vec::Vec<T>}::ne",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.Insts.CoreCmpPartialOrdVec.partial_cmp",
+      "rust_name": "alloc::vec::{impl core::cmp::PartialOrd<alloc::vec::Vec<T>> for alloc::vec::Vec<T>}::partial_cmp",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.Insts.CoreDefaultDefault.default",
+      "rust_name": "alloc::vec::{impl core::default::Default for alloc::vec::Vec<T>}::default",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.Insts.CoreHashHash.hash",
+      "rust_name": "alloc::vec::{impl core::hash::Hash for alloc::vec::Vec<T>}::hash",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "undefined-outside-value-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.is_empty",
+      "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::is_empty",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.pop",
+      "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::pop",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.remove",
+      "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::remove",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.reserve",
+      "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::reserve",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.reserve_exact",
+      "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::reserve_exact",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.retain",
+      "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::retain",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "alloc.vec.Vec.truncate",
+      "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::truncate",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "Array.Insts.CoreIterTraitsCollectIntoIteratorTIntoIter.into_iter",
+      "rust_name": "core::array::iter::{impl core::iter::traits::collect::IntoIterator<T, core::array::iter::IntoIter<T, N>> for [T; N]}::into_iter",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "Bool.Insts.CoreHashHash.hash",
+      "rust_name": "core::hash::impls::{impl core::hash::Hash for bool}::hash",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "Box.Insts.CoreConvertAsRef.as_ref",
+      "rust_name": "alloc::boxed::{impl core::convert::AsRef<T> for alloc::boxed::Box<T>}::as_ref",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.array.from_fn",
+      "rust_name": "core::array::from_fn",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.array.iter.IntoIter.Insts.CoreIterTraitsIteratorIterator.next",
+      "rust_name": "core::array::iter::{impl core::iter::traits::iterator::Iterator<T> for core::array::iter::IntoIter<T, N>}::next",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.bool.Bool.then_some",
+      "rust_name": "core::bool::{bool}::then_some",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.borrow.Borrow.Blanket.borrow",
+      "rust_name": "core::borrow::{impl core::borrow::Borrow<T> for T}::borrow",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.mem.size_of",
+      "rust_name": "core::mem::size_of",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "undefined-outside-value-model"
+    },
+    {
+      "lean_name": "core.mem.take",
+      "rust_name": "core::mem::take",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.num.I64.unsigned_abs",
+      "rust_name": "core::num::{i64}::unsigned_abs",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.num.U64.saturating_mul",
+      "rust_name": "core::num::{u64}::saturating_mul",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.num.Usize.checked_ilog2",
+      "rust_name": "core::num::{usize}::checked_ilog2",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.num.Usize.saturating_mul",
+      "rust_name": "core::num::{usize}::saturating_mul",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.ops.range.RangeInclusive.contains",
+      "rust_name": "core::ops::range::{core::ops::range::RangeInclusive<Idx>}::contains",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get",
+      "rust_name": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeTo<usize>}::get",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_mut",
+      "rust_name": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeTo<usize>}::get_mut",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked",
+      "rust_name": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeTo<usize>}::get_unchecked",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "undefined-outside-value-model"
+    },
+    {
+      "lean_name": "core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked_mut",
+      "rust_name": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeTo<usize>}::get_unchecked_mut",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "undefined-outside-value-model"
+    },
+    {
+      "lean_name": "core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.index",
+      "rust_name": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeTo<usize>}::index",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.index_mut",
+      "rust_name": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeTo<usize>}::index_mut",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.option.Option.and_then",
+      "rust_name": "core::option::{core::option::Option<T>}::and_then",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.option.Option.as_ref",
+      "rust_name": "core::option::{core::option::Option<T>}::as_ref",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.option.Option.filter",
+      "rust_name": "core::option::{core::option::Option<T>}::filter",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.option.Option.get_or_insert_with",
+      "rust_name": "core::option::{core::option::Option<T>}::get_or_insert_with",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.option.Option.Insts.CoreCloneClone.clone",
+      "rust_name": "core::option::{impl core::clone::Clone for core::option::Option<T>}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.option.Option.Insts.CoreCmpPartialEqOption.eq",
+      "rust_name": "core::option::{impl core::cmp::PartialEq<core::option::Option<T>> for core::option::Option<T>}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.option.Option.Insts.CoreFmtDebug.fmt",
+      "rust_name": "core::option::{impl core::fmt::Debug for core::option::Option<T>}::fmt",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual",
+      "rust_name": "core::option::{impl core::ops::try_trait::FromResidual<core::option::Option<!>> for core::option::Option<T>}::from_residual",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.option.Option.Insts.CoreOpsTry_traitTry.branch",
+      "rust_name": "core::option::{impl core::ops::try_trait::Try for core::option::Option<T>}::branch",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.option.Option.is_none_or",
+      "rust_name": "core::option::{core::option::Option<T>}::is_none_or",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.option.Option.map_or",
+      "rust_name": "core::option::{core::option::Option<T>}::map_or",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.option.Option.replace",
+      "rust_name": "core::option::{core::option::Option<T>}::replace",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.option.Option.unwrap_or_else",
+      "rust_name": "core::option::{core::option::Option<T>}::unwrap_or_else",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.option.Option.zip",
+      "rust_name": "core::option::{core::option::Option<T>}::zip",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.option.OptionOption.flatten",
+      "rust_name": "core::option::{core::option::Option<core::option::Option<T>>}::flatten",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.option.OptionShared0T.copied",
+      "rust_name": "core::option::{core::option::Option<&'_0 T>}::copied",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.result.Result.is_err",
+      "rust_name": "core::result::{core::result::Result<T, E>}::is_err",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.result.Result.ok",
+      "rust_name": "core::result::{core::result::Result<T, E>}::ok",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.slice.raw.from_ref",
+      "rust_name": "core::slice::raw::from_ref",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.slice.Slice.first",
+      "rust_name": "core::slice::{[T]}::first",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.slice.Slice.last",
+      "rust_name": "core::slice::{[T]}::last",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.slice.Slice.partition_point",
+      "rust_name": "core::slice::{[T]}::partition_point",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.slice.Slice.starts_with",
+      "rust_name": "core::slice::{[T]}::starts_with",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.str.converts.from_utf8",
+      "rust_name": "core::str::converts::from_utf8",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "core.str.Str.as_bytes",
+      "rust_name": "core::str::{str}::as_bytes",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "core.str.Str.get",
+      "rust_name": "core::str::{str}::get",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "I64.Insts.CoreConvertFromU32.from",
+      "rust_name": "core::convert::num::{impl core::convert::From<u32> for i64}::from",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "noble_contracts.component.CheckedExport.index",
+      "rust_name": "noble_contracts::component::{noble_contracts::component::CheckedExport}::index",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.component.CheckedExport.source",
+      "rust_name": "noble_contracts::component::{noble_contracts::component::CheckedExport}::source",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.component.CheckedExport.submission",
+      "rust_name": "noble_contracts::component::{noble_contracts::component::CheckedExport}::submission",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.component.CheckedExport.world_context",
+      "rust_name": "noble_contracts::component::{noble_contracts::component::CheckedExport}::world_context",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.component.context.World.build_context",
+      "rust_name": "noble_contracts::component::context::{noble_contracts::component::World}::build_context",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.component.Operation.input_types",
+      "rust_name": "noble_contracts::component::{noble_contracts::component::Operation}::input_types",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.component.Operation.output_types",
+      "rust_name": "noble_contracts::component::{noble_contracts::component::Operation}::output_types",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.component.Type.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_contracts::component::{impl core::clone::Clone for noble_contracts::component::Type}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.component.Type.Insts.CoreCmpPartialEqType.eq",
+      "rust_name": "noble_contracts::component::{impl core::cmp::PartialEq<noble_contracts::component::Type> for noble_contracts::component::Type}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.component.World.environment",
+      "rust_name": "noble_contracts::component::{noble_contracts::component::World}::environment",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.component.World.exports",
+      "rust_name": "noble_contracts::component::{noble_contracts::component::World}::exports",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.component.World.imports",
+      "rust_name": "noble_contracts::component::{noble_contracts::component::World}::imports",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.component.World.is_async",
+      "rust_name": "noble_contracts::component::{noble_contracts::component::World}::is_async",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.component.World.noble_type",
+      "rust_name": "noble_contracts::component::{noble_contracts::component::World}::noble_type",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.component.World.worker_program_kind",
+      "rust_name": "noble_contracts::component::{noble_contracts::component::World}::worker_program_kind",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.declared.state.DeclaredTextSourceOwner.rederive",
+      "rust_name": "noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.declared.state.SignedSourceOwner.rederive",
+      "rust_name": "noble_contracts::source::declared::state::{noble_contracts::source::declared::state::SignedSourceOwner<'_0>}::rederive",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedDefinitionId.identity",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedDefinitionId}::identity",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedDefinitionId.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_contracts::source::proof::{impl core::clone::Clone for noble_contracts::source::proof::CheckedDefinitionId}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedDefinitionId.Insts.CoreCmpPartialEqCheckedDefinitionId.eq",
+      "rust_name": "noble_contracts::source::proof::{impl core::cmp::PartialEq<noble_contracts::source::proof::CheckedDefinitionId> for noble_contracts::source::proof::CheckedDefinitionId}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedDefinitionId.Insts.CoreFmtDebug.fmt",
+      "rust_name": "noble_contracts::source::proof::{impl core::fmt::Debug for noble_contracts::source::proof::CheckedDefinitionId}::fmt",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedGeneratedWitness.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_contracts::source::proof::{impl core::clone::Clone for noble_contracts::source::proof::CheckedGeneratedWitness}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedGeneratedWitness.Insts.CoreFmtDebug.fmt",
+      "rust_name": "noble_contracts::source::proof::{impl core::fmt::Debug for noble_contracts::source::proof::CheckedGeneratedWitness}::fmt",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedQuoteSite.interface",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedQuoteSite<'_0>}::interface",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedSelectedTarget.body",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedSelectedTarget<'_0>}::body",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedSelectedTarget.checked_lexical_node",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedSelectedTarget<'_0>}::checked_lexical_node",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedSelectedTarget.checked_operation_site",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedSelectedTarget<'_0>}::checked_operation_site",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedSelectedTarget.checked_quote_site",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedSelectedTarget<'_0>}::checked_quote_site",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedSelectedTarget.definition",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedSelectedTarget<'_0>}::definition",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedSelectedTarget.definition_id",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedSelectedTarget<'_0>}::definition_id",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedSelectedTarget.is_generated_operation",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedSelectedTarget<'_0>}::is_generated_operation",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedSelectedTarget.lexical_body",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedSelectedTarget<'_0>}::lexical_body",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedSelectedTarget.lexical_nodes_len",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedSelectedTarget<'_0>}::lexical_nodes_len",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedSelectedTarget.root",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedSelectedTarget<'_0>}::root",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedSelectedTarget.source",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedSelectedTarget<'_0>}::source",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedSelectedTarget.source_generation",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedSelectedTarget<'_0>}::source_generation",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedSelectedTarget.submission",
+      "rust_name": "noble_contracts::source::proof::{noble_contracts::source::proof::CheckedSelectedTarget<'_0>}::submission",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.Span.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_contracts::{impl core::clone::Clone for noble_contracts::Span}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_contracts.Span.Insts.CoreFmtDebug.fmt",
+      "rust_name": "noble_contracts::{impl core::fmt::Debug for noble_contracts::Span}::fmt",
+      "kind": "function",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.acceptance.check",
+      "rust_name": "noble_kernel::acceptance::check",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.acceptance.check_signed_structure",
+      "rust_name": "noble_kernel::acceptance::check_signed_structure",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Behavior.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Behavior}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq",
+      "rust_name": "noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Behavior> for noble_kernel::contracts::Behavior}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.calculator_environment",
+      "rust_name": "noble_kernel::contracts::calculator_environment",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.checked_i64_environment",
+      "rust_name": "noble_kernel::contracts::checked_i64_environment",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.clone_budget.Env.calculator_clone_budget",
+      "rust_name": "noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.declared_text_environment",
+      "rust_name": "noble_kernel::contracts::declared_text_environment",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Definition.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Definition}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq",
+      "rust_name": "noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Definition> for noble_kernel::contracts::Definition}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Definition.Insts.CoreFmtDebug.fmt",
+      "rust_name": "noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Definition}::fmt",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Env.declare_bound_clock",
+      "rust_name": "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_clock",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Env.declare_bound_code_export",
+      "rust_name": "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_code_export",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Env.declare_bound_emit",
+      "rust_name": "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_emit",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Env.declare_bound_send",
+      "rust_name": "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_send",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Env.declare_generic_variant",
+      "rust_name": "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_generic_variant",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Env.declare_nominal",
+      "rust_name": "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_nominal",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Env.enable_live_slots",
+      "rust_name": "noble_kernel::contracts::{noble_kernel::contracts::Env}::enable_live_slots",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Env.generic_instance_matches",
+      "rust_name": "noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_instance_matches",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Env.has_checked_i64",
+      "rust_name": "noble_kernel::contracts::{noble_kernel::contracts::Env}::has_checked_i64",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Env.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Env.kind",
+      "rust_name": "noble_kernel::contracts::{noble_kernel::contracts::Env}::kind",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Env.nominal",
+      "rust_name": "noble_kernel::contracts::{noble_kernel::contracts::Env}::nominal",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Env.register_live_resource",
+      "rust_name": "noble_kernel::contracts::{noble_kernel::contracts::Env}::register_live_resource",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.Env.scheme",
+      "rust_name": "noble_kernel::contracts::{noble_kernel::contracts::Env}::scheme",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.environment",
+      "rust_name": "noble_kernel::contracts::environment",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.GenericVariantDecl.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::GenericVariantDecl}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.NominalDecl.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::NominalDecl}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.NominalDecl.Insts.CoreFmtDebug.fmt",
+      "rust_name": "noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::NominalDecl}::fmt",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.text_cursor_environment",
+      "rust_name": "noble_kernel::contracts::text_cursor_environment",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot.eq",
+      "rust_name": "noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::EffectSlot> for noble_kernel::shapes::EffectSlot}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.shapes.Pattern.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_kernel::shapes::impls::{impl core::clone::Clone for noble_kernel::shapes::Pattern}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.shapes.Pattern.Insts.CoreCmpPartialEqPattern.eq",
+      "rust_name": "noble_kernel::shapes::impls::{impl core::cmp::PartialEq<noble_kernel::shapes::Pattern> for noble_kernel::shapes::Pattern}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.shapes.Pattern.program",
+      "rust_name": "noble_kernel::shapes::{noble_kernel::shapes::Pattern}::program",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.data.Ty.is_data",
+      "rust_name": "noble_kernel::types::data::{noble_kernel::types::Ty}::is_data",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId.eq",
+      "rust_name": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffId> for noble_kernel::types::EffId}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.EffSet.as_slice",
+      "rust_name": "noble_kernel::types::{noble_kernel::types::EffSet}::as_slice",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.EffSet.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffSet}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.EffSet.Insts.CoreCmpPartialEqEffSet.eq",
+      "rust_name": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffSet> for noble_kernel::types::EffSet}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.EffSet.Insts.CoreFmtDebug.fmt",
+      "rust_name": "noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffSet}::fmt",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.EffSet.is_empty",
+      "rust_name": "noble_kernel::types::{noble_kernel::types::EffSet}::is_empty",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.EffSet.is_subset_of",
+      "rust_name": "noble_kernel::types::{noble_kernel::types::EffSet}::is_subset_of",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.NominalShape.Insts.CoreCmpPartialEqNominalShape.eq",
+      "rust_name": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::NominalShape> for noble_kernel::types::NominalShape}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq",
+      "rust_name": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::NominalTypeId> for noble_kernel::types::NominalTypeId}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.ResourceKind.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::ResourceKind}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq",
+      "rust_name": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::ResourceKind> for noble_kernel::types::ResourceKind}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.ResourceKind.Insts.CoreFmtDebug.fmt",
+      "rust_name": "noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::ResourceKind}::fmt",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.Ty.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_kernel::types::impls::{impl core::clone::Clone for noble_kernel::types::Ty}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq",
+      "rust_name": "noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.Ty.Insts.CoreFmtDebug.fmt",
+      "rust_name": "noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}::fmt",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.types.Ty.size",
+      "rust_name": "noble_kernel::types::{noble_kernel::types::Ty}::size",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.untrusted.Expected.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Expected}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.untrusted.Lit.ty",
+      "rust_name": "noble_kernel::untrusted::{noble_kernel::untrusted::Lit}::ty",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.untrusted.NodeId.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::NodeId}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.untrusted.NodeId.Insts.CoreCmpPartialEqNodeId.eq",
+      "rust_name": "noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::NodeId> for noble_kernel::untrusted::NodeId}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.untrusted.NodeId.Insts.CoreFmtDebug.fmt",
+      "rust_name": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::NodeId}::fmt",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.words.Scheme.Insts.CoreCloneClone.clone",
+      "rust_name": "noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Scheme}::clone",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.words.Scheme.subst_effects",
+      "rust_name": "noble_kernel::words::{noble_kernel::words::Scheme}::subst_effects",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.words.Scheme.subst_stack",
+      "rust_name": "noble_kernel::words::{noble_kernel::words::Scheme}::subst_stack",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "noble_kernel.words.VariableKind.Insts.CoreCmpPartialEqVariableKind.eq",
+      "rust_name": "noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::VariableKind> for noble_kernel::words::VariableKind}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-delegation"
+    },
+    {
+      "lean_name": "Pair.Insts.CoreCmpPartialEqPair.eq",
+      "rust_name": "core::tuple::{impl core::cmp::PartialEq<(U, T)> for (U, T)}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "Pair.Insts.CoreFmtDebug.fmt",
+      "rust_name": "core::fmt::{impl core::fmt::Debug for (U, T)}::fmt",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "Shared0Slice.Insts.CoreCmpPartialEqArray.eq",
+      "rust_name": "core::array::equality::{impl core::cmp::PartialEq<[U; N]> for &'_0 [T]}::eq",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "SharedAVec.Insts.CoreIterTraitsCollectIntoIteratorSharedATIter.into_iter",
+      "rust_name": "alloc::vec::{impl core::iter::traits::collect::IntoIterator<&'a T, core::slice::iter::Iter<'a, T>> for &'a alloc::vec::Vec<T>}::into_iter",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "Slice.Insts.CoreCmpOrd.cmp",
+      "rust_name": "core::slice::cmp::{impl core::cmp::Ord for [T]}::cmp",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "Slice.Insts.CoreCmpPartialOrdSlice.partial_cmp",
+      "rust_name": "core::slice::cmp::{impl core::cmp::PartialOrd<[T]> for [T]}::partial_cmp",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "U32.Insts.CoreConvertTryFromU64TryFromIntError.try_from",
+      "rust_name": "core::convert::num::{impl core::convert::TryFrom<u64, core::num::error::TryFromIntError> for u32}::try_from",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "U32.Insts.CoreHashHash.hash",
+      "rust_name": "core::hash::impls::{impl core::hash::Hash for u32}::hash",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from",
+      "rust_name": "core::convert::num::ptr_try_from_impls::{impl core::convert::TryFrom<usize, core::num::error::TryFromIntError> for u64}::try_from",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "U8.Insts.CoreConvertTryFromU64TryFromIntError.try_from",
+      "rust_name": "core::convert::num::{impl core::convert::TryFrom<u64, core::num::error::TryFromIntError> for u8}::try_from",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "U8.Insts.CoreHashHash.hash",
+      "rust_name": "core::hash::impls::{impl core::hash::Hash for u8}::hash",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "std-value-model"
+    },
+    {
+      "lean_name": "Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from",
+      "rust_name": "core::convert::num::ptr_try_from_impls::{impl core::convert::TryFrom<u32, core::num::error::TryFromIntError> for usize}::try_from",
+      "kind": "function",
+      "model": "NobleWasmImpl.StdModels",
+      "review": "inherited-model"
+    },
+    {
+      "lean_name": "noble_contracts.component.MAX_OPERATIONS",
+      "rust_name": "noble_contracts::component::MAX_OPERATIONS",
+      "kind": "global",
+      "model": "NobleWasmImpl.ContractsBridge",
+      "review": "frontend-constant"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.clone_budget.CALCULATOR_ENV_CLONE_FANOUT_LIMIT",
+      "rust_name": "noble_kernel::contracts::clone_budget::CALCULATOR_ENV_CLONE_FANOUT_LIMIT",
+      "kind": "global",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-constant"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.clone_budget.CALCULATOR_ENVIRONMENT_ROW_LIMIT",
+      "rust_name": "noble_kernel::contracts::clone_budget::CALCULATOR_ENVIRONMENT_ROW_LIMIT",
+      "kind": "global",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-constant"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.FIXTURE_RESOURCE",
+      "rust_name": "noble_kernel::contracts::FIXTURE_RESOURCE",
+      "kind": "global",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-constant"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.LIVE_DISPATCH",
+      "rust_name": "noble_kernel::contracts::LIVE_DISPATCH",
+      "kind": "global",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-constant"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.TEST_CLOCK",
+      "rust_name": "noble_kernel::contracts::TEST_CLOCK",
+      "kind": "global",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-constant"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.TEST_CODE_EXPORT",
+      "rust_name": "noble_kernel::contracts::TEST_CODE_EXPORT",
+      "kind": "global",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-constant"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.TEST_EMIT",
+      "rust_name": "noble_kernel::contracts::TEST_EMIT",
+      "kind": "global",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-constant"
+    },
+    {
+      "lean_name": "noble_kernel.contracts.TEST_SEND",
+      "rust_name": "noble_kernel::contracts::TEST_SEND",
+      "kind": "global",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-constant"
+    },
+    {
+      "lean_name": "noble_kernel.untrusted.CANDIDATE_FORMAT",
+      "rust_name": "noble_kernel::untrusted::CANDIDATE_FORMAT",
+      "kind": "global",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-constant"
+    },
+    {
+      "lean_name": "noble_kernel.untrusted.SEMANTIC_REVISION",
+      "rust_name": "noble_kernel::untrusted::SEMANTIC_REVISION",
+      "kind": "global",
+      "model": "NobleWasmImpl.KernelBridge",
+      "review": "kernel-constant"
+    },
+    {
+      "lean_name": "source.debug_origin",
+      "rust_name": "noble_wasm::source::debug_origin",
+      "kind": "local-opaque",
+      "model": "NobleWasmImpl.FunsExternal",
+      "review": "opaque-rendering"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.BTreeMap",
+      "rust_name": "alloc::collections::btree::map::BTreeMap",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "std-value-type"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.entry.OccupiedEntry",
+      "rust_name": "alloc::collections::btree::map::entry::OccupiedEntry",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "std-value-type"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.entry.VacantEntry",
+      "rust_name": "alloc::collections::btree::map::entry::VacantEntry",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "std-value-type"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.Keys",
+      "rust_name": "alloc::collections::btree::map::Keys",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "std-value-type"
+    },
+    {
+      "lean_name": "alloc.collections.btree.map.Values",
+      "rust_name": "alloc::collections::btree::map::Values",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "std-value-type"
+    },
+    {
+      "lean_name": "alloc.rc.Rc",
+      "rust_name": "alloc::rc::Rc",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "std-value-type"
+    },
+    {
+      "lean_name": "core.array.iter.IntoIter",
+      "rust_name": "core::array::iter::IntoIter",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "kernel-type"
+    },
+    {
+      "lean_name": "core.mem.maybe_uninit.MaybeUninit",
+      "rust_name": "core::mem::maybe_uninit::MaybeUninit",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "std-value-type"
+    },
+    {
+      "lean_name": "core.str.error.Utf8Error",
+      "rust_name": "core::str::error::Utf8Error",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "frontend-type"
+    },
+    {
+      "lean_name": "noble_contracts.component.CheckedExport",
+      "rust_name": "noble_contracts::component::CheckedExport",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "frontend-type"
+    },
+    {
+      "lean_name": "noble_contracts.component.World",
+      "rust_name": "noble_contracts::component::World",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "frontend-type"
+    },
+    {
+      "lean_name": "noble_contracts.Diagnostic",
+      "rust_name": "noble_contracts::Diagnostic",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "frontend-type"
+    },
+    {
+      "lean_name": "noble_contracts.source.declared.state.DeclaredTextSourceOwner",
+      "rust_name": "noble_contracts::source::declared::state::DeclaredTextSourceOwner",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "frontend-type"
+    },
+    {
+      "lean_name": "noble_contracts.source.declared.state.SignedSourceOwner",
+      "rust_name": "noble_contracts::source::declared::state::SignedSourceOwner",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "frontend-type"
+    },
+    {
+      "lean_name": "noble_contracts.source.Error",
+      "rust_name": "noble_contracts::source::Error",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "frontend-type"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedDefinitionId",
+      "rust_name": "noble_contracts::source::proof::CheckedDefinitionId",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "frontend-type"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedGeneratedWitness",
+      "rust_name": "noble_contracts::source::proof::CheckedGeneratedWitness",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "frontend-type"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedQuoteSite",
+      "rust_name": "noble_contracts::source::proof::CheckedQuoteSite",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "frontend-type"
+    },
+    {
+      "lean_name": "noble_contracts.source.proof.CheckedSelectedTarget",
+      "rust_name": "noble_contracts::source::proof::CheckedSelectedTarget",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "frontend-type"
+    },
+    {
+      "lean_name": "noble_kernel.types.EffSet",
+      "rust_name": "noble_kernel::types::EffSet",
+      "kind": "type",
+      "model": "NobleWasmImpl.TypesExternal",
+      "review": "kernel-type"
+    }
+  ]
+}
