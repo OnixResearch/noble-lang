@@ -582,4 +582,44 @@ mod tests {
         );
         assert_eq!(super::matching_resource(&resources, "c#z"), (None, false));
     }
+
+    #[test]
+    fn build_context_binds_every_selected_boundary_in_wire_order() {
+        let world = super::World {
+            identity: alloc::string::String::from("ns:pkg/w@1.0.0"),
+            name: alloc::string::String::from("w"),
+            wit: alloc::vec![b'x', b'y'],
+            imports: alloc::vec::Vec::new(),
+            exports: alloc::vec::Vec::new(),
+            resources: alloc::vec::Vec::new(),
+            asynchronous: false,
+            checked_u64: true,
+            worker_program_kind: Some(noble_kernel::types::ResourceKind(7)),
+            worker_program_effect: Some(noble_kernel::contracts::TEST_EMIT),
+            worker_transition_kind: Some(noble_kernel::types::ResourceKind(9)),
+            limits: crate::Limits::default(),
+        };
+        let mut expected = alloc::vec::Vec::new();
+        expected.extend_from_slice(super::PROFILE.as_bytes());
+        expected.push(0);
+        expected.extend_from_slice(super::BINDING_SCHEMA.as_bytes());
+        expected.push(0);
+        expected.extend_from_slice(super::CHECKED_U64_SCHEMA.as_bytes());
+        expected.push(0);
+        expected.extend_from_slice(b"worker-program-v2:Program([I64]->[I64]!{test.emit})");
+        expected.extend_from_slice(&7u32.to_le_bytes());
+        expected.push(0);
+        expected.extend_from_slice(b"worker-program-v2:transition-frames");
+        expected.extend_from_slice(&9u32.to_le_bytes());
+        expected.push(0);
+        expected.extend_from_slice(&super::STREAM_U8_KIND.0.to_le_bytes());
+        expected.extend_from_slice(&super::FUTURE_S64_KIND.0.to_le_bytes());
+        expected.extend_from_slice(&super::FUTURE_RESULT_S64_STRING_KIND.0.to_le_bytes());
+        expected.extend_from_slice(super::SYNC_ABI.as_bytes());
+        expected.push(0);
+        expected.extend_from_slice(b"ns:pkg/w@1.0.0");
+        expected.push(0);
+        expected.extend_from_slice(b"xy");
+        assert_eq!(world.build_context(), expected);
+    }
 }
