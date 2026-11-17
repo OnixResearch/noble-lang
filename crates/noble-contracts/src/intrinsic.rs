@@ -8,12 +8,7 @@ use crate::{Diagnostic, DiagnosticKind, Limits, Span};
     tigerstyle::non_trait_imports,
     reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
 )]
-use alloc::{
-    boxed::Box,
-    format,
-    string::{String, ToString},
-    vec::Vec,
-};
+use alloc::{boxed::Box, string::String, vec::Vec};
 
 mod named_v2;
 pub use named_v2::prepare_named_contract;
@@ -1784,7 +1779,7 @@ fn parse_proposition<'a>(
             if binding.len() != 2 {
                 return Err(reject(items[1].span, "Pi needs one typed binder"));
             }
-            let name = atom(&binding[0])?.to_string();
+            let name = String::from(atom(&binding[0])?);
             let next_depth = deeper(depth, binding[1].span)?;
             schedule_frame!(
                 frames,
@@ -2299,6 +2294,79 @@ const fn digit_byte(digit: usize) -> u8 {
         _ => b'9',
     }
 }
+/// The Lean name `v{index}` of the binder at de Bruijn level `index`, exactly
+/// as `format!("v{index}")` renders it.
+fn variable(index: usize) -> String {
+    let mut name = String::from("v");
+    name.push_str(&decimal(index));
+    name
+}
+/// The lowered equation `v{left} = v{right}`.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the two binder levels are the equation's sides in print order, pinned by unit tests against the format! text this replaced"
+)]
+fn equation_text(left: usize, right: usize) -> String {
+    let mut text = variable(left);
+    text.push_str(" = ");
+    text.push_str(&variable(right));
+    text
+}
+/// The lowered intro `(fun (v{index} : {sort}) => {body})`.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the texts are the lowered intro's parts in print order, pinned by unit tests against the format! text this replaced"
+)]
+fn intro_text(index: usize, sort: &str, body: &str) -> String {
+    let mut text = String::from("(fun (");
+    text.push_str(&variable(index));
+    text.push_str(" : ");
+    text.push_str(sort);
+    text.push_str(") => ");
+    text.push_str(body);
+    text.push(')');
+    text
+}
+/// The lowered reflexivity proof `(Eq.refl v{index})`.
+fn refl_text(index: usize) -> String {
+    let mut text = String::from("(Eq.refl ");
+    text.push_str(&variable(index));
+    text.push(')');
+    text
+}
+/// The lowered application `({function} {argument})`.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the texts are the lowered application's parts in print order, pinned by unit tests against the format! text this replaced"
+)]
+fn application_text(function: &str, argument: &str) -> String {
+    let mut text = String::from("(");
+    text.push_str(function);
+    text.push(' ');
+    text.push_str(argument);
+    text.push(')');
+    text
+}
+/// The lowered transport
+/// `(Eq.ndrec (motive := fun (v{index} : El {code}) => {motive}) {premise} {equality})`.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the texts are the lowered transport's parts in print order, pinned by unit tests against the format! text this replaced"
+)]
+fn transport_text(index: usize, code: &str, motive: &str, premise: &str, equality: &str) -> String {
+    let mut text = String::from("(Eq.ndrec (motive := fun (");
+    text.push_str(&variable(index));
+    text.push_str(" : El ");
+    text.push_str(code);
+    text.push_str(") => ");
+    text.push_str(motive);
+    text.push_str(") ");
+    text.push_str(premise);
+    text.push(' ');
+    text.push_str(equality);
+    text.push(')');
+    text
+}
 /// `out` with the character `code` appended. Rendered Lean text keeps its
 /// non-ASCII symbols out of string literals, which the extraction cannot print.
 fn push_code_point(mut out: String, code: u32) -> String {
@@ -2317,14 +2385,10 @@ fn lean_code(code: &Code, span: Span, bounds: TreeBounds) -> Result<String, Diag
         Code::Bool => Ok(".bool".into()),
         Code::I64 => Ok(".i64".into()),
         Code::Text => Ok(".text".into()),
-        Code::Variable(index) => Ok(format!("v{index}")),
+        Code::Variable(index) => Ok(variable(*index)),
         _ => lean_text(LeanFrame::Code(code), span, bounds),
     }
 }
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
-)]
 fn lean_sort(sort: &Sort, span: Span, bounds: TreeBounds) -> Result<String, Diagnostic> {
     match sort {
         Sort::Codes => Ok("PureTyCode".into()),
@@ -2332,7 +2396,11 @@ fn lean_sort(sort: &Sort, span: Span, bounds: TreeBounds) -> Result<String, Diag
         Sort::Value(Code::Bool) => Ok("El .bool".into()),
         Sort::Value(Code::I64) => Ok("El .i64".into()),
         Sort::Value(Code::Text) => Ok("El .text".into()),
-        Sort::Value(Code::Variable(index)) => Ok(format!("El v{index}")),
+        Sort::Value(Code::Variable(index)) => {
+            let mut text = String::from("El ");
+            text.push_str(&variable(*index));
+            Ok(text)
+        }
         Sort::Premise(prop) => lean_proposition(prop, span, bounds),
         _ => lean_text(LeanFrame::Sort(sort), span, bounds),
     }
@@ -2347,7 +2415,7 @@ fn lean_proposition(
     bounds: TreeBounds,
 ) -> Result<String, Diagnostic> {
     match prop {
-        Proposition::Eq(_, left, right) => Ok(format!("v{left} = v{right}")),
+        Proposition::Eq(_, left, right) => Ok(equation_text(*left, *right)),
         _ => lean_text(LeanFrame::Proposition(prop), span, bounds),
     }
 }
@@ -2554,9 +2622,7 @@ fn finish_intro(
         Ok(sort_text) => {
             if failure.is_none() {
                 let body = body.ok_or_else(|| exhausted(term.span))?;
-                *completed = Some(ProofValue::Checked(format!(
-                    "(fun (v{index} : {sort_text}) => {body})"
-                )));
+                *completed = Some(ProofValue::Checked(intro_text(index, &sort_text, &body)));
             }
         }
     }
@@ -2681,7 +2747,7 @@ fn infer_step<'a>(
             let Sort::Premise(proof) = sort else {
                 return Err(reject(term.span, "use does not name a proof premise"));
             };
-            *completed = Some(ProofValue::Inferred((**proof).clone(), format!("v{index}")));
+            *completed = Some(ProofValue::Inferred((**proof).clone(), variable(index)));
             return Ok(());
         }
         let dependency = last_available(available, name).ok_or_else(|| {
@@ -2733,7 +2799,7 @@ fn infer_step<'a>(
         };
         *completed = Some(ProofValue::Inferred(
             Proposition::Eq(code.clone(), index, index),
-            format!("(Eq.refl v{index})"),
+            refl_text(index),
         ));
         return Ok(());
     }
@@ -2796,7 +2862,7 @@ fn check_step<'a>(
         if binder_form.len() != 2 {
             return Err(reject(args[0].span, "intro needs a typed binder"));
         }
-        let name = atom(&binder_form[0])?.to_string();
+        let name = String::from(atom(&binder_form[0])?);
         let actual = advance!(
             *meter,
             sort(
@@ -2858,7 +2924,7 @@ fn check_step<'a>(
                 "subst motive needs one typed value binder",
             ));
         }
-        let name = atom(&binder_form[0])?.to_string();
+        let name = String::from(atom(&binder_form[0])?);
         let Sort::Value(code) = advance!(
             *meter,
             sort(
@@ -3097,7 +3163,7 @@ fn continuation_step<'a>(
             );
             *completed = Some(ProofValue::Inferred(
                 replace_prop(&body, index, &argument, term.span, bound)?,
-                format!("({lowered} {expression})"),
+                application_text(&lowered, &expression),
             ));
         }};
     }
@@ -3152,7 +3218,7 @@ fn continuation_step<'a>(
                         index,
                         Argument::Value(value),
                         lowered,
-                        format!("v{value}")
+                        variable(value)
                     );
                 }
                 Sort::Premise(expected) => {
@@ -3235,10 +3301,14 @@ fn continuation_step<'a>(
                     term.span
                 )
             );
-            *completed = Some(ProofValue::Checked(format!(
-                "(Eq.ndrec (motive := fun (v{index} : El {}) => {}) {premise} {equality_lean})",
-                lean_code(&code, term.span, meter.tree_bounds)?,
-                lean_proposition(&body, term.span, meter.tree_bounds)?
+            let code_text = lean_code(&code, term.span, meter.tree_bounds)?;
+            let motive_text = lean_proposition(&body, term.span, meter.tree_bounds)?;
+            *completed = Some(ProofValue::Checked(transport_text(
+                index,
+                &code_text,
+                &motive_text,
+                &premise,
+                &equality_lean,
             )));
         }
         ProofFrame::Infer(..)
@@ -4063,19 +4133,9 @@ fn prepare_checked_contract(
         .ok_or_else(|| reject(body_span, "subject body is outside original module source"))?;
     let body = core::str::from_utf8(body)
         .map_err(|_| reject(subject.source_span, "subject body must be UTF-8 for MC1"))?;
-    let mut text = format!("(contract 1 {} (input", contract.contract_name);
-    for (name, ty) in &contract.inputs {
-        text.push_str(&format!(" ({name} {ty})"));
-    }
-    text.push_str(") (output");
-    for (name, ty) in &contract.outputs {
-        text.push_str(&format!(" ({name} {ty})"));
-    }
     let requires = advance!(meter, mc1_expression(&contract.requires, meter, 0));
     let ensures = advance!(meter, mc1_expression(&contract.ensures, meter, 0));
-    text.push_str(&format!(
-        ") (program {body}) (requires {requires}) (ensures {ensures}))"
-    ));
+    let text = contract_text(contract, body, &requires, &ensures);
     let (_, charged) = meter.charge(text.len(), contract.contract_span);
     charged?;
     let result = crate::prepare(text.as_bytes(), limits)?;
@@ -4140,6 +4200,49 @@ fn prepare_checked_contract(
         ));
     }
     Ok((result, literal))
+}
+/// The standalone MC1 contract text of `contract`: its name, its input and
+/// output bindings, then the rendered `body`, `requires` and `ensures`.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the texts are the contract's rendered clauses in print order, pinned by unit tests against the format! text this replaced"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; this total text builder only concatenates already checked parts and has no precondition to assert"
+)]
+fn contract_text(contract: &ContractGoal, body: &str, requires: &str, ensures: &str) -> String {
+    let mut text = String::from("(contract 1 ");
+    text.push_str(&contract.contract_name);
+    text.push_str(" (input");
+    for (name, ty) in &contract.inputs {
+        text = contract_binding(text, name, ty);
+    }
+    text.push_str(") (output");
+    for (name, ty) in &contract.outputs {
+        text = contract_binding(text, name, ty);
+    }
+    text.push_str(") (program ");
+    text.push_str(body);
+    text.push_str(") (requires ");
+    text.push_str(requires);
+    text.push_str(") (ensures ");
+    text.push_str(ensures);
+    text.push_str("))");
+    text
+}
+/// `text` with one MC1 contract binding ` ({name} {ty})` appended.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the binding's name and type are appended in print order, pinned by unit tests against the format! text this replaced"
+)]
+fn contract_binding(mut text: String, name: &str, ty: &str) -> String {
+    text.push_str(" (");
+    text.push_str(name);
+    text.push(' ');
+    text.push_str(ty);
+    text.push(')');
+    text
 }
 /// Whether an accepted interface differs from the subject's stacks or effects.
 #[expect(
@@ -4588,7 +4691,9 @@ fn lower_unary_add(literal: i64) -> String {
         (.i64 (x + (__N__ : BitVec 64))) (.i64 (x + (__N__ : BitVec 64)))
         rfl rfl).mpr rfl))
 "#;
-    let term = replace_all(TERM, "__N__", &literal.to_string());
+    let mut digits = String::new();
+    crate::rendering::integer(&mut digits, literal);
+    let term = replace_all(TERM, "__N__", &digits);
     let term = replace_all(&term, "__AND__", &push_code_point(String::new(), 0x2227));
     let term = replace_all(&term, "__LANGLE__", &push_code_point(String::new(), 0x27E8));
     let term = replace_all(&term, "__RANGLE__", &push_code_point(String::new(), 0x27E9));
@@ -5250,6 +5355,83 @@ mod proposition_impl_tests {
             usize::MAX,
         ] {
             assert_eq!(super::decimal(value), alloc::format!("{value}"));
+        }
+    }
+
+    /// The format-free lowered texts are byte for byte the `format!` texts
+    /// they replaced, up to the widest binder index.
+    #[test]
+    fn lowered_texts_match_the_formatted_renderings() {
+        let indices = [0, 1, 9, 10, 4_096, usize::MAX];
+        for index in indices {
+            assert_eq!(super::variable(index), alloc::format!("v{index}"));
+            assert_eq!(
+                super::refl_text(index),
+                alloc::format!("(Eq.refl v{index})")
+            );
+            for other in indices {
+                assert_eq!(
+                    super::equation_text(index, other),
+                    alloc::format!("v{index} = v{other}")
+                );
+            }
+            for (sort_text, body) in [("El .i64", "(Eq.refl v0)"), ("", ""), ("PureTyCode", "{}")] {
+                assert_eq!(
+                    super::intro_text(index, sort_text, body),
+                    alloc::format!("(fun (v{index} : {sort_text}) => {body})")
+                );
+            }
+            let (premise, equality_lean) = ("(h v0)", "(Eq.refl v1)");
+            for (code, motive) in [(".i64", "v1 = v2"), ("", ""), ("v3", "{x}")] {
+                assert_eq!(
+                    super::transport_text(index, code, motive, premise, equality_lean),
+                    alloc::format!(
+                        "(Eq.ndrec (motive := fun (v{index} : El {}) => {}) {premise} {equality_lean})",
+                        code, motive
+                    )
+                );
+            }
+        }
+        for (lowered, expression) in [
+            ("f", "x"),
+            ("", ""),
+            ("(g v0)", "(\u{2200} (v1 : El .i64), v1 = v1)"),
+        ] {
+            assert_eq!(
+                super::application_text(lowered, expression),
+                alloc::format!("({lowered} {expression})")
+            );
+        }
+    }
+
+    /// Variable codes and sorts and equations lower to the `format!` texts
+    /// they replaced.
+    #[test]
+    fn lean_variable_leaves_match_the_formatted_renderings() {
+        let span = crate::Span { start: 0, end: 1 };
+        let bounds = super::TreeBounds::new(limits(1000));
+        assert!(bounds.is_some());
+        let Some(bounds) = bounds else { return };
+        for index in [0, 1, 10, usize::MAX] {
+            assert_eq!(
+                super::lean_code(&Code::Variable(index), span, bounds).ok(),
+                Some(alloc::format!("v{index}"))
+            );
+            assert_eq!(
+                super::lean_sort(&Sort::Value(Code::Variable(index)), span, bounds).ok(),
+                Some(alloc::format!("El v{index}"))
+            );
+            for other in [0, 7, usize::MAX] {
+                assert_eq!(
+                    super::lean_proposition(
+                        &Proposition::Eq(Code::I64, index, other),
+                        span,
+                        bounds
+                    )
+                    .ok(),
+                    Some(alloc::format!("v{index} = v{other}"))
+                );
+            }
         }
     }
 

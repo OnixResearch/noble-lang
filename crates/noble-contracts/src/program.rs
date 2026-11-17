@@ -425,7 +425,7 @@ fn with_eligibility(
     let mut word = alloc::string::String::new();
     append_bootstrap_spelling(definition, &mut word);
     let required = alloc::string::String::from("S Data");
-    let actual = alloc::format!("S {:?}", *ty);
+    let actual = debug_ty(alloc::string::String::from("S "), ty);
     problem.message.push_str("; word ");
     problem.message.push_str(&word);
     problem.message.push_str("; required ");
@@ -440,6 +440,221 @@ fn with_eligibility(
         value_origin: None,
         difference: None,
     })
+}
+
+/// One pending part of a type's `{:?}` text, popped in print order.
+enum DebugPart<'a> {
+    /// Fixed constructor or separator text.
+    Text(&'static str),
+    /// One type in its constructor form.
+    Ty(&'a noble_kernel::types::Ty),
+    /// A type stack as the list `[a, b]`, from position `next` on.
+    Stack(&'a [noble_kernel::types::Ty], usize),
+    /// An effect bound's identities as the list `[EffId(a), EffId(b)]`.
+    Effects(&'a [noble_kernel::types::EffId]),
+    /// A nominal descriptor's shape.
+    Shape(&'a noble_kernel::types::NominalShape),
+}
+
+/// `out` with `ty` appended exactly as its `{:?}` renders it: the kernel's
+/// constructor form, with derived renderings of the effect bound, resource
+/// kind and nominal identity. An explicit part stack replaces the recursive
+/// formatter calls.
+fn debug_ty(mut out: alloc::string::String, ty: &noble_kernel::types::Ty) -> alloc::string::String {
+    let mut pending = alloc::vec::Vec::new();
+    pending.push(DebugPart::Ty(ty));
+    while let Some(part) = pending.pop() {
+        (out, pending) = debug_part(out, pending, part);
+    }
+    out
+}
+
+/// Render one part: append its text now and schedule its later parts.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper appends through non-const String and Vec pushes, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; this total renderer accepts every part it scheduled itself; unit tests pin its output against the format! text it replaced"
+)]
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the part enum is local and sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
+fn debug_part<'a>(
+    mut out: alloc::string::String,
+    mut pending: alloc::vec::Vec<DebugPart<'a>>,
+    part: DebugPart<'a>,
+) -> (alloc::string::String, alloc::vec::Vec<DebugPart<'a>>) {
+    match part {
+        DebugPart::Text(text) => out.push_str(text),
+        DebugPart::Ty(ty) => return debug_constructor(out, pending, ty),
+        DebugPart::Stack(stack, next) => {
+            if next == 0 {
+                out.push('[');
+            }
+            if next < stack.len() {
+                if next != 0 {
+                    out.push_str(", ");
+                }
+                pending.push(DebugPart::Stack(stack, next.saturating_add(1)));
+                pending.push(DebugPart::Ty(&stack[next]));
+            } else {
+                out.push(']');
+            }
+        }
+        DebugPart::Effects(ids) => out = debug_effects(out, ids),
+        DebugPart::Shape(noble_kernel::types::NominalShape::Opaque(representation)) => {
+            out.push_str("Opaque(");
+            pending.push(DebugPart::Text(")"));
+            pending.push(DebugPart::Ty(representation));
+        }
+        DebugPart::Shape(noble_kernel::types::NominalShape::Variant(left, right)) => {
+            out.push_str("Variant(");
+            pending.push(DebugPart::Text(")"));
+            pending.push(DebugPart::Ty(right));
+            pending.push(DebugPart::Text(", "));
+            pending.push(DebugPart::Ty(left));
+        }
+    }
+    (out, pending)
+}
+
+/// Render one type's constructor: append its leading text now and schedule
+/// its payloads, separators and closing text.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper appends through non-const String and Vec pushes, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; this total renderer covers every type constructor; unit tests pin its output against the format! text it replaced"
+)]
+fn debug_constructor<'a>(
+    mut out: alloc::string::String,
+    mut pending: alloc::vec::Vec<DebugPart<'a>>,
+    ty: &'a noble_kernel::types::Ty,
+) -> (alloc::string::String, alloc::vec::Vec<DebugPart<'a>>) {
+    match ty {
+        noble_kernel::types::Ty::Unit => out.push_str("Unit"),
+        noble_kernel::types::Ty::Bool => out.push_str("Bool"),
+        noble_kernel::types::Ty::I64 => out.push_str("I64"),
+        noble_kernel::types::Ty::Text => out.push_str("Text"),
+        noble_kernel::types::Ty::Syntax => out.push_str("Syntax"),
+        noble_kernel::types::Ty::Contract => out.push_str("Contract"),
+        noble_kernel::types::Ty::Evidence => out.push_str("Evidence"),
+        noble_kernel::types::Ty::Certified => out.push_str("Certified"),
+        noble_kernel::types::Ty::Pair(left, right) => {
+            out.push_str("Pair(");
+            pending = debug_pair(pending, left, right);
+        }
+        noble_kernel::types::Ty::Sum(left, right) => {
+            out.push_str("Sum(");
+            pending = debug_pair(pending, left, right);
+        }
+        noble_kernel::types::Ty::List(item) => {
+            out.push_str("List(");
+            pending.push(DebugPart::Text(")"));
+            pending.push(DebugPart::Ty(item));
+        }
+        noble_kernel::types::Ty::Program(stack_in, stack_out, effects) => {
+            out.push_str("Program(");
+            pending = debug_callable(pending, stack_in.as_slice(), stack_out.as_slice(), effects);
+        }
+        noble_kernel::types::Ty::LiveRef(stack_in, stack_out, effects) => {
+            out.push_str("LiveRef(");
+            pending = debug_callable(pending, stack_in.as_slice(), stack_out.as_slice(), effects);
+        }
+        noble_kernel::types::Ty::Resource(kind) => {
+            out.push_str("Resource(ResourceKind(");
+            crate::rendering::number(&mut out, u64::from(kind.0));
+            out.push_str("))");
+        }
+        noble_kernel::types::Ty::Nominal(id, shape) => {
+            out.push_str("Nominal(");
+            out = debug_nominal_id(out, *id);
+            out.push_str(", ");
+            pending.push(DebugPart::Text(")"));
+            pending.push(DebugPart::Shape(shape));
+        }
+        noble_kernel::types::Ty::GenericNominal(id, args, shape) => {
+            out.push_str("GenericNominal(");
+            out = debug_nominal_id(out, *id);
+            out.push_str(", [");
+            pending.push(DebugPart::Text(")"));
+            pending.push(DebugPart::Shape(shape));
+            pending.push(DebugPart::Text("], "));
+            pending.push(DebugPart::Ty(&args[1]));
+            pending.push(DebugPart::Text(", "));
+            pending.push(DebugPart::Ty(&args[0]));
+        }
+    }
+    (out, pending)
+}
+
+/// Schedule `left, right)` after an already written constructor opening.
+fn debug_pair<'a>(
+    mut pending: alloc::vec::Vec<DebugPart<'a>>,
+    left: &'a noble_kernel::types::Ty,
+    right: &'a noble_kernel::types::Ty,
+) -> alloc::vec::Vec<DebugPart<'a>> {
+    pending.push(DebugPart::Text(")"));
+    pending.push(DebugPart::Ty(right));
+    pending.push(DebugPart::Text(", "));
+    pending.push(DebugPart::Ty(left));
+    pending
+}
+
+/// Schedule `[in], [out], EffSet([..]))` after an already written program or
+/// live reference opening.
+fn debug_callable<'a>(
+    mut pending: alloc::vec::Vec<DebugPart<'a>>,
+    stack_in: &'a [noble_kernel::types::Ty],
+    stack_out: &'a [noble_kernel::types::Ty],
+    effects: &'a noble_kernel::types::EffSet,
+) -> alloc::vec::Vec<DebugPart<'a>> {
+    pending.push(DebugPart::Text("))"));
+    pending.push(DebugPart::Effects(effects.as_slice()));
+    pending.push(DebugPart::Text(", EffSet("));
+    pending.push(DebugPart::Stack(stack_out, 0));
+    pending.push(DebugPart::Text(", "));
+    pending.push(DebugPart::Stack(stack_in, 0));
+    pending
+}
+
+/// `out` with the derived rendering `[EffId(a), EffId(b)]` of `ids` appended.
+fn debug_effects(
+    mut out: alloc::string::String,
+    ids: &[noble_kernel::types::EffId],
+) -> alloc::string::String {
+    out.push('[');
+    let mut index = 0;
+    while index < ids.len() {
+        if index != 0 {
+            out.push_str(", ");
+        }
+        out.push_str("EffId(");
+        crate::rendering::number(&mut out, u64::from(ids[index].0));
+        out.push(')');
+        index += 1;
+    }
+    out.push(']');
+    out
+}
+
+/// `out` with the derived rendering
+/// `NominalTypeId { module: m, ordinal: o }` of `id` appended.
+fn debug_nominal_id(
+    mut out: alloc::string::String,
+    id: noble_kernel::types::NominalTypeId,
+) -> alloc::string::String {
+    out.push_str("NominalTypeId { module: ");
+    crate::rendering::number(&mut out, id.module);
+    out.push_str(", ordinal: ");
+    crate::rendering::number(&mut out, u64::from(id.ordinal));
+    out.push_str(" }");
+    out
 }
 
 /// Append the rendered expected and actual stacks when they render.
@@ -471,4 +686,148 @@ fn rejection_shapes(
     let expected = attempt!(arena.stack(&diagnostic.expected, span, &mut meter));
     let actual = attempt!(arena.stack(&diagnostic.actual, span, &mut meter));
     arena.join_message(expected, actual, span, &mut meter)
+}
+
+#[cfg(test)]
+mod tests {
+    //! The format-free type rendering must equal the `format!("S {:?}")` text
+    //! it replaced, byte for byte.
+
+    fn id(module: u64, ordinal: u32) -> noble_kernel::types::NominalTypeId {
+        noble_kernel::types::NominalTypeId { module, ordinal }
+    }
+
+    fn boxed(ty: noble_kernel::types::Ty) -> alloc::boxed::Box<noble_kernel::types::Ty> {
+        alloc::boxed::Box::new(ty)
+    }
+
+    /// Every constructor, both shapes, empty and nonempty stacks and effect
+    /// bounds, extreme identities and a deep nesting.
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; the sample table is data, checked by the tests that consume it"
+    )]
+    fn samples() -> alloc::vec::Vec<noble_kernel::types::Ty> {
+        #[expect(
+            tigerstyle::non_trait_imports,
+            reason = "Owner: noble-contracts; the sample table names these kernel types on every line, and the qualified form would bury the shapes under owner paths"
+        )]
+        use noble_kernel::types::{EffId, EffSet, NominalShape, ResourceKind, Ty};
+        let effects = EffSet::from_ids(&[EffId(9), EffId(0), EffId(u32::MAX)]);
+        let program = Ty::program(
+            alloc::vec![Ty::I64, Ty::List(boxed(Ty::Text))],
+            alloc::vec![Ty::Bool],
+            effects.clone(),
+        );
+        let opaque = NominalShape::Opaque(boxed(Ty::I64));
+        let variant = NominalShape::Variant(boxed(Ty::Unit), boxed(program.clone()));
+        let mut deep = Ty::Bool;
+        for depth in 0..64 {
+            deep = if depth % 2 == 0 {
+                Ty::List(boxed(deep))
+            } else {
+                Ty::Pair(boxed(Ty::Unit), boxed(deep))
+            };
+        }
+        alloc::vec![
+            Ty::Unit,
+            Ty::Bool,
+            Ty::I64,
+            Ty::Text,
+            Ty::Syntax,
+            Ty::Contract,
+            Ty::Evidence,
+            Ty::Certified,
+            Ty::Pair(boxed(Ty::I64), boxed(Ty::Text)),
+            Ty::Sum(
+                boxed(Ty::Bool),
+                boxed(Ty::Pair(boxed(Ty::Unit), boxed(Ty::I64)))
+            ),
+            Ty::List(boxed(Ty::List(boxed(Ty::Syntax)))),
+            Ty::program(
+                alloc::vec::Vec::new(),
+                alloc::vec::Vec::new(),
+                EffSet::empty()
+            ),
+            program.clone(),
+            Ty::live_ref(alloc::vec![program.clone()], alloc::vec![Ty::I64], effects),
+            Ty::live_ref(
+                alloc::vec::Vec::new(),
+                alloc::vec::Vec::new(),
+                EffSet::empty()
+            ),
+            Ty::Resource(ResourceKind(0)),
+            Ty::Resource(ResourceKind(u32::MAX)),
+            Ty::Nominal(id(0, 0), alloc::boxed::Box::new(opaque.clone())),
+            Ty::Nominal(
+                id(u64::MAX, u32::MAX),
+                alloc::boxed::Box::new(variant.clone())
+            ),
+            Ty::GenericNominal(
+                id(17, 3),
+                alloc::boxed::Box::new([Ty::I64, Ty::List(boxed(Ty::Text))]),
+                alloc::boxed::Box::new(variant),
+            ),
+            Ty::List(boxed(Ty::GenericNominal(
+                id(1, 1),
+                alloc::boxed::Box::new([program, Ty::Unit]),
+                alloc::boxed::Box::new(opaque),
+            ))),
+            deep,
+        ]
+    }
+
+    #[test]
+    fn debug_ty_matches_the_formatted_rendering() {
+        for ty in samples() {
+            assert_eq!(
+                super::debug_ty(alloc::string::String::from("S "), &ty),
+                alloc::format!("S {ty:?}")
+            );
+        }
+    }
+
+    /// `with_eligibility` as it was written with `format!`, kept as the oracle.
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; the oracle is the replaced implementation verbatim, checked by the test that compares against it"
+    )]
+    fn formatted_with_eligibility(
+        mut problem: crate::Diagnostic,
+        definition: noble_kernel::contracts::Definition,
+        ty: &noble_kernel::types::Ty,
+    ) -> crate::Diagnostic {
+        let mut word = alloc::string::String::new();
+        super::append_bootstrap_spelling(definition, &mut word);
+        let required = alloc::string::String::from("S Data");
+        let actual = alloc::format!("S {:?}", *ty);
+        problem.message.push_str("; word ");
+        problem.message.push_str(&word);
+        problem.message.push_str("; required ");
+        problem.message.push_str(&required);
+        problem.message.push_str("; actual ");
+        problem.message.push_str(&actual);
+        problem.join_with(crate::JoinDiagnostic {
+            word,
+            expected_stack: required,
+            actual_stack: actual,
+            constraint: alloc::string::String::from("eligibility:Data"),
+            value_origin: None,
+            difference: None,
+        })
+    }
+
+    #[test]
+    fn eligibility_detail_matches_the_formatted_detail() {
+        let span = crate::Span { start: 3, end: 7 };
+        for definition in [0, 1, 4, 999] {
+            let definition = noble_kernel::contracts::Definition(definition);
+            for ty in samples() {
+                let problem = || crate::invalid(span, "kernel rejected a non-capturable value");
+                let actual = super::with_eligibility(problem(), definition, &ty);
+                let expected = formatted_with_eligibility(problem(), definition, &ty);
+                assert_eq!(alloc::format!("{actual:?}"), alloc::format!("{expected:?}"));
+            }
+        }
+    }
 }

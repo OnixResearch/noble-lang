@@ -151,7 +151,13 @@ fn module_families(
 
 /// The qualified `module@version.Name` spelling of an exported family.
 fn exported_family_name(module: &super::Module, export: &super::Export) -> String {
-    alloc::format!("{}@{}.{}", module.name, module.version, export.name)
+    let mut name = String::new();
+    name.push_str(&module.name);
+    name.push('@');
+    name = super::append_decimal(name, module.version);
+    name.push('.');
+    name.push_str(&export.name);
+    name
 }
 
 /// A copyable view of the signature families, passed by value through the
@@ -1186,5 +1192,44 @@ mod tests {
         )
         .expect_err("incomplete binding");
         assert_eq!(error.message, "expected declaration word");
+    }
+
+    /// The qualified family spelling is the `format!("{}@{}.{}")` text it
+    /// replaced, for the widest version and for names of every kind.
+    #[test]
+    fn exported_family_name_matches_the_formatted_spelling() {
+        for (name, version, export) in [
+            ("M", 0, "T"),
+            ("Shapes", 3, "Either"),
+            ("a_b", 10, "x9"),
+            ("Wide", u32::MAX, "Pair"),
+            ("", 1, ""),
+            ("\u{e9}", 7, "\u{fc}"),
+        ] {
+            let module = super::super::Module {
+                name: String::from(name),
+                version,
+                identity: 0,
+                exports: Vec::new(),
+                adapter_slot: None,
+                source: Vec::new(),
+                definition_spans: Vec::new(),
+                verified_signed_slots: Vec::new(),
+                import_aliases: Vec::new(),
+                contracts: Vec::new(),
+                proof_exports: Vec::new(),
+                proofs: Vec::new(),
+            };
+            let export = super::super::Export {
+                name: String::from(export),
+                ty: None,
+                generic: None,
+                words: Vec::new(),
+            };
+            assert_eq!(
+                exported_family_name(&module, &export),
+                alloc::format!("{}@{}.{}", module.name, module.version, export.name)
+            );
+        }
     }
 }

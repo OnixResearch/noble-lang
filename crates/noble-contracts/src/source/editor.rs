@@ -292,7 +292,8 @@ impl Emitter {
         ));
         let kind = match node {
             Node::Integer(value) => {
-                let text = alloc::format!("{value}");
+                let mut text = alloc::string::String::new();
+                crate::rendering::integer(&mut text, *value);
                 self = attempt!(self.append(text.as_bytes()));
                 super::Kind::Literal(noble_kernel::untrusted::Lit::I64(*value))
             }
@@ -832,6 +833,49 @@ mod tests {
             assert!(span.start <= span.end);
             assert!(!path.is_empty());
         }
+    }
+
+    /// Integer literals are emitted exactly as the `format!("{value}")` text
+    /// the emitter used before it rendered digits without `core::fmt`.
+    #[test]
+    fn integer_literals_emit_their_formatted_decimal_text() {
+        let values = [
+            i64::MIN,
+            i64::MIN + 1,
+            -10,
+            -9,
+            -1,
+            0,
+            1,
+            9,
+            10,
+            42,
+            i64::MAX,
+        ];
+        for value in values {
+            let candidate = Candidate {
+                format: FORMAT,
+                nodes: alloc::vec![Node::Integer(value)],
+            };
+            let source = candidate
+                .admitted_source(crate::Limits::default())
+                .expect("integer literal source");
+            assert_eq!(source, alloc::format!("{value} ").into_bytes());
+        }
+        let candidate = Candidate {
+            format: FORMAT,
+            nodes: values.iter().copied().map(Node::Integer).collect(),
+        };
+        let expected: String = values
+            .iter()
+            .map(|value| alloc::format!("{value} "))
+            .collect();
+        assert_eq!(
+            candidate
+                .admitted_source(crate::Limits::default())
+                .expect("integer list source"),
+            expected.into_bytes()
+        );
     }
 
     #[test]
