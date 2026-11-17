@@ -8610,7 +8610,7 @@ def words.Scheme.validate
   shapes.validate s s1 s2 s3
 
 /-- [noble_kernel::acceptance::validate::schemas]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 211:4-231:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 214:4-234:5 -/
 @[rust_loop_body]
 def acceptance.validate.schemas_loop.body
   (env : contracts.Env) (remaining : Std.U32) (spent : Std.U32)
@@ -8646,7 +8646,7 @@ def acceptance.validate.schemas_loop.body
   else ok (done (spent, none))
 
 /-- [noble_kernel::acceptance::validate::schemas]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 211:4-231:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 214:4-234:5 -/
 @[rust_loop]
 def acceptance.validate.schemas_loop
   (env : contracts.Env) (remaining : Std.U32) (spent : Std.U32)
@@ -8659,7 +8659,7 @@ def acceptance.validate.schemas_loop
     (spent, index)
 
 /-- [noble_kernel::acceptance::validate::schemas]:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 207:0-238:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 210:0-241:1 -/
 def acceptance.validate.schemas
   (env : contracts.Env) (remaining : Std.U32) :
   Result (core.result.Result Std.U32 acceptance.Fail)
@@ -8746,7 +8746,7 @@ def acceptance.validate.deps_of
   | core.result.Result.Err _ => ok (alloc.vec.Vec.new contracts.Definition)
 
 /-- [noble_kernel::acceptance::validate::dep_step]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 169:4-188:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 172:4-191:5 -/
 @[rust_loop_body]
 def acceptance.validate.dep_step_loop.body
   (v : alloc.vec.Vec Std.U8) (remaining : Std.U32)
@@ -8791,7 +8791,7 @@ def acceptance.validate.dep_step_loop.body
   else ok (done (v1, i, none))
 
 /-- [noble_kernel::acceptance::validate::dep_step]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 169:4-188:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 172:4-191:5 -/
 @[rust_loop]
 def acceptance.validate.dep_step_loop
   (v : alloc.vec.Vec Std.U8) (v1 : alloc.vec.Vec contracts.Definition)
@@ -8806,7 +8806,7 @@ def acceptance.validate.dep_step_loop
     (v1, i, dep_index)
 
 /-- [noble_kernel::acceptance::validate::dep_step]:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 137:0-194:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 140:0-197:1 -/
 def acceptance.validate.dep_step
   (env : contracts.Env) (walk : acceptance.validate.DepWalk)
   (remaining : Std.U32) :
@@ -8857,7 +8857,7 @@ def acceptance.validate.dep_step
               core.result.Result.Err problem)
 
 /-- [noble_kernel::acceptance::validate::dep_root]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 108:4-118:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 111:4-121:5 -/
 @[rust_loop_body]
 def acceptance.validate.dep_root_loop.body
   (env : contracts.Env) (remaining : Std.U32)
@@ -8875,7 +8875,7 @@ def acceptance.validate.dep_root_loop.body
     | core.result.Result.Err problem => ok (done (next, some problem))
 
 /-- [noble_kernel::acceptance::validate::dep_root]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 108:4-118:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 111:4-121:5 -/
 @[rust_loop]
 def acceptance.validate.dep_root_loop
   (env : contracts.Env) (remaining : Std.U32)
@@ -8887,7 +8887,7 @@ def acceptance.validate.dep_root_loop
     walk
 
 /-- [noble_kernel::acceptance::validate::dep_root]:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 99:0-123:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 102:0-126:1 -/
 def acceptance.validate.dep_root
   (env : contracts.Env) (root : contracts.Definition)
   (walk : acceptance.validate.DepWalk) (remaining : Std.U32) :
@@ -8902,7 +8902,7 @@ def acceptance.validate.dep_root
   | some problem => ok (walk1, core.result.Result.Err problem)
 
 /-- [noble_kernel::acceptance::validate::dependencies]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 69:4-85:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 72:4-88:5 -/
 @[rust_loop_body]
 def acceptance.validate.dependencies_loop.body
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -8923,44 +8923,49 @@ def acceptance.validate.dependencies_loop.body
   := do
   if root < count
   then
-    let i ←
-      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.U8)
-        walk.colors root
-    if i = 0#u8
+    let b5 := core.option.Option.is_none failure
+    if b5
     then
-      let i1 ← lift (UScalar.cast .U32 root)
-      let (next, step) ←
-        acceptance.validate.dep_root
-          {
-            defs := v,
-            kinds := v1,
-            deps := v2,
-            schemas := v3,
-            nominals := v4,
-            generic_variants := v5,
-            resource_kinds := v6,
-            live_resource_nominals := v7,
-            live_slots := b,
-            live_test_hosts := b1,
-            caller_module := o,
-            declared_modules := b2,
-            text_cursor := b3,
-            calculator := b4,
-            definition_owners := v8,
-            bound_adapters := v9,
-            effects := v10
-          } i1 walk remaining
-      match step with
-      | core.result.Result.Ok _ =>
-        let root1 ← root + 1#usize
-        ok (cont (next, failure, root1))
-      | core.result.Result.Err problem => ok (cont (next, some problem, root))
-    else let root1 ← root + 1#usize
-         ok (cont (walk, failure, root1))
+      let i ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.U8)
+          walk.colors root
+      if i = 0#u8
+      then
+        let i1 ← lift (UScalar.cast .U32 root)
+        let (next, step) ←
+          acceptance.validate.dep_root
+            {
+              defs := v,
+              kinds := v1,
+              deps := v2,
+              schemas := v3,
+              nominals := v4,
+              generic_variants := v5,
+              resource_kinds := v6,
+              live_resource_nominals := v7,
+              live_slots := b,
+              live_test_hosts := b1,
+              caller_module := o,
+              declared_modules := b2,
+              text_cursor := b3,
+              calculator := b4,
+              definition_owners := v8,
+              bound_adapters := v9,
+              effects := v10
+            } i1 walk remaining
+        match step with
+        | core.result.Result.Ok _ =>
+          let root1 ← root + 1#usize
+          ok (cont (next, failure, root1))
+        | core.result.Result.Err problem =>
+          ok (cont (next, some problem, root))
+      else let root1 ← root + 1#usize
+           ok (cont (walk, failure, root1))
+    else ok (done (walk, failure))
   else ok (done (walk, failure))
 
 /-- [noble_kernel::acceptance::validate::dependencies]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 69:4-85:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 72:4-88:5 -/
 @[rust_loop]
 def acceptance.validate.dependencies_loop
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -8985,7 +8990,7 @@ def acceptance.validate.dependencies_loop
     (walk, failure, root)
 
 /-- [noble_kernel::acceptance::validate::dependencies]:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 57:0-92:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 60:0-95:1 -/
 def acceptance.validate.dependencies
   (env : contracts.Env) (remaining : Std.U32) :
   Result (core.result.Result Std.U32 acceptance.Fail)
