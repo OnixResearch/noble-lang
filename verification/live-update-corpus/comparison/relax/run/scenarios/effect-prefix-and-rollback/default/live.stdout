@@ -1,0 +1,30 @@
+v0: first run (lazy compile on first call)
+CLRELAX sample segment=0 session=62c6aea52ce712a005ce883ff5ba49da image=df519da23d0f861a pid=3669749 rss_kb=139700 hwm_kb=143660 backend=relax domain=0
+CLRELAX effect sequence=0 step=a version=0
+CLRELAX effect sequence=1 step=b version=0
+CLRELAX effect-prefix result=11
+  test live::root ok (240.18 ms)
+v0: second run (all compiled)
+CLRELAX sample segment=1 session=62c6aea52ce712a005ce883ff5ba49da image=df519da23d0f861a pid=3669749 rss_kb=146616 hwm_kb=146616 backend=relax domain=0
+CLRELAX effect sequence=2 step=a version=0
+CLRELAX effect sequence=3 step=b version=0
+CLRELAX effect-prefix result=11
+  test live::root ok (0.09 ms)
+edit v1.rs: rung=patch 2 changed item(s), 2 fn(s) installed ["live::step_a", "live::step_b"]; parse+classify 0.833 ms, check 2.736 ms, compile 0.573 ms, install 0.089 ms
+CLRELAX sample segment=2 session=62c6aea52ce712a005ce883ff5ba49da image=df519da23d0f861a pid=3669749 rss_kb=147384 hwm_kb=147488 backend=relax domain=0
+CLRELAX effect sequence=4 step=a version=1
+CLRELAX effect sequence=5 step=b version=1
+  test live::root PANICKED (0.09 ms)
+  crash report: {"kind":"panic","message":"index out of bounds: the len is 1 but the index is 5","build":"makepad d08642ed5eee jit 7c8930659157","location":"<compiler-lab-run>/scenarios/effect-prefix-and-rollback/default/source/v1.rs:69:5","backtrace":[{"fn":"live::step_b","at":"<compiler-lab-run>/scenarios/effect-prefix-and-rollback/default/source/v1.rs:69:5","off":112,"patch_gen":1,"tier":0,"code":"baseline live-patch 0x701176622000","frame":8},{"fn":"live::root","at":"<compiler-lab-run>/scenarios/effect-prefix-and-rollback/default/source/v0.rs:75:13","off":35,"patch_gen":0,"tier":0,"code":"baseline fresh 0x701176610010","frame":80}],"recent_patches":[{"fn":"live::step_a","gen":1},{"fn":"live::step_b","gen":1}]}
+  rolled back patch 1 (["live::step_a", "live::step_b"]) in 7.503 ms; rerun:
+CLRELAX sample segment=3 session=62c6aea52ce712a005ce883ff5ba49da image=df519da23d0f861a pid=3669749 rss_kb=141312 hwm_kb=141312 backend=relax domain=0
+CLRELAX effect sequence=6 step=a version=0
+CLRELAX effect sequence=7 step=b version=0
+CLRELAX effect-prefix result=11
+  test live::root ok (0.09 ms)
+edit v2.rs: rung=patch 1 changed item(s), 1 fn(s) installed ["live::step_b"]; parse+classify 2.988 ms, check 0.429 ms, compile 0.423 ms, install 0.063 ms
+CLRELAX sample segment=4 session=62c6aea52ce712a005ce883ff5ba49da image=df519da23d0f861a pid=3669749 rss_kb=141536 hwm_kb=141536 backend=relax domain=0
+CLRELAX effect sequence=8 step=a version=0
+CLRELAX effect sequence=9 step=b version=2
+CLRELAX effect-prefix result=13
+  test live::root ok (0.12 ms)

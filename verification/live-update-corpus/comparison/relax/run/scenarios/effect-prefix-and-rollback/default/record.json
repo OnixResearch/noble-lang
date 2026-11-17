@@ -1,0 +1,1430 @@
+{
+  "case_id": "noble-live-update/relocation-and-effect-prefix",
+  "scenario": "effect-prefix-and-rollback",
+  "admission": "default",
+  "runtime": "makepad-relax",
+  "profile": {
+    "id": "compiler-lab-relax-live-profile/relax-5441582-v1",
+    "path": "src/validation/relax_live/profile.json",
+    "sha256": "7acb97fbec6ee1fe225f0ec1ae1b889cdcf0dd1cf45e1aadb71cb104a65cbb1a"
+  },
+  "corpus": {
+    "path": "<noble-export>/corpus.json",
+    "sha256": "99dc1505ceed462ccbfbbc64a4ae1e9c241145bad0fb2a87e52bc6e14d5310dd",
+    "corpus_revision": "2",
+    "source_commit": "6407c5ea0651530b3de8bb47541d045fdd698915",
+    "noble_profile_path": "verification/live-update-corpus/profiles/noble.json",
+    "noble_profile_id": "noble-live-update-profile/noble-v1",
+    "noble_profile_sha256": "38e64d885d3ff34def91be9e0a4f9b746e7837eaa58664d91b1840a1cf9da67d"
+  },
+  "noble": {
+    "case_id": "noble-live-update/relocation-and-effect-prefix",
+    "expectations": [
+      {
+        "expectation_id": "relocation.effect-moves-with-target",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "relocation.one-effect-per-root",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "relocation.dispatch-precedes-effect",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "relocation.omission-control",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "relocation.denied-effect",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "relocation.duplicate-not-constructible",
+        "status": "unsupported"
+      }
+    ],
+    "profile_refs": [
+      "dimensions.active_frames",
+      "dimensions.version_selection_boundary"
+    ],
+    "result_class": "unsupported",
+    "sha256": "55c56e65acf9405a6c02bd5ede9f25ef31924212c384cfb1ae03e3628ed56446",
+    "title": "Event relocation under a pinned map and the abnormal effect prefix"
+  },
+  "session": "62c6aea52ce712a005ce883ff5ba49da",
+  "edits": [
+    {
+      "version": "v0",
+      "artifact": {
+        "path": "scenarios/effect-prefix-and-rollback/default/source/v0.rs",
+        "bytes": 2645,
+        "sha256": "9c4def511882e4e5e3f49ebdb4c09fc1c17c2d8abe1c9e1b3b458bc999315259"
+      }
+    },
+    {
+      "version": "v1",
+      "artifact": {
+        "path": "scenarios/effect-prefix-and-rollback/default/source/v1.rs",
+        "bytes": 2696,
+        "sha256": "f126bfe9d8644277fedba52c0101bfc0f1d7cd0f58c94ca723579da01f45bbc6"
+      }
+    },
+    {
+      "version": "v2",
+      "artifact": {
+        "path": "scenarios/effect-prefix-and-rollback/default/source/v2.rs",
+        "bytes": 2645,
+        "sha256": "6a485c605909055506cc93f137bce40ff3d1cb727b8eeb6741cece30d0487854"
+      }
+    }
+  ],
+  "event_binding_sha256": "920f28bba3761e964cea304e4252866af3ba99abc94c7e9381f960b11be8cf4e",
+  "provenance": [
+    {
+      "role": "live-stdout",
+      "artifact": {
+        "path": "scenarios/effect-prefix-and-rollback/default/live.stdout",
+        "bytes": 2817,
+        "sha256": "21257da7ff2f1157981010143970840350dd40672001b007f9a548f3c9d177b6"
+      }
+    },
+    {
+      "role": "live-stderr",
+      "artifact": {
+        "path": "scenarios/effect-prefix-and-rollback/default/live.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "host": {
+    "configuration": {
+      "admission": "default",
+      "cache": "off",
+      "cpu_cores": "4",
+      "environment": {
+        "COMPILER_LAB_RELAX_CHECK_FIRST": "0",
+        "MAKEPAD_CPU_CORES": "4",
+        "MAKEPAD_RUN_CACHE": "off"
+      },
+      "profile": "default"
+    },
+    "executable_sha256": "fed38792ec30d29829fae808398f39444008c03f6e90cf2eb4418a711738e260",
+    "reported_version": "makepad run makepad d08642ed5eee jit 7c8930659157",
+    "std_tree_sha256": "73077222c2c40e616d2a58bb14921ebb9cd6f78cd1e7c96be4ddd30e64ba7c25"
+  },
+  "exit_code": 0,
+  "process_status": "Success",
+  "run": {
+    "segments": [
+      {
+        "index": 0,
+        "phase": "first-run",
+        "after_edit": null,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "143660",
+              "image": "df519da23d0f861a",
+              "pid": "3669749",
+              "rss_kb": "139700",
+              "segment": "0",
+              "session": "62c6aea52ce712a005ce883ff5ba49da"
+            }
+          },
+          {
+            "kind": "effect",
+            "fields": {
+              "sequence": "0",
+              "step": "a",
+              "version": "0"
+            }
+          },
+          {
+            "kind": "effect",
+            "fields": {
+              "sequence": "1",
+              "step": "b",
+              "version": "0"
+            }
+          },
+          {
+            "kind": "effect-prefix",
+            "fields": {
+              "result": "11"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 240.18,
+        "crash_report": null
+      },
+      {
+        "index": 1,
+        "phase": "second-run",
+        "after_edit": null,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "146616",
+              "image": "df519da23d0f861a",
+              "pid": "3669749",
+              "rss_kb": "146616",
+              "segment": "1",
+              "session": "62c6aea52ce712a005ce883ff5ba49da"
+            }
+          },
+          {
+            "kind": "effect",
+            "fields": {
+              "sequence": "2",
+              "step": "a",
+              "version": "0"
+            }
+          },
+          {
+            "kind": "effect",
+            "fields": {
+              "sequence": "3",
+              "step": "b",
+              "version": "0"
+            }
+          },
+          {
+            "kind": "effect-prefix",
+            "fields": {
+              "result": "11"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 0.09,
+        "crash_report": null
+      },
+      {
+        "index": 2,
+        "phase": "after-edit",
+        "after_edit": 1,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "147488",
+              "image": "df519da23d0f861a",
+              "pid": "3669749",
+              "rss_kb": "147384",
+              "segment": "2",
+              "session": "62c6aea52ce712a005ce883ff5ba49da"
+            }
+          },
+          {
+            "kind": "effect",
+            "fields": {
+              "sequence": "4",
+              "step": "a",
+              "version": "1"
+            }
+          },
+          {
+            "kind": "effect",
+            "fields": {
+              "sequence": "5",
+              "step": "b",
+              "version": "1"
+            }
+          }
+        ],
+        "passed": false,
+        "milliseconds": 0.09,
+        "crash_report": "{\"kind\":\"panic\",\"message\":\"index out of bounds: the len is 1 but the index is 5\",\"build\":\"makepad d08642ed5eee jit 7c8930659157\",\"location\":\"<compiler-lab-run>/scenarios/effect-prefix-and-rollback/default/source/v1.rs:69:5\",\"backtrace\":[{\"fn\":\"live::step_b\",\"at\":\"<compiler-lab-run>/scenarios/effect-prefix-and-rollback/default/source/v1.rs:69:5\",\"off\":112,\"patch_gen\":1,\"tier\":0,\"code\":\"baseline live-patch 0x701176622000\",\"frame\":8},{\"fn\":\"live::root\",\"at\":\"<compiler-lab-run>/scenarios/effect-prefix-and-rollback/default/source/v0.rs:75:13\",\"off\":35,\"patch_gen\":0,\"tier\":0,\"code\":\"baseline fresh 0x701176610010\",\"frame\":80}],\"recent_patches\":[{\"fn\":\"live::step_a\",\"gen\":1},{\"fn\":\"live::step_b\",\"gen\":1}]}"
+      },
+      {
+        "index": 3,
+        "phase": "rerun-after-rollback",
+        "after_edit": 1,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "141312",
+              "image": "df519da23d0f861a",
+              "pid": "3669749",
+              "rss_kb": "141312",
+              "segment": "3",
+              "session": "62c6aea52ce712a005ce883ff5ba49da"
+            }
+          },
+          {
+            "kind": "effect",
+            "fields": {
+              "sequence": "6",
+              "step": "a",
+              "version": "0"
+            }
+          },
+          {
+            "kind": "effect",
+            "fields": {
+              "sequence": "7",
+              "step": "b",
+              "version": "0"
+            }
+          },
+          {
+            "kind": "effect-prefix",
+            "fields": {
+              "result": "11"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 0.09,
+        "crash_report": null
+      },
+      {
+        "index": 4,
+        "phase": "after-edit",
+        "after_edit": 2,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "141536",
+              "image": "df519da23d0f861a",
+              "pid": "3669749",
+              "rss_kb": "141536",
+              "segment": "4",
+              "session": "62c6aea52ce712a005ce883ff5ba49da"
+            }
+          },
+          {
+            "kind": "effect",
+            "fields": {
+              "sequence": "8",
+              "step": "a",
+              "version": "0"
+            }
+          },
+          {
+            "kind": "effect",
+            "fields": {
+              "sequence": "9",
+              "step": "b",
+              "version": "2"
+            }
+          },
+          {
+            "kind": "effect-prefix",
+            "fields": {
+              "result": "13"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 0.12,
+        "crash_report": null
+      }
+    ],
+    "edits": [
+      {
+        "index": 1,
+        "step": "v1.rs",
+        "rung": "patch",
+        "changed_items": 2,
+        "installed": [
+          "live::step_a",
+          "live::step_b"
+        ],
+        "milliseconds": {
+          "check": 2.736,
+          "compile": 0.573,
+          "install": 0.089,
+          "parse+classify": 0.833
+        },
+        "notes": [],
+        "error_codes": [],
+        "rollback": {
+          "group": 1,
+          "functions": [
+            "live::step_a",
+            "live::step_b"
+          ],
+          "milliseconds": 7.503
+        }
+      },
+      {
+        "index": 2,
+        "step": "v2.rs",
+        "rung": "patch",
+        "changed_items": 1,
+        "installed": [
+          "live::step_b"
+        ],
+        "milliseconds": {
+          "check": 0.429,
+          "compile": 0.423,
+          "install": 0.063,
+          "parse+classify": 2.988
+        },
+        "notes": [],
+        "error_codes": [],
+        "rollback": null
+      }
+    ],
+    "unparsed": []
+  },
+  "ordering": [
+    {
+      "after_edit": null,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "first-run",
+      "segment": 0
+    },
+    {
+      "after_edit": null,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "second-run",
+      "segment": 1
+    },
+    {
+      "edit": 1,
+      "event": "edit",
+      "rung": "patch",
+      "step": "v1.rs"
+    },
+    {
+      "after_edit": 1,
+      "event": "checkpoint",
+      "passed": false,
+      "phase": "after-edit",
+      "segment": 2
+    },
+    {
+      "edit": 1,
+      "event": "rollback",
+      "functions": [
+        "live::step_a",
+        "live::step_b"
+      ]
+    },
+    {
+      "after_edit": 1,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "rerun-after-rollback",
+      "segment": 3
+    },
+    {
+      "edit": 2,
+      "event": "edit",
+      "rung": "patch",
+      "step": "v2.rs"
+    },
+    {
+      "after_edit": 2,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "after-edit",
+      "segment": 4
+    }
+  ],
+  "selected_identities": [
+    {
+      "segment": 0,
+      "subject": "effect 0",
+      "function": "step_a",
+      "version": "v0"
+    },
+    {
+      "segment": 0,
+      "subject": "effect 1",
+      "function": "step_b",
+      "version": "v0"
+    },
+    {
+      "segment": 1,
+      "subject": "effect 2",
+      "function": "step_a",
+      "version": "v0"
+    },
+    {
+      "segment": 1,
+      "subject": "effect 3",
+      "function": "step_b",
+      "version": "v0"
+    },
+    {
+      "segment": 2,
+      "subject": "effect 4",
+      "function": "step_a",
+      "version": "v1"
+    },
+    {
+      "segment": 2,
+      "subject": "effect 5",
+      "function": "step_b",
+      "version": "v1"
+    },
+    {
+      "segment": 3,
+      "subject": "effect 6",
+      "function": "step_a",
+      "version": "v0"
+    },
+    {
+      "segment": 3,
+      "subject": "effect 7",
+      "function": "step_b",
+      "version": "v0"
+    },
+    {
+      "segment": 4,
+      "subject": "effect 8",
+      "function": "step_a",
+      "version": "v0"
+    },
+    {
+      "segment": 4,
+      "subject": "effect 9",
+      "function": "step_b",
+      "version": "v2"
+    }
+  ],
+  "effect_prefixes": {
+    "abnormal": [
+      {
+        "fields": {
+          "sequence": "4",
+          "step": "a",
+          "version": "1"
+        },
+        "kind": "effect",
+        "segment": 2
+      },
+      {
+        "fields": {
+          "sequence": "5",
+          "step": "b",
+          "version": "1"
+        },
+        "kind": "effect",
+        "segment": 2
+      }
+    ],
+    "normal": [
+      {
+        "fields": {
+          "sequence": "0",
+          "step": "a",
+          "version": "0"
+        },
+        "kind": "effect",
+        "segment": 0
+      },
+      {
+        "fields": {
+          "sequence": "1",
+          "step": "b",
+          "version": "0"
+        },
+        "kind": "effect",
+        "segment": 0
+      },
+      {
+        "fields": {
+          "result": "11"
+        },
+        "kind": "effect-prefix",
+        "segment": 0
+      },
+      {
+        "fields": {
+          "sequence": "2",
+          "step": "a",
+          "version": "0"
+        },
+        "kind": "effect",
+        "segment": 1
+      },
+      {
+        "fields": {
+          "sequence": "3",
+          "step": "b",
+          "version": "0"
+        },
+        "kind": "effect",
+        "segment": 1
+      },
+      {
+        "fields": {
+          "result": "11"
+        },
+        "kind": "effect-prefix",
+        "segment": 1
+      },
+      {
+        "fields": {
+          "sequence": "6",
+          "step": "a",
+          "version": "0"
+        },
+        "kind": "effect",
+        "segment": 3
+      },
+      {
+        "fields": {
+          "sequence": "7",
+          "step": "b",
+          "version": "0"
+        },
+        "kind": "effect",
+        "segment": 3
+      },
+      {
+        "fields": {
+          "result": "11"
+        },
+        "kind": "effect-prefix",
+        "segment": 3
+      },
+      {
+        "fields": {
+          "sequence": "8",
+          "step": "a",
+          "version": "0"
+        },
+        "kind": "effect",
+        "segment": 4
+      },
+      {
+        "fields": {
+          "sequence": "9",
+          "step": "b",
+          "version": "2"
+        },
+        "kind": "effect",
+        "segment": 4
+      },
+      {
+        "fields": {
+          "result": "13"
+        },
+        "kind": "effect-prefix",
+        "segment": 4
+      }
+    ]
+  },
+  "expectations": [
+    {
+      "expectation_id": "effect.first-run",
+      "origin": {
+        "kind": "fixture",
+        "reference": "src/validation/relax_live/effect_prefix/v0.rs:1-8",
+        "text": "Version 0 prints its two effects, then 10 + 1."
+      },
+      "claim": "equals",
+      "declared": [
+        "0:a:0",
+        "1:b:0"
+      ],
+      "observed": [
+        "0:a:0",
+        "1:b:0"
+      ],
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "effect.edit-1-outcome",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.update_group_atomicity",
+        "text": "The edit of step_a and step_b installs one patch group."
+      },
+      "claim": "equals",
+      "declared": [
+        "live::step_a",
+        "live::step_b"
+      ],
+      "observed": [
+        "live::step_a",
+        "live::step_b"
+      ],
+      "status": "holds",
+      "mismatch_class": "unexpected-refusal",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": null
+    },
+    {
+      "expectation_id": "effect.abnormal-prefix",
+      "origin": {
+        "kind": "fixture",
+        "reference": "src/validation/relax_live/effect_prefix/v1.rs:1-8",
+        "text": "Version 1 performs both effects before step_b panics."
+      },
+      "claim": "equals",
+      "declared": [
+        "4:a:1",
+        "5:b:1"
+      ],
+      "observed": [
+        "4:a:1",
+        "5:b:1"
+      ],
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "erased-effect"
+    },
+    {
+      "expectation_id": "effect.panic",
+      "origin": {
+        "kind": "fixture",
+        "reference": "src/validation/relax_live/effect_prefix/v1.rs:1-8",
+        "text": "The run of version 1 panics with an out-of-bounds index."
+      },
+      "claim": "equals",
+      "declared": true,
+      "observed": true,
+      "status": "holds",
+      "mismatch_class": "runtime-failure",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": null
+    },
+    {
+      "expectation_id": "effect.group-rollback",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.update_group_atomicity; dimensions.abnormal_exit",
+        "text": "The rollback removes the whole patch group: both step_a and step_b."
+      },
+      "claim": "equals",
+      "declared": [
+        "live::step_a",
+        "live::step_b"
+      ],
+      "observed": [
+        "live::step_a",
+        "live::step_b"
+      ],
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "partial-rollback"
+    },
+    {
+      "expectation_id": "effect.rerun-after-rollback",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.abnormal_exit",
+        "text": "The rerun selects version 0 of both steps again."
+      },
+      "claim": "equals",
+      "declared": [
+        "6:a:0",
+        "7:b:0"
+      ],
+      "observed": [
+        "6:a:0",
+        "7:b:0"
+      ],
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "effect.no-effect-erased",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.abnormal_exit",
+        "text": "A rollback restores code, not effects or state: the effect counter runs from 0 to 9 without a gap or reset."
+      },
+      "claim": "equals",
+      "declared": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "observed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "erased-effect"
+    },
+    {
+      "expectation_id": "effect.edit-against-running-version",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "libs/relax/compiler/tests/live/rollback_then_edit/v0.rs:1-5",
+        "text": "The next edit applies against the running version: step_a stays version 0 and step_b becomes version 2."
+      },
+      "claim": "equals",
+      "declared": [
+        "8:a:0",
+        "9:b:2"
+      ],
+      "observed": [
+        "8:a:0",
+        "9:b:2"
+      ],
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "effect.result-after-edit-2",
+      "origin": {
+        "kind": "fixture",
+        "reference": "src/validation/relax_live/effect_prefix/v2.rs:1-8",
+        "text": "The final run returns 10 + 3."
+      },
+      "claim": "equals",
+      "declared": "13",
+      "observed": "13",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "effect.runs",
+      "origin": {
+        "kind": "driver",
+        "reference": "libs/relax/compiler/src/live.rs:1-3",
+        "text": "The driver runs the test twice before the first edit, once after each edit step, and once more after a rollback."
+      },
+      "claim": "equals",
+      "declared": 5,
+      "observed": 5,
+      "status": "holds",
+      "mismatch_class": "runtime-failure",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "runtime-failure"
+    },
+    {
+      "expectation_id": "effect.verdicts",
+      "origin": {
+        "kind": "fixture",
+        "reference": "the scenario's version comments",
+        "text": "Each run's test verdict follows the fixture: only a run of a deliberately panicking version fails."
+      },
+      "claim": "equals",
+      "declared": [
+        true,
+        true,
+        false,
+        true,
+        true
+      ],
+      "observed": [
+        true,
+        true,
+        false,
+        true,
+        true
+      ],
+      "status": "holds",
+      "mismatch_class": "runtime-failure",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "runtime-failure"
+    },
+    {
+      "expectation_id": "effect.same-process",
+      "origin": {
+        "kind": "driver",
+        "reference": "compiler-lab issue 190, session identity",
+        "text": "Every run reports the driver's session token from one process image and one process id under Relax's standard library, so each edit patched the running process."
+      },
+      "claim": "equals",
+      "declared": {
+        "backends": [
+          "relax"
+        ],
+        "driver_session": true,
+        "images": 1,
+        "pids": 1,
+        "samples": 5
+      },
+      "observed": {
+        "backends": [
+          "relax"
+        ],
+        "driver_session": true,
+        "images": 1,
+        "pids": 1,
+        "samples": 5
+      },
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "not-hot-patched"
+    },
+    {
+      "expectation_id": "effect.strict-output",
+      "origin": {
+        "kind": "driver",
+        "reference": "the strict output rule",
+        "text": "Every output line has a known form."
+      },
+      "claim": "equals",
+      "declared": 0,
+      "observed": 0,
+      "status": "holds",
+      "mismatch_class": "runtime-failure",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "malformed-output"
+    }
+  ],
+  "references": [
+    {
+      "version": "v0",
+      "compiler": "rustc",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "native",
+            "domain": "na",
+            "hwm_kb": "2252",
+            "image": "29a2e96d67d75da4",
+            "pid": "3668514",
+            "rss_kb": "2248",
+            "segment": "0",
+            "session": "62c6aea52ce712a005ce883ff5ba49da"
+          }
+        },
+        {
+          "kind": "effect",
+          "fields": {
+            "sequence": "0",
+            "step": "a",
+            "version": "0"
+          }
+        },
+        {
+          "kind": "effect",
+          "fields": {
+            "sequence": "1",
+            "step": "b",
+            "version": "0"
+          }
+        },
+        {
+          "kind": "effect-prefix",
+          "fields": {
+            "result": "11"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "effect-prefix-and-rollback-default-v0-rustc-run",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "sequence": "0",
+              "step": "a",
+              "version": "0"
+            },
+            "kind": "effect"
+          },
+          {
+            "fields": {
+              "sequence": "1",
+              "step": "b",
+              "version": "0"
+            },
+            "kind": "effect"
+          },
+          {
+            "fields": {
+              "result": "11"
+            },
+            "kind": "effect-prefix"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v0",
+      "compiler": "relax",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "relax",
+            "domain": "0",
+            "hwm_kb": "146648",
+            "image": "054d48ca30e65007",
+            "pid": "3668516",
+            "rss_kb": "143320",
+            "segment": "0",
+            "session": "62c6aea52ce712a005ce883ff5ba49da"
+          }
+        },
+        {
+          "kind": "effect",
+          "fields": {
+            "sequence": "0",
+            "step": "a",
+            "version": "0"
+          }
+        },
+        {
+          "kind": "effect",
+          "fields": {
+            "sequence": "1",
+            "step": "b",
+            "version": "0"
+          }
+        },
+        {
+          "kind": "effect-prefix",
+          "fields": {
+            "result": "11"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "effect-prefix-and-rollback-default-v0-relax",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "sequence": "0",
+              "step": "a",
+              "version": "0"
+            },
+            "kind": "effect"
+          },
+          {
+            "fields": {
+              "sequence": "1",
+              "step": "b",
+              "version": "0"
+            },
+            "kind": "effect"
+          },
+          {
+            "fields": {
+              "result": "11"
+            },
+            "kind": "effect-prefix"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v1",
+      "compiler": "rustc",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "native",
+            "domain": "na",
+            "hwm_kb": "2112",
+            "image": "9bbb7a0b6e3ae7d1",
+            "pid": "3668964",
+            "rss_kb": "2108",
+            "segment": "0",
+            "session": "62c6aea52ce712a005ce883ff5ba49da"
+          }
+        },
+        {
+          "kind": "effect",
+          "fields": {
+            "sequence": "0",
+            "step": "a",
+            "version": "1"
+          }
+        },
+        {
+          "kind": "effect",
+          "fields": {
+            "sequence": "1",
+            "step": "b",
+            "version": "1"
+          }
+        }
+      ],
+      "passed": false,
+      "command": "effect-prefix-and-rollback-default-v1-rustc-run",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "sequence": "0",
+              "step": "a",
+              "version": "1"
+            },
+            "kind": "effect"
+          },
+          {
+            "fields": {
+              "sequence": "1",
+              "step": "b",
+              "version": "1"
+            },
+            "kind": "effect"
+          }
+        ],
+        "passed": false
+      },
+      "holds": true
+    },
+    {
+      "version": "v1",
+      "compiler": "relax",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "relax",
+            "domain": "0",
+            "hwm_kb": "144296",
+            "image": "c99da12fc69a5c33",
+            "pid": "3668969",
+            "rss_kb": "140932",
+            "segment": "0",
+            "session": "62c6aea52ce712a005ce883ff5ba49da"
+          }
+        },
+        {
+          "kind": "effect",
+          "fields": {
+            "sequence": "0",
+            "step": "a",
+            "version": "1"
+          }
+        },
+        {
+          "kind": "effect",
+          "fields": {
+            "sequence": "1",
+            "step": "b",
+            "version": "1"
+          }
+        }
+      ],
+      "passed": false,
+      "command": "effect-prefix-and-rollback-default-v1-relax",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "sequence": "0",
+              "step": "a",
+              "version": "1"
+            },
+            "kind": "effect"
+          },
+          {
+            "fields": {
+              "sequence": "1",
+              "step": "b",
+              "version": "1"
+            },
+            "kind": "effect"
+          }
+        ],
+        "passed": false
+      },
+      "holds": true
+    },
+    {
+      "version": "v2",
+      "compiler": "rustc",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "native",
+            "domain": "na",
+            "hwm_kb": "2152",
+            "image": "bd82d81d089537aa",
+            "pid": "3669532",
+            "rss_kb": "2148",
+            "segment": "0",
+            "session": "62c6aea52ce712a005ce883ff5ba49da"
+          }
+        },
+        {
+          "kind": "effect",
+          "fields": {
+            "sequence": "0",
+            "step": "a",
+            "version": "0"
+          }
+        },
+        {
+          "kind": "effect",
+          "fields": {
+            "sequence": "1",
+            "step": "b",
+            "version": "2"
+          }
+        },
+        {
+          "kind": "effect-prefix",
+          "fields": {
+            "result": "13"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "effect-prefix-and-rollback-default-v2-rustc-run",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "sequence": "0",
+              "step": "a",
+              "version": "0"
+            },
+            "kind": "effect"
+          },
+          {
+            "fields": {
+              "sequence": "1",
+              "step": "b",
+              "version": "2"
+            },
+            "kind": "effect"
+          },
+          {
+            "fields": {
+              "result": "13"
+            },
+            "kind": "effect-prefix"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v2",
+      "compiler": "relax",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "relax",
+            "domain": "0",
+            "hwm_kb": "145208",
+            "image": "a38ff399c933cab1",
+            "pid": "3669534",
+            "rss_kb": "141672",
+            "segment": "0",
+            "session": "62c6aea52ce712a005ce883ff5ba49da"
+          }
+        },
+        {
+          "kind": "effect",
+          "fields": {
+            "sequence": "0",
+            "step": "a",
+            "version": "0"
+          }
+        },
+        {
+          "kind": "effect",
+          "fields": {
+            "sequence": "1",
+            "step": "b",
+            "version": "2"
+          }
+        },
+        {
+          "kind": "effect-prefix",
+          "fields": {
+            "result": "13"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "effect-prefix-and-rollback-default-v2-relax",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "sequence": "0",
+              "step": "a",
+              "version": "0"
+            },
+            "kind": "effect"
+          },
+          {
+            "fields": {
+              "sequence": "1",
+              "step": "b",
+              "version": "2"
+            },
+            "kind": "effect"
+          },
+          {
+            "fields": {
+              "result": "13"
+            },
+            "kind": "effect-prefix"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    }
+  ],
+  "temporal_admission": null,
+  "relax_contract": "supported-outcome",
+  "result_class": "supported-outcome",
+  "reasons": [],
+  "faithful_mapping": "Noble's abnormal effect prefix maps to the effect lines that the panicking version printed before its panic. Noble's abnormal root exit maps to Relax's rollback of the patch group and its rerun. Event relocation has no Relax counterpart.",
+  "unsupported_dimensions": [
+    "event-relocation: Relax has no counterpart of Noble's relocation witness.",
+    "effect owner: Noble performs an effect for the checked target slot; a Relax effect belongs to the code that ran, so no owner correspondence is claimed."
+  ],
+  "relations": [
+    {
+      "dimension": "effect-performed-for",
+      "noble": "the host performs the effect for the checked target slot the frame selected",
+      "relax": "an effect belongs to whichever reload transaction installed the running code",
+      "classification_rule": "a differing effect owner is a mapping question; the corpus will not claim correspondence without a justified Relax mapping",
+      "relation": "unsupported",
+      "observed": {
+        "abnormal_effects": [
+          "4:a:1",
+          "5:b:1"
+        ]
+      },
+      "basis": [
+        "effect.abnormal-prefix"
+      ]
+    }
+  ],
+  "intentional_differences": [],
+  "timing": {
+    "started_at": "2026-11-17T02:55:01.862Z",
+    "ended_at": "2026-11-17T02:55:02.299Z",
+    "duration_ms": 435,
+    "edit_milliseconds": [
+      {
+        "check": 2.736,
+        "compile": 0.573,
+        "install": 0.089,
+        "parse+classify": 0.833
+      },
+      {
+        "check": 0.429,
+        "compile": 0.423,
+        "install": 0.063,
+        "parse+classify": 2.988
+      }
+    ],
+    "run_milliseconds": [
+      240.18,
+      0.09,
+      0.09,
+      0.09,
+      0.12
+    ],
+    "memory_kb": [
+      {
+        "hwm_kb": "143660",
+        "rss_kb": "139700"
+      },
+      {
+        "hwm_kb": "146616",
+        "rss_kb": "146616"
+      },
+      {
+        "hwm_kb": "147488",
+        "rss_kb": "147384"
+      },
+      {
+        "hwm_kb": "141312",
+        "rss_kb": "141312"
+      },
+      {
+        "hwm_kb": "141536",
+        "rss_kb": "141536"
+      }
+    ],
+    "bound_to": {
+      "admission": "default",
+      "admission_outcome": [
+        {
+          "edit": 1,
+          "error_codes": [],
+          "rung": "patch"
+        },
+        {
+          "edit": 2,
+          "error_codes": [],
+          "rung": "patch"
+        }
+      ],
+      "case_id": "noble-live-update/relocation-and-effect-prefix",
+      "event_binding_sha256": "920f28bba3761e964cea304e4252866af3ba99abc94c7e9381f960b11be8cf4e",
+      "host_sha256": "fed38792ec30d29829fae808398f39444008c03f6e90cf2eb4418a711738e260",
+      "profile_sha256": "7acb97fbec6ee1fe225f0ec1ae1b889cdcf0dd1cf45e1aadb71cb104a65cbb1a",
+      "relax_revision": "544158264603dbf90994ac47fc97a2636437b656",
+      "result_class": "supported-outcome",
+      "scenario": "effect-prefix-and-rollback"
+    }
+  }
+}

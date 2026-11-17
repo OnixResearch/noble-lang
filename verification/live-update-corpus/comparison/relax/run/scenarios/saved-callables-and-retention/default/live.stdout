@@ -1,0 +1,22 @@
+v0: first run (lazy compile on first call)
+CLRELAX sample segment=0 session=2e85c23415db8a830be36d3631b4140d image=694b7b165a717a0f pid=3668099 rss_kb=142252 hwm_kb=145860 backend=relax domain=0
+CLRELAX saved-callables saved_fn=1005 direct=1005 saved_closure=16 fresh_closure=16
+  test live::root ok (230.01 ms)
+v0: second run (all compiled)
+CLRELAX sample segment=1 session=2e85c23415db8a830be36d3631b4140d image=694b7b165a717a0f pid=3668099 rss_kb=149668 hwm_kb=149668 backend=relax domain=0
+CLRELAX saved-callables saved_fn=1005 direct=1005 saved_closure=16 fresh_closure=16
+  test live::root ok (0.10 ms)
+edit v1.rs: rung=patch 2 changed item(s), 2 fn(s) installed ["live::make", "live::leaf"]; parse+classify 1.051 ms, check 4.169 ms, compile 1.982 ms, install 0.199 ms
+CLRELAX sample segment=2 session=2e85c23415db8a830be36d3631b4140d image=694b7b165a717a0f pid=3668099 rss_kb=150572 hwm_kb=150572 backend=relax domain=0
+CLRELAX saved-callables saved_fn=2005 direct=2005 saved_closure=17 fresh_closure=17
+  test live::root ok (0.09 ms)
+edit v2.rs: rung=patch 1 changed item(s), 1 fn(s) installed ["live::make"]; parse+classify 0.643 ms, check 0.921 ms, compile 1.267 ms, install 0.095 ms
+  held for a restart: stored values of a closure of `live::make` ({closure#235}@15) keep its old code (its captures or signature changed)
+  held for a restart: stored values of a closure of `live::make` ({closure#235}@15) keep its old code (its captures or signature changed)
+CLRELAX sample segment=3 session=2e85c23415db8a830be36d3631b4140d image=694b7b165a717a0f pid=3668099 rss_kb=150848 hwm_kb=150848 backend=relax domain=0
+CLRELAX saved-callables saved_fn=2005 direct=2005 saved_closure=17 fresh_closure=19
+  test live::root ok (0.07 ms)
+edit v3.rs: rung=patch 1 changed item(s), 1 fn(s) installed ["live::leaf"]; parse+classify 0.514 ms, check 0.364 ms, compile 0.170 ms, install 0.019 ms
+CLRELAX sample segment=4 session=2e85c23415db8a830be36d3631b4140d image=694b7b165a717a0f pid=3668099 rss_kb=150868 hwm_kb=150868 backend=relax domain=0
+CLRELAX saved-callables saved_fn=3005 direct=3005 saved_closure=17 fresh_closure=19
+  test live::root ok (0.06 ms)

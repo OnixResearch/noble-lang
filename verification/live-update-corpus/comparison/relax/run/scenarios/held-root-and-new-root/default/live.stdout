@@ -1,0 +1,12 @@
+v0: first run (lazy compile on first call)
+CLRELAX sample segment=0 session=7dd79b8eec61673427c91ab0429f3af7 image=e7249fb43136e6ee pid=3665685 rss_kb=139020 hwm_kb=142660 backend=relax domain=0
+CLRELAX held-root held=none fresh=1100101 transitive=71
+  test live::root ok (268.15 ms)
+v0: second run (all compiled)
+CLRELAX sample segment=1 session=7dd79b8eec61673427c91ab0429f3af7 image=e7249fb43136e6ee pid=3665685 rss_kb=148860 hwm_kb=148860 backend=relax domain=0
+CLRELAX held-root held=1100101 fresh=1100101 transitive=71
+  test live::root ok (7.58 ms)
+edit v1.rs: rung=patch 2 changed item(s), 2 fn(s) installed ["live::leaf_d", "live::leaf_b"]; parse+classify 0.855 ms, check 2.200 ms, compile 0.409 ms, install 0.120 ms
+CLRELAX sample segment=2 session=7dd79b8eec61673427c91ab0429f3af7 image=e7249fb43136e6ee pid=3665685 rss_kb=150832 hwm_kb=150840 backend=relax domain=0
+CLRELAX held-root held=1100201 fresh=1200201 transitive=81
+  test live::root ok (2.30 ms)

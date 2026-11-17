@@ -1,0 +1,1376 @@
+{
+  "case_id": "noble-live-update/saved-program-and-package-retention",
+  "scenario": "saved-callables-and-retention",
+  "admission": "default",
+  "runtime": "makepad-relax",
+  "profile": {
+    "id": "compiler-lab-relax-live-profile/relax-5441582-v1",
+    "path": "src/validation/relax_live/profile.json",
+    "sha256": "7acb97fbec6ee1fe225f0ec1ae1b889cdcf0dd1cf45e1aadb71cb104a65cbb1a"
+  },
+  "corpus": {
+    "path": "<noble-export>/corpus.json",
+    "sha256": "99dc1505ceed462ccbfbbc64a4ae1e9c241145bad0fb2a87e52bc6e14d5310dd",
+    "corpus_revision": "2",
+    "source_commit": "6407c5ea0651530b3de8bb47541d045fdd698915",
+    "noble_profile_path": "verification/live-update-corpus/profiles/noble.json",
+    "noble_profile_id": "noble-live-update-profile/noble-v1",
+    "noble_profile_sha256": "38e64d885d3ff34def91be9e0a4f9b746e7837eaa58664d91b1840a1cf9da67d"
+  },
+  "noble": {
+    "case_id": "noble-live-update/saved-program-and-package-retention",
+    "expectations": [
+      {
+        "expectation_id": "retention.replacement-runs-old-code",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "retention.no-retirement-while-owned",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "retention.retirement-after-last-owner",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "retention.released-program-refused",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "retention.charge-refuses-while-owned",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "retention.charge-admits-after-release",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "retention.module-root-survives-supersession",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "retention.module-root-retires-at-zero-owners",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "retention.module-root-last-run-refused",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "retention.saved-program-capacity-boundary",
+        "status": "holds"
+      }
+    ],
+    "profile_refs": [
+      "dimensions.saved_callable_values",
+      "dimensions.reclamation",
+      "dimensions.update_group_atomicity"
+    ],
+    "result_class": "supported-outcome",
+    "sha256": "24a780dd13ee74960c75e2b7de84df612d5a0ca2a388cce80cdd143eac00b399",
+    "title": "Saved Program, package retention and the retained-version quota"
+  },
+  "session": "2e85c23415db8a830be36d3631b4140d",
+  "edits": [
+    {
+      "version": "v0",
+      "artifact": {
+        "path": "scenarios/saved-callables-and-retention/default/source/v0.rs",
+        "bytes": 3499,
+        "sha256": "976ed32404d6c09e8d7834a275385e7fc3ded77db39f76880de25c741e3e1726"
+      }
+    },
+    {
+      "version": "v1",
+      "artifact": {
+        "path": "scenarios/saved-callables-and-retention/default/source/v1.rs",
+        "bytes": 3499,
+        "sha256": "0977f392656ec2abc4cac24e1a04e300440e52e31aed4fc8e2f780eeee6bcb48"
+      }
+    },
+    {
+      "version": "v2",
+      "artifact": {
+        "path": "scenarios/saved-callables-and-retention/default/source/v2.rs",
+        "bytes": 3514,
+        "sha256": "c360268af6189520219be778250de164091c8a3681516dff302f62745241ffab"
+      }
+    },
+    {
+      "version": "v3",
+      "artifact": {
+        "path": "scenarios/saved-callables-and-retention/default/source/v3.rs",
+        "bytes": 3514,
+        "sha256": "b8b274854ef89c573309695b4324807653322c34aec4fc1df0cba9e1decedd00"
+      }
+    }
+  ],
+  "event_binding_sha256": "a890b8f66193b6a78d214b343f35fa0f3d6c5a5f1e94978e2c6e221de600688a",
+  "provenance": [
+    {
+      "role": "live-stdout",
+      "artifact": {
+        "path": "scenarios/saved-callables-and-retention/default/live.stdout",
+        "bytes": 2156,
+        "sha256": "b14a2f1f7d1011ea792e3e7e06b0fbdf187d67eb230b3207b7f1ad1c265dbbb1"
+      }
+    },
+    {
+      "role": "live-stderr",
+      "artifact": {
+        "path": "scenarios/saved-callables-and-retention/default/live.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "host": {
+    "configuration": {
+      "admission": "default",
+      "cache": "off",
+      "cpu_cores": "4",
+      "environment": {
+        "COMPILER_LAB_RELAX_CHECK_FIRST": "0",
+        "MAKEPAD_CPU_CORES": "4",
+        "MAKEPAD_RUN_CACHE": "off"
+      },
+      "profile": "default"
+    },
+    "executable_sha256": "fed38792ec30d29829fae808398f39444008c03f6e90cf2eb4418a711738e260",
+    "reported_version": "makepad run makepad d08642ed5eee jit 7c8930659157",
+    "std_tree_sha256": "73077222c2c40e616d2a58bb14921ebb9cd6f78cd1e7c96be4ddd30e64ba7c25"
+  },
+  "exit_code": 0,
+  "process_status": "Success",
+  "run": {
+    "segments": [
+      {
+        "index": 0,
+        "phase": "first-run",
+        "after_edit": null,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "145860",
+              "image": "694b7b165a717a0f",
+              "pid": "3668099",
+              "rss_kb": "142252",
+              "segment": "0",
+              "session": "2e85c23415db8a830be36d3631b4140d"
+            }
+          },
+          {
+            "kind": "saved-callables",
+            "fields": {
+              "direct": "1005",
+              "fresh_closure": "16",
+              "saved_closure": "16",
+              "saved_fn": "1005"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 230.01,
+        "crash_report": null
+      },
+      {
+        "index": 1,
+        "phase": "second-run",
+        "after_edit": null,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "149668",
+              "image": "694b7b165a717a0f",
+              "pid": "3668099",
+              "rss_kb": "149668",
+              "segment": "1",
+              "session": "2e85c23415db8a830be36d3631b4140d"
+            }
+          },
+          {
+            "kind": "saved-callables",
+            "fields": {
+              "direct": "1005",
+              "fresh_closure": "16",
+              "saved_closure": "16",
+              "saved_fn": "1005"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 0.1,
+        "crash_report": null
+      },
+      {
+        "index": 2,
+        "phase": "after-edit",
+        "after_edit": 1,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "150572",
+              "image": "694b7b165a717a0f",
+              "pid": "3668099",
+              "rss_kb": "150572",
+              "segment": "2",
+              "session": "2e85c23415db8a830be36d3631b4140d"
+            }
+          },
+          {
+            "kind": "saved-callables",
+            "fields": {
+              "direct": "2005",
+              "fresh_closure": "17",
+              "saved_closure": "17",
+              "saved_fn": "2005"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 0.09,
+        "crash_report": null
+      },
+      {
+        "index": 3,
+        "phase": "after-edit",
+        "after_edit": 2,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "150848",
+              "image": "694b7b165a717a0f",
+              "pid": "3668099",
+              "rss_kb": "150848",
+              "segment": "3",
+              "session": "2e85c23415db8a830be36d3631b4140d"
+            }
+          },
+          {
+            "kind": "saved-callables",
+            "fields": {
+              "direct": "2005",
+              "fresh_closure": "19",
+              "saved_closure": "17",
+              "saved_fn": "2005"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 0.07,
+        "crash_report": null
+      },
+      {
+        "index": 4,
+        "phase": "after-edit",
+        "after_edit": 3,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "150868",
+              "image": "694b7b165a717a0f",
+              "pid": "3668099",
+              "rss_kb": "150868",
+              "segment": "4",
+              "session": "2e85c23415db8a830be36d3631b4140d"
+            }
+          },
+          {
+            "kind": "saved-callables",
+            "fields": {
+              "direct": "3005",
+              "fresh_closure": "19",
+              "saved_closure": "17",
+              "saved_fn": "3005"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 0.06,
+        "crash_report": null
+      }
+    ],
+    "edits": [
+      {
+        "index": 1,
+        "step": "v1.rs",
+        "rung": "patch",
+        "changed_items": 2,
+        "installed": [
+          "live::make",
+          "live::leaf"
+        ],
+        "milliseconds": {
+          "check": 4.169,
+          "compile": 1.982,
+          "install": 0.199,
+          "parse+classify": 1.051
+        },
+        "notes": [],
+        "error_codes": [],
+        "rollback": null
+      },
+      {
+        "index": 2,
+        "step": "v2.rs",
+        "rung": "patch",
+        "changed_items": 1,
+        "installed": [
+          "live::make"
+        ],
+        "milliseconds": {
+          "check": 0.921,
+          "compile": 1.267,
+          "install": 0.095,
+          "parse+classify": 0.643
+        },
+        "notes": [
+          "  held for a restart: stored values of a closure of `live::make` ({closure#235}@15) keep its old code (its captures or signature changed)",
+          "  held for a restart: stored values of a closure of `live::make` ({closure#235}@15) keep its old code (its captures or signature changed)"
+        ],
+        "error_codes": [],
+        "rollback": null
+      },
+      {
+        "index": 3,
+        "step": "v3.rs",
+        "rung": "patch",
+        "changed_items": 1,
+        "installed": [
+          "live::leaf"
+        ],
+        "milliseconds": {
+          "check": 0.364,
+          "compile": 0.17,
+          "install": 0.019,
+          "parse+classify": 0.514
+        },
+        "notes": [],
+        "error_codes": [],
+        "rollback": null
+      }
+    ],
+    "unparsed": []
+  },
+  "ordering": [
+    {
+      "after_edit": null,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "first-run",
+      "segment": 0
+    },
+    {
+      "after_edit": null,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "second-run",
+      "segment": 1
+    },
+    {
+      "edit": 1,
+      "event": "edit",
+      "rung": "patch",
+      "step": "v1.rs"
+    },
+    {
+      "after_edit": 1,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "after-edit",
+      "segment": 2
+    },
+    {
+      "edit": 2,
+      "event": "edit",
+      "rung": "patch",
+      "step": "v2.rs"
+    },
+    {
+      "after_edit": 2,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "after-edit",
+      "segment": 3
+    },
+    {
+      "edit": 3,
+      "event": "edit",
+      "rung": "patch",
+      "step": "v3.rs"
+    },
+    {
+      "after_edit": 3,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "after-edit",
+      "segment": 4
+    }
+  ],
+  "selected_identities": [
+    {
+      "segment": 0,
+      "subject": "stored fn pointer",
+      "function": "leaf",
+      "version": "v0"
+    },
+    {
+      "segment": 0,
+      "subject": "direct call",
+      "function": "leaf",
+      "version": "v0"
+    },
+    {
+      "segment": 0,
+      "subject": "stored closure",
+      "function": "make closure",
+      "version": "v0"
+    },
+    {
+      "segment": 0,
+      "subject": "fresh closure",
+      "function": "make closure",
+      "version": "v0"
+    },
+    {
+      "segment": 1,
+      "subject": "stored fn pointer",
+      "function": "leaf",
+      "version": "v0"
+    },
+    {
+      "segment": 1,
+      "subject": "direct call",
+      "function": "leaf",
+      "version": "v0"
+    },
+    {
+      "segment": 1,
+      "subject": "stored closure",
+      "function": "make closure",
+      "version": "v0"
+    },
+    {
+      "segment": 1,
+      "subject": "fresh closure",
+      "function": "make closure",
+      "version": "v0"
+    },
+    {
+      "segment": 2,
+      "subject": "stored fn pointer",
+      "function": "leaf",
+      "version": "v1"
+    },
+    {
+      "segment": 2,
+      "subject": "direct call",
+      "function": "leaf",
+      "version": "v1"
+    },
+    {
+      "segment": 2,
+      "subject": "stored closure",
+      "function": "make closure",
+      "version": "v1"
+    },
+    {
+      "segment": 2,
+      "subject": "fresh closure",
+      "function": "make closure",
+      "version": "v1"
+    },
+    {
+      "segment": 3,
+      "subject": "stored fn pointer",
+      "function": "leaf",
+      "version": "v1"
+    },
+    {
+      "segment": 3,
+      "subject": "direct call",
+      "function": "leaf",
+      "version": "v1"
+    },
+    {
+      "segment": 3,
+      "subject": "stored closure",
+      "function": "make closure",
+      "version": "v1"
+    },
+    {
+      "segment": 3,
+      "subject": "fresh closure",
+      "function": "make closure",
+      "version": "v2"
+    },
+    {
+      "segment": 4,
+      "subject": "stored fn pointer",
+      "function": "leaf",
+      "version": "v3"
+    },
+    {
+      "segment": 4,
+      "subject": "direct call",
+      "function": "leaf",
+      "version": "v3"
+    },
+    {
+      "segment": 4,
+      "subject": "stored closure",
+      "function": "make closure",
+      "version": "v1"
+    },
+    {
+      "segment": 4,
+      "subject": "fresh closure",
+      "function": "make closure",
+      "version": "v2"
+    }
+  ],
+  "effect_prefixes": {
+    "abnormal": [],
+    "normal": [
+      {
+        "fields": {
+          "direct": "1005",
+          "fresh_closure": "16",
+          "saved_closure": "16",
+          "saved_fn": "1005"
+        },
+        "kind": "saved-callables",
+        "segment": 0
+      },
+      {
+        "fields": {
+          "direct": "1005",
+          "fresh_closure": "16",
+          "saved_closure": "16",
+          "saved_fn": "1005"
+        },
+        "kind": "saved-callables",
+        "segment": 1
+      },
+      {
+        "fields": {
+          "direct": "2005",
+          "fresh_closure": "17",
+          "saved_closure": "17",
+          "saved_fn": "2005"
+        },
+        "kind": "saved-callables",
+        "segment": 2
+      },
+      {
+        "fields": {
+          "direct": "2005",
+          "fresh_closure": "19",
+          "saved_closure": "17",
+          "saved_fn": "2005"
+        },
+        "kind": "saved-callables",
+        "segment": 3
+      },
+      {
+        "fields": {
+          "direct": "3005",
+          "fresh_closure": "19",
+          "saved_closure": "17",
+          "saved_fn": "3005"
+        },
+        "kind": "saved-callables",
+        "segment": 4
+      }
+    ]
+  },
+  "expectations": [
+    {
+      "expectation_id": "saved.first-run",
+      "origin": {
+        "kind": "fixture",
+        "reference": "src/validation/relax_live/saved_callables/v0.rs:1-8",
+        "text": "Version 0: leaf(5) = 1005 and the closure gives 5 * 3 + 1."
+      },
+      "claim": "equals",
+      "declared": "16",
+      "observed": "16",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "saved.edit-1-outcome",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.update_group_atomicity",
+        "text": "The body edits of leaf and make apply as one patch."
+      },
+      "claim": "equals",
+      "declared": [
+        "live::leaf",
+        "live::make"
+      ],
+      "observed": [
+        "live::leaf",
+        "live::make"
+      ],
+      "status": "holds",
+      "mismatch_class": "unexpected-refusal",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": null
+    },
+    {
+      "expectation_id": "saved.direct-after-edit-1",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.version_selection_boundary",
+        "text": "A direct call after the edit runs leaf version 1: 5 + 2000."
+      },
+      "claim": "equals",
+      "declared": "2005",
+      "observed": "2005",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "saved.closure-follows-same-captures",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.saved_callable_values",
+        "text": "The stored closure keeps its captures, so it runs the edited body: 5 * 3 + 2."
+      },
+      "claim": "equals",
+      "declared": "17",
+      "observed": "17",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "saved.fn-pointer-after-edit-1",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.saved_callable_values; dimensions.reclamation",
+        "text": "The profile states no selection rule for a stored fn pointer. It must call a retained version of leaf and must not trap."
+      },
+      "claim": "matches",
+      "declared": {
+        "one_of": [
+          "1005",
+          "2005"
+        ]
+      },
+      "observed": "2005",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "premature-retirement"
+    },
+    {
+      "expectation_id": "saved.edit-2-outcome",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.saved_callable_values",
+        "text": "The capture change of make applies as a patch and reports that stored closure values keep their old code."
+      },
+      "claim": "equals",
+      "declared": true,
+      "observed": true,
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": null
+    },
+    {
+      "expectation_id": "saved.closure-keeps-old-code",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.saved_callable_values",
+        "text": "After the capture change the stored closure keeps version 1 code, 5 * 3 + 2."
+      },
+      "claim": "equals",
+      "declared": "17",
+      "observed": "17",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "premature-retirement"
+    },
+    {
+      "expectation_id": "saved.fresh-closure-after-edit-2",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.saved_callable_values",
+        "text": "A fresh closure after the capture change runs version 2: 5 * 3 + 4."
+      },
+      "claim": "equals",
+      "declared": "19",
+      "observed": "19",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "saved.retained-after-later-edit",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.reclamation",
+        "text": "A later unrelated edit leaves the stored closure's retained version 1 code callable: 17."
+      },
+      "claim": "equals",
+      "declared": "17",
+      "observed": "17",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "premature-retirement"
+    },
+    {
+      "expectation_id": "saved.direct-after-edit-3",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.version_selection_boundary",
+        "text": "A direct call after the third edit runs leaf version 3: 5 + 3000."
+      },
+      "claim": "equals",
+      "declared": "3005",
+      "observed": "3005",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "saved.fn-pointer-after-edit-3",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.saved_callable_values; dimensions.reclamation",
+        "text": "The stored fn pointer calls a retained version of leaf and does not trap."
+      },
+      "claim": "matches",
+      "declared": {
+        "one_of": [
+          "1005",
+          "2005",
+          "3005"
+        ]
+      },
+      "observed": "3005",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "premature-retirement"
+    },
+    {
+      "expectation_id": "saved.runs",
+      "origin": {
+        "kind": "driver",
+        "reference": "libs/relax/compiler/src/live.rs:1-3",
+        "text": "The driver runs the test twice before the first edit, once after each edit step, and once more after a rollback."
+      },
+      "claim": "equals",
+      "declared": 5,
+      "observed": 5,
+      "status": "holds",
+      "mismatch_class": "runtime-failure",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "runtime-failure"
+    },
+    {
+      "expectation_id": "saved.verdicts",
+      "origin": {
+        "kind": "fixture",
+        "reference": "the scenario's version comments",
+        "text": "Each run's test verdict follows the fixture: only a run of a deliberately panicking version fails."
+      },
+      "claim": "equals",
+      "declared": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "observed": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "status": "holds",
+      "mismatch_class": "runtime-failure",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "runtime-failure"
+    },
+    {
+      "expectation_id": "saved.same-process",
+      "origin": {
+        "kind": "driver",
+        "reference": "compiler-lab issue 190, session identity",
+        "text": "Every run reports the driver's session token from one process image and one process id under Relax's standard library, so each edit patched the running process."
+      },
+      "claim": "equals",
+      "declared": {
+        "backends": [
+          "relax"
+        ],
+        "driver_session": true,
+        "images": 1,
+        "pids": 1,
+        "samples": 5
+      },
+      "observed": {
+        "backends": [
+          "relax"
+        ],
+        "driver_session": true,
+        "images": 1,
+        "pids": 1,
+        "samples": 5
+      },
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "not-hot-patched"
+    },
+    {
+      "expectation_id": "saved.strict-output",
+      "origin": {
+        "kind": "driver",
+        "reference": "the strict output rule",
+        "text": "Every output line has a known form."
+      },
+      "claim": "equals",
+      "declared": 0,
+      "observed": 0,
+      "status": "holds",
+      "mismatch_class": "runtime-failure",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "malformed-output"
+    }
+  ],
+  "references": [
+    {
+      "version": "v0",
+      "compiler": "rustc",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "native",
+            "domain": "na",
+            "hwm_kb": "2300",
+            "image": "b37a2f6253420f48",
+            "pid": "3666140",
+            "rss_kb": "2296",
+            "segment": "0",
+            "session": "2e85c23415db8a830be36d3631b4140d"
+          }
+        },
+        {
+          "kind": "saved-callables",
+          "fields": {
+            "direct": "1005",
+            "fresh_closure": "16",
+            "saved_closure": "16",
+            "saved_fn": "1005"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "saved-callables-and-retention-default-v0-rustc-run",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "direct": "1005",
+              "fresh_closure": "16",
+              "saved_closure": "16",
+              "saved_fn": "1005"
+            },
+            "kind": "saved-callables"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v0",
+      "compiler": "relax",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "relax",
+            "domain": "0",
+            "hwm_kb": "147020",
+            "image": "96c0b5860449ae62",
+            "pid": "3666151",
+            "rss_kb": "143476",
+            "segment": "0",
+            "session": "2e85c23415db8a830be36d3631b4140d"
+          }
+        },
+        {
+          "kind": "saved-callables",
+          "fields": {
+            "direct": "1005",
+            "fresh_closure": "16",
+            "saved_closure": "16",
+            "saved_fn": "1005"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "saved-callables-and-retention-default-v0-relax",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "direct": "1005",
+              "fresh_closure": "16",
+              "saved_closure": "16",
+              "saved_fn": "1005"
+            },
+            "kind": "saved-callables"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v1",
+      "compiler": "rustc",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "native",
+            "domain": "na",
+            "hwm_kb": "2312",
+            "image": "7db04e13e1d5aea2",
+            "pid": "3666574",
+            "rss_kb": "2308",
+            "segment": "0",
+            "session": "2e85c23415db8a830be36d3631b4140d"
+          }
+        },
+        {
+          "kind": "saved-callables",
+          "fields": {
+            "direct": "2005",
+            "fresh_closure": "17",
+            "saved_closure": "17",
+            "saved_fn": "2005"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "saved-callables-and-retention-default-v1-rustc-run",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "direct": "2005",
+              "fresh_closure": "17",
+              "saved_closure": "17",
+              "saved_fn": "2005"
+            },
+            "kind": "saved-callables"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v1",
+      "compiler": "relax",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "relax",
+            "domain": "0",
+            "hwm_kb": "147672",
+            "image": "6ade41fd794aa8d3",
+            "pid": "3666581",
+            "rss_kb": "144744",
+            "segment": "0",
+            "session": "2e85c23415db8a830be36d3631b4140d"
+          }
+        },
+        {
+          "kind": "saved-callables",
+          "fields": {
+            "direct": "2005",
+            "fresh_closure": "17",
+            "saved_closure": "17",
+            "saved_fn": "2005"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "saved-callables-and-retention-default-v1-relax",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "direct": "2005",
+              "fresh_closure": "17",
+              "saved_closure": "17",
+              "saved_fn": "2005"
+            },
+            "kind": "saved-callables"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v2",
+      "compiler": "rustc",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "native",
+            "domain": "na",
+            "hwm_kb": "2276",
+            "image": "21236f1cbbfbb10c",
+            "pid": "3667017",
+            "rss_kb": "2272",
+            "segment": "0",
+            "session": "2e85c23415db8a830be36d3631b4140d"
+          }
+        },
+        {
+          "kind": "saved-callables",
+          "fields": {
+            "direct": "2005",
+            "fresh_closure": "19",
+            "saved_closure": "19",
+            "saved_fn": "2005"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "saved-callables-and-retention-default-v2-rustc-run",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "direct": "2005",
+              "fresh_closure": "19",
+              "saved_closure": "19",
+              "saved_fn": "2005"
+            },
+            "kind": "saved-callables"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v2",
+      "compiler": "relax",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "relax",
+            "domain": "0",
+            "hwm_kb": "147736",
+            "image": "39961c8c0b01b0b0",
+            "pid": "3667022",
+            "rss_kb": "144092",
+            "segment": "0",
+            "session": "2e85c23415db8a830be36d3631b4140d"
+          }
+        },
+        {
+          "kind": "saved-callables",
+          "fields": {
+            "direct": "2005",
+            "fresh_closure": "19",
+            "saved_closure": "19",
+            "saved_fn": "2005"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "saved-callables-and-retention-default-v2-relax",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "direct": "2005",
+              "fresh_closure": "19",
+              "saved_closure": "19",
+              "saved_fn": "2005"
+            },
+            "kind": "saved-callables"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v3",
+      "compiler": "rustc",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "native",
+            "domain": "na",
+            "hwm_kb": "2296",
+            "image": "f2f00f9661ca9429",
+            "pid": "3667736",
+            "rss_kb": "2292",
+            "segment": "0",
+            "session": "2e85c23415db8a830be36d3631b4140d"
+          }
+        },
+        {
+          "kind": "saved-callables",
+          "fields": {
+            "direct": "3005",
+            "fresh_closure": "19",
+            "saved_closure": "19",
+            "saved_fn": "3005"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "saved-callables-and-retention-default-v3-rustc-run",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "direct": "3005",
+              "fresh_closure": "19",
+              "saved_closure": "19",
+              "saved_fn": "3005"
+            },
+            "kind": "saved-callables"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v3",
+      "compiler": "relax",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "relax",
+            "domain": "0",
+            "hwm_kb": "146424",
+            "image": "fe8af756158833e4",
+            "pid": "3667741",
+            "rss_kb": "142980",
+            "segment": "0",
+            "session": "2e85c23415db8a830be36d3631b4140d"
+          }
+        },
+        {
+          "kind": "saved-callables",
+          "fields": {
+            "direct": "3005",
+            "fresh_closure": "19",
+            "saved_closure": "19",
+            "saved_fn": "3005"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "saved-callables-and-retention-default-v3-relax",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "direct": "3005",
+              "fresh_closure": "19",
+              "saved_closure": "19",
+              "saved_fn": "3005"
+            },
+            "kind": "saved-callables"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    }
+  ],
+  "temporal_admission": null,
+  "relax_contract": "supported-outcome",
+  "result_class": "intentional-semantic-difference",
+  "reasons": [
+    "Relax holds its own profile and differs from Noble on retention-unit."
+  ],
+  "faithful_mapping": "A saved Noble Program maps to a stored boxed closure and to a stored fn pointer, both saved in the first run. Replacements map to edits of leaf and make. Retention maps to calls of the stored values after later edits. Relax declares no retention quota, so Noble's quota boundary has no counterpart.",
+  "unsupported_dimensions": [
+    "retention-quota: Relax declares no bound on retained code.",
+    "package retirement order and saved-owner tokens: Relax has no per-value owner."
+  ],
+  "relations": [
+    {
+      "dimension": "retention-unit",
+      "noble": "the retained unit is the selected version's whole executable package, with a host-ledger quota in 1..16384",
+      "relax": "retained code follows the reload transaction's own retained-code policy; no comparable quota is implied",
+      "classification_rule": "a differing reclamation bound is an intentional semantic difference; only a stale handle that traps would be a failure under LREF-CASE-03",
+      "relation": "intentional-semantic-difference",
+      "observed": {
+        "stored_closure": [
+          "run 0=v0",
+          "run 1=v0",
+          "run 2=v1",
+          "run 3=v1",
+          "run 4=v1"
+        ],
+        "stored_fn_pointer": [
+          "run 0=v0",
+          "run 1=v0",
+          "run 2=v1",
+          "run 3=v1",
+          "run 4=v3"
+        ]
+      },
+      "basis": [
+        "saved.closure-keeps-old-code",
+        "saved.retained-after-later-edit"
+      ]
+    }
+  ],
+  "intentional_differences": [
+    "retention-unit"
+  ],
+  "timing": {
+    "started_at": "2026-11-17T02:54:59.153Z",
+    "ended_at": "2026-11-17T02:54:59.543Z",
+    "duration_ms": 389,
+    "edit_milliseconds": [
+      {
+        "check": 4.169,
+        "compile": 1.982,
+        "install": 0.199,
+        "parse+classify": 1.051
+      },
+      {
+        "check": 0.921,
+        "compile": 1.267,
+        "install": 0.095,
+        "parse+classify": 0.643
+      },
+      {
+        "check": 0.364,
+        "compile": 0.17,
+        "install": 0.019,
+        "parse+classify": 0.514
+      }
+    ],
+    "run_milliseconds": [
+      230.01,
+      0.1,
+      0.09,
+      0.07,
+      0.06
+    ],
+    "memory_kb": [
+      {
+        "hwm_kb": "145860",
+        "rss_kb": "142252"
+      },
+      {
+        "hwm_kb": "149668",
+        "rss_kb": "149668"
+      },
+      {
+        "hwm_kb": "150572",
+        "rss_kb": "150572"
+      },
+      {
+        "hwm_kb": "150848",
+        "rss_kb": "150848"
+      },
+      {
+        "hwm_kb": "150868",
+        "rss_kb": "150868"
+      }
+    ],
+    "bound_to": {
+      "admission": "default",
+      "admission_outcome": [
+        {
+          "edit": 1,
+          "error_codes": [],
+          "rung": "patch"
+        },
+        {
+          "edit": 2,
+          "error_codes": [],
+          "rung": "patch"
+        },
+        {
+          "edit": 3,
+          "error_codes": [],
+          "rung": "patch"
+        }
+      ],
+      "case_id": "noble-live-update/saved-program-and-package-retention",
+      "event_binding_sha256": "a890b8f66193b6a78d214b343f35fa0f3d6c5a5f1e94978e2c6e221de600688a",
+      "host_sha256": "fed38792ec30d29829fae808398f39444008c03f6e90cf2eb4418a711738e260",
+      "profile_sha256": "7acb97fbec6ee1fe225f0ec1ae1b889cdcf0dd1cf45e1aadb71cb104a65cbb1a",
+      "relax_revision": "544158264603dbf90994ac47fc97a2636437b656",
+      "result_class": "intentional-semantic-difference",
+      "scenario": "saved-callables-and-retention"
+    }
+  }
+}

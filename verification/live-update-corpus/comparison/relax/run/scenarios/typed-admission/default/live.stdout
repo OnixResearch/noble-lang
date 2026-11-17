@@ -1,0 +1,31 @@
+v0: first run (lazy compile on first call)
+CLRELAX sample segment=0 session=e07f7d5bceeeaa032f348886d9c56f54 image=73cb995f0bbd0423 pid=3672149 rss_kb=140548 hwm_kb=144148 backend=relax domain=0
+CLRELAX typed-admission value=11 scaled=22 held=5
+  test live::root ok (225.00 ms)
+v0: second run (all compiled)
+CLRELAX sample segment=1 session=e07f7d5bceeeaa032f348886d9c56f54 image=73cb995f0bbd0423 pid=3672149 rss_kb=147556 hwm_kb=147556 backend=relax domain=0
+CLRELAX typed-admission value=11 scaled=22 held=5
+  test live::root ok (0.08 ms)
+edit v1.rs: rung=refuse 1 changed item(s), 0 fn(s) installed []; parse+classify 0.879 ms, check 2.194 ms, compile 0.001 ms, install 0.000 ms
+  <compiler-lab-run>/scenarios/typed-admission/default/source/v1.rs:64:21: E0308: mismatched types: expected `u64`, found `&str`
+CLRELAX sample segment=2 session=e07f7d5bceeeaa032f348886d9c56f54 image=73cb995f0bbd0423 pid=3672149 rss_kb=141264 hwm_kb=141264 backend=relax domain=0
+CLRELAX typed-admission value=11 scaled=22 held=5
+  test live::root ok (0.11 ms)
+edit v2.rs: rung=refuse 2 changed item(s), 0 fn(s) installed []; parse+classify 3.577 ms, check 10.413 ms, compile 0.002 ms, install 0.000 ms
+  <compiler-lab-run>/scenarios/typed-admission/default/source/v2.rs:81:77: E0061: this function takes 2 arguments but 1 was supplied -- missing argument `y: u64`
+CLRELAX sample segment=3 session=e07f7d5bceeeaa032f348886d9c56f54 image=73cb995f0bbd0423 pid=3672149 rss_kb=141540 hwm_kb=141540 backend=relax domain=0
+CLRELAX typed-admission value=11 scaled=22 held=5
+  test live::root ok (0.11 ms)
+edit v3.rs: rung=restart 3 changed item(s), 0 fn(s) installed []; parse+classify 5.533 ms, check 4.172 ms, compile 0.001 ms, install 0.000 ms
+  <compiler-lab-run>/scenarios/typed-admission/default/source/v3.rs:18:1: struct `Held` changed its layout, and `live::HELD` may hold values of it in the old one -- restart the app
+CLRELAX sample segment=4 session=e07f7d5bceeeaa032f348886d9c56f54 image=73cb995f0bbd0423 pid=3672149 rss_kb=141692 hwm_kb=141692 backend=relax domain=0
+CLRELAX typed-admission value=11 scaled=22 held=5
+  test live::root ok (0.11 ms)
+edit v4.rs: rung=patch 1 changed item(s), 1 fn(s) installed ["live::value"]; parse+classify 7.069 ms, check 0.422 ms, compile 0.540 ms, install 0.171 ms
+CLRELAX sample segment=5 session=e07f7d5bceeeaa032f348886d9c56f54 image=73cb995f0bbd0423 pid=3672149 rss_kb=143068 hwm_kb=143120 backend=relax domain=0
+CLRELAX typed-admission value=15 scaled=30 held=5
+  test live::root ok (0.10 ms)
+edit v5.rs: rung=patch 1 changed item(s), 1 fn(s) installed ["live::value"]; parse+classify 0.669 ms, check 0.500 ms, compile 0.196 ms, install 0.024 ms
+CLRELAX sample segment=6 session=e07f7d5bceeeaa032f348886d9c56f54 image=73cb995f0bbd0423 pid=3672149 rss_kb=143132 hwm_kb=143132 backend=relax domain=0
+CLRELAX typed-admission value=16 scaled=32 held=5
+  test live::root ok (0.05 ms)
