@@ -21,6 +21,9 @@ For #97 the M2 and M3 coverage JSON records were re-derived against the new
 checked-in generated definition lists; that *static* join does not establish
 their proof gates, source-to-generated correspondence, or current-Rust
 applicability. See [the #97 classification](aeneas-re-extraction/README.md#generated-subjects-and-lane-receipts).
+Since the whole-crate re-extraction (2026-11-16) the M2 record covers the
+current generated subject and the full gate — Lean environment checkers and
+strength classification included — passes on it: see §9.
 
 ## 1. Binding source for the function list
 
@@ -312,3 +315,77 @@ Strength classes describe statement shape only. They do not show that
 `NobleM2.check` is correct, and a `universal` theorem about the reference
 model would still need the extracted function in its statement (the existing
 `CITATION-BINDING` check) to count for that function.
+
+## 9. Whole-crate re-extraction (#97, 2026-11-16)
+
+The checked-in `proofs/m2/NobleKernel/{Funs,Types}.lean` are now the
+whole-crate extraction of `crates/noble-kernel` (Charon `9e95cf31` with
+`--inline-anon-consts`, Aeneas `1238879f`; Rust subject `acf98da0`),
+identical to `proofs/m3/NobleKernel`. The record was re-derived from the
+emitter skeleton (§6) with these classifications:
+
+| Status | Count | Population |
+|---|---|---|
+| `extracted` | 2268 | every generated def in `Funs.lean` except `acceptance.check` |
+| `fixture-checked` | 1 | `noble_kernel.acceptance.check`: the same 13 citations as before (12 closed fixtures, the conditional `accepted_via_refinement` handoff) |
+| `modeled` | 66 | the template's external std surface in `FunsExternal.lean` |
+| `excepted` | 5 | the crate's five `#[charon::opaque]` helpers, unchanged |
+| `open` | 0 | |
+| **total** | **2340** | `Funs.lean` 2269 + `FunsExternal.lean` 71 |
+
+Every citation's axiom class is now `native`: the generated checker itself
+depends on three literal-size evaluation axioms that the pinned Aeneas
+`toStr` emits for string literals of the generated code (see
+[the M2 proof evidence §8](m2-proof-evidence.md)), so `accepted_via_refinement`
+moved from `conditional`/`strict` to `conditional`/`native`.
+
+Two gate adjustments, both forced by the new subject:
+
+- **Residual definitions.** The generated code has four `mutual … end`
+  blocks closed by `partial_fixpoint`, for which Lean elaborates one packed
+  fixpoint named after the block's first declaration
+  (`types.impls.clone_shape.mutual`, `types.impls.debug_shape.mutual`,
+  `contracts.clone_budget.Counter.boxed_type.mutual`,
+  `contracts.clone_budget.Counter.boxed_pattern.mutual`). They are not
+  textual definitions, so the join cannot classify them. Checker A now
+  tolerates a residual `<name>.mutual` only when `<name>` is classified and
+  its own definition is built from that packed fixpoint; the new refusal
+  cell `borrowed-mutual-suffix` splices an `abbrev
+  core.slice.Slice.first.mutual` that the classified `first` does not use,
+  and the gate refuses it at `ENV-UNCLASSIFIED`.
+- **The `conditional-claimed-universal` cell** now forges the strict axiom
+  class as well as the universal strength: with the truthful `native` class
+  kept, the join's status rule refused first and the cell no longer reached
+  the elaborated-statement check it exists to exercise.
+
+The external models also gained a doc header on every definition (the
+parser binds a definition only through its doc comment); no definition
+changed.
+
+Gate run (2026-11-16, pinned Lean 4.35.0 and `bun` on PATH):
+
+```
+[m2-coverage] PASS COVERAGE-DERIVE (Funs.lean + FunsExternal.lean defs with rust names and source spans; keyword parity holds)
+[m2-coverage] PASS COVERAGE-JOIN (total=2340 classified=2340 extracted=2268 proved=0 fixture-checked=1 modeled=66 excepted=5 open=0)
+[m2-coverage] PASS EXCEPTED-DISCLOSURE (5 excepted entries == #[charon::opaque] declarations in the crate)
+info: m2-coverage: ENV-A-PASS 2340 classified constants bound to their modules; 302 elaborator matchers and 4 partial_fixpoint mutual packings tolerated
+info: m2-coverage: ENV-B-PASS 13 refinement citations verified (theorem exists, statement mentions the constant)
+[m2-coverage] PASS STRENGTH (citations=13 fixture=12 conditional=1 universal=0 strict=0 native=13 strict_universal=0)
+[m2-coverage] PASS (all checks)
+```
+
+Refusal matrix (`verification/m2-coverage-refusals.sh`, same PATH), trimmed
+to the result lines:
+
+```
+refused at UNCLASSIFIED (gate exit 1)            (unclassified-def)
+refused at CITATION (gate exit 1)                (dangling-citation)
+refused at CITATION-BINDING (gate exit 1)        (misbound-citation)
+refused at STALE-ENTRY (gate exit 1)             (stale-entry)
+refused at STATUS (gate exit 1)                  (bad-status)
+refused at STRENGTH-STATUS (gate exit 1)         (native-fixtures-as-proved)
+refused at STRENGTH-DRIFT (gate exit 1)          (conditional-claimed-universal)
+refused at ENV-UNCLASSIFIED (gate exit 1)        (borrowed-mutual-suffix)
+accepted: the universal probe is classified universal/strict and its function is proved
+== all refusals demonstrated ==
+```
