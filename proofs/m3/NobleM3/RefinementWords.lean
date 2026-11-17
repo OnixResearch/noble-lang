@@ -4,6 +4,9 @@ The per-word scheme refinements (task 5.2, design item 1): for each of the
 witness resolution, substitution, and eligibility — applied to the word's
 scheme and its canonical witness yields exactly the reference
 instantiation's interface, decided by computation over the generated module.
+The extracted path runs as ordinary (unsigned) acceptance does, with no signed
+owner in its context, and resolves the witness with the fixture request's
+declared work as its fuel.
 -/
 
 import NobleKernel
@@ -15,12 +18,14 @@ namespace NobleM2.WordRefinement
 open NobleM2 NobleM2.Refinement NobleM2.WordCoverage noble_kernel Aeneas Aeneas.Std
 
 /-- The interface the extracted instantiation path derives, projected onto
-the reference domain; a rejected or divergent application is `none`. -/
+the reference domain; a rejected or divergent application is `none`. The
+resolved witness and the work the resolution spent are not compared. -/
 def extractedIface
-    (r : Result (core.result.Result (untrusted.Interface × words.Inst) acceptance.Fail)) :
+    (r : Result (core.result.Result (untrusted.Interface × words.Inst × Std.U32)
+      acceptance.Fail)) :
     Option Interface :=
   match r.match with
-  | .ok (core.result.Result.Ok (i, _)) => some (projectInterface i)
+  | .ok (core.result.Result.Ok (i, _, _)) => some (projectInterface i)
   | _ => none
 
 /-- The interface the reference instantiation derives, when accepted. -/
@@ -30,9 +35,14 @@ def referenceIface (r : Except Failure (Interface × Inst)) : Option Interface :
   | .error _ => none
 
 /-- The extracted instantiation context for word position `n`'s canonical
-fixture. -/
+fixture: ordinary acceptance, so no signed owner. -/
 def wordCtx (n : Nat) : acceptance.parts.Ctx :=
-  ⟨embedRequest (wordRequestOf n), embedEnv bootstrapEnv⟩
+  ⟨embedRequest (wordRequestOf n), embedEnv bootstrapEnv, none⟩
+
+/-- The resolution fuel for word position `n`'s canonical fixture: the
+request's declared work allowance. Before the kernel took this fuel as an
+argument, its instantiation path read exactly this value from the context. -/
+def wordFuel (n : Nat) : Std.U32 := embedU32 (wordRequestOf n).limits.work
 
 /-- The eligibility variable the extracted path reads for word `n`, when the
 word's behavior constrains one. -/
@@ -45,7 +55,7 @@ def wordDataVar (n : Nat) : Option noble_kernel.words.Variable :=
 reference substitution both derive the fixture's interface. -/
 def wordAgrees (n : Nat) (scheme : Scheme) : Bool :=
   extractedIface (acceptance.parts.instantiate.apply (embedScheme scheme)
-      (embedInst (canonInst n)) (wordDataVar n) ⟨none, none⟩ (wordCtx n))
+      (embedInst (canonInst n)) (wordDataVar n) ⟨none, none⟩ (wordCtx n) (wordFuel n))
     = some (wordCheckedOf n).interface
     && referenceIface (applyScheme bootstrapEnv (wordRequestOf n).limits scheme
         (canonInst n)) = some (wordCheckedOf n).interface

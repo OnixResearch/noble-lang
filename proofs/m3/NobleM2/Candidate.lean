@@ -120,6 +120,10 @@ inductive Constraint where
   | invalidContract : Constraint
   /-- Likewise for a reference to a definition the kernel keeps private. -/
   | privateDefinition : Nat → Constraint
+  /-- Likewise for a live slot whose reference is not one of the independently supplied borrowed inputs. -/
+  | borrowProvenance : Constraint
+  /-- Likewise for a candidate that aliases another live dispatch site. -/
+  | slotSite : Constraint
   deriving Repr, Inhabited
 
 /-- One rejection's diagnostic. -/
