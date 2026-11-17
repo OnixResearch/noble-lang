@@ -1213,7 +1213,7 @@ impl_def types.Ty.Insts.CoreCmpPartialEqTy : core.cmp.PartialEq types.Ty
 }
 
 /-- [noble_kernel::acceptance::parts::invalid]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 337:0-364:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 341:0-368:1 -/
 def acceptance.parts.invalid
   (ctx : acceptance.parts.Ctx) («at» : acceptance.parts.Site)
   (expected : alloc.vec.Vec types.Ty) (actual : alloc.vec.Vec types.Ty)
@@ -1375,7 +1375,7 @@ def acceptance.parts.multiset.same
     acceptance.parts.multiset.same_loop left right used true 0#usize
 
 /-- [noble_kernel::acceptance::parts::mismatch_constraint]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 290:0-299:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 294:0-303:1 -/
 def acceptance.parts.mismatch_constraint
   (expected : Slice types.Ty) (actual : Slice types.Ty) :
   Result untrusted.Constraint
@@ -1554,7 +1554,7 @@ def types.EffSet.union
   ok out1
 
 /-- [noble_kernel::acceptance::parts::tail_copy]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 305:0-314:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 309:0-318:1 -/
 def acceptance.parts.tail_copy
   (stack : Slice types.Ty) (needed : Std.Usize) :
   Result (alloc.vec.Vec types.Ty)
@@ -1572,7 +1572,7 @@ def acceptance.parts.tail_copy
   else alloc.slice.Slice.to_vec types.Ty.Insts.CoreCloneClone stack
 
 /-- [noble_kernel::acceptance::parts::match_tail]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 277:4-285:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 281:4-289:5 -/
 @[rust_loop_body]
 def acceptance.parts.match_tail_loop.body
   (stack : Slice types.Ty) (expected : Slice types.Ty) (tail_start : Std.Usize)
@@ -1599,7 +1599,7 @@ def acceptance.parts.match_tail_loop.body
   else ok (done none)
 
 /-- [noble_kernel::acceptance::parts::match_tail]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 277:4-285:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 281:4-289:5 -/
 @[rust_loop]
 def acceptance.parts.match_tail_loop
   (stack : Slice types.Ty) (expected : Slice types.Ty) (tail_start : Std.Usize)
@@ -1612,7 +1612,7 @@ def acceptance.parts.match_tail_loop
     index
 
 /-- [noble_kernel::acceptance::parts::match_tail]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 267:0-287:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 271:0-291:1 -/
 def acceptance.parts.match_tail
   (stack : Slice types.Ty) (expected : Slice types.Ty) :
   Result (Option untrusted.Constraint)
@@ -2026,7 +2026,7 @@ def words.bounds.check_sizes
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::acceptance::parts::invalid_without_stacks]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 318:0-331:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 322:0-335:1 -/
 def acceptance.parts.invalid_without_stacks
   («at» : acceptance.parts.Site) (constraint : untrusted.Constraint) :
   Result acceptance.Fail
@@ -2050,7 +2050,7 @@ def types.EffSet.as_slice
   ok (alloc.vec.Vec.deref self)
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 556:8-563:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 564:8-571:5
     Visibility: public -/
 @[rust_loop_body]
 def contracts.Env.knows_effect_loop.body
@@ -2071,7 +2071,7 @@ def contracts.Env.knows_effect_loop.body
   else ok (done false)
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 556:8-563:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 564:8-571:5
     Visibility: public -/
 @[rust_loop]
 def contracts.Env.knows_effect_loop
@@ -2083,7 +2083,7 @@ def contracts.Env.knows_effect_loop
     index
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 554:4-563:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 562:4-571:5
     Visibility: public -/
 @[reducible]
 def contracts.Env.knows_effect
@@ -2091,7 +2091,7 @@ def contracts.Env.knows_effect
   contracts.Env.knows_effect_loop self id 0#usize
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::contracts::nominal::validation::valid_program_components::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 687:23-687:60 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 695:23-695:60 -/
 def
   contracts.nominal.validation.valid_program_components.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool.call_once
   (c : contracts.nominal.validation.valid_program_components.closure)
@@ -2102,7 +2102,7 @@ def
   ok (tupled_args <= i)
 
 /-- Trait implementation: [noble_kernel::contracts::nominal::validation::valid_program_components::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::contracts::nominal::validation::valid_program_components::{closure}<'_0>}]
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 687:23-687:60 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 695:23-695:60 -/
 @[reducible]
 def
   contracts.nominal.validation.valid_program_components.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool
@@ -2114,7 +2114,7 @@ def
 }
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 681:4-684:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 689:4-692:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.valid_program_components_loop.body
   (env : contracts.Env) (ids : Slice types.EffId) (index : Std.Usize)
@@ -2134,7 +2134,7 @@ def contracts.nominal.validation.valid_program_components_loop.body
   else ok (done is_effect_set_known)
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 681:4-684:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 689:4-692:5 -/
 @[rust_loop]
 def contracts.nominal.validation.valid_program_components_loop
   (env : contracts.Env) (ids : Slice types.EffId) (index : Std.Usize)
@@ -2148,7 +2148,7 @@ def contracts.nominal.validation.valid_program_components_loop
     (index, is_effect_set_known)
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 671:0-688:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 679:0-696:1 -/
 def contracts.nominal.validation.valid_program_components
   (env : contracts.Env) (stack_in : Slice types.Ty)
   (stack_out : Slice types.Ty) (effects : types.EffSet) (max_nodes : Std.U32) :
@@ -2571,7 +2571,7 @@ def types.data.Ty.valid_generic_argument (self : types.Ty) : Result Bool := do
     types.data.Ty.valid_generic_argument_loop4 work1 0#usize
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_variant]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 425:8-427:9
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 433:8-435:9
     Visibility: public -/
 @[rust_loop_body]
 def contracts.Env.generic_variant_loop.body
@@ -2595,7 +2595,7 @@ def contracts.Env.generic_variant_loop.body
   else ok (done (self.generic_variants, index))
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_variant]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 425:8-427:9
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 433:8-435:9
     Visibility: public -/
 @[rust_loop]
 def contracts.Env.generic_variant_loop
@@ -2607,7 +2607,7 @@ def contracts.Env.generic_variant_loop
     index
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_variant]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 423:4-429:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 431:4-437:5
     Visibility: public -/
 def contracts.Env.generic_variant
   (self : contracts.Env) (id : types.NominalTypeId) :
@@ -4090,14 +4090,14 @@ def contracts.live.valid_ref
   else ok false
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::valid_live_ref]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 409:4-411:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 417:4-419:5
     Visibility: public -/
 def contracts.Env.valid_live_ref
   (self : contracts.Env) (ty : types.Ty) : Result Bool := do
   contracts.live.valid_ref self ty
 
 /-- [noble_kernel::acceptance::parts::valid_limited_entry]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 136:0-147:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 140:0-151:1 -/
 def acceptance.parts.valid_limited_entry
   (stack : Slice types.Ty) (index : Std.Usize) (env : contracts.Env)
   (allow_borrowed : Bool) :
@@ -4130,7 +4130,7 @@ def acceptance.parts.valid_limited_entry
   else contracts.nominal.type.walk.Env.valid_type env entry 512#u32
 
 /-- [noble_kernel::acceptance::parts::valid_limited_stack]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 128:4-131:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 132:4-135:5 -/
 @[rust_loop_body]
 def acceptance.parts.valid_limited_stack_loop.body
   (stack : Slice types.Ty) (env : contracts.Env) (allow_borrowed : Bool)
@@ -4150,7 +4150,7 @@ def acceptance.parts.valid_limited_stack_loop.body
   else ok (done is_valid)
 
 /-- [noble_kernel::acceptance::parts::valid_limited_stack]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 128:4-131:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 132:4-135:5 -/
 @[rust_loop]
 def acceptance.parts.valid_limited_stack_loop
   (stack : Slice types.Ty) (env : contracts.Env) (allow_borrowed : Bool)
@@ -4163,7 +4163,7 @@ def acceptance.parts.valid_limited_stack_loop
     (index, is_valid)
 
 /-- [noble_kernel::acceptance::parts::valid_limited_stack]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 121:0-133:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 125:0-137:1 -/
 @[reducible]
 def acceptance.parts.valid_limited_stack
   (stack : Slice types.Ty) (env : contracts.Env) (allow_borrowed : Bool) :
@@ -4181,7 +4181,7 @@ def acceptance.parts.site
   ok { node, «def» }
 
 /-- [noble_kernel::acceptance::parts::limits_of_with]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 83:0-113:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 87:0-117:1 -/
 def acceptance.parts.limits_of_with
   (stack : Slice types.Ty) (ctx : acceptance.parts.Ctx) (allow_borrowed : Bool)
   :
@@ -4227,7 +4227,7 @@ def acceptance.parts.limits_of
   acceptance.parts.limits_of_with stack ctx false
 
 /-- [noble_kernel::acceptance::parts::limits_of_join]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 241:0-260:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 245:0-264:1 -/
 def acceptance.parts.limits_of_join
   (height : Std.Usize) (appended : Slice types.Ty) (ctx : acceptance.parts.Ctx)
   :
@@ -4248,7 +4248,7 @@ def acceptance.parts.limits_of_join
       untrusted.LimitKind.StackHeight))
 
 /-- [noble_kernel::acceptance::parts::join::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::acceptance::parts::join::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 228:23-228:84 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 232:23-232:84 -/
 def
   acceptance.parts.join.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool.call_once
   (c : acceptance.parts.join.closure) (tupled_args : Std.U64) :
@@ -4258,7 +4258,7 @@ def
   ok (tupled_args <= i)
 
 /-- Trait implementation: [noble_kernel::acceptance::parts::join::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::acceptance::parts::join::{closure}<'_0>}]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 228:23-228:84 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 232:23-232:84 -/
 @[reducible]
 def acceptance.parts.join.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool :
   core.ops.function.FnOnce acceptance.parts.join.closure Std.U64 Bool := {
@@ -4267,7 +4267,7 @@ def acceptance.parts.join.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool :
 }
 
 /-- [noble_kernel::acceptance::parts::join]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 193:0-232:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 197:0-236:1 -/
 def acceptance.parts.join
   (frame : acceptance.Frame) (interface : untrusted.Interface)
   («at» : acceptance.parts.Site) (ctx : acceptance.parts.Ctx) :
@@ -4320,7 +4320,7 @@ def acceptance.parts.join
     ok (core.result.Result.Err f)
 
 /-- [noble_kernel::acceptance::parts::definition_of]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 172:0-190:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 176:0-194:1 -/
 def acceptance.parts.definition_of
   (candidate : untrusted.Candidate) (node : untrusted.NodeId) :
   Result (Option contracts.Definition)
@@ -6755,7 +6755,7 @@ def words.Scheme.check_inst
     | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::effect_count]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 575:4-577:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 583:4-585:5
     Visibility: public -/
 def contracts.Env.effect_count
   (self : contracts.Env) : Result (Option Std.U64) := do
@@ -7109,7 +7109,7 @@ def acceptance.parts.instantiate.resolve_witness
         untrusted.LimitKind.Work))
 
 /-- [noble_kernel::acceptance::parts::valid_stack_type_at]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 163:0-169:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 167:0-173:1 -/
 def acceptance.parts.valid_stack_type_at
   (stack : Slice types.Ty) (index : Std.Usize) (env : contracts.Env) :
   Result Bool
@@ -7118,7 +7118,7 @@ def acceptance.parts.valid_stack_type_at
   contracts.nominal.type.walk.Env.valid_type env t 512#u32
 
 /-- [noble_kernel::acceptance::parts::valid_stack_types]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 153:4-159:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 157:4-163:5 -/
 @[rust_loop_body]
 def acceptance.parts.valid_stack_types_loop.body
   (stack : Slice types.Ty) (env : contracts.Env) (index : Std.Usize) :
@@ -7135,7 +7135,7 @@ def acceptance.parts.valid_stack_types_loop.body
   else ok (done true)
 
 /-- [noble_kernel::acceptance::parts::valid_stack_types]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 153:4-159:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 157:4-163:5 -/
 @[rust_loop]
 def acceptance.parts.valid_stack_types_loop
   (stack : Slice types.Ty) (env : contracts.Env) (index : Std.Usize) :
@@ -7147,7 +7147,7 @@ def acceptance.parts.valid_stack_types_loop
     index
 
 /-- [noble_kernel::acceptance::parts::valid_stack_types]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 150:0-161:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 154:0-165:1 -/
 @[reducible]
 def acceptance.parts.valid_stack_types
   (stack : Slice types.Ty) (env : contracts.Env) : Result Bool := do
@@ -7476,7 +7476,7 @@ def acceptance.frames.complete_frame
 @[global_simps, irreducible] def untrusted.CANDIDATE_FORMAT : Std.U32 := 1#u32
 
 /-- [noble_kernel::contracts::index]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 585:0-587:1 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 593:0-595:1 -/
 def contracts.index
   («def» : contracts.Definition) : Result (Option Std.Usize) := do
   let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from «def»
@@ -7506,7 +7506,7 @@ def contracts.Behavior.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::kind]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 546:4-551:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 554:4-559:5
     Visibility: public -/
 def contracts.Env.kind
   (self : contracts.Env) («def» : contracts.Definition) :
@@ -7524,7 +7524,7 @@ def contracts.Env.kind
       o1
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::scheme]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 538:4-543:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 546:4-551:5
     Visibility: public -/
 def contracts.Env.scheme
   (self : contracts.Env) («def» : contracts.Definition) :
@@ -9116,7 +9116,7 @@ def contracts.nominal.inspection.Env.enqueue_program_pattern
   else ok none
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::nominal]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 416:8-418:9
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 424:8-426:9
     Visibility: public -/
 @[rust_loop_body]
 def contracts.Env.nominal_loop.body
@@ -9140,7 +9140,7 @@ def contracts.Env.nominal_loop.body
   else ok (done (self.nominals, index))
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::nominal]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 416:8-418:9
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 424:8-426:9
     Visibility: public -/
 @[rust_loop]
 def contracts.Env.nominal_loop
@@ -9152,7 +9152,7 @@ def contracts.Env.nominal_loop
     index
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::nominal]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 414:4-420:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 422:4-428:5
     Visibility: public -/
 def contracts.Env.nominal
   (self : contracts.Env) (id : types.NominalTypeId) :
@@ -9751,7 +9751,7 @@ impl_def contracts.Definition.Insts.CoreCmpPartialEqDefinition :
 }
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop body 1:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 661:8-665:9 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 669:8-673:9 -/
 @[rust_loop_body]
 def contracts.nominal.validation.bound_adapters_unique_loop0_loop0.body
   (v : alloc.vec.Vec contracts.BoundAdapter) (index : Std.Usize)
@@ -9779,7 +9779,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0_loop0.body
   else ok (done is_unique)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop 1:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 661:8-665:9 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 669:8-673:9 -/
 @[rust_loop]
 def contracts.nominal.validation.bound_adapters_unique_loop0_loop0
   (v : alloc.vec.Vec contracts.BoundAdapter) (index : Std.Usize)
@@ -9794,7 +9794,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0_loop0
     (is_unique, prior)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 650:4-667:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 658:4-675:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.bound_adapters_unique_loop0.body
   (env : contracts.Env) (index : Std.Usize) (is_unique : Bool) :
@@ -9885,7 +9885,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0.body
   else ok (done is_unique)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 650:4-667:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 658:4-675:5 -/
 @[rust_loop]
 def contracts.nominal.validation.bound_adapters_unique_loop0
   (env : contracts.Env) (index : Std.Usize) (is_unique : Bool) :
@@ -9898,7 +9898,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0
     (index, is_unique)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 647:0-669:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 655:0-677:1 -/
 @[reducible]
 def contracts.nominal.validation.bound_adapters_unique
   (env : contracts.Env) : Result Bool := do
@@ -9926,7 +9926,7 @@ def contracts.TEST_CODE_EXPORT : types.EffId := 6#u32
 @[global_simps, irreducible] def contracts.TEST_EMIT : types.EffId := 0#u32
 
 /-- [noble_kernel::contracts::nominal::validation::definition_has_owner]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 639:0-641:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 647:0-649:1 -/
 def contracts.nominal.validation.definition_has_owner
   (env : contracts.Env) (index : Std.Usize) : Result Bool := do
   let s := alloc.vec.Vec.deref env.definition_owners
@@ -9940,7 +9940,7 @@ def contracts.nominal.validation.definition_has_owner
                | some _ => ok true
 
 /-- [noble_kernel::contracts::nominal::validation::bound_row_has_only_effect]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 630:0-636:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 638:0-644:1 -/
 def contracts.nominal.validation.bound_row_has_only_effect
   (env : contracts.Env) (index : Std.Usize) (effect : types.EffId) :
   Result Bool
@@ -9953,7 +9953,7 @@ def contracts.nominal.validation.bound_row_has_only_effect
     types.EffId.Insts.CoreCmpPartialEqEffId s (Array.make 1#usize [ effect ])
 
 /-- [noble_kernel::contracts::nominal::validation::bound_row_names]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 616:0-627:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 620:0-631:1 -/
 def contracts.nominal.validation.bound_row_names
   (env : contracts.Env) (index : Std.Usize) («def» : contracts.Definition)
   (slot : Std.U32) :
@@ -12167,7 +12167,7 @@ def contracts.nominal.schemes.match_variables
   ok (alloc.slice.Slice.into_vec y)
 
 /-- [noble_kernel::contracts::nominal::payload::complete_list]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 290:0-300:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 292:0-302:1 -/
 def contracts.nominal.payload.complete_list
   (state : contracts.nominal.payload.Build) :
   Result (Option contracts.nominal.payload.Build)
@@ -12180,7 +12180,7 @@ def contracts.nominal.payload.complete_list
     ok (some { state with built := v1 })
 
 /-- [noble_kernel::contracts::nominal::payload::pair_pattern]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 302:0-312:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 304:0-314:1 -/
 def contracts.nominal.payload.pair_pattern
   (left : shapes.Pattern) (right : shapes.Pattern) (is_sum : Bool) :
   Result shapes.Pattern
@@ -12190,7 +12190,7 @@ def contracts.nominal.payload.pair_pattern
   else ok (shapes.Pattern.PairPattern left right)
 
 /-- [noble_kernel::contracts::nominal::payload::complete_pair]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 277:0-288:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 279:0-290:1 -/
 def contracts.nominal.payload.complete_pair
   (is_sum : Bool) (state : contracts.nominal.payload.Build) :
   Result (Option contracts.nominal.payload.Build)
@@ -12208,7 +12208,7 @@ def contracts.nominal.payload.complete_pair
       ok (some { state with built := v2 })
 
 /-- [noble_kernel::contracts::nominal::payload::complete_program]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 233:4-241:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 235:4-243:5 -/
 @[rust_loop_body]
 def contracts.nominal.payload.complete_program_loop0.body
   (output_len : Std.Usize) (v : alloc.vec.Vec shapes.Pattern)
@@ -12229,7 +12229,7 @@ def contracts.nominal.payload.complete_program_loop0.body
   else ok (done (v, output, index))
 
 /-- [noble_kernel::contracts::nominal::payload::complete_program]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 233:4-241:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 235:4-243:5 -/
 @[rust_loop]
 def contracts.nominal.payload.complete_program_loop0
   (output_len : Std.Usize) (v : alloc.vec.Vec shapes.Pattern)
@@ -12244,7 +12244,7 @@ def contracts.nominal.payload.complete_program_loop0
     (v, output, index)
 
 /-- [noble_kernel::contracts::nominal::payload::complete_program]: loop body 1:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 248:4-256:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 250:4-258:5 -/
 @[rust_loop_body]
 def contracts.nominal.payload.complete_program_loop1.body
   (input_len : Std.Usize) (v : alloc.vec.Vec shapes.Pattern)
@@ -12265,7 +12265,7 @@ def contracts.nominal.payload.complete_program_loop1.body
   else ok (done (v, index, input))
 
 /-- [noble_kernel::contracts::nominal::payload::complete_program]: loop 1:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 248:4-256:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 250:4-258:5 -/
 @[rust_loop]
 def contracts.nominal.payload.complete_program_loop1
   (input_len : Std.Usize) (v : alloc.vec.Vec shapes.Pattern)
@@ -12280,7 +12280,7 @@ def contracts.nominal.payload.complete_program_loop1
     (v, index, input)
 
 /-- [noble_kernel::contracts::nominal::payload::complete_program]: loop body 2:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 263:4-266:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 265:4-268:5 -/
 @[rust_loop_body]
 def contracts.nominal.payload.complete_program_loop2.body
   (effects : types.EffSet) (index : Std.Usize)
@@ -12299,7 +12299,7 @@ def contracts.nominal.payload.complete_program_loop2.body
   else ok (done slots)
 
 /-- [noble_kernel::contracts::nominal::payload::complete_program]: loop 2:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 263:4-266:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 265:4-268:5 -/
 @[rust_loop]
 def contracts.nominal.payload.complete_program_loop2
   (effects : types.EffSet) (index : Std.Usize)
@@ -12313,7 +12313,7 @@ def contracts.nominal.payload.complete_program_loop2
     (index, slots)
 
 /-- [noble_kernel::contracts::nominal::payload::complete_program]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 225:0-271:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 227:0-273:1 -/
 def contracts.nominal.payload.complete_program
   (input_len : Std.Usize) (output_len : Std.Usize) (effects : types.EffSet)
   (state : contracts.nominal.payload.Build) :
@@ -12349,7 +12349,7 @@ def contracts.nominal.payload.complete_program
       ok (some { state with built := v2 })
 
 /-- [noble_kernel::contracts::nominal::payload::complete_generic]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 201:0-215:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 203:0-217:1 -/
 def contracts.nominal.payload.complete_generic
   (env : contracts.Env) (id : types.NominalTypeId)
   (state : contracts.nominal.payload.Build) :
@@ -12382,7 +12382,7 @@ def contracts.nominal.payload.complete_generic
       contracts.nominal.payload.Build residual
 
 /-- [noble_kernel::contracts::nominal::payload::complete]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 184:0-199:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 186:0-201:1 -/
 def contracts.nominal.payload.complete
   (env : contracts.Env) (ty : types.Ty)
   (state : contracts.nominal.payload.Build) :
@@ -12412,7 +12412,7 @@ def contracts.nominal.payload.complete
     contracts.nominal.payload.complete_generic env id state
 
 /-- [noble_kernel::contracts::nominal::payload::leaf_pattern]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 161:0-178:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 163:0-180:1 -/
 def contracts.nominal.payload.leaf_pattern
   (ty : types.Ty) : Result (Option shapes.Pattern) := do
   match ty with
@@ -12437,52 +12437,52 @@ def contracts.nominal.payload.leaf_pattern
   | types.Ty.GenericNominalType _ _ _ => ok none
 
 /-- [noble_kernel::contracts::nominal::payload::push_reversed]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 147:4-157:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 148:4-159:5 -/
 @[rust_loop_body]
 def contracts.nominal.payload.push_reversed_loop.body
   (work : alloc.vec.Vec contracts.nominal.payload.Frame)
-  (rest : Slice types.Ty) :
+  (rest : Slice types.Ty) (remaining : Std.Usize) :
   Result (ControlFlow ((alloc.vec.Vec contracts.nominal.payload.Frame) ×
-    (Slice types.Ty)) (alloc.vec.Vec contracts.nominal.payload.Frame))
+    (Slice types.Ty) × Std.Usize) (alloc.vec.Vec
+    contracts.nominal.payload.Frame))
   := do
-  let i := Slice.len rest
-  let o ← lift (Usize.checked_sub i 1#usize)
-  match o with
-  | none => ok (done work)
-  | some last =>
-    let (head, tail) ← core.slice.Slice.split_at rest last
+  if remaining > 0#usize
+  then
+    let remaining1 ← remaining - 1#usize
+    let (head, tail) ← core.slice.Slice.split_at rest remaining1
     let tail1 ← core.slice.Slice.iter tail
-    let (o1, _) ← core.slice.iter.IteratorSliceIter.next tail1
-    match o1 with
-    | none => ok (cont (work, head))
+    let (o, _) ← core.slice.iter.IteratorSliceIter.next tail1
+    match o with
+    | none => ok (cont (work, head, remaining1))
     | some ty =>
       let work1 ←
         alloc.vec.Vec.push work ({ ty, is_complete := false } :
           contracts.nominal.payload.Frame)
-      ok (cont (work1, head))
+      ok (cont (work1, head, remaining1))
+  else ok (done work)
 
 /-- [noble_kernel::contracts::nominal::payload::push_reversed]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 147:4-157:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 148:4-159:5 -/
 @[rust_loop]
 def contracts.nominal.payload.push_reversed_loop
   (work : alloc.vec.Vec contracts.nominal.payload.Frame)
-  (rest : Slice types.Ty) :
+  (rest : Slice types.Ty) (remaining : Std.Usize) :
   Result (alloc.vec.Vec contracts.nominal.payload.Frame)
   := do
   loop
-    (fun (work1, rest1) => contracts.nominal.payload.push_reversed_loop.body
-      work1 rest1)
-    (work, rest)
+    (fun (work1, rest1, remaining1) =>
+      contracts.nominal.payload.push_reversed_loop.body work1 rest1 remaining1)
+    (work, rest, remaining)
 
 /-- [noble_kernel::contracts::nominal::payload::push_reversed]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 142:0-159:1 -/
-@[reducible]
+    Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 142:0-161:1 -/
 def contracts.nominal.payload.push_reversed
   (types : Slice types.Ty)
   (work : alloc.vec.Vec contracts.nominal.payload.Frame) :
   Result (alloc.vec.Vec contracts.nominal.payload.Frame)
   := do
-  contracts.nominal.payload.push_reversed_loop work types
+  let remaining := Slice.len types
+  contracts.nominal.payload.push_reversed_loop work types remaining
 
 /-- [noble_kernel::contracts::nominal::payload::enter]:
     Source: 'crates/noble-kernel/src/contracts/nominal/payload.rs', lines 77:0-134:1 -/
@@ -14972,7 +14972,7 @@ def contracts.nominal.validation.Env.valid_generic_declarations
     0#usize true
 
 /-- [noble_kernel::contracts::nominal::validation::generic_counts_match]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 138:10-141:9 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 134:10-137:9 -/
 @[rust_loop_body]
 def contracts.nominal.validation.generic_counts_match_loop.body
   (env : contracts.Env) (index : Std.Usize) :
@@ -14994,7 +14994,7 @@ def contracts.nominal.validation.generic_counts_match_loop.body
   else ok (done true)
 
 /-- [noble_kernel::contracts::nominal::validation::generic_counts_match]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 138:10-141:9 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 134:10-137:9 -/
 @[rust_loop]
 def contracts.nominal.validation.generic_counts_match_loop
   (env : contracts.Env) (index : Std.Usize) : Result Bool := do
@@ -15004,7 +15004,7 @@ def contracts.nominal.validation.generic_counts_match_loop
     index
 
 /-- [noble_kernel::contracts::nominal::validation::generic_counts_match]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 133:0-145:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 129:0-141:1 -/
 def contracts.nominal.validation.generic_counts_match
   (env : contracts.Env) : Result Bool := do
   let b ← contracts.nominal.validation.Env.valid_generic_declarations env
@@ -15037,7 +15037,7 @@ def words.Scheme.Insts.CoreCloneClone : core.clone.Clone words.Scheme := {
 }
 
 /-- [noble_kernel::contracts::environment]: loop body 1:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 610:4-618:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 618:4-626:5
     Visibility: public -/
 @[rust_loop_body]
 def contracts.environment_loop0_loop0.body
@@ -15064,7 +15064,7 @@ def contracts.environment_loop0_loop0.body
   else ok (done (defs, deps))
 
 /-- [noble_kernel::contracts::environment]: loop 1:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 610:4-618:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 618:4-626:5
     Visibility: public -/
 @[rust_loop]
 def contracts.environment_loop0_loop0
@@ -15081,7 +15081,7 @@ def contracts.environment_loop0_loop0
     (defs, deps, table_index)
 
 /-- [noble_kernel::contracts::environment]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 600:4-638:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 608:4-646:1
     Visibility: public -/
 @[rust_loop_body]
 def contracts.environment_loop0.body
@@ -15144,7 +15144,7 @@ def contracts.environment_loop0.body
       }))
 
 /-- [noble_kernel::contracts::environment]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 600:4-638:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 608:4-646:1
     Visibility: public -/
 @[rust_loop]
 def contracts.environment_loop0
@@ -15161,7 +15161,7 @@ def contracts.environment_loop0
     (kinds, index)
 
 /-- [noble_kernel::contracts::environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 594:0-638:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 602:0-646:1
     Visibility: public -/
 def contracts.environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -15216,7 +15216,7 @@ def P.Insts.CoreOpsFunctionFnMutTupleVecDefinition : core.ops.function.FnMut
 }
 
 /-- [noble_kernel::contracts::text_cursor_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 646:0-687:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 654:0-695:1
     Visibility: public -/
 def contracts.text_cursor_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -15349,7 +15349,7 @@ def contracts.text_cursor_environment
       contracts.Env (core.convert.FromSame shapes.Defect) residual
 
 /-- [noble_kernel::contracts::calculator_environment]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 838:4-849:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 846:4-857:1
     Visibility: public -/
 @[rust_loop_body]
 def contracts.calculator_environment_loop.body
@@ -15431,7 +15431,7 @@ def contracts.calculator_environment_loop.body
       ok (done r1)
 
 /-- [noble_kernel::contracts::calculator_environment]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 838:4-849:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 846:4-857:1
     Visibility: public -/
 @[rust_loop]
 def contracts.calculator_environment_loop
@@ -15455,7 +15455,7 @@ def contracts.calculator_environment_loop
     (iter, v, v1)
 
 /-- [noble_kernel::contracts::calculator_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 758:0-849:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 766:0-857:1
     Visibility: public -/
 def contracts.calculator_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -15753,7 +15753,7 @@ def contracts.nominal.validation.calculator_prefix_matches
   | core.result.Result.Err _ => ok false
 
 /-- [noble_kernel::contracts::declared_text_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 858:0-878:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 866:0-886:1
     Visibility: public -/
 def contracts.declared_text_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -19078,7 +19078,7 @@ def acceptance.parts.charge
   | some remaining => ok (core.result.Result.Ok remaining)
 
 /-- [noble_kernel::acceptance::preflight::declared_definition_budget]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 618:0-633:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 625:0-640:1 -/
 def acceptance.preflight.declared_definition_budget
   (env : contracts.Env) (request : untrusted.Request) (remaining : Std.U32) :
   Result (core.result.Result Std.U32 acceptance.Fail)
@@ -19106,7 +19106,7 @@ def acceptance.preflight.declared_definition_budget
       untrusted.LimitKind.Nodes))
 
 /-- [noble_kernel::acceptance::preflight::nominal_budget]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 590:0-612:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 597:0-619:1 -/
 def acceptance.preflight.nominal_budget
   (env : contracts.Env) (request : untrusted.Request) (remaining : Std.U32) :
   Result (core.result.Result Std.U32 acceptance.Fail)
@@ -19287,7 +19287,7 @@ def contracts.nominal.type.walk.Env.validate_decl
             else ok false
 
 /-- [noble_kernel::acceptance::preflight::nominal_size_within_limit]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 669:0-680:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 676:0-687:1 -/
 def acceptance.preflight.nominal_size_within_limit
   (payload_node_count : Option Std.U32) (limits : untrusted.Limits) :
   Result Bool
@@ -19301,7 +19301,7 @@ def acceptance.preflight.nominal_size_within_limit
     | some total_node_count => ok (total_node_count <= limits.type_size)
 
 /-- [noble_kernel::acceptance::preflight::nominal_payload_size::{impl core::ops::function::FnOnce<((u32, u32),), core::option::Option<u32>> for noble_kernel::acceptance::preflight::nominal_payload_size::{closure}}::call_once]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 662:22-662:61 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 669:22-669:61 -/
 def
   acceptance.preflight.nominal_payload_size.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32U32OptionU32.call_once
   (c : acceptance.preflight.nominal_payload_size.closure)
@@ -19312,7 +19312,7 @@ def
   ok (U32.checked_add left right)
 
 /-- Trait implementation: [noble_kernel::acceptance::preflight::nominal_payload_size::{impl core::ops::function::FnOnce<((u32, u32),), core::option::Option<u32>> for noble_kernel::acceptance::preflight::nominal_payload_size::{closure}}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 662:22-662:61 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 669:22-669:61 -/
 @[reducible]
 def
   acceptance.preflight.nominal_payload_size.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32U32OptionU32
@@ -19323,7 +19323,7 @@ def
 }
 
 /-- [noble_kernel::acceptance::preflight::nominal_payload_size]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 654:0-665:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 661:0-672:1 -/
 def acceptance.preflight.nominal_payload_size
   (shape : types.NominalShape) : Result (Option Std.U32) := do
   match shape with
@@ -19337,7 +19337,7 @@ def acceptance.preflight.nominal_payload_size
       o2 ()
 
 /-- [noble_kernel::acceptance::preflight::nominal_failure_at]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 636:0-652:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 643:0-659:1 -/
 def acceptance.preflight.nominal_failure_at
   (env : contracts.Env) (limits : untrusted.Limits) (index : Std.Usize) :
   Result (Option acceptance.preflight.NominalFailure)
@@ -19356,7 +19356,7 @@ def acceptance.preflight.nominal_failure_at
   else ok (some { is_invalid_type := true })
 
 /-- [noble_kernel::acceptance::preflight::first_nominal_failure]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 581:4-584:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 588:4-591:5 -/
 @[rust_loop_body]
 def acceptance.preflight.first_nominal_failure_loop.body
   (env : contracts.Env) (limits : untrusted.Limits) (index : Std.Usize)
@@ -19378,7 +19378,7 @@ def acceptance.preflight.first_nominal_failure_loop.body
   else ok (done first)
 
 /-- [noble_kernel::acceptance::preflight::first_nominal_failure]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 581:4-584:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 588:4-591:5 -/
 @[rust_loop]
 def acceptance.preflight.first_nominal_failure_loop
   (env : contracts.Env) (limits : untrusted.Limits) (index : Std.Usize)
@@ -19392,7 +19392,7 @@ def acceptance.preflight.first_nominal_failure_loop
     (index, first)
 
 /-- [noble_kernel::acceptance::preflight::first_nominal_failure]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 575:0-586:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 582:0-593:1 -/
 @[reducible]
 def acceptance.preflight.first_nominal_failure
   (env : contracts.Env) (limits : untrusted.Limits) :
@@ -19401,7 +19401,7 @@ def acceptance.preflight.first_nominal_failure
   acceptance.preflight.first_nominal_failure_loop env limits 0#usize none
 
 /-- [noble_kernel::acceptance::preflight::nominal_failure]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 565:0-573:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 572:0-580:1 -/
 def acceptance.preflight.nominal_failure
   (failure : acceptance.preflight.NominalFailure) :
   Result acceptance.Fail
@@ -19413,7 +19413,7 @@ def acceptance.preflight.nominal_failure
   else ok (acceptance.Fail.Exhausted untrusted.LimitKind.TypeSize)
 
 /-- [noble_kernel::acceptance::preflight::validate_nominals]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 537:0-558:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 544:0-565:1 -/
 def acceptance.preflight.validate_nominals
   (env : contracts.Env) (request : untrusted.Request) (remaining : Std.U32) :
   Result (core.result.Result Std.U32 acceptance.Fail)
@@ -19446,7 +19446,7 @@ def acceptance.preflight.validate_nominals
   | core.result.Result.Err _ => ok r
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::has_checked_i64]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 397:4-399:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 405:4-407:5
     Visibility: public -/
 def contracts.Env.has_checked_i64 (self : contracts.Env) : Result Bool := do
   let s := alloc.vec.Vec.deref self.kinds
@@ -19454,7 +19454,7 @@ def contracts.Env.has_checked_i64 (self : contracts.Env) : Result Bool := do
     contracts.Behavior.CheckedI64AddBehavior
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::ambient_test_emit_visible]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 383:4-393:5 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 391:4-401:5 -/
 def contracts.Env.ambient_test_emit_visible
   (self : contracts.Env) : Result Bool := do
   if self.text_cursor
@@ -19496,7 +19496,7 @@ def contracts.Env.ambient_test_emit_visible
         else ok false
 
 /-- [noble_kernel::acceptance::preflight::ambient_emit]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 525:4-533:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 532:4-540:5 -/
 @[rust_loop_body]
 def acceptance.preflight.ambient_emit_loop.body
   (env : contracts.Env) (candidate : untrusted.Candidate) (index : Std.Usize) :
@@ -19534,7 +19534,7 @@ def acceptance.preflight.ambient_emit_loop.body
   else ok (done none)
 
 /-- [noble_kernel::acceptance::preflight::ambient_emit]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 525:4-533:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 532:4-540:5 -/
 @[rust_loop]
 def acceptance.preflight.ambient_emit_loop
   (env : contracts.Env) (candidate : untrusted.Candidate) (index : Std.Usize) :
@@ -19546,7 +19546,7 @@ def acceptance.preflight.ambient_emit_loop
     index
 
 /-- [noble_kernel::acceptance::preflight::ambient_emit]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 519:0-535:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 526:0-542:1 -/
 @[reducible]
 def acceptance.preflight.ambient_emit
   (env : contracts.Env) (candidate : untrusted.Candidate) :
@@ -19555,7 +19555,7 @@ def acceptance.preflight.ambient_emit
   acceptance.preflight.ambient_emit_loop env candidate 0#usize
 
 /-- [noble_kernel::acceptance::preflight::reject_ambient_emit]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 498:0-516:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 505:0-523:1 -/
 def acceptance.preflight.reject_ambient_emit
   (env : contracts.Env) (candidate : untrusted.Candidate) :
   Result (core.result.Result Unit acceptance.Fail)
@@ -19583,7 +19583,7 @@ def acceptance.preflight.reject_ambient_emit
           untrusted.LimitKind.Nodes))
 
 /-- [noble_kernel::acceptance::preflight::guard_ty::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_kernel::acceptance::Fail> for noble_kernel::acceptance::preflight::guard_ty::{closure#1}}::call_once]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 451:29-451:90 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 460:29-460:90 -/
 def
   acceptance.preflight.guard_ty.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorFail.call_once
   (c : acceptance.preflight.guard_ty.closure_1)
@@ -19593,7 +19593,7 @@ def
   ok (acceptance.Fail.Exhausted untrusted.LimitKind.Work)
 
 /-- Trait implementation: [noble_kernel::acceptance::preflight::guard_ty::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_kernel::acceptance::Fail> for noble_kernel::acceptance::preflight::guard_ty::{closure#1}}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 451:29-451:90 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 460:29-460:90 -/
 @[reducible]
 def
   acceptance.preflight.guard_ty.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorFail
@@ -19604,7 +19604,7 @@ def
 }
 
 /-- [noble_kernel::acceptance::preflight::guard_ty::{impl core::ops::function::FnOnce<(u32,), bool> for noble_kernel::acceptance::preflight::guard_ty::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 444:32-444:68 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 453:32-453:68 -/
 def
   acceptance.preflight.guard_ty.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool.call_once
   (c : acceptance.preflight.guard_ty.closure) (tupled_args : Std.U32) :
@@ -19613,7 +19613,7 @@ def
   ok (tupled_args > c.limits.type_size)
 
 /-- Trait implementation: [noble_kernel::acceptance::preflight::guard_ty::{impl core::ops::function::FnOnce<(u32,), bool> for noble_kernel::acceptance::preflight::guard_ty::{closure}<'_0>}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 444:32-444:68 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 453:32-453:68 -/
 @[reducible]
 def
   acceptance.preflight.guard_ty.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool
@@ -19624,7 +19624,7 @@ def
 }
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop body 1:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 456:16-458:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 463:16-465:17 -/
 @[rust_loop_body]
 def acceptance.preflight.guard_ty_loop0_loop0.body
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19639,7 +19639,7 @@ def acceptance.preflight.guard_ty_loop0_loop0.body
     ok (cont (iter1, pending1))
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop 1:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 456:16-458:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 463:16-465:17 -/
 @[rust_loop]
 def acceptance.preflight.guard_ty_loop0_loop0
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19651,7 +19651,7 @@ def acceptance.preflight.guard_ty_loop0_loop0
     (iter, pending)
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop body 2:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 459:16-461:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 466:16-468:17 -/
 @[rust_loop_body]
 def acceptance.preflight.guard_ty_loop0_loop1.body
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19666,7 +19666,7 @@ def acceptance.preflight.guard_ty_loop0_loop1.body
     ok (cont (iter1, pending1))
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop 2:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 459:16-461:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 466:16-468:17 -/
 @[rust_loop]
 def acceptance.preflight.guard_ty_loop0_loop1
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19678,7 +19678,7 @@ def acceptance.preflight.guard_ty_loop0_loop1
     (iter, pending)
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop body 3:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 456:16-458:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 463:16-465:17 -/
 @[rust_loop_body]
 def acceptance.preflight.guard_ty_loop0_loop2.body
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19693,7 +19693,7 @@ def acceptance.preflight.guard_ty_loop0_loop2.body
     ok (cont (iter1, pending1))
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop 3:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 456:16-458:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 463:16-465:17 -/
 @[rust_loop]
 def acceptance.preflight.guard_ty_loop0_loop2
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19705,7 +19705,7 @@ def acceptance.preflight.guard_ty_loop0_loop2
     (iter, pending)
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop body 4:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 459:16-461:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 466:16-468:17 -/
 @[rust_loop_body]
 def acceptance.preflight.guard_ty_loop0_loop3.body
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19720,7 +19720,7 @@ def acceptance.preflight.guard_ty_loop0_loop3.body
     ok (cont (iter1, pending1))
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop 4:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 459:16-461:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 466:16-468:17 -/
 @[rust_loop]
 def acceptance.preflight.guard_ty_loop0_loop3
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19732,7 +19732,7 @@ def acceptance.preflight.guard_ty_loop0_loop3
     (iter, pending)
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 425:4-493:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 434:4-500:1 -/
 @[rust_loop_body]
 def acceptance.preflight.guard_ty_loop0.body
   (request : untrusted.Request) (pending : alloc.vec.Vec types.Ty)
@@ -19909,7 +19909,7 @@ def acceptance.preflight.guard_ty_loop0.body
       ok (done (core.result.Result.Err failure))
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 425:4-493:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 434:4-500:1 -/
 @[rust_loop]
 def acceptance.preflight.guard_ty_loop0
   (pending : alloc.vec.Vec types.Ty) (request : untrusted.Request)
@@ -19923,7 +19923,7 @@ def acceptance.preflight.guard_ty_loop0
     (pending, visited, reserved, remaining)
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 413:0-493:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 424:0-500:1 -/
 def acceptance.preflight.guard_ty
   (ty : types.Ty) (request : untrusted.Request) (remaining : Std.U32) :
   Result (core.result.Result (Std.U32 × Std.U32) acceptance.Fail)
@@ -20396,7 +20396,7 @@ def acceptance.preflight.signed_self_valid
           | core.result.Result.Err _ => ok false
 
 /-- [noble_kernel::acceptance::preflight::signed_self_check]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 159:0-175:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 155:0-171:1 -/
 def acceptance.preflight.signed_self_check
   (env : contracts.Env) (node : untrusted.Node)
   (signed_owner : Option (contracts.Definition × words.Inst))
@@ -21667,7 +21667,7 @@ def acceptance.nodes.node_of
     ok (core.result.Result.Err f)
 
 /-- [noble_kernel::acceptance::nodes::open_quotation]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 434:0-490:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 442:0-498:1 -/
 def acceptance.nodes.open_quotation
   (frame : acceptance.Frame) (node_id : untrusted.NodeId)
   (node : untrusted.Node) (context : acceptance.parts.Ctx) (fuel : Std.U32) :
@@ -21750,7 +21750,7 @@ def acceptance.halted
   ok { machine with outcome := (some outcome) }
 
 /-- [noble_kernel::acceptance::open_current]:
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 335:0-355:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 339:0-359:1 -/
 def acceptance.open_current
   (machine : acceptance.Machine) (frame : acceptance.Frame)
   (node_id : untrusted.NodeId) (node : untrusted.Node)
@@ -21936,7 +21936,7 @@ def types.EffSet.with_id
        ok out2
 
 /-- [noble_kernel::acceptance::nodes::validate_forwarded_ref]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 401:0-424:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 409:0-432:1 -/
 def acceptance.nodes.validate_forwarded_ref
   (formal : types.Ty) (logical_position : Std.Usize)
   («at» : acceptance.parts.Site) (context : acceptance.parts.Ctx) :
@@ -22052,7 +22052,7 @@ def acceptance.nodes.validate_forwarded_ref
       ok (core.result.Result.Err f)
 
 /-- [noble_kernel::acceptance::nodes::forwarded_position]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 377:0-395:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 385:0-403:1 -/
 def acceptance.nodes.forwarded_position
   (forwarded : Slice Std.U32) (next_forward : Std.Usize)
   («at» : acceptance.parts.Site) :
@@ -22080,7 +22080,7 @@ def acceptance.nodes.forwarded_position
       ok (core.result.Result.Err f)
 
 /-- [noble_kernel::acceptance::nodes::is_live_ref]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 373:0-375:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 381:0-383:1 -/
 def acceptance.nodes.is_live_ref (formal : types.Ty) : Result Bool := do
   match formal with
   | types.Ty.UnitType => ok false
@@ -22101,7 +22101,7 @@ def acceptance.nodes.is_live_ref (formal : types.Ty) : Result Bool := do
   | types.Ty.GenericNominalType _ _ _ => ok false
 
 /-- [noble_kernel::acceptance::nodes::forwarded_ref_matches]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 352:0-370:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 360:0-378:1 -/
 def acceptance.nodes.forwarded_ref_matches
   (formal : types.Ty) (forwarded : Slice Std.U32) (next_forward : Std.Usize)
   («at» : acceptance.parts.Site) (context : acceptance.parts.Ctx) :
@@ -22122,7 +22122,7 @@ def acceptance.nodes.forwarded_ref_matches
   else ok (core.result.Result.Ok false)
 
 /-- [noble_kernel::acceptance::nodes::fold_formal]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 329:0-346:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 337:0-354:1 -/
 def acceptance.nodes.fold_formal
   (formal : types.Ty) (forwarded : Slice Std.U32) (next_forward : Std.Usize)
   («at» : acceptance.parts.Site) (context : acceptance.parts.Ctx) :
@@ -22141,7 +22141,7 @@ def acceptance.nodes.fold_formal
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::acceptance::nodes::fold_formals]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 307:4-320:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 315:4-328:5 -/
 @[rust_loop_body]
 def acceptance.nodes.fold_formals_loop.body
   (stack_in : Slice types.Ty) (forwarded : Slice Std.U32)
@@ -22186,7 +22186,7 @@ def acceptance.nodes.fold_formals_loop.body
   else ok (done (value_in, next_forward, refusal))
 
 /-- [noble_kernel::acceptance::nodes::fold_formals]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 307:4-320:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 315:4-328:5 -/
 @[rust_loop]
 def acceptance.nodes.fold_formals_loop
   (stack_in : Slice types.Ty) (forwarded : Slice Std.U32)
@@ -22203,7 +22203,7 @@ def acceptance.nodes.fold_formals_loop
     (value_in, next_forward, formal_index, refusal)
 
 /-- [noble_kernel::acceptance::nodes::fold_formals]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 297:0-325:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 305:0-333:1 -/
 def acceptance.nodes.fold_formals
   (stack_in : Slice types.Ty) (forwarded : Slice Std.U32)
   («at» : acceptance.parts.Site) (context : acceptance.parts.Ctx) :
@@ -22221,7 +22221,7 @@ def acceptance.nodes.fold_formals
   | some refusal1 => ok (core.result.Result.Err refusal1)
 
 /-- [noble_kernel::acceptance::nodes::fold_slot]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 194:0-288:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 198:0-292:1 -/
 def acceptance.nodes.fold_slot
   (frame : acceptance.Frame) (node_id : untrusted.NodeId)
   (ref_ordinal : Std.U32) (site_id : Std.U32) (forwarded : Slice Std.U32)
@@ -23806,7 +23806,7 @@ def acceptance.nodes.fold_node
     ok (core.result.Result.Err acceptance.Fail.Internal)
 
 /-- [noble_kernel::acceptance::commit_fold]:
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 300:0-328:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 304:0-332:1 -/
 def acceptance.commit_fold
   (machine : acceptance.Machine) (node_id : untrusted.NodeId)
   (folded : (Std.U32 × acceptance.Frame × untrusted.Interface × (Option
@@ -23837,7 +23837,7 @@ def acceptance.commit_fold
     acceptance.halted machine (core.result.Result.Err problem)
 
 /-- [noble_kernel::acceptance::fold_current]:
-    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 281:0-293:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/mod.rs', lines 277:0-289:1 -/
 def acceptance.fold_current
   (machine : acceptance.Machine) (frame : acceptance.Frame)
   (node_id : untrusted.NodeId) (node : untrusted.Node)
@@ -35996,7 +35996,7 @@ def contracts.clone_budget.Counter.node
 mutual
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::boxed_type]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 183:4-191:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 187:4-195:5 -/
 def contracts.clone_budget.Counter.boxed_type
   (self : contracts.clone_budget.Counter) (value : types.Ty)
   (depth : Std.Usize) (nodes : Std.Usize) :
@@ -36015,7 +36015,7 @@ def contracts.clone_budget.Counter.boxed_type
 partial_fixpoint
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::types]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 200:4-212:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 208:4-220:5 -/
 def contracts.clone_budget.Counter.types
   (self : contracts.clone_budget.Counter) (items : Slice types.Ty)
   (index : Std.Usize) (depth : Std.Usize) (nodes : Std.Usize) :
@@ -36042,7 +36042,7 @@ def contracts.clone_budget.Counter.types
 partial_fixpoint
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::nominal]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 214:4-228:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 222:4-236:5 -/
 def contracts.clone_budget.Counter.nominal
   (self : contracts.clone_budget.Counter) (shape : types.NominalShape)
   (depth : Std.Usize) (nodes : Std.Usize) :
@@ -36086,7 +36086,7 @@ def contracts.clone_budget.Counter.nominal
 partial_fixpoint
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::ty]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 234:4-293:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 242:4-301:5 -/
 def contracts.clone_budget.Counter.ty
   (self : contracts.clone_budget.Counter) (value : types.Ty)
   (depth : Std.Usize) (nodes : Std.Usize) :
@@ -36631,7 +36631,7 @@ def contracts.clone_budget.Counter.boxed_pattern
 partial_fixpoint
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::patterns]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 100:4-112:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 104:4-116:5 -/
 def contracts.clone_budget.Counter.patterns
   (self : contracts.clone_budget.Counter) (items : Slice shapes.Pattern)
   (index : Std.Usize) (depth : Std.Usize) (nodes : Std.Usize) :
@@ -36658,7 +36658,7 @@ def contracts.clone_budget.Counter.patterns
 partial_fixpoint
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::pattern]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 118:4-181:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 122:4-185:5 -/
 def contracts.clone_budget.Counter.pattern
   (self : contracts.clone_budget.Counter) (value : shapes.Pattern)
   (depth : Std.Usize) (nodes : Std.Usize) :
@@ -37160,7 +37160,7 @@ partial_fixpoint
 end
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::scheme_stack]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 319:8-323:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 327:8-331:5 -/
 @[rust_loop_body]
 def contracts.clone_budget.Counter.scheme_stack_loop.body
   (iter : core.slice.iter.Iter shapes.Pattern)
@@ -37185,7 +37185,7 @@ def contracts.clone_budget.Counter.scheme_stack_loop.body
       ok (done (o2, self1))
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::scheme_stack]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 319:8-323:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 327:8-331:5 -/
 @[rust_loop]
 def contracts.clone_budget.Counter.scheme_stack_loop
   (iter : core.slice.iter.Iter shapes.Pattern)
@@ -37198,7 +37198,7 @@ def contracts.clone_budget.Counter.scheme_stack_loop
     (iter, self)
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::scheme_stack]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 318:4-323:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 326:4-331:5 -/
 def contracts.clone_budget.Counter.scheme_stack
   (self : contracts.clone_budget.Counter) (stack : Slice shapes.Pattern) :
   Result ((Option Unit) × contracts.clone_budget.Counter)
@@ -37207,7 +37207,7 @@ def contracts.clone_budget.Counter.scheme_stack
   contracts.clone_budget.Counter.scheme_stack_loop iter self
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::clone_budget::Counter}::scheme]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 295:4-313:5 -/
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 303:4-321:5 -/
 def contracts.clone_budget.Counter.scheme
   (self : contracts.clone_budget.Counter) (scheme : words.Scheme) :
   Result ((Option Unit) × contracts.clone_budget.Counter)
@@ -37393,7 +37393,7 @@ def contracts.clone_budget.Counter.scheme
           ok (o1, self1)
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 354:8-357:9
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 362:8-365:9
     Visibility: public -/
 @[rust_loop_body]
 def contracts.clone_budget.Env.calculator_clone_budget_loop0.body
@@ -37421,7 +37421,7 @@ def contracts.clone_budget.Env.calculator_clone_budget_loop0.body
   else ok (done (cost, walked))
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 354:8-357:9
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 362:8-365:9
     Visibility: public -/
 @[rust_loop]
 def contracts.clone_budget.Env.calculator_clone_budget_loop0
@@ -37437,7 +37437,7 @@ def contracts.clone_budget.Env.calculator_clone_budget_loop0
     (cost, index, walked)
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget]: loop body 1:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 361:8-364:9
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 369:8-372:9
     Visibility: public -/
 @[rust_loop_body]
 def contracts.clone_budget.Env.calculator_clone_budget_loop1.body
@@ -37462,7 +37462,7 @@ def contracts.clone_budget.Env.calculator_clone_budget_loop1.body
   else ok (done (cost, walked))
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget]: loop 1:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 361:8-364:9
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 369:8-372:9
     Visibility: public -/
 @[rust_loop]
 def contracts.clone_budget.Env.calculator_clone_budget_loop1
@@ -37477,7 +37477,7 @@ def contracts.clone_budget.Env.calculator_clone_budget_loop1
     (cost, index, walked)
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget]: loop body 2:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 368:8-371:9
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 376:8-379:9
     Visibility: public -/
 @[rust_loop_body]
 def contracts.clone_budget.Env.calculator_clone_budget_loop2.body
@@ -37504,7 +37504,7 @@ def contracts.clone_budget.Env.calculator_clone_budget_loop2.body
   else ok (done (cost, walked))
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget]: loop 2:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 368:8-371:9
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 376:8-379:9
     Visibility: public -/
 @[rust_loop]
 def contracts.clone_budget.Env.calculator_clone_budget_loop2
@@ -37520,7 +37520,7 @@ def contracts.clone_budget.Env.calculator_clone_budget_loop2
     (cost, index, walked)
 
 /-- [noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget]:
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 332:4-382:5
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 340:4-390:5
     Visibility: public -/
 def contracts.clone_budget.Env.calculator_clone_budget
   (self : contracts.Env) :
@@ -40093,7 +40093,7 @@ def contracts.ClockPlan.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::contracts::decide_clock]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 292:0-318:1 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 300:0-326:1 -/
 def contracts.decide_clock
   (plan : contracts.ClockPlan) (requested : Str) (index : Std.Usize) :
   Result (core.result.Result contracts.ClockDecision contracts.NominalError)
@@ -40175,7 +40175,7 @@ def types.ResourceKind.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 322:9-322:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:9-330:14
     Visibility: public -/
 def contracts.Env.Insts.CoreCloneClone.clone
   (self : contracts.Env) : Result contracts.Env := do
@@ -40239,14 +40239,14 @@ def contracts.Env.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 322:9-322:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:9-330:14 -/
 @[reducible]
 def contracts.Env.Insts.CoreCloneClone : core.clone.Clone contracts.Env := {
   clone := contracts.Env.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Env}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 322:16-322:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:16-330:21
     Visibility: public -/
 def contracts.Env.Insts.CoreFmtDebug.fmt
   (self : contracts.Env) (f : core.fmt.Formatter) :
@@ -40311,14 +40311,14 @@ def contracts.Env.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "Env") s values
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 322:16-322:21 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:16-330:21 -/
 @[reducible]
 def contracts.Env.Insts.CoreFmtDebug : core.fmt.Debug contracts.Env := {
   fmt := contracts.Env.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_kernel::contracts::{impl core::default::Default for noble_kernel::contracts::Env}::default]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 322:23-322:30
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:23-330:30
     Visibility: public -/
 def contracts.Env.Insts.CoreDefaultDefault.default : Result contracts.Env := do
   let v ← alloc.vec.Vec.Insts.CoreDefaultDefault.default words.Scheme
@@ -40362,7 +40362,7 @@ def contracts.Env.Insts.CoreDefaultDefault.default : Result contracts.Env := do
     }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::default::Default for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 322:23-322:30 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:23-330:30 -/
 @[reducible]
 def contracts.Env.Insts.CoreDefaultDefault : core.default.Default contracts.Env
   := {
@@ -40370,7 +40370,7 @@ def contracts.Env.Insts.CoreDefaultDefault : core.default.Default contracts.Env
 }
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::enable_live_slots]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 367:4-374:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 375:4-382:5
     Visibility: public -/
 def contracts.Env.enable_live_slots
   (self : contracts.Env) : Result contracts.Env := do
@@ -40381,14 +40381,14 @@ def contracts.Env.enable_live_slots
     ok { self with live_slots := true, declared_modules := true, effects := v }
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::enable_live_test_hosts]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 378:4-381:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 386:4-389:5
     Visibility: public -/
 def contracts.Env.enable_live_test_hosts
   (self : contracts.Env) : Result contracts.Env := do
   ok { self with live_test_hosts := true }
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::register_live_resource]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 403:4-405:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 411:4-413:5
     Visibility: public -/
 def contracts.Env.register_live_resource
   (self : contracts.Env) (decl : contracts.NominalDecl) :
@@ -40397,7 +40397,7 @@ def contracts.Env.register_live_resource
   contracts.live.register_resource self decl
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_instance]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 433:4-455:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 441:4-463:5
     Visibility: public -/
 def contracts.Env.generic_instance
   (self : contracts.Env) (id : types.NominalTypeId)
@@ -40469,7 +40469,7 @@ def contracts.Env.generic_instance
       types.Ty residual
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_instance_matches]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 459:4-471:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 467:4-479:5
     Visibility: public -/
 def contracts.Env.generic_instance_matches
   (self : contracts.Env) (ty : types.Ty) (id : types.NominalTypeId) :
@@ -40505,7 +40505,7 @@ def contracts.Env.generic_instance_matches
       else ok false
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::valid_generic_instance]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 474:4-479:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 482:4-487:5
     Visibility: public -/
 def contracts.Env.valid_generic_instance
   (self : contracts.Env) (ty : types.Ty) : Result Bool := do
@@ -40529,7 +40529,7 @@ def contracts.Env.valid_generic_instance
     contracts.Env.generic_instance_matches self ty id
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_nominal]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 483:4-489:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 491:4-497:5
     Visibility: public -/
 def contracts.Env.declare_nominal
   (self : contracts.Env) (decl : contracts.NominalDecl) :
@@ -40546,7 +40546,7 @@ def contracts.Env.declare_nominal
   else contracts.nominal.register self decl
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_generic_variant]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 493:4-498:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 501:4-506:5
     Visibility: public -/
 def contracts.Env.declare_generic_variant
   (self : contracts.Env) (decl : contracts.GenericVariantDecl) :
@@ -40556,7 +40556,7 @@ def contracts.Env.declare_generic_variant
   contracts.nominal.register_generic_variant self decl
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_emit]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 503:4-508:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 511:4-516:5
     Visibility: public -/
 def contracts.Env.declare_bound_emit
   (self : contracts.Env) (registration : contracts.BoundEmitRegistration) :
@@ -40566,7 +40566,7 @@ def contracts.Env.declare_bound_emit
   contracts.nominal.register_bound_emit self registration
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_clock]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 512:4-517:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 520:4-525:5
     Visibility: public -/
 def contracts.Env.declare_bound_clock
   (self : contracts.Env) (registration : contracts.BoundClockRegistration) :
@@ -40576,7 +40576,7 @@ def contracts.Env.declare_bound_clock
   contracts.nominal.register_bound_clock self registration
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_code_export]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 521:4-526:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 529:4-534:5
     Visibility: public -/
 def contracts.Env.declare_bound_code_export
   (self : contracts.Env) (registration : contracts.BoundCodeExportRegistration)
@@ -40587,7 +40587,7 @@ def contracts.Env.declare_bound_code_export
   contracts.nominal.register_bound_code_export self registration
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_send]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 530:4-535:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 538:4-543:5
     Visibility: public -/
 def contracts.Env.declare_bound_send
   (self : contracts.Env) (registration : contracts.BoundSendRegistration) :
@@ -40597,7 +40597,7 @@ def contracts.Env.declare_bound_send
   contracts.nominal.register_bound_send self registration
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::len]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 566:4-568:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 574:4-576:5
     Visibility: public -/
 def contracts.Env.len (self : contracts.Env) : Result (Option Std.U64) := do
   let i := alloc.vec.Vec.len self.defs
@@ -40605,14 +40605,14 @@ def contracts.Env.len (self : contracts.Env) : Result (Option Std.U64) := do
   core.result.Result.ok r
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::is_empty]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 580:4-582:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 588:4-590:5
     Visibility: public -/
 def contracts.Env.is_empty (self : contracts.Env) : Result Bool := do
   let i := alloc.vec.Vec.len self.defs
   ok (i = 0#usize)
 
 /-- [noble_kernel::contracts::checked_i64_environment::{impl core::ops::function::Fn<(noble_kernel::shapes::Pattern,), noble_kernel::words::Scheme> for noble_kernel::contracts::checked_i64_environment::{closure#1}<'_0>}::call]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 719:16-724:5 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 727:16-732:5 -/
 def
   contracts.checked_i64_environment.closure_1.Insts.CoreOpsFunctionFnTuplePatternScheme.call
   (c : contracts.checked_i64_environment.closure_1)
@@ -40642,7 +40642,7 @@ def
     }
 
 /-- [noble_kernel::contracts::checked_i64_environment::{impl core::ops::function::Fn<(noble_kernel::shapes::Pattern,), noble_kernel::words::Scheme> for noble_kernel::contracts::checked_i64_environment::{closure}<'_0>}::call]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 709:17-718:5 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 717:17-726:5 -/
 def
   contracts.checked_i64_environment.closure.Insts.CoreOpsFunctionFnTuplePatternScheme.call
   (c : contracts.checked_i64_environment.closure)
@@ -40673,7 +40673,7 @@ def
     }
 
 /-- [noble_kernel::contracts::checked_i64_environment]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 739:4-746:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 747:4-754:1
     Visibility: public -/
 @[rust_loop_body]
 def contracts.checked_i64_environment_loop.body
@@ -40735,7 +40735,7 @@ def contracts.checked_i64_environment_loop.body
       ok (done r1)
 
 /-- [noble_kernel::contracts::checked_i64_environment]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 739:4-746:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 747:4-754:1
     Visibility: public -/
 @[rust_loop]
 def contracts.checked_i64_environment_loop
@@ -40760,7 +40760,7 @@ def contracts.checked_i64_environment_loop
     (iter, v, v1, v8)
 
 /-- [noble_kernel::contracts::checked_i64_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 695:0-746:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 703:0-754:1
     Visibility: public -/
 def contracts.checked_i64_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do

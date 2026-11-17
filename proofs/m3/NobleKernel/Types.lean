@@ -426,7 +426,7 @@ inductive contracts.Behavior where
 | NamedBehavior : contracts.Behavior
 
 /-- [noble_kernel::contracts::Env]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 323:0-363:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 331:0-371:1
     Visibility: public -/
 structure contracts.Env where
   defs : alloc.vec.Vec words.Scheme
@@ -516,7 +516,7 @@ structure types.size.Walk where
   sizes : alloc.vec.Vec Std.U32
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components::{closure}]
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 687:23-687:60 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 695:23-695:60 -/
 @[reducible]
 def contracts.nominal.validation.valid_program_components.closure := Std.U32
 
@@ -545,7 +545,7 @@ structure contracts.nominal.type.walk.Scope where
   caller : Option Std.U64
 
 /-- [noble_kernel::acceptance::parts::join::{closure}]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 228:23-228:84 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 232:23-232:84 -/
 @[reducible]
 def acceptance.parts.join.closure := untrusted.Request
 
@@ -703,22 +703,22 @@ structure contracts.nominal.payload.Build where
   entered : Std.Usize
 
 /-- [noble_kernel::acceptance::preflight::nominal_payload_size::{closure}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 662:22-662:61 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 669:22-669:61 -/
 @[reducible]
 def acceptance.preflight.nominal_payload_size.closure := Unit
 
 /-- [noble_kernel::acceptance::preflight::NominalFailure]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 561:0-563:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 568:0-570:1 -/
 structure acceptance.preflight.NominalFailure where
   is_invalid_type : Bool
 
 /-- [noble_kernel::acceptance::preflight::guard_ty::{closure#1}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 451:29-451:90 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 460:29-460:90 -/
 @[reducible]
 def acceptance.preflight.guard_ty.closure_1 := Unit
 
 /-- [noble_kernel::acceptance::preflight::guard_ty::{closure}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 444:32-444:68 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 453:32-453:68 -/
 @[reducible]
 def acceptance.preflight.guard_ty.closure := untrusted.Request
 
@@ -1694,12 +1694,12 @@ structure contracts.ClockPlan where
   script : Slice Std.I64
 
 /-- [noble_kernel::contracts::checked_i64_environment::{closure#1}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 719:16-724:5 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 727:16-732:5 -/
 @[reducible]
 def contracts.checked_i64_environment.closure_1 := shapes.Pattern
 
 /-- [noble_kernel::contracts::checked_i64_environment::{closure}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 709:17-718:5 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 717:17-726:5 -/
 @[reducible]
 def contracts.checked_i64_environment.closure := shapes.Pattern
 
