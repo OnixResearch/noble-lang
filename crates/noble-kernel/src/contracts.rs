@@ -481,10 +481,7 @@ impl Env {
     /// Register a validated nonrecursive type and its typed operations.
     /// Ownership transfers into the updated environment on success.
     pub fn declare_nominal(self, decl: NominalDecl) -> Result<(Self, NominalOps), NominalError> {
-        let is_resource_payload = match &decl.shape {
-            crate::types::NominalShape::Opaque(inner) => !inner.is_data(),
-            crate::types::NominalShape::Variant(left, right) => !left.is_data() || !right.is_data(),
-        };
+        let is_resource_payload = decl.shape.owns_resource();
         if self.live_slots && is_resource_payload {
             return Err(NominalError::InvalidRepresentation);
         }

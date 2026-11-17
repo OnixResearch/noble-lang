@@ -18,6 +18,15 @@ pub const CALCULATOR_ENV_CLONE_FANOUT_LIMIT: u64 = 1u64 << 30;
 const DEPTH_LIMIT: usize = 64;
 const NODE_LIMIT: usize = 512;
 
+/// Whether either stack of a scheme exceeds the 128-entry clone bound.
+///
+/// A boolean-returning helper rather than a disjunction bound to a local: for
+/// the latter the selected Aeneas emits a `Prop`-typed binding that the
+/// generated Lean cannot branch on.
+fn stacks_exceed_bound(scheme: &crate::words::Scheme) -> bool {
+    scheme.stack_in.len() > 128 || scheme.stack_out.len() > 128
+}
+
 /// Payload bytes and allocator-rounded reservation for one complete clone.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[expect(
@@ -76,22 +85,30 @@ impl Counter {
         self.pattern(value, depth, nodes)
     }
 
-    /// Budget one stack's patterns in order against the shared node count,
-    /// stopping at the first refusal.
+    /// Budget one stack's patterns from `index` on, in order, against the
+    /// shared node count, stopping at the first refusal.
     ///
-    /// One loop per helper: the selected Aeneas library models no
-    /// `Iterator::chain`, and the selected Aeneas cannot translate two loops
-    /// that each return early from one function.
+    /// Recursion over the index rather than a loop: the selected Aeneas
+    /// library models no `Iterator::chain`, the selected Aeneas cannot
+    /// translate two loops that each return early from one function, and the
+    /// Lean backend cannot prove a loop that calls back into this recursive
+    /// walk monotone. A stack holds at most 128 entries.
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "one call per stack entry of the deliberately recursive per-subtree walk; the caller bounds the stack at 128 entries and the shared node budget bounds the visits"
+    )]
     fn patterns(
         &mut self,
         items: &[crate::shapes::Pattern],
+        index: usize,
         depth: usize,
         nodes: &mut usize,
     ) -> Option<()> {
-        for item in items.iter() {
-            self.pattern(item, depth, nodes)?;
-        }
-        Some(())
+        let Some(item) = items.get(index) else {
+            return Some(());
+        };
+        self.pattern(item, depth, nodes)?;
+        self.patterns(items, index.saturating_add(1), depth, nodes)
     }
 
     #[expect(
@@ -133,8 +150,8 @@ impl Counter {
                     self.allocation()?;
                 }
                 self.vector::<crate::shapes::EffectSlot>(effects.len())?;
-                self.patterns(input, depth.saturating_add(1), nodes)?;
-                self.patterns(output, depth.saturating_add(1), nodes)?;
+                self.patterns(input, 0, depth.saturating_add(1), nodes)?;
+                self.patterns(output, 0, depth.saturating_add(1), nodes)?;
             }
             crate::shapes::Pattern::Nominal(_, shape) => {
                 self.allocation()?;
@@ -173,13 +190,25 @@ impl Counter {
         self.ty(value, depth, nodes)
     }
 
-    /// Budget one stack's types in order against the shared node count,
-    /// stopping at the first refusal; one loop per helper, as for `patterns`.
-    fn types(&mut self, items: &[crate::types::Ty], depth: usize, nodes: &mut usize) -> Option<()> {
-        for item in items.iter() {
-            self.ty(item, depth, nodes)?;
-        }
-        Some(())
+    /// Budget one stack's types from `index` on, in order, against the shared
+    /// node count, stopping at the first refusal; recursive for the reasons
+    /// given on `patterns`.
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "one call per stack entry of the deliberately recursive per-subtree walk; the caller bounds the stack at 128 entries and the shared node budget bounds the visits"
+    )]
+    fn types(
+        &mut self,
+        items: &[crate::types::Ty],
+        index: usize,
+        depth: usize,
+        nodes: &mut usize,
+    ) -> Option<()> {
+        let Some(item) = items.get(index) else {
+            return Some(());
+        };
+        self.ty(item, depth, nodes)?;
+        self.types(items, index.saturating_add(1), depth, nodes)
     }
 
     fn nominal(
@@ -246,8 +275,8 @@ impl Counter {
                     self.allocation()?;
                 }
                 self.vector::<crate::types::EffId>(effects.as_slice().len())?;
-                self.types(input, depth.saturating_add(1), nodes)?;
-                self.types(output, depth.saturating_add(1), nodes)?;
+                self.types(input, 0, depth.saturating_add(1), nodes)?;
+                self.types(output, 0, depth.saturating_add(1), nodes)?;
             }
             crate::types::Ty::LiveRef(..) => return None,
             crate::types::Ty::Unit
@@ -266,7 +295,7 @@ impl Counter {
     fn scheme(&mut self, scheme: &crate::words::Scheme) -> Option<()> {
         let has_too_many_kinds = scheme.var_kinds.len() > 8;
         let has_too_many_effects = scheme.effects.len() > 8;
-        let has_too_many_stacks = scheme.stack_in.len() > 128 || scheme.stack_out.len() > 128;
+        let has_too_many_stacks = stacks_exceed_bound(scheme);
         if has_too_many_kinds || has_too_many_effects || has_too_many_stacks {
             return None;
         }

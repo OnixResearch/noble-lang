@@ -123,3 +123,18 @@ impl super::Ty {
         true
     }
 }
+
+impl super::NominalShape {
+    /// Whether this descriptor's payload owns a resource: some payload type
+    /// is not Data.
+    ///
+    /// A boolean-returning helper rather than a matched negation bound to a
+    /// local: for the latter the selected Aeneas emits a `Prop`-typed binding
+    /// that the generated Lean cannot branch on.
+    pub(crate) fn owns_resource(&self) -> bool {
+        match self {
+            super::NominalShape::Opaque(representation) => !representation.is_data(),
+            super::NominalShape::Variant(left, right) => !left.is_data() || !right.is_data(),
+        }
+    }
+}

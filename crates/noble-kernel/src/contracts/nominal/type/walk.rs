@@ -238,16 +238,11 @@ impl super::super::super::Env {
         if prior < index || self.generic_variant(decl.id).is_some() {
             return false;
         }
-        if self.live_slots && !self.live_resource_nominals.contains(&decl.id) {
-            let is_owns_resource = match &decl.shape {
-                crate::types::NominalShape::Opaque(representation) => !representation.is_data(),
-                crate::types::NominalShape::Variant(left, right) => {
-                    !left.is_data() || !right.is_data()
-                }
-            };
-            if is_owns_resource {
-                return false;
-            }
+        if self.live_slots
+            && !self.live_resource_nominals.contains(&decl.id)
+            && decl.shape.owns_resource()
+        {
+            return false;
         }
         if let crate::types::NominalShape::Opaque(ty) = &decl.shape {
             return self.walk_type(ty, max_nodes, true, index, None);
