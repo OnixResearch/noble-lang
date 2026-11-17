@@ -46,10 +46,13 @@ fn colored_slot(colors: &[u8], definition: crate::contracts::Definition) -> Opti
 /// Validate the environment's definition dependencies (B-CHECK-02).
 ///
 /// A definition that transitively depends on itself — directly or through
-/// a chain — is rejected as unsupported, naming the definition the cycle
-/// closes on. Every followed edge charges the declared work limit before
-/// it is taken; a walk that would exceed it fails closed as exhausted. The
-/// bootstrap table declares no dependencies, so its walk charges nothing.
+/// a chain — is rejected as unsupported. The first failure ends the walk:
+/// no later root runs over an aborted walk's on-path marks, and no later
+/// failure replaces the first. A rejection therefore names the on-path
+/// definition the first closing edge reaches, which lies on a cycle. Every
+/// followed edge charges the declared work limit before it is taken; a walk
+/// that would exceed it fails closed as exhausted. The bootstrap table
+/// declares no dependencies, so its walk charges nothing.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; dependencies bounds root access by the color arena and propagates the DFS cycle/work outcomes; externally supplied dependency graphs must reject without assertion panics."
@@ -66,7 +69,7 @@ pub(super) fn dependencies(
     };
     let mut failure: Option<super::Fail> = None;
     let mut root: usize = 0;
-    while root < count {
+    while root < count && failure.is_none() {
         if walk.colors[root] == 0 {
             let (next, step) = dep_root(
                 env,

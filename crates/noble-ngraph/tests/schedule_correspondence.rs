@@ -62,6 +62,8 @@ mod permutation_export;
 mod plancomparison;
 #[path = "plancomparison/fixtures.rs"]
 mod plancomparison_fixtures;
+#[path = "schedule_independence/mod.rs"]
+mod schedule_independence;
 #[path = "tick_runner/mod.rs"]
 mod tick_runner;
 use base::{declared, interleaved, packed};

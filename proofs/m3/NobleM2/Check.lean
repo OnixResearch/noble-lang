@@ -216,11 +216,16 @@ inductive DepMode where
 of the kernel's `dep_step` loop nest: a root advances, a stack top is
 dispatched on (unvisited turns on-path and hands its edges to the scan;
 on-path has finished its successors and turns done; done pops), or one
-declared edge is inspected — charging work exactly then. An edge to an
-already on-path definition closes a cycle and rejects, naming that
-definition. `fuel` is the walk's structural budget: every unit is a pop, a
-mark, a root advance, or a charged edge, so the generous bound never fires
-while the declared work limit holds. -/
+declared edge is inspected — charging work exactly then. `onPath` keeps
+every definition the walk has turned on-path, so a definition is on the
+current path exactly when it is in `onPath` and not in `done`. An edge to a
+finished (done) definition is neither a cycle nor re-walked: it charges its
+unit and pushes nothing, like an edge to a missing definition. An edge to a
+definition on the current path closes a cycle and rejects, naming that
+definition; any other edge pushes its target. The first rejection or
+exhaustion ends the walk. `fuel` is the walk's structural budget: every
+unit is a pop, a mark, a root advance, or a charged edge, so the generous
+bound never fires while the declared work limit holds. -/
 def depWalk (env : Env) (count : Nat) :
     Nat → Nat → DepMode → Nat → List Nat → List Nat → List Nat → ValidateResult
   | 0, _, _, _, _, _, _ => .exhausted
@@ -247,10 +252,11 @@ def depWalk (env : Env) (count : Nat) :
         if work = 0 then .exhausted
         else if count ≤ d then
           depWalk env count fuel next (.edges top rest) (work - 1) stack onPath done
+        else if done.contains d then
+          depWalk env count fuel next (.edges top rest) (work - 1) stack onPath done
         else if onPath.contains d then .depCycle d
         else
-          depWalk env count fuel next (.edges top rest) (work - 1)
-            (if done.contains d then stack else d :: stack) onPath done
+          depWalk env count fuel next (.edges top rest) (work - 1) (d :: stack) onPath done
 termination_by fuel _ _ _ _ _ _ => fuel
 
 /-- Validate the environment's definition dependencies (B-CHECK-02): the

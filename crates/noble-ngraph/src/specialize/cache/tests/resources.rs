@@ -243,3 +243,106 @@ fn interrupted_publication_cannot_leave_partial_entry() {
         Status::MissStored
     );
 }
+
+/// Static map of the later same-subject request; its larger constant makes
+/// the residual strictly larger than the one for `[Some(5), None]`.
+const LARGER_MAP: [Option<i64>; 2] = [Some(6_000_000_000), None];
+
+/// Two-subject session holding A (subject S1, `[Some(5), None]`) then B
+/// (subject S2) under a byte bound that fits A and B but not B and A',
+/// where A' is S1 with [`LARGER_MAP`]. Returns the session, A's source and
+/// A''s measured retained bytes.
+fn two_subject_session(
+    original: &crate::check::CheckedGraph,
+    other: &crate::check::CheckedGraph,
+    eviction_work: usize,
+) -> (Session, alloc::string::String, usize) {
+    let measure = |checked: &crate::check::CheckedGraph, map: &[Option<i64>]| {
+        let mut alone = Session::default();
+        run(&mut alone, &TestIds, checked, map).unwrap();
+        alone.retained_bytes()
+    };
+    let first_bytes = measure(original, &[Some(5), None]);
+    let other_bytes = measure(other, &[Some(31), None]);
+    let larger_bytes = measure(original, &LARGER_MAP);
+    assert!(larger_bytes > first_bytes, "A' must outgrow A");
+    let bound = first_bytes + other_bytes;
+    assert!(larger_bytes <= bound, "A' fits alone");
+    let mut session = Session::new(Limits {
+        entries: 2,
+        variants_per_subject: 1,
+        retained_bytes: bound,
+        lookup_work: 2,
+        eviction_work,
+        ..Limits::default()
+    })
+    .unwrap();
+    let first = run(&mut session, &TestIds, original, &[Some(5), None]).unwrap();
+    assert_eq!(first.status, Status::MissStored);
+    let second = run(&mut session, &TestIds, other, &[Some(31), None]).unwrap();
+    assert_eq!(second.status, Status::MissStored);
+    assert_eq!(session.len(), 2);
+    assert_eq!(session.retained_bytes(), bound);
+    (session, first.source, larger_bytes)
+}
+
+#[test]
+fn declined_publication_keeps_entries_and_accounting() {
+    let original = graph(&TestIds, false, 7, &[11, 12], false, false, false);
+    let other = graph(&TestIds, true, 7, &[11, 12], false, false, false);
+    // Evicting A costs 2 + 2 and then evicting B costs 1 + 1: six units
+    // exceed the five-unit bound, so the publication must decline whole.
+    let (mut session, first_source, _) = two_subject_session(&original, &other, 5);
+    let entries_before = session.len();
+    let bytes_before = session.retained_bytes();
+    let declined = run(&mut session, &TestIds, &original, &LARGER_MAP).unwrap();
+    assert_eq!(declined.status, Status::MissUncached);
+    assert_eq!(
+        session.len(),
+        entries_before,
+        "a declined insertion evicts nothing"
+    );
+    assert_eq!(session.retained_bytes(), bytes_before);
+    assert_eq!(declined.retained_bytes, bytes_before);
+    assert_eq!(
+        evaluate(&declined.readmitted, &[3]),
+        evaluate(&original, &[6_000_000_000, 3])
+    );
+    let repeated = run(&mut session, &TestIds, &original, &[Some(5), None]).unwrap();
+    assert_eq!(repeated.status, Status::Hit, "A stays reusable");
+    assert_eq!(repeated.source, first_source);
+    assert_eq!(
+        run(&mut session, &TestIds, &other, &[Some(31), None])
+            .unwrap()
+            .status,
+        Status::Hit,
+        "B stays reusable"
+    );
+}
+
+#[test]
+fn fitting_eviction_plan_evicts_subject_then_oldest() {
+    let original = graph(&TestIds, false, 7, &[11, 12], false, false, false);
+    let other = graph(&TestIds, true, 7, &[11, 12], false, false, false);
+    // The same six-unit plan fits a six-unit bound: A goes for the variant
+    // cap, then B for the byte bound, and A' is retained alone.
+    let (mut session, _, larger_bytes) = two_subject_session(&original, &other, 6);
+    let stored = run(&mut session, &TestIds, &original, &LARGER_MAP).unwrap();
+    assert_eq!(stored.status, Status::MissStored);
+    assert_eq!(session.len(), 1, "both A and B were evicted");
+    assert_eq!(session.retained_bytes(), larger_bytes);
+    assert_eq!(stored.retained_bytes, larger_bytes);
+    assert_eq!(
+        run(&mut session, &TestIds, &original, &LARGER_MAP)
+            .unwrap()
+            .status,
+        Status::Hit
+    );
+    assert_ne!(
+        run(&mut session, &TestIds, &other, &[Some(31), None])
+            .unwrap()
+            .status,
+        Status::Hit,
+        "an evicted subject must miss"
+    );
+}

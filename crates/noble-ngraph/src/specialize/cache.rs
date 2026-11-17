@@ -37,6 +37,8 @@ pub struct Limits {
     /// Maximum candidate entries inspected for one lookup.
     pub lookup_work: usize,
     /// Maximum candidate/movement units spent evicting for one insertion.
+    /// An insertion whose complete eviction plan exceeds this bound is
+    /// declined without evicting anything.
     pub eviction_work: usize,
 }
 
@@ -103,6 +105,8 @@ pub enum Stage {
     /// Current graph checking and ordinary source readmission.
     Admission,
     /// Build verified content identities and retain or decline the entry.
+    /// Retention is all-or-nothing: a declined entry leaves the retained
+    /// entry set and accounted bytes unchanged.
     Publication,
 }
 
@@ -167,6 +171,14 @@ struct Candidate {
     report: super::Report,
     source: alloc::string::String,
     program_key: crate::ir::Digest,
+}
+
+/// Victims of one admissible insertion, in eviction order: the oldest
+/// `subject_victims` entries of the inserted entry's subject, then the
+/// oldest `global_victims` entries that survive those.
+struct EvictionPlan {
+    subject_victims: usize,
+    global_victims: usize,
 }
 
 /// Complete input to one session-cache specialization request.
@@ -537,6 +549,14 @@ impl Session {
         Some(entry)
     }
 
+    /// Retains `entry` all-or-nothing. The complete eviction sequence is
+    /// planned first without mutation: the oldest same-subject entries go
+    /// until the variant cap admits the entry, then the oldest survivors go
+    /// until the entry and byte caps admit it, each step costing the current
+    /// entry count plus the entries moved behind the victim. Only a plan
+    /// whose total cost fits `eviction_work` is applied; otherwise the
+    /// insertion is declined and the retained entries and accounted bytes
+    /// are left unchanged, so a declined publication never destroys reuse.
     fn retain(&mut self, entry: Entry) -> bool {
         if self.limits.entries == 0
             || self.limits.variants_per_subject == 0
@@ -544,54 +564,98 @@ impl Session {
         {
             return false;
         }
-        let mut eviction_work = 0usize;
-        while self
-            .entries
-            .iter()
-            .filter(|old| old.subject_manifest == entry.subject_manifest)
-            .count()
-            >= self.limits.variants_per_subject
-        {
-            if !self.evict_oldest(Some(&entry.subject_manifest), &mut eviction_work) {
-                return false;
-            }
-        }
-        while self.entries.len() >= self.limits.entries
-            || self
-                .retained_bytes
-                .checked_add(entry.retained_bytes)
-                .is_none_or(|total| total > self.limits.retained_bytes)
-        {
-            if !self.evict_oldest(None, &mut eviction_work) {
-                return false;
-            }
-        }
+        let Some(plan) = self.plan_eviction(&entry) else {
+            return false;
+        };
+        self.apply_eviction(&entry.subject_manifest, &plan);
         self.retained_bytes += entry.retained_bytes;
         self.entries.push(entry);
         true
     }
 
-    fn evict_oldest(&mut self, subject: Option<&[u8]>, work: &mut usize) -> bool {
-        let Some(index) = self
+    /// Plans the evictions `retain` needs, or `None` when the plan exceeds
+    /// `eviction_work` or runs out of victims. Reads the session only.
+    fn plan_eviction(&self, entry: &Entry) -> Option<EvictionPlan> {
+        let subject = entry.subject_manifest.as_slice();
+        let mut work = 0usize;
+        let mut len = self.entries.len();
+        let mut bytes = self.retained_bytes;
+        let mut same_subject = self
             .entries
             .iter()
-            .position(|entry| subject.is_none_or(|key| entry.subject_manifest == key))
-        else {
-            return false;
-        };
-        let cost = self
+            .filter(|old| old.subject_manifest == subject)
+            .count();
+        let mut subject_victims = 0usize;
+        let matching = self
             .entries
-            .len()
-            .saturating_add(self.entries.len() - index);
-        if work
-            .checked_add(cost)
-            .is_none_or(|total| total > self.limits.eviction_work)
-        {
-            return false;
+            .iter()
+            .enumerate()
+            .filter(|(_, old)| old.subject_manifest == subject);
+        for (index, old) in matching {
+            if same_subject < self.limits.variants_per_subject {
+                break;
+            }
+            // Every earlier victim precedes this entry, so its current
+            // index is its original index less the victims already planned.
+            work = self.charge_eviction(work, len, index - subject_victims)?;
+            len -= 1;
+            same_subject -= 1;
+            bytes = bytes.saturating_sub(old.retained_bytes);
+            subject_victims += 1;
         }
-        *work += cost;
-        self.remove(index);
-        true
+        if same_subject >= self.limits.variants_per_subject {
+            return None;
+        }
+        let mut skipped = 0usize;
+        let mut survivors = self.entries.iter().filter(|old| {
+            let is_subject_victim = skipped < subject_victims && old.subject_manifest == subject;
+            skipped += usize::from(is_subject_victim);
+            !is_subject_victim
+        });
+        let mut global_victims = 0usize;
+        while len >= self.limits.entries
+            || bytes
+                .checked_add(entry.retained_bytes)
+                .is_none_or(|total| total > self.limits.retained_bytes)
+        {
+            let old = survivors.next()?;
+            // The oldest survivor is always at current index zero.
+            work = self.charge_eviction(work, len, 0)?;
+            len -= 1;
+            bytes = bytes.saturating_sub(old.retained_bytes);
+            global_victims += 1;
+        }
+        Some(EvictionPlan {
+            subject_victims,
+            global_victims,
+        })
+    }
+
+    /// Adds the cost of evicting current index `index` from `len` entries,
+    /// or `None` when the total would exceed `eviction_work`.
+    fn charge_eviction(&self, work: usize, len: usize, index: usize) -> Option<usize> {
+        let cost = len.saturating_add(len - index);
+        work.checked_add(cost)
+            .filter(|total| *total <= self.limits.eviction_work)
+    }
+
+    /// Removes exactly the planned victims in one pass, preserving the order
+    /// of the survivors and the accounting of a step-by-step eviction.
+    fn apply_eviction(&mut self, subject: &[u8], plan: &EvictionPlan) {
+        let mut subject_victims = plan.subject_victims;
+        let mut global_victims = plan.global_victims;
+        let retained_bytes = &mut self.retained_bytes;
+        self.entries.retain(|old| {
+            if subject_victims > 0 && old.subject_manifest == subject {
+                subject_victims -= 1;
+            } else if global_victims > 0 {
+                global_victims -= 1;
+            } else {
+                return true;
+            }
+            *retained_bytes = retained_bytes.saturating_sub(old.retained_bytes);
+            false
+        });
     }
 
     fn remove(&mut self, index: usize) {

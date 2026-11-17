@@ -27,6 +27,8 @@
 
 #[path = "recursion_schema_cycle/builders.rs"]
 mod builders;
+#[path = "recursion_schema_cycle/orders.rs"]
+mod orders;
 #[path = "recursion_schema_cycle/witnesses.rs"]
 mod witnesses;
 
