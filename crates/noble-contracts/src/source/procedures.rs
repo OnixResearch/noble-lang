@@ -1638,7 +1638,7 @@ impl ProcedureLibrary {
         let Some(replaced_id) = records[index].supersedes else {
             return Ok(());
         };
-        let old_index = position_first(records, |old| {
+        let old_index = position_first(records, move |old| {
             old.procedure_id == replaced_id && old.status == Status::Superseded
         })
         .ok_or_else(|| {
