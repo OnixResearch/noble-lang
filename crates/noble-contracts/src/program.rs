@@ -425,7 +425,8 @@ fn with_eligibility(
     let mut word = alloc::string::String::new();
     append_bootstrap_spelling(definition, &mut word);
     let required = alloc::string::String::from("S Data");
-    let actual = debug_ty(alloc::string::String::from("S "), ty);
+    let mut actual = alloc::string::String::from("S ");
+    debug_ty(&mut actual, ty);
     problem.message.push_str("; word ");
     problem.message.push_str(&word);
     problem.message.push_str("; required ");
@@ -442,100 +443,22 @@ fn with_eligibility(
     })
 }
 
-/// One pending part of a type's `{:?}` text, popped in print order.
-enum DebugPart<'a> {
-    /// Fixed constructor or separator text.
-    Text(&'static str),
-    /// One type in its constructor form.
-    Ty(&'a noble_kernel::types::Ty),
-    /// A type stack as the list `[a, b]`, from position `next` on.
-    Stack(&'a [noble_kernel::types::Ty], usize),
-    /// An effect bound's identities as the list `[EffId(a), EffId(b)]`.
-    Effects(&'a [noble_kernel::types::EffId]),
-    /// A nominal descriptor's shape.
-    Shape(&'a noble_kernel::types::NominalShape),
-}
-
-/// `out` with `ty` appended exactly as its `{:?}` renders it: the kernel's
-/// constructor form, with derived renderings of the effect bound, resource
-/// kind and nominal identity. An explicit part stack replaces the recursive
-/// formatter calls.
-fn debug_ty(mut out: alloc::string::String, ty: &noble_kernel::types::Ty) -> alloc::string::String {
-    let mut pending = alloc::vec::Vec::new();
-    pending.push(DebugPart::Ty(ty));
-    while let Some(part) = pending.pop() {
-        (out, pending) = debug_part(out, pending, part);
-    }
-    out
-}
-
-/// Render one part: append its text now and schedule its later parts.
+/// Append `ty` exactly as its `{:?}` renders it: the kernel's constructor
+/// form, with the derived renderings of the effect bound, resource kind and
+/// nominal identity, built by `String` pushes instead of `core::fmt`.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; appending a type rendering requires the caller's growable String, not a fixed str slice."
+)]
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; each call descends one constructor of the borrowed type, exactly as the kernel's structural Debug recursion this replaces; direct recursion preserves pinned Aeneas extraction without a borrowed work stack."
+)]
 #[expect(
     tigerstyle::missing_const_fn,
-    reason = "Owner: noble-contracts; the helper appends through non-const String and Vec pushes, so the const suggestion does not apply"
+    reason = "Owner: noble-contracts; type rendering grows the caller's String through non-const push and push_str."
 )]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; this total renderer accepts every part it scheduled itself; unit tests pin its output against the format! text it replaced"
-)]
-#[expect(
-    tigerstyle::fragile_exhaustive_enum_match,
-    reason = "Owner: noble-contracts; the part enum is local and sealed, so every exhaustive match over it is reviewed when a variant is added"
-)]
-fn debug_part<'a>(
-    mut out: alloc::string::String,
-    mut pending: alloc::vec::Vec<DebugPart<'a>>,
-    part: DebugPart<'a>,
-) -> (alloc::string::String, alloc::vec::Vec<DebugPart<'a>>) {
-    match part {
-        DebugPart::Text(text) => out.push_str(text),
-        DebugPart::Ty(ty) => return debug_constructor(out, pending, ty),
-        DebugPart::Stack(stack, next) => {
-            if next == 0 {
-                out.push('[');
-            }
-            if next < stack.len() {
-                if next != 0 {
-                    out.push_str(", ");
-                }
-                pending.push(DebugPart::Stack(stack, next.saturating_add(1)));
-                pending.push(DebugPart::Ty(&stack[next]));
-            } else {
-                out.push(']');
-            }
-        }
-        DebugPart::Effects(ids) => out = debug_effects(out, ids),
-        DebugPart::Shape(noble_kernel::types::NominalShape::Opaque(representation)) => {
-            out.push_str("Opaque(");
-            pending.push(DebugPart::Text(")"));
-            pending.push(DebugPart::Ty(representation));
-        }
-        DebugPart::Shape(noble_kernel::types::NominalShape::Variant(left, right)) => {
-            out.push_str("Variant(");
-            pending.push(DebugPart::Text(")"));
-            pending.push(DebugPart::Ty(right));
-            pending.push(DebugPart::Text(", "));
-            pending.push(DebugPart::Ty(left));
-        }
-    }
-    (out, pending)
-}
-
-/// Render one type's constructor: append its leading text now and schedule
-/// its payloads, separators and closing text.
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-contracts; the helper appends through non-const String and Vec pushes, so the const suggestion does not apply"
-)]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; this total renderer covers every type constructor; unit tests pin its output against the format! text it replaced"
-)]
-fn debug_constructor<'a>(
-    mut out: alloc::string::String,
-    mut pending: alloc::vec::Vec<DebugPart<'a>>,
-    ty: &'a noble_kernel::types::Ty,
-) -> (alloc::string::String, alloc::vec::Vec<DebugPart<'a>>) {
+fn debug_ty(out: &mut alloc::string::String, ty: &noble_kernel::types::Ty) {
     match ty {
         noble_kernel::types::Ty::Unit => out.push_str("Unit"),
         noble_kernel::types::Ty::Bool => out.push_str("Bool"),
@@ -545,116 +468,179 @@ fn debug_constructor<'a>(
         noble_kernel::types::Ty::Contract => out.push_str("Contract"),
         noble_kernel::types::Ty::Evidence => out.push_str("Evidence"),
         noble_kernel::types::Ty::Certified => out.push_str("Certified"),
-        noble_kernel::types::Ty::Pair(left, right) => {
-            out.push_str("Pair(");
-            pending = debug_pair(pending, left, right);
-        }
-        noble_kernel::types::Ty::Sum(left, right) => {
-            out.push_str("Sum(");
-            pending = debug_pair(pending, left, right);
-        }
+        noble_kernel::types::Ty::Pair(left, right) => debug_pair(out, "Pair(", left, right),
+        noble_kernel::types::Ty::Sum(left, right) => debug_pair(out, "Sum(", left, right),
         noble_kernel::types::Ty::List(item) => {
             out.push_str("List(");
-            pending.push(DebugPart::Text(")"));
-            pending.push(DebugPart::Ty(item));
+            debug_ty(out, item);
+            out.push(')');
         }
         noble_kernel::types::Ty::Program(stack_in, stack_out, effects) => {
-            out.push_str("Program(");
-            pending = debug_callable(pending, stack_in.as_slice(), stack_out.as_slice(), effects);
+            debug_callable(out, "Program(", stack_in, stack_out, effects);
         }
         noble_kernel::types::Ty::LiveRef(stack_in, stack_out, effects) => {
-            out.push_str("LiveRef(");
-            pending = debug_callable(pending, stack_in.as_slice(), stack_out.as_slice(), effects);
+            debug_callable(out, "LiveRef(", stack_in, stack_out, effects);
         }
         noble_kernel::types::Ty::Resource(kind) => {
             out.push_str("Resource(ResourceKind(");
-            crate::rendering::number(&mut out, u64::from(kind.0));
+            crate::rendering::number(out, u64::from(kind.0));
             out.push_str("))");
         }
         noble_kernel::types::Ty::Nominal(id, shape) => {
             out.push_str("Nominal(");
-            out = debug_nominal_id(out, *id);
+            debug_nominal_id(out, *id);
             out.push_str(", ");
-            pending.push(DebugPart::Text(")"));
-            pending.push(DebugPart::Shape(shape));
+            debug_shape(out, shape);
+            out.push(')');
         }
         noble_kernel::types::Ty::GenericNominal(id, args, shape) => {
             out.push_str("GenericNominal(");
-            out = debug_nominal_id(out, *id);
-            out.push_str(", [");
-            pending.push(DebugPart::Text(")"));
-            pending.push(DebugPart::Shape(shape));
-            pending.push(DebugPart::Text("], "));
-            pending.push(DebugPart::Ty(&args[1]));
-            pending.push(DebugPart::Text(", "));
-            pending.push(DebugPart::Ty(&args[0]));
+            debug_nominal_id(out, *id);
+            out.push_str(", ");
+            debug_stack(out, &**args);
+            out.push_str(", ");
+            debug_shape(out, shape);
+            out.push(')');
         }
     }
-    (out, pending)
 }
 
-/// Schedule `left, right)` after an already written constructor opening.
-fn debug_pair<'a>(
-    mut pending: alloc::vec::Vec<DebugPart<'a>>,
-    left: &'a noble_kernel::types::Ty,
-    right: &'a noble_kernel::types::Ty,
-) -> alloc::vec::Vec<DebugPart<'a>> {
-    pending.push(DebugPart::Text(")"));
-    pending.push(DebugPart::Ty(right));
-    pending.push(DebugPart::Text(", "));
-    pending.push(DebugPart::Ty(left));
-    pending
+/// Append `{opening}{left:?}, {right:?})`.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; appending a type rendering requires the caller's growable String, not a fixed str slice."
+)]
+fn debug_pair(
+    out: &mut alloc::string::String,
+    opening: &str,
+    left: &noble_kernel::types::Ty,
+    right: &noble_kernel::types::Ty,
+) {
+    out.push_str(opening);
+    debug_ty(out, left);
+    out.push_str(", ");
+    debug_ty(out, right);
+    out.push(')');
 }
 
-/// Schedule `[in], [out], EffSet([..]))` after an already written program or
-/// live reference opening.
-fn debug_callable<'a>(
-    mut pending: alloc::vec::Vec<DebugPart<'a>>,
-    stack_in: &'a [noble_kernel::types::Ty],
-    stack_out: &'a [noble_kernel::types::Ty],
-    effects: &'a noble_kernel::types::EffSet,
-) -> alloc::vec::Vec<DebugPart<'a>> {
-    pending.push(DebugPart::Text("))"));
-    pending.push(DebugPart::Effects(effects.as_slice()));
-    pending.push(DebugPart::Text(", EffSet("));
-    pending.push(DebugPart::Stack(stack_out, 0));
-    pending.push(DebugPart::Text(", "));
-    pending.push(DebugPart::Stack(stack_in, 0));
-    pending
+/// Append one nominal shape in the kernel's `Opaque(..)`/`Variant(.., ..)` form.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; appending a type rendering requires the caller's growable String, not a fixed str slice."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; type rendering grows the caller's String through non-const push and push_str."
+)]
+fn debug_shape(out: &mut alloc::string::String, shape: &noble_kernel::types::NominalShape) {
+    match shape {
+        noble_kernel::types::NominalShape::Opaque(representation) => {
+            out.push_str("Opaque(");
+            debug_ty(out, representation);
+            out.push(')');
+        }
+        noble_kernel::types::NominalShape::Variant(left, right) => {
+            debug_pair(out, "Variant(", left, right);
+        }
+    }
 }
 
-/// `out` with the derived rendering `[EffId(a), EffId(b)]` of `ids` appended.
-fn debug_effects(
-    mut out: alloc::string::String,
-    ids: &[noble_kernel::types::EffId],
-) -> alloc::string::String {
+/// Append `{opening}[in], [out], EffSet([..]))` for a program or a borrowed
+/// live reference.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; appending a type rendering requires the caller's growable String, not a fixed str slice."
+)]
+fn debug_callable(
+    out: &mut alloc::string::String,
+    opening: &str,
+    stack_in: &[noble_kernel::types::Ty],
+    stack_out: &[noble_kernel::types::Ty],
+    effects: &noble_kernel::types::EffSet,
+) {
+    out.push_str(opening);
+    debug_stack(out, stack_in);
+    out.push_str(", ");
+    debug_stack(out, stack_out);
+    out.push_str(", ");
+    debug_effects(out, effects.as_slice());
+    out.push(')');
+}
+
+/// Append a type stack in the kernel's list form `[a, b]`.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; appending a type rendering requires the caller's growable String, not a fixed str slice."
+)]
+fn debug_stack(out: &mut alloc::string::String, entries: &[noble_kernel::types::Ty]) {
     out.push('[');
+    debug_entries(out, entries, 0);
+    out.push(']');
+}
+
+/// Append the stack entries from `index` on, separated by `, `.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; appending a type rendering requires the caller's growable String, not a fixed str slice."
+)]
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; each call advances one entry of a finite borrowed stack; a direct tail call keeps the type recursion outside Aeneas's higher-order loop combinator, as in rendering::types."
+)]
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; index < entries.len() implies index < usize::MAX, so the immediate recursive successor cannot overflow."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; type rendering grows the caller's String through non-const push and push_str."
+)]
+fn debug_entries(
+    out: &mut alloc::string::String,
+    entries: &[noble_kernel::types::Ty],
+    index: usize,
+) {
+    if index < entries.len() {
+        if index != 0 {
+            out.push_str(", ");
+        }
+        debug_ty(out, &entries[index]);
+        debug_entries(out, entries, index + 1);
+    }
+}
+
+/// Append the derived rendering `EffSet([EffId(a), EffId(b)])` of the
+/// identities `ids` of one effect bound.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; appending a type rendering requires the caller's growable String, not a fixed str slice."
+)]
+fn debug_effects(out: &mut alloc::string::String, ids: &[noble_kernel::types::EffId]) {
+    out.push_str("EffSet([");
     let mut index = 0;
     while index < ids.len() {
         if index != 0 {
             out.push_str(", ");
         }
         out.push_str("EffId(");
-        crate::rendering::number(&mut out, u64::from(ids[index].0));
+        crate::rendering::number(out, u64::from(ids[index].0));
         out.push(')');
         index += 1;
     }
-    out.push(']');
-    out
+    out.push_str("])");
 }
 
-/// `out` with the derived rendering
-/// `NominalTypeId { module: m, ordinal: o }` of `id` appended.
-fn debug_nominal_id(
-    mut out: alloc::string::String,
-    id: noble_kernel::types::NominalTypeId,
-) -> alloc::string::String {
+/// Append the derived rendering `NominalTypeId { module: m, ordinal: o }`.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; appending a type rendering requires the caller's growable String, not a fixed str slice."
+)]
+fn debug_nominal_id(out: &mut alloc::string::String, id: noble_kernel::types::NominalTypeId) {
     out.push_str("NominalTypeId { module: ");
-    crate::rendering::number(&mut out, id.module);
+    crate::rendering::number(out, id.module);
     out.push_str(", ordinal: ");
-    crate::rendering::number(&mut out, u64::from(id.ordinal));
+    crate::rendering::number(out, u64::from(id.ordinal));
     out.push_str(" }");
-    out
 }
 
 /// Append the rendered expected and actual stacks when they render.
@@ -780,10 +766,9 @@ mod tests {
     #[test]
     fn debug_ty_matches_the_formatted_rendering() {
         for ty in samples() {
-            assert_eq!(
-                super::debug_ty(alloc::string::String::from("S "), &ty),
-                alloc::format!("S {ty:?}")
-            );
+            let mut rendered = alloc::string::String::from("S ");
+            super::debug_ty(&mut rendered, &ty);
+            assert_eq!(rendered, alloc::format!("S {ty:?}"));
         }
     }
 
