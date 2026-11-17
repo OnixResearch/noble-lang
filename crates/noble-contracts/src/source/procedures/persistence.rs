@@ -2052,15 +2052,15 @@ fn confirm_generations(
     let mut failure = None;
     let mut index = 0;
     while failure.is_none() && index < generations.len() {
-        match check_generation(generations, index, chunk_revision, namespace) {
-            Ok(()) => match confirm_records(
-                verifier,
-                &generations[index].records,
-                core::mem::take(&mut confirmed),
-            ) {
-                Ok(extended) => confirmed = extended,
-                Err(refusal) => failure = Some(refusal),
-            },
+        match confirm_generation(
+            generations,
+            index,
+            chunk_revision,
+            namespace,
+            verifier,
+            core::mem::take(&mut confirmed),
+        ) {
+            Ok(extended) => confirmed = extended,
             Err(refusal) => failure = Some(refusal),
         }
         index += 1;
@@ -2069,6 +2069,23 @@ fn confirm_generations(
         Some(refusal) => Err(refusal),
         None => Ok(()),
     }
+}
+
+/// Validates generation `index`, then re-establishes its receipts, extending `confirmed`.
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
+fn confirm_generation(
+    generations: &[Snapshot],
+    index: usize,
+    chunk_revision: [u8; chunks::REVISION_BYTES],
+    namespace: &super::super::Session,
+    verifier: Option<&super::acceptance::OwnerVerifier>,
+    confirmed: Vec<VerifiedEvidence>,
+) -> Result<Vec<VerifiedEvidence>, Refusal> {
+    check_generation(generations, index, chunk_revision, namespace)?;
+    confirm_records(verifier, &generations[index].records, confirmed)
 }
 
 /// Validates generation `index` of a loaded store against its sequence,
@@ -2099,7 +2116,13 @@ fn check_generation(
             generation_index,
         ));
     }
-    check_generation_ancestry(generations, index, generation_index)?;
+    let links = GenerationLinks {
+        parent_generation: snapshot.record.parent_generation,
+        rollback_of: snapshot.record.rollback_of,
+        kind: snapshot.record.kind,
+        has_no_records: snapshot.records.is_empty(),
+    };
+    check_generation_ancestry(links, index, generation_index, generations.len())?;
     if snapshot.record.chunk_library_revision != chunk_revision {
         return Err(Refusal::at(
             RefusalKind::Invalid,
@@ -2136,20 +2159,30 @@ fn check_generation(
     Ok(())
 }
 
-/// Checks generation `index` against the append-only ancestry rules.
+/// The ancestry links of one generation, copied out of its record so the
+/// ancestry rules branch on owned values only.
+#[derive(Clone, Copy)]
+struct GenerationLinks {
+    parent_generation: Option<u32>,
+    rollback_of: Option<u32>,
+    kind: GenerationKind,
+    has_no_records: bool,
+}
+
+/// Checks generation `index`'s links against the append-only ancestry rules.
 fn check_generation_ancestry(
-    generations: &[Snapshot],
+    links: GenerationLinks,
     index: usize,
     generation_index: u32,
+    generation_count: usize,
 ) -> Result<(), Refusal> {
-    let snapshot = &generations[index];
     if index == 0 {
         let is_initial_generation = matches!(
             (
-                snapshot.record.parent_generation,
-                snapshot.record.rollback_of,
-                snapshot.record.kind,
-                snapshot.records.is_empty(),
+                links.parent_generation,
+                links.rollback_of,
+                links.kind,
+                links.has_no_records,
             ),
             (None, None, GenerationKind::Publish, true)
         );
@@ -2181,19 +2214,19 @@ fn check_generation_ancestry(
                 },
             )
         })?;
-        let is_ancestry_valid = match snapshot.record.kind {
-            GenerationKind::Publish => {
-                snapshot.record.parent_generation == Some(previous)
-                    && snapshot.record.rollback_of.is_none()
-            }
-            GenerationKind::Rollback => {
-                snapshot.record.parent_generation.is_some_and(|parent| {
+        let is_ancestry_valid = match links.kind {
+            GenerationKind::Publish => match (links.parent_generation, links.rollback_of) {
+                (Some(parent), None) => parent == previous,
+                (None, _) | (Some(_), Some(_)) => false,
+            },
+            GenerationKind::Rollback => match (links.parent_generation, links.rollback_of) {
+                (Some(parent), Some(abandoned)) => {
                     parent <= previous
-                        && usize::try_from(parent)
-                            .ok()
-                            .is_some_and(|parent_index| generations.get(parent_index).is_some())
-                }) && snapshot.record.rollback_of == Some(previous)
-            }
+                        && is_loaded_generation(parent, generation_count)
+                        && abandoned == previous
+                }
+                (None, _) | (Some(_), None) => false,
+            },
         };
         if !is_ancestry_valid {
             return Err(Refusal::at(
@@ -2207,6 +2240,11 @@ fn check_generation_ancestry(
         }
     }
     Ok(())
+}
+
+/// Whether generation number `generation` indexes one of `generation_count` loaded generations.
+fn is_loaded_generation(generation: u32, generation_count: usize) -> bool {
+    usize::try_from(generation).is_ok_and(|generation_index| generation_index < generation_count)
 }
 
 /// Whether some adjacent pair of `records` is out of canonical retrieval order.
@@ -2461,36 +2499,11 @@ impl ProcedureLibrary {
         out.push_str("\",\"procedure_library_revision\":\"");
         out.push_hex(&current.record.procedure_library_revision);
         out.push_str("\",\"closure\":[");
-        for (index, entry) in current.record.closure.iter().enumerate() {
-            if index != 0 {
-                out.push(',');
-            }
-            out.push_str("{\"procedure_id\":\"");
-            out.push_hex(&entry.procedure_id);
-            out.push_str("\",\"state_digest\":\"");
-            out.push_hex(&entry.state_digest);
-            out.push_str("\"}");
-        }
+        write_manifest_closure(&mut out, &current.record.closure);
         out.push_str("]},\"entries\":[");
-        let mut index = 0;
-        let mut outcome = Ok(());
-        while outcome.is_ok() && index < current.records.len() {
-            if index != 0 {
-                out.push(',');
-            }
-            outcome = write_manifest_record(&mut out, &current.records[index]);
-            index += 1;
-        }
-        outcome?;
+        write_manifest_entries(&mut out, &current.records)?;
         out.push_str("],\"retrieval_order\":[");
-        for (index, record) in current.records.iter().enumerate() {
-            if index != 0 {
-                out.push(',');
-            }
-            out.push('"');
-            out.push_hex(&record.procedure_id);
-            out.push('"');
-        }
+        write_manifest_retrieval_order(&mut out, &current.records);
         out.push_str("],\"non_claims\":[\"experimental library-local identity; not a canonical Noble hash\",\"evidence lists submitter claims kept as unverified provenance; only verified_evidence, minted at admission by the library owner's verifier, supports tested or promoted\"]}");
         out.finish(JsonLimit::Manifest)
     }
@@ -2807,6 +2820,49 @@ fn metric_sum_overflow(field: &str) -> Refusal {
 /// Pushes the encoder identity; kept loop-free because it reads a borrowed `const`.
 fn push_encoder_id(out: &mut BoundedJson) {
     out.push_json_string(ENCODER_ID);
+}
+
+/// Writes the current generation's closure entries.
+fn write_manifest_closure(out: &mut BoundedJson, closure: &[ClosureEntry]) {
+    for (index, entry) in closure.iter().enumerate() {
+        if index != 0 {
+            out.push(',');
+        }
+        out.push_str("{\"procedure_id\":\"");
+        out.push_hex(&entry.procedure_id);
+        out.push_str("\",\"state_digest\":\"");
+        out.push_hex(&entry.state_digest);
+        out.push_str("\"}");
+    }
+}
+
+/// Writes the manifest entries in retrieval order, stopping at the first refusal.
+fn write_manifest_entries(
+    out: &mut BoundedJson,
+    records: &[ProcedureRecord],
+) -> Result<(), Refusal> {
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < records.len() {
+        if index != 0 {
+            out.push(',');
+        }
+        outcome = write_manifest_record(out, &records[index]);
+        index += 1;
+    }
+    outcome
+}
+
+/// Writes the retrieval order as quoted procedure identities.
+fn write_manifest_retrieval_order(out: &mut BoundedJson, records: &[ProcedureRecord]) {
+    for (index, record) in records.iter().enumerate() {
+        if index != 0 {
+            out.push(',');
+        }
+        out.push('"');
+        out.push_hex(&record.procedure_id);
+        out.push('"');
+    }
 }
 
 fn write_manifest_record(out: &mut BoundedJson, record: &ProcedureRecord) -> Result<(), Refusal> {
@@ -3321,5 +3377,74 @@ mod tests {
         assert_eq!(aggregate.retrieval_queries, 36);
         assert_eq!(aggregate.max_examined, Some(29));
         assert_eq!(aggregate.teacher_calls, 0);
+    }
+
+    fn links(
+        parent_generation: Option<u32>,
+        rollback_of: Option<u32>,
+        kind: GenerationKind,
+    ) -> GenerationLinks {
+        GenerationLinks {
+            parent_generation,
+            rollback_of,
+            kind,
+            has_no_records: true,
+        }
+    }
+
+    #[test]
+    fn generation_ancestry_accepts_only_canonical_links() {
+        let publish = GenerationKind::Publish;
+        let rollback = GenerationKind::Rollback;
+        assert!(check_generation_ancestry(links(None, None, publish), 0, 0, 1).is_ok());
+        let with_records = GenerationLinks {
+            has_no_records: false,
+            ..links(None, None, publish)
+        };
+        for initial in [
+            links(Some(0), None, publish),
+            links(None, None, rollback),
+            with_records,
+        ] {
+            let refusal = check_generation_ancestry(initial, 0, 0, 1)
+                .expect_err("generation zero must be an empty parentless publish");
+            assert_eq!(refusal.kind, RefusalKind::Invalid);
+            assert_eq!(refusal.location.field, "generation.zero");
+        }
+
+        let accepted = [
+            (Some(1), None, publish),
+            (Some(0), Some(1), rollback),
+            (Some(1), Some(1), rollback),
+        ];
+        let refused = [
+            (Some(0), None, publish),
+            (None, None, publish),
+            (Some(1), Some(1), publish),
+            (Some(2), Some(1), rollback),
+            (Some(0), Some(0), rollback),
+            (None, Some(1), rollback),
+            (Some(0), None, rollback),
+        ];
+        for (parent_generation, rollback_of, kind) in accepted {
+            let candidate = links(parent_generation, rollback_of, kind);
+            assert!(
+                check_generation_ancestry(candidate, 2, 2, 3).is_ok(),
+                "{parent_generation:?} {rollback_of:?} {kind:?}"
+            );
+        }
+        for (parent_generation, rollback_of, kind) in refused {
+            let candidate = links(parent_generation, rollback_of, kind);
+            let refusal = check_generation_ancestry(candidate, 2, 2, 3)
+                .expect_err("non-canonical ancestry must refuse");
+            assert_eq!(refusal.kind, RefusalKind::Invalid);
+            assert_eq!(refusal.location.field, "generation.parent");
+            assert_eq!(refusal.location.index, Some(2));
+        }
+
+        let unloaded_parent = links(Some(1), Some(1), rollback);
+        assert!(check_generation_ancestry(unloaded_parent, 2, 2, 1).is_err());
+        assert!(is_loaded_generation(2, 3));
+        assert!(!is_loaded_generation(3, 3));
     }
 }
