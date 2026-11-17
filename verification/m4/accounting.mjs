@@ -127,8 +127,13 @@ export const inheritedOpaque = [
 // Recent bounded structural-equality refactors changed adjacent non-opaque
 // code in both impls.rs files. Re-pin the current file bytes only after the
 // five separately hashed opaque helper bodies are verified unchanged.
+// The #97 re-extraction renewal (prior types/impls.rs pin
+// 636c0927667693891485be5bf1d57527975c8e7b13e217000f234c152e11a02f) only
+// queues ty_eq's Program element pairs inside its walk instead of through a
+// helper that threaded the borrowed work stack; clone_stack and debug_stack
+// keep their pinned bodies.
 export const inheritedOpaqueSources = {
-  'crates/noble-kernel/src/types/impls.rs': '636c0927667693891485be5bf1d57527975c8e7b13e217000f234c152e11a02f',
+  'crates/noble-kernel/src/types/impls.rs': '479761e9371a17ac9695e89a729a28dadfd20e2b106a985a1e405af7145a17df',
   'crates/noble-kernel/src/shapes/impls.rs': 'c5e01ec491af3ac46488e567ff2d3c0b9531a22e11cc842ecab7604544620413',
 };
 export const inheritedOpaqueBodies = {

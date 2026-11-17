@@ -7,20 +7,19 @@ impl super::Ty {
     /// The walk borrows its pending nodes: eligibility never copies the
     /// payload it inspects, so an ineligible value is rejected without first
     /// duplicating it.
+    ///
+    /// The first ineligible node or exhausted bound returns `false` directly
+    /// rather than breaking out with a flag: the selected Aeneas cannot end
+    /// the borrowed work stack's loans on the `break` paths.
     pub fn is_data(&self) -> bool {
         let mut work: alloc::vec::Vec<&super::Ty> = alloc::vec::Vec::with_capacity(8);
         work.push(self);
-        let mut is_data = true;
         while let Some(node) = work.pop() {
             if work.len() >= super::WORK_CAP {
-                is_data = false;
-                break;
+                return false;
             }
             match node {
-                super::Ty::Resource(_) | super::Ty::LiveRef(_, _, _) => {
-                    is_data = false;
-                    break;
-                }
+                super::Ty::Resource(_) | super::Ty::LiveRef(_, _, _) => return false,
                 super::Ty::Pair(left, right) | super::Ty::Sum(left, right) => {
                     work.push(left);
                     work.push(right);
@@ -41,10 +40,7 @@ impl super::Ty {
                             work.push(left);
                             work.push(right);
                         }
-                        super::NominalShape::Opaque(_) => {
-                            is_data = false;
-                            break;
-                        }
+                        super::NominalShape::Opaque(_) => return false,
                     }
                 }
                 super::Ty::Unit
@@ -58,7 +54,7 @@ impl super::Ty {
                 | super::Ty::Program(_, _, _) => {}
             }
         }
-        is_data
+        true
     }
 
     /// Generic family arguments are Data: a valid immutable program is a

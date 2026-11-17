@@ -293,10 +293,7 @@ pub(super) fn register_bound_clock(
     let has_input = !registration.input.is_empty();
     let is_i64_returning = registration.output.as_slice() == [crate::types::Ty::I64];
     let has_test_clock_effect = registration.effects.as_slice() == [super::TEST_CLOCK];
-    let is_registered = env
-        .bound_adapters
-        .iter()
-        .any(|row| row.adapter_slot == registration.adapter_slot);
+    let is_registered = adapter_slot_taken(&env, registration.adapter_slot);
     let is_clock_shape = has_identity && !has_input;
     let is_clock_signature = is_i64_returning && has_test_clock_effect;
     if !(is_clock_shape && is_clock_signature) || is_registered {
@@ -336,10 +333,7 @@ pub(super) fn register_bound_code_export(
         || registration.input.as_slice() != [crate::types::Ty::Text, crate::types::Ty::Text]
         || !registration.output.is_empty()
         || registration.effects.as_slice() != [super::TEST_CODE_EXPORT]
-        || env
-            .bound_adapters
-            .iter()
-            .any(|row| row.adapter_slot == registration.adapter_slot)
+        || adapter_slot_taken(&env, registration.adapter_slot)
     {
         return Err(super::NominalError::InvalidRepresentation);
     }
@@ -377,10 +371,7 @@ pub(super) fn register_bound_send(
         || registration.input.as_slice() != [crate::types::Ty::Text]
         || !registration.output.is_empty()
         || registration.effects.as_slice() != [super::TEST_SEND]
-        || env
-            .bound_adapters
-            .iter()
-            .any(|row| row.adapter_slot == registration.adapter_slot)
+        || adapter_slot_taken(&env, registration.adapter_slot)
     {
         return Err(super::NominalError::InvalidRepresentation);
     }
@@ -425,6 +416,22 @@ fn checked_bound_registration(
         index += 1;
     }
     Ok(registration)
+}
+
+/// Whether a bound-adapter row already holds `slot`, scanning in table order
+/// and stopping at the first hit, as `Iterator::any` does.
+///
+/// An explicit index walk: the selected Aeneas cannot join the contexts left
+/// by the slice iterator's higher-ranked predicate closure.
+fn adapter_slot_taken(env: &super::Env, slot: u32) -> bool {
+    let mut index = 0;
+    while index < env.bound_adapters.len() {
+        if env.bound_adapters[index].adapter_slot == slot {
+            return true;
+        }
+        index += 1;
+    }
+    false
 }
 
 fn bound_adapter(

@@ -6,6 +6,11 @@ pub(crate) mod instantiate;
 mod multiset;
 
 /// The request and environment a check runs against.
+///
+/// `Copy` lets a check hand a by-value context to a helper that loops or
+/// joins: the selected Aeneas cannot join control flow while a borrow of this
+/// borrow-carrying struct is in scope.
+#[derive(Clone, Copy)]
 pub(crate) struct Ctx<'a> {
     pub(crate) request: &'a crate::untrusted::Request,
     pub(crate) env: &'a crate::contracts::Env,
@@ -93,22 +98,7 @@ fn limits_of_with(
             crate::untrusted::LimitKind::StackHeight,
         ));
     }
-    let mut is_valid = true;
-    let mut index = 0;
-    while index < stack.len() {
-        let is_next =
-            if allow_borrowed && matches!(&stack[index], crate::types::Ty::LiveRef(_, _, _)) {
-                ctx.env.valid_live_ref(&stack[index])
-            } else {
-                ctx.env.valid_type(&stack[index], 512)
-            };
-        if !is_next {
-            is_valid = false;
-            break;
-        }
-        index += 1;
-    }
-    if !is_valid {
+    if !valid_limited_stack(stack, ctx.env, allow_borrowed) {
         return Err(invalid_without_stacks(
             site(None, None),
             crate::untrusted::Constraint::InvalidType,
@@ -120,6 +110,40 @@ fn limits_of_with(
             crate::untrusted::LimitKind::TypeSize,
         )),
     }
+}
+
+/// Check each stack entry in order, stopping at the first invalid one. Only
+/// entry input may carry live references, which are validated as such.
+///
+/// Kept apart from `limits_of_with`, which holds a borrow of the
+/// borrow-carrying `Ctx`: the selected Aeneas cannot join control flow while
+/// such a borrow is in scope.
+fn valid_limited_stack(
+    stack: &[crate::types::Ty],
+    env: &crate::contracts::Env,
+    allow_borrowed: bool,
+) -> bool {
+    let mut index = 0;
+    let mut is_valid = true;
+    while index < stack.len() && is_valid {
+        is_valid = valid_limited_entry(stack, index, env, allow_borrowed);
+        index += 1;
+    }
+    is_valid
+}
+
+/// Validate one stack entry without carrying a borrowed entry across the loop.
+fn valid_limited_entry(
+    stack: &[crate::types::Ty],
+    index: usize,
+    env: &crate::contracts::Env,
+    allow_borrowed: bool,
+) -> bool {
+    let entry = &stack[index];
+    if allow_borrowed && matches!(entry, crate::types::Ty::LiveRef(_, _, _)) {
+        return env.valid_live_ref(entry);
+    }
+    env.valid_type(entry, 512)
 }
 
 /// Check each stack entry without carrying a borrowed entry across the loop.

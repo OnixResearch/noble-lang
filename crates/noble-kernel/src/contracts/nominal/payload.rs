@@ -106,22 +106,8 @@ fn enter<'a>(ty: &'a crate::types::Ty, mut state: Build<'a>) -> Option<Build<'a>
             ty,
             is_complete: true,
         });
-        let mut index = output.len();
-        while index > 0 {
-            index -= 1;
-            state.work.push(Frame {
-                ty: &output[index],
-                is_complete: false,
-            });
-        }
-        index = input.len();
-        while index > 0 {
-            index -= 1;
-            state.work.push(Frame {
-                ty: &input[index],
-                is_complete: false,
-            });
-        }
+        state.work = push_reversed(output, state.work);
+        state.work = push_reversed(input, state.work);
         return Some(state);
     } else if let crate::types::Ty::GenericNominal(_, args, _) = ty {
         state.work.push(Frame {
@@ -145,6 +131,31 @@ fn enter<'a>(ty: &'a crate::types::Ty, mut state: Build<'a>) -> Option<Build<'a>
         }
         None => None,
     }
+}
+
+/// Queue one unentered frame per element of `types`, last element first, so
+/// the walk pops them in order.
+///
+/// Each step splits off the last element and reads it through a slice
+/// iterator: the selected Aeneas cannot translate a loop that pushes borrows
+/// obtained by indexing, and models no reverse slice iterator.
+fn push_reversed<'a>(
+    types: &'a [crate::types::Ty],
+    mut work: alloc::vec::Vec<Frame<'a>>,
+) -> alloc::vec::Vec<Frame<'a>> {
+    let mut rest = types;
+    while let Some(last) = rest.len().checked_sub(1) {
+        let (head, tail) = rest.split_at(last);
+        let mut tail = tail.iter();
+        if let Some(ty) = tail.next() {
+            work.push(Frame {
+                ty,
+                is_complete: false,
+            });
+        }
+        rest = head;
+    }
+    work
 }
 
 fn leaf_pattern(ty: &crate::types::Ty) -> Option<crate::shapes::Pattern> {

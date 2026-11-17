@@ -76,6 +76,24 @@ impl Counter {
         self.pattern(value, depth, nodes)
     }
 
+    /// Budget one stack's patterns in order against the shared node count,
+    /// stopping at the first refusal.
+    ///
+    /// One loop per helper: the selected Aeneas library models no
+    /// `Iterator::chain`, and the selected Aeneas cannot translate two loops
+    /// that each return early from one function.
+    fn patterns(
+        &mut self,
+        items: &[crate::shapes::Pattern],
+        depth: usize,
+        nodes: &mut usize,
+    ) -> Option<()> {
+        for item in items.iter() {
+            self.pattern(item, depth, nodes)?;
+        }
+        Some(())
+    }
+
     #[expect(
         tigerstyle::no_recursion,
         reason = "depth and node budgets are per subtree, so the walk is deliberately recursive; a worklist rewrite would change the accounting subject"
@@ -115,9 +133,8 @@ impl Counter {
                     self.allocation()?;
                 }
                 self.vector::<crate::shapes::EffectSlot>(effects.len())?;
-                for item in input.iter().chain(output.iter()) {
-                    self.pattern(item, depth.saturating_add(1), nodes)?;
-                }
+                self.patterns(input, depth.saturating_add(1), nodes)?;
+                self.patterns(output, depth.saturating_add(1), nodes)?;
             }
             crate::shapes::Pattern::Nominal(_, shape) => {
                 self.allocation()?;
@@ -154,6 +171,15 @@ impl Counter {
     ) -> Option<()> {
         self.allocation()?;
         self.ty(value, depth, nodes)
+    }
+
+    /// Budget one stack's types in order against the shared node count,
+    /// stopping at the first refusal; one loop per helper, as for `patterns`.
+    fn types(&mut self, items: &[crate::types::Ty], depth: usize, nodes: &mut usize) -> Option<()> {
+        for item in items.iter() {
+            self.ty(item, depth, nodes)?;
+        }
+        Some(())
     }
 
     fn nominal(
@@ -220,9 +246,8 @@ impl Counter {
                     self.allocation()?;
                 }
                 self.vector::<crate::types::EffId>(effects.as_slice().len())?;
-                for item in input.iter().chain(output.iter()) {
-                    self.ty(item, depth.saturating_add(1), nodes)?;
-                }
+                self.types(input, depth.saturating_add(1), nodes)?;
+                self.types(output, depth.saturating_add(1), nodes)?;
             }
             crate::types::Ty::LiveRef(..) => return None,
             crate::types::Ty::Unit
@@ -253,7 +278,16 @@ impl Counter {
         if !scheme.stack_out.is_empty() {
             self.allocation()?;
         }
-        for value in scheme.stack_in.iter().chain(scheme.stack_out.iter()) {
+        self.scheme_stack(&scheme.stack_in)?;
+        self.scheme_stack(&scheme.stack_out)?;
+        Some(())
+    }
+
+    /// Budget one scheme stack's patterns in order, each from depth zero with
+    /// its own node count, stopping at the first refusal; one loop per
+    /// helper, as for `patterns`.
+    fn scheme_stack(&mut self, stack: &[crate::shapes::Pattern]) -> Option<()> {
+        for value in stack.iter() {
             self.pattern(value, 0, &mut 0)?;
         }
         Some(())

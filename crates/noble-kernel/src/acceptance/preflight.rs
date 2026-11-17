@@ -166,19 +166,40 @@ fn signed_self_check(
         return Ok(remaining);
     };
     let remaining = attempt!(super::parts::charge(remaining, 1));
-    let owner = usize::try_from(def.0)
-        .ok()
-        .and_then(|index| env.definition_owners.get(index));
-    let is_valid = signed_owner.map(|(owner, _)| owner) == Some(*def)
-        && env.kind(*def) == Some(crate::contracts::Behavior::Named)
-        && env.caller_module.is_some()
-        && owner == Some(&env.caller_module);
-    if !is_valid {
+    if !signed_self_valid(env, *def, signed_owner) {
         return Err(super::Fail::Unsupported(
             crate::untrusted::UnsupportedKind::NodeForm,
         ));
     }
     Ok(remaining)
+}
+
+/// Whether a signed-self node names the signed owner itself: a named
+/// definition owned by the present caller module.
+///
+/// Each conjunct is checked in turn without closures: the selected Aeneas
+/// cannot end the borrow an `and_then` closure captures from `env`.
+fn signed_self_valid(
+    env: &crate::contracts::Env,
+    def: crate::contracts::Definition,
+    signed_owner: Option<(crate::contracts::Definition, &crate::words::Inst)>,
+) -> bool {
+    let Some((owner, _)) = signed_owner else {
+        return false;
+    };
+    if owner != def || env.kind(def) != Some(crate::contracts::Behavior::Named) {
+        return false;
+    }
+    if env.caller_module.is_none() {
+        return false;
+    }
+    let Ok(index) = usize::try_from(def.0) else {
+        return false;
+    };
+    let Some(owner_module) = env.definition_owners.get(index) else {
+        return false;
+    };
+    *owner_module == env.caller_module
 }
 
 /// Reject one live-slot invocation node outside the live-slot profile.
@@ -394,7 +415,10 @@ fn guard_ty(
     request: &crate::untrusted::Request,
     remaining: u32,
 ) -> Result<(u32, u32), super::Fail> {
-    let mut pending = alloc::vec![ty];
+    // `vec![ty]`'s capacity-one buffer, built without the macro: the selected
+    // Aeneas crashes on `into_vec` over a boxed array of borrows.
+    let mut pending: alloc::vec::Vec<&crate::types::Ty> = alloc::vec::Vec::with_capacity(1);
+    pending.push(ty);
     let mut visited = 0u32;
     let mut reserved = 0u32;
     let mut remaining = remaining;
@@ -427,7 +451,12 @@ fn guard_ty(
                     .map_err(|_| super::Fail::Exhausted(crate::untrusted::LimitKind::Work))?;
                 remaining = attempt!(super::parts::charge(remaining, count));
                 reserved = reserved.saturating_add(count);
-                for child in input.iter().chain(output.iter()) {
+                // Inputs then outputs, as `chain` would: the selected Aeneas
+                // library models no `Iterator::chain`.
+                for child in input.iter() {
+                    pending.push(child);
+                }
+                for child in output.iter() {
                     pending.push(child);
                 }
             }

@@ -123,6 +123,8 @@ fn take_sizes(
 ///
 /// Each child is queued by reference: the tree under walk is only read, so the
 /// walk neither copies a subtree nor needs a copy to reach a later sibling.
+/// Program stacks are queued in order through slice iterators: the selected
+/// Aeneas cannot translate a loop that pushes borrows obtained by indexing.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; queue_children records one for leaves and queues the exact constructor children with length-bounded indexing; walk_step handles the work bound and missing-size failures without assertions."
@@ -148,15 +150,11 @@ fn queue_children<'a>(
         crate::types::Ty::Program(stack_in, stack_out, _)
         | crate::types::Ty::LiveRef(stack_in, stack_out, _) => {
             todo.push((node, true));
-            let mut index = 0;
-            while index < stack_in.len() {
-                todo.push((&stack_in[index], false));
-                index += 1;
+            for input in stack_in.iter() {
+                todo.push((input, false));
             }
-            index = 0;
-            while index < stack_out.len() {
-                todo.push((&stack_out[index], false));
-                index += 1;
+            for output in stack_out.iter() {
+                todo.push((output, false));
             }
         }
         crate::types::Ty::Nominal(_, shape) => {

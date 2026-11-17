@@ -262,6 +262,7 @@ pub enum ClockDecision {
 }
 
 /// A finite, explicitly typed test clock, not an ambient clock or authority.
+#[derive(Clone, Copy)]
 pub struct ClockPlan<'a> {
     pub operation: &'a str,
     pub adapter_identity: &'a str,
@@ -280,28 +281,40 @@ impl ClockPlan<'_> {
         reason = "the index is a bounded table position already typed usize by the caller; changing it would break the kernel API"
     )]
     pub fn decide(&self, requested: &str, index: usize) -> Result<ClockDecision, NominalError> {
-        let is_test_clock = self.operation == "test.clock";
-        let has_adapter = !self.adapter_identity.is_empty();
-        let has_input = !self.input.is_empty();
-        let is_i64_returning = self.output == [crate::types::Ty::I64];
-        let has_test_clock_effect = self.effects == [TEST_CLOCK];
-        let is_short_script = self.script.len() <= 16;
-        let is_clock_shape = is_test_clock && has_adapter && !has_input;
-        let is_clock_signature = is_i64_returning && has_test_clock_effect && is_short_script;
-        if !(is_clock_shape && is_clock_signature) {
-            return Err(NominalError::InvalidRepresentation);
-        }
-        if requested != self.operation {
-            return Ok(ClockDecision::UnexpectedOperation);
-        }
-        if !self.allowed {
-            return Ok(ClockDecision::Denied);
-        }
-        Ok(match self.script.get(index) {
-            Some(value) => ClockDecision::Value(*value),
-            None => ClockDecision::ScriptExhausted,
-        })
+        decide_clock(*self, requested, index)
     }
+}
+
+/// Decide one dispatch from a copy of the plan.
+///
+/// The plan is taken by value: the selected Aeneas cannot join control flow
+/// while a borrow of a borrow-carrying struct is in scope, as `&self` is here.
+fn decide_clock(
+    plan: ClockPlan<'_>,
+    requested: &str,
+    index: usize,
+) -> Result<ClockDecision, NominalError> {
+    let is_test_clock = plan.operation == "test.clock";
+    let has_adapter = !plan.adapter_identity.is_empty();
+    let has_input = !plan.input.is_empty();
+    let is_i64_returning = plan.output == [crate::types::Ty::I64];
+    let has_test_clock_effect = plan.effects == [TEST_CLOCK];
+    let is_short_script = plan.script.len() <= 16;
+    let is_clock_shape = is_test_clock && has_adapter && !has_input;
+    let is_clock_signature = is_i64_returning && has_test_clock_effect && is_short_script;
+    if !(is_clock_shape && is_clock_signature) {
+        return Err(NominalError::InvalidRepresentation);
+    }
+    if requested != plan.operation {
+        return Ok(ClockDecision::UnexpectedOperation);
+    }
+    if !plan.allowed {
+        return Ok(ClockDecision::Denied);
+    }
+    Ok(match plan.script.get(index) {
+        Some(value) => ClockDecision::Value(*value),
+        None => ClockDecision::ScriptExhausted,
+    })
 }
 
 /// The checking environment. `Default` is an empty staging replacement;
