@@ -436,7 +436,7 @@ function mutationControl(control, generated, moduleText, names, dependencies, pr
   }
   const mutated = { ...generated, 'NobleKernel/Funs.lean': Buffer.from(funs) };
   const project = makeProject(directory, mutated, moduleText, dependencies, profile);
-  run(lake, ['build', 'NobleKernel'], project);
+  run(lake, ['--no-cache', 'build', 'NobleKernel'], project);
   const moduleLines = moduleText.endsWith('\n') ? moduleText.split('\n').length - 1 : moduleText.split('\n').length;
   const auditText = moduleText + (moduleText.endsWith('\n') ? '' : '\n') +
     names.map(name => `#print axioms ${name}`).join('\n') + '\n';
@@ -502,7 +502,7 @@ try {
   compatibility = libraryCompatibility(root);
   const dependencies = dependencyPackages(profile);
   const project = makeProject(join(output, 'baseline'), generated, moduleText, dependencies, profile);
-  const build = run(lake, ['build', 'M5Authority'], project);
+  const build = run(lake, ['--no-cache', 'build', 'M5Authority'], project);
   const generatedWarnings = build.split('\n').filter(line => line.startsWith('warning:'));
   requireThat(generatedWarnings.every(line => line.startsWith('warning: NobleKernel/Funs.lean:') &&
     line.includes('mathlib naming conventions')), `unexpected Lean build diagnostics: ${build}`);

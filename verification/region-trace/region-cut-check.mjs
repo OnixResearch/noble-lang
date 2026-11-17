@@ -115,7 +115,7 @@ const declared = [...proofCode.matchAll(/^(?:@\[[^\n]+\]\s*)?theorem\s+(\w+)/gm)
 requireThat(declared.length === names.length && names.every(name => declared.includes(name)),
   `cut theorem inventory differs from declarations: ${declared}`);
 const project = join(root, 'proofs/m5');
-run(join(lean, 'lake'), ['build', 'RegionCutProof'], project);
+run(join(lean, 'lake'), ['--no-cache', 'build', 'RegionCutProof'], project);
 const auditFile = join(output, 'Audit.lean');
 const lines = ['import RegionCutProof', ''];
 const positions = {};
