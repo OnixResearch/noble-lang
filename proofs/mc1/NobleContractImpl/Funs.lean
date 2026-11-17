@@ -704,7 +704,7 @@ impl_def noble_kernel.contracts.GenericVariantDecl.Insts.CoreCloneClone :
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 309:9-309:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:9-330:14
     Name pattern: [core::clone::Clone<noble_kernel::contracts::Env>] -/
 @[reducible, rust_trait_impl
   "core::clone::Clone<noble_kernel::contracts::Env>"]
@@ -716,7 +716,7 @@ impl_def noble_kernel.contracts.Env.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 309:16-309:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:16-330:21
     Name pattern: [core::fmt::Debug<noble_kernel::contracts::Env>] -/
 @[reducible, rust_trait_impl "core::fmt::Debug<noble_kernel::contracts::Env>"]
 def noble_kernel.contracts.Env.Insts.CoreFmtDebug : core.fmt.Debug
@@ -725,7 +725,7 @@ def noble_kernel.contracts.Env.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::default::Default for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 309:23-309:30
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:23-330:30
     Name pattern: [core::default::Default<noble_kernel::contracts::Env>] -/
 @[reducible, rust_trait_impl
   "core::default::Default<noble_kernel::contracts::Env>"]
@@ -806,7 +806,7 @@ impl_def noble_kernel.types.Ty.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 223:0-223:35
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 216:0-216:35
     Name pattern: [core::cmp::PartialEq<noble_kernel::types::Ty, noble_kernel::types::Ty>] -/
 @[reducible, rust_trait_impl
   "core::cmp::PartialEq<noble_kernel::types::Ty, noble_kernel::types::Ty>"]
@@ -818,7 +818,7 @@ impl_def noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy : core.cmp.PartialEq
 }
 
 /-- Trait implementation: [noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}]
-    Source: 'crates/noble-kernel/src/types/impls.rs', lines 301:0-301:42
+    Source: 'crates/noble-kernel/src/types/impls.rs', lines 294:0-294:42
     Name pattern: [core::fmt::Debug<noble_kernel::types::Ty>] -/
 @[reducible, rust_trait_impl "core::fmt::Debug<noble_kernel::types::Ty>"]
 def noble_kernel.types.Ty.Insts.CoreFmtDebug : core.fmt.Debug

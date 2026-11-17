@@ -389,7 +389,7 @@ inductive noble_kernel.contracts.Behavior where
 | NamedBehavior : noble_kernel.contracts.Behavior
 
 /-- [noble_kernel::contracts::Env]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 310:0-310:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 331:0-331:14
     Name pattern: [noble_kernel::contracts::Env]
     Visibility: public -/
 @[rust_type "noble_kernel::contracts::Env"]
@@ -783,7 +783,7 @@ inductive noble_kernel.untrusted.Outcome where
 | InternalFailure : noble_kernel.untrusted.Outcome
 
 /-- [noble_kernel::contracts::clone_budget::CloneBudget]
-    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 27:0-27:22
+    Source: 'crates/noble-kernel/src/contracts/clone_budget.rs', lines 36:0-36:22
     Name pattern: [noble_kernel::contracts::clone_budget::CloneBudget]
     Visibility: public -/
 @[rust_type "noble_kernel::contracts::clone_budget::CloneBudget"]
