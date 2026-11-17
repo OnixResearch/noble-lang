@@ -2,7 +2,7 @@
 // alter repository sources, reviewed expectations, or the positive audit input.
 import fs from 'node:fs';
 import path from 'node:path';
-import { account, auditPacket, auditPackets, canonicalLlbcHash, rootsFor, lanes, equal, exactBytes, fail } from './accounting.mjs';
+import { account, auditPacket, auditPackets, canonicalLlbcHash, rootsFor, lanes, equal, exactBytes, fail, sha } from './accounting.mjs';
 
 export function refusals({ raw, accounts, sources, tools, packet, packets, audit, run, proofRoot, lake, artifacts, save }) {
   const results = [];
@@ -64,7 +64,7 @@ export function refusals({ raw, accounts, sources, tools, packet, packets, audit
       label: 'kernel-core-macro' },
     { lane: 'kernel', source: 'crates/noble-kernel/src/contracts/nominal/schemes.rs', line: 5,
       label: 'kernel-nominal-schemes-macro' },
-    { lane: 'contracts', source: 'crates/noble-contracts/src/source/declared/state.rs', line: 7,
+    { lane: 'contracts', source: 'crates/noble-contracts/src/source/declared/state.rs', line: 9,
       label: 'contracts-declared-state-macro' },
   ]) {
     const llbc = raw[lane].llbc;
@@ -85,7 +85,7 @@ export function refusals({ raw, accounts, sources, tools, packet, packets, audit
     });
   }
   const ordinaryEnd = findSpan(repacked.translated.fun_decls,
-    repacked.translated.files.find(file => file?.name?.Local === 'crates/noble-wasm/src/lib.rs')?.id, 13, false);
+    repacked.translated.files.find(file => file?.name?.Local === 'crates/noble-wasm/src/lib.rs')?.id, 53, false);
   if (!ordinaryEnd) fail('REFUSAL', 'missing ordinary multi-line span');
   ordinaryEnd.col += 1;
   if (canonicalLlbcHash(repacked) === llbcHash) fail('REFUSAL', 'ordinary span mutation was accepted');
@@ -148,6 +148,24 @@ export function refusals({ raw, accounts, sources, tools, packet, packets, audit
     const changed = copied();
     changed.llbc.translated.options.start_from = ['noble_wasm::compile'];
     account(wasm, changed.llbc, changed.translation, sources);
+  });
+  reject('uncollected-unreviewed-source', 'SOURCE-COVERAGE', () => {
+    account(wasm, raw.wasm.llbc, raw.wasm.translation, {
+      ...sources, 'crates/noble-wasm/src/unreviewed.rs': '0'.repeat(64),
+    });
+  });
+  reject('test-only-source-without-exact-test-parent', 'SOURCE-COVERAGE', () => {
+    const contracts = lanes.find(lane => lane.id === 'contracts');
+    const llbc = structuredClone(raw.contracts.llbc);
+    const file = 'crates/noble-contracts/src/inference/effects.rs';
+    const parent = llbc.translated.files.find(item => item?.name?.Local === file);
+    const original = parent.contents;
+    parent.contents = original.replace('#[cfg(test)]\nmod oracle;', 'mod oracle;');
+    if (parent.contents === original) fail('REFUSAL', 'missing exact oracle directive');
+    // Keep the compiler/source hash binding coherent so this targets the
+    // exact test-only-module review rather than an earlier source drift check.
+    const changed = { ...sources, [file]: sha(parent.contents) };
+    account(contracts, llbc, raw.contracts.translation, changed);
   });
   reject('collector-source-drift', 'LLBC-SOURCE', () => {
     const changed = copied();
