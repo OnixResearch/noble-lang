@@ -407,3 +407,25 @@ With the selected Lean 4.35.0 first on `PATH`:
   theorems in 69 modules and checker B 110 theorems in one module. The
   axioms of `noble_kernel.acceptance.check` are `propext`, `Classical.choice`,
   `Quot.sound` and the three literal-size axioms above.
+
+### 7.5 The coverage record
+
+`verification/m3-coverage.json` was re-derived from the regenerated subject
+with `m3-coverage-join.mjs emit`: 2,340 functions, 2,269 generated and 71
+external. Every generated definition is `extracted` except
+`acceptance.check`, which stays `fixture-checked` with its 29 citations
+(26 fixtures and 3 conditional handoffs). Since the checker carries the
+literal-size axioms of §7.3, all 29 now have the `native` axiom class; the
+entry's note says so. The external definitions are 66 `modeled` template
+externals and the five `excepted` `#[charon::opaque]` helpers.
+
+The regenerated module has four `mutual` blocks closed by
+`partial_fixpoint`, and Lean names each block's packed fixpoint
+`<first declaration>.mutual`. These are elaborator definitions, not text the
+join can parse. `verification/m3-coverage-gate.sh` (like the M2 coverage gate,
+with the same `isMutualFixpoint` rule) tolerates such a residual definition
+only when its first declaration is classified and that declaration's value
+uses it. The `borrowed-mutual-suffix` refusal cell shows that a definition
+which only borrows the suffix still fails `ENV-UNCLASSIFIED`. The gate passes
+with 302 elaborator matchers and 4 packed fixpoints tolerated; STRENGTH
+computes the 29 citations as recorded.
