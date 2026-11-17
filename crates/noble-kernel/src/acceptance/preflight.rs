@@ -678,3 +678,91 @@ const fn nominal_size_within_limit(
     };
     total_node_count <= limits.type_size
 }
+
+#[cfg(test)]
+mod tests {
+    fn request(type_size: u32) -> crate::untrusted::Request {
+        crate::untrusted::Request {
+            input_bytes: 0,
+            expected: crate::untrusted::Expected {
+                stack_in: alloc::vec![],
+                stack_out: alloc::vec![],
+                allowed_effects: crate::types::EffSet::empty(),
+            },
+            limits: crate::untrusted::Limits {
+                bytes: 1024,
+                nodes: 64,
+                depth: 8,
+                type_size,
+                stack_height: 64,
+                work: 1024,
+                diagnostics: 16,
+            },
+        }
+    }
+
+    #[test]
+    fn type_guard_visits_and_reserves_program_outputs() {
+        let ty = crate::types::Ty::Program(
+            alloc::boxed::Box::new(alloc::vec![crate::types::Ty::I64]),
+            alloc::boxed::Box::new(alloc::vec![crate::types::Ty::Bool, crate::types::Ty::Text]),
+            crate::types::EffSet::empty(),
+        );
+        // One program node and three children are visited; the three children
+        // are also reserved when the program node is charged.
+        assert!(matches!(
+            super::guard_ty(&ty, &request(64), 100),
+            Ok((7, 93))
+        ));
+        assert!(matches!(
+            super::guard_ty(&ty, &request(3), 100),
+            Err(super::super::Fail::Exhausted(
+                crate::untrusted::LimitKind::TypeSize
+            ))
+        ));
+    }
+
+    #[test]
+    fn signed_self_requires_the_named_signed_owner_of_the_caller_module() {
+        let inst = crate::words::Inst {
+            bindings: alloc::vec![],
+        };
+        let env = crate::contracts::Env {
+            kinds: alloc::vec![crate::contracts::Behavior::Named],
+            definition_owners: alloc::vec![Some(7)],
+            caller_module: Some(7),
+            ..crate::contracts::Env::default()
+        };
+        let def = crate::contracts::Definition(0);
+        assert!(super::signed_self_valid(&env, def, Some((def, &inst))));
+        assert!(!super::signed_self_valid(&env, def, None));
+        assert!(!super::signed_self_valid(
+            &env,
+            def,
+            Some((crate::contracts::Definition(1), &inst))
+        ));
+        let foreign_owner = crate::contracts::Env {
+            definition_owners: alloc::vec![Some(8)],
+            ..env.clone()
+        };
+        assert!(!super::signed_self_valid(
+            &foreign_owner,
+            def,
+            Some((def, &inst))
+        ));
+        let no_caller = crate::contracts::Env {
+            caller_module: None,
+            ..env.clone()
+        };
+        assert!(!super::signed_self_valid(
+            &no_caller,
+            def,
+            Some((def, &inst))
+        ));
+        let unnamed = crate::contracts::Env {
+            kinds: alloc::vec![crate::contracts::Behavior::Reserved],
+            ..env
+        };
+        assert!(!super::signed_self_valid(&unnamed, def, Some((def, &inst))));
+    }
+}

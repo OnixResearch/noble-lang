@@ -686,3 +686,17 @@ pub(super) fn valid_program_components(
         && u64::try_from(stack_in.len().saturating_add(stack_out.len()))
             .is_ok_and(|count| count <= u64::from(max_nodes))
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn a_definition_has_an_owner_only_when_one_is_recorded() {
+        let env = crate::contracts::Env {
+            definition_owners: alloc::vec![None, Some(3)],
+            ..crate::contracts::Env::default()
+        };
+        assert!(!super::definition_has_owner(&env, 0));
+        assert!(super::definition_has_owner(&env, 1));
+        assert!(!super::definition_has_owner(&env, 2));
+    }
+}

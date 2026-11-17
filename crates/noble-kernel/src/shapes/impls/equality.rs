@@ -118,3 +118,84 @@ pub(super) fn pattern_eq(left: &crate::shapes::Pattern, right: &crate::shapes::P
     }
     true
 }
+
+#[cfg(test)]
+mod tests {
+    fn program(
+        input: alloc::vec::Vec<crate::shapes::Pattern>,
+        output: alloc::vec::Vec<crate::shapes::Pattern>,
+        effect: u32,
+    ) -> crate::shapes::Pattern {
+        crate::shapes::Pattern::program(
+            input,
+            output,
+            alloc::vec![crate::shapes::EffectSlot::Effect(crate::types::EffId(
+                effect
+            ))],
+        )
+    }
+
+    #[test]
+    fn variables_compare_by_kind_and_index() {
+        let value = crate::shapes::Pattern::Var(crate::words::Variable(1));
+        let stack = crate::shapes::Pattern::StackVar(crate::words::Variable(1));
+        assert!(value == crate::shapes::Pattern::Var(crate::words::Variable(1)));
+        assert!(stack == crate::shapes::Pattern::StackVar(crate::words::Variable(1)));
+        assert!(value != crate::shapes::Pattern::Var(crate::words::Variable(2)));
+        assert!(stack != crate::shapes::Pattern::StackVar(crate::words::Variable(2)));
+        assert!(value != stack);
+    }
+
+    #[test]
+    fn programs_compare_inputs_outputs_and_effects_pairwise() {
+        let base = program(
+            alloc::vec![crate::shapes::Pattern::I64, crate::shapes::Pattern::Text],
+            alloc::vec![crate::shapes::Pattern::Bool, crate::shapes::Pattern::Unit],
+            3,
+        );
+        assert!(
+            base == program(
+                alloc::vec![crate::shapes::Pattern::I64, crate::shapes::Pattern::Text],
+                alloc::vec![crate::shapes::Pattern::Bool, crate::shapes::Pattern::Unit],
+                3,
+            )
+        );
+        let changed_input = program(
+            alloc::vec![crate::shapes::Pattern::I64, crate::shapes::Pattern::Bool],
+            alloc::vec![crate::shapes::Pattern::Bool, crate::shapes::Pattern::Unit],
+            3,
+        );
+        let changed_output = program(
+            alloc::vec![crate::shapes::Pattern::I64, crate::shapes::Pattern::Text],
+            alloc::vec![crate::shapes::Pattern::Bool, crate::shapes::Pattern::Text],
+            3,
+        );
+        let changed_effect = program(
+            alloc::vec![crate::shapes::Pattern::I64, crate::shapes::Pattern::Text],
+            alloc::vec![crate::shapes::Pattern::Bool, crate::shapes::Pattern::Unit],
+            4,
+        );
+        let shorter = program(
+            alloc::vec![crate::shapes::Pattern::I64],
+            alloc::vec![crate::shapes::Pattern::Bool, crate::shapes::Pattern::Unit],
+            3,
+        );
+        assert!(base != changed_input);
+        assert!(base != changed_output);
+        assert!(base != changed_effect);
+        assert!(base != shorter);
+        let borrowed = crate::shapes::Pattern::live_ref(
+            alloc::vec![crate::shapes::Pattern::I64],
+            alloc::vec![crate::shapes::Pattern::Text],
+            alloc::vec![],
+        );
+        assert!(
+            borrowed
+                != crate::shapes::Pattern::live_ref(
+                    alloc::vec![crate::shapes::Pattern::Bool],
+                    alloc::vec![crate::shapes::Pattern::Text],
+                    alloc::vec![],
+                )
+        );
+    }
+}

@@ -224,3 +224,30 @@ pub(super) fn valid_ref(env: &super::Env, ty: &crate::types::Ty) -> bool {
     }
     is_valid
 }
+
+#[cfg(test)]
+mod tests {
+    fn live_ref(input: alloc::vec::Vec<crate::types::Ty>, effect: Option<u32>) -> crate::types::Ty {
+        let effects = match effect {
+            Some(id) => crate::types::EffSet::from_ids(&[crate::types::EffId(id)]),
+            None => crate::types::EffSet::empty(),
+        };
+        crate::types::Ty::LiveRef(
+            alloc::boxed::Box::new(input),
+            alloc::boxed::Box::new(alloc::vec![crate::types::Ty::I64]),
+            effects,
+        )
+    }
+
+    #[test]
+    fn forwarded_borrowed_inputs_are_validated_as_references() {
+        let env = crate::contracts::Env {
+            live_slots: true,
+            ..crate::contracts::Env::default()
+        };
+        let valid_nested = live_ref(alloc::vec![live_ref(alloc::vec![], None)], None);
+        assert!(super::valid_ref(&env, &valid_nested));
+        let unknown_effect = live_ref(alloc::vec![live_ref(alloc::vec![], Some(99))], None);
+        assert!(!super::valid_ref(&env, &unknown_effect));
+    }
+}

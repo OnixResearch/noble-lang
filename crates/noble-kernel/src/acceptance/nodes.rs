@@ -488,3 +488,55 @@ pub(super) fn open_quotation(
     };
     Ok((cost, frame, child))
 }
+
+#[cfg(test)]
+mod tests {
+    fn live_ref(output: crate::types::Ty) -> crate::types::Ty {
+        crate::types::Ty::LiveRef(
+            alloc::boxed::Box::default(),
+            alloc::boxed::Box::new(alloc::vec![output]),
+            crate::types::EffSet::empty(),
+        )
+    }
+
+    #[test]
+    fn the_first_forwarded_refusal_is_reported() {
+        let env = crate::contracts::Env::default();
+        let request = crate::untrusted::Request {
+            input_bytes: 0,
+            expected: crate::untrusted::Expected {
+                stack_in: alloc::vec![live_ref(crate::types::Ty::I64)],
+                stack_out: alloc::vec![],
+                allowed_effects: crate::types::EffSet::empty(),
+            },
+            limits: crate::untrusted::Limits {
+                bytes: 1024,
+                nodes: 64,
+                depth: 8,
+                type_size: 64,
+                stack_height: 64,
+                work: 1024,
+                diagnostics: 16,
+            },
+        };
+        let context = super::super::parts::Ctx {
+            request: &request,
+            env: &env,
+            signed_owner: None,
+        };
+        let first = live_ref(crate::types::Ty::Unit);
+        let second = live_ref(crate::types::Ty::Bool);
+        let folded = super::fold_formals(
+            &[first.clone(), second],
+            &[0],
+            super::super::parts::site(None, None),
+            context,
+        );
+        assert!(matches!(
+            folded,
+            Err(super::super::Fail::Invalid(ref diagnostic))
+                if diagnostic.expected == [first.clone()]
+                    && diagnostic.constraint == crate::untrusted::Constraint::StackJoin
+        ));
+    }
+}

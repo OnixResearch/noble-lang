@@ -352,3 +352,56 @@ impl super::Env {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn program_stacks_count_inputs_and_outputs() {
+        let mut counter = super::Counter {
+            bytes: 0,
+            allocations: 0,
+        };
+        let mut nodes = 0usize;
+        let pattern = crate::shapes::Pattern::program(
+            alloc::vec![crate::shapes::Pattern::Text],
+            alloc::vec![crate::shapes::Pattern::I64, crate::shapes::Pattern::Bool],
+            alloc::vec![],
+        );
+        assert_eq!(counter.pattern(&pattern, 0, &mut nodes), Some(()));
+        assert_eq!(nodes, 4);
+        nodes = 0;
+        let ty = crate::types::Ty::Program(
+            alloc::boxed::Box::new(alloc::vec![crate::types::Ty::Text]),
+            alloc::boxed::Box::new(alloc::vec![crate::types::Ty::I64, crate::types::Ty::Bool]),
+            crate::types::EffSet::empty(),
+        );
+        assert_eq!(counter.ty(&ty, 0, &mut nodes), Some(()));
+        assert_eq!(nodes, 4);
+    }
+
+    #[test]
+    fn scheme_result_patterns_are_counted() {
+        let scheme = |stack_out| crate::words::Scheme {
+            var_kinds: alloc::vec![],
+            stack_in: alloc::vec![],
+            stack_out,
+            effects: alloc::vec![],
+        };
+        let mut empty = super::Counter {
+            bytes: 0,
+            allocations: 0,
+        };
+        let mut one = super::Counter {
+            bytes: 0,
+            allocations: 0,
+        };
+        assert_eq!(empty.scheme(&scheme(alloc::vec![])), Some(()));
+        assert_eq!(
+            one.scheme(&scheme(alloc::vec![crate::shapes::Pattern::I64])),
+            Some(())
+        );
+        let pattern_bytes = u64::try_from(core::mem::size_of::<crate::shapes::Pattern>())
+            .expect("pattern size fits u64");
+        assert_eq!(one.bytes, empty.bytes.saturating_add(pattern_bytes));
+    }
+}

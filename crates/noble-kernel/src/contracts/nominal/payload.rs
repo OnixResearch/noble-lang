@@ -310,3 +310,22 @@ fn pair_pattern(
         crate::shapes::Pattern::Pair(alloc::boxed::Box::new(left), alloc::boxed::Box::new(right))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn program_payload_keeps_input_and_output_order() {
+        let env = crate::contracts::Env::default();
+        let program = crate::types::Ty::Program(
+            alloc::boxed::Box::new(alloc::vec![crate::types::Ty::I64, crate::types::Ty::Text]),
+            alloc::boxed::Box::new(alloc::vec![crate::types::Ty::Bool, crate::types::Ty::Unit]),
+            crate::types::EffSet::from_ids(&[crate::types::EffId(5)]),
+        );
+        let expected = crate::shapes::Pattern::program(
+            alloc::vec![crate::shapes::Pattern::I64, crate::shapes::Pattern::Text],
+            alloc::vec![crate::shapes::Pattern::Bool, crate::shapes::Pattern::Unit],
+            alloc::vec![crate::shapes::EffectSlot::Effect(crate::types::EffId(5))],
+        );
+        assert!(super::pattern(&env, &program) == Some(expected));
+    }
+}
