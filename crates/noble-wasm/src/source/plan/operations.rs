@@ -26,33 +26,50 @@ pub(super) fn derivation(
     node: noble_kernel::untrusted::NodeId,
 ) -> Result<&noble_kernel::untrusted::Interface, crate::Diagnostic> {
     let mut index = 0usize;
-    let mut found: Option<&noble_kernel::untrusted::Interface> = None;
+    let mut found: Option<usize> = None;
     let mut failure = None;
     while index < checked.derivations.len() {
-        let item = &checked.derivations[index];
-        if item.node != node {
-            index += 1;
-            continue;
-        }
-        if let Some(previous) = found {
-            if previous.stack_in != item.interface.stack_in
-                || previous.stack_out != item.interface.stack_out
-                || previous.effects != item.interface.effects
-            {
-                failure = Some(crate::Diagnostic::Invalid);
+        match derivation_step(checked, node, found, index) {
+            Ok(next) => {
+                found = next;
+                index += 1;
+            }
+            Err(problem) => {
+                failure = Some(problem);
                 break;
             }
         }
-        found = Some(&item.interface);
-        index += 1;
     }
     match failure {
         Some(problem) => Err(problem),
         None => match found {
-            Some(value) => Ok(value),
+            Some(at) => Ok(&checked.derivations[at].interface),
             None => Err(crate::Diagnostic::Invalid),
         },
     }
+}
+
+/// Fold derivation `index` into the last derivation of `node` found before it.
+fn derivation_step(
+    checked: &noble_kernel::untrusted::Checked,
+    node: noble_kernel::untrusted::NodeId,
+    found: Option<usize>,
+    index: usize,
+) -> Result<Option<usize>, crate::Diagnostic> {
+    let item = &checked.derivations[index];
+    if item.node != node {
+        return Ok(found);
+    }
+    if let Some(previous) = found {
+        let previous = &checked.derivations[previous].interface;
+        if previous.stack_in != item.interface.stack_in
+            || previous.stack_out != item.interface.stack_out
+            || previous.effects != item.interface.effects
+        {
+            return Err(crate::Diagnostic::Invalid);
+        }
+    }
+    Ok(Some(index))
 }
 
 #[expect(
@@ -180,12 +197,10 @@ fn lower_node(
             if !layout.live_slots || *site_id != id.0 {
                 return Err(crate::Diagnostic::Invalid);
             }
-            let site = match input
-                .checked
-                .live_sites
-                .iter()
-                .find(|site| site.site_id == *site_id)
-            {
+            let site_id = *site_id;
+            let site = match crate::scan::find_first(&input.checked.live_sites, |site| {
+                site.site_id == site_id
+            }) {
                 Some(site) => site,
                 None => return Err(crate::Diagnostic::Invalid),
             };
@@ -193,13 +208,7 @@ fn lower_node(
             let input_signature = attempt!(compiler.signature(&site.stack_in, work));
             let output_signature = attempt!(compiler.signature(&site.stack_out, work));
             let effect_mask = attempt!(super::effect_mask(&site.allowed_effects));
-            let mut forwarded_target_positions =
-                alloc::vec::Vec::with_capacity(site.stack_in.len());
-            for (position, ty) in site.stack_in.iter().enumerate() {
-                if matches!(ty, noble_kernel::types::Ty::LiveRef(_, _, _)) {
-                    forwarded_target_positions.push(attempt!(super::number(position)));
-                }
-            }
+            let forwarded_target_positions = attempt!(live_ref_positions(&site.stack_in));
             if forwarded_target_positions.len() != site.forwarded_ref_ordinals.len() {
                 return Err(crate::Diagnostic::Invalid);
             }
@@ -238,6 +247,34 @@ fn lower_node(
         output,
         effects: attempt!(super::effect_mask(&interface.effects)),
     })
+}
+
+/// The positions of the live references in a dispatch site's input stack.
+fn live_ref_positions(
+    stack_in: &[noble_kernel::types::Ty],
+) -> Result<alloc::vec::Vec<u32>, crate::Diagnostic> {
+    let mut positions = alloc::vec::Vec::with_capacity(stack_in.len());
+    let mut position = 0usize;
+    let mut failure = None;
+    while position < stack_in.len() {
+        if matches!(
+            stack_in[position],
+            noble_kernel::types::Ty::LiveRef(_, _, _)
+        ) {
+            match super::number(position) {
+                Ok(number) => positions.push(number),
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
+                }
+            }
+        }
+        position += 1;
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(positions),
+    }
 }
 
 impl Input<'_> {

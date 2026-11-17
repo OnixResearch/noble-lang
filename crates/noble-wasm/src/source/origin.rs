@@ -81,7 +81,10 @@ fn action(
         Action::Call(index, identity)
             if program_index == plan.root
                 && identity == selected.definition_id().identity()
-                && plan.definition_roots.first() == Some(&index) =>
+                && plan
+                    .definition_roots
+                    .first()
+                    .is_some_and(|first| *first == index) =>
         {
             OriginAction::CallSelected(index)
         }
@@ -90,139 +93,259 @@ fn action(
     Some(result)
 }
 
-#[expect(
-    tigerstyle::compound_condition,
-    tigerstyle::function_length,
-    reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks."
-)]
+// A selected target holds borrowed source state, so every walk that consults
+// it recurses over a bounded index instead of looping over its borrow.
 fn programs(selected: &CheckedSelectedTarget<'_>, plan: &Layout) -> Option<Vec<OriginProgram>> {
     if plan.programs.len() > MAX_ORIGIN_PROGRAMS || plan.programs.is_empty() {
         return None;
     }
-    let mut count = 0usize;
-    let mut result = Vec::with_capacity(plan.programs.len());
-    for (program_index, program) in plan.programs.iter().enumerate() {
-        if program.operations.is_empty()
-            || program.effects != 0
-            || program.depth > MAX_ORIGIN_DEPTH as u32
-            || program.leaves > MAX_ORIGIN_OPERATIONS as u32
+    let result = programs_from(
+        selected,
+        plan,
+        0,
+        0,
+        Vec::with_capacity(plan.programs.len()),
+    )?;
+    let body_nodes = quotation_bodies(selected, &result, 0, 0, alloc::vec![None; result.len()])?;
+    bind_bodies(selected, plan, &body_nodes, result, 0)
+}
+
+/// Lower the programs from `program_index` on, after `count` earlier operations.
+#[expect(
+    tigerstyle::compound_condition,
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; the recursion follows the structure of an already checked, size-bounded input."
+)]
+fn programs_from(
+    selected: &CheckedSelectedTarget<'_>,
+    plan: &Layout,
+    program_index: usize,
+    count: usize,
+    mut result: Vec<OriginProgram>,
+) -> Option<Vec<OriginProgram>> {
+    let Some(program) = plan.programs.get(program_index) else {
+        return Some(result);
+    };
+    if program.operations.is_empty()
+        || program.effects != 0
+        || program.depth > MAX_ORIGIN_DEPTH as u32
+        || program.leaves > MAX_ORIGIN_OPERATIONS as u32
+    {
+        return None;
+    }
+    let count = count.checked_add(program.operations.len())?;
+    if count > MAX_ORIGIN_OPERATIONS {
+        return None;
+    }
+    let source_artifact = if program_index == plan.root {
+        OriginSource::Selection
+    } else {
+        OriginSource::Definition
+    };
+    if source_artifact == OriginSource::Selection
+        && (program.operations.len() != 1
+            || !matches!(program.operations[0].action, Action::Call(..)))
+    {
+        return None;
+    }
+    let operations = operations_from(
+        selected,
+        plan,
+        program_index,
+        0,
+        Vec::with_capacity(program.operations.len()),
+    )?;
+    result.push(OriginProgram {
+        source_artifact,
+        program_index,
+        entry: program.entry,
+        body_node: None,
+        input_signature: program.input,
+        output_signature: program.output,
+        effect_mask: program.effects,
+        operations,
+    });
+    programs_from(selected, plan, program_index + 1, count, result)
+}
+
+/// Lower the operations of one program from `ordinal` on.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-wasm-maintainers; the recursion follows the structure of an already checked, size-bounded input."
+)]
+fn operations_from(
+    selected: &CheckedSelectedTarget<'_>,
+    plan: &Layout,
+    program_index: usize,
+    ordinal: usize,
+    mut operations: Vec<OriginOperation>,
+) -> Option<Vec<OriginOperation>> {
+    if ordinal >= plan.programs[program_index].operations.len() {
+        return Some(operations);
+    }
+    let operation = operation_at(selected, plan, program_index, ordinal, &operations)?;
+    operations.push(operation);
+    operations_from(selected, plan, program_index, ordinal + 1, operations)
+}
+
+/// Lower operation `ordinal` of a program after its earlier `prior` operations.
+fn operation_at(
+    selected: &CheckedSelectedTarget<'_>,
+    plan: &Layout,
+    program_index: usize,
+    ordinal: usize,
+    prior: &[OriginOperation],
+) -> Option<OriginOperation> {
+    let program = &plan.programs[program_index];
+    let operation = &program.operations[ordinal];
+    let source_artifact = if program_index == plan.root {
+        OriginSource::Selection
+    } else {
+        OriginSource::Definition
+    };
+    let ordinal = u32::try_from(ordinal).ok()?;
+    let table_entry = program.entry.checked_add(ordinal)?;
+    let node = operation.node;
+    if table_entry < plan.first_function
+        || table_entry >= plan.functions
+        || crate::scan::find_first(prior, |earlier| earlier.node == node).is_some()
+    {
+        return None;
+    }
+    if operation.effects != 0 {
+        return None;
+    }
+    let action = action(selected, plan, program_index, operation)?;
+    let site = if source_artifact == OriginSource::Selection {
+        if operation.node != NodeId(0) || !matches!(action, OriginAction::CallSelected(..)) {
+            return None;
+        }
+        None
+    } else {
+        Some(selected.checked_operation_site(operation.node).ok()?)
+    };
+    Some(OriginOperation {
+        node: operation.node,
+        lexical_node: site.as_ref().map(|site| site.lexical_node),
+        authored_span: site.as_ref().and_then(|site| site.authored_span),
+        generated: site
+            .as_ref()
+            .is_some_and(|site| site.generated_witness.is_some()),
+        generated_witness: site.and_then(|site| site.generated_witness),
+        ordinal,
+        table_entry,
+        input_signature: operation.input,
+        output_signature: operation.output,
+        effect_mask: operation.effects,
+        action,
+    })
+}
+
+/// Record each static quotation's lexical body node, visiting the operations
+/// of program `program` from `ordinal` on and then every later program.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-wasm-maintainers; the recursion follows the structure of an already checked, size-bounded input."
+)]
+fn quotation_bodies(
+    selected: &CheckedSelectedTarget<'_>,
+    result: &[OriginProgram],
+    program: usize,
+    ordinal: usize,
+    mut body_nodes: Vec<Option<u32>>,
+) -> Option<Vec<Option<u32>>> {
+    let Some(origin) = result.get(program) else {
+        return Some(body_nodes);
+    };
+    let Some(operation) = origin.operations.get(ordinal) else {
+        return quotation_bodies(selected, result, program + 1, 0, body_nodes);
+    };
+    if let OriginAction::StaticProgram(index) = operation.action {
+        let node = operation.lexical_node?;
+        if !matches!(
+            selected.checked_lexical_node(node).ok()?.kind,
+            CheckedLexicalKind::Quotation(_)
+        ) || body_nodes.get_mut(index)?.replace(node).is_some()
         {
             return None;
         }
-        count = count.checked_add(program.operations.len())?;
-        if count > MAX_ORIGIN_OPERATIONS {
-            return None;
-        }
-        let source_artifact = if program_index == plan.root {
-            OriginSource::Selection
-        } else {
-            OriginSource::Definition
-        };
-        if source_artifact == OriginSource::Selection
-            && (program.operations.len() != 1
-                || !matches!(program.operations[0].action, Action::Call(..)))
-        {
-            return None;
-        }
-        let mut operations = Vec::with_capacity(program.operations.len());
-        for (ordinal, operation) in program.operations.iter().enumerate() {
-            let ordinal = u32::try_from(ordinal).ok()?;
-            let table_entry = program.entry.checked_add(ordinal)?;
-            if table_entry < plan.first_function
-                || table_entry >= plan.functions
-                || operations
-                    .iter()
-                    .any(|prior: &OriginOperation| prior.node == operation.node)
-            {
-                return None;
-            }
-            if operation.effects != 0 {
-                return None;
-            }
-            let action = action(selected, plan, program_index, operation)?;
-            let site = if source_artifact == OriginSource::Selection {
-                if operation.node != NodeId(0) || !matches!(action, OriginAction::CallSelected(..))
-                {
-                    return None;
-                }
-                None
-            } else {
-                Some(selected.checked_operation_site(operation.node).ok()?)
-            };
-            operations.push(OriginOperation {
-                node: operation.node,
-                lexical_node: site.as_ref().map(|site| site.lexical_node),
-                authored_span: site.as_ref().and_then(|site| site.authored_span),
-                generated: site
-                    .as_ref()
-                    .is_some_and(|site| site.generated_witness.is_some()),
-                generated_witness: site.and_then(|site| site.generated_witness),
-                ordinal,
-                table_entry,
-                input_signature: operation.input,
-                output_signature: operation.output,
-                effect_mask: operation.effects,
-                action,
-            });
-        }
-        result.push(OriginProgram {
-            source_artifact,
-            program_index,
-            entry: program.entry,
-            body_node: None,
-            input_signature: program.input,
-            output_signature: program.output,
-            effect_mask: program.effects,
-            operations,
-        });
     }
-    let mut body_nodes = alloc::vec![None; result.len()];
-    for program in &result {
-        for operation in &program.operations {
-            if let OriginAction::StaticProgram(index) = operation.action {
-                let node = operation.lexical_node?;
-                if !matches!(
-                    selected.checked_lexical_node(node).ok()?.kind,
-                    CheckedLexicalKind::Quotation(_)
-                ) || body_nodes.get_mut(index)?.replace(node).is_some()
-                {
-                    return None;
-                }
-            }
-        }
+    quotation_bodies(selected, result, program, ordinal + 1, body_nodes)
+}
+
+/// Bind the programs from `index` on to their lexical bodies.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-wasm-maintainers; the recursion follows the structure of an already checked, size-bounded input."
+)]
+fn bind_bodies(
+    selected: &CheckedSelectedTarget<'_>,
+    plan: &Layout,
+    body_nodes: &[Option<u32>],
+    mut result: Vec<OriginProgram>,
+    index: usize,
+) -> Option<Vec<OriginProgram>> {
+    if index >= result.len() {
+        return Some(result);
     }
+    bind_body(selected, plan, body_nodes, &mut result[index])?;
+    bind_bodies(selected, plan, body_nodes, result, index + 1)
+}
+
+/// Bind one program to its lexical body and check its operations follow it.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
+fn bind_body(
+    selected: &CheckedSelectedTarget<'_>,
+    plan: &Layout,
+    body_nodes: &[Option<u32>],
+    program: &mut OriginProgram,
+) -> Option<()> {
     let named = plan.definition_roots[0];
-    for program in &mut result {
-        let lexical_body = if program.program_index == plan.root {
-            if body_nodes[program.program_index].is_some() {
-                return None;
-            }
-            continue;
-        } else if program.program_index == named {
-            if body_nodes[program.program_index].is_some() {
-                return None;
-            }
-            selected.lexical_body()
-        } else {
-            let body_node = body_nodes[program.program_index]?;
-            program.body_node = Some(body_node);
-            let CheckedLexicalKind::Quotation(body) =
-                selected.checked_lexical_node(body_node).ok()?.kind
-            else {
-                return None;
-            };
-            body
-        };
-        if lexical_body.len() != program.operations.len()
-            || !lexical_body
-                .iter()
-                .zip(&program.operations)
-                .all(|(lexical, operation)| operation.lexical_node == Some(*lexical))
-        {
+    let lexical_body = if program.program_index == plan.root {
+        if body_nodes[program.program_index].is_some() {
             return None;
         }
+        return Some(());
+    } else if program.program_index == named {
+        if body_nodes[program.program_index].is_some() {
+            return None;
+        }
+        selected.lexical_body()
+    } else {
+        let body_node = body_nodes[program.program_index]?;
+        program.body_node = Some(body_node);
+        let CheckedLexicalKind::Quotation(body) =
+            selected.checked_lexical_node(body_node).ok()?.kind
+        else {
+            return None;
+        };
+        body
+    };
+    if lexical_body.len() != program.operations.len()
+        || !follows_lexical_body(lexical_body, &program.operations)
+    {
+        return None;
     }
-    Some(result)
+    Some(())
+}
+
+/// Whether each operation names the lexical node at its position, as far as both run.
+fn follows_lexical_body(lexical_body: &[u32], operations: &[OriginOperation]) -> bool {
+    let mut index = 0usize;
+    let mut is_following = true;
+    while is_following && index < lexical_body.len() && index < operations.len() {
+        is_following = names_lexical_node(&operations[index], lexical_body[index]);
+        index += 1;
+    }
+    is_following
+}
+
+/// Whether an operation names `lexical` as its lexical occurrence.
+fn names_lexical_node(operation: &OriginOperation, lexical: u32) -> bool {
+    operation.lexical_node == Some(lexical)
 }
 
 fn program_value(value: Value) -> Option<(Rc<OriginProgramValue>, usize)> {
@@ -244,11 +367,9 @@ fn fixed_dimensions(recipe: &OriginFixedExpression) -> (usize, usize) {
     reason = "Owner: noble-wasm-maintainers; the bounded origin interpreter threads its program table, layout, value stack, recursion guard, depth, static cache and step meter explicitly through each recursive step."
 )]
 #[expect(
-    tigerstyle::function_length,
     tigerstyle::mutating_input_in_pure,
-    tigerstyle::no_recursion,
     tigerstyle::too_many_parameters,
-    reason = "Owner: noble-wasm-maintainers; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the recursion follows the structure of an already checked, size-bounded input; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
 #[expect(
     tigerstyle::borrowed_argument_types,
@@ -269,154 +390,194 @@ fn execute(
     }
     active[level] = index;
     let named = programs.get(index)?;
-    for operation in &named.operations {
-        *steps = (*steps).checked_add(1)?;
-        if *steps > MAX_REPLAY_STEPS {
-            return None;
+    let mut at = 0usize;
+    let mut outcome = Some(());
+    while outcome.is_some() && at < named.operations.len() {
+        outcome = execute_operation(
+            programs,
+            plan,
+            &named.operations[at],
+            stack,
+            active,
+            level,
+            static_programs,
+            steps,
+        );
+        at += 1;
+    }
+    outcome
+}
+
+/// Replay one operation of the program at `level` against the value stack.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Owner: noble-wasm-maintainers; the bounded origin interpreter threads its program table, layout, value stack, recursion guard, depth, static cache and step meter explicitly through each recursive step."
+)]
+#[expect(
+    tigerstyle::function_length,
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-wasm-maintainers; the replayed operand stack is pushed and popped, so it needs the growable vector."
+)]
+fn execute_operation(
+    programs: &[OriginProgram],
+    plan: &Layout,
+    operation: &OriginOperation,
+    stack: &mut Vec<Value>,
+    active: &mut [usize; MAX_ORIGIN_DEPTH],
+    level: usize,
+    static_programs: &mut [Option<Rc<OriginProgramValue>>],
+    steps: &mut usize,
+) -> Option<()> {
+    *steps = (*steps).checked_add(1)?;
+    if *steps > MAX_REPLAY_STEPS {
+        return None;
+    }
+    match operation.action {
+        OriginAction::I64(value) => stack.push(Value::I64(OriginI64::Fixed {
+            value,
+            recipe: Rc::new(OriginFixedExpression::Literal(value)),
+        })),
+        OriginAction::Dup => stack.push(stack.last()?.clone()),
+        OriginAction::Drop => {
+            stack.pop()?;
         }
-        match operation.action {
-            OriginAction::I64(value) => stack.push(Value::I64(OriginI64::Fixed {
+        OriginAction::Swap => {
+            let len = stack.len();
+            if len < 2 {
+                return None;
+            }
+            stack.swap(len - 1, len - 2);
+        }
+        OriginAction::Dip => {
+            let (helper, _) = program_value(stack.pop()?)?;
+            let OriginProgramValue::Static { program_index, .. } = helper.as_ref() else {
+                return None;
+            };
+            let hidden = stack.pop()?;
+            execute(
+                programs,
+                plan,
+                *program_index,
+                stack,
+                active,
+                level + 1,
+                static_programs,
+                steps,
+            )?;
+            stack.push(hidden);
+        }
+        OriginAction::Add | OriginAction::Sub | OriginAction::Mul => {
+            let Value::I64(OriginI64::Fixed {
+                value: right,
+                recipe: right_recipe,
+            }) = stack.pop()?
+            else {
+                return None;
+            };
+            let Value::I64(OriginI64::Fixed {
+                value: left,
+                recipe: left_recipe,
+            }) = stack.pop()?
+            else {
+                return None;
+            };
+            let (value, kind) = match operation.action {
+                OriginAction::Add => (left.wrapping_add(right), OriginFixedArithmetic::Add),
+                OriginAction::Sub => (left.wrapping_sub(right), OriginFixedArithmetic::Sub),
+                OriginAction::Mul => (left.wrapping_mul(right), OriginFixedArithmetic::Mul),
+                _ => return None,
+            };
+            let (left_nodes, left_depth) = fixed_dimensions(&left_recipe);
+            let (right_nodes, right_depth) = fixed_dimensions(&right_recipe);
+            let nodes = left_nodes.checked_add(right_nodes)?.checked_add(1)?;
+            let depth = left_depth.max(right_depth).checked_add(1)?;
+            if nodes > MAX_ORIGIN_OPERATIONS || depth > MAX_ORIGIN_DEPTH {
+                return None;
+            }
+            stack.push(Value::I64(OriginI64::Fixed {
                 value,
-                recipe: Rc::new(OriginFixedExpression::Literal(value)),
-            })),
-            OriginAction::Dup => stack.push(stack.last()?.clone()),
-            OriginAction::Drop => {
-                stack.pop()?;
+                recipe: Rc::new(OriginFixedExpression::Arithmetic {
+                    kind,
+                    left: left_recipe,
+                    right: right_recipe,
+                    nodes,
+                    depth,
+                }),
+            }));
+        }
+        OriginAction::StaticProgram(program_index) => {
+            let slot = static_programs.get_mut(program_index)?;
+            let depth = usize::try_from(plan.programs.get(program_index)?.depth).ok()?;
+            if depth > MAX_ORIGIN_DEPTH {
+                return None;
             }
-            OriginAction::Swap => {
-                let len = stack.len();
-                if len < 2 {
-                    return None;
-                }
-                stack.swap(len - 1, len - 2);
-            }
-            OriginAction::Dip => {
-                let (helper, _) = program_value(stack.pop()?)?;
-                let OriginProgramValue::Static { program_index, .. } = helper.as_ref() else {
-                    return None;
-                };
-                let hidden = stack.pop()?;
-                execute(
-                    programs,
-                    plan,
-                    *program_index,
-                    stack,
-                    active,
-                    level + 1,
-                    static_programs,
-                    steps,
-                )?;
-                stack.push(hidden);
-            }
-            OriginAction::Add | OriginAction::Sub | OriginAction::Mul => {
-                let Value::I64(OriginI64::Fixed {
-                    value: right,
-                    recipe: right_recipe,
-                }) = stack.pop()?
-                else {
-                    return None;
-                };
-                let Value::I64(OriginI64::Fixed {
-                    value: left,
-                    recipe: left_recipe,
-                }) = stack.pop()?
-                else {
-                    return None;
-                };
-                let (value, kind) = match operation.action {
-                    OriginAction::Add => (left.wrapping_add(right), OriginFixedArithmetic::Add),
-                    OriginAction::Sub => (left.wrapping_sub(right), OriginFixedArithmetic::Sub),
-                    OriginAction::Mul => (left.wrapping_mul(right), OriginFixedArithmetic::Mul),
-                    _ => return None,
-                };
-                let (left_nodes, left_depth) = fixed_dimensions(&left_recipe);
-                let (right_nodes, right_depth) = fixed_dimensions(&right_recipe);
-                let nodes = left_nodes.checked_add(right_nodes)?.checked_add(1)?;
-                let depth = left_depth.max(right_depth).checked_add(1)?;
-                if nodes > MAX_ORIGIN_OPERATIONS || depth > MAX_ORIGIN_DEPTH {
-                    return None;
-                }
-                stack.push(Value::I64(OriginI64::Fixed {
-                    value,
-                    recipe: Rc::new(OriginFixedExpression::Arithmetic {
-                        kind,
-                        left: left_recipe,
-                        right: right_recipe,
-                        nodes,
-                        depth,
-                    }),
-                }));
-            }
-            OriginAction::StaticProgram(program_index) => {
-                let slot = static_programs.get_mut(program_index)?;
-                let depth = usize::try_from(plan.programs.get(program_index)?.depth).ok()?;
-                if depth > MAX_ORIGIN_DEPTH {
-                    return None;
-                }
-                let result = slot
-                    .get_or_insert_with(|| {
-                        Rc::new(OriginProgramValue::Static {
-                            node: operation.node,
-                            program_index,
-                        })
+            let result = slot
+                .get_or_insert_with(|| {
+                    Rc::new(OriginProgramValue::Static {
+                        node: operation.node,
+                        program_index,
                     })
-                    .clone();
-                stack.push(Value::Program { result, depth });
-            }
-            OriginAction::Quote {
-                program_operand, ..
-            } => {
-                let (operand, depth) = if program_operand {
-                    let (operand, depth) = program_value(stack.pop()?)?;
-                    (OriginOperand::Program(operand), depth.checked_add(1)?)
-                } else {
-                    let Value::I64(operand) = stack.pop()? else {
-                        return None;
-                    };
-                    (OriginOperand::I64(operand), 1)
+                })
+                .clone();
+            stack.push(Value::Program { result, depth });
+        }
+        OriginAction::Quote {
+            program_operand, ..
+        } => {
+            let (operand, depth) = if program_operand {
+                let (operand, depth) = program_value(stack.pop()?)?;
+                (OriginOperand::Program(operand), depth.checked_add(1)?)
+            } else {
+                let Value::I64(operand) = stack.pop()? else {
+                    return None;
                 };
-                if depth > MAX_ORIGIN_DEPTH {
-                    return None;
-                }
-                stack.push(Value::Program {
-                    result: Rc::new(OriginProgramValue::Quote {
-                        node: operation.node,
-                        table_entry: operation.table_entry,
-                        operand,
-                    }),
-                    depth,
-                });
+                (OriginOperand::I64(operand), 1)
+            };
+            if depth > MAX_ORIGIN_DEPTH {
+                return None;
             }
-            OriginAction::Compose => {
-                let (right, rdepth) = program_value(stack.pop()?)?;
-                let (left, ldepth) = program_value(stack.pop()?)?;
-                let depth = ldepth.max(rdepth).checked_add(1)?;
-                if depth > MAX_ORIGIN_DEPTH {
-                    return None;
-                }
-                stack.push(Value::Program {
-                    result: Rc::new(OriginProgramValue::Compose {
-                        node: operation.node,
-                        table_entry: operation.table_entry,
-                        left,
-                        right,
-                    }),
-                    depth,
-                });
+            stack.push(Value::Program {
+                result: Rc::new(OriginProgramValue::Quote {
+                    node: operation.node,
+                    table_entry: operation.table_entry,
+                    operand,
+                }),
+                depth,
+            });
+        }
+        OriginAction::Compose => {
+            let (right, rdepth) = program_value(stack.pop()?)?;
+            let (left, ldepth) = program_value(stack.pop()?)?;
+            let depth = ldepth.max(rdepth).checked_add(1)?;
+            if depth > MAX_ORIGIN_DEPTH {
+                return None;
             }
-            _ => return None,
+            stack.push(Value::Program {
+                result: Rc::new(OriginProgramValue::Compose {
+                    node: operation.node,
+                    table_entry: operation.table_entry,
+                    left,
+                    right,
+                }),
+                depth,
+            });
         }
-        if stack.len() > MAX_ORIGIN_OPERATIONS {
-            return None;
-        }
+        _ => return None,
+    }
+    if stack.len() > MAX_ORIGIN_OPERATIONS {
+        return None;
     }
     Some(())
 }
 
 #[expect(
     tigerstyle::compound_condition,
-    tigerstyle::unbounded_collection_growth,
-    reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; growth is bounded by the checked input or admission limits that drive the loop."
+    reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
 )]
 fn returned_outputs(
     selected: &CheckedSelectedTarget<'_>,
@@ -428,17 +589,44 @@ fn returned_outputs(
     let outputs = &selected.body().interface.stack_out;
     if inputs.len() > MAX_ORIGIN_OPERATIONS
         || outputs.len() > MAX_ORIGIN_OPERATIONS
-        || inputs.iter().any(|ty| *ty != Ty::I64)
+        || crate::scan::find_first(inputs, |ty| *ty != Ty::I64).is_some()
         || !selected.body().interface.effects.is_empty()
     {
         return None;
     }
+    replay_outputs(inputs, outputs, plan, programs, named_index)
+}
+
+/// Replay the named program over symbolic I64 inputs and classify its outputs.
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-wasm-maintainers; growth is bounded by the checked input or admission limits that drive the loop."
+)]
+fn replay_outputs(
+    inputs: &[Ty],
+    outputs: &[Ty],
+    plan: &Layout,
+    programs: &[OriginProgram],
+    named_index: usize,
+) -> Option<Vec<OriginOutput>> {
     let named = programs.get(named_index)?;
     let mut stack = Vec::with_capacity(inputs.len().saturating_add(named.operations.len()));
-    for position in 0..inputs.len() {
-        stack.push(Value::I64(OriginI64::RootInput(
-            u32::try_from(position).ok()?,
-        )));
+    let mut position = 0usize;
+    let mut is_refused = false;
+    while position < inputs.len() {
+        match u32::try_from(position) {
+            Ok(input) => {
+                stack.push(Value::I64(OriginI64::RootInput(input)));
+                position += 1;
+            }
+            Err(_) => {
+                is_refused = true;
+                break;
+            }
+        }
+    }
+    if is_refused {
+        return None;
     }
     let mut steps = 0;
     let mut static_programs: [Option<Rc<OriginProgramValue>>; MAX_ORIGIN_PROGRAMS] =
@@ -458,21 +646,26 @@ fn returned_outputs(
         return None;
     }
     let mut result = Vec::new();
-    for (stack_position, (ty, value)) in outputs.iter().zip(stack).enumerate() {
-        if matches!(ty, Ty::Program(..)) {
-            let (result_value, _) = program_value(value)?;
-            if matches!(result_value.as_ref(), OriginProgramValue::Static { .. }) {
-                // An installed static Program already has its own pinned
-                // source/index owner; it is not a constructed returned target.
-                return None;
+    let mut stack_position = 0usize;
+    while stack_position < outputs.len() {
+        match returned_output(
+            &outputs[stack_position],
+            &stack[stack_position],
+            stack_position,
+        ) {
+            Some(Some(output)) => {
+                result.push(output);
+                stack_position += 1;
             }
-            result.push(OriginOutput {
-                stack_position,
-                result: result_value,
-            });
-        } else if *ty != Ty::I64 || !matches!(value, Value::I64(_)) {
-            return None;
+            Some(None) => stack_position += 1,
+            None => {
+                is_refused = true;
+                break;
+            }
         }
+    }
+    if is_refused {
+        return None;
     }
     // Cross-output aliasing requires a single graph receipt spanning multiple
     // independently saved owners. Do not claim identity for that profile.
@@ -480,6 +673,28 @@ fn returned_outputs(
         return None;
     }
     Some(result)
+}
+
+/// One returned stack entry: a constructed Program output, an I64, or a refusal.
+fn returned_output(ty: &Ty, value: &Value, stack_position: usize) -> Option<Option<OriginOutput>> {
+    if matches!(ty, Ty::Program(..)) {
+        let Value::Program { result, .. } = value else {
+            return None;
+        };
+        if matches!(result.as_ref(), OriginProgramValue::Static { .. }) {
+            // An installed static Program already has its own pinned
+            // source/index owner; it is not a constructed returned target.
+            return None;
+        }
+        return Some(Some(OriginOutput {
+            stack_position,
+            result: Rc::clone(result),
+        }));
+    }
+    if *ty != Ty::I64 || !matches!(value, Value::I64(_)) {
+        return None;
+    }
+    Some(None)
 }
 
 #[expect(
@@ -492,7 +707,7 @@ fn returned_outputs(
 fn bounded_graph_cells(
     value: &Rc<OriginProgramValue>,
     programs: &[OriginProgram],
-    constructed: &mut [usize; MAX_ORIGIN_PROGRAMS],
+    constructed: &mut [Option<Rc<OriginProgramValue>>; MAX_ORIGIN_PROGRAMS],
     constructed_count: &mut usize,
     static_programs: &mut [bool],
     total: &mut usize,
@@ -505,6 +720,31 @@ fn bounded_graph_cells(
     fn charge(total: &mut usize, cells: usize) -> Option<()> {
         *total = total.checked_add(cells)?;
         (*total <= MAX_ORIGIN_PROGRAMS).then_some(())
+    }
+    /// Record a constructed cell's allocation; `true` if it was already counted.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    fn counted_before(
+        value: &Rc<OriginProgramValue>,
+        constructed: &mut [Option<Rc<OriginProgramValue>>; MAX_ORIGIN_PROGRAMS],
+        constructed_count: &mut usize,
+    ) -> Option<bool> {
+        let mut index = 0usize;
+        let mut is_counted = false;
+        while !is_counted && index < *constructed_count {
+            if let Some(prior) = &constructed[index] {
+                is_counted = Rc::ptr_eq(prior, value);
+            }
+            index += 1;
+        }
+        if is_counted {
+            return Some(true);
+        }
+        *constructed.get_mut(*constructed_count)? = Some(Rc::clone(value));
+        *constructed_count += 1;
+        Some(false)
     }
     #[expect(
         tigerstyle::mutating_input_in_pure,
@@ -524,12 +764,15 @@ fn bounded_graph_cells(
         charge(total, 1)?;
         let operations = &programs.get(index)?.operations;
         charge(total, operations.len().checked_mul(2)?.checked_sub(1)?)?;
-        for operation in operations {
-            if let OriginAction::StaticProgram(child) = operation.action {
-                static_body(child, programs, seen, total)?;
+        let mut at = 0usize;
+        let mut outcome = Some(());
+        while outcome.is_some() && at < operations.len() {
+            if let OriginAction::StaticProgram(child) = operations[at].action {
+                outcome = static_body(child, programs, seen, total);
             }
+            at += 1;
         }
-        Some(())
+        outcome
     }
     #[expect(
         tigerstyle::mutating_input_in_pure,
@@ -556,12 +799,9 @@ fn bounded_graph_cells(
             static_body(*program_index, programs, static_programs, total)
         }
         OriginProgramValue::Quote { operand, .. } => {
-            let pointer = Rc::as_ptr(value) as usize;
-            if constructed[..*constructed_count].contains(&pointer) {
+            if counted_before(value, constructed, constructed_count)? {
                 return Some(());
             }
-            *constructed.get_mut(*constructed_count)? = pointer;
-            *constructed_count += 1;
             match operand {
                 OriginOperand::I64(scalar) => {
                     if let OriginI64::Fixed { recipe, .. } = scalar {
@@ -584,12 +824,9 @@ fn bounded_graph_cells(
             }
         }
         OriginProgramValue::Compose { left, right, .. } => {
-            let pointer = Rc::as_ptr(value) as usize;
-            if constructed[..*constructed_count].contains(&pointer) {
+            if counted_before(value, constructed, constructed_count)? {
                 return Some(());
             }
-            *constructed.get_mut(*constructed_count)? = pointer;
-            *constructed_count += 1;
             charge(total, 2)?;
             bounded_graph_cells(
                 left,
@@ -621,9 +858,11 @@ pub(super) fn build(
     selected: &CheckedSelectedTarget<'_>,
     plan: &Layout,
 ) -> Option<SelectedOriginMetadata> {
-    let [definition] = selected.submission().definitions.as_slice() else {
+    let definitions = selected.submission().definitions.as_slice();
+    if definitions.len() != 1 {
         return None;
-    };
+    }
+    let definition = &definitions[0];
     if definition.identity != selected.definition_id().identity()
         || selected.lexical_nodes_len() > 512
         || selected.source().len() > 131_072
@@ -645,7 +884,8 @@ pub(super) fn build(
     // static Program plus its complete recipe atom/concat DAG once.
     let mut cells = 0;
     let mut fixed_nodes = 0;
-    let mut constructed = [0; MAX_ORIGIN_PROGRAMS];
+    let mut constructed: [Option<Rc<OriginProgramValue>>; MAX_ORIGIN_PROGRAMS] =
+        core::array::from_fn(|_| None);
     let mut constructed_count = 0;
     let mut static_programs = [false; MAX_ORIGIN_PROGRAMS];
     bounded_graph_cells(

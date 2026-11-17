@@ -138,8 +138,7 @@ impl Base {
             return false;
         }
         index = 0;
-        while index < self.descriptor_base && current.descriptors[index] == next.descriptors[index]
-        {
+        while index < self.descriptor_base && same_descriptor(current, next, index) {
             index += 1;
         }
         if index != self.descriptor_base {
@@ -148,15 +147,23 @@ impl Base {
         index = 0;
         while index < self.identity_base {
             // Every recipe came from the bounded private output buffer.
-            let before = &current.identities[index];
-            let prepared = &next.identities[index];
-            if before.id != prepared.id || before.recipe != prepared.recipe {
+            if identity_differs(&current.identities[index], &next.identities[index]) {
                 break;
             }
             index += 1;
         }
         index == self.identity_base
     }
+}
+
+/// Whether both compilers publish the same descriptor at `index`.
+fn same_descriptor(current: &super::Compiler, next: &super::Compiler, index: usize) -> bool {
+    current.descriptors[index] == next.descriptors[index]
+}
+
+/// Whether a retained identity record differs from the committed one.
+fn identity_differs(before: &super::Identity, prepared: &super::Identity) -> bool {
+    before.id != prepared.id || before.recipe != prepared.recipe
 }
 
 #[cfg(test)]

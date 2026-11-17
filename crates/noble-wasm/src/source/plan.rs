@@ -385,7 +385,11 @@ fn start(
         work
     )));
     let definition_roots = if submission.environment.live_slots || compiler.worker_inputs {
-        arenas[..index].iter().map(|arena| arena.root).collect()
+        let mut roots = alloc::vec::Vec::with_capacity(index);
+        for arena in &arenas[..index] {
+            roots.push(arena.root);
+        }
+        roots
     } else {
         alloc::vec::Vec::new()
     };
@@ -441,43 +445,62 @@ fn start(
 // Every lowered program is emitted, including named definitions and quotation
 // bodies that the root does not invoke yet. Only executable operations grant
 // host imports; an interface's effect set or an unused binding does not.
+fn host_footprint(layout: &mut Layout) -> Result<(), crate::Diagnostic> {
+    let mut program = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && program < layout.programs.len() {
+        outcome = program_footprint(layout, program);
+        program += 1;
+    }
+    outcome
+}
+
+/// Record the host imports of one program's operations in source order.
+fn program_footprint(layout: &mut Layout, program: usize) -> Result<(), crate::Diagnostic> {
+    let mut at = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && at < layout.programs[program].operations.len() {
+        let action = layout.programs[program].operations[at].action;
+        outcome = operation_footprint(layout, action);
+        at += 1;
+    }
+    outcome
+}
+
+/// Record one executable operation's host import or refuse a forbidden one.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; the complete private program table is traversed after checked lowering, and forbidden ambient operations reject before any module is emitted."
 )]
-fn host_footprint(layout: &mut Layout) -> Result<(), crate::Diagnostic> {
-    for program in &layout.programs {
-        for operation in &program.operations {
-            match operation.action {
-                Action::Word(22)
-                    if layout.live
-                        || layout.text_cursor
-                        || layout.calculator
-                        || (layout.declared_modules && !layout.live_test_hosts) =>
-                {
-                    return Err(crate::Diagnostic::Invalid);
-                }
-                Action::Word(23)
-                    if layout.declared_modules
-                        || layout.live
-                        || layout.text_cursor
-                        || layout.calculator =>
-                {
-                    return Err(crate::Diagnostic::Invalid);
-                }
-                Action::Word(22) => layout.has_core_emit = true,
-                Action::Word(23) => layout.has_core_abort = true,
-                Action::TextByte => layout.has_text_byte = true,
-                Action::I64Less => layout.has_i64_less = true,
-                Action::EmitBound(_) => layout.has_bound_emit = true,
-                Action::ClockBound(_) => layout.has_bound_clock = true,
-                Action::CodeExportBound(_) => layout.has_bound_code_export = true,
-                Action::SendBound(_) => layout.has_bound_send = true,
-                Action::LivePropose(_) => layout.has_live_propose = true,
-                Action::LiveGeneration => layout.has_live_generation = true,
-                _ => {}
-            }
+fn operation_footprint(layout: &mut Layout, action: Action) -> Result<(), crate::Diagnostic> {
+    match action {
+        Action::Word(22)
+            if layout.live
+                || layout.text_cursor
+                || layout.calculator
+                || (layout.declared_modules && !layout.live_test_hosts) =>
+        {
+            return Err(crate::Diagnostic::Invalid);
         }
+        Action::Word(23)
+            if layout.declared_modules
+                || layout.live
+                || layout.text_cursor
+                || layout.calculator =>
+        {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        Action::Word(22) => layout.has_core_emit = true,
+        Action::Word(23) => layout.has_core_abort = true,
+        Action::TextByte => layout.has_text_byte = true,
+        Action::I64Less => layout.has_i64_less = true,
+        Action::EmitBound(_) => layout.has_bound_emit = true,
+        Action::ClockBound(_) => layout.has_bound_clock = true,
+        Action::CodeExportBound(_) => layout.has_bound_code_export = true,
+        Action::SendBound(_) => layout.has_bound_send = true,
+        Action::LivePropose(_) => layout.has_live_propose = true,
+        Action::LiveGeneration => layout.has_live_generation = true,
+        _ => {}
     }
     Ok(())
 }
@@ -547,58 +570,97 @@ pub(super) fn lower(
 /// quotations, and the matching checked `case`. The kernel checker has
 /// already established every complete stack/type interface. Other shapes
 /// retain the baseline operations unchanged.
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; this pass rewrites only the exact five-operation source pattern after independent checking; unmatched shapes remain baseline operations."
-)]
 fn specialize_known_sum_cases(
     programs: &mut [Program],
     work: &mut super::Work,
 ) -> Result<(u64, u64), crate::Diagnostic> {
     let mut specializations = 0u64;
     let mut fallback_operations = 0u64;
-    for program in programs {
-        let mut index = 0usize;
-        while index < program.operations.len() {
-            attempt!(work.charge(1));
-            if index.saturating_add(4) < program.operations.len() {
-                let is_scalar_literal = matches!(
-                    program.operations[index].action,
-                    Action::I64(_) | Action::Bool(_) | Action::Unit
-                );
-                let variant_definition = if let Action::Word(definition @ (15 | 16)) =
-                    program.operations[index + 1].action
-                {
-                    Some(definition)
-                } else {
-                    None
-                };
-                let has_static_quotations =
-                    matches!(program.operations[index + 2].action, Action::Program(_))
-                        && matches!(program.operations[index + 3].action, Action::Program(_));
-                if is_scalar_literal
-                    && has_static_quotations
-                    && matches!(program.operations[index + 4].action, Action::Word(17))
-                {
-                    if let Some(definition) = variant_definition {
-                        program.operations[index + 1].action = Action::KnownVariant(definition);
-                        program.operations[index + 4].action =
-                            Action::KnownCase(u32::from(definition == 16));
-                        specializations = specializations
-                            .checked_add(1)
-                            .ok_or(crate::Diagnostic::Exhausted)?;
-                        index += 5;
-                        continue;
-                    }
-                }
+    let mut program = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && program < programs.len() {
+        outcome = specialize_program(
+            &mut programs[program],
+            work,
+            &mut specializations,
+            &mut fallback_operations,
+        );
+        program += 1;
+    }
+    attempt!(outcome);
+    Ok((specializations, fallback_operations))
+}
+
+/// Visit one program's operations in order, fusing each matching pattern.
+fn specialize_program(
+    program: &mut Program,
+    work: &mut super::Work,
+    specializations: &mut u64,
+    fallback_operations: &mut u64,
+) -> Result<(), crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < program.operations.len() {
+        match specialize_at(program, index, work, specializations, fallback_operations) {
+            Ok(next) => index = next,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
             }
-            fallback_operations = fallback_operations
-                .checked_add(1)
-                .ok_or(crate::Diagnostic::Exhausted)?;
-            index += 1;
         }
     }
-    Ok((specializations, fallback_operations))
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+/// Charge the visit at `index`, fuse a pattern starting there, and return the next index.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; this pass rewrites only the exact five-operation source pattern after independent checking; unmatched shapes remain baseline operations."
+)]
+fn specialize_at(
+    program: &mut Program,
+    index: usize,
+    work: &mut super::Work,
+    specializations: &mut u64,
+    fallback_operations: &mut u64,
+) -> Result<usize, crate::Diagnostic> {
+    attempt!(work.charge(1));
+    if index.saturating_add(4) < program.operations.len() {
+        let is_scalar_literal = matches!(
+            program.operations[index].action,
+            Action::I64(_) | Action::Bool(_) | Action::Unit
+        );
+        let variant_definition =
+            if let Action::Word(definition @ (15 | 16)) = program.operations[index + 1].action {
+                Some(definition)
+            } else {
+                None
+            };
+        let has_static_quotations =
+            matches!(program.operations[index + 2].action, Action::Program(_))
+                && matches!(program.operations[index + 3].action, Action::Program(_));
+        if is_scalar_literal
+            && has_static_quotations
+            && matches!(program.operations[index + 4].action, Action::Word(17))
+        {
+            if let Some(definition) = variant_definition {
+                program.operations[index + 1].action = Action::KnownVariant(definition);
+                program.operations[index + 4].action =
+                    Action::KnownCase(u32::from(definition == 16));
+                *specializations = specializations
+                    .checked_add(1)
+                    .ok_or(crate::Diagnostic::Exhausted)?;
+                return Ok(index + 5);
+            }
+        }
+    }
+    *fallback_operations = fallback_operations
+        .checked_add(1)
+        .ok_or(crate::Diagnostic::Exhausted)?;
+    Ok(index + 1)
 }
 
 pub(super) fn number(value: usize) -> Result<u32, crate::Diagnostic> {

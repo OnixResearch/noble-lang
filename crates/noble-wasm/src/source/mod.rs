@@ -480,6 +480,10 @@ pub enum OriginOperand {
 }
 
 impl core::fmt::Debug for OriginOperand {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; Debug formatting writes only to the caller's Formatter, which is the operation"
+    )]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         debug_origin_operand(self, f)
     }
@@ -494,6 +498,10 @@ impl core::fmt::Debug for OriginOperand {
 /// cycle the pinned Aeneas refuses. Formatting layout is already an abstracted
 /// trust boundary.
 #[charon::opaque]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-wasm-maintainers; Debug formatting writes only to the caller's Formatter, which is the operation"
+)]
 fn debug_origin_operand(
     operand: &OriginOperand,
     f: &mut core::fmt::Formatter<'_>,
@@ -616,22 +624,24 @@ impl Prepared {
         let count =
             u32::try_from(self.next.descriptors.len()).map_err(|_| crate::Diagnostic::Exhausted)?;
         bytes.extend_from_slice(&count.to_le_bytes());
-        for ((address, length), signature) in
-            self.next.descriptors.iter().zip(&self.next.signatures.keys)
-        {
-            if usize::try_from(*length).ok() != Some(signature.len())
-                || *address < TEXT_START
-                || address
-                    .checked_add(*length)
-                    .is_none_or(|end| end > MEMORY_BYTES)
-            {
-                return Err(crate::Diagnostic::Defective);
+        let mut index = 0usize;
+        let mut failure = None;
+        while index < self.next.descriptors.len() {
+            let (address, length) = self.next.descriptors[index];
+            let signature = &self.next.signatures.keys[index];
+            if is_defective_descriptor(address, length, signature) {
+                failure = Some(crate::Diagnostic::Defective);
+                break;
             }
             bytes.extend_from_slice(&address.to_le_bytes());
             bytes.extend_from_slice(&length.to_le_bytes());
             bytes.extend_from_slice(signature);
+            index += 1;
         }
-        Ok(bytes)
+        match failure {
+            Some(problem) => Err(problem),
+            None => Ok(bytes),
+        }
     }
 
     /// The exact table span installed by this module's successful submission.
@@ -712,7 +722,7 @@ impl Compiler {
         }
         let mut start = self.functions;
         if self.live_slots {
-            if let Some(index) = self.free_code.iter().position(|free| free.slots >= slots) {
+            if let Some(index) = position_of(&self.free_code, |free| free.slots >= slots) {
                 let free = &mut self.free_code[index];
                 start = free.start;
                 free.start += slots;
@@ -1015,14 +1025,13 @@ impl Compiler {
         if !submission.environment.declared_modules || !submission.environment.text_cursor {
             return Err(crate::Diagnostic::Unsupported);
         }
-        let is_signed = submission.definitions.iter().any(|definition| {
-            definition
-                .body
-                .candidate
-                .nodes
-                .iter()
-                .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. }))
-        });
+        let is_signed = crate::scan::find_first(&submission.definitions, |definition| {
+            crate::scan::find_first(&definition.body.candidate.nodes, |node| {
+                matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })
+            })
+            .is_some()
+        })
+        .is_some();
         self.prepare_from(&submission, None, self.functions, false, false, is_signed)
     }
 
@@ -1075,10 +1084,11 @@ impl Compiler {
         )
     }
 
+    // A selected target holds borrowed source state, so every loop of this
+    // preparation runs in a helper that never receives it.
     #[expect(
-        tigerstyle::allocation_in_loop,
         tigerstyle::too_many_parameters,
-        reason = "Owner: noble-wasm-maintainers; each iteration's buffer is bounded by the checked input that drives the loop; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+        reason = "Owner: noble-wasm-maintainers; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
     )]
     fn prepare_from(
         &self,
@@ -1153,31 +1163,9 @@ impl Compiler {
         // A quiescent epoch starts with an empty identity ledger: nothing of
         // the committed ledger is retained, so none of it is copied or charged.
         let retained = if quiescent { 0 } else { self.identities.len() };
-        let mut identity = 0usize;
-        let mut identity_charge = 0u64;
-        let mut failure = None;
-        while identity < retained {
-            let entries = self.identities[identity].recipe.len();
-            match work.entries(entries) {
-                Ok(()) => {
-                    identity_charge = identity_charge.saturating_add(entries as u64);
-                    identity += 1;
-                }
-                Err(problem) => {
-                    failure = Some(problem);
-                    break;
-                }
-            }
-        }
-        if let Some(problem) = failure {
-            return Err(problem);
-        }
+        let identity_charge = attempt!(identity_copy_charge(&self.identities, retained, &mut work));
         // The literal table is copied into the prospective compiler.
-        attempt!(work.entries(
-            self.static_literals
-                .keys()
-                .fold(0usize, |total, key| total.saturating_add(key.len() + 1))
-        ));
+        attempt!(work.entries(literal_copy_entries(&self.static_literals)));
         let mut next = Self {
             live: self.live,
             declared_live: self.declared_live,
@@ -1273,94 +1261,30 @@ impl Compiler {
         } else {
             None
         };
-        let mut named_targets = alloc::vec::Vec::new();
-        if self.live_slots || self.worker_inputs {
-            for (index, definition) in submission.definitions.iter().enumerate() {
-                let checked_body = attempt!(checked
-                    .definitions
-                    .get(index)
-                    .ok_or(crate::Diagnostic::Invalid));
-                let program_index = attempt!(plan
-                    .definition_roots
-                    .get(index)
-                    .copied()
-                    .ok_or(crate::Diagnostic::Invalid));
-                let program = attempt!(plan
-                    .programs
-                    .get(program_index)
-                    .ok_or(crate::Diagnostic::Invalid));
-                let recipe = attempt!(next
-                    .identities
-                    .iter()
-                    .find(|identity| identity.id == definition.identity)
-                    .ok_or(crate::Diagnostic::Invalid));
-                named_targets.push(NamedTargetMetadata {
-                    definition: definition.definition,
-                    definition_identity: definition.identity,
-                    program_index,
-                    entry: program.entry,
-                    input_signature: program.input,
-                    output_signature: program.output,
-                    effect_mask: program.effects,
-                    stack_in: checked_body.interface.stack_in.clone(),
-                    stack_out: checked_body.interface.stack_out.clone(),
-                    effects: checked_body.interface.effects.clone(),
-                    checked_recipe: recipe.recipe.clone(),
-                });
-            }
-        }
-        let selected_origin = selected.and_then(|selected| origin::build(selected, &plan));
-        let mut program_metadata = alloc::vec::Vec::new();
-        if self.live_slots || self.worker_inputs {
-            program_metadata.reserve(plan.programs.len());
-            let text_witness = plan.text_witness;
-            for (program_index, program) in plan.programs.iter_mut().enumerate() {
-                let logical = attempt!(program.logical.take().ok_or(crate::Diagnostic::Defective));
-                let runtime_atoms = if self.worker_inputs {
-                    program
-                        .operations
-                        .iter()
-                        .map(|operation| plan::atom_metadata(operation, text_witness))
-                        .collect()
-                } else {
-                    alloc::vec::Vec::new()
-                };
-                program_metadata.push(ProgramMetadata {
-                    program_index,
-                    entry: program.entry,
-                    input_signature: program.input,
-                    output_signature: program.output,
-                    effect_mask: program.effects,
-                    stack_in: logical.stack_in,
-                    stack_out: logical.stack_out,
-                    effects: logical.effects,
-                    capture_left: 0,
-                    capture_right: 0,
-                    recipe_depth: program.depth,
-                    recipe_leaves: program.leaves,
-                    runtime_atoms,
-                });
-            }
-        }
-        let mut resource_catalog = alloc::vec::Vec::new();
-        if self.live_slots {
-            for id in &submission.environment.live_resource_nominals {
-                let declaration = attempt!(submission
-                    .environment
-                    .nominal(*id)
-                    .ok_or(crate::Diagnostic::Invalid));
-                let noble_kernel::types::NominalShape::Opaque(value) = &declaration.shape else {
-                    return Err(crate::Diagnostic::Invalid);
-                };
-                let noble_kernel::types::Ty::Resource(kind) = value.as_ref() else {
-                    return Err(crate::Diagnostic::Invalid);
-                };
-                resource_catalog.push(ResourceCatalogEntry {
-                    declaration: declaration.clone(),
-                    kind: *kind,
-                });
-            }
-        }
+        let named_targets = if self.live_slots || self.worker_inputs {
+            attempt!(checked_named_targets(
+                submission,
+                &checked,
+                &plan,
+                &next.identities
+            ))
+        } else {
+            alloc::vec::Vec::new()
+        };
+        let selected_origin = match selected {
+            Some(selected) => origin::build(selected, &plan),
+            None => None,
+        };
+        let program_metadata = if self.live_slots || self.worker_inputs {
+            attempt!(checked_program_metadata(&mut plan, self.worker_inputs))
+        } else {
+            alloc::vec::Vec::new()
+        };
+        let resource_catalog = if self.live_slots {
+            attempt!(admitted_resource_catalog(&submission.environment))
+        } else {
+            alloc::vec::Vec::new()
+        };
         let named_bodies = submission.definitions.len() as u64;
         let work_environment_grant = admission_issued - preflight_issued;
         let metrics = CompileMetrics {
@@ -1443,14 +1367,16 @@ impl Compiler {
             false,
         ));
         let id = selected.definition_id();
-        let mut matches = prepared.named_targets.iter().filter(|named| {
-            named.definition == selected.definition().definition
-                && named.definition_identity == id.identity()
-        });
-        let Some(named) = matches.next() else {
+        let (first, has_duplicate) = selected_named_target(
+            &prepared.named_targets,
+            selected.definition().definition,
+            id.identity(),
+        );
+        let Some(index) = first else {
             return Err(crate::Diagnostic::Invalid);
         };
-        let has_interface_mismatch = matches.next().is_some()
+        let named = &prepared.named_targets[index];
+        let has_interface_mismatch = has_duplicate
             || named.stack_in != selected.body().interface.stack_in
             || named.stack_out != selected.body().interface.stack_out
             || named.effects != selected.body().interface.effects
@@ -1570,7 +1496,7 @@ impl Compiler {
         {
             return Err(crate::Diagnostic::Invalid);
         }
-        let Some(index) = self.installed_code.iter().position(|owned| *owned == span) else {
+        let Some(index) = position_of(&self.installed_code, |owned| *owned == span) else {
             return Err(crate::Diagnostic::Invalid);
         };
         let Some(end) = span.start.checked_add(span.slots) else {
@@ -1619,6 +1545,305 @@ impl Default for Compiler {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// The index of the first element satisfying `predicate`, as `items.iter().position(..)`.
+fn position_of<T>(items: &[T], mut predicate: impl FnMut(&T) -> bool) -> Option<usize> {
+    let mut index = 0usize;
+    let mut found = None;
+    while found.is_none() && index < items.len() {
+        if predicate(&items[index]) {
+            found = Some(index);
+        }
+        index += 1;
+    }
+    found
+}
+
+/// Whether a published descriptor fails to name exactly its key's bytes in memory.
+fn is_defective_descriptor(address: u32, length_bytes: u32, signature: &[u8]) -> bool {
+    usize::try_from(length_bytes).ok() != Some(signature.len())
+        || address < TEXT_START
+        || address
+            .checked_add(length_bytes)
+            .is_none_or(|end| end > MEMORY_BYTES)
+}
+
+/// Charge copying the first `retained` identity recipes, returning the charged entries.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; the budget belongs to one private preparation and tracks consumed work without modifying the borrowed submission or published compiler."
+)]
+fn identity_copy_charge(
+    identities: &[Identity],
+    retained: usize,
+    work: &mut Work,
+) -> Result<u64, crate::Diagnostic> {
+    let mut identity = 0usize;
+    let mut identity_charge = 0u64;
+    let mut failure = None;
+    while identity < retained {
+        let entries = identities[identity].recipe.len();
+        match work.entries(entries) {
+            Ok(()) => {
+                identity_charge = identity_charge.saturating_add(entries as u64);
+                identity += 1;
+            }
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(identity_charge),
+    }
+}
+
+/// The entries of copying the static literal table: every key plus one.
+fn literal_copy_entries(
+    static_literals: &alloc::collections::BTreeMap<alloc::vec::Vec<u8>, u32>,
+) -> usize {
+    let mut total = 0usize;
+    for key in static_literals.keys() {
+        total = total.saturating_add(key.len() + 1);
+    }
+    total
+}
+
+/// The named target of every accepted definition, in definition order.
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-wasm-maintainers; growth is bounded by the checked input or admission limits that drive the loop."
+)]
+fn checked_named_targets(
+    submission: &noble_kernel::execution::Submission,
+    checked: &admission::Accepted,
+    plan: &plan::Layout,
+    identities: &[Identity],
+) -> Result<alloc::vec::Vec<NamedTargetMetadata>, crate::Diagnostic> {
+    let mut targets = alloc::vec::Vec::new();
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < submission.definitions.len() {
+        match checked_named_target(submission, checked, plan, identities, index) {
+            Ok(target) => {
+                targets.push(target);
+                index += 1;
+            }
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(targets),
+    }
+}
+
+/// The emitted program and checked recipe of accepted definition `index`.
+fn checked_named_target(
+    submission: &noble_kernel::execution::Submission,
+    checked: &admission::Accepted,
+    plan: &plan::Layout,
+    identities: &[Identity],
+    index: usize,
+) -> Result<NamedTargetMetadata, crate::Diagnostic> {
+    let definition = &submission.definitions[index];
+    let checked_body = attempt!(checked
+        .definitions
+        .get(index)
+        .ok_or(crate::Diagnostic::Invalid));
+    let program_index = attempt!(plan
+        .definition_roots
+        .get(index)
+        .copied()
+        .ok_or(crate::Diagnostic::Invalid));
+    let program = attempt!(plan
+        .programs
+        .get(program_index)
+        .ok_or(crate::Diagnostic::Invalid));
+    let identity = definition.identity;
+    let recipe = attempt!(
+        crate::scan::find_first(identities, |row| row.id == identity)
+            .ok_or(crate::Diagnostic::Invalid)
+    );
+    Ok(NamedTargetMetadata {
+        definition: definition.definition,
+        definition_identity: definition.identity,
+        program_index,
+        entry: program.entry,
+        input_signature: program.input,
+        output_signature: program.output,
+        effect_mask: program.effects,
+        stack_in: checked_body.interface.stack_in.clone(),
+        stack_out: checked_body.interface.stack_out.clone(),
+        effects: checked_body.interface.effects.clone(),
+        checked_recipe: recipe.recipe.clone(),
+    })
+}
+
+/// Every emitted program's metadata, moving out each program's logical interface.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; metadata publication moves each logical interface out of the unpublished plan that this preparation owns; the borrowed submission stays immutable."
+)]
+fn checked_program_metadata(
+    plan: &mut plan::Layout,
+    worker_inputs: bool,
+) -> Result<alloc::vec::Vec<ProgramMetadata>, crate::Diagnostic> {
+    let mut metadata = alloc::vec::Vec::with_capacity(plan.programs.len());
+    let text_witness = plan.text_witness;
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < plan.programs.len() {
+        match program_entry(
+            &mut plan.programs[index],
+            index,
+            text_witness,
+            worker_inputs,
+        ) {
+            Ok(entry) => {
+                metadata.push(entry);
+                index += 1;
+            }
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(metadata),
+    }
+}
+
+/// One program's metadata; a worker module also retains its runtime atoms.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; metadata publication moves each logical interface out of the unpublished plan that this preparation owns; the borrowed submission stays immutable."
+)]
+fn program_entry(
+    program: &mut plan::Program,
+    program_index: usize,
+    text_witness: u32,
+    worker_inputs: bool,
+) -> Result<ProgramMetadata, crate::Diagnostic> {
+    let logical = attempt!(program.logical.take().ok_or(crate::Diagnostic::Defective));
+    let runtime_atoms = if worker_inputs {
+        runtime_atoms(&program.operations, text_witness)
+    } else {
+        alloc::vec::Vec::new()
+    };
+    Ok(ProgramMetadata {
+        program_index,
+        entry: program.entry,
+        input_signature: program.input,
+        output_signature: program.output,
+        effect_mask: program.effects,
+        stack_in: logical.stack_in,
+        stack_out: logical.stack_out,
+        effects: logical.effects,
+        capture_left: 0,
+        capture_right: 0,
+        recipe_depth: program.depth,
+        recipe_leaves: program.leaves,
+        runtime_atoms,
+    })
+}
+
+/// The closed runtime atom of every operation, in order.
+fn runtime_atoms(
+    operations: &[plan::Operation],
+    text_witness: u32,
+) -> alloc::vec::Vec<ProgramAtomMetadata> {
+    let mut atoms = alloc::vec::Vec::with_capacity(operations.len());
+    for operation in operations {
+        atoms.push(plan::atom_metadata(operation, text_witness));
+    }
+    atoms
+}
+
+/// Every admitted live resource descriptor, in environment order.
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-wasm-maintainers; growth is bounded by the checked input or admission limits that drive the loop."
+)]
+fn admitted_resource_catalog(
+    environment: &noble_kernel::contracts::Env,
+) -> Result<alloc::vec::Vec<ResourceCatalogEntry>, crate::Diagnostic> {
+    let mut catalog = alloc::vec::Vec::new();
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < environment.live_resource_nominals.len() {
+        match resource_entry(environment, environment.live_resource_nominals[index]) {
+            Ok(entry) => {
+                catalog.push(entry);
+                index += 1;
+            }
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(catalog),
+    }
+}
+
+/// The admitted descriptor of one opaque live resource nominal.
+fn resource_entry(
+    environment: &noble_kernel::contracts::Env,
+    id: noble_kernel::types::NominalTypeId,
+) -> Result<ResourceCatalogEntry, crate::Diagnostic> {
+    let declaration = attempt!(environment.nominal(id).ok_or(crate::Diagnostic::Invalid));
+    let noble_kernel::types::NominalShape::Opaque(value) = &declaration.shape else {
+        return Err(crate::Diagnostic::Invalid);
+    };
+    let noble_kernel::types::Ty::Resource(kind) = value.as_ref() else {
+        return Err(crate::Diagnostic::Invalid);
+    };
+    Ok(ResourceCatalogEntry {
+        declaration: declaration.clone(),
+        kind: *kind,
+    })
+}
+
+/// The first named target compiled for the selection, and whether another follows it.
+fn selected_named_target(
+    named_targets: &[NamedTargetMetadata],
+    definition: noble_kernel::contracts::Definition,
+    identity: u64,
+) -> (Option<usize>, bool) {
+    let mut first = None;
+    let mut has_duplicate = false;
+    let mut index = 0usize;
+    while !has_duplicate && index < named_targets.len() {
+        if is_named_selection(&named_targets[index], definition, identity) {
+            if first.is_none() {
+                first = Some(index);
+            } else {
+                has_duplicate = true;
+            }
+        }
+        index += 1;
+    }
+    (first, has_duplicate)
+}
+
+/// Whether a named target was compiled for `definition` with `identity`.
+fn is_named_selection(
+    named: &NamedTargetMetadata,
+    definition: noble_kernel::contracts::Definition,
+    identity: u64,
+) -> bool {
+    named.definition == definition && named.definition_identity == identity
 }
 
 #[cfg(test)]
@@ -2107,6 +2332,288 @@ mod tests {
             retained_steady.len()
         );
     }
+
+    /// FNV-1a of an emitted module, enough to pin its exact bytes in a fixture.
+    fn wat_digest(wat: &[u8]) -> u64 {
+        let mut hash = 0xcbf2_9ce4_8422_2325u64;
+        for byte in wat {
+            hash ^= u64::from(*byte);
+            hash = hash.wrapping_mul(0x0100_0000_01b3);
+        }
+        hash
+    }
+
+    fn fixture_limits() -> noble_contracts::Limits {
+        noble_contracts::Limits {
+            bytes: 262_144,
+            nodes: 524_288,
+            depth: 64,
+            work: 512_000_000,
+        }
+    }
+
+    // Recorded from the lowering before its loops were restructured for the
+    // pinned Aeneas extraction (issue #97): every charge, grant, allocation and
+    // emitted byte of these ordinary, experimental, calculator and nominal
+    // fixtures must stay identical.
+    #[test]
+    fn restructured_lowering_keeps_its_recorded_accounting_and_bytes() {
+        let ordinary_session = noble_contracts::source::Session::new();
+        let known_sum = ordinary_session
+            .prepare(b"10 inl [ 1 + ] [ 2 + ] case", &[], fixture_limits())
+            .unwrap_or_else(|_| panic!("known-sum source refused"));
+        let submission = known_sum
+            .submission()
+            .unwrap_or_else(|| panic!("missing known-sum submission"));
+        let ordinary = Compiler::new()
+            .prepare(submission)
+            .unwrap_or_else(|_| panic!("ordinary compile refused"));
+        let ordinary_metrics = super::CompileMetrics {
+            work_initial: 512_000_000,
+            work_preflight_grant: 0,
+            work_environment_grant: 0,
+            work_plan_grant: 0,
+            work_issued: 512_000_000,
+            work_spent: 256_109_871,
+            environment_rows: 24,
+            environment_work: 0,
+            named_bodies: 0,
+            max_type_nodes: 3,
+            type_nodes_cap: 256,
+            signature_keys: 7,
+            signature_key_charge: 0,
+            identity_charge: 0,
+            table_end: 13,
+            text_end: 262_274,
+            wat_bytes: 62_439,
+            type_directed_specializations: 0,
+            type_directed_fallback_operations: 0,
+        };
+        assert_eq!(ordinary.metrics(), ordinary_metrics);
+        assert_eq!(wat_digest(ordinary.wat()), 0x4db9_0ea5_8a6a_6d3d);
+        let experimental = Compiler::new_type_directed_experimental()
+            .prepare(submission)
+            .unwrap_or_else(|_| panic!("experimental compile refused"));
+        assert_eq!(
+            experimental.metrics(),
+            super::CompileMetrics {
+                work_spent: 256_109_876,
+                wat_bytes: 63_045,
+                type_directed_specializations: 1,
+                type_directed_fallback_operations: 4,
+                ..ordinary_metrics
+            }
+        );
+        assert_eq!(wat_digest(experimental.wat()), 0x01dc_dfc9_8cfc_9c28);
+
+        let mut calculator = noble_contracts::source::Session::new_calculator();
+        let defined = calculator
+            .prepare(b"def identity_epoch_word [ 1 drop ]", &[], fixture_limits())
+            .unwrap_or_else(|_| panic!("calculator definition refused"));
+        calculator
+            .commit(defined)
+            .unwrap_or_else(|_| panic!("calculator definition commit refused"));
+        let call = calculator
+            .prepare(b"identity_epoch_word", &[], fixture_limits())
+            .unwrap_or_else(|_| panic!("calculator call refused"));
+        let submission = call
+            .submission()
+            .unwrap_or_else(|| panic!("missing calculator submission"));
+        let calculator_metrics = super::CompileMetrics {
+            work_initial: 512_000_000,
+            work_preflight_grant: 37_325,
+            work_environment_grant: 1_790_468,
+            work_plan_grant: 0,
+            work_issued: 513_827_793,
+            work_spent: 257_604_957,
+            environment_rows: 33,
+            environment_work: 447_617,
+            named_bodies: 1,
+            max_type_nodes: 1,
+            type_nodes_cap: 256,
+            signature_keys: 3,
+            signature_key_charge: 0,
+            identity_charge: 0,
+            table_end: 7,
+            text_end: 524_288,
+            wat_bytes: 80_934,
+            type_directed_specializations: 0,
+            type_directed_fallback_operations: 0,
+        };
+        for prepared in [
+            Compiler::new_calculator().prepare(submission),
+            Compiler::new_calculator().prepare_quiescent(submission),
+            Compiler::new_calculator().prepare_program_free(submission),
+        ] {
+            let prepared = prepared.unwrap_or_else(|_| panic!("calculator compile refused"));
+            assert_eq!(prepared.metrics(), calculator_metrics);
+            assert_eq!(wat_digest(prepared.wat()), 0x0e66_33b3_71d5_56e0);
+        }
+
+        let module = b"module capsule@1 [
+            opaque Secret Pair<I64,I64> private
+            export Secret
+            signature make forall<S:stack> [ S -- S Secret ! pure ]
+            export make
+            def make [ 7 11 pair Secret.new ]
+            signature sum forall<S:stack> [ S Secret -- S I64 ! pure ]
+            export sum
+            def sum [ Secret.into unpair + ]
+        ]";
+        let session = noble_contracts::source::ModuleSession::new_calculator()
+            .unwrap_or_else(|_| panic!("calculator module session refused"));
+        let pending = session
+            .prepare(module, &[], fixture_limits())
+            .unwrap_or_else(|_| panic!("nominal module refused"));
+        let (session, installed) = session.commit(pending);
+        installed.unwrap_or_else(|_| panic!("nominal module not installed"));
+        let make = session
+            .prepare(b"capsule@1.make", &[], fixture_limits())
+            .unwrap_or_else(|_| panic!("nominal creator refused"));
+        let carrier = make.output().to_vec();
+        let mut compiler = Compiler::new_calculator();
+        let created = compiler
+            .prepare(
+                make.submission()
+                    .unwrap_or_else(|| panic!("missing creator submission")),
+            )
+            .unwrap_or_else(|_| panic!("nominal creator compile refused"));
+        let make_metrics = super::CompileMetrics {
+            work_preflight_grant: 70_444,
+            work_environment_grant: 1_825_284,
+            work_issued: 513_895_728,
+            work_spent: 257_677_711,
+            environment_rows: 35,
+            environment_work: 456_321,
+            max_type_nodes: 4,
+            signature_keys: 5,
+            wat_bytes: 89_382,
+            ..calculator_metrics
+        };
+        assert_eq!(created.metrics(), make_metrics);
+        assert_eq!(wat_digest(created.wat()), 0xb780_9508_aaf8_180b);
+        compiler
+            .commit(created)
+            .unwrap_or_else(|_| panic!("nominal creator commit refused"));
+        let (session, committed) = session.commit(make);
+        committed.unwrap_or_else(|_| panic!("nominal creator not committed"));
+        let sum = session
+            .prepare(b"capsule@1.sum", &carrier, fixture_limits())
+            .unwrap_or_else(|_| panic!("nominal consumer refused"));
+        let consumed = compiler
+            .prepare(
+                sum.submission()
+                    .unwrap_or_else(|| panic!("missing consumer submission")),
+            )
+            .unwrap_or_else(|_| panic!("nominal consumer compile refused"));
+        assert_eq!(
+            consumed.metrics(),
+            super::CompileMetrics {
+                work_preflight_grant: 75_416,
+                work_environment_grant: 1_827_332,
+                work_issued: 513_902_748,
+                work_spent: 257_687_918,
+                environment_work: 456_833,
+                signature_keys: 6,
+                signature_key_charge: 36,
+                identity_charge: 38,
+                table_end: 9,
+                wat_bytes: 87_789,
+                ..make_metrics
+            }
+        );
+        assert_eq!(wat_digest(consumed.wat()), 0x4220_b858_9924_b696);
+    }
+
+    #[test]
+    fn runtime_signature_catalog_lists_descriptors_until_the_first_defective_one() {
+        let session = noble_contracts::source::Session::new();
+        let known_sum = session
+            .prepare(b"10 inl [ 1 + ] [ 2 + ] case", &[], fixture_limits())
+            .unwrap_or_else(|_| panic!("known-sum source refused"));
+        let submission = known_sum
+            .submission()
+            .unwrap_or_else(|| panic!("missing known-sum submission"));
+        let mut prepared = Compiler::new()
+            .prepare(submission)
+            .unwrap_or_else(|_| panic!("ordinary compile refused"));
+        assert!(matches!(
+            prepared.runtime_signature_catalog(),
+            Err(crate::Diagnostic::Invalid)
+        ));
+        prepared.next.live = true;
+        let descriptors = prepared.next.descriptors.clone();
+        assert!(descriptors.len() >= 2);
+        let count = u32::try_from(descriptors.len())
+            .unwrap_or_else(|_| panic!("descriptor count exceeds u32"));
+        let mut expected = count.to_le_bytes().to_vec();
+        for (index, (address, length)) in descriptors.iter().enumerate() {
+            expected.extend_from_slice(&address.to_le_bytes());
+            expected.extend_from_slice(&length.to_le_bytes());
+            expected.extend_from_slice(&prepared.next.signatures.keys[index]);
+        }
+        assert_eq!(prepared.runtime_signature_catalog().ok(), Some(expected));
+
+        // A defect after a valid first descriptor refuses the whole catalogue.
+        prepared.next.descriptors[1].1 += 1;
+        assert!(matches!(
+            prepared.runtime_signature_catalog(),
+            Err(crate::Diagnostic::Defective)
+        ));
+        prepared.next.descriptors[1] = descriptors[1];
+        prepared.next.descriptors[1].0 = super::TEXT_START - 1;
+        assert!(matches!(
+            prepared.runtime_signature_catalog(),
+            Err(crate::Diagnostic::Defective)
+        ));
+        prepared.next.descriptors[1].0 = super::MEMORY_BYTES;
+        prepared.next.descriptors[1].1 = 1;
+        prepared.next.signatures.keys[1] = alloc::vec![0];
+        assert!(matches!(
+            prepared.runtime_signature_catalog(),
+            Err(crate::Diagnostic::Defective)
+        ));
+    }
+
+    #[test]
+    fn reusable_retained_bytes_counts_every_identity_and_literal_record() {
+        let mut calculator = noble_contracts::source::Session::new_calculator();
+        let defined = calculator
+            .prepare(b"def retained_word [ 1 drop ]", &[], fixture_limits())
+            .unwrap_or_else(|_| panic!("calculator definition refused"));
+        calculator
+            .commit(defined)
+            .unwrap_or_else(|_| panic!("calculator definition commit refused"));
+        let call = calculator
+            .prepare(
+                b"\"abc\" text.length \"de\" text.length retained_word",
+                &[],
+                fixture_limits(),
+            )
+            .unwrap_or_else(|_| panic!("calculator call refused"));
+        let submission = call
+            .submission()
+            .unwrap_or_else(|| panic!("missing calculator submission"));
+        let prepared = Compiler::new_calculator()
+            .prepare_program_free(submission)
+            .unwrap_or_else(|_| panic!("program-free compile refused"));
+        let reusable = prepared
+            .reusable()
+            .unwrap_or_else(|| panic!("program-free preparation is reusable"));
+        assert!(!prepared.next.identities.is_empty());
+        assert_eq!(prepared.next.static_literals.len(), 2);
+        let mut expected = core::mem::size_of::<super::Reusable>()
+            + reusable.wat().len()
+            + prepared.next.signatures.retained_bytes()
+            + prepared.next.descriptors.len() * 8;
+        for key in prepared.next.static_literals.keys() {
+            expected += key.len() + 64;
+        }
+        for identity in &prepared.next.identities {
+            expected += identity.recipe.len() + 64;
+        }
+        assert_eq!(reusable.retained_bytes(), expected);
+    }
 }
 
 // Test harness only: scenario-named tests over checked fixtures.
@@ -2454,13 +2961,18 @@ mod origin_operand_debug_tests {
     //! it replaces; `mirror` keeps that derive over the same payload types.
     #![allow(
         tigerstyle::non_trait_imports,
-        reason = "Owner: noble-wasm-maintainers; the origin types under test are imported directly."
+        tigerstyle::path_segment_repetition,
+        reason = "Owner: noble-wasm-maintainers; the origin types under test are imported directly, and the mirror and test names repeat the module's origin/debug subject on purpose."
     )]
     use super::{OriginFixedExpression, OriginI64, OriginOperand, OriginProgramValue};
     use alloc::{format, rc::Rc, vec, vec::Vec};
 
     mod mirror {
         #[derive(Debug)]
+        #[expect(
+            dead_code,
+            reason = "Owner: noble-wasm-maintainers; the mirror's payloads are read only by its derived Debug rendering under test."
+        )]
         pub enum OriginOperand {
             I64(super::OriginI64),
             Program(alloc::rc::Rc<super::OriginProgramValue>),
