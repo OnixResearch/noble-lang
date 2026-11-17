@@ -1,0 +1,14 @@
+{"operation":"define","id":"hdef","name":"h","source":"def h [ 1 + ]","inputs":[]}
+{"operation":"define","id":"gdef","name":"g","source":"def g [ h ]","inputs":[]}
+{"operation":"define","id":"mkdef","name":"mk","source":"def mk [ [ g ] ]","inputs":[]}
+{"operation":"install","id":"mk","source":"mk","selected_name":"mk","inputs":[]}
+{"operation":"invoke","id":"mk","inputs":[],"refs":[]}
+{"operation":"install","id":"runner","source":"run","inputs":["I64","Program<I64,I64,pure>"]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"41"},{"kind":"program","owner":"program-1"}],"refs":[]}
+{"operation":"publish","slot":"Q","id":"mk","expected_epoch":"0"}
+{"operation":"define","id":"v2def","name":"mk2","source":"def mk2 [ [ 5 + ] ]","inputs":[]}
+{"operation":"install","id":"v2","source":"mk2","selected_name":"mk2","inputs":[]}
+{"operation":"publish","slot":"Q","id":"v2","expected_epoch":"1","expected_incarnation":"1","expected_generation":"1"}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"41"},{"kind":"program","owner":"program-1"}],"refs":[]}
+{"operation":"release-program","owner":"program-1"}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"41"},{"kind":"program","owner":"program-1"}],"refs":[]}

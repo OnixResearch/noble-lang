@@ -1,0 +1,45 @@
+{
+  "executable": "/nix/store/1m05wga7kwjxk4nwnsk27vxm0pmsg36x-compiler-lab-relax-host-544158264603dbf90994ac47fc97a2636437b656/bin/compiler-lab-relax-host",
+  "executable_sha256": "fed38792ec30d29829fae808398f39444008c03f6e90cf2eb4418a711738e260",
+  "manifest_path": "/nix/store/1m05wga7kwjxk4nwnsk27vxm0pmsg36x-compiler-lab-relax-host-544158264603dbf90994ac47fc97a2636437b656/share/compiler-lab/relax.json",
+  "manifest_sha256": "aca8125ac31a1a839c1679c7256ecf8a339bb9758bee91d8b617c87cb4fce41d",
+  "manifest": {
+    "schema": 1,
+    "source_repository": "https://github.com/makepad/relax",
+    "source_revision": "544158264603dbf90994ac47fc97a2636437b656",
+    "source_hash": "sha256-k2JxIErxsw0KjTWomLaB0xxYhMj2jUv6Yeq6qXBz400=",
+    "source_path": "/nix/store/cc60y9v06brv05nhn4hs80cjgpdm95l6-source",
+    "relax_provenance": "makepad run makepad d08642ed5eee jit 7c8930659157",
+    "host": {
+      "path": "bin/compiler-lab-relax-host",
+      "sha256": "fed38792ec30d29829fae808398f39444008c03f6e90cf2eb4418a711738e260",
+      "source": {
+        "Cargo.lock": "5badeddf946cb26ff59be505fd31f5024bef06eafc67a4dc7659667c7fae7acb",
+        "Cargo.toml": "c69cd184d7a15dc558efb0da4a89327351caad25c8f6b8a2477ac3ef7e72cfe5",
+        "src/main.rs": "0496d1cf9bbeb876b9a64f56bb69d7ec9fc7cf632c1a3e6064f9b6c16b255606"
+      }
+    },
+    "std": {
+      "path": "/nix/store/cc60y9v06brv05nhn4hs80cjgpdm95l6-source/libs/relax/compiler/std",
+      "tree_sha256": "73077222c2c40e616d2a58bb14921ebb9cd6f78cd1e7c96be4ddd30e64ba7c25",
+      "files": 407
+    },
+    "bootstrap": {
+      "channel": "1.99.0",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n"
+    },
+    "target": "x86_64-unknown-linux-gnu",
+    "check_first_variable": "COMPILER_LAB_RELAX_CHECK_FIRST",
+    "licenses": [
+      "share/licenses/compiler-lab-relax/LICENSE",
+      "share/licenses/compiler-lab-relax/std-CREDITS.md"
+    ]
+  },
+  "reported_version": "makepad run makepad d08642ed5eee jit 7c8930659157",
+  "std_tree_sha256": "73077222c2c40e616d2a58bb14921ebb9cd6f78cd1e7c96be4ddd30e64ba7c25",
+  "std_files": 407,
+  "cpu": {
+    "model": "AMD RYZEN AI MAX+ 395 w/ Radeon 8060S",
+    "flags_sha256": "74c53b8e51b4e9db91c639243e6b633880fdba77cf974e7088ccb032a036d139"
+  }
+}

@@ -1,0 +1,9 @@
+{"operation":"define","id":"defTracedA","name":"tracedA","source":"def tracedA [ drop \"relocated\" test.emit drop 21 ]","inputs":[]}
+{"operation":"define","id":"defTracedE","name":"tracedE","source":"def tracedE [ drop \"relocated\" test.emit drop 21 ]","inputs":[]}
+{"operation":"define","id":"defInert","name":"inertBody","source":"def inertBody [ drop 21 ]","inputs":[]}
+{"operation":"install","id":"inert","source":"inertBody","inputs":["I64"],"selected_name":"inertBody"}
+{"operation":"install","id":"callerNew","source":"slot.invoke","inputs":["I64","LiveRef<I64,I64,live.dispatch+test.emit>"]}
+{"operation":"candidate","id":"callerNew"}
+{"operation":"publish","slot":"E","id":"inert","program_index":0,"expected_epoch":"0"}
+{"operation":"publish","slot":"B","id":"callerNew","program_index":0,"expected_epoch":"1"}
+{"operation":"invoke","id":"callerNew","inputs":[{"kind":"i64","value":"5"}],"refs":[{"position":1,"ordinal":0,"slot":"E"}]}

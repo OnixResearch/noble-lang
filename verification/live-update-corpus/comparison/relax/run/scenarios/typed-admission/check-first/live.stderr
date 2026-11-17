@@ -1,0 +1,1 @@
+borrow check failed: live::value at <compiler-lab-run>/scenarios/typed-admission/check-first/source/v4.rs:66:5: cannot assign to `x` because it is borrowed (live edit refused)

@@ -8,7 +8,7 @@
     "selection_command": "noble live slot --engine v8 --authority <authority.json>"
   },
   "status": "frozen",
-  "frozen_on": "2026-11-13",
+  "frozen_on": "2026-11-16",
   "meaning": "Declared update semantics of the selected Noble live-slot profile, frozen before any measurement governed by it. A profile is a declaration, not an observation, a proof or a conformance promotion.",
   "frozen_from": [
     {
@@ -92,10 +92,6 @@
     }
   },
   "unsupported_dimensions": [
-    {
-      "id": "makepad-relax-runtime",
-      "reason": "compiler-lab #188 (Relax host) and #190 (persistent sessions) are not available, so no Relax profile is frozen and no Relax column is measured"
-    },
     {
       "id": "concurrent-host-threads",
       "reason": "the selected CLI serves one ordered operator session; two host threads sharing one registry are not exercised by any existing lane"

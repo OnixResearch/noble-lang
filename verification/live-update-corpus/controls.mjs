@@ -9,17 +9,28 @@
  * `runControls` is called by `export.mjs` on the fresh export directory and by `controls.test.mjs`
  * on the committed evidence directory. It never mutates its input: every mutating control works on
  * a temporary copy of the evidence directory.
+ *
+ * `runComparisonControls` does the same for a revision-2 comparison directory: each control changes
+ * one retained compiler-lab fact (a record byte, an edit digest, the Relax or Noble profile binding,
+ * the consumed export, a replay relation, a compiler-lab control, a timing binding, a local path, a
+ * quoted fixture source line, an unlisted file) or the imported column itself, and requires
+ * `verifyComparison` to reject it for that reason after every mechanically refittable digest has
+ * been resealed.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-  SCENARIOS, canonicalPromotions, canonicalSnapshot, classifyScenario, digestValue,
-  evaluateExpectations, readJson, sha256, stableJson, verifyEvidence,
+  EVIDENCE_DIRECTORY, SCENARIOS, canonicalPromotions, canonicalSnapshot, classifyScenario,
+  digestValue, evaluateExpectations, readJson, sha256, stableJson, verifyEvidence,
 } from './corpus.mjs';
+import {
+  bindReceipt, copyComparison, sealComparison, verifyComparison,
+} from './comparison.mjs';
 
 const SUITE = 'verification/live-update-corpus/controls.mjs';
+const COMPARISON_SUITE = 'verification/live-update-corpus/controls.mjs#runComparisonControls';
 
 function copyEvidence(directory, receiptDocument) {
   const target = fs.mkdtempSync(path.join(os.tmpdir(), 'noble-live-update-control-'));
@@ -308,10 +319,148 @@ export function runControls({ directory, repositoryRoot = undefined, receipt = n
   return report;
 }
 
+const HELD_RECORD = 'relax/run/scenarios/held-root-and-new-root/default/record.json';
+const HELD_STDOUT = 'relax/run/scenarios/held-root-and-new-root/default/live.stdout';
+
+/**
+ * Comparison controls. Each works on a private copy. `reseal` re-derives the corpus and receipt
+ * from the mutated retained files, as an importer would, so only a semantic or binding check is
+ * left to catch the mutation.
+ */
+export function runComparisonControls({ directory, repositoryRoot = null }) {
+  const corpus = readJson(path.join(directory, 'corpus.json'));
+  const receipt = readJson(path.join(directory, 'receipt.json'));
+  const receiptBase = Object.fromEntries(['schema', 'claim', 'source', 'pins', 'timing']
+    .map(key => [key, receipt[key]]));
+  const editJson = (copy, relative, edit) => {
+    const file = path.join(copy, relative);
+    const document = JSON.parse(fs.readFileSync(file, 'utf8'));
+    edit(document);
+    fs.writeFileSync(file, `${JSON.stringify(document, null, 2)}\n`);
+  };
+  const reseal = copy => sealComparison({ directory: copy, retained: corpus.comparison.retained,
+    generatedAt: corpus.generated_at, receiptBase });
+  const controls = [];
+  const control = (name, expected, mutate) => {
+    const copy = copyComparison(directory);
+    try {
+      mutate(copy);
+      const result = verifyComparison({ directory: copy, repositoryRoot });
+      const observed = [...new Set(result.failures.map(row => row.code))].sort();
+      controls.push(expected === null
+        ? { control: name, expected_reason: null, observed_reasons: observed,
+          passed: observed.length === 0,
+          detail: observed.length === 0 ? ['evidence verified'] : result.failures.slice(0, 4) }
+        : { control: name, expected_reason: expected, observed_reasons: observed,
+          passed: observed.includes(expected),
+          detail: observed.length === 0 ? ['no failure was reported']
+            : result.failures.filter(row => row.code === expected).slice(0, 4) });
+    } finally {
+      fs.rmSync(copy, { recursive: true, force: true });
+    }
+  };
+
+  control('pristine-comparison-verifies', null, () => {});
+  // A retained record changes and its recorded digest stays.
+  control('stale-relax-record', 'stale-evidence', copy => {
+    const file = path.join(copy, HELD_RECORD);
+    const text = fs.readFileSync(file, 'utf8');
+    const changed = text.replace(/"session": "([0-9a-f])/u,
+      (_, digit) => `"session": "${digit === '0' ? '1' : '0'}`);
+    assert.notEqual(changed, text, 'the stale-record control must change the record');
+    fs.writeFileSync(file, changed);
+  });
+  // The imported column claims another class than its record; only the corpus binding is resealed.
+  control('forged-relax-class', 'comparison-drift', copy => {
+    const corpusPath = path.join(copy, 'corpus.json');
+    const forged = readJson(corpusPath);
+    const column = forged.scenarios
+      .find(row => row.case_id === 'noble-live-update/held-root-and-new-root').other_runtime;
+    column.result_class = 'supported-outcome';
+    for (const setting of column.admission_settings) setting.result_class = 'supported-outcome';
+    fs.writeFileSync(corpusPath, `${JSON.stringify(forged, null, 2)}\n`);
+    const resealed = bindReceipt({ ...readJson(path.join(copy, 'receipt.json')),
+      corpus: { evidence_path: 'corpus.json', sha256: sha256(fs.readFileSync(corpusPath)) } });
+    fs.writeFileSync(path.join(copy, 'receipt.json'), `${JSON.stringify(resealed, null, 2)}\n`);
+  });
+  // An edit of the held-root counterpart is replaced: the event binding no longer covers its edits.
+  control('mutated-relax-edit-binding', 'event-binding-mismatch', copy => {
+    editJson(copy, HELD_RECORD, record => {
+      record.edits[1].artifact.sha256 = sha256(Buffer.from('another edit'));
+    });
+    reseal(copy);
+  });
+  // The report was produced under another Relax profile.
+  control('mutated-relax-profile', 'relax-profile-changed', copy => {
+    editJson(copy, 'relax/run/report.json', report => {
+      const other = sha256(Buffer.from('another Relax profile'));
+      report.profile.sha256 = other;
+      for (const column of report.noble_columns) column.profile.sha256 = other;
+    });
+    reseal(copy);
+  });
+  // The run consumed another Noble export than the one retained beside it.
+  control('wrong-noble-export', 'corpus-binding-mismatch', copy => {
+    editJson(copy, 'relax/run/report.json', report => {
+      report.corpus.sha256 = sha256(Buffer.from('another Noble export'));
+    });
+    reseal(copy);
+  });
+  // The run compared against another Noble profile: prior comparison evidence is invalid.
+  control('mutated-noble-profile', 'profile-changed', copy => {
+    editJson(copy, 'relax/run/report.json', report => {
+      report.corpus.noble_profile_sha256 = sha256(Buffer.from('another Noble profile'));
+    });
+    reseal(copy);
+  });
+  // The replay no longer reproduces the run from its retained edits.
+  control('replay-diverged', 'replay-not-reproduced', copy => {
+    editJson(copy, 'relax/replay/report.json', replay => {
+      replay.replay[0].relation = 'diverged';
+    });
+    reseal(copy);
+  });
+  // One of compiler-lab's own evidence controls failed.
+  control('relax-control-failed', 'relax-controls-failed', copy => {
+    editJson(copy, 'relax/run/report.json', report => {
+      report.controls[1].passed = false;
+    });
+    reseal(copy);
+  });
+  // A Relax timing names another outcome than the run it was measured in.
+  control('unbound-relax-timing', 'timing-unbound', copy => {
+    editJson(copy, HELD_RECORD, record => {
+      record.timing.bound_to.result_class = 'supported-outcome';
+    });
+    reseal(copy);
+  });
+  // A retained stream carries a local path.
+  control('private-path-leak', 'private-path', copy => {
+    fs.appendFileSync(path.join(copy, HELD_STDOUT), 'location /var/tmp/fixture.rs:1:1\n');
+    reseal(copy);
+  });
+  // A retained stream quotes a fixture source line in a diagnostic gutter.
+  control('source-excerpt-leak', 'private-source', copy => {
+    fs.appendFileSync(path.join(copy, HELD_STDOUT), '12 |     let quoted = fixture_line();\n');
+    reseal(copy);
+  });
+  // A withheld fixture source is placed beside the retained files without being listed.
+  control('unlisted-relax-file', 'unlisted-evidence', copy => {
+    const file = path.join(copy, 'relax/run/scenarios/held-root-and-new-root/default/source/v0.rs');
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, 'fn main() {}\n');
+  });
+
+  return {
+    suite: COMPARISON_SUITE,
+    controls,
+    passed: controls.every(row => row.passed),
+  };
+}
+
 /** Standalone report: prints the suite and exits nonzero when any control fails. */
 if (import.meta.main) {
-  const directory = path.resolve(process.argv[2]
-    ?? 'verification/live-update-corpus/evidence');
+  const directory = path.resolve(process.argv[2] ?? EVIDENCE_DIRECTORY);
   const root = path.resolve(process.argv[3] ?? '.');
   const report = runControls({ directory, repositoryRoot: root });
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);

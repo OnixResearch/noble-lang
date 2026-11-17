@@ -1,0 +1,44 @@
+[
+  {
+    "name": "unchanged-evidence",
+    "purpose": "The retained evidence of every scenario verifies before any mutation.",
+    "expected_reason": "none",
+    "observed_reason": null,
+    "passed": true
+  },
+  {
+    "name": "wrong-version",
+    "purpose": "A held root that reports leaf_b version 0 after the edit violates the per-call selection that the profile declares.",
+    "expected_reason": "wrong-version",
+    "observed_reason": "wrong-version",
+    "passed": true
+  },
+  {
+    "name": "stale-evidence",
+    "purpose": "A changed raw stream with its old digest is stale evidence.",
+    "expected_reason": "stale-evidence",
+    "observed_reason": "stale-evidence",
+    "passed": true
+  },
+  {
+    "name": "premature-retirement",
+    "purpose": "A saved closure whose retained code traps after later edits violates the code-only-grows profile.",
+    "expected_reason": "premature-retirement",
+    "observed_reason": "premature-retirement",
+    "passed": true
+  },
+  {
+    "name": "event-binding",
+    "purpose": "A changed edit digest invalidates the prior comparison.",
+    "expected_reason": "event-binding-changed",
+    "observed_reason": "event-binding-changed",
+    "passed": true
+  },
+  {
+    "name": "profile",
+    "purpose": "A changed Relax profile invalidates the prior comparison.",
+    "expected_reason": "profile-changed",
+    "observed_reason": "profile-changed",
+    "passed": true
+  }
+]
