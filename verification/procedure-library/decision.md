@@ -13,6 +13,56 @@ reopening conditions. The original frozen criterion is
 `36b8efc1d7f99485f3e1764a596ce014ab24dcb62d6f029bf32456c196a4dc79`),
 committed before either transfer attempt.
 
+## Correction and change note (2026-11-17, issue #136): replacement lineage
+
+The previous replacement validator admitted a fork A → {B, C} when a caller
+replaced A twice, but refused the ordinary chain A → B → C. Its blanket
+ban on a superseded record having a predecessor rejected the intermediate B.
+Both issue regressions were executed against unchanged production source at
+base `0f5cdff9`: each returned exit 101 with 0 passed and 1 failed. The fork
+was accepted, and the chain refused as `Invalid` at `supersedes`.
+
+Implementation correction `2202447` selects coherent, acyclic single-successor
+chains, not implicit branching. Every superseded record has exactly one
+retained successor, and every predecessor link targets a retained superseded
+record. Intermediate B keeps its predecessor A after becoming superseded by
+C. Replacing an already superseded target refuses as `StaleContext` at
+`supersedes`, without changing records, retained generations or encoded
+bytes. A previously admitted independent subject can become a successor only
+through atomic replacement; ordinary admission cannot introduce or rewrite
+its predecessor. Re-admission may omit an existing predecessor, which the
+merge preserves. The public fields, status variants and wire encoding are
+unchanged.
+
+The existing generations and malformed-reload tests now check both issue
+cases, current-head retrieval, rejection atomicity, replacement with an
+already-retained independent record, predecessor preservation, rollback to
+A → B, restoration of A → B → C and byte-identical reloads. The malformed
+wire producer changes links and recomputes state and library integrity
+indexes: fork, cycle, self-cycle, dangling-target, live-target and orphan
+controls must refuse at `supersedes`, rather than merely at a stale checksum.
+
+Observed verification for this correction, not retained clean-source
+receipts:
+
+- `cargo test -p noble-contracts --all-targets --all-features --offline --locked`
+  passed 353 tests in 10 targets, with 0 failures and the 2 historical one-shot
+  measurements ignored. The editor target passed 126 tests, including both
+  previously failing regressions and all six rebound malformed-wire controls.
+  This run preceded the implementation commit, with the committed Rust bytes.
+- `cargo fmt --all -- --check` exited 0 after the implementation commit.
+- A throwaway standalone Rust consumer linked the committed implementation's
+  public libraries, without private test hooks. It exercised ordinary
+  admission, A → B → C, two stale-target refusals with byte equality,
+  candidate retrieval, rollback, restoration and reload. It printed
+  `LINEAGE_SMOKE_OK generations=7 records=4 historical_edges=2 stale_replacements=2 retrieval_heads=2 rollback_reload=ok`.
+  The throwaway source and executable were removed after the smoke.
+
+These finite observations do not establish universal Rust/Lean refinement or
+revise any retained historical receipt. D14's NO-GO remains unchanged. Shared
+integration lint, inventory and extraction evidence must bind the final
+integrated source rather than a predecessor's generated subject.
+
 ## Erratum (2026-11-16, issue #131): earlier promoted and tested states were claim-only
 
 Before commit `e3198a85`, `ProcedureLibrary` admission treated every
@@ -295,7 +345,7 @@ proof claim: independent MC2 checked-evidence remains required.
 | Reuse, two-record composition, ordinary source/kernel re-admission, invalid contract/effect/capability/policy refusals | DONE | `tests/editor/procedures/composition.rs`, `admission.rs`; `procedures/composition.rs`. Resulting authority is checked under the caller's budgets. |
 | Exact-record deduplication and refusal of digest-only alias claims | DONE | `tests/editor/procedures/identity.rs` and `admission::an_alias_digest_cannot_replace_a_verified_exact_pair_certificate`; no claim that a digest proves semantic equivalence. |
 | Positive semantic alias of distinct records in the bounded pure-I64 fragment (LPL-04) | DONE | `procedures/alias.rs` recomputes bounded polynomial forms and empty closure digests from both retained records on admission and reload; `admission/alias/{mod,forgery}.rs` tests distribution, wraparound, success, replay and forged/unsupported refusals. The distinct `validation/passed` evidence does not claim a #56 proof, proof-demanding promotion or formal Rust/Lean refinement. |
-| Two-process reload equality, deterministic dependency order, mutation/encoder-drift refusals, replacement and rollback | DONE | `tests/editor/procedures/identity.rs`, `reload-negative.rs`, `generations.rs`. Two child processes compare the exact identity manifest against the parent. |
+| Two-process reload equality, deterministic dependency order, mutation/encoder-drift refusals, replacement and rollback | DONE, with the issue #136 correction above | `tests/editor/procedures/identity.rs`, `reload-negative.rs`, `generations.rs`. Two child processes compare the exact identity manifest against the parent. Single-successor chains retain predecessor edges; rebound forks, cycles and dangling links refuse, and rollback/reload preserve exact closures. |
 | Frozen held-out composed-task evaluation and per-seed library growth/retrieval overhead | DONE for the **repaired fixture** | Criterion SHA-256 above; both attempts retained separately; one repaired repeat meets 8/8 and 24/24. Per-arm rows, bytes, query counts, restart, retention, regression and null break-even reasons are in `transfer-repeat.json`. This is not an incremental benefit over the frozen-hand library. |
 | #116-generated held-out **transfer measurement**, with grammar/budget/trace/verifier status and no target leakage | DONE for frozen v3 | `criteria-producer-targets-v3.json`/`producer-targets-v3.txt` were mechanically derived and committed before target generation. One clean-source #116 producer receipt retains candidates, budgets, trace, external solver answers, held-out producer examples and normal CLI re-admission. One clean-source four-arm receipt `producer-transfer-v3.json` plus raw log gives GO, learned 8/8 and 24/24, hand 8/8, other controls 0/8, all restart/regression checks passed. Generated target bodies are oracle-only; acquired source procedures alone enter the library. Neither v1 nor defective v2 was rerun. |
 | No runtime teacher/proposer fallback, including an attempted-call refusal | DONE for v3; historical original frozen clause unmet | V3's 16 scored rows have zero attempts and calls; its four isolated negative controls each deliberately attempted both producer types and refused before any callbacks or library mutation. The original frozen repeat missed the attempted-call clause and is not retroactively repaired. |
