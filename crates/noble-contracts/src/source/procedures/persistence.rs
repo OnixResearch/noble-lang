@@ -9,6 +9,8 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::cmp::Ordering;
 
+mod history;
+
 const DOMAIN_ID: u64 = 0x4e_50_52_4f_43_00_00_01;
 const DOMAIN_STATE: u64 = 0x4e_50_52_4f_43_00_00_02;
 const DOMAIN_LIBRARY: u64 = 0x4e_50_52_4f_43_00_00_03;
@@ -1929,6 +1931,7 @@ impl ProcedureLibrary {
                 }
             }
             ProcedureLibrary::verify_snapshot(snapshot)?;
+            history::validate(&generations, snapshot)?;
             let rebuilt =
                 ProcedureLibrary::rebuild_chunks(namespace, chunk_revision, &snapshot.records)?;
             if rebuilt.revision() != &snapshot.record.chunk_library_revision {
