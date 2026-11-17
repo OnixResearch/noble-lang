@@ -4202,7 +4202,7 @@ fn prepare_checked_contract(
     Ok((result, literal))
 }
 /// The standalone MC1 contract text of `contract`: its name, its input and
-/// output bindings, then the rendered `body`, `requires` and `ensures`.
+/// output bindings, then the rendered body, precondition and postcondition.
 #[expect(
     tigerstyle::ambiguous_params,
     reason = "Owner: noble-contracts; the texts are the contract's rendered clauses in print order, pinned by unit tests against the format! text this replaced"
@@ -4211,7 +4211,12 @@ fn prepare_checked_contract(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; this total text builder only concatenates already checked parts and has no precondition to assert"
 )]
-fn contract_text(contract: &ContractGoal, body: &str, requires: &str, ensures: &str) -> String {
+fn contract_text(
+    contract: &ContractGoal,
+    body: &str,
+    requires_text: &str,
+    ensures_text: &str,
+) -> String {
     let mut text = String::from("(contract 1 ");
     text.push_str(&contract.contract_name);
     text.push_str(" (input");
@@ -4225,9 +4230,9 @@ fn contract_text(contract: &ContractGoal, body: &str, requires: &str, ensures: &
     text.push_str(") (program ");
     text.push_str(body);
     text.push_str(") (requires ");
-    text.push_str(requires);
+    text.push_str(requires_text);
     text.push_str(") (ensures ");
-    text.push_str(ensures);
+    text.push_str(ensures_text);
     text.push_str("))");
     text
 }
@@ -5402,6 +5407,76 @@ mod proposition_impl_tests {
                 alloc::format!("({lowered} {expression})")
             );
         }
+    }
+
+    fn contract_render_fixture() -> Result<super::ContractGoal, alloc::string::String> {
+        let limits = crate::Limits {
+            bytes: 65_536,
+            nodes: 16_384,
+            depth: 64,
+            work: 2_000_000,
+        };
+        let retained = crate::source::RetainedSourceLimit::new(65_536)
+            .ok_or("invalid test retained source limit")?;
+        let session = crate::source::ModuleSession::new(&[], retained)
+            .map_err(|error| alloc::format!("{error:?}"))?;
+        let source = b"module renderer@1 [ def increment [ 1 + ] contract 1 law [ subject increment input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ] proof 1 p for law [ (refl 0) ] ]";
+        let prepared = session
+            .prepare(source, &[], limits)
+            .map_err(|error| alloc::format!("{error:?}"))?;
+        let batch = prepared
+            .proof_obligations()
+            .ok_or("missing contract obligation")?;
+        assert_eq!(batch.obligations.len(), 1);
+        let Some(super::ProofObligation {
+            goal: super::PendingGoal::Contract { contract },
+            ..
+        }) = batch.obligations.first()
+        else {
+            return Err(alloc::string::String::from("missing resolved contract"));
+        };
+        Ok(contract.as_ref().clone())
+    }
+
+    #[test]
+    fn contract_text_matches_the_formatted_rendering() -> Result<(), alloc::string::String> {
+        let mut contract = contract_render_fixture()?;
+        for bindings in [
+            vec![],
+            vec![("x", "I64")],
+            vec![("a", "(List I64)"), ("b", "Text")],
+        ] {
+            contract.inputs = bindings
+                .iter()
+                .map(|(name, ty)| {
+                    (
+                        alloc::string::String::from(*name),
+                        alloc::string::String::from(*ty),
+                    )
+                })
+                .collect();
+            contract.outputs = contract.inputs.clone();
+            let inputs: alloc::string::String = contract
+                .inputs
+                .iter()
+                .map(|(name, ty)| alloc::format!(" ({name} {ty})"))
+                .collect();
+            let outputs: alloc::string::String = contract
+                .outputs
+                .iter()
+                .map(|(name, ty)| alloc::format!(" ({name} {ty})"))
+                .collect();
+            for (body, requires_text, ensures_text) in [
+                ("1 +", "true", "(eq (out x) (add (in x) 1))"),
+                ("", "", ""),
+                ("\u{03bb}\\\"\n", "{ x }", "(eq \u{2200} x)"),
+            ] {
+                assert_eq!(super::contract_text(&contract, body, requires_text, ensures_text),
+                    alloc::format!("(contract 1 {} (input{}) (output{}) (program {body}) (requires {requires_text}) (ensures {ensures_text}))",
+                        contract.contract_name, inputs, outputs));
+            }
+        }
+        Ok(())
     }
 
     /// Variable codes and sorts and equations lower to the `format!` texts
