@@ -26,7 +26,7 @@ fn replacement_pair() -> Result<(Session, ProcedureLibrary, [ProcedureId; 2]), S
     Ok((namespace, library, [first, second]))
 }
 
-fn assert_lineage(
+fn assert_records(
     library: &ProcedureLibrary,
     expected: &[(ProcedureId, Status, Option<ProcedureId>)],
 ) -> Result<(), String> {
@@ -68,7 +68,7 @@ fn replacement_must_not_fork_live_successors() -> Result<(), String> {
             before
         );
     }
-    assert_lineage(
+    assert_records(
         &library,
         &[
             (first, Status::Superseded, None),
@@ -95,7 +95,7 @@ fn replacing_current_successor_should_support_a_linear_chain() -> Result<(), Str
         (second, Status::Superseded, Some(first)),
         (third, Status::Candidate, Some(second)),
     ];
-    assert_lineage(&library, &chain)?;
+    assert_records(&library, &chain)?;
     assert_eq!(library.current_generation(), 3);
     let candidates = library
         .retrieve(
@@ -116,7 +116,7 @@ fn replacing_current_successor_should_support_a_linear_chain() -> Result<(), Str
             literal_record(3, Producer::Chunk).map_err(|error| format!("{error:?}"))?,
         )
         .map_err(|error| format!("duplicate: {error:?}"))?;
-    assert_lineage(&library, &chain)?;
+    assert_records(&library, &chain)?;
     assert_eq!(library.current_generation(), 3);
     let chain_records = library.records().to_vec();
     let chain_generation = library
@@ -160,7 +160,7 @@ fn replacing_current_successor_should_support_a_linear_chain() -> Result<(), Str
         .map_err(|error| format!("chain rollback: {error:?}"))?;
     assert_eq!(restarted.current_generation(), 5);
     assert_eq!(restarted.generation_records().len(), 6);
-    assert_lineage(&restarted, &chain)?;
+    assert_records(&restarted, &chain)?;
     let final_bytes = restarted.encode().map_err(|error| format!("{error:?}"))?;
     let final_reload = ProcedureLibrary::load(&final_bytes, &namespace)
         .map_err(|error| format!("restored chain reload: {error:?}"))?;
@@ -233,7 +233,7 @@ fn replacing_with_an_existing_independent_record_retires_the_target() -> Result<
         .map_err(|error| format!("existing replacement: {error:?}"))?;
     assert_eq!(replacement, ids[1]);
     assert_eq!(library.current_generation(), 2);
-    assert_lineage(
+    assert_records(
         &library,
         &[
             (ids[0], Status::Superseded, None),

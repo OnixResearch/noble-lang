@@ -65,12 +65,12 @@ fn rebind_head(bytes: &mut [u8], library: &ProcedureLibrary) -> Result<(), Strin
         .zip(offsets.iter().rev().take(records.len()).rev())
         .zip(&head.closure)
     {
-        let identity_end_byte_offset = offsets
+        let identity_end_offset_bytes = offsets
             .procedure_id_offset_bytes
             .checked_add(32)
             .ok_or("identity offset overflow")?;
         assert_eq!(
-            bytes.get(offsets.procedure_id_offset_bytes..identity_end_byte_offset),
+            bytes.get(offsets.procedure_id_offset_bytes..identity_end_offset_bytes),
             Some(record.procedure_id.as_slice())
         );
         let state = bytes
@@ -85,14 +85,14 @@ fn rebind_head(bytes: &mut [u8], library: &ProcedureLibrary) -> Result<(), Strin
             .windows(old_binding.len())
             .rposition(|window| window == old_binding)
             .ok_or("closure entry missing")?;
-        let digest_start_byte_offset = binding_offset_bytes
+        let digest_start_offset_bytes = binding_offset_bytes
             .checked_add(32)
             .ok_or("closure offset overflow")?;
-        let binding_end_byte_offset = digest_start_byte_offset
+        let binding_end_offset_bytes = digest_start_offset_bytes
             .checked_add(32)
             .ok_or("closure digest offset overflow")?;
         bytes
-            .get_mut(digest_start_byte_offset..binding_end_byte_offset)
+            .get_mut(digest_start_offset_bytes..binding_end_offset_bytes)
             .ok_or("closure digest missing")?
             .copy_from_slice(&digest);
         closure.extend_from_slice(&record.procedure_id);
@@ -102,11 +102,11 @@ fn rebind_head(bytes: &mut [u8], library: &ProcedureLibrary) -> Result<(), Strin
         .windows(32)
         .rposition(|window| window == library.procedure_library_revision())
         .ok_or("head revision missing")?;
-    let revision_end_byte_offset = revision_offset_bytes
+    let revision_end_offset_bytes = revision_offset_bytes
         .checked_add(32)
         .ok_or("revision offset overflow")?;
     bytes
-        .get_mut(revision_offset_bytes..revision_end_byte_offset)
+        .get_mut(revision_offset_bytes..revision_end_offset_bytes)
         .ok_or("revision range missing")?
         .copy_from_slice(&wire_digest(0x4e_50_52_4f_43_00_00_03, &closure));
     Ok(())
