@@ -25,15 +25,9 @@ pub(super) fn certificates(out: &mut crate::output::Buffer) -> Result<(), crate:
     )
 }
 
-#[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
-)]
-#[expect(
-    tigerstyle::assertion_density,
-    tigerstyle::fragile_exhaustive_enum_match,
-    reason = "Owner: noble-maintainers; Shape is the closed semantic storage vocabulary and every variant needs its explicit observation predicate; bounded output failures propagate diagnostics rather than assertions."
-)]
+// The header, the observation predicate and the close are emitted by separate
+// functions whose branches all end them, so no emitted sequence follows a
+// branch that two paths share.
 pub(super) fn shape(
     out: &mut crate::output::Buffer,
     index: usize,
@@ -42,7 +36,29 @@ pub(super) fn shape(
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(func $t"));
     attempt!(out.index(index));
-    let is_cached = calculator
+    attempt!(prologue(out, index, shape, calculator));
+    attempt!(predicate(out, shape));
+    out.append(b")\n")
+}
+
+/// The function header, with the certificate cache wrapper where it applies.
+fn prologue(
+    out: &mut crate::output::Buffer,
+    index: usize,
+    shape: super::Shape,
+    calculator: bool,
+) -> Result<(), crate::Diagnostic> {
+    if is_cached(shape, calculator) {
+        return cached_prologue(out, index);
+    }
+    attempt!(out.append(b" (param $tag i32) (param $value i64) (result i32) (local $h i32)\n"));
+    attempt!(resource_locals(out, shape));
+    out.append(b"(if (i32.eqz (call $observation_tick)) (then (return (i32.const 0))))\n")
+}
+
+/// Whether a calculator caches this shape's validated cells.
+fn is_cached(shape: super::Shape, calculator: bool) -> bool {
+    calculator
         && matches!(
             shape,
             super::Shape::Pair(..)
@@ -50,34 +66,50 @@ pub(super) fn shape(
                 | super::Shape::NominalOpaque(..)
                 | super::Shape::NominalVariant(..)
                 | super::Shape::List(..)
-        );
-    if is_cached {
-        // Calculator source submissions have no host imports. Only validated,
-        // append-only cells in this one synchronous submit can be certified.
-        attempt!(out.append(b" (param $tag i32) (param $value i64) (result i32) (local $h i32) (local $valid i32)\n(if (i32.eqz (call $observation_tick)) (then (return (i32.const 0))))\n(if (i32.and (i32.ge_u (local.get $tag) (i32.const 4)) (i64.le_u (local.get $value) (i64.const 4294967295))) (then\n(local.set $h (i32.wrap_i64 (local.get $value)))\n(if (call $is_live (local.get $h)) (then\n(if (i32.eq (call $kind (local.get $h)) (local.get $tag)) (then\n(if (call $type_certificate_has (i32.const "));
-        attempt!(out.index(index));
-        attempt!(out.append(
-            b") (local.get $h)) (then (return (i32.const 1))))))))))\n(local.set $valid (call $t"
-        ));
-        attempt!(out.index(index));
-        attempt!(out.append(b"_body (local.get $tag) (local.get $value)))\n(if (i32.and (local.get $valid) (local.get $h)) (then (call $type_certificate_put (i32.const "));
-        attempt!(out.index(index));
-        attempt!(out.append(b") (local.get $h))))\n(local.get $valid))\n(func $t"));
-        attempt!(out.index(index));
-        attempt!(
-            out.append(b"_body (param $tag i32) (param $value i64) (result i32) (local $h i32)\n")
-        );
-    } else {
-        attempt!(out.append(b" (param $tag i32) (param $value i64) (result i32) (local $h i32)\n"));
-        if let super::Shape::Resource(_) = shape {
-            attempt!(out.append(b"(local $resource_ordinal i64) (local $resource_valid i32)\n"));
-        }
-        attempt!(
-            out.append(b"(if (i32.eqz (call $observation_tick)) (then (return (i32.const 0))))\n")
-        );
-    }
+        )
+}
+
+/// The cached header: calculator source submissions have no host imports, and
+/// only validated, append-only cells in this one synchronous submit can be
+/// certified.
+fn cached_prologue(out: &mut crate::output::Buffer, index: usize) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b" (param $tag i32) (param $value i64) (result i32) (local $h i32) (local $valid i32)\n(if (i32.eqz (call $observation_tick)) (then (return (i32.const 0))))\n(if (i32.and (i32.ge_u (local.get $tag) (i32.const 4)) (i64.le_u (local.get $value) (i64.const 4294967295))) (then\n(local.set $h (i32.wrap_i64 (local.get $value)))\n(if (call $is_live (local.get $h)) (then\n(if (i32.eq (call $kind (local.get $h)) (local.get $tag)) (then\n(if (call $type_certificate_has (i32.const "));
+    attempt!(out.index(index));
+    attempt!(out.append(
+        b") (local.get $h)) (then (return (i32.const 1))))))))))\n(local.set $valid (call $t"
+    ));
+    attempt!(out.index(index));
+    attempt!(out.append(b"_body (local.get $tag) (local.get $value)))\n(if (i32.and (local.get $valid) (local.get $h)) (then (call $type_certificate_put (i32.const "));
+    attempt!(out.index(index));
+    attempt!(out.append(b") (local.get $h))))\n(local.get $valid))\n(func $t"));
+    attempt!(out.index(index));
+    out.append(b"_body (param $tag i32) (param $value i64) (result i32) (local $h i32)\n")
+}
+
+/// The resource locals a Resource predicate needs.
+fn resource_locals(
+    out: &mut crate::output::Buffer,
+    shape: super::Shape,
+) -> Result<(), crate::Diagnostic> {
     match shape {
-        super::Shape::Scalar(tag) => attempt!(scalar(out, tag)),
+        super::Shape::Resource(_) => {
+            out.append(b"(local $resource_ordinal i64) (local $resource_valid i32)\n")
+        }
+        _ => Ok(()),
+    }
+}
+
+/// The observation predicate of one shape.
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; Shape is the closed semantic storage vocabulary and every variant needs its explicit observation predicate."
+)]
+fn predicate(
+    out: &mut crate::output::Buffer,
+    shape: super::Shape,
+) -> Result<(), crate::Diagnostic> {
+    match shape {
+        super::Shape::Scalar(tag) => scalar(out, tag),
         super::Shape::Resource(kind) => {
             attempt!(reference(out, 17));
             attempt!(out.append(b"(if (i32.ne (call $x (local.get $h)) "));
@@ -86,7 +118,7 @@ pub(super) fn shape(
             attempt!(out.append(b"(local.set $resource_ordinal (call $payload (local.get $h)))\n(if (i64.gt_u (local.get $resource_ordinal) (i64.const 4294967295)) (then (return (i32.const 0))))\n"));
             attempt!(out.append(b"(global.set $failure (i32.const 5))\n(local.set $resource_valid (call $host_resource_validate (i32.wrap_i64 (local.get $resource_ordinal)) "));
             attempt!(out.i32(kind.0));
-            attempt!(out.append(b"))\n(global.set $failure (i32.const 0))\n(i32.eq (local.get $resource_valid) (i32.const 1))\n"));
+            out.append(b"))\n(global.set $failure (i32.const 0))\n(i32.eq (local.get $resource_valid) (i32.const 1))\n")
         }
         super::Shape::Program(input, output_signature, effects) => {
             attempt!(reference(out, 4));
@@ -96,27 +128,27 @@ pub(super) fn shape(
             attempt!(out.i32(output_signature));
             attempt!(out.append(b") (i64.eq (call $payload (local.get $h)) "));
             attempt!(out.i64(i64::from(effects)));
-            attempt!(out.append(b")))\n"));
+            out.append(b")))\n")
         }
         super::Shape::Text => {
             attempt!(reference(out, 11));
-            attempt!(out.append(b"(i32.const 1)\n"));
+            out.append(b"(i32.const 1)\n")
         }
         super::Shape::Syntax => {
             attempt!(reference(out, 10));
-            attempt!(out.append(b"(i32.const 1)\n"));
+            out.append(b"(i32.const 1)\n")
         }
         super::Shape::Contract => {
             attempt!(reference(out, 14));
-            attempt!(out.append(b"(i32.const 1)\n"));
+            out.append(b"(i32.const 1)\n")
         }
         super::Shape::Evidence => {
             attempt!(reference(out, 15));
-            attempt!(out.append(b"(i32.and (i32.eqz (i32.eq (call $a (local.get $h)) (i32.const 0))) (i32.eq (call $kind (call $a (local.get $h))) (i32.const 14)))\n"));
+            out.append(b"(i32.and (i32.eqz (i32.eq (call $a (local.get $h)) (i32.const 0))) (i32.eq (call $kind (call $a (local.get $h))) (i32.const 14)))\n")
         }
         super::Shape::Certified => {
             attempt!(reference(out, 16));
-            attempt!(out.append(b"(i32.and (i32.eq (call $kind (call $a (local.get $h))) (i32.const 4)) (i32.and (i32.eq (call $kind (call $b (local.get $h))) (i32.const 14)) (i32.eq (call $kind (call $c (local.get $h))) (i32.const 15))))\n"));
+            out.append(b"(i32.and (i32.eq (call $kind (call $a (local.get $h))) (i32.const 4)) (i32.and (i32.eq (call $kind (call $b (local.get $h))) (i32.const 14)) (i32.eq (call $kind (call $c (local.get $h))) (i32.const 15))))\n")
         }
         super::Shape::Pair(left, right) => {
             attempt!(reference(out, 5));
@@ -124,29 +156,26 @@ pub(super) fn shape(
             attempt!(child(out, left, b"a"));
             attempt!(out.append(b") (then (return (i32.const 0))))\n"));
             attempt!(child(out, right, b"b"));
-            attempt!(out.append(b"\n"));
+            out.append(b"\n")
         }
-        super::Shape::Sum(left, right) => {
-            attempt!(sum(out, SumCases { left, right }));
-        }
+        super::Shape::Sum(left, right) => sum(out, SumCases { left, right }),
         super::Shape::NominalOpaque(id, value) => {
             attempt!(reference(out, 12));
             attempt!(nominal_identity(out, id, 1));
             attempt!(child(out, value, b"a"));
-            attempt!(out.append(b"\n"));
+            out.append(b"\n")
         }
         super::Shape::NominalVariant(id, left, right) => {
-            attempt!(nominal_variant(out, id, SumCases { left, right }));
+            nominal_variant(out, id, SumCases { left, right })
         }
         super::Shape::List(item) => {
             attempt!(out.append(b"(if (i32.and (i32.ne (local.get $tag) (i32.const 6)) (i32.ne (local.get $tag) (i32.const 7))) (then (return (i32.const 0))))\n"));
             attempt!(live(out));
             attempt!(out.append(b"(loop $list\n(if (i32.eqz (call $observation_tick)) (then (return (i32.const 0))))\n(if (i32.eq (call $kind (local.get $h)) (i32.const 7)) (then (return (i32.const 1))))\n(if (i32.ne (call $kind (local.get $h)) (i32.const 6)) (then (return (i32.const 0))))\n(if (i32.eqz "));
             attempt!(child(out, item, b"a"));
-            attempt!(out.append(b") (then (return (i32.const 0))))\n(local.set $h (call $b (local.get $h)))\n(br $list))\n(i32.const 0)\n"));
+            out.append(b") (then (return (i32.const 0))))\n(local.set $h (call $b (local.get $h)))\n(br $list))\n(i32.const 0)\n")
         }
     }
-    out.append(b")\n")
 }
 
 struct SumCases {

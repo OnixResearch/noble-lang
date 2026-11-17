@@ -273,25 +273,40 @@ fn descriptor(
     }
 }
 
-#[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
-)]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; checked function additions and byte allocations enforce table and memory limits while actual signature and type interning charges the shared meter; only the unpublished compiler and layout grow on success."
-)]
+// Each stage is its own function whose branches all end it, so no later stage
+// follows a branch that two paths share.
 pub(super) fn finish(
     layout: &mut super::Layout,
     compiler: &mut super::super::Compiler,
     checked: &noble_kernel::untrusted::Checked,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
+    let count = attempt!(entry_count(&layout.programs, compiler.calculator));
+    let span = attempt!(compiler.reserve_code(count));
+    layout.first_function = span.start;
+    layout.functions = attempt!(assign_entries(
+        &mut layout.programs,
+        span.start,
+        compiler.calculator
+    ));
+    layout.input_types = attempt!(input_types(layout, compiler, checked, work));
+    layout.output_types =
+        attempt!(layout
+            .types
+            .stack(&checked.interface.stack_out, compiler, work));
+    layout.text_witness = attempt!(compiler.signature(&[noble_kernel::types::Ty::Text], work));
+    attempt!(publish_descriptors(compiler, layout));
+    layout.descriptors = compiler.descriptors.clone();
+    Ok(())
+}
+
+/// The table entries every program needs, stopping at the first failure.
+fn entry_count(programs: &[super::Program], calculator: bool) -> Result<u32, crate::Diagnostic> {
     let mut count = 0u32;
     let mut index = 0usize;
     let mut failure = None;
-    while index < layout.programs.len() {
-        match add_entries(count, &layout.programs[index], compiler.calculator) {
+    while index < programs.len() {
+        match add_entries(count, &programs[index], calculator) {
             Ok(next) => {
                 count = next;
                 index += 1;
@@ -302,19 +317,24 @@ pub(super) fn finish(
             }
         }
     }
-    if let Some(problem) = failure {
-        return Err(problem);
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(count),
     }
-    let span = attempt!(compiler.reserve_code(count));
-    layout.first_function = span.start;
-    let mut function = span.start;
-    index = 0;
-    while index < layout.programs.len() {
-        match entry(
-            &mut layout.programs[index],
-            &mut function,
-            compiler.calculator,
-        ) {
+}
+
+/// Assign every program its first table entry from `start`, returning the
+/// table end and stopping at the first failure.
+fn assign_entries(
+    programs: &mut [super::Program],
+    start: u32,
+    calculator: bool,
+) -> Result<u32, crate::Diagnostic> {
+    let mut function = start;
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < programs.len() {
+        match entry(&mut programs[index], &mut function, calculator) {
             Ok(()) => index += 1,
             Err(problem) => {
                 failure = Some(problem);
@@ -322,25 +342,37 @@ pub(super) fn finish(
             }
         }
     }
-    if let Some(problem) = failure {
-        return Err(problem);
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(function),
     }
-    layout.functions = function;
+}
+
+/// The root input type witnesses: a live-slot root first splits off its borrowed
+/// references.
+fn input_types(
+    layout: &mut super::Layout,
+    compiler: &mut super::super::Compiler,
+    checked: &noble_kernel::untrusted::Checked,
+    work: &mut super::super::Work,
+) -> Result<alloc::vec::Vec<u32>, crate::Diagnostic> {
     if layout.live_slots {
         let value_inputs = attempt!(split_live_inputs(&checked.interface.stack_in, layout));
-        layout.input_types = attempt!(layout.types.stack(&value_inputs, compiler, work));
-    } else {
-        layout.input_types =
-            attempt!(layout
-                .types
-                .stack(&checked.interface.stack_in, compiler, work));
+        return layout.types.stack(&value_inputs, compiler, work);
     }
-    layout.output_types =
-        attempt!(layout
-            .types
-            .stack(&checked.interface.stack_out, compiler, work));
-    layout.text_witness = attempt!(compiler.signature(&[noble_kernel::types::Ty::Text], work));
-    index = compiler.descriptors.len();
+    layout
+        .types
+        .stack(&checked.interface.stack_in, compiler, work)
+}
+
+/// Publish a descriptor for every signature interned since the committed
+/// table, stopping at the first failure.
+fn publish_descriptors(
+    compiler: &mut super::super::Compiler,
+    layout: &mut super::Layout,
+) -> Result<(), crate::Diagnostic> {
+    let mut index = compiler.descriptors.len();
+    let mut failure = None;
     while index < compiler.signatures.len() {
         match descriptor(compiler, layout, index) {
             Ok(descriptor) => {
@@ -355,9 +387,6 @@ pub(super) fn finish(
     }
     match failure {
         Some(problem) => Err(problem),
-        None => {
-            layout.descriptors = compiler.descriptors.clone();
-            Ok(())
-        }
+        None => Ok(()),
     }
 }

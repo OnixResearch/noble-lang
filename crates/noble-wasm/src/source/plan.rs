@@ -620,10 +620,6 @@ fn specialize_program(
 }
 
 /// Charge the visit at `index`, fuse a pattern starting there, and return the next index.
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; this pass rewrites only the exact five-operation source pattern after independent checking; unmatched shapes remain baseline operations."
-)]
 fn specialize_at(
     program: &mut Program,
     index: usize,
@@ -632,39 +628,83 @@ fn specialize_at(
     fallback_operations: &mut u64,
 ) -> Result<usize, crate::Diagnostic> {
     attempt!(work.charge(1));
-    if index.saturating_add(4) < program.operations.len() {
-        let is_scalar_literal = matches!(
-            program.operations[index].action,
-            Action::I64(_) | Action::Bool(_) | Action::Unit
-        );
-        let variant_definition =
-            if let Action::Word(definition @ (15 | 16)) = program.operations[index + 1].action {
-                Some(definition)
-            } else {
-                None
-            };
-        let has_static_quotations =
-            matches!(program.operations[index + 2].action, Action::Program(_))
-                && matches!(program.operations[index + 3].action, Action::Program(_));
-        if is_scalar_literal
-            && has_static_quotations
-            && matches!(program.operations[index + 4].action, Action::Word(17))
-        {
-            if let Some(definition) = variant_definition {
-                program.operations[index + 1].action = Action::KnownVariant(definition);
-                program.operations[index + 4].action =
-                    Action::KnownCase(u32::from(definition == 16));
-                *specializations = specializations
-                    .checked_add(1)
-                    .ok_or(crate::Diagnostic::Exhausted)?;
-                return Ok(index + 5);
-            }
-        }
+    if let Some(definition) = known_sum_definition(&program.operations, index) {
+        program.operations[index + 1].action = Action::KnownVariant(definition);
+        program.operations[index + 4].action = Action::KnownCase(u32::from(definition == 16));
+        *specializations = specializations
+            .checked_add(1)
+            .ok_or(crate::Diagnostic::Exhausted)?;
+        return Ok(index + 5);
     }
     *fallback_operations = fallback_operations
         .checked_add(1)
         .ok_or(crate::Diagnostic::Exhausted)?;
     Ok(index + 1)
+}
+
+/// The variant definition (15 or 16) of the exact five-operation known-Sum
+/// source pattern starting at `index`: a scalar literal, the variant word, two
+/// static quotations and the case word. Unmatched shapes stay baseline.
+fn known_sum_definition(operations: &[Operation], index: usize) -> Option<u32> {
+    if index.saturating_add(4) >= operations.len() {
+        return None;
+    }
+    known_sum_pattern(
+        operations[index].action,
+        operations[index + 1].action,
+        operations[index + 2].action,
+        operations[index + 3].action,
+        operations[index + 4].action,
+    )
+}
+
+/// The variant definition of a scalar literal, a Sum constructor word, two
+/// static quotations and the case word, in that order. Each action is matched
+/// by value in its own test, so no expanded action is live across a join.
+fn known_sum_pattern(
+    literal: Action,
+    variant: Action,
+    left: Action,
+    right: Action,
+    case: Action,
+) -> Option<u32> {
+    if !is_scalar_literal(literal) {
+        return None;
+    }
+    if !is_static_quotation(left) {
+        return None;
+    }
+    if !is_static_quotation(right) {
+        return None;
+    }
+    if !is_case_word(case) {
+        return None;
+    }
+    variant_definition(variant)
+}
+
+/// Whether an action pushes a scalar literal.
+fn is_scalar_literal(action: Action) -> bool {
+    matches!(action, Action::I64(_) | Action::Bool(_) | Action::Unit)
+}
+
+/// Whether an action pushes a static quotation.
+fn is_static_quotation(action: Action) -> bool {
+    matches!(action, Action::Program(_))
+}
+
+/// Whether an action is the Sum case word.
+fn is_case_word(action: Action) -> bool {
+    matches!(action, Action::Word(17))
+}
+
+/// The variant word's definition, when it is one of the two Sum constructors.
+fn variant_definition(action: Action) -> Option<u32> {
+    match action {
+        Action::Word(definition @ (15 | 16)) => Some(definition),
+        // Every other action leaves the pattern unmatched.
+        _ => None,
+    }
 }
 
 pub(super) fn number(value: usize) -> Result<u32, crate::Diagnostic> {

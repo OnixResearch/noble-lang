@@ -77,15 +77,8 @@ fn builtin_count(env: &noble_kernel::contracts::Env) -> u32 {
     if env.has_checked_i64() {
         return 30;
     }
-    if env.calculator && env.declared_modules {
-        return 32;
-    }
-    // Declared text extends the cursor prefix with signed I64 `<` at 27.
-    if env.text_cursor && env.declared_modules {
-        return 28;
-    }
     if env.declared_modules {
-        return 23;
+        return declared_builtin_count(env);
     }
     if env.text_cursor {
         return 27;
@@ -95,6 +88,18 @@ fn builtin_count(env: &noble_kernel::contracts::Env) -> u32 {
     }
     if env.effects.contains(&noble_kernel::types::EffId(1)) {
         return 24;
+    }
+    23
+}
+
+/// The fixed prefix of a declared-module session.
+const fn declared_builtin_count(env: &noble_kernel::contracts::Env) -> u32 {
+    if env.calculator {
+        return 32;
+    }
+    // Declared text extends the cursor prefix with signed I64 `<` at 27.
+    if env.text_cursor {
+        return 28;
     }
     23
 }
@@ -720,37 +725,60 @@ impl Compiler {
                 generation: self.generation,
             });
         }
-        let mut start = self.functions;
-        if self.live_slots {
-            if let Some(index) = position_of(&self.free_code, |free| free.slots >= slots) {
-                let free = &mut self.free_code[index];
-                start = free.start;
-                free.start += slots;
-                free.slots -= slots;
-                if free.slots == 0 {
-                    self.free_code.remove(index);
-                }
-            } else {
-                self.functions = match self.functions.checked_add(slots) {
-                    Some(end) if end <= TABLE_LIMIT => end,
-                    Some(_) | None => return Err(crate::Diagnostic::Exhausted),
-                };
-            }
-        } else {
-            self.functions = match self.functions.checked_add(slots) {
-                Some(end) if end <= TABLE_LIMIT => end,
-                Some(_) | None => return Err(crate::Diagnostic::Exhausted),
-            };
-        }
+        let start = attempt!(self.code_start(slots));
         let span = CodeSpan {
             start,
             slots,
             generation: self.generation,
         };
-        if self.live || self.declared_live || self.live_slots {
+        if self.owns_code() {
             self.installed_code.push(span);
         }
         Ok(span)
+    }
+
+    /// The first slot of `slots` new code slots: the first free span that fits
+    /// under live slots, else the table's end, which then grows by `slots`.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; reserve_code updates only the unpublished prospective compiler table and preserves every refusal as a diagnostic."
+    )]
+    fn code_start(&mut self, slots: u32) -> Result<u32, crate::Diagnostic> {
+        if let Some(index) = self.fitting_free_code(slots) {
+            return Ok(self.take_free_code(index, slots));
+        }
+        let start = self.functions;
+        self.functions = attempt!(extended_table(self.functions, slots));
+        Ok(start)
+    }
+
+    /// The first free span holding `slots` slots; only live slots reuse code.
+    fn fitting_free_code(&self, slots: u32) -> Option<usize> {
+        if !self.live_slots {
+            return None;
+        }
+        position_of(&self.free_code, |free| free.slots >= slots)
+    }
+
+    /// Take `slots` slots from the front of free span `index`, dropping it once empty.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; reserve_code updates only the unpublished prospective compiler table and preserves every refusal as a diagnostic."
+    )]
+    fn take_free_code(&mut self, index: usize, slots: u32) -> u32 {
+        let free = &mut self.free_code[index];
+        let start = free.start;
+        free.start += slots;
+        free.slots -= slots;
+        if free.slots == 0 {
+            self.free_code.remove(index);
+        }
+        start
+    }
+
+    /// Whether a live or declared-live profile owns its installed code spans.
+    const fn owns_code(&self) -> bool {
+        self.live || self.declared_live || self.live_slots
     }
 
     #[expect(
@@ -1583,10 +1611,7 @@ impl Compiler {
         span: CodeSpan,
         verify_and_clear: impl FnOnce(CodeSpan) -> Result<(), crate::Diagnostic>,
     ) -> Result<(), crate::Diagnostic> {
-        if !(self.live || self.declared_live || self.live_slots)
-            || span.slots == 0
-            || span.start < 4
-        {
+        if !self.owns_code() || span.slots == 0 || span.start < 4 {
             return Err(crate::Diagnostic::Invalid);
         }
         let Some(index) = position_of(&self.installed_code, |owned| *owned == span) else {
@@ -1600,7 +1625,7 @@ impl Compiler {
         }
         attempt!(verify_and_clear(span));
         self.installed_code.remove(index);
-        let mut index = self
+        let index = self
             .free_code
             .partition_point(|free| free.start < span.start);
         self.free_code.insert(
@@ -1610,27 +1635,66 @@ impl Compiler {
                 slots: span.slots,
             },
         );
-        if index > 0
-            && self.free_code[index - 1].start + self.free_code[index - 1].slots
-                == self.free_code[index].start
-        {
-            let right = self.free_code.remove(index);
-            self.free_code[index - 1].slots += right.slots;
-            index -= 1;
-        }
-        if index + 1 < self.free_code.len()
-            && self.free_code[index].start + self.free_code[index].slots
-                == self.free_code[index + 1].start
-        {
-            let right = self.free_code.remove(index + 1);
-            self.free_code[index].slots += right.slots;
-        }
-        if self.free_code[index].start + self.free_code[index].slots == self.functions {
-            self.functions = self.free_code[index].start;
-            self.free_code.remove(index);
-        }
+        let index = self.coalesce_left(index);
+        self.coalesce_right(index);
+        self.release_table_end(index);
         self.retention_revision += 1;
         Ok(())
+    }
+
+    /// Merge free span `index` into its left neighbour when they touch,
+    /// returning the index of the span that now holds it.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers; successful retirement explicitly clears trusted runtime table entries and publishes a revised compiler allocation state."
+    )]
+    fn coalesce_left(&mut self, index: usize) -> usize {
+        if !self.touches_left(index) {
+            return index;
+        }
+        let right = self.free_code.remove(index);
+        self.free_code[index - 1].slots += right.slots;
+        index - 1
+    }
+
+    /// Whether free span `index` starts where its left neighbour ends.
+    fn touches_left(&self, index: usize) -> bool {
+        index > 0
+            && self.free_code[index - 1].start + self.free_code[index - 1].slots
+                == self.free_code[index].start
+    }
+
+    /// Merge free span `index`'s right neighbour into it when they touch.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers; successful retirement explicitly clears trusted runtime table entries and publishes a revised compiler allocation state."
+    )]
+    fn coalesce_right(&mut self, index: usize) {
+        if !self.touches_right(index) {
+            return;
+        }
+        let right = self.free_code.remove(index + 1);
+        self.free_code[index].slots += right.slots;
+    }
+
+    /// Whether free span `index`'s right neighbour starts where it ends.
+    fn touches_right(&self, index: usize) -> bool {
+        index + 1 < self.free_code.len()
+            && self.free_code[index].start + self.free_code[index].slots
+                == self.free_code[index + 1].start
+    }
+
+    /// Shrink the table when free span `index` ends exactly at the table's end.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers; successful retirement explicitly clears trusted runtime table entries and publishes a revised compiler allocation state."
+    )]
+    fn release_table_end(&mut self, index: usize) {
+        if self.free_code[index].start + self.free_code[index].slots != self.functions {
+            return;
+        }
+        self.functions = self.free_code[index].start;
+        self.free_code.remove(index);
     }
 }
 
@@ -1651,6 +1715,14 @@ fn position_of<T>(items: &[T], mut predicate: impl FnMut(&T) -> bool) -> Option<
         index += 1;
     }
     found
+}
+
+/// The table end after `slots` more functions, refused past the table limit.
+fn extended_table(functions: u32, slots: u32) -> Result<u32, crate::Diagnostic> {
+    match functions.checked_add(slots) {
+        Some(end) if end <= TABLE_LIMIT => Ok(end),
+        Some(_) | None => Err(crate::Diagnostic::Exhausted),
+    }
 }
 
 /// The work budget and checked submission after borrowed preflight and

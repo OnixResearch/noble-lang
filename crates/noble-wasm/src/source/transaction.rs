@@ -75,11 +75,8 @@ impl Base {
     fn positions_match(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
         // The descriptor table has exactly one entry for every emitted
         // signature, so its transactional base shares the profile key bound.
-        let key_cap = if self.calculator {
-            crate::signatures::CALCULATOR_SOURCE_KEY_LIMIT
-        } else {
-            crate::signatures::SOURCE_KEY_LIMIT
-        };
+        let key_cap = key_limit(self.calculator);
+        let identity_cap = identity_limit(self.calculator);
         self.live == current.live
             && self.live == next.live
             && self.declared_live == current.declared_live
@@ -116,12 +113,7 @@ impl Base {
             && self.identity_base <= next.identities.len()
             && self.signature_count <= key_cap
             && self.descriptor_count <= key_cap
-            && self.identity_count
-                <= if self.calculator {
-                    super::CALCULATOR_DEFINITION_LIMIT
-                } else {
-                    super::DEFINITION_LIMIT
-                }
+            && self.identity_count <= identity_cap
     }
 
     pub(super) fn matches(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
@@ -164,6 +156,24 @@ fn same_descriptor(current: &super::Compiler, next: &super::Compiler, index: usi
 /// Whether a retained identity record differs from the committed one.
 fn identity_differs(before: &super::Identity, prepared: &super::Identity) -> bool {
     before.id != prepared.id || before.recipe != prepared.recipe
+}
+
+/// The profile's signature key bound, shared by the descriptor table.
+const fn key_limit(calculator: bool) -> usize {
+    if calculator {
+        crate::signatures::CALCULATOR_SOURCE_KEY_LIMIT
+    } else {
+        crate::signatures::SOURCE_KEY_LIMIT
+    }
+}
+
+/// The profile's identity bound: one identity per definition.
+const fn identity_limit(calculator: bool) -> usize {
+    if calculator {
+        super::CALCULATOR_DEFINITION_LIMIT
+    } else {
+        super::DEFINITION_LIMIT
+    }
 }
 
 #[cfg(test)]

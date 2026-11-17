@@ -167,14 +167,8 @@ const fn definition_limit(calculator: bool) -> usize {
     }
 }
 
-#[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
-)]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; bounded environment schemes, expected interfaces and every body are inspected with one shared meter before any recursive clone; oversized untrusted submissions return diagnostics rather than panic."
-)]
+// Each profile-dependent stage runs in its own function whose branches all
+// end it, so no later stage follows a branch that two paths share.
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
     profile: super::ProfileSelection,
@@ -197,72 +191,116 @@ pub(super) fn check(
     {
         return Err(crate::Diagnostic::Exhausted);
     }
-    if profile.calculator {
-        let budget = attempt!(submission
-            .environment
-            .calculator_clone_budget()
-            .ok_or(crate::Diagnostic::Exhausted));
-        let count = attempt!(submission
-            .definitions
-            .len()
-            .checked_add(1)
-            .ok_or(crate::Diagnostic::Exhausted));
-        let copies = attempt!(u64::try_from(count).map_err(|_| crate::Diagnostic::Exhausted));
-        attempt!(budget
-            .reserved_bytes
-            .checked_mul(copies)
-            .filter(|total| *total <= noble_kernel::contracts::CALCULATOR_ENV_CLONE_FANOUT_LIMIT)
-            .ok_or(crate::Diagnostic::Exhausted));
-        attempt!(work.charge(attempt!(budget
-            .bytes
-            .checked_mul(copies)
-            .ok_or(crate::Diagnostic::Exhausted))));
-    }
-    let mut index = 0usize;
-    let mut failure = None;
-    // The selected clone-budget walk has already inspected every scheme
-    // constructor, embedded nominal descriptor and depth/arity bound.
-    // Do not repeat the old borrowed tree walk before independent admission.
-    if !profile.calculator {
-        while index < submission.environment.defs.len() {
-            match schemes::check(&submission.environment.defs[index], work) {
-                Ok(()) => index += 1,
-                Err(problem) => {
-                    failure = Some(problem);
-                    break;
-                }
-            }
-        }
-    }
-    if let Some(problem) = failure {
-        return Err(problem);
-    }
-    if profile.calculator {
-        attempt!(variables::schemes(submission, work));
-    }
-    if !profile.calculator {
-        index = 0;
-        while index < submission.environment.nominals.len() {
-            let shape = &submission.environment.nominals[index].shape;
-            match nominal_shape(shape, work) {
-                Ok(()) => index += 1,
-                Err(problem) => {
-                    failure = Some(problem);
-                    break;
-                }
-            }
-        }
-    }
-    if let Some(problem) = failure {
-        return Err(problem);
-    }
+    attempt!(environment(submission, profile.calculator, work));
     attempt!(expected(
         &submission.request.expected,
         submission.request.limits,
         work
     ));
     attempt!(body(&submission.body, submission.request.limits, work));
-    index = 0;
+    attempt!(definitions(submission, work));
+    if profile.calculator {
+        return variables::check(submission, work);
+    }
+    Ok(())
+}
+
+/// Inspect the environment: the calculator charges its clone budget and walks
+/// its schemes once; every other profile checks each scheme and nominal shape.
+fn environment(
+    submission: &noble_kernel::execution::Submission,
+    is_calculator: bool,
+    work: &mut super::Work,
+) -> Result<(), crate::Diagnostic> {
+    if is_calculator {
+        // The selected clone-budget walk has already inspected every scheme
+        // constructor, embedded nominal descriptor and depth/arity bound.
+        // Do not repeat the old borrowed tree walk before independent admission.
+        attempt!(calculator_clone_charge(submission, work));
+        return variables::schemes(submission, work);
+    }
+    attempt!(environment_schemes(submission, work));
+    environment_nominals(submission, work)
+}
+
+/// Charge the calculator's environment clone budget for every copy it makes.
+fn calculator_clone_charge(
+    submission: &noble_kernel::execution::Submission,
+    work: &mut super::Work,
+) -> Result<(), crate::Diagnostic> {
+    let budget = attempt!(submission
+        .environment
+        .calculator_clone_budget()
+        .ok_or(crate::Diagnostic::Exhausted));
+    let count = attempt!(submission
+        .definitions
+        .len()
+        .checked_add(1)
+        .ok_or(crate::Diagnostic::Exhausted));
+    let copies = attempt!(u64::try_from(count).map_err(|_| crate::Diagnostic::Exhausted));
+    attempt!(budget
+        .reserved_bytes
+        .checked_mul(copies)
+        .filter(|total| *total <= noble_kernel::contracts::CALCULATOR_ENV_CLONE_FANOUT_LIMIT)
+        .ok_or(crate::Diagnostic::Exhausted));
+    work.charge(attempt!(budget
+        .bytes
+        .checked_mul(copies)
+        .ok_or(crate::Diagnostic::Exhausted)))
+}
+
+/// Check every environment scheme in order, stopping at the first failure.
+fn environment_schemes(
+    submission: &noble_kernel::execution::Submission,
+    work: &mut super::Work,
+) -> Result<(), crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < submission.environment.defs.len() {
+        match schemes::check(&submission.environment.defs[index], work) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+/// Check every environment nominal shape in order, stopping at the first failure.
+fn environment_nominals(
+    submission: &noble_kernel::execution::Submission,
+    work: &mut super::Work,
+) -> Result<(), crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < submission.environment.nominals.len() {
+        let shape = &submission.environment.nominals[index].shape;
+        match nominal_shape(shape, work) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+/// Check every named definition in order, stopping at the first failure.
+fn definitions(
+    submission: &noble_kernel::execution::Submission,
+    work: &mut super::Work,
+) -> Result<(), crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut failure = None;
     while index < submission.definitions.len() {
         match definition(
             &submission.definitions[index],
@@ -278,7 +316,6 @@ pub(super) fn check(
     }
     match failure {
         Some(problem) => Err(problem),
-        None if profile.calculator => variables::check(submission, work),
         None => Ok(()),
     }
 }

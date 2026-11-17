@@ -587,26 +587,43 @@ struct Cost {
     quotation_output_height: u64,
 }
 
-#[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-wasm-maintainers; the selected lowering or preflight stage keeps its checked step order in one reviewable unit, and splitting it would separate the emitted sequence from its bounds checks."
-)]
+// Each node kind prices itself in its own function, so no pricing step
+// follows a branch that two node kinds share.
 fn node(
     node: &noble_kernel::untrusted::Node,
     submission: &noble_kernel::execution::Submission,
     work: &mut super::super::Work,
 ) -> Result<Cost, crate::Diagnostic> {
-    let inst = match node {
-        noble_kernel::untrusted::Node::Literal { inst, .. }
-        | noble_kernel::untrusted::Node::Invocation { inst, .. }
-        | noble_kernel::untrusted::Node::Quotation { inst, .. } => inst,
+    match node {
+        noble_kernel::untrusted::Node::Literal { inst, .. } => literal_cost(inst, submission, work),
+        noble_kernel::untrusted::Node::Quotation { inst, body, .. } => {
+            quotation_cost(inst, body.len(), submission, work)
+        }
+        noble_kernel::untrusted::Node::Invocation { inst, def, .. } => {
+            invocation_cost(inst, *def, submission, work)
+        }
         // The kernel refuses borrowed dispatch outside the live-slot profile.
         // The calculator profile never authorizes signed self recursion.
         noble_kernel::untrusted::Node::SlotInvoke { .. }
-        | noble_kernel::untrusted::Node::SignedSelf { .. } => {
-            return Err(crate::Diagnostic::Unsupported)
-        }
-    };
+        | noble_kernel::untrusted::Node::SignedSelf { .. } => Err(crate::Diagnostic::Unsupported),
+    }
+}
+
+/// The witness sizes and volumes every node prices from, its base clone cost
+/// and the environment's nominal lookup rows.
+struct NodeWitness {
+    sizes: [u64; 8],
+    volumes: [Volume; 8],
+    cost: u64,
+    lookup_rows: u64,
+}
+
+/// Price a node's instantiation witness.
+fn node_witness(
+    inst: &noble_kernel::words::Inst,
+    submission: &noble_kernel::execution::Submission,
+    work: &mut super::super::Work,
+) -> Result<NodeWitness, crate::Diagnostic> {
     let lookup_rows = attempt!(u64::try_from(
         submission
             .environment
@@ -616,109 +633,158 @@ fn node(
     )
     .map_err(|_| crate::Diagnostic::Exhausted));
     let (sizes, volumes, witness_size) = attempt!(witness(inst, lookup_rows, work));
-    let mut cost = attempt!(mul(witness_size, 16));
-    let input;
-    let output;
-    let quotation_input;
-    let quotation_output;
-    let input_height;
-    let output_height;
-    let quotation_input_height;
-    let quotation_output_height;
-    match node {
-        noble_kernel::untrusted::Node::Literal { .. } => {
-            cost = attempt!(add(cost, attempt!(mul(sizes[0], 32))));
-            input = sizes[0];
-            output = attempt!(add(input, 1));
-            quotation_input = 0;
-            quotation_output = 0;
-            input_height = volumes[0].height;
-            output_height = attempt!(add(input_height, 1));
-            quotation_input_height = 0;
-            quotation_output_height = 0;
-        }
-        noble_kernel::untrusted::Node::Quotation { body, .. } => {
-            cost = attempt!(add(cost, attempt!(mul(body.len() as u64, 16))));
-            let stack = attempt!(add(
-                attempt!(mul(sizes[0], 2)),
-                attempt!(add(sizes[1], sizes[2]))
-            ));
-            cost = attempt!(add(cost, attempt!(mul(stack, 16))));
-            let constructed = attempt!(volumes[1].add(volumes[2])).constructed(1, false);
-            input = sizes[0];
-            output = attempt!(add(
-                input,
-                attempt!(attempt!(constructed).cost(lookup_rows))
-            ));
-            quotation_input = sizes[1];
-            quotation_output = sizes[2];
-            input_height = volumes[0].height;
-            output_height = attempt!(add(input_height, 1));
-            quotation_input_height = volumes[1].height;
-            quotation_output_height = volumes[2].height;
-        }
-        noble_kernel::untrusted::Node::Invocation { def, .. } => {
-            let scheme = attempt!(submission
-                .environment
-                .scheme(*def)
-                .ok_or(crate::Diagnostic::Invalid));
-            cost = attempt!(add(
-                cost,
-                attempt!(super::super::admission::witness_scheme(
-                    submission, *def, work
-                ))
-            ));
-            let mut index = 0usize;
-            let mut failure = None;
-            while index < scheme.stack_in.len() + scheme.stack_out.len() {
-                let value = chained(&scheme.stack_in, &scheme.stack_out, index);
-                match pattern(value, &sizes, 0, lookup_rows, work) {
-                    Ok(size) => match add(cost, size) {
-                        Ok(sum) => {
-                            cost = sum;
-                            index += 1;
-                        }
-                        Err(problem) => {
-                            failure = Some(problem);
-                            break;
-                        }
-                    },
-                    Err(problem) => {
-                        failure = Some(problem);
-                        break;
-                    }
-                }
-            }
-            if let Some(problem) = failure {
-                return Err(problem);
-            }
-            let projected_input = attempt!(projected_stack(&scheme.stack_in, &volumes, 0, work));
-            let projected_output = attempt!(projected_stack(&scheme.stack_out, &volumes, 0, work));
-            input = attempt!(projected_input.cost(lookup_rows));
-            output = attempt!(projected_output.cost(lookup_rows));
-            quotation_input = 0;
-            quotation_output = 0;
-            input_height = projected_input.height;
-            output_height = projected_output.height;
-            quotation_input_height = 0;
-            quotation_output_height = 0;
-        }
-        noble_kernel::untrusted::Node::SlotInvoke { .. }
-        | noble_kernel::untrusted::Node::SignedSelf { .. } => {
-            return Err(crate::Diagnostic::Unsupported)
-        }
-    }
+    let cost = attempt!(mul(witness_size, 16));
+    Ok(NodeWitness {
+        sizes,
+        volumes,
+        cost,
+        lookup_rows,
+    })
+}
+
+/// A literal copies its witness and pushes one cell.
+fn literal_cost(
+    inst: &noble_kernel::words::Inst,
+    submission: &noble_kernel::execution::Submission,
+    work: &mut super::super::Work,
+) -> Result<Cost, crate::Diagnostic> {
+    let witness = attempt!(node_witness(inst, submission, work));
+    let cost = attempt!(add(witness.cost, attempt!(mul(witness.sizes[0], 32))));
+    let input = witness.sizes[0];
+    let output = attempt!(add(input, 1));
+    let input_height = witness.volumes[0].height;
+    let output_height = attempt!(add(input_height, 1));
     Ok(Cost {
         clone: cost,
         input,
         output,
-        quotation_input,
-        quotation_output,
+        quotation_input: 0,
+        quotation_output: 0,
         input_height,
         output_height,
-        quotation_input_height,
-        quotation_output_height,
+        quotation_input_height: 0,
+        quotation_output_height: 0,
     })
+}
+
+/// A quotation copies its body and stacks and pushes one constructed Program.
+fn quotation_cost(
+    inst: &noble_kernel::words::Inst,
+    body_len: usize,
+    submission: &noble_kernel::execution::Submission,
+    work: &mut super::super::Work,
+) -> Result<Cost, crate::Diagnostic> {
+    let witness = attempt!(node_witness(inst, submission, work));
+    let mut cost = attempt!(add(witness.cost, attempt!(mul(body_len as u64, 16))));
+    let stack = attempt!(add(
+        attempt!(mul(witness.sizes[0], 2)),
+        attempt!(add(witness.sizes[1], witness.sizes[2]))
+    ));
+    cost = attempt!(add(cost, attempt!(mul(stack, 16))));
+    let constructed = attempt!(witness.volumes[1].add(witness.volumes[2])).constructed(1, false);
+    let input = witness.sizes[0];
+    let output = attempt!(add(
+        input,
+        attempt!(attempt!(constructed).cost(witness.lookup_rows))
+    ));
+    let input_height = witness.volumes[0].height;
+    let output_height = attempt!(add(input_height, 1));
+    Ok(Cost {
+        clone: cost,
+        input,
+        output,
+        quotation_input: witness.sizes[1],
+        quotation_output: witness.sizes[2],
+        input_height,
+        output_height,
+        quotation_input_height: witness.volumes[1].height,
+        quotation_output_height: witness.volumes[2].height,
+    })
+}
+
+/// An invocation prices its scheme's witness and every pattern of its scheme,
+/// then projects its concrete input and output stacks.
+fn invocation_cost(
+    inst: &noble_kernel::words::Inst,
+    def: noble_kernel::contracts::Definition,
+    submission: &noble_kernel::execution::Submission,
+    work: &mut super::super::Work,
+) -> Result<Cost, crate::Diagnostic> {
+    let witness = attempt!(node_witness(inst, submission, work));
+    let scheme = attempt!(submission
+        .environment
+        .scheme(def)
+        .ok_or(crate::Diagnostic::Invalid));
+    let cost = attempt!(add(
+        witness.cost,
+        attempt!(super::super::admission::witness_scheme(
+            submission, def, work
+        ))
+    ));
+    let cost = attempt!(scheme_cost(
+        scheme,
+        &witness.sizes,
+        witness.lookup_rows,
+        cost,
+        work
+    ));
+    let projected_input = attempt!(projected_stack(&scheme.stack_in, &witness.volumes, 0, work));
+    let projected_output = attempt!(projected_stack(
+        &scheme.stack_out,
+        &witness.volumes,
+        0,
+        work
+    ));
+    let input = attempt!(projected_input.cost(witness.lookup_rows));
+    let output = attempt!(projected_output.cost(witness.lookup_rows));
+    Ok(Cost {
+        clone: cost,
+        input,
+        output,
+        quotation_input: 0,
+        quotation_output: 0,
+        input_height: projected_input.height,
+        output_height: projected_output.height,
+        quotation_input_height: 0,
+        quotation_output_height: 0,
+    })
+}
+
+/// Add every input, then output, pattern of a scheme to `cost`, stopping at
+/// the first failure.
+fn scheme_cost(
+    scheme: &noble_kernel::words::Scheme,
+    sizes: &[u64; 8],
+    lookup_rows: u64,
+    cost: u64,
+    work: &mut super::super::Work,
+) -> Result<u64, crate::Diagnostic> {
+    let mut cost = cost;
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < scheme.stack_in.len() + scheme.stack_out.len() {
+        let value = chained(&scheme.stack_in, &scheme.stack_out, index);
+        match pattern(value, sizes, 0, lookup_rows, work) {
+            Ok(size) => match add(cost, size) {
+                Ok(sum) => {
+                    cost = sum;
+                    index += 1;
+                }
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
+                }
+            },
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(cost),
+    }
 }
 
 /// The immutable inputs shared by every recursive `appearance` visit.

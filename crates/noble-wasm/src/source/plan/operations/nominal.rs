@@ -7,6 +7,77 @@ pub(super) struct Output<'a> {
 }
 
 impl<'a> Output<'a> {
+    /// The action of a declared non-`Named` behaviour. A builtin behaviour on
+    /// a definition past the builtin prefix is refused.
+    pub(super) fn behavior_action(
+        self,
+        kind: noble_kernel::contracts::Behavior,
+    ) -> Result<super::super::Action, crate::Diagnostic> {
+        match kind {
+            noble_kernel::contracts::Behavior::BoundEmit(slot) => self.bound_action(slot),
+            noble_kernel::contracts::Behavior::BoundClock(slot) => self.clock_action(slot),
+            noble_kernel::contracts::Behavior::BoundCodeExport(slot) => {
+                self.code_export_action(slot)
+            }
+            noble_kernel::contracts::Behavior::BoundSend(slot) => self.send_action(slot),
+            noble_kernel::contracts::Behavior::NominalNew(id) => self.new_action(id),
+            noble_kernel::contracts::Behavior::NominalInto(id) => {
+                let input_index = attempt!(Self::checked_input(self.env, self.interface, id, 1));
+                self.into_action(id, input_index)
+            }
+            noble_kernel::contracts::Behavior::NominalLeft(id) => self.variant_action(true, id),
+            noble_kernel::contracts::Behavior::NominalRight(id) => self.variant_action(false, id),
+            noble_kernel::contracts::Behavior::NominalMatch(id) => {
+                let input_index = attempt!(Self::checked_input(self.env, self.interface, id, 3));
+                self.match_action(id, input_index)
+            }
+            noble_kernel::contracts::Behavior::GenericLeft(id) => {
+                self.generic_variant_action(true, id)
+            }
+            noble_kernel::contracts::Behavior::GenericRight(id) => {
+                self.generic_variant_action(false, id)
+            }
+            noble_kernel::contracts::Behavior::GenericMatch(id) => self.generic_match_action(id),
+            noble_kernel::contracts::Behavior::Dup
+            | noble_kernel::contracts::Behavior::Drop
+            | noble_kernel::contracts::Behavior::Swap
+            | noble_kernel::contracts::Behavior::Dip
+            | noble_kernel::contracts::Behavior::Arith
+            | noble_kernel::contracts::Behavior::Equals
+            | noble_kernel::contracts::Behavior::Quote
+            | noble_kernel::contracts::Behavior::Compose
+            | noble_kernel::contracts::Behavior::Run
+            | noble_kernel::contracts::Behavior::Reflect
+            | noble_kernel::contracts::Behavior::Unit
+            | noble_kernel::contracts::Behavior::Pair
+            | noble_kernel::contracts::Behavior::Unpair
+            | noble_kernel::contracts::Behavior::Inl
+            | noble_kernel::contracts::Behavior::Inr
+            | noble_kernel::contracts::Behavior::Case
+            | noble_kernel::contracts::Behavior::If
+            | noble_kernel::contracts::Behavior::Nil
+            | noble_kernel::contracts::Behavior::Cons
+            | noble_kernel::contracts::Behavior::ListCase
+            | noble_kernel::contracts::Behavior::TestEmit
+            | noble_kernel::contracts::Behavior::Reserved
+            | noble_kernel::contracts::Behavior::TextByte
+            | noble_kernel::contracts::Behavior::I64Less
+            | noble_kernel::contracts::Behavior::CheckedI64Add
+            | noble_kernel::contracts::Behavior::CheckedI64Sub
+            | noble_kernel::contracts::Behavior::CheckedI64Mul
+            | noble_kernel::contracts::Behavior::CheckedI64Neg
+            | noble_kernel::contracts::Behavior::CheckedI64Abs
+            | noble_kernel::contracts::Behavior::CheckedI64Less
+            | noble_kernel::contracts::Behavior::CheckedI64DivRem
+            | noble_kernel::contracts::Behavior::CalculatorIterate
+            | noble_kernel::contracts::Behavior::CalculatorCompare
+            | noble_kernel::contracts::Behavior::CalculatorDivRem
+            | noble_kernel::contracts::Behavior::CalculatorTextFromAscii
+            | noble_kernel::contracts::Behavior::CalculatorTextLength
+            | noble_kernel::contracts::Behavior::Named => Err(crate::Diagnostic::Invalid),
+        }
+    }
+
     pub(super) fn new_action(
         self,
         id: noble_kernel::types::NominalTypeId,
