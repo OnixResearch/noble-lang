@@ -10,7 +10,10 @@
 // glue, failed discovery retains all three actual extractions for that work.
 // After separately reviewing/renewing the generated files and transparent model
 // glue, rerun discovery against the settled tree, review its complete inventory,
-// and install review-candidate.json as verification/m4/extraction-lock.json.
+// and install the extraction-lock.json.gz it writes next to review-candidate.json
+// (the same content, gzip-compressed) as verification/m4/extraction-lock.json.gz.
+// Check writes implementation.json and its gzip; retain the gzip unchanged. The
+// whole-crate lock and receipt exceed GitHub's 100 MiB file limit uncompressed.
 // Check independently re-extracts, byte-compares generated files and compares
 // every source/tool/inventory/dependency/axiom entry with that reviewed lock.
 //
@@ -21,6 +24,7 @@
 // required integration checks; this gate neither replaces nor weakens them.
 import fs from 'node:fs';
 import path from 'node:path';
+import zlib from 'node:zlib';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { schema, sha, canonical, canonicalLlbcHash, fail, equal, exactBytes, lanes, sourcePolicy, account, auditPacket, auditPackets } from './accounting.mjs';
@@ -44,10 +48,14 @@ if (artifacts === root || artifacts.startsWith(`${root}${path.sep}`)) fail('ARTI
 fs.mkdirSync(path.dirname(artifacts), { recursive: true });
 fs.mkdirSync(artifacts); // Never overwrite or resume a previous run.
 const workspace = path.join(artifacts, 'workspace');
-const lockFile = 'verification/m4/extraction-lock.json';
+const lockFile = 'verification/m4/extraction-lock.json.gz';
 const fileSha = file => sha(fs.readFileSync(file));
 const json = file => JSON.parse(fs.readFileSync(file, 'utf8'));
+const gzipJson = file => JSON.parse(zlib.gunzipSync(fs.readFileSync(file)).toString('utf8'));
 const save = (name, value) => fs.writeFileSync(path.join(artifacts, name), JSON.stringify(value, null, 2) + '\n');
+// The retained lock and receipt are these exact bytes: level-9 gzip of the saved JSON.
+const saveGzip = (name, value) => fs.writeFileSync(path.join(artifacts, name),
+  zlib.gzipSync(Buffer.from(JSON.stringify(value, null, 2) + '\n'), { level: 9 }));
 const pins = {
   charon: '/nix/store/dg8i5s1hl2lncdcjmi6iq98iq1dji5x3-charon',
   aeneas: '/nix/store/mx4siwxnwb74avq1sq971h5i55bwxwzq-ocaml5.2.1-aeneas-0.1.0',
@@ -261,7 +269,7 @@ try {
   if (mode === 'check') {
     if (!fs.existsSync(path.join(root, lockFile))) fail('LOCK', 'missing reviewed extraction lock; use discovery, do not invent counts');
     if (fs.lstatSync(path.join(root, lockFile)).isSymbolicLink()) fail('LOCK', 'symlinked review');
-    expectedLock = json(path.join(root, lockFile));
+    expectedLock = gzipJson(path.join(root, lockFile));
     equal(expectedLock.schema, schema, 'LOCK', 'schema');
     equal(expectedLock.source_files, sourceFiles, 'SOURCE', 'reviewed source/tool/model/configuration drift');
     evidence.reviewed_lock_sha256 = fileSha(path.join(root, lockFile));
@@ -523,12 +531,14 @@ try {
   if (mode === 'discover') {
     evidence.result = 'review-required';
     save('review-candidate.json', candidate);
+    saveGzip('extraction-lock.json.gz', candidate);
     save('discovery.json', evidence);
     console.log(`M4-DISCOVERY review-required: ${evidence.source_revision}; no gate acceptance claimed`);
   } else {
     equal(candidate, expectedLock, 'LOCK', 'unreviewed lock field or missing required coverage');
     evidence.result = 'passed';
     save('implementation.json', evidence);
+    saveGzip('implementation.json.gz', evidence);
     console.log(`M4-IMPLEMENTATION-GATE passed: ${evidence.source_revision}`);
   }
 } catch (error) {

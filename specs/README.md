@@ -54,7 +54,8 @@ compatibility and local lifecycle/schema/progress probes. The pin is
 `0.3.0-rc-2025-09-16`, not stable WASI 0.3 or full WASI support.
 The [independently checked extraction](../verification/m6/extraction.json)
 passed 14 strict actual-Rust roots, all 75 constructor pairs and 176 M6
-refusal controls against the [reviewed lock](../verification/m4/extraction-lock.json);
+refusal controls against the then-reviewed M4 lock (since renewed by #97 as
+[`extraction-lock.json.gz`](../verification/m4/extraction-lock.json.gz));
 its [formal archives](../verification/m6/formal-archives.json) retain the
 products. [The completion record](../verification/m6/evidence.json) binds the
 full [prior regressions](../verification/m6/regressions.json), all thirteen
@@ -171,8 +172,11 @@ receipts alongside `acceptance.json`. The runtime evidence is retained at
 `verification/m4/acceptance.json` and `verification/m4/runtime.tar.gz`, with
 `verification/m4/evidence.json` recording the complete retained boundary.
 The separate actual-source extraction authorities are the reviewed
-`verification/m4/extraction-lock.json`, `verification/m4/implementation.json`
-and `verification/m4/assurance.tar.gz`. Discovery produces a review candidate;
+`verification/m4/extraction-lock.json.gz` and its check receipt
+`verification/m4/implementation.json.gz`. #97 renewed both over the
+whole-crate subjects, and they are gzip-compressed because each exceeds
+GitHub's 100 MiB file limit. `verification/m4/assurance.tar.gz` stays the
+historical M4 assurance archive. Discovery produces a review candidate;
 independent check mode re-extracts and compares source/generated identities,
 inventories, dependencies and axioms against that reviewed lock. Neither
 discovery nor runtime acceptance substitutes for that check, and no universal

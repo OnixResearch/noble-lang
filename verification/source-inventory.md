@@ -1038,7 +1038,7 @@ types; separate audit entrypoints include their transitive project dependencies.
 Its reviewed extraction lock and implementation
 receipt are the authorities for exact functions, external models, dependencies
 and axioms at their recorded source revisions. The retained shared lock is
-`verification/m4/extraction-lock.json`; M4/MC2 receipts retain their original
+`verification/m4/extraction-lock.json.gz`, renewed by #97; M4/MC2 receipts retain their original
 scopes, and each renewal requires a fresh independent check. M5's
 resource-transition theorems and component dependency coverage remain
 separate from this classification.
@@ -1046,7 +1046,8 @@ separate from this classification.
 M6 adds the async-task kernel, WIT/component frontend and async component
 lowering/emission scopes. The [independent fresh
 check](../verification/m6/extraction.json) passed against the renewed
-[reviewed lock](../verification/m4/extraction-lock.json): 526 M6 source files,
+reviewed lock of that time (`verification/m4/extraction-lock.json`, since
+renewed by #97 as [`extraction-lock.json.gz`](../verification/m4/extraction-lock.json.gz)): 526 M6 source files,
 fourteen strict actual-Rust roots for transition, table-decision, classifier
 and record-validation correspondence plus qualified lifecycle properties,
 all 75 state/event constructor pairs, and 176 M6 refusal controls (228 total
@@ -1082,7 +1083,8 @@ refinement obligations; bounded compiled execution and proof roots did not
 discharge them.
 
 DXM1 separately [checked 630 then-reviewed source files](declared-modules-v1/extraction.json)
-under the then-renewed shared [lock](m4/extraction-lock.json). All 268 inherited
+under the then-renewed shared lock (`verification/m4/extraction-lock.json` at that
+revision). All 268 inherited
 and renewed mutation controls refused the planted defects (34 earlier, 21
 M5, 176 M6 and 37 M7); no stale generated Lean source was admitted **in
 that retained run**, which does not admit the #97 source. Exactly

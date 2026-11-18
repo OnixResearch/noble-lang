@@ -36,9 +36,9 @@ The harness refuses three things:
 1. **The generated and handwritten inputs.** The generated entry, Types and Funs
    must match [the profile](model-inputs.json) and two independently produced
    records of the same extraction:
-   - `verification/m4/implementation.json`, a passed independent extraction in
+   - `verification/m4/implementation.json.gz`, a passed independent extraction in
      check mode, whose reviewed-lock hash must equal the selected lock;
-   - `verification/m4/extraction-lock.json`.
+   - `verification/m4/extraction-lock.json.gz`.
 
    Extractor and library revisions must agree, and both records must name the
    policy-selected Charon/Aeneas binary identities. The checker walks the local
@@ -136,6 +136,24 @@ whole renewed kernel equals the historical extraction: the universal codec
 theorems are checked again against the selected new subject and trusted models.
 
 ## Retained runs
+
+### `2739a352`: [receipt-2739a352.json](receipt-2739a352.json)
+
+This is the first passing run of the lane after `a3cba761` ported it to the
+whole-crate kernel subject. It is also the first against the renewed #97
+extraction records, `verification/m4/extraction-lock.json.gz` and
+`implementation.json.gz`. It is a clean run at source `2739a352`, and all 61
+theorems compile:
+
+| Axioms | Theorems |
+|---|---|
+| `propext, Classical.choice, Quot.sound` | 37 |
+| `propext, Quot.sound` | 13 |
+| `propext` | 10 |
+| none | 1 |
+
+All eleven mutation controls are refused, each losing between 3 and 10 of the
+strict theorems it targets.
 
 ### `48965967`: [receipt-48965967.json](receipt-48965967.json)
 
