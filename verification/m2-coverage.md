@@ -21,9 +21,10 @@ For #97 the M2 and M3 coverage JSON records were re-derived against the new
 checked-in generated definition lists; that *static* join does not establish
 their proof gates, source-to-generated correspondence, or current-Rust
 applicability. See [the #97 classification](aeneas-re-extraction/README.md#generated-subjects-and-lane-receipts).
-Since the whole-crate re-extraction (2026-11-16) the M2 record covers the
-current generated subject and the full gate — Lean environment checkers and
-strength classification included — passes on it: see §9.
+The whole-crate re-extraction of 2026-11-16 (§9) recorded the then-current
+generated subject, and that run's record covered it. That subject was
+regenerated once more on 2026-11-18; §10 records the subject sync, the
+re-derived record and the current gate run (§9 is historical).
 
 ## 1. Binding source for the function list
 
@@ -250,6 +251,16 @@ statuses (and citations for `proved`) and replaces the record — the gate's
 DRIFT/UNCLASSIFIED/STALE-ENTRY checks force exactly this on any drift, and
 refuse a record that merely re-states old facts over a new surface.
 
+When the generated surface changes but the classification does not, the
+2026-11-18 re-derivation (§10) instead rebuilds each entry from
+`derive(PROOF_ROOT)` — the same parser the gate runs — and carries the
+reviewed `status`/`citations`/`note` fields over *by function name*: every
+surviving name keeps its reviewed classification, a name that disappeared
+must be dropped (the join reports it as `STALE-ENTRY` otherwise), and a new
+generated name must be reviewed and classified explicitly. The derived
+`kind`/`rust`/`source`/`file`/`line` fields are never carried over, so the
+record cannot restate a span the new output no longer has.
+
 ## 7. Files added
 
 - `verification/m2-coverage-gate.sh` — the gate (§2).
@@ -317,6 +328,11 @@ model would still need the extracted function in its statement (the existing
 `CITATION-BINDING` check) to count for that function.
 
 ## 9. Whole-crate re-extraction (#97, 2026-11-16)
+
+**Historical: this section records the 2026-11-16 subject and its counts.
+That subject was superseded on 2026-11-18 (the `checked_i64_environment`
+closure adapters became the direct helpers `binary`/`unary`); §10 records
+the current bytes, the re-derived record and the gate run on them.**
 
 The checked-in `proofs/m2/NobleKernel/{Funs,Types}.lean` are now the
 whole-crate extraction of `crates/noble-kernel` (Charon `9e95cf31` with
@@ -389,3 +405,94 @@ refused at ENV-UNCLASSIFIED (gate exit 1)        (borrowed-mutual-suffix)
 accepted: the universal probe is classified universal/strict and its function is proved
 == all refusals demonstrated ==
 ```
+
+## 10. Subject re-sync and re-derived record (#97, 2026-11-18)
+
+§9's subject was regenerated once more before this run: the two
+`checked_i64_environment` closure adapters became the ordinary helper
+functions `binary`/`unary` in `crates/noble-kernel/src/contracts.rs`
+(commit `e1a14cb4`), so the generated `Types.lean` lost the two
+`@[reducible]` closure aliases and the generated `Funs.lean` lost the two
+`Fn`-impl `call`s in favour of `contracts.checked_i64_environment.binary`
+(`Funs.lean:40647`) and `.unary` (`:40621`) — the same scheme construction
+with the captured tail passed as an ordinary parameter. Only the M3 copy of
+the generated output had been updated, so the two lanes had diverged.
+
+**Subject.** `proofs/m2/NobleKernel/Types.lean` and `Funs.lean` are now the
+exact bytes of the current `proofs/m3/NobleKernel` files, copied, never
+hand-edited:
+
+```
+e09e7688131f2bf2fc68fa68453cc86e  proofs/m2/NobleKernel/Types.lean
+f27ba9d7370a147f7be2015ca04f2287  proofs/m2/NobleKernel/Funs.lean
+```
+
+`FunsExternal.lean` and `TypesExternal.lean` were already identical in both
+lanes; `NobleKernel.lean` is the hand-maintained entry point (the M2 copy
+carries its regeneration header, the M3 copy is the bare generated entry)
+and its generated content — `module` plus `public import NobleKernel.Funs` —
+is the same.
+
+**Record.** `m2-coverage.json` was rebuilt from `derive(proofs/m2)` (the
+gate's own parser) with the reviewed `status`/`citations`/`note` fields
+carried over by function name (§6). Changes, each reviewed:
+
+| Change | Count |
+|---|---|
+| entries whose restated generated facts moved (647 facts: 640 Lean `line`, 7 Rust `source` span, 3 of them both) | 644 |
+| dropped as `STALE-ENTRY`: `…checked_i64_environment.closure{,_1}.Insts.CoreOpsFunctionFnTuplePatternScheme.call` | 2 |
+| added as `extracted`: `…checked_i64_environment.{binary,unary}` | 2 |
+| status counts after the re-derivation | unchanged: 2,268 `extracted`, 1 `fixture-checked`, 69 `modeled`, 5 `excepted` (2,343 total) |
+
+`noble_kernel.acceptance.check` keeps its thirteen citations unchanged: the
+generated `check` statement did not change (only its internal helper calls
+did), and the gate re-verified every citation against the new environment.
+
+**Gate run (2026-11-18, commit `589b2d7e`, pinned Lean 4.35.0 and `bun`
+first on PATH).** `verification/m2-coverage-gate.sh` (result lines; the
+duplicate `COVERAGE-JOIN (record and generated surface agree)` line, the
+`NON-CLAIM` note and the `SUMMARY` line are elided — the per-status and
+per-strength counts are on the `COVERAGE-JOIN` and `STRENGTH` lines):
+
+```
+[m2-coverage] PASS SETUP (bun + lean 4.35.0)
+[m2-coverage] PASS BUILD (lake build NobleM2 NobleM2.Refinement NobleKernel)
+[m2-coverage] PASS COVERAGE-DERIVE (Funs.lean + FunsExternal.lean defs with rust names and source spans; keyword parity holds)
+[m2-coverage] PASS COVERAGE-JOIN (total=2343 classified=2343 extracted=2268 proved=0 fixture-checked=1 modeled=69 excepted=5 open=0)
+[m2-coverage] PASS EXCEPTED-DISCLOSURE (5 excepted entries == #[charon::opaque] declarations in the crate)
+[m2-coverage] PASS OPEN-SUBJECT (0 open entries; every generated function is classified)
+info: m2-coverage: ENV-A-PASS 2343 classified constants bound to their modules; 302 elaborator matchers and 4 partial_fixpoint mutual packings tolerated
+info: m2-coverage: ENV-B-PASS 13 refinement citations verified (theorem exists, statement mentions the constant)
+[m2-coverage] PASS ENV-BINDING (constants bound in the elaborated environment; citations are theorems mentioning their constants)
+[m2-coverage] PASS STRENGTH (citations=13 fixture=12 conditional=1 universal=0 strict=0 native=13 strict_universal=0)
+[m2-coverage] PASS (all checks) — subject: …/proofs/m2; record: …/verification/m2-coverage.json
+```
+
+`verification/m2-coverage-refusals.sh` (same PATH; result lines, case label
+in parentheses):
+
+```
+baseline: gate exit 0 (all checks pass)
+refused at UNCLASSIFIED (gate exit 1)            (unclassified-def)
+refused at CITATION (gate exit 1)                (dangling-citation)
+refused at CITATION-BINDING (gate exit 1)        (misbound-citation)
+refused at STALE-ENTRY (gate exit 1)             (stale-entry)
+refused at STATUS (gate exit 1)                  (bad-status)
+refused at STRENGTH-STATUS (gate exit 1)         (native-fixtures-as-proved)
+refused at STRENGTH-DRIFT (gate exit 1)          (conditional-claimed-universal)
+refused at ENV-UNCLASSIFIED (gate exit 1)        (borrowed-mutual-suffix)
+accepted: the universal probe is classified universal/strict and its function is proved
+== all refusals demonstrated ==
+```
+
+Every cell keeps its semantic target on the new subject: the spliced
+`coverage_probe` is refused as `UNCLASSIFIED` at `Funs.lean:49464` (the new
+end of the file), the forged strict/universal handoff is still refused by
+the elaborated statement (`record says strict … the transitive axiom set is
+native`, `record says universal, the elaborated statement is conditional`),
+and the positive control still reaches `proved=1 strict_universal=1`. No
+cell needed retargeting, so none was deleted or weakened.
+
+Both scripts were re-run on a clean tree with explicit exit capture; each
+exited 0 (`EXIT m2-coverage-gate = 0`, `EXIT m2-coverage-refusals = 0`), and
+the re-run reproduced the lines quoted above.

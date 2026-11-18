@@ -489,3 +489,76 @@ axiom as forbidden —
 `_private.NobleKernel.FunsExternal.0.noble_kernel.Shared0Slice.Insts.CoreCmpPartialEqArray.eq._native.decide.ax_1`
 and `NobleM2.embedEnv._native.decide.ax_1` — while the three generated
 literal-size axioms stay on the separate "not strict" line.
+
+## 9. Subject re-sync (#97, 2026-11-18)
+
+**§8 is historical for the subject it describes.** After it was written the
+kernel extraction was regenerated once more (the two `checked_i64_environment`
+closure adapters became the ordinary helpers `binary`/`unary` in
+`crates/noble-kernel/src/contracts.rs`, commit `e1a14cb4`), and the checked-in
+M2 subject still carried the earlier bytes. `proofs/m2/NobleKernel/{Types,
+Funs}.lean` are now byte-identical to the current `proofs/m3/NobleKernel`
+files (`md5 e09e7688131f2bf2fc68fa68453cc86e` and
+`f27ba9d7370a147f7be2015ca04f2287`), and the two `*External.lean` external
+models were already identical. The library entry point
+`proofs/m2/NobleKernel.lean` keeps its hand-written regeneration header
+(the M3 copy is the bare generated entry); its generated content — `module`
+plus `public import NobleKernel.Funs` — is the same, and both files are
+hand-maintained, not compared by byte. Nothing else in the proof tree
+changed.
+
+What this does and does not establish: the subject is the same generated code
+the M3 lane carries, and the gates below re-verify the theorems against it.
+It is not a fresh extraction run; the extraction receipt, its subject commit
+and the source inventory belong to the lanes that own them.
+
+The change is inside the generated definitions, not in any theorem
+statement: `contracts.checked_i64_environment` now calls
+`contracts.checked_i64_environment.binary`/`.unary` (plain generated defs
+with Rust names and source spans) where it used to call the two
+`Fn`-impl `call`s of the closure adapters. `noble_kernel.acceptance.check`'s
+type is unchanged, so every refinement theorem still states the same
+equation; all twelve `refinement_*` theorems still close by
+`native_decide`, and the three generated literal-size axioms of §8 are
+unchanged (`TEST_CODE_EXPORT_ADAPTER_IDENTITY`, `TEST_SEND_ADAPTER_IDENTITY`,
+`acceptance.parts.join`).
+
+**Gate run (2026-11-18, commit `589b2d7e`, pinned Lean 4.35.0 first on
+PATH).** Commands:
+`lake build NobleM2 NobleM2.Refinement NobleKernel` (inside the gate),
+`verification/m2-proof-gate.sh`, `verification/m2-proof-gate-refusals.sh`.
+
+```
+[m2-gate] PASS TOOLCHAIN (lean 4.35.0)
+[m2-gate] PASS BUILD (lake build NobleM2 NobleM2.Refinement NobleKernel)
+[m2-gate] PASS NO-SORRY (no 'sorry' outside .lake)
+[m2-gate] PASS GENERATED-KERNEL (Aeneas entry point, Funs.lean, acceptance.check)
+[m2-gate] PASS REFINEMENT-SUBJECT (Refinement.lean and Embed.lean import NobleKernel)
+[m2-gate] PASS REQUIRED-THEOREMS (inventory, axiom policy, subject binding)
+[m2-gate] PASS EXTERNAL-MODELS (no template axioms in FunsExternal/TypesExternal)
+[m2-gate] PASS (all checks) — proof root: …/proofs/m2
+```
+
+The axiom lines for `noble_kernel.acceptance.check` and the twelve
+`refinement_*` theorems are the §8 set (trifecta + the declaration's own
+`native_decide.ax_1_1` + the three literal-size axioms, reported separately
+as `generated literal-size evaluation (not strict)`), and every refinement
+theorem logs `subject … binds noble_kernel.acceptance.check`.
+
+```
+$ verification/m2-proof-gate-refusals.sh
+baseline: gate exit 0 (all checks pass)
+refused: gate exit 1 at NO-SORRY                (proof-hole)
+refused: gate exit 1 at REFINEMENT-SUBJECT      (substituted-subject)
+refused: gate exit 1 at BUILD                   (unexplained-external)
+refused: gate exit 1 at REQUIRED-THEOREMS       (unexecuted-coverage)
+refused for the probe axiom: *CoreCmpPartialEqArray.eq._native.decide.ax_*
+refused: gate exit 1 at REQUIRED-THEOREMS       (foreign-native-type)
+refused for the probe axiom: *embedEnv._native.decide.ax_*
+refused: gate exit 1 at REQUIRED-THEOREMS       (foreign-owner-literal)
+== refusal matrix complete: baseline passes, all six mutations refused ==
+```
+
+Both scripts above were re-run on a clean tree with explicit exit capture —
+`EXIT m2-proof-gate = 0`, `EXIT m2-proof-gate-refusals = 0` — and the re-run
+reproduced the quoted lines.
