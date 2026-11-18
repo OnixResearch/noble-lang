@@ -66,7 +66,7 @@ pub(super) fn value_type(
 ) -> Result<Option<noble_contracts::component::Type>, crate::Diagnostic> {
     match ty {
         noble_kernel::types::Ty::Program(_, _, _)
-            if worker_program.is_some_and(|(_, selected)| selected == ty) =>
+            if worker_program.is_some_and(|(_, selected)| *selected == *ty) =>
         {
             Ok(worker_program.map(|(kind, _)| noble_contracts::component::Type::Own(kind)))
         }
@@ -131,12 +131,16 @@ pub(super) const fn memory_layout(ty: noble_contracts::component::Type) -> (u32,
 /// Async lowering retains at most four flat arguments. Wider signatures use
 /// one canonical tuple pointer, even though exports still admit sixteen lanes.
 pub(super) fn indirect_parameters(operation: &noble_contracts::component::Operation) -> bool {
-    operation.asynchronous
-        && operation
-            .parameters
-            .iter()
-            .fold(0usize, |count, ty| count.saturating_add(lane_count(*ty)))
-            > 4
+    operation.asynchronous && flat_lanes(&operation.parameters) > 4
+}
+
+/// The saturating total of canonical flat lanes across `types`.
+fn flat_lanes(types: &[noble_contracts::component::Type]) -> usize {
+    let mut count = 0usize;
+    for ty in types {
+        count = count.saturating_add(lane_count(*ty));
+    }
+    count
 }
 
 #[expect(

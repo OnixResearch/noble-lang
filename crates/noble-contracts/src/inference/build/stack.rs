@@ -1,38 +1,39 @@
 impl super::super::Arena {
+    /// Charge one step, push the empty base, charge one scan per entry from
+    /// the top, then build and push every entry bottom first.
     #[expect(
-        tigerstyle::raw_arithmetic_overflow,
-        reason = "Owner: noble-maintainers; this step allocates arena/worklist entries. The immediately preceding nonempty check proves len - 1 cannot underflow."
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express."
     )]
-    pub(super) fn build_stack_ty<'a>(
+    pub(in crate::inference) fn build_stack_ty(
         &mut self,
-        stack: &'a [noble_kernel::types::Ty],
-        mut state: super::State<'a>,
+        stack: &[noble_kernel::types::Ty],
+        values: &mut alloc::vec::Vec<u32>,
         span: crate::Span,
         meter: &mut crate::Meter,
-    ) -> Result<super::State<'a>, crate::Diagnostic> {
-        state
-            .values
-            .push(attempt!(self.add(super::super::Term::Empty, span, meter)));
-        if !stack.is_empty() {
-            state
-                .steps
-                .push(super::Step::StackTyParts(stack, stack.len() - 1));
-        }
-        Ok(state)
+    ) -> Result<(), crate::Diagnostic> {
+        attempt!(meter.charge(1, span));
+        values.push(attempt!(self.add(super::super::Term::Empty, span, meter)));
+        attempt!(charge_scans(stack.len(), span, meter));
+        self.push_ty_entries(stack, values, span, meter)
     }
 
+    /// Charge one step, push the stack-variable or empty base, then build the
+    /// remaining entries as `build_stack_ty` does.
     #[expect(
-        tigerstyle::raw_arithmetic_overflow,
-        reason = "Owner: noble-maintainers; this step allocates arena/worklist entries. len > start and start >= 0 prove len - 1 cannot underflow."
+        tigerstyle::borrowed_argument_types,
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express, and charges the non-const work meter while allocating arena terms."
     )]
-    pub(super) fn build_stack_pattern<'a>(
+    pub(in crate::inference) fn build_stack_pattern(
         &mut self,
-        stack: &'a [noble_kernel::shapes::Pattern],
-        mut state: super::State<'a>,
+        stack: &[noble_kernel::shapes::Pattern],
+        values: &mut alloc::vec::Vec<u32>,
         variables: &[super::super::Variable],
         span: crate::Span,
         meter: &mut crate::Meter,
-    ) -> Result<super::State<'a>, crate::Diagnostic> {
+    ) -> Result<(), crate::Diagnostic> {
+        attempt!(meter.charge(1, span));
         let mut start = 0usize;
         let initial = match stack.first() {
             Some(noble_kernel::shapes::Pattern::StackVar(variable)) => {
@@ -67,64 +68,85 @@ impl super::super::Arena {
             )
             | None => attempt!(self.add(super::super::Term::Empty, span, meter)),
         };
-        state.values.push(initial);
-        if stack.len() > start {
-            state.steps.push(super::Step::StackPatternParts(
-                stack,
-                start,
-                stack.len() - 1,
-            ));
+        values.push(initial);
+        // The entries after the stack-variable prefix.
+        let entries = match stack.get(start..) {
+            Some(entries) => entries,
+            None => return Err(crate::internal(span)),
+        };
+        attempt!(charge_scans(entries.len(), span, meter));
+        self.push_pattern_entries(entries, values, variables, span, meter)
+    }
+
+    /// Build and push every stack entry, bottom first, stopping at the first
+    /// refusal.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express, and charges the non-const work meter while allocating arena terms."
+    )]
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-maintainers; each call consumes one entry of a stack bounded by the admitted stack height and type size; recursion instead of a loop keeps the build's recursive cycle free of loops, which the pinned Aeneas cannot prove monotone."
+    )]
+    fn push_ty_entries(
+        &mut self,
+        entries: &[noble_kernel::types::Ty],
+        values: &mut alloc::vec::Vec<u32>,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<(), crate::Diagnostic> {
+        match entries.split_first() {
+            Some((ty, rest)) => {
+                attempt!(self.build_ty(ty, values, span, meter));
+                attempt!(self.join(super::Join::Push, values, span, meter));
+                self.push_ty_entries(rest, values, span, meter)
+            }
+            None => Ok(()),
         }
-        Ok(state)
+    }
+
+    /// Build and push every stack-pattern entry, bottom first, stopping at the
+    /// first refusal.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express, and charges the non-const work meter while allocating arena terms."
+    )]
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-maintainers; each call consumes one entry of a stack bounded by the admitted stack height and type size; recursion instead of a loop keeps the build's recursive cycle free of loops, which the pinned Aeneas cannot prove monotone."
+    )]
+    fn push_pattern_entries(
+        &mut self,
+        entries: &[noble_kernel::shapes::Pattern],
+        values: &mut alloc::vec::Vec<u32>,
+        variables: &[super::super::Variable],
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<(), crate::Diagnostic> {
+        match entries.split_first() {
+            Some((pattern, rest)) => {
+                attempt!(self.build_pattern(pattern, values, variables, span, meter));
+                attempt!(self.join(super::Join::Push, values, span, meter));
+                self.push_pattern_entries(rest, values, variables, span, meter)
+            }
+            None => Ok(()),
+        }
     }
 }
 
-#[expect(
-    tigerstyle::raw_arithmetic_overflow,
-    reason = "Owner: noble-maintainers; scheduling grows a Vec and is non-const. The local at > 0 guard proves at - 1 cannot underflow."
-)]
-pub(super) fn ty_step<'a>(
-    stack: &'a [noble_kernel::types::Ty],
-    at: usize,
-    mut state: super::State<'a>,
+/// Charge one scan step per stack entry, stopping at the first refusal.
+fn charge_scans(
+    count: usize,
     span: crate::Span,
-) -> Result<super::State<'a>, crate::Diagnostic> {
-    let ty = match stack.get(at) {
-        Some(ty) => ty,
-        None => return Err(crate::internal(span)),
-    };
-    state.steps.push(super::Step::Push);
-    state.steps.push(super::Step::Ty(ty));
-    // Scan first, then evaluate: every scan keeps its original charge and order.
-    // The continuation and its borrowed elements move together through build.
-    if at > 0 {
-        state.steps.push(super::Step::StackTyParts(stack, at - 1));
+    meter: &mut crate::Meter,
+) -> Result<(), crate::Diagnostic> {
+    let mut outcome = Ok(());
+    let mut remaining = count;
+    while outcome.is_ok() && remaining > 0 {
+        outcome = meter.charge(1, span);
+        remaining -= 1;
     }
-    Ok(state)
-}
-
-#[expect(
-    tigerstyle::raw_arithmetic_overflow,
-    tigerstyle::ambiguous_params,
-    reason = "Owner: noble-maintainers; scheduling grows a Vec. start and at are related bounds of the same reverse scan; at > start proves at - 1 is safe and keeps the prefix excluded."
-)]
-pub(super) fn pattern_step<'a>(
-    stack: &'a [noble_kernel::shapes::Pattern],
-    start: usize,
-    at: usize,
-    mut state: super::State<'a>,
-    span: crate::Span,
-) -> Result<super::State<'a>, crate::Diagnostic> {
-    let pattern = match stack.get(at) {
-        Some(pattern) => pattern,
-        None => return Err(crate::internal(span)),
-    };
-    state.steps.push(super::Step::Push);
-    state.steps.push(super::Step::Pattern(pattern));
-    if at > start {
-        state
-            .steps
-            .push(super::Step::StackPatternParts(stack, start, at - 1));
-    }
-    Ok(state)
+    outcome
 }

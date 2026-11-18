@@ -63,8 +63,11 @@ const requiredRoots = [
   ...['index', 'representative'].map(method => ({ group: 'async-tasks', type: 'EventKind', method })),
   ...['STATE_SCHEMA', 'EVENT_SCHEMA', 'STATE_CONSTRUCTORS', 'EVENT_CONSTRUCTORS'].map(name =>
     ({ group: 'async-tasks', kind: 'globals', rust: `noble_kernel::async_tasks::schema::${name}` })),
-  ...['parse', 'prepare_export', 'check_import_effect', 'environment', 'session',
+  // As in M5: the excluded check_import_effect wrapper's checked logic is the
+  // extracted import_identity and import_effect_verdict.
+  ...['parse', 'prepare_export', 'import_identity', 'environment', 'session',
     'build_context', 'profile', 'is_async'].map(method => ({ group: 'async-frontend', type: 'World', method })),
+  { group: 'async-frontend', rust: 'noble_contracts::component::preparation::import_effect_verdict' },
   ...['compile', 'context', 'abi::indirect_parameters', 'emit::async_imports', 'emit::task::write',
     'lower::calls::invoke', 'lower::results::finish'].map(suffix =>
     ({ group: 'async-backend', rust: `noble_wasm::component::${suffix}` })),
@@ -212,7 +215,9 @@ export function asyncPacket(accounts, sources, packet) {
       dependencies.push(tableDecide, transition, classify);
     }
     const requiresAcceptance = required.method === 'prepare_export' || required.rust === 'noble_wasm::component::compile';
-    if (requiresAcceptance) dependencies.push('noble_kernel.acceptance.check');
+    // check, check_with_work and the signed-structure variant all run the same
+    // extracted machine; source preparation calls the budgeted entrypoints.
+    if (requiresAcceptance) dependencies.push('noble_kernel.acceptance.run');
     return { ...required, lane: row.lane, kind, rust: row.rust, declaration: row.declaration, owner: row.owner,
       requires_acceptance: requiresAcceptance, required_dependencies: dependencies };
   });

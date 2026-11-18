@@ -136,25 +136,28 @@ pub(super) fn types_valid(env: &super::Env, types: &[crate::types::Ty]) -> bool 
 
 /// Queue one live-reference input's forwarded references without changing order.
 /// The owned vector is returned so its allocation is reused by the outer walk.
+///
+/// The inputs are read through a slice iterator, and entries after the first
+/// refusal are passed over without being examined: the selected Aeneas cannot
+/// translate a loop that pushes borrows obtained by indexing.
 fn queue_forwarded_refs<'a>(
     env: &super::Env,
     input: &'a [crate::types::Ty],
     mut pending: alloc::vec::Vec<&'a crate::types::Ty>,
 ) -> (alloc::vec::Vec<&'a crate::types::Ty>, bool) {
-    let mut index = 0;
     let mut is_queued = true;
-    while index < input.len() && is_queued {
-        let value = &input[index];
-        if matches!(value, crate::types::Ty::LiveRef(_, _, _)) {
-            if pending.len() >= 512 {
+    for value in input.iter() {
+        if is_queued {
+            if matches!(value, crate::types::Ty::LiveRef(_, _, _)) {
+                if pending.len() >= 512 {
+                    is_queued = false;
+                } else {
+                    pending.push(value);
+                }
+            } else if !env.valid_type(value, 512) {
                 is_queued = false;
-            } else {
-                pending.push(value);
             }
-        } else if !env.valid_type(value, 512) {
-            is_queued = false;
         }
-        index += 1;
     }
     (pending, is_queued)
 }
@@ -220,4 +223,31 @@ pub(super) fn valid_ref(env: &super::Env, ty: &crate::types::Ty) -> bool {
         }
     }
     is_valid
+}
+
+#[cfg(test)]
+mod tests {
+    fn borrowed(input: alloc::vec::Vec<crate::types::Ty>, effect: Option<u32>) -> crate::types::Ty {
+        let effects = match effect {
+            Some(id) => crate::types::EffSet::from_ids(&[crate::types::EffId(id)]),
+            None => crate::types::EffSet::empty(),
+        };
+        crate::types::Ty::LiveRef(
+            alloc::boxed::Box::new(input),
+            alloc::boxed::Box::new(alloc::vec![crate::types::Ty::I64]),
+            effects,
+        )
+    }
+
+    #[test]
+    fn forwarded_borrowed_inputs_are_validated_as_references() {
+        let env = crate::contracts::Env {
+            live_slots: true,
+            ..crate::contracts::Env::default()
+        };
+        let valid_nested = borrowed(alloc::vec![borrowed(alloc::vec![], None)], None);
+        assert!(super::valid_ref(&env, &valid_nested));
+        let unknown_effect = borrowed(alloc::vec![borrowed(alloc::vec![], Some(99))], None);
+        assert!(!super::valid_ref(&env, &unknown_effect));
+    }
 }

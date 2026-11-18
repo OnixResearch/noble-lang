@@ -147,8 +147,7 @@ fn bound_registration(
     identity: u64,
     requirement: &Requirement,
 ) -> Result<(Registration, u32), crate::source::Error> {
-    let selected = attempt!(binding_index(session, name, version, requirement));
-    let binding = &session.bindings[selected];
+    let binding = attempt!(bound_binding(session, name, version, requirement));
     let registration = if binding.operation == "test.clock" {
         Registration::Clock(noble_kernel::contracts::BoundClockRegistration {
             adapter_identity: binding.adapter_identity.clone(),
@@ -189,12 +188,13 @@ fn bound_registration(
     Ok((registration, binding.adapter_slot))
 }
 
-fn binding_index(
-    session: &crate::source::declared::ModuleSession,
+/// The first host binding for this module version and required operation.
+fn bound_binding<'a>(
+    session: &'a crate::source::declared::ModuleSession,
     name: &str,
     version: u32,
     requirement: &Requirement,
-) -> Result<usize, crate::source::Error> {
+) -> Result<&'a crate::source::declared::BoundOperation, crate::source::Error> {
     debug_assert!(!name.is_empty());
     debug_assert!(version != 0);
     let (_, input, operation) = requirement;
@@ -208,20 +208,17 @@ fn binding_index(
             "unsupported or mismatched required operation contract",
         ));
     }
-    session
-        .bindings
-        .iter()
-        .position(|binding| {
-            binding.module_name == name
-                && binding.module_version == version
-                && binding.operation == operation.as_str()
-        })
-        .ok_or_else(|| {
-            crate::source::declared::error(
-                crate::source::Stage::Link,
-                "missing bound adapter for required operation",
-            )
-        })
+    crate::scan::find_first(&session.bindings, |binding| {
+        binding.module_name == name
+            && binding.module_version == version
+            && binding.operation == operation.as_str()
+    })
+    .ok_or_else(|| {
+        crate::source::declared::error(
+            crate::source::Stage::Link,
+            "missing bound adapter for required operation",
+        )
+    })
 }
 
 fn declare_word(

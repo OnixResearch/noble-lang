@@ -29,10 +29,18 @@ pub const TEST_CLOCK: crate::types::EffId = crate::types::EffId(2);
 pub const TEST_CODE_EXPORT: crate::types::EffId = crate::types::EffId(6);
 /// Host-selected identity of the deny-only WORKER-12 source adapter.
 pub const TEST_CODE_EXPORT_ADAPTER_IDENTITY: &str = "worker-test-code-export@1.0.0";
+/// The same identity as bytes. Acceptance compares registrations with these
+/// bytes, not the `&str`: every extracted string literal carries a
+/// native-evaluated size bound, which strict theorems about the checker refuse.
+pub(crate) const TEST_CODE_EXPORT_IDENTITY_BYTES: [u8; TEST_CODE_EXPORT_ADAPTER_IDENTITY.len()] =
+    *b"worker-test-code-export@1.0.0";
 /// The reserved identity of the required, host-observed `test.send` effect.
 pub const TEST_SEND: crate::types::EffId = crate::types::EffId(7);
 /// Host-selected identity of the WORKER-10 observed-send source adapter.
 pub const TEST_SEND_ADAPTER_IDENTITY: &str = "worker-test-send@1.0.0";
+/// The same identity as bytes, for the reason given on the code-export bytes.
+pub(crate) const TEST_SEND_IDENTITY_BYTES: [u8; TEST_SEND_ADAPTER_IDENTITY.len()] =
+    *b"worker-test-send@1.0.0";
 /// The reserved, opt-in effect of selecting a preadmitted live program.
 pub const LIVE_DISPATCH: crate::types::EffId = crate::types::EffId(5);
 
@@ -262,6 +270,7 @@ pub enum ClockDecision {
 }
 
 /// A finite, explicitly typed test clock, not an ambient clock or authority.
+#[derive(Clone, Copy)]
 pub struct ClockPlan<'a> {
     pub operation: &'a str,
     pub adapter_identity: &'a str,
@@ -280,28 +289,48 @@ impl ClockPlan<'_> {
         reason = "the index is a bounded table position already typed usize by the caller; changing it would break the kernel API"
     )]
     pub fn decide(&self, requested: &str, index: usize) -> Result<ClockDecision, NominalError> {
-        let is_test_clock = self.operation == "test.clock";
-        let has_adapter = !self.adapter_identity.is_empty();
-        let has_input = !self.input.is_empty();
-        let is_i64_returning = self.output == [crate::types::Ty::I64];
-        let has_test_clock_effect = self.effects == [TEST_CLOCK];
-        let is_short_script = self.script.len() <= 16;
-        let is_clock_shape = is_test_clock && has_adapter && !has_input;
-        let is_clock_signature = is_i64_returning && has_test_clock_effect && is_short_script;
-        if !(is_clock_shape && is_clock_signature) {
-            return Err(NominalError::InvalidRepresentation);
-        }
-        if requested != self.operation {
-            return Ok(ClockDecision::UnexpectedOperation);
-        }
-        if !self.allowed {
-            return Ok(ClockDecision::Denied);
-        }
-        Ok(match self.script.get(index) {
-            Some(value) => ClockDecision::Value(*value),
-            None => ClockDecision::ScriptExhausted,
-        })
+        decide_clock(*self, requested, index)
     }
+}
+
+/// Decide one dispatch from a copy of the plan.
+///
+/// The plan is taken by value: the selected Aeneas cannot join control flow
+/// while a borrow of a borrow-carrying struct is in scope, as `&self` is here.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; decide_clock reports an unexpected binding as a typed NominalError and every scripted outcome as a ClockDecision; forged plans must not reach assertion panics."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; decide_clock compares str and type slices through non-const PartialEq on both pinned compilers; reassess when those comparisons become const-capable."
+)]
+fn decide_clock(
+    plan: ClockPlan<'_>,
+    requested: &str,
+    index: usize,
+) -> Result<ClockDecision, NominalError> {
+    let is_test_clock = plan.operation == "test.clock";
+    let has_adapter = !plan.adapter_identity.is_empty();
+    let has_input = !plan.input.is_empty();
+    let is_i64_returning = plan.output == [crate::types::Ty::I64];
+    let has_test_clock_effect = plan.effects == [TEST_CLOCK];
+    let is_short_script = plan.script.len() <= 16;
+    let is_clock_shape = is_test_clock && has_adapter && !has_input;
+    let is_clock_signature = is_i64_returning && has_test_clock_effect && is_short_script;
+    if !(is_clock_shape && is_clock_signature) {
+        return Err(NominalError::InvalidRepresentation);
+    }
+    if requested != plan.operation {
+        return Ok(ClockDecision::UnexpectedOperation);
+    }
+    if !plan.allowed {
+        return Ok(ClockDecision::Denied);
+    }
+    Ok(match plan.script.get(index) {
+        Some(value) => ClockDecision::Value(*value),
+        None => ClockDecision::ScriptExhausted,
+    })
 }
 
 /// The checking environment. `Default` is an empty staging replacement;
@@ -468,10 +497,7 @@ impl Env {
     /// Register a validated nonrecursive type and its typed operations.
     /// Ownership transfers into the updated environment on success.
     pub fn declare_nominal(self, decl: NominalDecl) -> Result<(Self, NominalOps), NominalError> {
-        let is_resource_payload = match &decl.shape {
-            crate::types::NominalShape::Opaque(inner) => !inner.is_data(),
-            crate::types::NominalShape::Variant(left, right) => !left.is_data() || !right.is_data(),
-        };
+        let is_resource_payload = decl.shape.owns_resource();
         if self.live_slots && is_resource_payload {
             return Err(NominalError::InvalidRepresentation);
         }
@@ -696,33 +722,43 @@ pub fn checked_i64_environment() -> Result<Env, crate::shapes::Defect> {
         )),
         alloc::boxed::Box::new(crate::shapes::Pattern::I64),
     );
-    let binary = |output: crate::shapes::Pattern| crate::words::Scheme {
-        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
-        stack_in: alloc::vec![
-            tail.clone(),
-            crate::shapes::Pattern::I64,
-            crate::shapes::Pattern::I64
-        ],
-        stack_out: alloc::vec![tail.clone(), output],
-        effects: alloc::vec![],
-    };
-    let unary = |output: crate::shapes::Pattern| crate::words::Scheme {
-        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
-        stack_in: alloc::vec![tail.clone(), crate::shapes::Pattern::I64],
-        stack_out: alloc::vec![tail.clone(), output],
-        effects: alloc::vec![],
-    };
+    fn binary(
+        tail: &crate::shapes::Pattern,
+        output: crate::shapes::Pattern,
+    ) -> crate::words::Scheme {
+        crate::words::Scheme {
+            var_kinds: alloc::vec![crate::words::VariableKind::Stack],
+            stack_in: alloc::vec![
+                (*tail).clone(),
+                crate::shapes::Pattern::I64,
+                crate::shapes::Pattern::I64
+            ],
+            stack_out: alloc::vec![(*tail).clone(), output],
+            effects: alloc::vec![],
+        }
+    }
+    fn unary(
+        tail: &crate::shapes::Pattern,
+        output: crate::shapes::Pattern,
+    ) -> crate::words::Scheme {
+        crate::words::Scheme {
+            var_kinds: alloc::vec![crate::words::VariableKind::Stack],
+            stack_in: alloc::vec![(*tail).clone(), crate::shapes::Pattern::I64],
+            stack_out: alloc::vec![(*tail).clone(), output],
+            effects: alloc::vec![],
+        }
+    }
     let operations = [
-        (Behavior::CheckedI64Add, binary(result.clone())),
-        (Behavior::CheckedI64Sub, binary(result.clone())),
-        (Behavior::CheckedI64Mul, binary(result.clone())),
-        (Behavior::CheckedI64Neg, unary(result.clone())),
-        (Behavior::CheckedI64Abs, unary(result)),
+        (Behavior::CheckedI64Add, binary(&tail, result.clone())),
+        (Behavior::CheckedI64Sub, binary(&tail, result.clone())),
+        (Behavior::CheckedI64Mul, binary(&tail, result.clone())),
+        (Behavior::CheckedI64Neg, unary(&tail, result.clone())),
+        (Behavior::CheckedI64Abs, unary(&tail, result)),
         (
             Behavior::CheckedI64Less,
-            binary(crate::shapes::Pattern::Bool),
+            binary(&tail, crate::shapes::Pattern::Bool),
         ),
-        (Behavior::CheckedI64DivRem, binary(div_rem_result)),
+        (Behavior::CheckedI64DivRem, binary(&tail, div_rem_result)),
     ];
     env.deps
         .extend(alloc::vec![alloc::vec::Vec::new(); operations.len()]);

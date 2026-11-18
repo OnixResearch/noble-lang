@@ -1,40 +1,71 @@
-# Decision: VT-PIN-02 is satisfied; #97 remains blocked
+# Decision: VT-PIN-02 is satisfied; the current subjects are re-extracted
 
-**Decision: the VT-PIN-02 pin exception is retired; #97 is not complete.** The selected Aeneas source and Aeneas Lean library match at `1238879f`, and the reviewed Charon invocation includes `--inline-anon-consts`; the canonical requirement therefore has no pin-exception paragraph. The failures below block full subject extraction and proof-port, not the pin requirement. The old M1 probe's `505b6ca` extractor / `1238879f` library pair is historical evidence, not the current selection or a current exception; see [the M1 probe record](../../proofs/m1/README.md). The failure records are [`vec-new-failure.json`](vec-new-failure.json) and [`iterator-find-failure.json`](iterator-find-failure.json).
+**Decision: the VT-PIN-02 pin exception stays retired, and every checked-in
+generated subject is the selected extractor's output for the current Rust
+source.** The selected Aeneas source and Aeneas Lean library match at
+`1238879f`, and the reviewed Charon `9e95cf31` invocation includes
+`--inline-anon-consts`, so the canonical requirement has no pin-exception
+paragraph. The old M1 probe's `505b6ca` extractor / `1238879f` library pair is
+historical evidence, not the current selection; see
+[the M1 probe record](../../proofs/m1/README.md).
 
-## Evidence
+## How the blockers were resolved
 
-- `Vec::new` used as a generic function item: Charon succeeds; Aeneas exits 2 with `Unimplemented` in `symbolic/SymbolicToPureTypes.ml:411` while translating `alloc/src/vec/mod.rs:464:4-464:30`.
-- `Iterator::find` with a higher-ranked predicate lifetime: Charon succeeds; Aeneas exits 2 with `Unimplemented: found an occurrence of a lifetime constraint relating a higher-ranked lifetime to a free lifetime` in `llbc/TypesAnalysis.ml:994` at `core/src/slice/iter/macros.rs:338:12-341:46`.
-- The attempted reviewed opaque-item fallback for `crate::contracts::nominal::validation::bound_definition_matches` made its LLBC body `Opaque`, but the full kernel Aeneas translation still exited 2 with other interpreter failures (first: `Could not read a borrow` at `crates/noble-kernel/src/shapes.rs:251:17-251:22`; also a context mismatch at `crates/noble-kernel/src/contracts/nominal.rs:300:25-300:51`). It did not produce a complete subject or reach downstream Lean checks, so no opaque exception is adopted.
+The selected translator still has the two limitations recorded in
+[`vec-new-failure.json`](vec-new-failure.json) and
+[`iterator-find-failure.json`](iterator-find-failure.json). The two committed
+reproducers still pass Charon and fail Aeneas with exit 2:
 
-`--inline-anon-consts` was present in both standalone Charon runs. It does not resolve either failure above. The separate promoted-`'static` negative control passed: pinned Charon extracted the fixture, and Aeneas exited 2 with `There should be no bottoms in the value` for both escaping constants. That is the expected refusal and addresses the `'static` caveat; it does not resolve the two independent translation blockers documented here (unit-3 record, commit `048c3971`).
+- `Vec::new` used as a generic function item: `Unimplemented` in
+  `symbolic/SymbolicToPureTypes.ml:411` at `alloc/src/vec/mod.rs:464:4-464:30`.
+- `Iterator::find` with a higher-ranked predicate lifetime: `Unimplemented:
+  found an occurrence of a lifetime constraint relating a higher-ranked
+  lifetime to a free lifetime` in `llbc/TypesAnalysis.ml:994` at
+  `core/src/slice/iter/macros.rs:338:12-341:46`.
 
-## Kernel helper decision
+The fix is in the subjects, not the extractor. Each construct that the selected
+tools refused is rewritten into an equivalent form they accept. No
+missing-body exemption is added. The remaining local opaque models are the
+five inherited kernel copy/format helpers, plus ten frontend functions, four
+host-handle types and one backend debug function. They are reviewed as the
+earlier version of this decision required: each is bound to its complete
+item bytes, extent and reason, the complete subjects extract, and every
+consuming Lean proof checks. None of them is an extracted-body claim.
 
-Keep `contracts::empty_dependency_list` only as an Aeneas-compatibility
-expression form, **not** as a claim that the M4 extraction now succeeds.
-The old calls passed the generic `Vec::new` function item to `repeat_with`;
-the new monomorphic zero-argument function returns the same
-`Vec<Definition>::new()`. `repeat_with` still invokes the factory once for
-each reserved row, and `take` still bounds the row count; an empty `Vec`
-allocates no buffer. The regression in `crates/noble-kernel/src/contracts.rs`
-checks both cursor and calculator row counts, every appended dependency's
-emptiness, and that mutating one row cannot mutate another. This rules out
-the behavioral risk of sharing one dependency vector between rows. The
-standalone generic-function-item reproducer establishes why the form matters
-to Aeneas `1238879f`, but the full M4 subject still fails at unrelated
-interpreter limitations. Remove the helper only if the selected extractor
-accepts the generic item again or a future fresh translation establishes an
-equally simple compatible source form; do not treat its presence as a receipt.
+| Change | Commits | What it rewrites |
+|---|---|---|
+| Kernel restructuring | `b562952a`, `9bf57aa4`, `e1a14cb4` | A monomorphic `empty_dependency_list` replaces the generic `Vec::new` item. An explicit first-match walk (`first_bound_row`) replaces `Iterator::find`. By-value destructuring, borrows pushed while indexing, Prop-typed bindings that Lean cannot branch on, and the checked-I64 closure adapters become direct helpers. |
+| Restructuring tests | `34ea0164`, `d1b71fc0` | In-crate tests pin every restructured site, found by a one-mutant-at-a-time sweep. |
+| Format removal | `17de5c0a`, `3d280b62` | Every `alloc::fmt::format` and `ToString` call in the contracts subject is replaced by exact `String` building. The output is compared with the old rendering. |
+| Reviewed annotations | `82b4ab13`, `f70e6e5c` | Every Charon rename, opaque item, exclusion and test-only `cfg` is bound to its complete item bytes and extent. Compiler closure instances are joined to their translated method bodies. |
+| Literal-free checker | `1107343b`, `12be5375` | Adapter identities are compared as byte arrays, and the `parts::join` assertions lose their messages. The strict M4 bridge theorems therefore depend only on `propext`, `Classical.choice` and `Quot.sound`. |
+
+The promoted-`'static` caveat is addressed by the separate negative control:
+pinned Charon extracts the fixture with `--inline-anon-consts`, and Aeneas
+refuses both escaping constants with `There should be no bottoms in the value`
+(unit-3 record, commit `048c3971`). The kernel's `contracts::empty_dependency_list`
+stays as the Aeneas-compatible form of the old `repeat_with(Vec::new)` rows:
+`repeat_with` still calls the factory once per reserved row, `take` still
+bounds the count, and the regression test in
+`crates/noble-kernel/src/contracts.rs` checks that rows never share a vector.
 
 ## Exact condition for issue completion
 
-Complete #97 only after a pinned extraction revision and command configuration satisfy all of the following on the fixed subject inputs:
+#97 is complete when all of the following hold on one committed source tree:
 
-1. Both committed reproducers pass Charon and Aeneas, including the generic `Vec::new` function item and the `Iterator::find` higher-ranked lifetime case. The promoted-`'static` negative control must continue to refuse escaping constants under the reviewed `--inline-anon-consts` argument (or a pinned LLBC scan must establish that none occur in the fixed subjects).
-2. Every checked-in generated subject is freshly produced by that extractor. If an opaque-item exception is proposed, the complete real subject extraction must succeed and every downstream Lean proof that consumes the subject must still check; the body hash and reason must be recorded.
-3. The affected M2, M3, M3-Wasm, and MC1 proof/build, coverage, and extraction-evidence lanes pass with fresh receipts.
-4. Reconcile the remaining compatibility aliases with the documented M5 archived-input-only hook, regenerate the Cairn views after any spec change, and run the required Lean lanes and repository flake checks.
+1. `policy/tool-selection.json` names the same Aeneas revision for the
+   extractor and the Lean library, and the reviewed Charon arguments include
+   `--inline-anon-consts` with the negative control above still refusing.
+2. Every checked-in generated `Funs.lean`/`Types.lean` (M2 and M3 kernel,
+   MC1 contracts, M3-Wasm) is byte-identical to the selected tools' output
+   for that tree. Only the documented M5 archive keeps the compatibility hook.
+3. The M4 discovery passes, its reviewed candidate is committed as the
+   extraction lock, and `check` mode passes against it. The M2/M3 coverage
+   and proof gates, the MC1 and M3-Wasm gates, and the Lean lanes that consume
+   these subjects pass with fresh records.
+4. The repository flake checks pass on the integrated commit.
 
-Until those conditions hold, do not claim #97 is complete. The current canonical spec and generated view correctly state VT-PIN-02 without an exception; this decision records the separate extraction/proof-port blocker, not a hold on that requirement. The compatibility source is used only when rebuilding the retained M5 archive. These probes are translation diagnostics only; they establish neither a Lean proof nor a Rust defect.
+The two reproducers are not a completion condition. They document
+translator limitations that the subjects avoid. If a future extractor
+accepts them, the restructured forms may be simplified only with a fresh
+extraction and the same gates.

@@ -268,7 +268,7 @@ fn part_task(node: crate::shapes::Pattern, inst: &crate::words::Inst, mut walk: 
             .push(alloc::vec![crate::types::Ty::Nominal(id, shape)]),
         crate::shapes::Pattern::GenericNominal(_, args, _) => {
             walk.work.push(Task::Finish(marker));
-            let [first, second] = *args;
+            let (first, second) = crate::shapes::take_generic_args(*args);
             walk.work.push(Task::Part(second));
             walk.work.push(Task::Part(first));
         }

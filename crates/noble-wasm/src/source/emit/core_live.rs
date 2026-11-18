@@ -17,15 +17,17 @@ pub(super) fn release_module_roots(
     ));
     // Validate the complete immutable module-global set before touching any
     // shared root byte; a wrong/old handle cannot release a partial module.
-    for id in 0..programs {
-        attempt!(out.append(b"(if (i32.eqz (call $core_live_module_rooted "));
-        attempt!(super::get_global(out, id));
-        attempt!(out.append(b")) (then (return (i32.const 4))))\n"));
-    }
-    for id in 0..programs {
-        attempt!(out.append(b"(call $core_live_unroot_module "));
-        attempt!(super::get_global(out, id));
-        attempt!(out.append(b")\n"));
-    }
+    attempt!(super::program_global_lines(
+        out,
+        programs,
+        b"(if (i32.eqz (call $core_live_module_rooted ",
+        b")) (then (return (i32.const 4))))\n",
+    ));
+    attempt!(super::program_global_lines(
+        out,
+        programs,
+        b"(call $core_live_unroot_module ",
+        b")\n",
+    ));
     out.append(b"(global.set $core_live_module_installed (i32.const 0))\n(i32.const 0))\n")
 }

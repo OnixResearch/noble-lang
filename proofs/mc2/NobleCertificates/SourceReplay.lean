@@ -92,7 +92,7 @@ private def certifiedComposition
   let bindResult ← companion.core.Core.bind engine evidence subject
   let bound ← requireOk bindResult
   let sameSubject ← companion.Subject.Insts.CoreCmpPartialEqSubject.eq bound subject
-  let releaseResult ← companion.core.Core.release engine evidence
+  let releaseResult ← companion.core.Core.release engine evidence subject
   let released ← requireOk releaseResult
   let statement ← companion.admit.ClaimTemplate.digest (.IncrementBy amount)
   match entry.outcome, entry.class, claim, rule with
@@ -178,7 +178,7 @@ def rejectedReplay : Result Bool := do
     premises := replayPremise
   }
   let classRefused ← refusedAs classResult .WrongPremiseClass
-  let absentResult ← companion.core.Core.release engine next
+  let absentResult ← companion.core.Core.release engine next twiceSubject
   let absent ← refusedAs absentResult .UnknownEvidence
   let retainedCertified ← certifiedComposition engine twice.evidence twiceSubject 2#i64
     [original, original]
@@ -194,7 +194,7 @@ private def staleApplicationAndRelease (engine : companion.Core)
     Result Bool := do
   let bindResult ← companion.core.Core.bind engine evidence subject
   let bindRefused ← refusedAs bindResult .StaleContext
-  let releaseResult ← companion.core.Core.release engine evidence
+  let releaseResult ← companion.core.Core.release engine evidence subject
   let releaseRefused ← refusedAs releaseResult .StaleContext
   ok (bindRefused && releaseRefused)
 
@@ -221,12 +221,17 @@ def applicationTransitions : Result Bool := do
   let forgedIdentityResult ← companion.core.Core.bind engine evidence
     { changed with identity := entry.subject.identity }
   let forgedIdentityRefused ← refusedAs forgedIdentityResult .MismatchedSubject
+  let changedRelease ← companion.core.Core.release engine evidence changed
+  let changedReleaseRefused ← refusedAs changedRelease .MismatchedSubject
+  let forgedRelease ← companion.core.Core.release engine evidence
+    { changed with identity := entry.subject.identity }
+  let forgedReleaseRefused ← refusedAs forgedRelease .MismatchedSubject
   let unchanged ← companion.core.context.Core.set_policy engine engine.policy
   let unchangedBind ← companion.core.Core.bind unchanged evidence observation
   let unchangedBound ← requireOk unchangedBind
   let unchangedCanonical ← companion.Subject.Insts.CoreCmpPartialEqSubject.eq
     unchangedBound entry.subject
-  let unchangedRelease ← companion.core.Core.release unchanged evidence
+  let unchangedRelease ← companion.core.Core.release unchanged evidence observation
   let released ← requireOk unchangedRelease
   let policy ← companion.core.context.Core.set_policy engine 1#u32
   let policyStale ← staleApplicationAndRelease policy evidence observation
@@ -239,6 +244,7 @@ def applicationTransitions : Result Bool := do
   let environment ← companion.core.context.Core.set_environment_fact engine 1#u64
   let environmentStale ← staleApplicationAndRelease environment evidence observation
   ok (exactCanonical && observedCanonical && changedRefused && forgedIdentityRefused &&
+    changedReleaseRefused && forgedReleaseRefused &&
     unchangedCanonical && released.evidence == evidence && released.contract == entry.contract &&
     released.statement == entry.statement && released.subject == entry.subject.identity &&
     policyStale && restoredStale && semanticStale && hostStale && environmentStale)
@@ -260,14 +266,14 @@ def guardedSelection : Result Bool := do
   | [.LtI64Max], [template@.LtI64Max] =>
     let source ← companion.core.Core.wrapper_source engine template (toStr "1 +")
     let live ← companion.core.Core.invocation_wrapper engine template
-    let releaseResult ← companion.core.Core.release engine evidence
+    let releaseResult ← companion.core.Core.release engine evidence entry.subject
     let released ← requireOk releaseResult
     let stale ← companion.core.context.Core.set_policy engine 1#u32
     let staleContractResult ← companion.core.Core.guard_templates stale entry.contract
     let staleContract ← refusedAs staleContractResult .StaleContext
     let staleEvidenceResult ← companion.core.Core.evidence_guard_templates stale evidence
     let staleEvidence ← refusedAs staleEvidenceResult .StaleContext
-    let staleReleaseResult ← companion.core.Core.release stale evidence
+    let staleReleaseResult ← companion.core.Core.release stale evidence entry.subject
     let staleRelease ← refusedAs staleReleaseResult .StaleContext
     ok (source == "[ dup 9223372036854775807 = [ drop 1 inl ] [ [ 1 + ] run inr ] if ]" &&
       live == "[ swap dup 9223372036854775807 = [ drop drop 1 inl ] [ swap run inr ] if ]" &&

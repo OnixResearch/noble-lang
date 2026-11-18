@@ -2,7 +2,7 @@
 # Task-3.3 refusal matrix for the M2 coverage gate.
 #
 # Runs the positive baseline (verification/m2-coverage-gate.sh on the
-# repository proof root and record), then seven mutated scratch copies.
+# repository proof root and record), then eight mutated scratch copies.
 # Every mutation must be REFUSED: the gate exits non-zero with its named
 # check. A final positive control shows the strength classifier is not
 # vacuous: a synthetic universal theorem makes its function proved. Proof-root mutations share the lake package cache through hard
@@ -34,6 +34,11 @@
 #   claimed-universal is the refinement equation, recorded as    DRIFT
 #                     universal and the function as proved
 #                     (#88 control b)
+#   borrowed-mutual-  an `abbrev core.slice.Slice.first.mutual`  -> ENV-
+#   suffix            spliced into FunsExternal.lean: invisible  UNCLASSIFIED
+#                     to the text parser, named like a
+#                     partial_fixpoint packing of a classified
+#                     function that does not use it
 # Positive control (#88 control c):
 #   universal-probe   a synthetic universal theorem about a toy  -> accepted,
 #                     extracted function (EffId clone) makes it   proved=1
@@ -82,6 +87,21 @@ mutate_record() { # IN OUT SCRIPT
     '"$3"'
     await Bun.write(process.argv[2], JSON.stringify(r, null, 1) + "\n");
   ' "$1" "$2"
+}
+
+# Splice TEXT before the final `end noble_kernel` of a scratch copy's
+# NobleKernel/FunsExternal.lean (write-then-mv, so the hard-linked
+# repository file is untouched).
+splice_external() { # COPY TEXT
+  local file="$1/NobleKernel/FunsExternal.lean" last_end
+  last_end="$(awk '/^end noble_kernel$/ { n = NR } END { print n }' "$file")"
+  [ -n "$last_end" ] || return 1
+  {
+    head -n $((last_end - 1)) "$file"
+    printf '%b\n' "$2"
+    tail -n +"$last_end" "$file"
+  } > "$SCRATCH/funs-external-mutated.lean"
+  mv "$SCRATCH/funs-external-mutated.lean" "$file"
 }
 
 run_case() {
@@ -161,11 +181,25 @@ run_case() {
   conditional-claimed-universal)
     fresh_copy "$copy"
     record="$SCRATCH/$label.json"
+    # The forged citation claims the strict axiom class too: since #97 the
+    # handoff's recorded class is native (the generated checker carries the
+    # literal-size evaluation axioms), and a forged universal/native citation
+    # would already fail the join's status rule. Claiming universal/strict
+    # passes that rule, so only the elaborated statement can refuse it.
     mutate_record "$RECORD" "$record" '
       const e = r.functions.find(f => f.lean === "noble_kernel.acceptance.check");
-      e.citations.find(c => c.theorem === "NobleM2.Refinement.accepted_via_refinement").strength = "universal";
+      const handoff = e.citations.find(c => c.theorem === "NobleM2.Refinement.accepted_via_refinement");
+      handoff.strength = "universal";
+      handoff.axioms = "strict";
       e.status = "proved";
     ' || { echo "APPLY FAILED"; return 1; }
+    ;;
+  borrowed-mutual-suffix)
+    fresh_copy "$copy"
+    splice_external "$copy" 'abbrev core.slice.Slice.first.mutual : Bool := true\n' \
+      || { echo "APPLY FAILED"; return 1; }
+    grep -q '^abbrev core.slice.Slice.first.mutual' "$copy/NobleKernel/FunsExternal.lean" \
+      || { echo "APPLY FAILED"; return 1; }
     ;;
   *) echo "unknown case $label"; return 1 ;;
   esac
@@ -232,7 +266,8 @@ for case_label in \
   'stale-entry STALE-ENTRY' \
   'bad-status STATUS' \
   'native-fixtures-as-proved STRENGTH-STATUS' \
-  'conditional-claimed-universal STRENGTH-DRIFT'
+  'conditional-claimed-universal STRENGTH-DRIFT' \
+  'borrowed-mutual-suffix ENV-UNCLASSIFIED'
 do
   # shellcheck disable=SC2086
   run_case $case_label || rc_all=1

@@ -258,7 +258,7 @@ try {
   requireThat(version.includes('version 4.35.0') && version.includes('eb6cafb7290e8bd5f2937522d8d804f58f02bafc'),
     'wrong pinned Lean executable');
   const { project, packages, compatibility } = prepareProject(profile);
-  const build = run(join(leanBin, 'lake'), ['build', 'RegionTable'], project);
+  const build = run(join(leanBin, 'lake'), ['--no-cache', 'build', 'RegionTable'], project);
   const generatedWarnings = build.split('\n').filter(line => line.startsWith('warning:'));
   requireThat(generatedWarnings.every(line => line.startsWith('warning: NobleKernel/Funs.lean:') &&
     line.includes('mathlib naming conventions')), `unexpected Lean build diagnostics: ${build}`);

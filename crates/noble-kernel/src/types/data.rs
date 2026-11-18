@@ -7,20 +7,19 @@ impl super::Ty {
     /// The walk borrows its pending nodes: eligibility never copies the
     /// payload it inspects, so an ineligible value is rejected without first
     /// duplicating it.
+    ///
+    /// The first ineligible node or exhausted bound returns `false` directly
+    /// rather than breaking out with a flag: on the `break` form the selected
+    /// Aeneas finds a loan and its borrow in one region abstraction and stops.
     pub fn is_data(&self) -> bool {
         let mut work: alloc::vec::Vec<&super::Ty> = alloc::vec::Vec::with_capacity(8);
         work.push(self);
-        let mut is_data = true;
         while let Some(node) = work.pop() {
             if work.len() >= super::WORK_CAP {
-                is_data = false;
-                break;
+                return false;
             }
             match node {
-                super::Ty::Resource(_) | super::Ty::LiveRef(_, _, _) => {
-                    is_data = false;
-                    break;
-                }
+                super::Ty::Resource(_) | super::Ty::LiveRef(_, _, _) => return false,
                 super::Ty::Pair(left, right) | super::Ty::Sum(left, right) => {
                     work.push(left);
                     work.push(right);
@@ -41,10 +40,7 @@ impl super::Ty {
                             work.push(left);
                             work.push(right);
                         }
-                        super::NominalShape::Opaque(_) => {
-                            is_data = false;
-                            break;
-                        }
+                        super::NominalShape::Opaque(_) => return false,
                     }
                 }
                 super::Ty::Unit
@@ -58,7 +54,7 @@ impl super::Ty {
                 | super::Ty::Program(_, _, _) => {}
             }
         }
-        is_data
+        true
     }
 
     /// Generic family arguments are Data: a valid immutable program is a
@@ -125,5 +121,49 @@ impl super::Ty {
             }
         }
         true
+    }
+}
+
+impl super::NominalShape {
+    /// Whether this descriptor's payload owns a resource: some payload type
+    /// is not Data.
+    ///
+    /// A boolean-returning helper rather than a matched negation bound to a
+    /// local: for the latter the selected Aeneas emits a `Prop`-typed binding
+    /// that the generated Lean cannot branch on.
+    pub(crate) fn owns_resource(&self) -> bool {
+        match self {
+            super::NominalShape::Opaque(representation) => !representation.is_data(),
+            super::NominalShape::Variant(left, right) => !left.is_data() || !right.is_data(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    fn boxed(ty: super::super::Ty) -> alloc::boxed::Box<super::super::Ty> {
+        alloc::boxed::Box::new(ty)
+    }
+
+    #[test]
+    fn descriptors_own_a_resource_through_either_payload() {
+        let resource = || super::super::Ty::Resource(super::super::ResourceKind(0));
+        assert!(super::super::NominalShape::Opaque(boxed(resource())).owns_resource());
+        assert!(!super::super::NominalShape::Opaque(boxed(super::super::Ty::I64)).owns_resource());
+        assert!(super::super::NominalShape::Variant(
+            boxed(super::super::Ty::I64),
+            boxed(resource())
+        )
+        .owns_resource());
+        assert!(super::super::NominalShape::Variant(
+            boxed(resource()),
+            boxed(super::super::Ty::I64)
+        )
+        .owns_resource());
+        assert!(!super::super::NominalShape::Variant(
+            boxed(super::super::Ty::I64),
+            boxed(super::super::Ty::Text)
+        )
+        .owns_resource());
     }
 }

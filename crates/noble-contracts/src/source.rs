@@ -49,7 +49,10 @@ pub const fn pure_builtin_spelling(identity: u32) -> Option<&'static str> {
 
 /// Immutable source authority for the versioned Result interface. The same
 /// declaration bytes are checked through ordinary module registration.
-pub const RESULT_LIBRARY_SOURCE: &[u8] = include_bytes!("fixtures/result.noble");
+// Included as (ASCII) text rather than a byte array: the extraction prints a
+// byte-array constant as an array literal whose length proof Lean cannot
+// close, while `as_bytes` yields the identical bytes.
+pub const RESULT_LIBRARY_SOURCE: &[u8] = include_str!("fixtures/result.noble").as_bytes();
 
 /// Host-selected aggregate of original module bytes and outside definition history.
 /// This does not raise the per-submission `Limits::bytes` parser bound.
@@ -288,40 +291,23 @@ pub fn parse_core_interface(text: &str) -> Result<CoreInterface, Error> {
             crate::invalid(span, "Core interface bytes exhausted"),
         ));
     }
-    let mut stack_in = alloc::vec::Vec::new();
-    let mut stack_out = alloc::vec::Vec::new();
+    let mut interface = CoreInterface {
+        stack_in: alloc::vec::Vec::new(),
+        stack_out: alloc::vec::Vec::new(),
+    };
     let mut is_separator = false;
-    for word in text.split_ascii_whitespace() {
-        if word == "--" {
-            if is_separator {
-                return Err(Error::at(
-                    Stage::Check,
-                    crate::invalid(span, "duplicate stack separator"),
-                ));
-            }
-            is_separator = true;
-            continue;
+    let mut at = 0;
+    let mut failure = None;
+    while let Some(word) = next_ascii_word(text, at) {
+        at = word.1;
+        if let Err(error) = core_interface_word(text, word, span, &mut is_separator, &mut interface)
+        {
+            failure = Some(error);
+            break;
         }
-        let stack = if is_separator {
-            &mut stack_out
-        } else {
-            &mut stack_in
-        };
-        if stack.len() >= 128 {
-            return Err(Error::at(
-                Stage::Check,
-                crate::invalid(span, "Core stack height exhausted"),
-            ));
-        }
-        let parsed = declared::types::parse_with_families(word, &[], &[], None, span)
-            .map_err(|error| Error::at(Stage::Check, error))?;
-        if !core_type(&parsed.ty) {
-            return Err(Error::at(
-                Stage::Check,
-                crate::invalid(span, "unsupported Core interface type"),
-            ));
-        }
-        stack.push(parsed.ty);
+    }
+    if let Some(error) = failure {
+        return Err(error);
     }
     if !is_separator {
         return Err(Error::at(
@@ -329,10 +315,81 @@ pub fn parse_core_interface(text: &str) -> Result<CoreInterface, Error> {
             crate::invalid(span, "missing stack separator"),
         ));
     }
-    Ok(CoreInterface {
-        stack_in,
-        stack_out,
-    })
+    Ok(interface)
+}
+
+/// The byte range of the next word at or after byte `from`, as one step of
+/// `str::split_ascii_whitespace`. Only offsets are returned, so the caller's
+/// loop carries no borrow of `text`.
+fn next_ascii_word(text: &str, from: usize) -> Option<(usize, usize)> {
+    let bytes = text.as_bytes();
+    let mut start = from;
+    while start < bytes.len() && bytes[start].is_ascii_whitespace() {
+        start += 1;
+    }
+    let mut end = start;
+    while end < bytes.len() && !bytes[end].is_ascii_whitespace() {
+        end += 1;
+    }
+    if start == end {
+        return None;
+    }
+    Some((start, end))
+}
+
+/// Admit the Core interface word at byte range `word`: the stack separator or
+/// one Core type.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it mutates only the separator flag and interface being built by its single caller, one word at a time."
+)]
+fn core_interface_word(
+    text: &str,
+    word: (usize, usize),
+    span: crate::Span,
+    is_separator: &mut bool,
+    interface: &mut CoreInterface,
+) -> Result<(), Error> {
+    // ASCII whitespace never occurs inside a multi-byte UTF-8 sequence, so
+    // both offsets are character boundaries and the word always exists.
+    let Some(word) = text.get(word.0..word.1) else {
+        return Err(Error::at(Stage::Check, crate::internal(span)));
+    };
+    if word == "--" {
+        if *is_separator {
+            return Err(Error::at(
+                Stage::Check,
+                crate::invalid(span, "duplicate stack separator"),
+            ));
+        }
+        *is_separator = true;
+        return Ok(());
+    }
+    let stack = if *is_separator {
+        &mut interface.stack_out
+    } else {
+        &mut interface.stack_in
+    };
+    if stack.len() >= 128 {
+        return Err(Error::at(
+            Stage::Check,
+            crate::invalid(span, "Core stack height exhausted"),
+        ));
+    }
+    let parsed = declared::types::parse_with_families(word, &[], &[], None, span)
+        .map_err(|error| Error::at(Stage::Check, error))?;
+    if !core_type(&parsed.ty) {
+        return Err(Error::at(
+            Stage::Check,
+            crate::invalid(span, "unsupported Core interface type"),
+        ));
+    }
+    stack.push(parsed.ty);
+    Ok(())
 }
 
 #[expect(
@@ -341,7 +398,7 @@ pub fn parse_core_interface(text: &str) -> Result<CoreInterface, Error> {
 )]
 #[expect(
     tigerstyle::missing_const_fn,
-    reason = "Owner: noble-contracts; the walk recurses through boxed Ty children, and Box dereference is not const."
+    reason = "Owner: noble-contracts; it follows boxed child types through Deref and slices stack lists, neither of which is const."
 )]
 fn core_type(ty: &noble_kernel::types::Ty) -> bool {
     #[expect(
@@ -354,12 +411,32 @@ fn core_type(ty: &noble_kernel::types::Ty) -> bool {
         Ty::List(item) => core_type(item),
         Ty::Pair(left, right) | Ty::Sum(left, right) => core_type(left) && core_type(right),
         Ty::Program(input, output, effects) => {
-            effects.as_slice().is_empty()
-                && input.iter().all(core_type)
-                && output.iter().all(core_type)
+            effects.as_slice().is_empty() && core_types(input) && core_types(output)
         }
         _ => false,
     }
+}
+
+/// Whether every type of a stack list is a Core type. The list is halved
+/// rather than looped over: no loop may sit on the recursion with `core_type`
+/// for the extraction, and halving keeps the added depth logarithmic.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; each call halves the list, so the depth is logarithmic in the stack length of an already checked type."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; range-indexing a slice and the mutual recursion with core_type are not const."
+)]
+fn core_types(types: &[noble_kernel::types::Ty]) -> bool {
+    if types.is_empty() {
+        return true;
+    }
+    let half = types.len() / 2;
+    if half == 0 {
+        return core_type(&types[0]);
+    }
+    core_types(&types[..half]) && core_types(&types[half..])
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -408,18 +485,6 @@ impl Tree {
     }
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
-)]
-#[expect(
-    tigerstyle::platform_dependent_cast,
-    reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
-)]
-#[expect(
-    tigerstyle::unbounded_collection_growth,
-    reason = "Owner: noble-contracts; the collection is bounded by the surrounding admission limits, which are checked before this loop runs"
-)]
 /// Follow immutable named targets, including calls inside quotations. A
 /// replacement must not enter the old identity through any historical body:
 /// rebuilding current dependents would otherwise publish an apparent cycle
@@ -428,54 +493,90 @@ fn reaches_index(
     tree: &Tree,
     definitions: &[Named],
     target: usize,
-    mut work: u32,
+    work: u32,
 ) -> Result<bool, Error> {
     let span = tree.span;
-    let mut visited = alloc::vec![false; definitions.len()];
-    let mut pending = alloc::vec::Vec::new();
-    let mut current = Some(tree);
-    while let Some(body) = current {
-        for node in &body.nodes {
-            work = work.checked_sub(1).ok_or_else(|| {
-                Error::at(
-                    Stage::Acceptance,
-                    exhausted(span, "live replacement dependency walk exhausted"),
-                )
-            })?;
-            if let Kind::Call(Target::Named(index)) = &node.kind {
-                let index = *index as usize;
-                if index == target {
-                    return Ok(true);
-                }
-                let seen = visited.get_mut(index).ok_or_else(|| {
-                    Error::at(
-                        Stage::Acceptance,
-                        crate::invalid(span, "invalid retained definition target"),
-                    )
-                })?;
-                if !*seen {
-                    *seen = true;
-                    pending.push(index);
-                }
-            }
+    let mut reach = Reach {
+        target,
+        work,
+        visited: alloc::vec![false; definitions.len()],
+        pending: alloc::vec::Vec::new(),
+    };
+    let mut outcome = reach.nodes(&tree.nodes, span);
+    while matches!(outcome, Ok(false)) {
+        match reach.pending.pop() {
+            Some(index) => outcome = reach.nodes(&definitions[index].tree.nodes, span),
+            None => break,
         }
-        current = pending.pop().map(|index| &definitions[index].tree);
     }
-    Ok(false)
+    outcome
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
-)]
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
-)]
-#[expect(
-    tigerstyle::platform_dependent_cast,
-    reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
-)]
+/// Budget, visited set and worklist of the `reaches_index` walk.
+struct Reach {
+    target: usize,
+    work: u32,
+    visited: alloc::vec::Vec<bool>,
+    pending: alloc::vec::Vec<usize>,
+}
+
+impl Reach {
+    /// Walk one body's nodes in order until the target is reached or the walk fails.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it advances only the private walk state owned by reaches_index."
+    )]
+    fn nodes(&mut self, nodes: &[Node], span: crate::Span) -> Result<bool, Error> {
+        let mut outcome = Ok(false);
+        let mut at = 0;
+        while matches!(outcome, Ok(false)) && at < nodes.len() {
+            outcome = self.node(&nodes[at], span);
+            at += 1;
+        }
+        outcome
+    }
+
+    /// Charge one node and queue its unseen named callee; report the target.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it advances only the private walk state owned by reaches_index."
+    )]
+    #[expect(
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+    )]
+    fn node(&mut self, node: &Node, span: crate::Span) -> Result<bool, Error> {
+        self.work = self.work.checked_sub(1).ok_or_else(|| {
+            Error::at(
+                Stage::Acceptance,
+                exhausted(span, "live replacement dependency walk exhausted"),
+            )
+        })?;
+        if let Kind::Call(Target::Named(index)) = &node.kind {
+            let index = *index as usize;
+            if index == self.target {
+                return Ok(true);
+            }
+            // An explicit match: a mutable borrow must not pass through a
+            // std combinator for the extraction.
+            let seen = match self.visited.get_mut(index) {
+                Some(seen) => seen,
+                None => {
+                    return Err(Error::at(
+                        Stage::Acceptance,
+                        crate::invalid(span, "invalid retained definition target"),
+                    ));
+                }
+            };
+            if !*seen {
+                *seen = true;
+                self.pending.push(index);
+            }
+        }
+        Ok(false)
+    }
+}
+
 /// Replay is allowed to change exactly the named edges rebuilt in this batch.
 /// Source spelling alone is not authority to retarget a shadowed historical
 /// call to today's same-name definition.
@@ -487,22 +588,59 @@ fn replay_preserves_targets(
     if original.body != replayed.body || original.nodes.len() != replayed.nodes.len() {
         return false;
     }
-    original
-        .nodes
-        .iter()
-        .zip(&replayed.nodes)
-        .all(|(old, new)| match (&old.kind, &new.kind) {
-            (Kind::Literal(a), Kind::Literal(b)) => a == b,
-            (Kind::Text(a), Kind::Text(b)) => a == b,
-            (Kind::Quotation(a), Kind::Quotation(b)) => a == b,
-            (Kind::Call(Target::Builtin(a)), Kind::Call(Target::Builtin(b))) => a == b,
-            (Kind::Call(Target::SlotInvoke(a)), Kind::Call(Target::SlotInvoke(b))) => a == b,
-            (Kind::Call(Target::SelfOwner), Kind::Call(Target::SelfOwner)) => true,
-            (Kind::Call(Target::Named(a)), Kind::Call(Target::Named(b))) => replacements
-                .get(*a as usize)
-                .is_some_and(|replacement| replacement.unwrap_or(*a as usize) == *b as usize),
-            _ => false,
-        })
+    let mut is_preserved = true;
+    let mut at = 0;
+    while is_preserved && at < original.nodes.len() {
+        is_preserved = replayed_kind_preserved(
+            &original.nodes[at].kind,
+            &replayed.nodes[at].kind,
+            replacements,
+        );
+        at += 1;
+    }
+    is_preserved
+}
+
+/// One node pair of `replay_preserves_targets`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+)]
+fn replayed_kind_preserved(old: &Kind, new: &Kind, replacements: &[Option<usize>]) -> bool {
+    match (old, new) {
+        (Kind::Literal(a), Kind::Literal(b)) => a == b,
+        (Kind::Text(a), Kind::Text(b)) => a == b,
+        (Kind::Quotation(a), Kind::Quotation(b)) => a == b,
+        (Kind::Call(Target::Builtin(a)), Kind::Call(Target::Builtin(b))) => a == b,
+        (Kind::Call(Target::SlotInvoke(a)), Kind::Call(Target::SlotInvoke(b))) => a == b,
+        (Kind::Call(Target::SelfOwner), Kind::Call(Target::SelfOwner)) => true,
+        (Kind::Call(Target::Named(a)), Kind::Call(Target::Named(b))) => replacements
+            .get(*a as usize)
+            .is_some_and(|replacement| replacement.unwrap_or(*a as usize) == *b as usize),
+        _ => false,
+    }
+}
+
+/// Whether a body calls a definition already marked affected, as the
+/// `iter().any(..)` scan of `Session::current_dependents`.
+#[expect(
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+)]
+fn calls_affected(nodes: &[Node], affected: &[bool]) -> bool {
+    let mut is_found = false;
+    let mut at = 0;
+    while !is_found && at < nodes.len() {
+        if let Kind::Call(Target::Named(target)) = &nodes[at].kind {
+            is_found = affected.get(*target as usize).copied().unwrap_or(false);
+        }
+        at += 1;
+    }
+    is_found
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -571,6 +709,17 @@ impl PartialEq for Named {
     }
 }
 
+impl Named {
+    /// Whether this definition is named `name`.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; String comparison is not const."
+    )]
+    fn is_named(&self, name: &str) -> bool {
+        self.name == name
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 struct AliasUse {
     spelling: alloc::string::String,
@@ -580,6 +729,10 @@ struct AliasUse {
 
 /// An immutable preparation. A declaration deliberately has no executable root.
 #[derive(Clone, Debug)]
+// Renamed for extraction only: generated code names the crate-root `Prepared`
+// unqualified, which inside `source.*` would resolve to this type; the Rust
+// name is unchanged.
+#[charon::rename("SourcePrepared")]
 pub struct Prepared {
     generation: u64,
     history: alloc::vec::Vec<u8>,
@@ -613,15 +766,17 @@ impl Prepared {
     pub const fn checked(&self) -> Option<&noble_kernel::untrusted::Checked> {
         self.checked.as_ref()
     }
-    pub fn live_sites(&self) -> Option<&[noble_kernel::untrusted::LiveSite]> {
-        self.checked
-            .as_ref()
-            .map(|checked| checked.live_sites.as_slice())
+    pub const fn live_sites(&self) -> Option<&[noble_kernel::untrusted::LiveSite]> {
+        match &self.checked {
+            Some(checked) => Some(checked.live_sites.as_slice()),
+            None => None,
+        }
     }
-    pub fn definition_name(&self) -> Option<&str> {
-        self.definition
-            .as_ref()
-            .map(|definition| definition.name.as_str())
+    pub const fn definition_name(&self) -> Option<&str> {
+        match &self.definition {
+            Some(definition) => Some(definition.name.as_str()),
+            None => None,
+        }
     }
     pub const fn output(&self) -> &[noble_kernel::types::Ty] {
         self.output.as_slice()
@@ -773,20 +928,20 @@ impl Session {
         id: noble_kernel::types::NominalTypeId,
     ) -> Result<(), Error> {
         let span = crate::Span { start: 0, end: 0 };
-        let Some((base, version)) = name.rsplit_once('@') else {
+        let Some((base, version)) = crate::scan::rsplit_once_byte(name, b'@') else {
             return Err(Error::at(
                 Stage::Acceptance,
                 crate::invalid(span, "live resource name requires a version suffix"),
             ));
         };
         if base.is_empty()
-            || !base
-                .bytes()
-                .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
+            || !every_byte(base.as_bytes(), |byte| {
+                byte.is_ascii_alphanumeric() || byte == b'_'
+            })
             || !base.as_bytes()[0].is_ascii_alphabetic()
             || version.is_empty()
-            || (version.len() > 1 && version.starts_with('0'))
-            || !version.bytes().all(|byte| byte.is_ascii_digit())
+            || (version.len() > 1 && version.as_bytes().starts_with(b"0"))
+            || !every_byte(version.as_bytes(), |byte| byte.is_ascii_digit())
             || version.parse::<u32>().is_err()
         {
             return Err(Error::at(
@@ -825,10 +980,10 @@ impl Session {
             || !profile.environment.resource_kinds.contains(kind)
             || !declaration.exported
             || declaration.public != [false, false]
-            || profile.resources.iter().any(|(existing, ty)| {
-                existing == name
-                    || matches!(ty, noble_kernel::types::Ty::Nominal(other, _) if *other == id)
+            || crate::scan::find_first(&profile.resources, |resource| {
+                is_resource_registration(resource, name, id)
             })
+            .is_some()
         {
             return Err(Error::at(
                 Stage::Acceptance,
@@ -898,11 +1053,21 @@ impl Session {
     /// Immutable identity of the current definition named `name`, independent
     /// of whether the live self-edit grant selects it.
     pub fn installed_definition_identity(&self, name: &str) -> Option<u64> {
-        self.definitions
-            .iter()
-            .rev()
-            .find(|definition| definition.name == name)
-            .map(|definition| definition.identity)
+        let index = self.last_definition_named(name)?;
+        Some(self.definitions[index].identity)
+    }
+
+    /// Index of the last definition named `name`, as `iter().rposition(..)`.
+    fn last_definition_named(&self, name: &str) -> Option<usize> {
+        let mut at = self.definitions.len();
+        let mut found = None;
+        while found.is_none() && at > 0 {
+            at -= 1;
+            if self.definitions[at].is_named(name) {
+                found = Some(at);
+            }
+        }
+        found
     }
 
     /// Names of current named dependents whose resolved calls reach `name`, in
@@ -910,40 +1075,36 @@ impl Session {
     /// are not dependents themselves, but a current body that reaches `name`
     /// through one is reported: the resolved hop does not hide the dependency.
     pub fn current_dependent_names(&self, name: &str) -> alloc::vec::Vec<alloc::string::String> {
-        let Some(index) = self
-            .definitions
-            .iter()
-            .rposition(|definition| definition.name == name)
-        else {
+        let Some(index) = self.last_definition_named(name) else {
             return alloc::vec::Vec::new();
         };
-        self.current_dependents(index)
-            .into_iter()
-            .filter_map(|dependent| {
-                self.definitions
-                    .get(dependent)
-                    .map(|definition| definition.name.clone())
-            })
-            .collect()
+        let dependents = self.current_dependents(index);
+        let mut names = alloc::vec::Vec::with_capacity(dependents.len());
+        let mut at = 0;
+        while at < dependents.len() {
+            if let Some(name) = self.definition_name_at(dependents[at]) {
+                names.push(name);
+            }
+            at += 1;
+        }
+        names
+    }
+
+    /// An owned copy of the name of the definition at `index`, if any.
+    fn definition_name_at(&self, index: usize) -> Option<alloc::string::String> {
+        let definition = self.definitions.get(index)?;
+        Some(definition.name.clone())
     }
 
     /// Only current named bodies count as live dependents. Old Programs may
     /// retain historical definitions without acquiring the guest edit grant.
     pub fn live_definition_has_dependents(&self, name: &str) -> bool {
-        let Some(index) = self
-            .definitions
-            .iter()
-            .rposition(|definition| definition.name == name)
-        else {
+        let Some(index) = self.last_definition_named(name) else {
             return true;
         };
         !self.current_dependents(index).is_empty()
     }
 
-    #[expect(
-        tigerstyle::platform_dependent_cast,
-        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
-    )]
     #[expect(
         tigerstyle::unbounded_collection_growth,
         reason = "Owner: noble-contracts; the collection is bounded by the surrounding admission limits, which are checked before this loop runs"
@@ -955,33 +1116,45 @@ impl Session {
         let mut affected = alloc::vec![false; self.definitions.len()];
         affected[original] = true;
         let mut dependents = alloc::vec::Vec::new();
-        for (index, definition) in self.definitions.iter().enumerate() {
-            if index == original {
-                continue;
-            }
-            let has_affected_call = definition.tree.nodes.iter().any(|node| match &node.kind {
-                Kind::Call(Target::Named(target)) => {
-                    affected.get(*target as usize).copied().unwrap_or(false)
+        let mut index = 0;
+        while index < self.definitions.len() {
+            if index != original && calls_affected(&self.definitions[index].tree.nodes, &affected) {
+                // A shadowed historical definition is still a resolved hop: a
+                // current body that calls it reaches the original identity
+                // through it, even though the hop itself is not a live dependent.
+                affected[index] = true;
+                if !self.is_shadowed(index) {
+                    dependents.push(index);
                 }
-                _ => false,
-            });
-            if !has_affected_call {
-                continue;
             }
-            // A shadowed historical definition is still a resolved hop: a
-            // current body that calls it reaches the original identity through
-            // it, even though the hop itself is not a live dependent.
-            affected[index] = true;
-            let is_shadowed = self
-                .definitions
-                .iter()
-                .skip(index.saturating_add(1))
-                .any(|later| later.name == definition.name);
-            if !is_shadowed {
-                dependents.push(index);
-            }
+            index += 1;
         }
         dependents
+    }
+
+    /// Whether a later definition reuses the name of the one at `index`.
+    fn is_shadowed(&self, index: usize) -> bool {
+        let mut later = index.saturating_add(1);
+        let mut is_found = false;
+        while !is_found && later < self.definitions.len() {
+            is_found = self.same_name(index, later);
+            later += 1;
+        }
+        is_found
+    }
+
+    /// Whether the definitions at `left` and `right` share a name; only the
+    /// indexes cross the caller's loop.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; String comparison is not const."
+    )]
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; name equality is symmetric, so the two indexes cannot be swapped by accident."
+    )]
+    fn same_name(&self, left: usize, right: usize) -> bool {
+        self.definitions[left].name == self.definitions[right].name
     }
 
     #[expect(
@@ -1023,11 +1196,7 @@ impl Session {
                 ),
             ));
         };
-        let name = &replacement.name;
-        let original = self
-            .definitions
-            .iter()
-            .rposition(|definition| definition.name == *name);
+        let original = self.last_definition_named(replacement.name.as_str());
         if let Some(index) = original {
             let compatibility = replacement::compatible(
                 self,
@@ -1088,8 +1257,10 @@ impl Session {
                 ));
             }
         }
-        let dependents =
-            original.map_or_else(alloc::vec::Vec::new, |index| self.current_dependents(index));
+        let dependents = match original {
+            Some(index) => self.current_dependents(index),
+            None => alloc::vec::Vec::new(),
+        };
         let mut successor = Self {
             definitions: self.definitions.clone(),
             history: self.history.clone(),
@@ -1121,82 +1292,101 @@ impl Session {
                 ),
             ));
         }
-        for index in dependents {
-            let bytes = self
-                .definition_source(index)
-                .map_err(|error| classify_diagnostic(PreviewRefusal::RetainedSource, error))?;
-            let limits = crate::Limits {
-                work: replay_work,
-                ..prepared.limits
-            };
-            let dependent = successor
-                .prepare(bytes, &[], limits)
-                .map_err(|error| classify_diagnostic(PreviewRefusal::DependentRebuild, error))?;
-            let Some(rebuilt) = dependent.definition.as_ref() else {
-                return Err(classify(
-                    PreviewRefusal::DependentRebuild,
-                    Error::at(
-                        Stage::Acceptance,
-                        crate::invalid(span, "retained dependent source is not a definition"),
-                    ),
-                ));
-            };
-            if rebuilt.name != self.definitions[index].name
-                || successor.core_definition_requires_host_effects(&dependent)
-            {
-                return Err(classify(
-                    PreviewRefusal::DependentRebuild,
-                    Error::at(
-                        Stage::Acceptance,
-                        crate::invalid(
-                            span,
-                            "retained dependent changed name or requires unavailable host effects",
-                        ),
-                    ),
-                ));
-            }
-            if !replay_preserves_targets(
-                &self.definitions[index].tree,
-                &rebuilt.tree,
-                &replacements,
-            ) {
-                return Err(classify(
-                    PreviewRefusal::DependentRebuild,
-                    Error::at(
-                        Stage::Acceptance,
-                        crate::invalid(
-                            span,
-                            "retained dependent changed an unapproved resolved call target",
-                        ),
-                    ),
-                ));
-            }
-            let compatibility =
-                replacement::compatible(&successor, &self.definitions[index], rebuilt, limits)
-                    .map_err(|diagnostic| {
-                        classify_diagnostic(
-                            PreviewRefusal::DependentRebuild,
-                            Error::at(Stage::Check, diagnostic),
-                        )
-                    })?;
-            if compatibility != replacement::Compatibility::Compatible {
-                return Err(classify(
-                    PreviewRefusal::DependentRebuild,
-                    Error::at(
-                        Stage::Acceptance,
-                        crate::invalid(
-                            span,
-                            "rebuilt dependent changes the checked stack interface or increases effects",
-                        ),
-                    ),
-                ));
-            }
-            replacements[index] = Some(successor.definitions.len());
-            successor
-                .commit(dependent)
-                .map_err(|error| classify_diagnostic(PreviewRefusal::DependentRebuild, error))?;
+        let limits = crate::Limits {
+            work: replay_work,
+            ..prepared.limits
+        };
+        let mut at = 0;
+        let mut outcome = Ok(());
+        while outcome.is_ok() && at < dependents.len() {
+            outcome =
+                self.rebuild_dependent(&mut successor, &mut replacements, dependents[at], limits);
+            at += 1;
         }
+        outcome?;
         Ok(successor)
+    }
+
+    /// Rebuild one retained dependent from its own source into `successor`,
+    /// as one step of `preview_core_rebuild`.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it extends only the private successor and replacement map that preview_core_rebuild owns and returns."
+    )]
+    fn rebuild_dependent(
+        &self,
+        successor: &mut Self,
+        replacements: &mut [Option<usize>],
+        index: usize,
+        limits: crate::Limits,
+    ) -> Result<(), PreviewError> {
+        let span = crate::Span { start: 0, end: 0 };
+        let bytes = self
+            .definition_source(index)
+            .map_err(|error| classify_diagnostic(PreviewRefusal::RetainedSource, error))?;
+        let dependent = successor
+            .prepare(bytes, &[], limits)
+            .map_err(|error| classify_diagnostic(PreviewRefusal::DependentRebuild, error))?;
+        let Some(rebuilt) = dependent.definition.as_ref() else {
+            return Err(classify(
+                PreviewRefusal::DependentRebuild,
+                Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(span, "retained dependent source is not a definition"),
+                ),
+            ));
+        };
+        if rebuilt.name != self.definitions[index].name
+            || successor.core_definition_requires_host_effects(&dependent)
+        {
+            return Err(classify(
+                PreviewRefusal::DependentRebuild,
+                Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(
+                        span,
+                        "retained dependent changed name or requires unavailable host effects",
+                    ),
+                ),
+            ));
+        }
+        if !replay_preserves_targets(&self.definitions[index].tree, &rebuilt.tree, replacements) {
+            return Err(classify(
+                PreviewRefusal::DependentRebuild,
+                Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(
+                        span,
+                        "retained dependent changed an unapproved resolved call target",
+                    ),
+                ),
+            ));
+        }
+        let compatibility =
+            replacement::compatible(successor, &self.definitions[index], rebuilt, limits).map_err(
+                |diagnostic| {
+                    classify_diagnostic(
+                        PreviewRefusal::DependentRebuild,
+                        Error::at(Stage::Check, diagnostic),
+                    )
+                },
+            )?;
+        if compatibility != replacement::Compatibility::Compatible {
+            return Err(classify(
+                PreviewRefusal::DependentRebuild,
+                Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(
+                        span,
+                        "rebuilt dependent changes the checked stack interface or increases effects",
+                    ),
+                ),
+            ));
+        }
+        replacements[index] = Some(successor.definitions.len());
+        successor
+            .commit(dependent)
+            .map_err(|error| classify_diagnostic(PreviewRefusal::DependentRebuild, error))
     }
 
     /// The ordered, statically inferred interface of the current definition
@@ -1206,14 +1396,10 @@ impl Session {
         name: &str,
         limits: crate::Limits,
     ) -> Result<Option<OrderedInterface>, Error> {
-        let Some(definition) = self
-            .definitions
-            .iter()
-            .rfind(|definition| definition.name == name)
-        else {
+        let Some(index) = self.last_definition_named(name) else {
             return Ok(None);
         };
-        replacement::ordered(self, definition, limits)
+        replacement::ordered(self, &self.definitions[index], limits)
             .map(Some)
             .map_err(|diagnostic| Error::at(Stage::Check, diagnostic))
     }
@@ -1286,10 +1472,6 @@ impl Session {
         })
     }
 
-    #[expect(
-        tigerstyle::platform_dependent_cast,
-        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
-    )]
     /// A definition declaration has no executable root; checking only an
     /// empty post-definition submission would miss latent host operations in
     /// its body. Walk resolved calls (including immutable named dependencies)
@@ -1304,41 +1486,171 @@ impl Session {
             Ok(environment) => environment,
             Err(_) => return true,
         };
-        let mut seen = alloc::vec![false; self.definitions.len()];
-        let mut pending = alloc::vec![&definition.tree];
-        while let Some(tree) = pending.pop() {
-            for node in &tree.nodes {
-                match &node.kind {
-                    Kind::Call(Target::Builtin(index))
-                        if environment.defs.get(*index as usize).is_none_or(|scheme| {
-                            scheme.effects.iter().any(|effect| {
-                                !matches!(effect,
-                                    noble_kernel::shapes::EffectSlot::Effect(
-                                        noble_kernel::types::EffId(3 | 4)
-                                    ) | noble_kernel::shapes::EffectSlot::Var(_)
-                                        if self.live_selected.is_some())
-                            })
-                        }) =>
-                    {
-                        return true;
-                    }
-                    Kind::Call(Target::Named(index)) => {
-                        let Some(prior) = self.definitions.get(*index as usize) else {
-                            return true;
-                        };
-                        let Some(visited) = seen.get_mut(*index as usize) else {
-                            return true;
-                        };
-                        if !*visited {
-                            *visited = true;
-                            pending.push(&prior.tree);
-                        }
-                    }
-                    _ => {}
-                }
+        match &environment {
+            alloc::borrow::Cow::Borrowed(environment) => {
+                self.tree_requires_host_effects(environment, &definition.tree)
+            }
+            alloc::borrow::Cow::Owned(environment) => {
+                self.tree_requires_host_effects(environment, &definition.tree)
             }
         }
-        false
+    }
+
+    /// Walk a body, then each unseen named dependency (last queued first),
+    /// until one node needs an unavailable host effect.
+    fn tree_requires_host_effects(
+        &self,
+        environment: &noble_kernel::contracts::Env,
+        root: &Tree,
+    ) -> bool {
+        let mut seen = alloc::vec![false; self.definitions.len()];
+        let mut pending = alloc::vec::Vec::new();
+        let mut needs_host_effects =
+            self.nodes_require_host_effects(environment, &root.nodes, &mut seen, &mut pending);
+        while !needs_host_effects {
+            match pending.pop() {
+                Some(index) => {
+                    needs_host_effects = self.nodes_require_host_effects(
+                        environment,
+                        &self.definitions[index].tree.nodes,
+                        &mut seen,
+                        &mut pending,
+                    );
+                }
+                None => break,
+            }
+        }
+        needs_host_effects
+    }
+
+    /// Scan one body's nodes in order, queueing each unseen named callee.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it marks only the private visited set and worklist of tree_requires_host_effects."
+    )]
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; unseen named callees are appended to the walk's worklist with Vec::push, so it needs the growable vector."
+    )]
+    fn nodes_require_host_effects(
+        &self,
+        environment: &noble_kernel::contracts::Env,
+        nodes: &[Node],
+        seen: &mut [bool],
+        pending: &mut alloc::vec::Vec<usize>,
+    ) -> bool {
+        let mut needs_host_effects = false;
+        let mut at = 0;
+        while !needs_host_effects && at < nodes.len() {
+            needs_host_effects =
+                self.node_requires_host_effects(environment, &nodes[at], seen, pending);
+            at += 1;
+        }
+        needs_host_effects
+    }
+
+    /// Whether one node needs an unavailable host effect; an unseen named
+    /// callee is queued instead.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it marks only the private visited set and worklist of tree_requires_host_effects."
+    )]
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; unseen named callees are appended to the walk's worklist with Vec::push, so it needs the growable vector."
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
+    #[expect(
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+    )]
+    fn node_requires_host_effects(
+        &self,
+        environment: &noble_kernel::contracts::Env,
+        node: &Node,
+        seen: &mut [bool],
+        pending: &mut alloc::vec::Vec<usize>,
+    ) -> bool {
+        match &node.kind {
+            Kind::Call(Target::Builtin(index)) => {
+                self.builtin_requires_host_effects(environment, *index)
+            }
+            Kind::Call(Target::Named(index)) => self.queue_named(*index as usize, seen, pending),
+            _ => false,
+        }
+    }
+
+    /// Whether builtin `index` is unavailable or admits an unscoped effect.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
+    #[expect(
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+    )]
+    fn builtin_requires_host_effects(
+        &self,
+        environment: &noble_kernel::contracts::Env,
+        index: u32,
+    ) -> bool {
+        match environment.defs.get(index as usize) {
+            Some(scheme) => self.scheme_requires_host_effects(scheme),
+            None => true,
+        }
+    }
+
+    /// Queue the named callee `index` once; a missing definition fails closed.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it marks only the private visited set and worklist of tree_requires_host_effects."
+    )]
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; unseen named callees are appended to the walk's worklist with Vec::push, so it needs the growable vector."
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
+    fn queue_named(
+        &self,
+        index: usize,
+        seen: &mut [bool],
+        pending: &mut alloc::vec::Vec<usize>,
+    ) -> bool {
+        if self.definitions.get(index).is_none() {
+            return true;
+        }
+        match seen.get_mut(index) {
+            Some(visited) => {
+                if !*visited {
+                    *visited = true;
+                    pending.push(index);
+                }
+                false
+            }
+            None => true,
+        }
+    }
+
+    /// Whether a builtin scheme admits an effect other than this session's
+    /// scoped live effects.
+    fn scheme_requires_host_effects(&self, scheme: &noble_kernel::words::Scheme) -> bool {
+        let mut needs_host_effects = false;
+        let mut at = 0;
+        while !needs_host_effects && at < scheme.effects.len() {
+            needs_host_effects = !matches!(&scheme.effects[at],
+                noble_kernel::shapes::EffectSlot::Effect(
+                    noble_kernel::types::EffId(3 | 4)
+                ) | noble_kernel::shapes::EffectSlot::Var(_)
+                    if self.live_selected.is_some());
+            at += 1;
+        }
+        needs_host_effects
     }
 
     pub(crate) fn with_bindings(bindings: crate::component::Bindings) -> Self {
@@ -1354,19 +1666,11 @@ impl Session {
     )]
     fn effect_universe(&self) -> u64 {
         if let Some(profile) = &self.live_slots {
-            return profile
-                .environment
-                .effects
-                .iter()
-                .fold(0u64, |mask, id| mask | 1u64.checked_shl(id.0).unwrap_or(0));
+            return effect_mask(&profile.environment.effects);
         }
         if let Some(context) = &self.declared {
             // Kernel validation binds non-bootstrap IDs to exact host-selected adapters.
-            return context
-                .environment
-                .effects
-                .iter()
-                .fold(0u64, |mask, id| mask | 1u64.checked_shl(id.0).unwrap_or(0));
+            return effect_mask(&context.environment.effects);
         }
         match &self.bindings {
             Some(bindings) => bindings.effects,
@@ -1471,6 +1775,42 @@ impl Session {
 
 fn exhausted(span: crate::Span, message: &str) -> crate::Diagnostic {
     crate::Diagnostic::new(crate::DiagnosticKind::Exhausted, span, message)
+}
+
+/// Whether a registered live resource already uses `name` or schema `id`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String comparison is not const."
+)]
+fn is_resource_registration(
+    resource: &(alloc::string::String, noble_kernel::types::Ty),
+    name: &str,
+    id: noble_kernel::types::NominalTypeId,
+) -> bool {
+    resource.0 == name
+        || matches!(&resource.1, noble_kernel::types::Ty::Nominal(other, _) if *other == id)
+}
+
+/// The bit set of the listed effect identities, folded in order; an identity
+/// of 64 or more adds no bit.
+fn effect_mask(effects: &[noble_kernel::types::EffId]) -> u64 {
+    let mut mask = 0u64;
+    let mut at = 0;
+    while at < effects.len() {
+        mask |= 1u64.checked_shl(effects[at].0).unwrap_or(0);
+        at += 1;
+    }
+    mask
+}
+
+/// Whether every byte satisfies `predicate`, testing in order and stopping at
+/// the first failure, as `bytes.iter().all(..)`.
+fn every_byte(bytes: &[u8], mut predicate: impl FnMut(u8) -> bool) -> bool {
+    let mut at = 0;
+    while at < bytes.len() && predicate(bytes[at]) {
+        at += 1;
+    }
+    at == bytes.len()
 }
 
 const fn classify(kind: PreviewRefusal, error: Error) -> PreviewError {
@@ -1722,7 +2062,10 @@ mod tests {
             .prepare(b"slot.invoke", &[Ty::I64, c], live_limits())
             .unwrap();
         assert!(sites[0].admits_target(&leaf.checked().unwrap().interface));
-        assert_eq!(leaf.live_sites().unwrap()[0].forwarded_ref_ordinals, []);
+        assert_eq!(
+            leaf.live_sites().unwrap()[0].forwarded_ref_ordinals,
+            [0u32; 0]
+        );
     }
 
     #[expect(
@@ -2262,5 +2605,286 @@ mod tests {
             );
             assert_eq!(session.definitions.len(), 3);
         }
+    }
+
+    fn walk_tree(targets: &[Option<u32>]) -> super::Tree {
+        let span = crate::Span { start: 0, end: 0 };
+        let mut nodes = alloc::vec::Vec::with_capacity(targets.len());
+        for target in targets {
+            let kind = match target {
+                Some(index) => super::Kind::Call(super::Target::Named(*index)),
+                None => super::Kind::Literal(noble_kernel::untrusted::Lit::I64(1)),
+            };
+            nodes.push(super::Node { kind, span });
+        }
+        super::Tree {
+            nodes,
+            body: alloc::vec::Vec::new(),
+            span,
+        }
+    }
+
+    fn walk_definition(targets: &[Option<u32>]) -> super::Named {
+        super::Named {
+            name: alloc::string::String::from("d"),
+            identity: 1,
+            owner: None,
+            tree: walk_tree(targets),
+            signature: None,
+            signed: None,
+            alias_uses: alloc::vec::Vec::new(),
+            history_start: None,
+        }
+    }
+
+    #[test]
+    fn dependency_walk_charges_each_node_and_visits_the_latest_queued_body_first() {
+        let definitions = [
+            walk_definition(&[None]),
+            walk_definition(&[None]),
+            walk_definition(&[Some(0)]),
+        ];
+        // Root (two units), then definition 1 (queued last, one unit), then
+        // definition 2, whose first node is the target (one more unit).
+        let tree = walk_tree(&[Some(2), Some(1)]);
+        assert!(super::reaches_index(&tree, &definitions, 0, 4).unwrap());
+        let exhausted = super::reaches_index(&tree, &definitions, 0, 3).unwrap_err();
+        assert_eq!(
+            exhausted.diagnostic().message,
+            "live replacement dependency walk exhausted"
+        );
+        // Without a path to the target every reachable node is charged once.
+        let unreachable = walk_tree(&[Some(1), Some(1)]);
+        assert!(!super::reaches_index(&unreachable, &definitions, 0, 3).unwrap());
+        assert!(super::reaches_index(&unreachable, &definitions, 0, 2).is_err());
+        let invalid = super::reaches_index(&walk_tree(&[Some(7)]), &definitions, 0, 9);
+        assert_eq!(
+            invalid.unwrap_err().diagnostic().message,
+            "invalid retained definition target"
+        );
+    }
+
+    #[test]
+    fn core_interface_words_split_on_ascii_whitespace_and_stop_at_the_first_refusal() {
+        use noble_kernel::types::Ty;
+        let parsed = super::parse_core_interface(" \tI64\n\x0cBool\r -- \t Text ").unwrap();
+        assert_eq!(parsed.stack_in, alloc::vec![Ty::I64, Ty::Bool]);
+        assert_eq!(parsed.stack_out, alloc::vec![Ty::Text]);
+        // A vertical tab is not ASCII whitespace: it stays inside one word.
+        let joined = super::parse_core_interface("-- I64\x0bBool").unwrap_err();
+        assert_ne!(joined.diagnostic().message, "missing stack separator");
+        // The second separator is refused before the later word is parsed.
+        let duplicate = super::parse_core_interface("I64 -- Bool -- Other").unwrap_err();
+        assert_eq!(duplicate.diagnostic().message, "duplicate stack separator");
+        for interface in ["", " \t\r\n", "I64 Bool"] {
+            let missing = super::parse_core_interface(interface).unwrap_err();
+            assert_eq!(missing.diagnostic().message, "missing stack separator");
+        }
+        let full = alloc::format!("{}--", "I64 ".repeat(128));
+        assert_eq!(
+            super::parse_core_interface(&full).unwrap().stack_in.len(),
+            128
+        );
+        let over = alloc::format!("{}--", "I64 ".repeat(129));
+        assert_eq!(
+            super::parse_core_interface(&over)
+                .unwrap_err()
+                .diagnostic()
+                .message,
+            "Core stack height exhausted"
+        );
+    }
+
+    #[test]
+    fn program_types_are_core_only_when_every_stack_entry_is() {
+        let program = |input: alloc::vec::Vec<noble_kernel::types::Ty>, output| {
+            noble_kernel::types::Ty::Program(
+                alloc::boxed::Box::new(input),
+                alloc::boxed::Box::new(output),
+                noble_kernel::types::EffSet::empty(),
+            )
+        };
+        // Stacks of several heights with one non-Core entry at every position:
+        // the halving walk must reach each of them.
+        for count in 0..7 {
+            let core = alloc::vec![noble_kernel::types::Ty::I64; count];
+            assert!(super::core_type(&program(core.clone(), core.clone())));
+            for at in 0..count {
+                let mut mixed = core.clone();
+                mixed[at] = noble_kernel::types::Ty::Contract;
+                assert!(!super::core_type(&program(mixed.clone(), core.clone())));
+                assert!(!super::core_type(&program(core.clone(), mixed)));
+            }
+        }
+        let inner = program(
+            alloc::vec::Vec::new(),
+            alloc::vec![noble_kernel::types::Ty::Bool],
+        );
+        assert!(super::core_type(&program(
+            alloc::vec![inner],
+            alloc::vec::Vec::new()
+        )));
+        let effectful = noble_kernel::types::Ty::Program(
+            alloc::boxed::Box::default(),
+            alloc::boxed::Box::default(),
+            noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::LIVE_DISPATCH]),
+        );
+        assert!(!super::core_type(&effectful));
+    }
+
+    #[test]
+    fn result_library_text_is_the_exact_fixture_bytes() {
+        assert_eq!(
+            super::RESULT_LIBRARY_SOURCE,
+            include_bytes!("fixtures/result.noble").as_slice()
+        );
+    }
+
+    #[test]
+    fn live_resource_names_are_validated_before_the_profile_is_consulted() {
+        let mut session = Session::new();
+        let id = noble_kernel::types::NominalTypeId {
+            module: 110,
+            ordinal: 0,
+        };
+        let mut refusal = |name: &str| {
+            session
+                .register_live_resource(name, id)
+                .unwrap_err()
+                .diagnostic()
+                .message
+                .clone()
+        };
+        assert_eq!(
+            refusal("Account"),
+            "live resource name requires a version suffix"
+        );
+        for name in [
+            "@1",
+            "1Account@1",
+            "_Account@1",
+            "Acc-ount@1",
+            "a@b@1",
+            "Account@",
+            "Account@01",
+            "Account@1x",
+            "Account@4294967296",
+        ] {
+            assert_eq!(
+                refusal(name),
+                "invalid versioned live resource name",
+                "{name}"
+            );
+        }
+        for name in ["Account@1", "A_1@10", "Account@0", "Account@4294967295"] {
+            assert_eq!(
+                refusal(name),
+                "live resource registration requires the live-slot profile",
+                "{name}"
+            );
+        }
+    }
+
+    #[test]
+    fn live_slot_locals_and_ordinals_refuse_malformed_binders_in_written_order() {
+        let session = Session::new_live_slots(
+            noble_kernel::contracts::environment()
+                .unwrap()
+                .enable_live_slots(),
+        )
+        .unwrap();
+        let refusal = |source: &[u8]| {
+            session
+                .prepare(source, &[], live_limits())
+                .unwrap_err()
+                .diagnostic()
+                .message
+                .clone()
+        };
+        for source in [
+            b"1 2 let a let a".as_slice(),
+            b"1 let +",
+            b"1 let a [ 2 let b 3 let b ]",
+            b"1 let a [ 2 let let ]",
+        ] {
+            assert_eq!(
+                refusal(source),
+                "duplicate or invalid local name",
+                "{source:?}"
+            );
+        }
+        for source in [b"1 let".as_slice(), b"1 let [ ]"] {
+            assert_eq!(refusal(source), "let requires a local name", "{source:?}");
+        }
+        for source in [
+            b"slot.invoke.".as_slice(),
+            b"slot.invoke.01",
+            b"slot.invoke.1x",
+            b"slot.invoke.12345678901",
+        ] {
+            assert_eq!(
+                refusal(source),
+                "invalid borrowed input ordinal",
+                "{source:?}"
+            );
+        }
+        assert_eq!(
+            refusal(b"slot.invoke.4294967296"),
+            "borrowed input ordinal exceeds u32"
+        );
+    }
+
+    #[test]
+    fn logical_bodies_refuse_the_first_malformed_token_in_written_order() {
+        let scan = |source: &[u8]| {
+            let mut meter = crate::Meter::new(crate::Limits::default());
+            let mut scanner = super::lexer::Scanner::new_declared(source, &mut meter).unwrap();
+            match scanner.next_logical_body(&mut meter) {
+                Ok(super::lexer::Token {
+                    kind: super::lexer::TokenKind::LogicalBody(tokens),
+                    ..
+                }) => Ok(tokens.len()),
+                Ok(_) => Err(alloc::string::String::from("not a logical body")),
+                Err(error) => Err(error.message),
+            }
+        };
+        assert_eq!(scan(b"[ (refl 0) ]"), Ok(4));
+        assert_eq!(scan(b"[ a:b, (c) ]"), Ok(7));
+        for (source, message) in [
+            (b"[ (refl %) ]".as_slice(), "unsupported logical atom"),
+            (b"[ (refl 0) ", "unclosed logical body"),
+            (b"[ (refl 0 ]", "unclosed logical parenthesis"),
+            (b"[ refl 0) ]", "unmatched logical parenthesis"),
+            (b"[ (refl [0]) ]", "invalid logical delimiter or escape"),
+        ] {
+            assert_eq!(
+                scan(source),
+                Err(alloc::string::String::from(message)),
+                "{source:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn host_effect_walk_follows_named_dependencies_and_permits_only_scoped_live_effects() {
+        let limits = live_limits();
+        let requires = |session: &Session, source: &[u8]| {
+            let prepared = session.prepare(source, &[], limits).unwrap();
+            session.core_definition_requires_host_effects(&prepared)
+        };
+        let mut session = Session::new();
+        for source in [
+            b"def pure [ 1 + ]".as_slice(),
+            b"def noisy [ \"x\" test.emit ]",
+        ] {
+            let prepared = session.prepare(source, &[], limits).unwrap();
+            session.commit(prepared).unwrap();
+        }
+        assert!(!requires(&session, b"def a [ pure pure ]"));
+        assert!(requires(&session, b"def b [ pure noisy ]"));
+        assert!(requires(&session, b"def c [ \"x\" test.emit ]"));
+        assert!(requires(&session, b"1 2 +"));
+        let live = Session::new_live("evolve");
+        assert!(!requires(&live, b"def evolve [ self.generation drop 1 + ]"));
     }
 }

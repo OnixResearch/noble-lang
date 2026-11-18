@@ -3,7 +3,7 @@
 #
 # Positive baseline: every check below must pass on the repository's proofs/m2
 # tree. Refusal controls: verification/m2-proof-gate-refusals.sh runs this gate
-# against four mutated scratch copies; each mutation must fail hard.
+# against six mutated scratch copies; each mutation must fail hard.
 #
 #   PRF-MISSING  a required theorem deleted            -> REQUIRED-THEOREMS
 #   PRF-HOLE     a `sorry` in any proof source         -> NO-SORRY (and
@@ -16,6 +16,19 @@
 #   unexplained  an external model left as a template  -> EXTERNAL-MODELS
 #   external     axiom, or its implementation deleted  (axiom scan) or
 #                so the generated module breaks        BUILD
+#   foreign      a `_native.decide` axiom outside the   -> REQUIRED-THEOREMS
+#   native       reviewed native_decide family: another
+#                type in a kernel module, or the exact
+#                literal-size shape owned by another module
+#
+# Generated literal sizes (#97). The pinned Aeneas library's
+# `toStr (s) (h : s.toByteArray.size ≤ U32.max := by decide +native)` leaves
+# one `<decl>._native.decide.ax_<n>` axiom per string literal of the
+# generated code. The generated `noble_kernel.acceptance.check` reaches none
+# of them: adapter identities are compared as byte arrays and the
+# `acceptance.parts.join` assertions carry no message. So the checker and
+# the refinement family stay trifecta-only, and such an axiom on a required
+# theorem rejects like any other.
 #
 # Usage (from any directory; the pinned Lean must be first on PATH):
 #

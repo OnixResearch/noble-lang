@@ -90,6 +90,143 @@ The entry point always regenerates Charon and Aeneas output into a fresh artifac
 Freshness rejection, unsupported-body rejection, edited-output rejection, and proof-required rejection belong to task 3.2.
 The generated Lean module compiles against the pinned backend; this does not establish refinement, Wasm correspondence, or cache authenticity.
 
+## Whole-crate M4 annotation admission (#97)
+
+The separate whole-crate route in `verification/m4/implementation.mjs` uses
+`verification/m4/accounting.mjs` to admit only its reviewed source annotations.
+Every live `charon::` control path, after masking Rust comments and literal
+contents, must belong to exactly one recognized attribute occurrence. A path
+fed through a macro argument, or a legal alternative spelling such as
+`# [charon::exclude]`, is refused rather than treated as an absent annotation.
+The reviewed item first line, complete extent and SHA-256 remain checked.
+Annotation normalization preserves the bytes inside quoted arguments:
+`variants_suffix("Co de")` is not the reviewed `variants_suffix("Code")`.
+
+The same occurrence-attribution requirement applies to live `cfg(...)` and
+`cfg_attr(...)` source-selection metadata, including metadata passed through
+macro arguments or written with a spaced `# [`. The existing exact test-only
+exceptions remain unchanged. Runtime `cfg!(...)` macros are not item-selection
+metadata; comments and literal contents remain ignored.
+
+### Initial Charon controls and observed results
+
+The permanent controls are in `verification/m4/opaque-model-review.test.mjs`:
+
+| Control name | Mutation |
+|---|---|
+| `macro-fed Charon exclusion refuses unreviewed source selection` | A macro receives `charon::exclude` as a metadata argument and emits an attributed function. |
+| `spaced Charon exclusion refuses unreviewed source selection` | An unreviewed function uses `# [charon::exclude]`. |
+| `whitespace inside reviewed variant suffix refuses review` | The reviewed suffix `Code` becomes `Co de` without changing the enum item bytes. |
+
+At tests-only commit `09f6ffd`, with accounting unchanged, the selected Node 24
+run of these three controls exited 1: 0 passed, 3 failed, each with
+`Missing expected exception`. After the accounting fix at `5c4ddbd`, the
+selected Node 24 run of the full suite reported 70 tests, 70 passed, 0 failed.
+That result applies to the initial Charon fix, before the conditional-metadata
+controls were added; it is not a result for the expanded suite.
+The full-suite command is:
+
+```sh
+SELECTED_NODE --test verification/m4/opaque-model-review.test.mjs
+```
+
+### Expanded conditional controls and direct API smoke
+
+The expanded suite adds `macro-fed conditional metadata refuses unreviewed source selection`
+and `spaced conditional metadata refuses unreviewed source selection`. Each
+checks both `cfg` and `cfg_attr` metadata with recomputed source hashes. At
+`a2947e5`, the full suite reported 72 passed, 0 failed.
+
+A separate direct `sourcePolicy` API smoke also ran at `a2947e5`, recomputing
+the source SHA-256 values for every mutation. The canonical reviewed sources
+were accepted, and all five malformed cases were refused:
+
+| Direct API case | Result |
+|---|---|
+| Macro-fed `charon::exclude` | Refused |
+| Spaced `# [charon::exclude]` | Refused |
+| Quoted suffix `Code` changed to `Co de` | Refused |
+| Macro-fed `cfg(any())` | Refused |
+| Spaced `# [cfg(any())]` | Refused |
+
+The direct smoke summary was `malformed=5 accepted=0`, exit 0. Before the
+conditional-metadata fix, the same smoke accepted the two malformed `cfg`
+cases and exited 1 with `malformed=5 accepted=2`.
+
+These are source-selection admission controls over mutated source strings,
+not executions of those Rust fixtures through Charon/Aeneas. They establish
+neither Rust/Lean refinement nor fresh extraction evidence or M4 acceptance.
+
+### Compiler closure instances and real bodies
+
+The compiler inventory distinguishes an authored closure method from its
+compiler-generated call-trait instance. Aeneas may emit the method without a
+separate instance declaration. Such an instance is accounted only when it is
+the standard Fn, FnMut or FnOnce trait, has exactly one method and no associated
+items, and that method belongs to the same compiler instance and source span.
+Its real body must already have passed ordinary function accounting and have
+exactly one nonopaque translated entrypoint. The inventory records those method
+identities separately; it does not invent a translated instance or waive a body.
+
+Direct accounting of retained contracts extraction accepted seven such
+method-lowered instances. Substituting an unrelated method or a contradictory
+call-trait kind was refused as M4-CLOSURE-INSTANCE. Both mutations are also
+required controls of the full M4 gate. Conversely, two kernel scheme closures
+had untranslatable call-adapter bodies, not merely missing instance records;
+they were replaced with direct named helpers. No missing-body exemption was
+added. The regenerated kernel passed declaration accounting and 231 native
+tests, with one historical measurement ignored; this is not a complete
+multi-subject extraction receipt.
+
+The reviewed whole-subject translator wall limit is 900 seconds, the same hang
+guard as the Charon and Lean bounds. Translating the renewed contracts subject
+took 147 to 166 seconds on an idle host and 425 seconds while other builds ran,
+so the historical 120-second limit no longer fits. This resource change does not
+relax source, generated-byte, model or axiom checks; receipts produced under the
+old configuration remain historical.
+
+The gate's Lean commands share a second hang guard, now 1800 seconds. Its
+fresh build compiles all three subjects from scratch, and
+`NobleContractImpl.Funs` alone took 335 to 381 seconds idle but 720 seconds at a
+load average of 45 on 32 cores, and that build reached the historical
+900-second bound with three of its 1813 modules still to compile.
+The MC1 and M3-Wasm gates now take their Charon, translator and Lean bounds
+from the same selected configuration instead of a fixed 900 seconds, since each
+also builds the contracts subject fresh.
+
+### Checker literals and strict bridge theorems
+
+The pinned Aeneas Lean library proves each extracted string literal's UTF-8
+size bound with `decide +native` (`Aeneas.Std.toStr`), so every literal
+leaves one `<decl>._native.decide.ax_<n>` axiom. `M4Audit` admits exactly
+that shape (`nativeStringBound`) on non-strict declarations only. The strict
+bridge theorems `KernelBridge.check_from_inputs` of the contracts and Wasm
+lanes must use only `propext`, `Classical.choice` and `Quot.sound`.
+
+The regenerated checker reached three literals: the two test adapter
+identities `contracts::TEST_CODE_EXPORT_ADAPTER_IDENTITY` and
+`TEST_SEND_ADAPTER_IDENTITY`, and one `debug_assert_eq!` message in
+`acceptance::parts::join`. Both lane audits refused them with `M4-AXIOM`.
+The kernel now compares a registration's or bound row's identity bytes
+(`str::as_bytes`) with `TEST_CODE_EXPORT_IDENTITY_BYTES` and
+`TEST_SEND_IDENTITY_BYTES`, whose lengths are typed from the unchanged public
+`&str` constants. The two `join` assertions keep their invariants without
+messages. The comparisons reuse the existing `str::as_bytes`, `String` deref
+and slice/array equality models, so the regenerated checker depends only on
+the three strict axioms. The kernel's unused `String`/`&str` `ne` model is
+removed. The M2 and M3 proof gates no longer need their literal-size
+allowance. Each now refuses a planted kernel-owned literal; see
+[the M3 proof evidence §9](m3-proof-evidence.md).
+
+Since `1c19a86f`, source preparation calls the budgeted
+`acceptance::check_with_work` and `check_signed_structure_with_work`. These
+run the same extracted machine, `acceptance::run`, as `acceptance::check`.
+`M4Audit`'s acceptance-dependency rule and the M5 and M6 packets therefore
+require each acceptance root to reach `noble_kernel.acceptance.run`.
+Requiring `check` itself refused `prepare_export` as detached even though it
+runs the same checker. The renewed M4 lock's root audits record
+`World.prepare_export` and `component::compile` both reaching it.
+
 ## Allocators at this boundary (#121)
 
 This route erases the allocator, so it cannot report on one. Charon sets `hide_allocator: true` under

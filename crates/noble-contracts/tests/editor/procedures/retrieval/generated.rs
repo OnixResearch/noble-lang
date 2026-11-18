@@ -9,6 +9,8 @@ use noble_kernel::types::{EffSet, Ty};
 use std::string::String;
 use std::vec::Vec;
 
+#[path = "generated/closure.rs"]
+mod closure;
 #[path = "generated/fixtures.rs"]
 mod fixtures;
 #[path = "generated/query.rs"]

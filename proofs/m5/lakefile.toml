@@ -16,9 +16,6 @@ name = "M5Audit"
 name = "HostLocality"
 
 [[lean_lib]]
-name = "RegionCutExtracted"
-
-[[lean_lib]]
 name = "RegionTrace"
 
 [[lean_lib]]

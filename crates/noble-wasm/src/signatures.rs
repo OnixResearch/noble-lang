@@ -42,6 +42,14 @@ const fn index_probe_cost(entries: usize) -> usize {
     (usize::BITS - entries.leading_zeros()) as usize + 1
 }
 
+/// The candidate index key of one (fingerprint, length_bytes) class: the
+/// fingerprint fills the high 64 bits and the length the low 32, so integer
+/// order is the lexicographic (fingerprint, length_bytes) order and equal
+/// keys are exactly equal pairs.
+const fn candidate_key(hash: u64, length_bytes: u32) -> u128 {
+    ((hash as u128) << 32) | (length_bytes as u128)
+}
+
 /// IDs intern complete ordered structural stacks, never just stack heights.
 /// The canonical grammar is injective and contains no caller-provided text.
 /// Calculator uses compact printable tokens so a long-lived selected session
@@ -50,10 +58,11 @@ const fn index_probe_cost(entries: usize) -> usize {
 pub(crate) struct Pool {
     pub(crate) keys: alloc::vec::Vec<alloc::vec::Vec<u8>>,
     prefix_keys: alloc::vec::Vec<PrefixKey>,
-    // Compact records by (fingerprint, length_bytes), each list in ascending ID
-    // order. A lookup visits only records that could equal the key, so its
-    // metered cost does not grow with the session's accumulated pool.
-    candidates: alloc::collections::BTreeMap<(u64, u32), alloc::vec::Vec<u32>>,
+    // Compact records by (fingerprint, length_bytes) class, keyed by
+    // `candidate_key`, each list in ascending ID order. A lookup visits only
+    // records that could equal the key, so its metered cost does not grow
+    // with the session's accumulated pool.
+    candidates: alloc::collections::BTreeMap<u128, alloc::vec::Vec<u32>>,
     bytes: usize,
     expanded_bytes: usize,
     extended: bool,
@@ -104,19 +113,22 @@ impl Pool {
     /// and allocation overhead. It never under-counts the stored key bytes.
     pub(crate) fn retained_bytes(&self) -> usize {
         const RECORD: usize = 64;
-        let keys = self.keys.iter().fold(0usize, |total, key| {
-            total.saturating_add(key.len()).saturating_add(RECORD)
-        });
-        let prefixes = self.prefix_keys.iter().fold(0usize, |total, key| {
-            total
+        let mut keys = 0usize;
+        for key in &self.keys {
+            keys = keys.saturating_add(key.len()).saturating_add(RECORD);
+        }
+        let mut prefixes = 0usize;
+        for key in &self.prefix_keys {
+            prefixes = prefixes
                 .saturating_add(key.suffix.len())
-                .saturating_add(RECORD)
-        });
-        let candidates = self.candidates.values().fold(0usize, |total, ids| {
-            total
+                .saturating_add(RECORD);
+        }
+        let mut candidates = 0usize;
+        for ids in self.candidates.values() {
+            candidates = candidates
                 .saturating_add(ids.len().saturating_mul(4))
-                .saturating_add(RECORD)
-        });
+                .saturating_add(RECORD);
+        }
         keys.saturating_add(prefixes).saturating_add(candidates)
     }
 
@@ -152,7 +164,7 @@ impl Pool {
     pub(crate) fn expanded_keys(
         &self,
         first: usize,
-        mut charge: impl FnMut(usize) -> Result<(), crate::Diagnostic>,
+        work: &mut crate::source::Work,
     ) -> Result<alloc::vec::Vec<alloc::vec::Vec<u8>>, crate::Diagnostic> {
         let Some(delta) = self.prefix_keys.get(first..) else {
             return Err(crate::Diagnostic::Defective);
@@ -161,15 +173,20 @@ impl Pool {
         // impossible module before decompressing an adversarially shared
         // prefix into a large transient allocation.
         let mut expanded_bytes = 0usize;
-        for record in delta {
-            attempt!(charge(1));
-            expanded_bytes = match expanded_bytes.checked_add(record.length_bytes as usize) {
-                Some(value) => value,
-                None => return Err(crate::Diagnostic::Exhausted),
-            };
-            if expanded_bytes > CALCULATOR_EXPANDED_KEY_LIMIT {
-                return Err(crate::Diagnostic::Exhausted);
+        let mut index = 0usize;
+        let mut failure = None;
+        while index < delta.len() {
+            match expanded_total(expanded_bytes, &delta[index], work) {
+                Ok(total) => expanded_bytes = total,
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
+                }
             }
+            index += 1;
+        }
+        if let Some(problem) = failure {
+            return Err(problem);
         }
         if expanded_bytes > self.expanded_bytes {
             return Err(crate::Diagnostic::Defective);
@@ -177,34 +194,30 @@ impl Pool {
         let start = first / PREFIX_BLOCK * PREFIX_BLOCK;
         let mut output = alloc::vec::Vec::with_capacity(delta.len());
         let mut scratch = alloc::vec::Vec::new();
-        for (index, record) in self.prefix_keys.iter().enumerate().skip(start) {
-            if index % PREFIX_BLOCK == 0 {
-                scratch.clear();
+        index = start;
+        while index < self.prefix_keys.len() {
+            let record = &self.prefix_keys[index];
+            match expand_record(record, index, first, &mut scratch, work) {
+                Ok(Some(key)) => output.push(key),
+                Ok(None) => {}
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
+                }
             }
-            if record.prefix as usize > scratch.len() {
-                return Err(crate::Diagnostic::Defective);
-            }
-            scratch.truncate(record.prefix as usize);
-            attempt!(charge(record.suffix.len().saturating_add(1)));
-            scratch.extend_from_slice(&record.suffix);
-            attempt!(charge(scratch.len()));
-            if scratch.len() != record.length_bytes as usize || fingerprint(&scratch) != record.hash
-            {
-                return Err(crate::Diagnostic::Defective);
-            }
-            if index >= first {
-                attempt!(charge(scratch.len()));
-                output.push(scratch.clone());
-            }
+            index += 1;
         }
-        Ok(output)
+        match failure {
+            Some(problem) => Err(problem),
+            None => Ok(output),
+        }
     }
 
     pub(crate) fn intern(
         &mut self,
         stack: &[noble_kernel::types::Ty],
     ) -> Result<u32, crate::Diagnostic> {
-        self.intern_charged(stack, |_| Ok(()))
+        self.intern_charged(stack, &mut crate::source::Work::unmetered())
     }
 
     /// Charge each comparison actually visited, including a matching key.
@@ -213,22 +226,34 @@ impl Pool {
     pub(crate) fn intern_charged(
         &mut self,
         stack: &[noble_kernel::types::Ty],
-        mut charge: impl FnMut(usize) -> Result<(), crate::Diagnostic>,
+        work: &mut crate::source::Work,
     ) -> Result<u32, crate::Diagnostic> {
         let key = attempt!(walk::encode(stack, self.extended, self.compact));
         if self.compact {
-            attempt!(charge(key.len()));
-            return self.intern_prefix(key, &mut charge);
+            attempt!(work.entries(key.len()));
+            return self.intern_prefix(key, work);
         }
         let mut index = 0usize;
+        let mut found = None;
+        let mut failure = None;
         while index < self.keys.len() {
-            attempt!(charge(
-                self.keys[index].len().min(key.len()).saturating_add(1)
-            ));
-            if self.keys[index] == key {
-                return number(index);
+            match compare_key(&self.keys[index], &key, work) {
+                Ok(true) => {
+                    found = Some(index);
+                    break;
+                }
+                Ok(false) => index += 1,
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
+                }
             }
-            index += 1;
+        }
+        if let Some(problem) = failure {
+            return Err(problem);
+        }
+        if let Some(index) = found {
+            return number(index);
         }
         if self.extended && self.keys.len() >= SOURCE_KEY_LIMIT {
             return Err(crate::Diagnostic::Exhausted);
@@ -249,7 +274,7 @@ impl Pool {
     fn intern_prefix(
         &mut self,
         key: alloc::vec::Vec<u8>,
-        charge: &mut impl FnMut(usize) -> Result<(), crate::Diagnostic>,
+        work: &mut crate::source::Work,
     ) -> Result<u32, crate::Diagnostic> {
         let hash = fingerprint(&key);
         // Lengths above u32 cannot be stored and are refused below; they
@@ -257,33 +282,16 @@ impl Pool {
         let Ok(length_bytes) = u32::try_from(key.len()) else {
             return Err(crate::Diagnostic::Exhausted);
         };
-        let index_key = (hash, length_bytes);
+        let index_key = candidate_key(hash, length_bytes);
         let mut scratch = alloc::vec::Vec::new();
         // One ordered-index probe, then one unit per candidate actually
         // examined, plus every candidate block record actually decoded.
-        attempt!(charge(index_probe_cost(self.candidates.len())));
+        attempt!(work.entries(index_probe_cost(self.candidates.len())));
         if let Some(candidates) = self.candidates.get(&index_key) {
-            for &candidate in candidates {
-                attempt!(charge(1));
-                let index = candidate as usize;
-                let Some(existing) = self.prefix_keys.get(index) else {
-                    return Err(crate::Diagnostic::Defective);
-                };
-                if existing.hash != hash || existing.length_bytes as usize != key.len() {
-                    continue;
-                }
-                scratch.clear();
-                for record in &self.prefix_keys[index / PREFIX_BLOCK * PREFIX_BLOCK..=index] {
-                    if record.prefix as usize > scratch.len() {
-                        return Err(crate::Diagnostic::Defective);
-                    }
-                    scratch.truncate(record.prefix as usize);
-                    attempt!(charge(record.suffix.len().saturating_add(1)));
-                    scratch.extend_from_slice(&record.suffix);
-                }
-                if scratch == key {
-                    return number(index);
-                }
+            let existing =
+                attempt!(self.existing_record(candidates, hash, &key, &mut scratch, work));
+            if let Some(index) = existing {
+                return number(index);
             }
         }
         let index = self.prefix_keys.len();
@@ -297,18 +305,15 @@ impl Pool {
         let mut prefix = 0usize;
         if !index.is_multiple_of(PREFIX_BLOCK) {
             scratch.clear();
-            for record in &self.prefix_keys[index / PREFIX_BLOCK * PREFIX_BLOCK..index] {
-                if record.prefix as usize > scratch.len() {
-                    return Err(crate::Diagnostic::Defective);
-                }
-                scratch.truncate(record.prefix as usize);
-                attempt!(charge(record.suffix.len().saturating_add(1)));
-                scratch.extend_from_slice(&record.suffix);
-            }
+            attempt!(decode_records(
+                &self.prefix_keys[index / PREFIX_BLOCK * PREFIX_BLOCK..index],
+                &mut scratch,
+                work
+            ));
             while prefix < key.len() && prefix < scratch.len() && key[prefix] == scratch[prefix] {
                 prefix += 1;
             }
-            attempt!(charge(prefix.saturating_add(1)));
+            attempt!(work.entries(prefix.saturating_add(1)));
         }
         let suffix = &key[prefix..];
         let size_bytes = match self
@@ -326,8 +331,8 @@ impl Pool {
             Ok(value) => value,
             Err(_) => return Err(crate::Diagnostic::Exhausted),
         };
-        attempt!(charge(suffix.len().saturating_add(PREFIX_RECORD_BYTES)));
-        attempt!(charge(index_probe_cost(self.candidates.len())));
+        attempt!(work.entries(suffix.len().saturating_add(PREFIX_RECORD_BYTES)));
+        attempt!(work.entries(index_probe_cost(self.candidates.len())));
         let id = attempt!(number(index));
         self.prefix_keys.push(PrefixKey {
             prefix,
@@ -336,12 +341,69 @@ impl Pool {
             suffix: suffix.to_vec(),
         });
         self.candidates
-            .entry((hash, length_bytes))
+            .entry(candidate_key(hash, length_bytes))
             .or_default()
             .push(id);
         self.bytes = size_bytes;
         self.expanded_bytes = expanded_bytes;
         Ok(id)
+    }
+
+    /// The first indexed candidate whose decoded bytes equal `key`, charging
+    /// one unit per candidate examined plus every block record decoded.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; candidate decoding reuses the caller's private front-coding scratch, which requires Vec growth rather than a slice."
+    )]
+    fn existing_record(
+        &self,
+        candidates: &[u32],
+        hash: u64,
+        key: &[u8],
+        scratch: &mut alloc::vec::Vec<u8>,
+        work: &mut crate::source::Work,
+    ) -> Result<Option<usize>, crate::Diagnostic> {
+        let mut position = 0usize;
+        let mut verdict = Ok(None);
+        while matches!(verdict, Ok(None)) && position < candidates.len() {
+            verdict = self.candidate_record(candidates[position], hash, key, scratch, work);
+            position += 1;
+        }
+        verdict
+    }
+
+    /// `Some(index)` when stored record `candidate` decodes to exactly `key`.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; candidate decoding reuses the caller's private front-coding scratch, which requires Vec growth rather than a slice."
+    )]
+    fn candidate_record(
+        &self,
+        candidate: u32,
+        hash: u64,
+        key: &[u8],
+        scratch: &mut alloc::vec::Vec<u8>,
+        work: &mut crate::source::Work,
+    ) -> Result<Option<usize>, crate::Diagnostic> {
+        attempt!(work.entries(1));
+        let index = candidate as usize;
+        let Some(existing) = self.prefix_keys.get(index) else {
+            return Err(crate::Diagnostic::Defective);
+        };
+        if existing.hash != hash || existing.length_bytes as usize != key.len() {
+            return Ok(None);
+        }
+        scratch.clear();
+        attempt!(decode_records(
+            &self.prefix_keys[index / PREFIX_BLOCK * PREFIX_BLOCK..index + 1],
+            scratch,
+            work
+        ));
+        if scratch.as_slice() == key {
+            Ok(Some(index))
+        } else {
+            Ok(None)
+        }
     }
 
     pub(crate) fn interface(
@@ -392,6 +454,117 @@ impl Pool {
     }
 }
 
+/// Charge one comparison of `key` with a retained key, then compare them.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; the only mutable input is the caller's charge meter, invoked once before the comparison result is returned."
+)]
+fn compare_key(
+    stored: &[u8],
+    key: &[u8],
+    work: &mut crate::source::Work,
+) -> Result<bool, crate::Diagnostic> {
+    attempt!(work.entries(stored.len().min(key.len()).saturating_add(1)));
+    Ok(stored == key)
+}
+
+/// Charge one delta record and add its expanded length to `total`, refusing
+/// a total above the calculator expansion ceiling.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; the only mutable input is the caller's charge meter, invoked once before the checked total is returned."
+)]
+fn expanded_total(
+    total: usize,
+    record: &PrefixKey,
+    work: &mut crate::source::Work,
+) -> Result<usize, crate::Diagnostic> {
+    attempt!(work.entries(1));
+    let total = match total.checked_add(record.length_bytes as usize) {
+        Some(value) => value,
+        None => return Err(crate::Diagnostic::Exhausted),
+    };
+    if total > CALCULATOR_EXPANDED_KEY_LIMIT {
+        return Err(crate::Diagnostic::Exhausted);
+    }
+    Ok(total)
+}
+
+/// Decode record `index` into its block's `scratch`, returning an owned copy
+/// when the record belongs to the requested delta `first..`.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; the decode truncates and extends the caller's private front-coding scratch, which requires Vec growth rather than a slice."
+)]
+fn expand_record(
+    record: &PrefixKey,
+    index: usize,
+    first: usize,
+    scratch: &mut alloc::vec::Vec<u8>,
+    work: &mut crate::source::Work,
+) -> Result<Option<alloc::vec::Vec<u8>>, crate::Diagnostic> {
+    if index.is_multiple_of(PREFIX_BLOCK) {
+        scratch.clear();
+    }
+    if record.prefix as usize > scratch.len() {
+        return Err(crate::Diagnostic::Defective);
+    }
+    scratch.truncate(record.prefix as usize);
+    attempt!(work.entries(record.suffix.len().saturating_add(1)));
+    scratch.extend_from_slice(&record.suffix);
+    attempt!(work.entries(scratch.len()));
+    if scratch.len() != record.length_bytes as usize || fingerprint(scratch) != record.hash {
+        return Err(crate::Diagnostic::Defective);
+    }
+    if index < first {
+        return Ok(None);
+    }
+    attempt!(work.entries(scratch.len()));
+    Ok(Some(scratch.clone()))
+}
+
+/// Decode the front-coded `records` in order into `scratch`, charging each
+/// record's suffix copy and stopping at the first malformed prefix.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; the decode truncates and extends the caller's private front-coding scratch, which requires Vec growth rather than a slice."
+)]
+fn decode_records(
+    records: &[PrefixKey],
+    scratch: &mut alloc::vec::Vec<u8>,
+    work: &mut crate::source::Work,
+) -> Result<(), crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < records.len() {
+        outcome = decode_record(&records[index], scratch, work);
+        index += 1;
+    }
+    outcome
+}
+
+/// Apply one front-coded record to `scratch`.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; the decode truncates and extends the caller's private front-coding scratch, which requires Vec growth rather than a slice."
+)]
+fn decode_record(
+    record: &PrefixKey,
+    scratch: &mut alloc::vec::Vec<u8>,
+    work: &mut crate::source::Work,
+) -> Result<(), crate::Diagnostic> {
+    if record.prefix as usize > scratch.len() {
+        return Err(crate::Diagnostic::Defective);
+    }
+    scratch.truncate(record.prefix as usize);
+    attempt!(work.entries(record.suffix.len().saturating_add(1)));
+    scratch.extend_from_slice(&record.suffix);
+    Ok(())
+}
+
 #[expect(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-maintainers; signature serialization mutates only the fresh bounded compiler sink, not the borrowed interned key."
@@ -429,6 +602,166 @@ mod tests {
         reason = "Owner: noble-wasm-maintainers; these pool fixtures build the whole boundary scenario in one function and assert its retention outcome, so terse flags, long setups and bounded test-only pushes are the readable form."
     )]
 
+    /// The running totals one metered call charges, recovered from budgets:
+    /// with any budget below the full cost `total` the call is refused after
+    /// the longest charged prefix that fits, leaving the rest unspent, and
+    /// interns nothing; with exactly `total` it succeeds and spends it all.
+    /// Every run starts from a fresh clone of `pool`.
+    fn running_totals<T>(
+        pool: &super::Pool,
+        total: u64,
+        mut run: impl FnMut(&mut super::Pool, &mut crate::source::Work) -> Result<T, crate::Diagnostic>,
+    ) -> alloc::vec::Vec<u64> {
+        let mut totals = alloc::vec![0];
+        for budget in 0..=total {
+            let mut copy = pool.clone();
+            let mut work = crate::source::Work::limited(budget);
+            let outcome = run(&mut copy, &mut work);
+            let spent = budget - work.remaining();
+            if budget < total {
+                assert!(
+                    matches!(outcome, Err(crate::Diagnostic::Exhausted)),
+                    "budget {budget} below {total} was not refused"
+                );
+                assert_eq!(copy.len(), pool.len());
+                assert_eq!(copy.bytes, pool.bytes);
+            } else {
+                assert!(outcome.is_ok(), "the full cost {total} was refused");
+                assert_eq!(spent, total);
+            }
+            if totals.last() != Some(&spent) {
+                totals.push(spent);
+            }
+        }
+        totals
+    }
+
+    /// The individual charges whose running totals are `totals`.
+    fn charges(totals: &[u64]) -> alloc::vec::Vec<u64> {
+        totals.windows(2).map(|pair| pair[1] - pair[0]).collect()
+    }
+
+    #[test]
+    fn candidate_keys_keep_pair_order_and_lookups() {
+        let pairs = [
+            (0u64, 0u32),
+            (0, 1),
+            (0, u32::MAX),
+            (1, 0),
+            (1, 7),
+            (0xff, 3),
+            (0x7fff_ffff_ffff_ffff, u32::MAX),
+            (0x8000_0000_0000_0000, 5),
+            (u64::MAX, 0),
+            (u64::MAX, u32::MAX),
+        ];
+        // Insert out of order so both maps must sort.
+        let mut by_pair = alloc::collections::BTreeMap::new();
+        let mut by_key = alloc::collections::BTreeMap::new();
+        for (index, &(hash, length_bytes)) in pairs.iter().enumerate().rev() {
+            by_pair.insert((hash, length_bytes), index);
+            by_key.insert(super::candidate_key(hash, length_bytes), index);
+        }
+        // Iteration visits the classes in the same (lexicographic) order.
+        let pair_order: alloc::vec::Vec<usize> = by_pair.values().copied().collect();
+        let key_order: alloc::vec::Vec<usize> = by_key.values().copied().collect();
+        assert_eq!(pair_order, key_order);
+        assert_eq!(key_order, (0..pairs.len()).collect::<alloc::vec::Vec<_>>());
+        // Every class finds its own entry, and neighbouring classes miss.
+        for &(hash, length_bytes) in &pairs {
+            assert_eq!(
+                by_key.get(&super::candidate_key(hash, length_bytes)),
+                by_pair.get(&(hash, length_bytes))
+            );
+        }
+        for (hash, length_bytes) in [(0u64, 2u32), (2, 0), (1, 6), (u64::MAX - 1, u32::MAX)] {
+            assert_eq!(by_pair.get(&(hash, length_bytes)), None);
+            assert_eq!(by_key.get(&super::candidate_key(hash, length_bytes)), None);
+        }
+    }
+
+    #[test]
+    fn ordinary_pool_charges_each_compared_key_in_order_and_stops_at_a_refusal() {
+        let mut pool = super::Pool::source();
+        let first = [noble_kernel::types::Ty::I64];
+        let second = [noble_kernel::types::Ty::Bool, noble_kernel::types::Ty::I64];
+        let third = [noble_kernel::types::Ty::Unit];
+        assert_eq!(pool.intern(&first).ok(), Some(0));
+        assert_eq!(pool.intern(&second).ok(), Some(1));
+        assert_eq!(pool.intern(&third).ok(), Some(2));
+        // Keys "[I64]", "[Bool I64]" and "[Unit]": each visited key is
+        // charged its shorter compared length plus one, and a match ends
+        // the scan before any later key is charged; any smaller budget is
+        // refused and interns nothing.
+        let hit = running_totals(&pool, 17, |pool, work| pool.intern_charged(&second, work));
+        assert_eq!(charges(&hit), [6, 11]);
+        let mut work = crate::source::Work::limited(17);
+        assert_eq!(pool.intern_charged(&second, &mut work).ok(), Some(1));
+        assert_eq!(work.remaining(), 0);
+        // A new key ("[Text]") is charged against every retained key.
+        let text = [noble_kernel::types::Ty::Text];
+        let fresh = running_totals(&pool, 20, |pool, work| pool.intern_charged(&text, work));
+        assert_eq!(charges(&fresh), [6, 7, 7]);
+        let mut work = crate::source::Work::limited(20);
+        assert_eq!(pool.intern_charged(&text, &mut work).ok(), Some(3));
+        assert_eq!(work.remaining(), 0);
+        // The first refused comparison stops the scan and interns nothing:
+        // "[Syntax]" is charged 6, then 9 does not fit the remaining 8.
+        let mut work = crate::source::Work::limited(14);
+        let refused = pool.intern_charged(&[noble_kernel::types::Ty::Syntax], &mut work);
+        assert!(matches!(refused, Err(crate::Diagnostic::Exhausted)));
+        assert_eq!(work.remaining(), 8);
+        assert_eq!(pool.len(), 4);
+    }
+
+    #[test]
+    fn calculator_pool_charges_decoded_records_in_order_and_stops_at_a_refusal() {
+        let mut pool = super::Pool::source();
+        pool.select_calculator();
+        assert_eq!(
+            pool.intern_prefix(alloc::vec![1, 2, 3], &mut crate::source::Work::unmetered())
+                .ok(),
+            Some(0)
+        );
+        assert_eq!(
+            pool.intern_prefix(alloc::vec![9, 9], &mut crate::source::Work::unmetered())
+                .ok(),
+            Some(1)
+        );
+        // One unit per delta record, then per decoded record its suffix copy
+        // plus one and its decoded bytes, plus an owned copy for each
+        // requested key; any smaller budget stops the decode with a refusal.
+        let all = running_totals(&pool, 19, |pool, work| pool.expanded_keys(0, work));
+        assert_eq!(charges(&all), [1, 1, 4, 3, 3, 3, 2, 2]);
+        assert_eq!(
+            pool.expanded_keys(0, &mut crate::source::Work::limited(19))
+                .ok(),
+            Some(alloc::vec![alloc::vec![1, 2, 3], alloc::vec![9, 9]])
+        );
+        // A delta starting at ID 1 decodes its block predecessor uncopied.
+        let delta = running_totals(&pool, 15, |pool, work| pool.expanded_keys(1, work));
+        assert_eq!(charges(&delta), [1, 4, 3, 3, 2, 2]);
+        assert_eq!(
+            pool.expanded_keys(1, &mut crate::source::Work::limited(15))
+                .ok(),
+            Some(alloc::vec![alloc::vec![9, 9]])
+        );
+        // A hit charges the index probe, the candidate, and each block
+        // record it decodes; a refusal inside that decode interns nothing.
+        let hit = running_totals(&pool, 11, |pool, work| {
+            pool.intern_prefix(alloc::vec![9, 9], work)
+        });
+        assert_eq!(charges(&hit), [3, 1, 4, 3]);
+        let bytes = pool.bytes;
+        assert_eq!(
+            pool.intern_prefix(alloc::vec![9, 9], &mut crate::source::Work::limited(11))
+                .ok(),
+            Some(1)
+        );
+        assert_eq!(pool.len(), 2);
+        assert_eq!(pool.bytes, bytes);
+    }
+
     #[test]
     fn calculator_pool_crosses_front_coded_mib_but_refuses_expanded_overflow_atomically() {
         let mut pool = super::Pool::source();
@@ -439,7 +772,8 @@ mod tests {
         for first in 0..64u8 {
             let key = alloc::vec![first; 65_536];
             assert_eq!(
-                pool.intern_prefix(key, &mut |_| Ok(())).ok(),
+                pool.intern_prefix(key, &mut crate::source::Work::unmetered())
+                    .ok(),
                 Some(u32::from(first))
             );
         }
@@ -447,33 +781,42 @@ mod tests {
         assert!(pool.bytes > crate::OUTPUT_BYTE_LIMIT);
         let previous_bytes = pool.bytes;
         assert_eq!(
-            pool.intern_prefix(alloc::vec![0; 65_536], &mut |_| Ok(()))
-                .ok(),
+            pool.intern_prefix(
+                alloc::vec![0; 65_536],
+                &mut crate::source::Work::unmetered()
+            )
+            .ok(),
             Some(0)
         );
         assert_eq!(pool.expanded_bytes, super::CALCULATOR_EXPANDED_KEY_LIMIT);
         assert_eq!(pool.bytes, previous_bytes);
         for _ in 0..128 {
             assert_eq!(
-                pool.intern_prefix(alloc::vec![0; 65_536], &mut |_| Ok(()))
-                    .ok(),
+                pool.intern_prefix(
+                    alloc::vec![0; 65_536],
+                    &mut crate::source::Work::unmetered()
+                )
+                .ok(),
                 Some(0)
             );
         }
         assert_eq!(pool.expanded_bytes, super::CALCULATOR_EXPANDED_KEY_LIMIT);
         assert_eq!(pool.bytes, previous_bytes);
         assert!(matches!(
-            pool.intern_prefix(alloc::vec![64], &mut |_| Ok(())),
+            pool.intern_prefix(alloc::vec![64], &mut crate::source::Work::unmetered()),
             Err(crate::Diagnostic::Exhausted)
         ));
         assert!(matches!(
-            pool.intern_prefix(alloc::vec![64; 65_537], &mut |_| Ok(())),
+            pool.intern_prefix(
+                alloc::vec![64; 65_537],
+                &mut crate::source::Work::unmetered()
+            ),
             Err(crate::Diagnostic::Exhausted)
         ));
         assert_eq!(pool.len(), 64);
         assert_eq!(pool.bytes, previous_bytes);
         let expanded = pool
-            .expanded_keys(0, |_| Ok(()))
+            .expanded_keys(0, &mut crate::source::Work::unmetered())
             .unwrap_or_else(|_| panic!("bounded keys did not decode"));
         for (first, key) in expanded.iter().enumerate() {
             assert_eq!(key.len(), 65_536);
@@ -488,7 +831,8 @@ mod tests {
         let original = alloc::vec![1, 2, 3, 4];
         let different = alloc::vec![4, 3, 2, 1];
         assert_eq!(
-            pool.intern_prefix(original.clone(), &mut |_| Ok(())).ok(),
+            pool.intern_prefix(original.clone(), &mut crate::source::Work::unmetered())
+                .ok(),
             Some(0)
         );
         // Force a genuine fingerprint collision: record 0 is also indexed
@@ -496,37 +840,50 @@ mod tests {
         // compare its bytes rather than trust the matching hash.
         pool.prefix_keys[0].hash = super::fingerprint(&different);
         pool.candidates
-            .entry((super::fingerprint(&different), 4))
+            .entry(super::candidate_key(super::fingerprint(&different), 4))
             .or_default()
             .push(0);
         assert_eq!(
-            pool.intern_prefix(different.clone(), &mut |_| Ok(())).ok(),
+            pool.intern_prefix(different.clone(), &mut crate::source::Work::unmetered())
+                .ok(),
             Some(1)
         );
         pool.prefix_keys[0].hash = super::fingerprint(&original);
-        assert_eq!(pool.intern_prefix(original, &mut |_| Ok(())).ok(), Some(0));
-        assert_eq!(pool.intern_prefix(different, &mut |_| Ok(())).ok(), Some(1));
+        assert_eq!(
+            pool.intern_prefix(original, &mut crate::source::Work::unmetered())
+                .ok(),
+            Some(0)
+        );
+        assert_eq!(
+            pool.intern_prefix(different, &mut crate::source::Work::unmetered())
+                .ok(),
+            Some(1)
+        );
         for value in 2..super::CALCULATOR_SOURCE_KEY_LIMIT {
             let key = (value as u32).to_le_bytes().to_vec();
             assert_eq!(
-                pool.intern_prefix(key, &mut |_| Ok(())).ok(),
+                pool.intern_prefix(key, &mut crate::source::Work::unmetered())
+                    .ok(),
                 Some(value as u32)
             );
         }
         let before = pool.bytes;
         assert!(matches!(
-            pool.intern_prefix(alloc::vec![9; 5], &mut |_| Ok(())),
+            pool.intern_prefix(alloc::vec![9; 5], &mut crate::source::Work::unmetered()),
             Err(crate::Diagnostic::Exhausted)
         ));
         assert_eq!(pool.bytes, before);
         assert_eq!(pool.len(), super::CALCULATOR_SOURCE_KEY_LIMIT);
         assert_eq!(
-            pool.intern_prefix(alloc::vec![4, 3, 2, 1], &mut |_| Ok(()))
-                .ok(),
+            pool.intern_prefix(
+                alloc::vec![4, 3, 2, 1],
+                &mut crate::source::Work::unmetered()
+            )
+            .ok(),
             Some(1)
         );
         let keys = pool
-            .expanded_keys(0, |_| Ok(()))
+            .expanded_keys(0, &mut crate::source::Work::unmetered())
             .unwrap_or_else(|_| panic!("bounded source keys did not decode"));
         assert_eq!(
             keys[super::SOURCE_KEY_LIMIT],
@@ -538,13 +895,11 @@ mod tests {
         );
         // A delta that starts mid-block still decodes its front-coded
         // predecessors, but returns and charges output for only its own IDs.
-        let mut copied = 0usize;
+        let mut work = crate::source::Work::unmetered();
         let delta = pool
-            .expanded_keys(super::CALCULATOR_SOURCE_KEY_LIMIT - 1, |bytes| {
-                copied += bytes;
-                Ok(())
-            })
+            .expanded_keys(super::CALCULATOR_SOURCE_KEY_LIMIT - 1, &mut work)
             .unwrap_or_else(|_| panic!("bounded source delta did not decode"));
+        let copied = u64::MAX - work.remaining();
         assert_eq!(
             delta,
             [keys[super::CALCULATOR_SOURCE_KEY_LIMIT - 1].clone()]
@@ -554,27 +909,28 @@ mod tests {
             "delta decode charged {copied} for one four-byte key"
         );
         assert_eq!(
-            pool.expanded_keys(super::CALCULATOR_SOURCE_KEY_LIMIT, |_| Ok(()))
-                .ok(),
+            pool.expanded_keys(
+                super::CALCULATOR_SOURCE_KEY_LIMIT,
+                &mut crate::source::Work::unmetered()
+            )
+            .ok(),
             Some(alloc::vec::Vec::new())
         );
         assert!(matches!(
-            pool.expanded_keys(super::CALCULATOR_SOURCE_KEY_LIMIT + 1, |_| Ok(())),
+            pool.expanded_keys(
+                super::CALCULATOR_SOURCE_KEY_LIMIT + 1,
+                &mut crate::source::Work::unmetered()
+            ),
             Err(crate::Diagnostic::Defective)
         ));
     }
 
     #[test]
     fn calculator_pool_lookup_charge_does_not_grow_with_retained_keys() {
-        fn charged(pool: &mut super::Pool, key: alloc::vec::Vec<u8>) -> (Option<u32>, usize) {
-            let mut total = 0usize;
-            let id = pool
-                .intern_prefix(key, &mut |amount| {
-                    total += amount;
-                    Ok(())
-                })
-                .ok();
-            (id, total)
+        fn charged(pool: &mut super::Pool, key: alloc::vec::Vec<u8>) -> (Option<u32>, u64) {
+            let mut work = crate::source::Work::unmetered();
+            let id = pool.intern_prefix(key, &mut work).ok();
+            (id, u64::MAX - work.remaining())
         }
         let key = |value: u32| {
             alloc::vec![b'k', b'0' + (value % 10) as u8]
@@ -629,7 +985,9 @@ mod tests {
                 );
             }
             assert_eq!(
-                selected.intern_prefix(key, &mut |_| Ok(())).ok(),
+                selected
+                    .intern_prefix(key, &mut crate::source::Work::unmetered())
+                    .ok(),
                 Some(index as u32)
             );
             if index == super::SOURCE_KEY_LIMIT {
@@ -641,7 +999,7 @@ mod tests {
             selected
                 .intern_prefix(
                     (super::SOURCE_KEY_LIMIT as u32).to_le_bytes().to_vec(),
-                    &mut |_| Ok(())
+                    &mut crate::source::Work::unmetered()
                 )
                 .ok(),
             Some(super::SOURCE_KEY_LIMIT as u32)
@@ -755,7 +1113,7 @@ mod tests {
             "different payload mappings cannot share a selected signature"
         );
         let keys = pool
-            .expanded_keys(0, |_| Ok(()))
+            .expanded_keys(0, &mut crate::source::Work::unmetered())
             .unwrap_or_else(|_| panic!("selected signature prefix did not decode"));
         // Each module publishes only signatures new since the committed base,
         // so every distinct identity appears in exactly one compiled module.

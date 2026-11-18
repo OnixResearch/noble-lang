@@ -147,78 +147,107 @@ impl<'a> Scanner<'a> {
         self.at += 1;
         let mut tokens = alloc::vec::Vec::new();
         let mut parens = 0u32;
-        loop {
-            attempt!(self.skip(meter));
-            let token_start = self.at;
-            let Some(byte) = self.source.get(self.at).copied() else {
-                return Err(crate::invalid(self.full, "unclosed logical body"));
-            };
-            if byte == b']' {
-                if parens != 0 {
-                    return Err(crate::invalid(
-                        attempt!(self.span(token_start)),
-                        "unclosed logical parenthesis",
-                    ));
-                }
-                attempt!(meter.node(self.full));
-                self.at += 1;
-                return Ok(Token {
-                    kind: TokenKind::LogicalBody(tokens),
-                    span: attempt!(self.span(start)),
-                });
-            }
-            attempt!(meter.node(self.full));
-            let kind = match byte {
-                b'(' => {
-                    parens = attempt!(parens.checked_add(1).ok_or_else(|| {
-                        crate::invalid(self.full, "logical nesting exceeds finite format")
-                    }));
-                    if parens > 64 {
-                        return Err(crate::invalid(
-                            attempt!(self.span(token_start)),
-                            "logical nesting exceeds supported depth",
-                        ));
-                    }
-                    attempt!(meter.depth(parens.saturating_add(1), self.full));
-                    self.at += 1;
-                    LogicalKind::OpenParen
-                }
-                b')' => {
-                    let Some(next) = parens.checked_sub(1) else {
-                        return Err(crate::invalid(self.full, "unmatched logical parenthesis"));
-                    };
-                    parens = next;
-                    self.at += 1;
-                    LogicalKind::CloseParen
-                }
-                b':' => {
-                    self.at += 1;
-                    LogicalKind::Colon
-                }
-                b',' => {
-                    self.at += 1;
-                    LogicalKind::Comma
-                }
-                b'[' | b'"' | b'\\' => {
-                    return Err(crate::invalid(
-                        self.full,
-                        "invalid logical delimiter or escape",
-                    ));
-                }
-                _ => LogicalKind::Atom(attempt!(self.logical_atom(meter))),
-            };
-            // Every logical token, including a nonempty atom, consumes a source byte.
-            if tokens.len() >= self.source.len() {
+        let mut outcome = Ok(false);
+        while matches!(outcome, Ok(false)) {
+            outcome = self.logical_step(&mut tokens, &mut parens, meter);
+        }
+        attempt!(outcome);
+        Ok(Token {
+            kind: TokenKind::LogicalBody(tokens),
+            span: attempt!(self.span(start)),
+        })
+    }
+
+    /// Consume one logical token into `tokens`, or the closing bracket of the
+    /// body (returning true).
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; each logical token is appended to the body's growable token list."
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; logical scanning charges the runtime meter, grows the token list and constructs owned diagnostics."
+    )]
+    fn logical_step(
+        &mut self,
+        tokens: &mut alloc::vec::Vec<LogicalToken>,
+        parens: &mut u32,
+        meter: &mut crate::Meter,
+    ) -> Result<bool, crate::Diagnostic> {
+        attempt!(self.skip(meter));
+        let token_start = self.at;
+        let Some(byte) = self.source.get(self.at).copied() else {
+            return Err(crate::invalid(self.full, "unclosed logical body"));
+        };
+        if byte == b']' {
+            if *parens != 0 {
                 return Err(crate::invalid(
-                    self.full,
-                    "logical body exceeds its source bytes",
+                    attempt!(self.span(token_start)),
+                    "unclosed logical parenthesis",
                 ));
             }
-            tokens.push(LogicalToken {
-                kind,
-                span: attempt!(self.span(token_start)),
-            });
+            attempt!(meter.node(self.full));
+            self.at += 1;
+            return Ok(true);
         }
+        attempt!(meter.node(self.full));
+        let kind = match byte {
+            b'(' => {
+                *parens = match parens.checked_add(1) {
+                    Some(next) => next,
+                    None => {
+                        return Err(crate::invalid(
+                            self.full,
+                            "logical nesting exceeds finite format",
+                        ))
+                    }
+                };
+                if *parens > 64 {
+                    return Err(crate::invalid(
+                        attempt!(self.span(token_start)),
+                        "logical nesting exceeds supported depth",
+                    ));
+                }
+                attempt!(meter.depth(parens.saturating_add(1), self.full));
+                self.at += 1;
+                LogicalKind::OpenParen
+            }
+            b')' => {
+                let Some(next) = parens.checked_sub(1) else {
+                    return Err(crate::invalid(self.full, "unmatched logical parenthesis"));
+                };
+                *parens = next;
+                self.at += 1;
+                LogicalKind::CloseParen
+            }
+            b':' => {
+                self.at += 1;
+                LogicalKind::Colon
+            }
+            b',' => {
+                self.at += 1;
+                LogicalKind::Comma
+            }
+            b'[' | b'"' | b'\\' => {
+                return Err(crate::invalid(
+                    self.full,
+                    "invalid logical delimiter or escape",
+                ));
+            }
+            _ => LogicalKind::Atom(attempt!(self.logical_atom(meter))),
+        };
+        // Every logical token, including a nonempty atom, consumes a source byte.
+        if tokens.len() >= self.source.len() {
+            return Err(crate::invalid(
+                self.full,
+                "logical body exceeds its source bytes",
+            ));
+        }
+        tokens.push(LogicalToken {
+            kind,
+            span: attempt!(self.span(token_start)),
+        });
+        Ok(false)
     }
 
     fn logical_atom(
@@ -226,6 +255,7 @@ impl<'a> Scanner<'a> {
         meter: &mut crate::Meter,
     ) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
         let start = self.at;
+        let mut failure = None;
         while let Some(byte) = self.source.get(self.at).copied() {
             if whitespace(byte) || matches!(byte, b'#' | b'[' | b']' | b'(' | b')' | b':' | b',') {
                 break;
@@ -246,10 +276,17 @@ impl<'a> Scanner<'a> {
                         | b'@'
                 ))
             {
-                return Err(crate::invalid(self.full, "unsupported logical atom"));
+                failure = Some(crate::invalid(self.full, "unsupported logical atom"));
+                break;
             }
-            attempt!(meter.charge(1, self.full));
+            if let Err(problem) = meter.charge(1, self.full) {
+                failure = Some(problem);
+                break;
+            }
             self.at += 1;
+        }
+        if let Some(problem) = failure {
+            return Err(problem);
         }
         if self.at == start {
             return Err(crate::invalid(self.full, "unsupported logical atom"));

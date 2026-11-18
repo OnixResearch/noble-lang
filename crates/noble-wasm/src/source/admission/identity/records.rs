@@ -13,12 +13,7 @@ pub(super) fn admit(
     work: &mut super::super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     let definition = &submission.definitions[index];
-    let is_signed_body = definition
-        .body
-        .candidate
-        .nodes
-        .iter()
-        .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. }));
+    let is_signed_body = super::super::has_signed_self(&definition.body);
     if is_signed_body && !signed {
         return Err(crate::Diagnostic::Invalid);
     }

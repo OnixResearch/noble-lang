@@ -1,5 +1,9 @@
 pub(crate) mod topology;
 
+/// The extracted constructors carry an `Operation` suffix: `Bool` and `Unit`
+/// would otherwise shadow Lean's own `Bool` and `Unit` inside the generated
+/// declarations that name this type. The Rust names are unchanged.
+#[charon::variants_suffix("Operation")]
 #[derive(Clone, Copy)]
 pub(crate) enum Operation {
     I64(i64),

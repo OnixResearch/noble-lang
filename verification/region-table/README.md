@@ -11,6 +11,11 @@ on top of two inputs:
   `verification/m5/discovery.tar.gz`;
 - the T1–T3 model `proofs/foundation/NobleFoundation/RegionProtocol.lean`.
 
+This is an archived-source replay. The four compatibility declarations in
+`verification/m5-archived-library-compatibility.lean` are appended only to its temporary archived
+TypesExternal.lean, never to a current checked-in subject. `lake --no-cache build` selects a local
+source build without an optional release-cache download; it does not relax the diagnostic guard.
+
 The check then audits every inventoried theorem: the name must be declared in the sources, the
 compiled statement is recorded in the receipt (not compared with an expected statement, so a weaker
 statement is not detected here), and every transitive axiom must stay inside the row's allow-list.
@@ -36,7 +41,8 @@ The harness makes four refusals:
 - any of the six `crates/noble-kernel/src/resources` files differing from the bytes the retained
   extraction recorded.
 
-Because of the last refusal, the extracted table methods are the current ones.
+The last refusal binds the current Rust resource files byte for byte to the historical inputs.
+The lane recompiles the archived generated methods; it does not freshly extract the current Rust.
 
 ## Subject
 
@@ -96,6 +102,11 @@ as two breaks `accounting_local_releases`, the release and destructor cases of `
   sources. The lane compiles the generated sources anew but does not re-run the translation.
 
 ## Receipt
+
+[`receipt-20261117-879bfd66.json`](receipt-20261117-879bfd66.json) is the 2026-11-17 replay from
+clean commit `879bfd66` with Lean 4.35.0: **30** theorems plus the same four reused roots, every
+transitive axiom accepted. All six resource files and the archived M5 input retain their required
+hashes. No theorem, source binding or earlier receipt was changed for this replay.
 
 [`receipt.json`](receipt.json) is the retained receipt of one run, on the clean commit `0985ee06`
 with Lean 4.35.0: **30** theorems, plus the four reused ones. The reported axioms are `propext`,

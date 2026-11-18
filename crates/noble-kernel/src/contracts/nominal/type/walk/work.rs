@@ -32,6 +32,9 @@ impl<'a> State<'a> {
         self
     }
 
+    /// Queue a program's interface types, inputs then outputs, as non-payload
+    /// nodes. Each is pushed from a slice iterator: the selected Aeneas cannot
+    /// translate the borrowed `map` closure an `extend` would need.
     pub(super) fn with_program(
         mut self,
         input: &'a [crate::types::Ty],
@@ -39,8 +42,12 @@ impl<'a> State<'a> {
     ) -> Self {
         self.pending
             .reserve(input.len().saturating_add(output.len()));
-        self.pending.extend(input.iter().map(|ty| (ty, false)));
-        self.pending.extend(output.iter().map(|ty| (ty, false)));
+        for ty in input.iter() {
+            self.pending.push((ty, false));
+        }
+        for ty in output.iter() {
+            self.pending.push((ty, false));
+        }
         self
     }
 

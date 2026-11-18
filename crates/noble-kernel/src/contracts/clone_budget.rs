@@ -18,6 +18,15 @@ pub const CALCULATOR_ENV_CLONE_FANOUT_LIMIT: u64 = 1u64 << 30;
 const DEPTH_LIMIT: usize = 64;
 const NODE_LIMIT: usize = 512;
 
+/// Whether either stack of a scheme exceeds the 128-entry clone bound.
+///
+/// A boolean-returning helper rather than a disjunction bound to a local: for
+/// the latter the selected Aeneas emits a `Prop`-typed binding that the
+/// generated Lean cannot branch on.
+const fn stacks_exceed_bound(scheme: &crate::words::Scheme) -> bool {
+    scheme.stack_in.len() > 128 || scheme.stack_out.len() > 128
+}
+
 /// Payload bytes and allocator-rounded reservation for one complete clone.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[expect(
@@ -76,6 +85,36 @@ impl Counter {
         self.pattern(value, depth, nodes)
     }
 
+    /// Budget one stack's patterns from `index` on, in order, against the
+    /// shared node count, stopping at the first refusal.
+    ///
+    /// Recursion over the index rather than a loop: the selected Aeneas
+    /// library models no `Iterator::chain`, the selected Aeneas cannot
+    /// translate two loops that each return early from one function, and the
+    /// Lean backend cannot prove a loop that calls back into this recursive
+    /// walk monotone. A stack holds at most 128 entries.
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "one call per stack entry of the deliberately recursive per-subtree walk; the caller bounds the stack at 128 entries and the shared node budget bounds the visits"
+    )]
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "the stack index and the subtree depth are positional by contract and named at every call site"
+    )]
+    fn patterns(
+        &mut self,
+        items: &[crate::shapes::Pattern],
+        index: usize,
+        depth: usize,
+        nodes: &mut usize,
+    ) -> Option<()> {
+        let Some(item) = items.get(index) else {
+            return Some(());
+        };
+        self.pattern(item, depth, nodes)?;
+        self.patterns(items, index.saturating_add(1), depth, nodes)
+    }
+
     #[expect(
         tigerstyle::no_recursion,
         reason = "depth and node budgets are per subtree, so the walk is deliberately recursive; a worklist rewrite would change the accounting subject"
@@ -115,9 +154,8 @@ impl Counter {
                     self.allocation()?;
                 }
                 self.vector::<crate::shapes::EffectSlot>(effects.len())?;
-                for item in input.iter().chain(output.iter()) {
-                    self.pattern(item, depth.saturating_add(1), nodes)?;
-                }
+                self.patterns(input, 0, depth.saturating_add(1), nodes)?;
+                self.patterns(output, 0, depth.saturating_add(1), nodes)?;
             }
             crate::shapes::Pattern::Nominal(_, shape) => {
                 self.allocation()?;
@@ -154,6 +192,31 @@ impl Counter {
     ) -> Option<()> {
         self.allocation()?;
         self.ty(value, depth, nodes)
+    }
+
+    /// Budget one stack's types from `index` on, in order, against the shared
+    /// node count, stopping at the first refusal; recursive for the reasons
+    /// given on `patterns`.
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "one call per stack entry of the deliberately recursive per-subtree walk; the caller bounds the stack at 128 entries and the shared node budget bounds the visits"
+    )]
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "the stack index and the subtree depth are positional by contract and named at every call site"
+    )]
+    fn types(
+        &mut self,
+        items: &[crate::types::Ty],
+        index: usize,
+        depth: usize,
+        nodes: &mut usize,
+    ) -> Option<()> {
+        let Some(item) = items.get(index) else {
+            return Some(());
+        };
+        self.ty(item, depth, nodes)?;
+        self.types(items, index.saturating_add(1), depth, nodes)
     }
 
     fn nominal(
@@ -220,9 +283,8 @@ impl Counter {
                     self.allocation()?;
                 }
                 self.vector::<crate::types::EffId>(effects.as_slice().len())?;
-                for item in input.iter().chain(output.iter()) {
-                    self.ty(item, depth.saturating_add(1), nodes)?;
-                }
+                self.types(input, 0, depth.saturating_add(1), nodes)?;
+                self.types(output, 0, depth.saturating_add(1), nodes)?;
             }
             crate::types::Ty::LiveRef(..) => return None,
             crate::types::Ty::Unit
@@ -241,7 +303,7 @@ impl Counter {
     fn scheme(&mut self, scheme: &crate::words::Scheme) -> Option<()> {
         let has_too_many_kinds = scheme.var_kinds.len() > 8;
         let has_too_many_effects = scheme.effects.len() > 8;
-        let has_too_many_stacks = scheme.stack_in.len() > 128 || scheme.stack_out.len() > 128;
+        let has_too_many_stacks = stacks_exceed_bound(scheme);
         if has_too_many_kinds || has_too_many_effects || has_too_many_stacks {
             return None;
         }
@@ -253,7 +315,16 @@ impl Counter {
         if !scheme.stack_out.is_empty() {
             self.allocation()?;
         }
-        for value in scheme.stack_in.iter().chain(scheme.stack_out.iter()) {
+        self.scheme_stack(&scheme.stack_in)?;
+        self.scheme_stack(&scheme.stack_out)?;
+        Some(())
+    }
+
+    /// Budget one scheme stack's patterns in order, each from depth zero with
+    /// its own node count, stopping at the first refusal; one loop per
+    /// helper, as for `patterns`.
+    fn scheme_stack(&mut self, stack: &[crate::shapes::Pattern]) -> Option<()> {
+        for value in stack.iter() {
             self.pattern(value, 0, &mut 0)?;
         }
         Some(())
@@ -316,5 +387,71 @@ impl super::Env {
             allocations: cost.allocations,
             reserved_bytes,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn program_stacks_count_inputs_and_outputs() {
+        let mut counter = super::Counter {
+            bytes: 0,
+            allocations: 0,
+        };
+        let mut nodes = 0usize;
+        let pattern = crate::shapes::Pattern::program(
+            alloc::vec![crate::shapes::Pattern::Text],
+            alloc::vec![crate::shapes::Pattern::I64, crate::shapes::Pattern::Bool],
+            alloc::vec![],
+        );
+        assert_eq!(counter.pattern(&pattern, 0, &mut nodes), Some(()));
+        assert_eq!(nodes, 4);
+        nodes = 0;
+        let ty = crate::types::Ty::Program(
+            alloc::boxed::Box::new(alloc::vec![crate::types::Ty::Text]),
+            alloc::boxed::Box::new(alloc::vec![crate::types::Ty::I64, crate::types::Ty::Bool]),
+            crate::types::EffSet::empty(),
+        );
+        assert_eq!(counter.ty(&ty, 0, &mut nodes), Some(()));
+        assert_eq!(nodes, 4);
+    }
+
+    #[test]
+    fn either_stack_beyond_128_entries_exceeds_the_bound() {
+        let scheme = |stack_in: usize, stack_out: usize| crate::words::Scheme {
+            var_kinds: alloc::vec![],
+            stack_in: alloc::vec![crate::shapes::Pattern::Unit; stack_in],
+            stack_out: alloc::vec![crate::shapes::Pattern::Unit; stack_out],
+            effects: alloc::vec![],
+        };
+        assert!(!super::stacks_exceed_bound(&scheme(128, 128)));
+        assert!(super::stacks_exceed_bound(&scheme(129, 0)));
+        assert!(super::stacks_exceed_bound(&scheme(0, 129)));
+    }
+
+    #[test]
+    fn scheme_result_patterns_are_counted() {
+        let scheme = |stack_out| crate::words::Scheme {
+            var_kinds: alloc::vec![],
+            stack_in: alloc::vec![],
+            stack_out,
+            effects: alloc::vec![],
+        };
+        let mut empty = super::Counter {
+            bytes: 0,
+            allocations: 0,
+        };
+        let mut one = super::Counter {
+            bytes: 0,
+            allocations: 0,
+        };
+        assert_eq!(empty.scheme(&scheme(alloc::vec![])), Some(()));
+        assert_eq!(
+            one.scheme(&scheme(alloc::vec![crate::shapes::Pattern::I64])),
+            Some(())
+        );
+        let pattern_bytes = u64::try_from(core::mem::size_of::<crate::shapes::Pattern>())
+            .expect("pattern size fits u64");
+        assert_eq!(one.bytes, empty.bytes.saturating_add(pattern_bytes));
     }
 }

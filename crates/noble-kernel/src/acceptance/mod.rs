@@ -271,26 +271,47 @@ fn close_frame(
 
 /// Fold one literal or invocation node into the machine's counters.
 #[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; fold_current returns node or work exhaustion failures before committing work, derivation and frame advancement; assertions would change the rejection contract."
-)]
-#[expect(
     tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; fold_current performs runtime substitution and Vec derivation/frame pushes; reassess only if those owned transitions become const-capable."
+    reason = "Owner: noble-maintainers; fold_current runs the runtime node fold (substitution and owned frame joins) before commit_fold's Vec pushes; reassess only if those owned transitions become const-capable."
 )]
 fn fold_current(
-    mut machine: Machine,
+    machine: Machine,
     frame: Frame,
     node_id: crate::untrusted::NodeId,
     node: &crate::untrusted::Node,
     context: &parts::Ctx,
 ) -> Machine {
     let fuel = machine.state.work;
-    let (cost, joined, interface, live_site) =
-        match nodes::fold_node(frame, node_id, node, context, fuel) {
-            Ok(folded) => folded,
-            Err(problem) => return halted(machine, Err(problem)),
-        };
+    match nodes::fold_node(frame, node_id, node, context, fuel) {
+        Ok(folded) => commit_fold(machine, node_id, folded),
+        Err(problem) => halted(machine, Err(problem)),
+    }
+}
+
+/// Charge one folded node and record its derivation, live site and frame.
+///
+/// Kept apart from `fold_current`, which holds a borrow of the borrow-carrying
+/// `Ctx`: the selected Aeneas cannot join control flow while such a borrow is
+/// in scope.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; commit_fold returns work exhaustion failures before committing work, derivation and frame advancement; assertions would change the rejection contract."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; commit_fold performs Vec live-site, derivation and frame pushes; reassess only if those owned transitions become const-capable."
+)]
+fn commit_fold(
+    mut machine: Machine,
+    node_id: crate::untrusted::NodeId,
+    folded: (
+        u32,
+        Frame,
+        crate::untrusted::Interface,
+        Option<crate::untrusted::LiveSite>,
+    ),
+) -> Machine {
+    let (cost, joined, interface, live_site) = folded;
     let remaining = match parts::charge(machine.state.work, cost) {
         Ok(remaining) => remaining,
         Err(problem) => return halted(machine, Err(problem)),

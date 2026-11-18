@@ -67,8 +67,8 @@ fn advance<'a>(
 }
 
 #[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-kernel; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; both pinned Rust compilers reject Vec<Frame/Pattern>::push (E0658) and owned Build destruction (E0493) in enter; reassess when these runtime transitions become const-capable."
 )]
 #[expect(
     tigerstyle::nested_conditionals,
@@ -106,22 +106,8 @@ fn enter<'a>(ty: &'a crate::types::Ty, mut state: Build<'a>) -> Option<Build<'a>
             ty,
             is_complete: true,
         });
-        let mut index = output.len();
-        while index > 0 {
-            index -= 1;
-            state.work.push(Frame {
-                ty: &output[index],
-                is_complete: false,
-            });
-        }
-        index = input.len();
-        while index > 0 {
-            index -= 1;
-            state.work.push(Frame {
-                ty: &input[index],
-                is_complete: false,
-            });
-        }
+        state.work = push_reversed(output, state.work);
+        state.work = push_reversed(input, state.work);
         return Some(state);
     } else if let crate::types::Ty::GenericNominal(_, args, _) = ty {
         state.work.push(Frame {
@@ -145,6 +131,33 @@ fn enter<'a>(ty: &'a crate::types::Ty, mut state: Build<'a>) -> Option<Build<'a>
         }
         None => None,
     }
+}
+
+/// Queue one unentered frame per element of `types`, last element first, so
+/// the walk pops them in order.
+///
+/// Each step splits off the last element and reads it through a slice
+/// iterator: the selected Aeneas cannot translate a loop that pushes borrows
+/// obtained by indexing, and models no reverse slice iterator.
+fn push_reversed<'a>(
+    types: &'a [crate::types::Ty],
+    mut work: alloc::vec::Vec<Frame<'a>>,
+) -> alloc::vec::Vec<Frame<'a>> {
+    let mut rest = types;
+    let mut remaining = types.len();
+    while remaining > 0 {
+        remaining -= 1;
+        let (head, tail) = rest.split_at(remaining);
+        let mut tail = tail.iter();
+        if let Some(ty) = tail.next() {
+            work.push(Frame {
+                ty,
+                is_complete: false,
+            });
+        }
+        rest = head;
+    }
+    work
 }
 
 fn leaf_pattern(ty: &crate::types::Ty) -> Option<crate::shapes::Pattern> {
@@ -297,5 +310,24 @@ fn pair_pattern(
         crate::shapes::Pattern::Sum(alloc::boxed::Box::new(left), alloc::boxed::Box::new(right))
     } else {
         crate::shapes::Pattern::Pair(alloc::boxed::Box::new(left), alloc::boxed::Box::new(right))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn program_patterns_keep_input_and_output_order() {
+        let env = crate::contracts::Env::default();
+        let program = crate::types::Ty::Program(
+            alloc::boxed::Box::new(alloc::vec![crate::types::Ty::I64, crate::types::Ty::Text]),
+            alloc::boxed::Box::new(alloc::vec![crate::types::Ty::Bool, crate::types::Ty::Unit]),
+            crate::types::EffSet::from_ids(&[crate::types::EffId(5)]),
+        );
+        let expected = crate::shapes::Pattern::program(
+            alloc::vec![crate::shapes::Pattern::I64, crate::shapes::Pattern::Text],
+            alloc::vec![crate::shapes::Pattern::Bool, crate::shapes::Pattern::Unit],
+            alloc::vec![crate::shapes::EffectSlot::Effect(crate::types::EffId(5))],
+        );
+        assert!(super::pattern(&env, &program) == Some(expected));
     }
 }

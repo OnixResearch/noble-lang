@@ -116,10 +116,10 @@ fn named(
         None => return Err(crate::internal(frame.span)),
     };
     body.root = frame.sequence;
-    let variables = if body
-        .nodes
-        .iter()
-        .any(|node| matches!(node.kind, super::DraftKind::SignedSelf(_)))
+    let variables = if crate::scan::find_first(&body.nodes, |node| {
+        matches!(node.kind, super::DraftKind::SignedSelf(_))
+    })
+    .is_some()
     {
         body.owner_variables
             .as_ref()

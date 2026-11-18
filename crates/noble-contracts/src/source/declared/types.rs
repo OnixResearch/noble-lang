@@ -10,25 +10,20 @@ pub(in crate::source) fn parse_with_families(
     environment: Option<&noble_kernel::contracts::Env>,
     span: crate::Span,
 ) -> Result<ParsedType, crate::Diagnostic> {
-    parse_with_depth(word, types, families, environment, span, 0)
+    let parser = attempt!(start_parser(alloc::string::String::from(word), span, 0));
+    run(parser, types, families, environment)
 }
 
+/// A parser for one type word at nesting `depth`, after the depth and whitespace checks.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
-#[expect(
-    tigerstyle::too_many_parameters,
-    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
-)]
-fn parse_with_depth(
-    word: &str,
-    types: &[(alloc::string::String, noble_kernel::types::Ty)],
-    families: &[(alloc::string::String, noble_kernel::types::NominalTypeId)],
-    environment: Option<&noble_kernel::contracts::Env>,
+fn start_parser(
+    word: alloc::string::String,
     span: crate::Span,
     depth: u32,
-) -> Result<ParsedType, crate::Diagnostic> {
+) -> Result<Parser, crate::Diagnostic> {
     if depth >= 32 {
         return Err(crate::invalid(
             span,
@@ -38,32 +33,343 @@ fn parse_with_depth(
     if contains_ascii_whitespace(word.as_bytes()) {
         return Err(crate::invalid(span, "type word contains whitespace"));
     }
-    Parser {
-        text: word.as_bytes(),
+    Ok(Parser {
+        text: word.into_bytes(),
         at: 0,
         nodes: 0,
         span,
-        names: types,
-        families,
-        environment,
         depth,
         pending: alloc::vec::Vec::new(),
         value: None,
-    }
-    .parse()
+    })
 }
 
-struct Parser<'a> {
-    text: &'a [u8],
+/// The running type-word parser and the callable types suspended beneath it,
+/// innermost last. This explicit stack replaces recursion through nested
+/// `Program`/`LiveRef` components, so no loop lies on a recursive cycle.
+struct Machine {
+    running: Parser,
+    suspended: alloc::vec::Vec<Callable>,
+}
+
+/// Drive `parser` and every nested callable component to the first failure
+/// or the complete outermost type.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+fn run(
+    parser: Parser,
+    types: &[(alloc::string::String, noble_kernel::types::Ty)],
+    families: &[(alloc::string::String, noble_kernel::types::NominalTypeId)],
+    environment: Option<&noble_kernel::contracts::Env>,
+) -> Result<ParsedType, crate::Diagnostic> {
+    let span = parser.span;
+    let mut machine = Machine {
+        running: parser,
+        suspended: alloc::vec::Vec::new(),
+    };
+    let mut completed = None;
+    let mut failure = None;
+    while completed.is_none() {
+        match machine_step(machine, types, families, environment) {
+            Ok((next, result)) => {
+                machine = next;
+                completed = result;
+            }
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
+    }
+    completed.ok_or_else(|| crate::internal(span))
+}
+
+/// Step the running parser; hand a finished component to the callable waiting
+/// for it, or report the outermost type once no callable is waiting.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; Vec pop and the parser and callable steps it calls are not const on the pinned compilers, so the const suggestion does not apply"
+)]
+fn machine_step(
+    machine: Machine,
+    types: &[(alloc::string::String, noble_kernel::types::Ty)],
+    families: &[(alloc::string::String, noble_kernel::types::NominalTypeId)],
+    environment: Option<&noble_kernel::contracts::Env>,
+) -> Result<(Machine, Option<ParsedType>), crate::Diagnostic> {
+    let Machine {
+        running,
+        mut suspended,
+    } = machine;
+    match attempt!(running.parse_step(types, families, environment)) {
+        Step::Continue(parser) => Ok((
+            Machine {
+                running: parser,
+                suspended,
+            },
+            None,
+        )),
+        Step::Callable(callable) => resume(callable.advance(environment), suspended),
+        Step::Complete(parser, parsed) => match suspended.pop() {
+            Some(callable) => resume(callable.accept(parsed).advance(environment), suspended),
+            None => Ok((
+                Machine {
+                    running: parser,
+                    suspended,
+                },
+                Some(parsed),
+            )),
+        },
+    }
+}
+
+/// Continue with the next component of a callable, or with its finished parent.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; Vec push and Result matching with owned Vec payloads are not const on the pinned compilers, so the const suggestion does not apply"
+)]
+fn resume(
+    advanced: Result<Advance, crate::Diagnostic>,
+    mut suspended: alloc::vec::Vec<Callable>,
+) -> Result<(Machine, Option<ParsedType>), crate::Diagnostic> {
+    match attempt!(advanced) {
+        Advance::Component(callable, parser) => {
+            suspended.push(callable);
+            Ok((
+                Machine {
+                    running: parser,
+                    suspended,
+                },
+                None,
+            ))
+        }
+        Advance::Finished(parent) => Ok((
+            Machine {
+                running: parent,
+                suspended,
+            },
+            None,
+        )),
+    }
+}
+
+/// The type-word parser state. It owns its text so suspended parsers can be
+/// kept on the machine's stack; the name tables and the optional environment
+/// are passed beside it.
+struct Parser {
+    text: alloc::vec::Vec<u8>,
     at: usize,
     nodes: usize,
     span: crate::Span,
-    names: &'a [(alloc::string::String, noble_kernel::types::Ty)],
-    families: &'a [(alloc::string::String, noble_kernel::types::NominalTypeId)],
-    environment: Option<&'a noble_kernel::contracts::Env>,
     depth: u32,
     pending: alloc::vec::Vec<Frame>,
     value: Option<noble_kernel::types::Ty>,
+}
+
+/// One parser step: keep going, suspend for a callable, or a complete type.
+enum Step {
+    Continue(Parser),
+    Callable(Callable),
+    Complete(Parser, ParsedType),
+}
+
+/// One read type: the parser continues, or a callable needs its stacks parsed.
+enum Read {
+    Parser(Parser),
+    Callable(Callable),
+}
+
+/// A `Program`/`LiveRef` type whose input and output stacks are being parsed,
+/// with the parser that read it suspended until both are complete.
+struct Callable {
+    parent: Parser,
+    is_live_ref: bool,
+    end: usize,
+    fields: alloc::vec::Vec<alloc::string::String>,
+    nested: u32,
+    has_inputs: bool,
+    inputs: alloc::vec::Vec<noble_kernel::types::Ty>,
+    input_nodes: usize,
+    stack: StackWork,
+}
+
+/// One `+`-separated program stack: its parts, the next part and the parsed values.
+struct StackWork {
+    parts: alloc::vec::Vec<alloc::string::String>,
+    at: usize,
+    values: alloc::vec::Vec<noble_kernel::types::Ty>,
+    nodes: usize,
+}
+
+impl StackWork {
+    /// The stack of an `empty` field: no parts and no values.
+    const fn empty() -> Self {
+        Self {
+            parts: alloc::vec::Vec::new(),
+            at: 0,
+            values: alloc::vec::Vec::new(),
+            nodes: 0,
+        }
+    }
+}
+
+/// A callable after one advance: a component to parse next, or its finished parent.
+#[expect(
+    clippy::large_enum_variant,
+    reason = "Owner: noble-contracts; each advance result is matched immediately and its callable moved onto the machine stack, so boxing would only add an allocation per component"
+)]
+enum Advance {
+    Component(Callable, Parser),
+    Finished(Parser),
+}
+
+/// A stack after one advance: its next component parser, or its values and nodes.
+enum Part {
+    Parser(StackWork, Parser),
+    Done(alloc::vec::Vec<noble_kernel::types::Ty>, usize),
+}
+
+/// The program stack spelled by one callable field, before any component is parsed.
+fn start_stack(word: &str, span: crate::Span) -> Result<StackWork, crate::Diagnostic> {
+    if word == "empty" {
+        return Ok(StackWork::empty());
+    }
+    let parts = attempt!(split_top_level(word, b'+', span));
+    if parts.len() > 256 {
+        return Err(crate::invalid(span, "Program stack height limit exceeded"));
+    }
+    Ok(StackWork {
+        values: alloc::vec::Vec::with_capacity(parts.len()),
+        parts,
+        at: 0,
+        nodes: 0,
+    })
+}
+
+/// The parser of the next stack component, or the finished stack.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; mem::take of a String and parser construction are not const on the pinned compilers, so the const suggestion does not apply"
+)]
+fn next_part(
+    mut stack: StackWork,
+    span: crate::Span,
+    depth: u32,
+) -> Result<Part, crate::Diagnostic> {
+    if stack.at < stack.parts.len() {
+        let at = stack.at;
+        let word = core::mem::take(&mut stack.parts[at]);
+        stack.at += 1;
+        let parser = attempt!(start_parser(word, span, depth));
+        return Ok(Part::Parser(stack, parser));
+    }
+    Ok(Part::Done(stack.values, stack.nodes))
+}
+
+impl Callable {
+    /// Record one parsed stack component.
+    fn accept(mut self, parsed: ParsedType) -> Self {
+        self.stack.nodes = self.stack.nodes.saturating_add(parsed.nodes);
+        self.stack.values.push(parsed.ty);
+        self
+    }
+
+    /// Start the next component of the current stack, or move past a finished one.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; it drops and moves owned Vec state and calls non-const stack helpers, so the const suggestion does not apply"
+    )]
+    fn advance(
+        mut self,
+        environment: Option<&noble_kernel::contracts::Env>,
+    ) -> Result<Advance, crate::Diagnostic> {
+        let stack = core::mem::replace(&mut self.stack, StackWork::empty());
+        match attempt!(next_part(stack, self.parent.span, self.nested)) {
+            Part::Parser(stack, parser) => {
+                self.stack = stack;
+                Ok(Advance::Component(self, parser))
+            }
+            Part::Done(values, nodes) => {
+                if self.has_inputs {
+                    self.finish(values, nodes, environment)
+                } else {
+                    self.has_inputs = true;
+                    self.inputs = values;
+                    self.input_nodes = nodes;
+                    self.start_outputs(environment)
+                }
+            }
+        }
+    }
+
+    /// Begin the output stack once the input stack is complete.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; it splits the output field into owned Strings and calls non-const stack helpers, so the const suggestion does not apply"
+    )]
+    fn start_outputs(
+        mut self,
+        environment: Option<&noble_kernel::contracts::Env>,
+    ) -> Result<Advance, crate::Diagnostic> {
+        let stack = attempt!(start_stack(&self.fields[1], self.parent.span));
+        match attempt!(next_part(stack, self.parent.span, self.nested)) {
+            Part::Parser(stack, parser) => {
+                self.stack = stack;
+                Ok(Advance::Component(self, parser))
+            }
+            Part::Done(values, nodes) => self.finish(values, nodes, environment),
+        }
+    }
+
+    /// Parse the effect bound and resume the parent with the complete callable type.
+    fn finish(
+        self,
+        outputs: alloc::vec::Vec<noble_kernel::types::Ty>,
+        output_nodes: usize,
+        environment: Option<&noble_kernel::contracts::Env>,
+    ) -> Result<Advance, crate::Diagnostic> {
+        let Callable {
+            mut parent,
+            is_live_ref,
+            end,
+            fields,
+            inputs,
+            input_nodes,
+            ..
+        } = self;
+        let effects = attempt!(parse_callable_effects(&fields[2], environment, parent.span));
+        parent.nodes = parent
+            .nodes
+            .saturating_add(input_nodes)
+            .saturating_add(output_nodes);
+        if parent.nodes > 256 {
+            return Err(crate::invalid(
+                parent.span,
+                "type constructor limit exceeded",
+            ));
+        }
+        parent.at = attempt!(end
+            .checked_add(1)
+            .ok_or_else(|| crate::invalid(parent.span, "unclosed Program type")));
+        parent.value = Some(if is_live_ref {
+            noble_kernel::types::Ty::LiveRef(
+                alloc::boxed::Box::new(inputs),
+                alloc::boxed::Box::new(outputs),
+                effects,
+            )
+        } else {
+            noble_kernel::types::Ty::program(inputs, outputs, effects)
+        });
+        Ok(Advance::Finished(parent))
+    }
 }
 
 enum Frame {
@@ -77,57 +383,61 @@ enum Frame {
     Unknown,
 }
 
-impl Parser<'_> {
-    fn parse(mut self) -> Result<ParsedType, crate::Diagnostic> {
-        let span = self.span;
-        let mut completed = None;
-        let mut failure = None;
-        while completed.is_none() {
-            match self.parse_step() {
-                Ok((next, result)) => {
-                    self = next;
-                    completed = result;
-                }
-                Err(problem) => {
-                    failure = Some(problem);
-                    break;
-                }
+impl Parser {
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; it calls the non-const read and fold steps over owned Vec state, so the const suggestion does not apply"
+    )]
+    fn parse_step(
+        mut self,
+        types: &[(alloc::string::String, noble_kernel::types::Ty)],
+        families: &[(alloc::string::String, noble_kernel::types::NominalTypeId)],
+        environment: Option<&noble_kernel::contracts::Env>,
+    ) -> Result<Step, crate::Diagnostic> {
+        if self.value.is_none() {
+            match attempt!(self.read_type(types, families, environment)) {
+                Read::Parser(parser) => self = parser,
+                Read::Callable(callable) => return Ok(Step::Callable(callable)),
             }
         }
-        if let Some(problem) = failure {
-            return Err(problem);
+        match self.value.take() {
+            Some(ty) => match attempt!(self.fold(ty, environment)) {
+                (parser, Some(parsed)) => Ok(Step::Complete(parser, parsed)),
+                (parser, None) => Ok(Step::Continue(parser)),
+            },
+            None => Ok(Step::Continue(self)),
         }
-        completed.ok_or_else(|| crate::internal(span))
     }
 
-    fn parse_step(mut self) -> Result<(Self, Option<ParsedType>), crate::Diagnostic> {
-        if self.value.is_none() {
-            self = attempt!(self.read_type());
-        }
-        if let Some(ty) = self.value.take() {
-            return self.fold(ty);
-        }
-        Ok((self, None))
-    }
-
-    fn read_type(mut self) -> Result<Self, crate::Diagnostic> {
+    fn read_type(
+        mut self,
+        types: &[(alloc::string::String, noble_kernel::types::Ty)],
+        families: &[(alloc::string::String, noble_kernel::types::NominalTypeId)],
+        environment: Option<&noble_kernel::contracts::Env>,
+    ) -> Result<Read, crate::Diagnostic> {
         if self.pending.len() >= 64 || self.nodes >= 256 {
             return Err(crate::invalid(self.span, "type constructor limit exceeded"));
         }
         self.nodes += 1;
         let start = self.at;
-        while type_name_byte(self.text, self.at) {
+        while type_name_byte(&self.text, self.at) {
             self.at += 1;
         }
-        let name = attempt!(core::str::from_utf8(&self.text[start..self.at])
-            .map_err(|_| crate::invalid(self.span, "invalid type name")));
+        // An owned copy, so the name outlives moves of the parser.
+        let name = attempt!(
+            alloc::string::String::from_utf8(self.text[start..self.at].to_vec())
+                .map_err(|_| crate::invalid(self.span, "invalid type name"))
+        );
         if name.is_empty() {
             return Err(crate::invalid(self.span, "type constructor missing name"));
         }
         if self.text.get(self.at) == Some(&b'<') {
             self.at += 1;
             if name == "Program" || name == "LiveRef" {
-                self = attempt!(self.read_callable(name == "LiveRef"));
+                let is_live_ref = name == "LiveRef";
+                return Ok(Read::Callable(attempt!(
+                    self.read_callable(is_live_ref, environment)
+                )));
             } else if name == "Resource" {
                 let kind = b"test.counter";
                 if self.text.get(self.at..self.at.saturating_add(kind.len()))
@@ -142,11 +452,9 @@ impl Parser<'_> {
                     noble_kernel::types::ResourceKind(0),
                 ));
             } else {
-                let family = self
-                    .families
-                    .iter()
-                    .find_map(|(known, id)| (known == name).then_some(*id));
-                self.pending.push(match name {
+                let family = crate::scan::find_first(families, |(known, _)| *known == name)
+                    .map(|(_, id)| *id);
+                self.pending.push(match name.as_str() {
                     "List" => Frame::List,
                     "Pair" => Frame::PairLeft,
                     "Sum" => Frame::SumLeft,
@@ -154,7 +462,7 @@ impl Parser<'_> {
                 });
             }
         } else {
-            self.value = Some(match name {
+            self.value = Some(match name.as_str() {
                 "I64" => noble_kernel::types::Ty::I64,
                 "Bool" => noble_kernel::types::Ty::Bool,
                 "Text" => noble_kernel::types::Ty::Text,
@@ -162,12 +470,11 @@ impl Parser<'_> {
                 "Syntax" => noble_kernel::types::Ty::Syntax,
                 _ => {
                     let mut found = None;
-                    let mut at = self.names.len();
+                    let mut at = types.len();
                     while at != 0 {
                         at -= 1;
-                        let (known, ty) = &self.names[at];
-                        if known == name {
-                            found = Some(ty.clone());
+                        if names_type(&types[at], &name) {
+                            found = Some(types[at].1.clone());
                             break;
                         }
                     }
@@ -180,15 +487,15 @@ impl Parser<'_> {
                 }
             });
         }
-        Ok(self)
+        Ok(Read::Parser(self))
     }
 
-    fn read_callable(mut self, live_ref: bool) -> Result<Self, crate::Diagnostic> {
-        if live_ref
-            && !self
-                .environment
-                .is_some_and(|environment| environment.live_slots)
-        {
+    fn read_callable(
+        mut self,
+        is_live_ref: bool,
+        environment: Option<&noble_kernel::contracts::Env>,
+    ) -> Result<Callable, crate::Diagnostic> {
+        if is_live_ref && !environment.is_some_and(|environment| environment.live_slots) {
             return Err(crate::invalid(
                 self.span,
                 "LiveRef requires the live-slot profile",
@@ -224,52 +531,24 @@ impl Parser<'_> {
         let nested = attempt!(self.depth.checked_add(1).ok_or_else(|| {
             crate::invalid(self.span, "type constructor nesting limit exceeded")
         }));
-        let (inputs, input_nodes) = attempt!(parse_program_stack(
-            fields[0],
-            self.names,
-            self.families,
-            self.environment,
-            self.span,
+        let stack = attempt!(start_stack(&fields[0], self.span));
+        Ok(Callable {
+            parent: self,
+            is_live_ref,
+            end,
+            fields,
             nested,
-        ));
-        let (outputs, output_nodes) = attempt!(parse_program_stack(
-            fields[1],
-            self.names,
-            self.families,
-            self.environment,
-            self.span,
-            nested,
-        ));
-        let effects = attempt!(parse_callable_effects(
-            fields[2],
-            self.environment,
-            self.span,
-        ));
-        self.nodes = self
-            .nodes
-            .saturating_add(input_nodes)
-            .saturating_add(output_nodes);
-        if self.nodes > 256 {
-            return Err(crate::invalid(self.span, "type constructor limit exceeded"));
-        }
-        self.at = attempt!(end
-            .checked_add(1)
-            .ok_or_else(|| crate::invalid(self.span, "unclosed Program type")));
-        self.value = Some(if live_ref {
-            noble_kernel::types::Ty::LiveRef(
-                alloc::boxed::Box::new(inputs),
-                alloc::boxed::Box::new(outputs),
-                effects,
-            )
-        } else {
-            noble_kernel::types::Ty::program(inputs, outputs, effects)
-        });
-        Ok(self)
+            has_inputs: false,
+            inputs: alloc::vec::Vec::new(),
+            input_nodes: 0,
+            stack,
+        })
     }
 
     fn fold(
         mut self,
         ty: noble_kernel::types::Ty,
+        environment: Option<&noble_kernel::contracts::Env>,
     ) -> Result<(Self, Option<ParsedType>), crate::Diagnostic> {
         match self.pending.pop() {
             Some(Frame::List) => {
@@ -295,8 +574,7 @@ impl Parser<'_> {
             Some(Frame::GenericRight(id, left)) => {
                 attempt!(self.expect(b'>'));
                 self.at += 1;
-                self.value = Some(attempt!(self
-                    .environment
+                self.value = Some(attempt!(environment
                     .and_then(|environment| environment.generic_instance(id, [left, ty]))
                     .ok_or_else(|| crate::invalid(
                         self.span,
@@ -367,69 +645,57 @@ fn parse_callable_effects(
     if text == "pure" {
         return Ok(noble_kernel::types::EffSet::empty());
     }
+    let words = attempt!(split_top_level(text, b'+', span));
     let mut effects = alloc::vec::Vec::new();
-    for word in attempt!(split_top_level(text, b'+', span)) {
-        let id = match word {
-            "test.emit" => noble_kernel::contracts::TEST_EMIT,
-            "test.clock" => noble_kernel::contracts::TEST_CLOCK,
-            "test.code-export" => noble_kernel::contracts::TEST_CODE_EXPORT,
-            "test.send" => noble_kernel::contracts::TEST_SEND,
-            "live.dispatch" => noble_kernel::contracts::LIVE_DISPATCH,
-            _ => return Err(crate::invalid(span, "unknown callable effect bound")),
-        };
-        if !environment.is_some_and(|environment| {
-            environment.effects.contains(&id)
-                && (id != noble_kernel::contracts::LIVE_DISPATCH || environment.live_slots)
-        }) || effects.contains(&id)
-        {
-            return Err(crate::invalid(
-                span,
-                "unregistered or duplicate callable effect",
-            ));
+    let mut failure = None;
+    let mut index = 0usize;
+    while failure.is_none() && index < words.len() {
+        match callable_effect(&words[index], environment, span, &effects) {
+            Ok(id) => effects.push(id),
+            Err(problem) => failure = Some(problem),
         }
-        effects.push(id);
+        index += 1;
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
     }
     Ok(noble_kernel::types::EffSet::from_ids(&effects))
 }
 
+/// One registered, not yet bound callable effect named by `word`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; str pattern matching and diagnostic construction are not const on the pinned compilers, so the const suggestion does not apply"
+)]
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
-#[expect(
-    tigerstyle::too_many_parameters,
-    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
-)]
-fn parse_program_stack(
+fn callable_effect(
     word: &str,
-    types: &[(alloc::string::String, noble_kernel::types::Ty)],
-    families: &[(alloc::string::String, noble_kernel::types::NominalTypeId)],
     environment: Option<&noble_kernel::contracts::Env>,
     span: crate::Span,
-    depth: u32,
-) -> Result<(alloc::vec::Vec<noble_kernel::types::Ty>, usize), crate::Diagnostic> {
-    if word == "empty" {
-        return Ok((alloc::vec::Vec::new(), 0));
-    }
-    let parts = attempt!(split_top_level(word, b'+', span));
-    if parts.len() > 256 {
-        return Err(crate::invalid(span, "Program stack height limit exceeded"));
-    }
-    let mut stack = alloc::vec::Vec::with_capacity(parts.len());
-    let mut nodes = 0usize;
-    for part in parts {
-        let parsed = attempt!(parse_with_depth(
-            part,
-            types,
-            families,
-            environment,
+    effects: &[noble_kernel::types::EffId],
+) -> Result<noble_kernel::types::EffId, crate::Diagnostic> {
+    let id = match word {
+        "test.emit" => noble_kernel::contracts::TEST_EMIT,
+        "test.clock" => noble_kernel::contracts::TEST_CLOCK,
+        "test.code-export" => noble_kernel::contracts::TEST_CODE_EXPORT,
+        "test.send" => noble_kernel::contracts::TEST_SEND,
+        "live.dispatch" => noble_kernel::contracts::LIVE_DISPATCH,
+        _ => return Err(crate::invalid(span, "unknown callable effect bound")),
+    };
+    if !environment.is_some_and(|environment| {
+        environment.effects.contains(&id)
+            && (id != noble_kernel::contracts::LIVE_DISPATCH || environment.live_slots)
+    }) || effects.contains(&id)
+    {
+        return Err(crate::invalid(
             span,
-            depth,
+            "unregistered or duplicate callable effect",
         ));
-        nodes = nodes.saturating_add(parsed.nodes);
-        stack.push(parsed.ty);
     }
-    Ok((stack, nodes))
+    Ok(id)
 }
 
 #[expect(
@@ -440,45 +706,83 @@ fn split_top_level(
     word: &str,
     separator: u8,
     span: crate::Span,
-) -> Result<alloc::vec::Vec<&str>, crate::Diagnostic> {
-    let mut parts = alloc::vec::Vec::new();
-    let mut start = 0usize;
-    let mut depth = 0usize;
-    for (at, byte) in word.bytes().enumerate() {
-        match byte {
-            b'<' => depth = depth.saturating_add(1),
-            b'>' => {
-                depth = attempt!(depth
-                    .checked_sub(1)
-                    .ok_or_else(|| crate::invalid(span, "unbalanced type argument")));
-            }
-            byte if byte == separator && depth == 0 => {
-                // Parts end at distinct separator bytes, so this bound is never reached.
-                if parts.len() >= word.len() {
-                    return Err(crate::invalid(
-                        span,
-                        "unbalanced or oversized type argument",
-                    ));
-                }
-                parts.push(&word[start..at]);
-                start = attempt!(at
-                    .checked_add(1)
-                    .ok_or_else(|| crate::invalid(span, "unbalanced or oversized type argument")));
-            }
-            _ => {}
-        }
+) -> Result<alloc::vec::Vec<alloc::string::String>, crate::Diagnostic> {
+    let mut split = Ok(TopLevel {
+        parts: alloc::vec::Vec::new(),
+        start: 0,
+        depth: 0,
+    });
+    let mut at = 0usize;
+    while split.is_ok() && at < word.len() {
+        split = match split {
+            Ok(current) => top_level_step(word, separator, at, span, current),
+            Err(problem) => Err(problem),
+        };
+        at += 1;
     }
+    let TopLevel {
+        mut parts,
+        start,
+        depth,
+    } = attempt!(split);
     if depth != 0 || parts.len() > 256 {
         return Err(crate::invalid(
             span,
             "unbalanced or oversized type argument",
         ));
     }
-    parts.push(&word[start..]);
-    if parts.iter().any(|part| part.is_empty()) {
+    parts.push(alloc::string::String::from(&word[start..]));
+    if super::has_empty_part(&parts) {
         return Err(crate::invalid(span, "empty type argument"));
     }
     Ok(parts)
+}
+
+/// The owned parts, current part start and nesting depth of a top-level split.
+struct TopLevel {
+    parts: alloc::vec::Vec<alloc::string::String>,
+    start: usize,
+    depth: usize,
+}
+
+/// Classify the byte of `word` at `at`: track nesting or cut a top-level part.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+fn top_level_step(
+    word: &str,
+    separator: u8,
+    at: usize,
+    span: crate::Span,
+    mut split: TopLevel,
+) -> Result<TopLevel, crate::Diagnostic> {
+    match word.as_bytes()[at] {
+        b'<' => split.depth = split.depth.saturating_add(1),
+        b'>' => {
+            split.depth = attempt!(split
+                .depth
+                .checked_sub(1)
+                .ok_or_else(|| crate::invalid(span, "unbalanced type argument")));
+        }
+        byte if byte == separator && split.depth == 0 => {
+            // Parts end at distinct separator bytes, so this bound is never reached.
+            if split.parts.len() >= word.len() {
+                return Err(crate::invalid(
+                    span,
+                    "unbalanced or oversized type argument",
+                ));
+            }
+            split
+                .parts
+                .push(alloc::string::String::from(&word[split.start..at]));
+            split.start = attempt!(at
+                .checked_add(1)
+                .ok_or_else(|| crate::invalid(span, "unbalanced or oversized type argument")));
+        }
+        _ => {}
+    }
+    Ok(split)
 }
 #[expect(
     tigerstyle::missing_const_fn,
@@ -490,6 +794,15 @@ fn type_name_byte(text: &[u8], at: usize) -> bool {
     } else {
         false
     }
+}
+
+/// Whether the named-type entry is spelled `name`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String-to-str equality is not const on the pinned compilers, so the const suggestion does not apply"
+)]
+fn names_type(entry: &(alloc::string::String, noble_kernel::types::Ty), name: &str) -> bool {
+    entry.0 == name
 }
 
 fn contains_ascii_whitespace(bytes: &[u8]) -> bool {

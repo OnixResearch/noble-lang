@@ -284,7 +284,7 @@ writeFileSync(join(project, 'lean-toolchain'), readFileSync(join(root, 'proofs/m
 writeFileSync(join(project, 'lakefile.toml'),
   ['name = "noble_region_trace"', 'defaultTargets = ["RegionTrace", "RegionTraceRuntime"]', '',
    '[[lean_lib]]', 'name = "RegionTrace"', '', '[[lean_lib]]', 'name = "RegionTraceRuntime"', ''].join('\n'));
-run(join(leanBin, 'lake'), ['build', 'RegionTrace', 'RegionTraceRuntime'], project);
+run(join(leanBin, 'lake'), ['--no-cache', 'build', 'RegionTrace', 'RegionTraceRuntime'], project);
 const theorems = auditTheorems(project, inventory, names);
 const cutOutput = join(output, 'region-cut');
 run(node, ['verification/region-trace/region-cut-check.mjs',
@@ -329,7 +329,7 @@ const bindings = {
     correspondence: 'bounded-decision-only',
     selected_roots: cut.selected_roots,
     source_commit: cut.source_commit,
-    receipt: 'verification/region-trace/receipt-20261115-region-cut-v3-extraction.json',
+    receipt: 'verification/region-trace/receipt-20261118-region-cut-v4-extraction.json',
     receipt_sha256: digest64(readFileSync(join(cutOutput, 'receipt.json'))),
   },
   correspondence_route: [
@@ -393,7 +393,8 @@ const receipt = {
   allow_dirty: allowDirty, lean: version,
   bindings, claims,
   sources_sha256: Object.fromEntries([codeFile, inventoryFile, runtimeFile, runtimeInventoryFile,
-    'proofs/m5/RegionCutProof.lean', 'proofs/m5/RegionCutExtracted.lean',
+    'proofs/m5/RegionCutProof.lean', 'proofs/m3/NobleKernel/Types.lean',
+    'proofs/m3/NobleKernel/Funs.lean', 'proofs/m3/NobleKernel/FunsExternal.lean',
     'proofs/m5/region-cut-inventory.json', 'proofs/m5/lakefile.toml',
     'crates/noble-kernel/src/lib.rs',
     'crates/noble-kernel/src/region/read.rs',

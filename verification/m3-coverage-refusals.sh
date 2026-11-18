@@ -34,6 +34,11 @@
 #   unclassified-      an attribute-only external model (the form the    -> UNCLASSIFIED
 #   external-model     regenerated FunsExternal.lean uses) spliced in: it
 #                      is parsed, so the join must report it, not skip it
+#   borrowed-mutual-   an `abbrev` named `<classified def>.mutual` that  -> ENV-
+#   suffix             the classified def does not use, spliced into the  UNCLASSIFIED
+#                      m3 root's FunsExternal.lean: the join cannot see
+#                      it, and only a packed partial_fixpoint that its
+#                      first declaration is built from may be tolerated
 #   native-fixtures-   acceptance.check marked proved while every         -> STRENGTH-
 #   as-proved          citation is a native fixture or conditional          STATUS
 #                      handoff (#88 control a, on M3)
@@ -188,6 +193,13 @@ run_case() {
     grep -q '^def core.probe.coverage_probe' "$copy/NobleKernel/FunsExternal.lean" \
       || { echo "APPLY FAILED"; return 1; }
     ;;
+  borrowed-mutual-suffix)
+    fresh_copy "$copy"
+    splice_external "$copy" 'abbrev core.slice.Slice.first.mutual : Bool := true\n' \
+      || { echo "APPLY FAILED"; return 1; }
+    grep -q '^abbrev core.slice.Slice.first.mutual' "$copy/NobleKernel/FunsExternal.lean" \
+      || { echo "APPLY FAILED"; return 1; }
+    ;;
   native-fixtures-as-proved)
     fresh_copy "$copy"
     record="$SCRATCH/$label.json"
@@ -198,9 +210,16 @@ run_case() {
   conditional-claimed-universal)
     fresh_copy "$copy"
     record="$SCRATCH/$label.json"
+    # The forger claims a strict universal citation: since #97 the handoff's
+    # recorded axiom class is native (the checker carries the generated
+    # literal-size axioms), and leaving it native would let the record-only
+    # status rule refuse first, so the class is forged too and only the
+    # elaborated statement can refuse the claim.
     mutate_record "$RECORD" "$record" '
       const e = r.functions.find(f => f.lean === "noble_kernel.acceptance.check");
-      e.citations.find(c => c.theorem === "NobleM3.Refine.accepted_via_refinement_v1").strength = "universal";
+      const handoff = e.citations.find(c => c.theorem === "NobleM3.Refine.accepted_via_refinement_v1");
+      handoff.strength = "universal";
+      handoff.axioms = "strict";
       e.status = "proved";
     ' || { echo "APPLY FAILED"; return 1; }
     ;;
@@ -233,6 +252,7 @@ for case_label in \
   'bad-status STATUS' \
   'unparsed-external-def PARSE-PARITY' \
   'unclassified-external-model UNCLASSIFIED' \
+  'borrowed-mutual-suffix ENV-UNCLASSIFIED' \
   'native-fixtures-as-proved STRENGTH-STATUS' \
   'conditional-claimed-universal STRENGTH-DRIFT'
 do

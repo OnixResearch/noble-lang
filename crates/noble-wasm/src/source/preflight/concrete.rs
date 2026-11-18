@@ -209,6 +209,28 @@ pub(super) fn sized(
     Ok(())
 }
 
+/// Add the visited node's depth weight and nominal lookup to the running totals.
+fn count_node(
+    root: &noble_kernel::types::Ty,
+    path: &[usize],
+    weighted: u64,
+    lookups: u64,
+) -> Result<(u64, u64), crate::Diagnostic> {
+    let weighted = attempt!(weighted
+        .checked_add(path.len() as u64 + 1)
+        .ok_or(crate::Diagnostic::Exhausted));
+    let current = attempt!(type_at(root, path));
+    let lookups = if matches!(
+        current,
+        noble_kernel::types::Ty::Nominal(_, _) | noble_kernel::types::Ty::GenericNominal(_, _, _)
+    ) {
+        attempt!(lookups.checked_add(1).ok_or(crate::Diagnostic::Exhausted))
+    } else {
+        lookups
+    };
+    Ok((weighted, lookups))
+}
+
 /// One already-metered borrowed walk measures the total depth-weighted
 /// substitution binding volume and nominal lookups. Kernel Ty::size and
 /// interface joins clone ancestors while visiting descendants, not just
@@ -230,16 +252,15 @@ pub(in crate::source) fn count(
             break;
         }
         nodes += 1;
-        weighted = attempt!(weighted
-            .checked_add(path.len() as u64 + 1)
-            .ok_or(crate::Diagnostic::Exhausted));
-        let current = attempt!(type_at(root, &path));
-        if matches!(
-            current,
-            noble_kernel::types::Ty::Nominal(_, _)
-                | noble_kernel::types::Ty::GenericNominal(_, _, _)
-        ) {
-            lookups = attempt!(lookups.checked_add(1).ok_or(crate::Diagnostic::Exhausted));
+        match count_node(root, &path, weighted, lookups) {
+            Ok((next_weighted, next_lookups)) => {
+                weighted = next_weighted;
+                lookups = next_lookups;
+            }
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
         }
         match type_step(root, &mut path, work) {
             Ok(true) => {}

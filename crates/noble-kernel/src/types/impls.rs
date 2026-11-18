@@ -89,39 +89,17 @@ impl Clone for crate::types::Ty {
     }
 }
 
-/// Queue one `Program` pair's element checks; the flag fails closed.
-fn push_type_program<'a>(
-    mut work: alloc::vec::Vec<(&'a crate::types::Ty, &'a crate::types::Ty)>,
-    first_in: &'a [crate::types::Ty],
-    first_out: &'a [crate::types::Ty],
-    second_in: &'a [crate::types::Ty],
-    second_out: &'a [crate::types::Ty],
-) -> (
-    alloc::vec::Vec<(&'a crate::types::Ty, &'a crate::types::Ty)>,
-    bool,
-) {
-    let is_comparable = first_in.len() == second_in.len()
-        && first_out.len() == second_out.len()
-        && work.len() < super::WORK_CAP;
-    let mut index = 0;
-    while index < first_in.len() && is_comparable {
-        work.push((&first_in[index], &second_in[index]));
-        index += 1;
-    }
-    index = 0;
-    while index < first_out.len() && is_comparable {
-        work.push((&first_out[index], &second_out[index]));
-        index += 1;
-    }
-    (work, is_comparable)
-}
-
 /// Structural equality of two types, decided by one explicit pairwise walk.
 ///
 /// The work stack holds borrowed node pairs and visits each compared node
 /// once: equality never copies a subtree, so comparing two deep values costs
 /// the nodes they share, not the square of their depth. The walk fails closed
 /// past the local work bound.
+///
+/// A `Program` pair queues its element pairs in place, inputs then outputs,
+/// through slice iterators. The selected Aeneas cannot translate a loop that
+/// pushes borrows obtained by indexing, nor a helper that threads the
+/// borrowed work stack through such a loop.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; ty_eq returns false for constructor, stack-length, effect or local-work mismatches; unequal types and exhausted comparisons must remain boolean results rather than panic paths."
@@ -138,8 +116,10 @@ fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
         if work.len() >= super::WORK_CAP {
             return false;
         }
+        // Unreachable: the stack was just checked non-empty, and an empty
+        // stack ends the walk as equal.
         let Some((first, second)) = work.pop() else {
-            break;
+            return true;
         };
         match (first, second) {
             (crate::types::Ty::Unit, crate::types::Ty::Unit)
@@ -208,10 +188,23 @@ fn ty_eq(left: &crate::types::Ty, right: &crate::types::Ty) -> bool {
                 crate::types::Ty::LiveRef(a_in, a_out, a_eff),
                 crate::types::Ty::LiveRef(b_in, b_out, b_eff),
             ) if a_eff == b_eff => {
-                let (next, is_program_equal) = push_type_program(work, a_in, a_out, b_in, b_out);
-                work = next;
-                if !is_program_equal {
+                if a_in.len() != b_in.len()
+                    || a_out.len() != b_out.len()
+                    || work.len() >= super::WORK_CAP
+                {
                     return false;
+                }
+                let mut second_inputs = b_in.iter();
+                for first_input in a_in.iter() {
+                    if let Some(second_input) = second_inputs.next() {
+                        work.push((first_input, second_input));
+                    }
+                }
+                let mut second_outputs = b_out.iter();
+                for first_output in a_out.iter() {
+                    if let Some(second_output) = second_outputs.next() {
+                        work.push((first_output, second_output));
+                    }
                 }
             }
             _ => return false,

@@ -1,31 +1,47 @@
 use super::*;
 
+fn matching_position(
+    record: &ProcedureRecord,
+    procedure_id: &ProcedureId,
+    index: usize,
+) -> Option<usize> {
+    if &record.procedure_id == procedure_id {
+        Some(index)
+    } else {
+        None
+    }
+}
+
 fn record_position(records: &[ProcedureRecord], procedure_id: &ProcedureId) -> Option<usize> {
     let mut index = 0;
     let mut found = None;
     while index < records.len() && found.is_none() {
-        if &records[index].procedure_id == procedure_id {
-            found = Some(index);
-        }
+        found = matching_position(&records[index], procedure_id, index);
         index += 1;
     }
     found
+}
+
+fn check_unique_record(records: &[ProcedureRecord], index: usize) -> Result<(), Refusal> {
+    let record = &records[index];
+    if record_position(&records[..index], &record.procedure_id).is_some() {
+        return Err(Refusal::at(
+            RefusalKind::Invalid,
+            Diagnostic {
+                field: "procedure_id",
+                message: "a generation cannot retain the same procedure identity twice",
+            },
+            index as u32,
+        ));
+    }
+    Ok(())
 }
 
 fn validate_unique_records(records: &[ProcedureRecord]) -> Result<(), Refusal> {
     let mut index = 0;
     let mut result = Ok(());
     while index < records.len() && result.is_ok() {
-        if record_position(&records[..index], &records[index].procedure_id).is_some() {
-            result = Err(Refusal::at(
-                RefusalKind::Invalid,
-                Diagnostic {
-                    field: "procedure_id",
-                    message: "a generation cannot retain the same procedure identity twice",
-                },
-                index as u32,
-            ));
-        }
+        result = check_unique_record(records, index);
         index += 1;
     }
     result

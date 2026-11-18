@@ -66,10 +66,7 @@ fn token(
     if next == at {
         return Err(super::super::invalid("invalid WIT token"));
     }
-    if bytes[at].is_ascii_whitespace()
-        || bytes.get(at..at.saturating_add(2)) == Some(b"//")
-        || bytes.get(at..at.saturating_add(2)) == Some(b"/*")
-    {
+    if bytes[at].is_ascii_whitespace() || pair_at(bytes, at, b"//") || pair_at(bytes, at, b"/*") {
         return Ok((next, None));
     }
     let nodes = match u32::try_from(count) {
@@ -97,17 +94,17 @@ fn scan(bytes: &[u8], at: usize) -> Result<usize, super::super::Error> {
     if byte.is_ascii_whitespace() {
         return Ok(at.saturating_add(1));
     }
-    if bytes.get(at..at.saturating_add(2)) == Some(b"//") {
+    if pair_at(bytes, at, b"//") {
         let mut end = at.saturating_add(2);
         while end < bytes.len() && bytes[end] != b'\n' {
             end = end.saturating_add(1);
         }
         return Ok(end);
     }
-    if bytes.get(at..at.saturating_add(2)) == Some(b"/*") {
+    if pair_at(bytes, at, b"/*") {
         return comment(bytes, at.saturating_add(2));
     }
-    if bytes.get(at..at.saturating_add(2)) == Some(b"->") {
+    if pair_at(bytes, at, b"->") {
         return Ok(at.saturating_add(2));
     }
     if b";:@{}()<>,./".contains(&byte) {
@@ -121,6 +118,18 @@ fn scan(bytes: &[u8], at: usize) -> Result<usize, super::super::Error> {
         return Ok(end);
     }
     Err(super::super::unsupported("unsupported WIT token"))
+}
+
+/// Whether the two bytes at `at` are `pair`, as `bytes.get(at..at + 2) == Some(pair)`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; range indexing through slice get and slice equality are non-const trait calls."
+)]
+fn pair_at(bytes: &[u8], at: usize, pair: &[u8; 2]) -> bool {
+    match bytes.get(at..at.saturating_add(2)) {
+        Some(found) => *found == *pair,
+        None => false,
+    }
 }
 
 #[expect(

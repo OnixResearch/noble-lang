@@ -5,12 +5,14 @@ impl super::super::Env {
         let mut index = 0;
         let mut is_valid = true;
         while index < self.generic_variants.len() && is_valid {
-            let decl = &self.generic_variants[index];
-            is_valid =
-                matches!(decl.payload_params, [0, 1] | [1, 0]) && self.nominal(decl.id).is_none();
+            // Copy the row's fields: no borrowed row stays live across the
+            // joins below, which the selected Aeneas cannot match.
+            let id = self.generic_variants[index].id;
+            let payload_params = self.generic_variants[index].payload_params;
+            is_valid = matches!(payload_params, [0, 1] | [1, 0]) && self.nominal(id).is_none();
             let mut prior = 0;
             while prior < index && is_valid {
-                is_valid = self.generic_variants[prior].id != decl.id;
+                is_valid = self.generic_variants[prior].id != id;
                 prior += 1;
             }
             index += 1;
@@ -124,40 +126,52 @@ fn calculator_prefix_matches(env: &super::super::Env) -> bool {
 /// First row the calculator profile adds and visibility grants by index.
 const CALCULATOR_FIRST_ROW: usize = 27;
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
-)]
 fn generic_counts_match(env: &super::super::Env) -> bool {
     if !env.valid_generic_declarations() {
         return false;
     }
     let mut index = 0;
     while index < env.generic_variants.len() {
-        let decl = &env.generic_variants[index];
-        let mut count = [0u8; 3];
-        let mut kind_index = 0;
-        while kind_index < env.kinds.len() {
-            match env.kinds[kind_index] {
-                super::super::Behavior::GenericLeft(id) if id == decl.id => {
-                    count[0] = count[0].saturating_add(1);
-                }
-                super::super::Behavior::GenericRight(id) if id == decl.id => {
-                    count[1] = count[1].saturating_add(1);
-                }
-                super::super::Behavior::GenericMatch(id) if id == decl.id => {
-                    count[2] = count[2].saturating_add(1);
-                }
-                _ => {}
-            }
-            kind_index += 1;
-        }
-        if count != [1, 1, 1] {
+        if generic_family_counts(env, env.generic_variants[index].id) != [1, 1, 1] {
             return false;
         }
         index += 1;
     }
     true
+}
+
+/// How many left, right and matcher rows name the generic family `id`, in
+/// that order, each count saturating.
+///
+/// Each row's behavior is copied out before it is matched, into scalar
+/// counters rather than an indexed count array: the selected Aeneas cannot
+/// join the per-arm borrows of a matched table row or an updated array.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
+fn generic_family_counts(env: &super::super::Env, id: crate::types::NominalTypeId) -> [u8; 3] {
+    let mut left = 0u8;
+    let mut right = 0u8;
+    let mut matcher = 0u8;
+    let mut kind_index = 0;
+    while kind_index < env.kinds.len() {
+        let kind = env.kinds[kind_index];
+        match kind {
+            super::super::Behavior::GenericLeft(found) if found == id => {
+                left = left.saturating_add(1);
+            }
+            super::super::Behavior::GenericRight(found) if found == id => {
+                right = right.saturating_add(1);
+            }
+            super::super::Behavior::GenericMatch(found) if found == id => {
+                matcher = matcher.saturating_add(1);
+            }
+            _ => {}
+        }
+        kind_index += 1;
+    }
+    [left, right, matcher]
 }
 
 #[expect(
@@ -194,11 +208,11 @@ fn bound_row_contract(row: &super::super::BoundAdapter) -> bool {
         || (row.input.is_empty()
             && row.output.as_slice() == [crate::types::Ty::I64]
             && row.effects.as_slice() == [super::super::TEST_CLOCK])
-        || (row.adapter_identity == super::super::TEST_CODE_EXPORT_ADAPTER_IDENTITY
+        || (str::as_bytes(&row.adapter_identity) == super::super::TEST_CODE_EXPORT_IDENTITY_BYTES
             && row.input.as_slice() == [crate::types::Ty::Text, crate::types::Ty::Text]
             && row.output.is_empty()
             && row.effects.as_slice() == [super::super::TEST_CODE_EXPORT])
-        || (row.adapter_identity == super::super::TEST_SEND_ADAPTER_IDENTITY
+        || (str::as_bytes(&row.adapter_identity) == super::super::TEST_SEND_IDENTITY_BYTES
             && row.input.as_slice() == [crate::types::Ty::Text]
             && row.output.is_empty()
             && row.effects.as_slice() == [super::super::TEST_SEND])
@@ -216,18 +230,7 @@ fn bootstrap_matches(env: &super::super::Env) -> bool {
     if !env.declared_modules {
         return true;
     }
-    let has_clock = env
-        .kinds
-        .iter()
-        .any(|kind| matches!(kind, super::super::Behavior::BoundClock(_)));
-    let has_code_export = env
-        .kinds
-        .iter()
-        .any(|kind| matches!(kind, super::super::Behavior::BoundCodeExport(_)));
-    let has_send = env
-        .kinds
-        .iter()
-        .any(|kind| matches!(kind, super::super::Behavior::BoundSend(_)));
+    let (has_clock, has_code_export, has_send) = bound_adapter_kinds(env);
     env.resource_kinds.len() == 1usize.saturating_add(env.live_resource_nominals.len())
         && env.resource_kinds[0].0 == super::super::FIXTURE_RESOURCE.0
         && env.effects.len()
@@ -243,6 +246,28 @@ fn bootstrap_matches(env: &super::super::Env) -> bool {
         && env.effects.contains(&super::super::LIVE_DISPATCH) == env.live_slots
         && env.definition_owners.len() == env.defs.len()
         && env.deps.len() == env.defs.len()
+}
+
+/// Whether any bound clock, code-export and send rows exist, in that order.
+///
+/// One explicit scan rather than three `Iterator::any` calls: the selected
+/// Aeneas library models no `Iterator::any`.
+fn bound_adapter_kinds(env: &super::super::Env) -> (bool, bool, bool) {
+    let mut has_clock = false;
+    let mut has_code_export = false;
+    let mut has_send = false;
+    let mut index = 0;
+    while index < env.kinds.len() {
+        let kind = env.kinds[index];
+        match kind {
+            super::super::Behavior::BoundClock(_) => has_clock = true,
+            super::super::Behavior::BoundCodeExport(_) => has_code_export = true,
+            super::super::Behavior::BoundSend(_) => has_send = true,
+            _ => {}
+        }
+        index += 1;
+    }
+    (has_clock, has_code_export, has_send)
 }
 
 fn fixed_definitions_match(env: &super::super::Env) -> bool {
@@ -553,20 +578,74 @@ fn bound_definition_matches(
     let Ok(def) = u32::try_from(index) else {
         return false;
     };
-    let Some(row) = env
-        .bound_adapters
-        .iter()
-        .find(|row| row.definition == super::super::Definition(def) && row.adapter_slot == slot)
-    else {
+    let Some(found) = first_bound_row(env, super::super::Definition(def), slot) else {
         return false;
     };
-    if row.effects.as_slice() != [effect] {
+    if !bound_row_has_only_effect(env, found, effect) {
         return false;
     }
-    matches!(
-        env.matching_bound_rows(super::super::Definition(def), slot),
-        1
-    ) && matches!(env.definition_owners.get(index), Some(Some(_)))
+    if env.matching_bound_rows(super::super::Definition(def), slot) != 1 {
+        return false;
+    }
+    definition_has_owner(env, index)
+}
+
+/// Index of the first bound-adapter row naming `def` at `slot`, scanning in
+/// table order and stopping at the first match (the `Iterator::find` order).
+///
+/// An explicit index walk rather than `Iterator::find`: the selected Aeneas
+/// refuses that method's higher-ranked predicate lifetime. The row test is a
+/// separate loop-free helper so no borrowed row stays live across the join.
+fn first_bound_row(
+    env: &super::super::Env,
+    def: super::super::Definition,
+    slot: u32,
+) -> Option<usize> {
+    let mut index = 0;
+    let mut found = None;
+    while index < env.bound_adapters.len() && found.is_none() {
+        if bound_row_names(env, index, def, slot) {
+            found = Some(index);
+        }
+        index += 1;
+    }
+    found
+}
+
+/// Whether bound-adapter row `index` names `def` at `slot`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; both pinned Rust compilers reject indexing bound_adapters Vec (E0277/E0658) and its runtime Definition equality; reassess when those reads and comparisons become const-capable."
+)]
+fn bound_row_names(
+    env: &super::super::Env,
+    index: usize,
+    def: super::super::Definition,
+    slot: u32,
+) -> bool {
+    let row = &env.bound_adapters[index];
+    if row.definition != def {
+        return false;
+    }
+    row.adapter_slot == slot
+}
+
+/// Whether bound-adapter row `index` declares exactly the single `effect`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; both pinned Rust compilers reject indexing bound_adapters Vec (E0277/E0658) and its runtime EffId slice equality; reassess when those reads and comparisons become const-capable."
+)]
+fn bound_row_has_only_effect(
+    env: &super::super::Env,
+    index: usize,
+    effect: crate::types::EffId,
+) -> bool {
+    env.bound_adapters[index].effects.as_slice() == [effect]
+}
+
+/// Whether definition `index` has an owning module recorded.
+fn definition_has_owner(env: &super::super::Env, index: usize) -> bool {
+    matches!(env.definition_owners.get(index), Some(Some(_)))
 }
 
 #[expect(
@@ -614,4 +693,18 @@ pub(super) fn valid_program_components(
     is_effect_set_known
         && u64::try_from(stack_in.len().saturating_add(stack_out.len()))
             .is_ok_and(|count| count <= u64::from(max_nodes))
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn a_definition_has_an_owner_only_when_one_is_recorded() {
+        let env = crate::contracts::Env {
+            definition_owners: alloc::vec![None, Some(3)],
+            ..crate::contracts::Env::default()
+        };
+        assert!(!super::definition_has_owner(&env, 0));
+        assert!(super::definition_has_owner(&env, 1));
+        assert!(!super::definition_has_owner(&env, 2));
+    }
 }

@@ -100,6 +100,14 @@ mutual
     /-- A nominal type identity: the declaring module and ordinal, and nothing else. The fragment does not model the
         nominal shape or export flag, so a projection here carries identity only. -/
     | nominal : Nat → Nat → Ty
+    /-- A borrowed live program reference: its ordered input stack, its result stack and its latent bound, the same
+        components as `program`. The fragment does not admit live references: the constructor exists so extracted
+        types project without loss, and it is never `Data`. -/
+    | liveRef : TyList → TyList → EffSet → Ty
+    /-- A two-parameter nominal family instance: the declaring module and ordinal and the two ordered type arguments.
+        As for `nominal`, the fragment does not model the canonical descriptor, so a projection here carries the
+        identity and the arguments only. The fragment does not admit such a value, and it is never `Data`. -/
+    | genericNominal : Nat → Nat → Ty → Ty → Ty
     deriving Repr, DecidableEq, Inhabited
 
   /-- A finite stack of types, bottom first (the head is the stack bottom). -/
@@ -120,6 +128,7 @@ mutual
     | Ty.program _ _ _ => true
     | Ty.resource _ => false
     | Ty.contract | Ty.evidence | Ty.certified | Ty.nominal _ _ => false
+    | Ty.liveRef _ _ _ | Ty.genericNominal _ _ _ _ => false
 
   /-- Whether every stack entry is `Data`. -/
   def TyList.isData : TyList → Bool
@@ -130,7 +139,8 @@ end
 
 mutual
 
-  /-- A size measure used by the declared type-size limit. -/
+  /-- A size measure used by the declared type-size limit: one point per constructor node. A live reference
+      counts its two stacks like a program type; a generic nominal instance counts its two type arguments. -/
   def Ty.size : Ty → Nat
     | Ty.unit | Ty.bool | Ty.i64 | Ty.text | Ty.syn => 1
     | Ty.resource _ => 1
@@ -138,6 +148,8 @@ mutual
     | Ty.pair a b | Ty.sum a b => 1 + a.size + b.size
     | Ty.list a => 1 + a.size
     | Ty.program i o _ => 1 + i.size + o.size
+    | Ty.liveRef i o _ => 1 + i.size + o.size
+    | Ty.genericNominal _ _ a b => 1 + a.size + b.size
 
   /-- Total size of every stack entry. -/
   def TyList.size : TyList → Nat

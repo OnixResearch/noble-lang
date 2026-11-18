@@ -27,10 +27,9 @@ fn has_word(module: &super::Module, word: &str) -> bool {
     let mut entry_slot = 0usize;
     let mut is_found = false;
     while entry_slot < module.exports.len() && !is_found {
-        is_found = module.exports[entry_slot]
-            .words
-            .iter()
-            .any(|(name, _)| name == word);
+        is_found =
+            super::position_first(&module.exports[entry_slot].words, |(name, _)| name == word)
+                .is_some();
         entry_slot += 1;
     }
     is_found

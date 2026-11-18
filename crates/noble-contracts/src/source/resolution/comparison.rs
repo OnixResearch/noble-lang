@@ -97,9 +97,8 @@ impl Context<'_> {
         let a = attempt!(self.left.node(a_id));
         let b = attempt!(self.right.node(b_id));
         match (&a.kind, &b.kind) {
-            (crate::source::Kind::Literal(a), crate::source::Kind::Literal(b)) if a == b => {
-                Ok(true)
-            }
+            // A literal pair compares by value; an unequal pair is a mismatch.
+            (crate::source::Kind::Literal(a), crate::source::Kind::Literal(b)) => Ok(a == b),
             (crate::source::Kind::Text(a), crate::source::Kind::Text(b)) => {
                 attempt!(meter.charge(
                     attempt!(crate::index(

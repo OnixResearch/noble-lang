@@ -87,11 +87,13 @@ theorem guard_template_roundtrip (template : GuardTemplate) :
   cases template <;> rfl
 
 /-- Once the actual registry lookups select these entries, successful release
-requires their retained outcome to be `Proved`. The lookup equations bind the
-claim to the real registry operations, not to a handwritten registry model. -/
+requires their retained outcome to be `Proved`, whatever observed subject the
+caller presents. The lookup equations bind the claim to the real registry
+operations, not to a handwritten registry model. -/
 theorem release_requires_proved
     (engine : noble_contracts.companion.Core)
     (id : noble_contracts.companion.registry.EvidenceId)
+    (subject : noble_contracts.companion.Subject)
     (entry : noble_contracts.companion.registry.EvidenceEntry)
     (contract : noble_contracts.companion.registry.ContractEntry)
     (released : noble_contracts.companion.Release)
@@ -99,7 +101,8 @@ theorem release_requires_proved
       engine.registry id = ok (.Ok entry))
     (contractLookup : noble_contracts.companion.registry.entries.Registry.contract
       engine.registry entry.contract = ok (.Ok contract))
-    (success : noble_contracts.companion.core.Core.release engine id = ok (.Ok released)) :
+    (success : noble_contracts.companion.core.Core.release engine id subject =
+      ok (.Ok released)) :
     entry.outcome = .Proved := by
   cases outcome : entry.outcome <;>
     simp_all [noble_contracts.companion.core.Core.release,
@@ -115,10 +118,12 @@ theorem release_requires_proved
   all_goals split_ifs at success <;> simp_all
 
 /-- A real registry assumption cannot be promoted to a released obligation,
-even if an attacker pairs that evidence class with a `Proved` outcome. -/
+even if an attacker pairs that evidence class with a `Proved` outcome, for any
+observed subject. -/
 theorem release_rejects_assumptions
     (engine : noble_contracts.companion.Core)
     (id : noble_contracts.companion.registry.EvidenceId)
+    (subject : noble_contracts.companion.Subject)
     (entry : noble_contracts.companion.registry.EvidenceEntry)
     (contract : noble_contracts.companion.registry.ContractEntry)
     (released : noble_contracts.companion.Release)
@@ -127,9 +132,9 @@ theorem release_rejects_assumptions
     (contractLookup : noble_contracts.companion.registry.entries.Registry.contract
       engine.registry entry.contract = ok (.Ok contract))
     (assumptionClass : entry.class = .Assumption) :
-    noble_contracts.companion.core.Core.release engine id ≠ ok (.Ok released) := by
+    noble_contracts.companion.core.Core.release engine id subject ≠ ok (.Ok released) := by
   intro success
-  have outcome := release_requires_proved engine id entry contract released
+  have outcome := release_requires_proved engine id subject entry contract released
     evidenceLookup contractLookup success
   simp_all [noble_contracts.companion.core.Core.release,
     noble_contracts.companion.release.select,
@@ -148,25 +153,30 @@ def guardLiteral : GuardTemplate → I64
   | .neI64Min => core.num.I64.MIN
   | .eqI64Literal value => ⟨value⟩
 
+/-- The UTF-8 byte-size bound `toStr` requires for a literal, checked by the
+kernel from the literal's characters. The generated code proves the same bounds
+by native evaluation; any two proofs are equal, so a layout built with these
+cites no generated auxiliary axiom by name and introduces no native axiom. -/
+theorem literal_size (s : String) (h : (s.toList.map Char.utf8Size).sum ≤ 4294967295) :
+    s.toByteArray.size ≤ U32.max := by
+  rw [← String.utf8Encode_toList, U32.max_eq]
+  simpa [List.utf8Encode, List.size_toByteArray, String.length_utf8EncodeChar] using h
+
 /-- Exact wrapper grammar with the extracted decimal renderer left explicit.
-The closed byte-size proofs are reused from generated code: this definition
-introduces no new native axiom and does not assert parser correctness. -/
+Literal byte-size bounds come from `literal_size`: this definition introduces
+no native axiom and does not assert parser correctness. -/
 def sourceLayout (template : GuardTemplate) (subject : Str) : Result String := do
   let out ← noble_contracts.alloc.string.String.new
   let out ← noble_contracts.alloc.string.String.push_str out
-    (toStr "[ dup " (of_decide_eq_true
-      noble_contracts.companion.guard.wrapper_source._native.decide.ax_1))
+    (toStr "[ dup " (literal_size _ (by simp [Char.utf8Size])))
   let out ← noble_contracts.companion.guard.push_i64 out (guardLiteral template)
   let beforeSubject := match template with
-    | .eqI64Literal _ => toStr " = [ [ " (of_decide_eq_true
-        noble_contracts.companion.guard.wrapper_source._native.decide.ax_8)
-    | _ => toStr " = [ drop 1 inl ] [ [ " (of_decide_eq_true
-        noble_contracts.companion.guard.wrapper_source._native.decide.ax_2)
+    | .eqI64Literal _ => toStr " = [ [ " (literal_size _ (by simp [Char.utf8Size]))
+    | _ => toStr " = [ drop 1 inl ] [ [ " (literal_size _ (by simp [Char.utf8Size]))
   let afterSubject := match template with
-    | .eqI64Literal _ => toStr " ] run inr ] [ drop 1 inl ] if ]" (of_decide_eq_true
-        noble_contracts.companion.guard.wrapper_source._native.decide.ax_9)
-    | _ => toStr " ] run inr ] if ]" (of_decide_eq_true
-        noble_contracts.companion.guard.wrapper_source._native.decide.ax_3)
+    | .eqI64Literal _ => toStr " ] run inr ] [ drop 1 inl ] if ]"
+        (literal_size _ (by simp [Char.utf8Size]))
+    | _ => toStr " ] run inr ] if ]" (literal_size _ (by simp [Char.utf8Size]))
   let out ← noble_contracts.alloc.string.String.push_str out beforeSubject
   let out ← noble_contracts.alloc.string.String.push_str out subject
   noble_contracts.alloc.string.String.push_str out afterSubject
@@ -181,16 +191,13 @@ theorem wrapper_source_layout (engine : noble_contracts.companion.Core)
 consumes it without running it. The primitive execution theorem is separate. -/
 def invocationLayout (template : GuardTemplate) : Result String := do
   let out ← noble_contracts.alloc.string.String.Insts.CoreConvertFromShared0Str.from
-    (toStr "[ swap dup " (of_decide_eq_true
-      noble_contracts.companion.guard.invocation_wrapper._native.decide.ax_1))
+    (toStr "[ swap dup " (literal_size _ (by simp [Char.utf8Size])))
   let out ← noble_contracts.companion.guard.push_i64 out (guardLiteral template)
   let branches := match template with
     | .eqI64Literal _ => toStr " = [ swap run inr ] [ drop drop 1 inl ] if ]"
-        (of_decide_eq_true
-          noble_contracts.companion.guard.invocation_wrapper._native.decide.ax_4)
+        (literal_size _ (by simp [Char.utf8Size]))
     | _ => toStr " = [ drop drop 1 inl ] [ swap run inr ] if ]"
-        (of_decide_eq_true
-          noble_contracts.companion.guard.invocation_wrapper._native.decide.ax_2)
+        (literal_size _ (by simp [Char.utf8Size]))
   noble_contracts.alloc.string.String.push_str out branches
 
 theorem invocation_wrapper_layout (template : GuardTemplate) :

@@ -166,6 +166,10 @@ impl<'a> Schedule<'a> {
         reason = "Owner: noble-maintainers; E0277/E0658 Vec Index and Deref plus E0015 blocked and declared::error prevent const on both pinned Rust compilers; reassess const graph APIs."
     )]
     fn ready(mut self, position: usize) -> (Self, Result<bool, crate::source::Error>) {
+        // The owner decision is taken before `name` and `tree` borrow the
+        // pending entry; both are pure, so the refusal order is unchanged.
+        let is_signed_owner = is_signed_self(&self.session)
+            && is_signed_definition(&self.pending, &self.work.signatures, position);
         let Some((name, _, tree)) = self.pending[position].as_ref() else {
             return (
                 self,
@@ -175,16 +179,6 @@ impl<'a> Schedule<'a> {
                 )),
             );
         };
-        let is_signed_owner = self
-            .session
-            .as_ref()
-            .and_then(|session| session.source.declared.as_ref())
-            .is_some_and(|context| context.signed_self)
-            && self
-                .work
-                .signatures
-                .iter()
-                .any(|(declared, _)| declared == name);
         let (meter, blocked) = super::scheduling::blocked(
             tree,
             &self.names,
@@ -223,12 +217,10 @@ impl<'a> Schedule<'a> {
         let installed = super::install_one(
             session,
             super::DefinitionInput {
-                signature: self
-                    .work
-                    .signatures
-                    .iter()
-                    .find(|(declared, _)| declared == &name)
-                    .map(|(_, scheme)| scheme.clone()),
+                signature: crate::scan::find_first(&self.work.signatures, |(declared, _)| {
+                    declared == &name
+                })
+                .map(|(_, scheme)| scheme.clone()),
                 name,
                 source: definition_bytes,
                 limits: self.limits,
@@ -245,5 +237,34 @@ impl<'a> Schedule<'a> {
         self.session = Some(session);
         self.work.local_exports = local_exports;
         (self, Ok(()))
+    }
+}
+
+/// Whether the session's declared source selects its signed self owner.
+const fn is_signed_self(session: &Option<crate::source::declared::ModuleSession>) -> bool {
+    match session {
+        Some(session) => match &session.source.declared {
+            Some(context) => context.signed_self,
+            None => false,
+        },
+        None => false,
+    }
+}
+
+/// Whether the pending definition at `position` has a source signature.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; crate::scan::find_first and its closure predicate are not const (E0015)."
+)]
+fn is_signed_definition(
+    pending: &[Option<super::Definition>],
+    signatures: &[(alloc::string::String, noble_kernel::words::Scheme)],
+    position: usize,
+) -> bool {
+    match &pending[position] {
+        Some((name, _, _)) => {
+            crate::scan::find_first(signatures, |(declared, _)| declared == name).is_some()
+        }
+        None => false,
     }
 }

@@ -1,0 +1,117 @@
+{
+  "schema": "noble-issue97-owned-lean-checks/v1",
+  "recorded": "2026-11-17T20:16:09.419Z",
+  "source_commit": "879bfd663986e6bbc61dbf2c33d628eba2665408",
+  "source_tree": "862082da21e0bf614acc32d9ee8bdfa2bd1ce412",
+  "status": "",
+  "clean_source": true,
+  "source_unchanged": true,
+  "runner_sha256": "7e411f9e202dc25181050d670ca3381a9c00f47013e58fe52b1f9e22892ade24",
+  "commands": [
+    {
+      "id": "m5-authority",
+      "started": "2026-11-17T20:09:51.950Z",
+      "finished": "2026-11-17T20:14:58.090Z",
+      "cwd": "/home/brittonr/.cache/noble-iss/wt/archive-lanes-97",
+      "command": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "argv": [
+        "verification/m5-authority/check.mjs",
+        "--output",
+        "/dev/shm/noble-iss/archive-lanes-97/archived-879bfd66/m5-authority"
+      ],
+      "executable_sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "environment": {
+        "HOME": "/home/brittonr",
+        "USER": "brittonr",
+        "LOGNAME": "brittonr",
+        "LANG": "C.UTF-8",
+        "TMPDIR": "/dev/shm/noble-iss/archive-lanes-97/tmp",
+        "PATH": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:/run/current-system/sw/bin:/usr/bin:/bin"
+      },
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "43454063702ffa68cc1ce61a58442ec35dcc50c66fc925dd628a819c8a08b428",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "region-table",
+      "started": "2026-11-17T20:14:58.250Z",
+      "finished": "2026-11-17T20:15:32.229Z",
+      "cwd": "/home/brittonr/.cache/noble-iss/wt/archive-lanes-97",
+      "command": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "argv": [
+        "verification/region-table/check.mjs",
+        "--output",
+        "/dev/shm/noble-iss/archive-lanes-97/archived-879bfd66/region-table"
+      ],
+      "executable_sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "environment": {
+        "HOME": "/home/brittonr",
+        "USER": "brittonr",
+        "LOGNAME": "brittonr",
+        "LANG": "C.UTF-8",
+        "TMPDIR": "/dev/shm/noble-iss/archive-lanes-97/tmp",
+        "PATH": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:/run/current-system/sw/bin:/usr/bin:/bin"
+      },
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "897e0c8cb11fa470935b41281824530835a446d36d14ca3eaac3591fbd9f855d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "host-locality",
+      "started": "2026-11-17T20:15:32.358Z",
+      "finished": "2026-11-17T20:16:06.011Z",
+      "cwd": "/home/brittonr/.cache/noble-iss/wt/archive-lanes-97",
+      "command": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "argv": [
+        "verification/host-locality/check.mjs",
+        "--output",
+        "/dev/shm/noble-iss/archive-lanes-97/archived-879bfd66/host-locality"
+      ],
+      "executable_sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "environment": {
+        "HOME": "/home/brittonr",
+        "USER": "brittonr",
+        "LOGNAME": "brittonr",
+        "LANG": "C.UTF-8",
+        "TMPDIR": "/dev/shm/noble-iss/archive-lanes-97/tmp",
+        "PATH": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:/run/current-system/sw/bin:/usr/bin:/bin"
+      },
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "13721275507617cbf9b2c20f2275801fd6ea2fc52654d76e790ff0c23b3f1259",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "nested-session",
+      "started": "2026-11-17T20:16:06.135Z",
+      "finished": "2026-11-17T20:16:09.310Z",
+      "cwd": "/home/brittonr/.cache/noble-iss/wt/archive-lanes-97",
+      "command": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "argv": [
+        "verification/nested-session/check.mjs",
+        "--output",
+        "/dev/shm/noble-iss/archive-lanes-97/archived-879bfd66/nested-session"
+      ],
+      "executable_sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "environment": {
+        "HOME": "/home/brittonr",
+        "USER": "brittonr",
+        "LOGNAME": "brittonr",
+        "LANG": "C.UTF-8",
+        "TMPDIR": "/dev/shm/noble-iss/archive-lanes-97/tmp",
+        "PATH": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:/run/current-system/sw/bin:/usr/bin:/bin"
+      },
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "f70d791b93430e6e1a8953f7b2ffefad18801d92cd58f0c7cc75b0c6963a13e5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "result": "passed"
+}

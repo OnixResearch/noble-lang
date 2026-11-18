@@ -133,9 +133,13 @@ def provedAndReleased (guarded : Bool) : Result Bool := do
   let (admission, engine) ← acceptedIncrement guarded
   let some contract := admission.contract | fail .panic
   let some evidence := admission.evidence | fail .panic
-  let release ← noble_contracts.companion.core.Core.release engine evidence
   let correspondence ← noble_contracts.companion.core.Core.correspond engine evidence contract
   let program ← noble_contracts.companion.core.Core.contract_program engine contract
+  let .Ok events := program | fail .panic
+  let [retained] := engine.registry.contracts.val | fail .panic
+  let subject ← noble_contracts.companion.core.Core.observe events
+    { input := retained.input_signature, output := retained.output_signature }
+  let release ← noble_contracts.companion.core.Core.release engine evidence subject
   let claim ← noble_contracts.companion.core.Core.claim engine evidence
   let rule ← noble_contracts.companion.core.Core.evidence_rule engine evidence
   match release, correspondence, program, rule,
@@ -176,7 +180,10 @@ def refusedRetained
     (outcome : noble_contracts.companion.admit.Outcome)
     (refusal : noble_contracts.companion.Refusal) : Result Bool := do
   let (admission, engine) ← computation
-  let release ← noble_contracts.companion.core.Core.release engine 0#u32
+  let [retained] := engine.registry.contracts.val | fail .panic
+  let subject ← noble_contracts.companion.core.Core.observe (alloc.vec.Vec.deref retained.program)
+    { input := retained.input_signature, output := retained.output_signature }
+  let release ← noble_contracts.companion.core.Core.release engine 0#u32 subject
   let claim ← noble_contracts.companion.core.Core.claim engine 0#u32
   let outcomeMatches ←
     noble_contracts.companion.admit.Outcome.Insts.CoreCmpPartialEqOutcome.eq
@@ -246,7 +253,8 @@ def capabilityRefused
   let (admission, engine) ← checkedIncrementWith
     (assumedAuthenticSoundHostObservationForNamedIncrement false) false
     { incrementOffer false with payload }
-  let release ← noble_contracts.companion.core.Core.release engine 0#u32
+  let subject ← emptyObservation
+  let release ← noble_contracts.companion.core.Core.release engine 0#u32 subject
   let program ← noble_contracts.companion.core.Core.contract_program engine 0#u32
   match admission.outcome, admission.contract, admission.evidence, admission.refusals.val,
       release, program, engine.registry.contracts.val, engine.registry.evidence.val with

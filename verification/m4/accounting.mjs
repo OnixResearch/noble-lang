@@ -25,7 +25,7 @@ export function exactBytes(actual, expected, detail) {
 // spans, the rest of these spans, any body, or any extraction option.
 const syntheticExpansionSites = {
   noble_kernel: [
-    { file: 'crates/noble-kernel/src/lib.rs', crate: 'noble_kernel', line: 24, end: 19,
+    { file: 'crates/noble-kernel/src/lib.rs', crate: 'noble_kernel', line: 36, end: 19,
       source: '        match $step {' },
     { file: '/rustc/library/core/src/macros/mod.rs', crate: 'core', line: 434, end: 25,
       source: null },
@@ -33,15 +33,15 @@ const syntheticExpansionSites = {
       source: '        match $candidate {' },
   ],
   noble_contracts: [
-    { file: 'crates/noble-contracts/src/lib.rs', crate: 'noble_contracts', line: 9, end: 19,
+    { file: 'crates/noble-contracts/src/lib.rs', crate: 'noble_contracts', line: 23, end: 19,
       source: '        match $step {' },
     { file: '/rustc/library/core/src/macros/mod.rs', crate: 'core', line: 434, end: 25,
       source: null },
-    { file: 'crates/noble-contracts/src/source/declared/state.rs', crate: 'noble_contracts', line: 7, end: 24,
+    { file: 'crates/noble-contracts/src/source/declared/state.rs', crate: 'noble_contracts', line: 9, end: 24,
       source: '        match $candidate {' },
   ],
   noble_wasm: [
-    { file: 'crates/noble-wasm/src/lib.rs', crate: 'noble_wasm', line: 13, end: 19,
+    { file: 'crates/noble-wasm/src/lib.rs', crate: 'noble_wasm', line: 53, end: 19,
       source: '        match $step {' },
   ],
 };
@@ -127,8 +127,13 @@ export const inheritedOpaque = [
 // Recent bounded structural-equality refactors changed adjacent non-opaque
 // code in both impls.rs files. Re-pin the current file bytes only after the
 // five separately hashed opaque helper bodies are verified unchanged.
+// The #97 re-extraction renewal (prior types/impls.rs pin
+// 636c0927667693891485be5bf1d57527975c8e7b13e217000f234c152e11a02f) only
+// queues ty_eq's Program element pairs inside its walk instead of through a
+// helper that threaded the borrowed work stack; clone_stack and debug_stack
+// keep their pinned bodies.
 export const inheritedOpaqueSources = {
-  'crates/noble-kernel/src/types/impls.rs': '636c0927667693891485be5bf1d57527975c8e7b13e217000f234c152e11a02f',
+  'crates/noble-kernel/src/types/impls.rs': '479761e9371a17ac9695e89a729a28dadfd20e2b106a985a1e405af7145a17df',
   'crates/noble-kernel/src/shapes/impls.rs': 'c5e01ec491af3ac46488e567ff2d3c0b9531a22e11cc842ecab7604544620413',
 };
 export const inheritedOpaqueBodies = {
@@ -141,6 +146,202 @@ export const inheritedOpaqueBodies = {
     debug_parts: 'c93c255598269fbc11e74206efca41ac2729955b8c948ec5ae7a481f2e942e9d',
     debug_slots: '8295e5745e323de390d59d074d1e348c2345111badc8cf82d1adcb73c8bb9527',
   },
+};
+// Reviewed #97 local opaque boundaries of the frontend and backend lanes. The
+// frontend's host plug-in handles hold `dyn` trait objects or a host `fn`
+// pointer, which the pinned Aeneas cannot represent: the four handle types are
+// opaque and the methods that call through them are opaque. Three frontend
+// Debug renderers and the backend's `debug_origin` are opaque because a
+// transparent body needs a trait-instance cycle the pinned Aeneas refuses;
+// formatting layout is already an abstracted, observation-only boundary. Each
+// is a modelled boundary, never an extracted body, and its exact annotated item
+// is pinned in `reviewedAnnotations` below.
+export const reviewedOpaque = {
+  contracts: [
+    'noble_contracts::intrinsic::debug_form_kind',
+    'noble_contracts::intrinsic::debug_proof_dependency',
+    'noble_contracts::source::chunks::{noble_contracts::source::chunks::MonotonicClock}::now_ns',
+    "noble_contracts::source::chunks::{noble_contracts::source::chunks::ObserverHandle<'_0>}::observe",
+    "noble_contracts::source::chunks::{noble_contracts::source::chunks::RankerHandle<'_0>}::model_identity",
+    "noble_contracts::source::chunks::{noble_contracts::source::chunks::RankerHandle<'_0>}::provenance_matches",
+    "noble_contracts::source::chunks::{noble_contracts::source::chunks::RankerHandle<'_0>}::score",
+    'noble_contracts::source::editor::debug_node',
+    'noble_contracts::source::procedures::acceptance::{impl core::fmt::Debug for noble_contracts::source::procedures::acceptance::OwnerVerifier}::fmt',
+    'noble_contracts::source::procedures::acceptance::{noble_contracts::source::procedures::acceptance::OwnerVerifier}::verify',
+  ],
+  wasm: ['noble_wasm::source::debug_origin'],
+};
+export const reviewedOpaqueTypes = {
+  contracts: [
+    'noble_contracts::source::chunks::MonotonicClock',
+    'noble_contracts::source::chunks::ObserverHandle',
+    'noble_contracts::source::chunks::RankerHandle',
+    'noble_contracts::source::procedures::acceptance::OwnerVerifier',
+  ],
+  wasm: [],
+};
+// One out-of-line oracle belongs exclusively to a compiler-confirmed cfg(test)
+// module. Its bytes remain source-bound, but it is not a production body. This
+// is an exact path/parent/directive review, not a filename or directory waiver.
+export const testOnlySourceModules = {
+  'crates/noble-contracts/src/inference/effects/oracle.rs': {
+    parent: 'crates/noble-contracts/src/inference/effects.rs',
+    directive: '#[cfg(test)]\nmod oracle;',
+  },
+};
+// Every Charon annotation outside the separately body-pinned inherited kernel
+// helpers is bound to the exact item it decorates: first line, complete item
+// SHA-256 and line count, in source order. Added/removed annotations or changed
+// item extents/bodies refuse review, including rename and excluded adapters.
+// - rename: extraction-only Lean names. A field named `source` would shadow the
+//   `source.*` namespace of later field types, and three type names would
+//   collide with other Lean declarations. Rust names and semantics are unchanged.
+// - opaque: the `reviewedOpaque`/`reviewedOpaqueTypes` boundaries above.
+// - exclude: public host adapters whose signatures name `dyn` trait objects,
+//   nested borrows or host `fn` clocks. They are not part of the extraction: no
+//   translated item can reference them (the pinned extraction then fails), and
+//   the checked logic each one wraps, named in its doc comment, is extracted.
+export const reviewedAnnotations = {
+  "crates/noble-contracts/src/component/preparation.rs": [
+    { annotation: "exclude", item: "pub fn check_import_effect(&self, word: &str, claimed: &[&str]) -> Result<(), super::Error> {",
+      lines: 13, sha256: "5929e3108c71251070b90925398ee51d7b5030b131d261e770f2a444bf439cc6" },
+  ],
+  "crates/noble-contracts/src/inference/mod.rs": [
+    { annotation: "variants_suffix(\"Term\")", item: "pub(crate) enum Term {",
+      lines: 23, sha256: "a3e59dadb87a11de99f0285b5dab7fdf632b1327823f47b7abb831ccb9edf16f" },
+  ],
+  "crates/noble-contracts/src/intrinsic.rs": [
+    { annotation: "opaque", item: "fn debug_form_kind(kind: &FormKind, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {",
+      lines: 6, sha256: "dc77b2b97d5b71fb70c30969b6148ccfe70e07cc189ea759005afc135c852217" },
+    { annotation: "opaque", item: "fn debug_proof_dependency(",
+      lines: 16, sha256: "a7e38618f573f6f7d6995067782ab72dc66ba032f7a8144697b337b87a3cc2cc" },
+    { annotation: "rename(\"IntrinsicMeter\")", item: "struct Meter<'a> {",
+      lines: 7, sha256: "af149099953ff42060b75be1bc4416f25ba1fce095f1f9c9b97b038a565bef00" },
+    { annotation: "variants_suffix(\"Code\")", item: "enum Code {",
+      lines: 10, sha256: "7a87adf9158b5cb0bacf72b3d3ccde4a5d9172c704c01d11478422a24617eb92" },
+  ],
+  "crates/noble-contracts/src/lib.rs": [
+    { annotation: "variants_suffix(\"Expr\")", item: "pub enum ExprKind {",
+      lines: 34, sha256: "2fdd04e3c6b85d06d01153cb6d9aa71935d88584c0e71f45707a259ad0e32a79" },
+  ],
+  "crates/noble-contracts/src/source.rs": [
+    { annotation: "rename(\"SourcePrepared\")", item: "pub struct Prepared {",
+      lines: 20, sha256: "2eaef3abb8af04e8d7bcbac8e40870bc60e60ad1d40c0b6e18a5790b89a934cc" },
+  ],
+  "crates/noble-contracts/src/source/chunks.rs": [
+    { annotation: "variants_suffix(\"Scalar\")", item: "pub enum Scalar {",
+      lines: 6, sha256: "a33029a7eaf4a790fefcf5bce1eddcd8d44eacf3a4277f9f23e36a9b0a38c7c1" },
+    { annotation: "variants_suffix(\"Node\")", item: "pub enum Node {",
+      lines: 19, sha256: "6a56787ce015ee91bdf3d0818638d72d1c7b6177f21110e889fd3fc36feb13c1" },
+    { annotation: "rename(\"source_bytes\")", item: "source: alloc::vec::Vec<u8>,",
+      lines: 1, sha256: "58f4e27ef8d4038bd5ef2bef2d0d17196390eea4a6f465f4e78c32ab84c6a080" },
+    { annotation: "variants_suffix(\"Element\")", item: "pub enum Element {",
+      lines: 12, sha256: "2ac74f5af12fdcf57d6be1414704bd7bfbc73771e06a920dc315c3a9b28f4071" },
+    { annotation: "opaque", item: "struct ObserverHandle<'a>(&'a mut CandidateOutcomeObserver<'a>);",
+      lines: 1, sha256: "4cc011e932b011ac1af5c7e9037f166a743d1da94a71032309e3772bef30c42b" },
+    { annotation: "opaque", item: "fn observe(&mut self, outcome: &CandidateOutcome) {",
+      lines: 3, sha256: "7aadff513dde51bb4a90df5a6755302e58d85878b55f21e33e6f4eef558e58b5" },
+    { annotation: "exclude", item: "pub const fn new(",
+      lines: 9, sha256: "2c2f703fa6cdc6be4682e5def2d62cbf2a67a6c66c2372412386e03e20cbc4d6" },
+    { annotation: "exclude", item: "fn reborrow(&mut self) -> RankerSession<'_> {",
+      lines: 6, sha256: "f8ff46ac9551dddee04f598928f67aa8b368eed1b6c31b67debb5b0b22d24441" },
+    { annotation: "opaque", item: "struct RankerHandle<'a>(&'a mut dyn CandidateRanker);",
+      lines: 1, sha256: "573bbe018d7b7440275cd3627008a32c616ef26d27c0b548ab1083a8891bc12a" },
+    { annotation: "opaque", item: "fn model_identity(&self) -> [u8; REVISION_BYTES] {",
+      lines: 3, sha256: "6a35ead83ee60d3438aebe51563fe8c0912b260dfa3480ddb280d6a1fc70f84d" },
+    { annotation: "opaque", item: "fn provenance_matches(&self, identity: &RankingIdentity) -> bool {",
+      lines: 3, sha256: "39323e186c0fec386d46a3b6653c6a1dca125938bfabf9ce3542fd1225b2d824" },
+    { annotation: "opaque", item: "fn score(",
+      lines: 6, sha256: "d2674d4a72cf8b211bdb7118b8ede7df917db1e780cda57c09d8e8e63a594d49" },
+    { annotation: "opaque", item: "struct MonotonicClock(fn() -> u64);",
+      lines: 1, sha256: "dcfbb4beca5b3496b8c06a6e4803b3bdd9ef35c83dbd13bb6b1c33d54fde9201" },
+    { annotation: "opaque", item: "fn now_ns(&mut self) -> u64 {",
+      lines: 3, sha256: "5e88415743d4b753871353cff6582f73702c4237c3f565129e05b0cc02972f9a" },
+    { annotation: "rename(\"source_bytes\")", item: "pub source: alloc::vec::Vec<u8>,",
+      lines: 1, sha256: "1ac1b335e3b2bf7784824c1249855664e8db0b6f86a4f27d4d9ba8eed87b65a9" },
+    { annotation: "variants_suffix(\"Value\")", item: "enum Value {",
+      lines: 5, sha256: "d93e60d4c8a3ca9c6c6ca310f908f27a6bed4fdf97b78e4b671405feeb46aaa8" },
+    { annotation: "exclude", item: "pub fn complete(",
+      lines: 19, sha256: "91cd00a1ea5987521f14b96e6b13fd5419c9cade03c6a6bf24e2f1f1796f0d13" },
+    { annotation: "exclude", item: "pub fn complete_observed(",
+      lines: 20, sha256: "ab8d96a542fe2ebb8ad16f81533fd391d552e6b2ea8161191fb914c4b73338a3" },
+    { annotation: "exclude", item: "pub fn complete_ranked(",
+      lines: 20, sha256: "1dfcfe6034014b4048fe4b7cd8843ef6612c176871aa9dae5604e85e6405c40e" },
+    { annotation: "exclude", item: "pub fn complete_ranked_observed(",
+      lines: 21, sha256: "f494c036bff600b717cab47385f2249e7e601b546f3f459cce7e4906ed845d92" },
+    { annotation: "exclude", item: "pub fn complete_replayed<'observer>(",
+      lines: 25, sha256: "1b14c90b8a2b33aae8d914bbfc0b9d4b9f20c6c6c73825dab73eb4351fca608b" },
+  ],
+  "crates/noble-contracts/src/source/declared.rs": [
+    { annotation: "rename(\"source_bytes\")", item: "source: alloc::vec::Vec<u8>,",
+      lines: 1, sha256: "58f4e27ef8d4038bd5ef2bef2d0d17196390eea4a6f465f4e78c32ab84c6a080" },
+  ],
+  "crates/noble-contracts/src/source/declared/state/register/logical.rs": [
+    { annotation: "rename(\"source_bytes\")", item: "source: &'a [u8],",
+      lines: 1, sha256: "7050702421e87f3b3367a803261c9d474601086ec47bc543ea9dda2409d7528d" },
+  ],
+  "crates/noble-contracts/src/source/editor.rs": [
+    { annotation: "opaque", item: "fn debug_node(node: &Node, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {",
+      lines: 9, sha256: "551503703115a14a0ef93dee6c75b762e0761e799a3b3fe6e19c10444cee99de" },
+  ],
+  "crates/noble-contracts/src/source/procedures.rs": [
+    { annotation: "rename(\"ProcedureDiagnostic\")", item: "struct Diagnostic<'a> {",
+      lines: 4, sha256: "5afe2b662fafd8bd9965e29de3a023215430c42f26f5db16f260664f675d0ef5" },
+    { annotation: "exclude", item: "pub fn with_verifier(",
+      lines: 8, sha256: "a9c7332b152b17ea40b7ff096975cbb69218786eb1eebc9111728f901586d73e" },
+  ],
+  "crates/noble-contracts/src/source/procedures/acceptance.rs": [
+    { annotation: "opaque", item: "pub(super) struct OwnerVerifier(pub(super) Box<dyn EvidenceVerifier>);",
+      lines: 1, sha256: "a1645fac214375694cf7ea956059b01a6faee8ef7fc99cf101e1da03bf4c1563" },
+    { annotation: "opaque", item: "pub(super) fn verify(",
+      lines: 7, sha256: "17cf0e4ca63064ffe6d5d9485fa697120ab72f816ddd8c87bc6a8b9eb4c75d67" },
+    { annotation: "opaque", item: "fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {",
+      lines: 3, sha256: "931af0af1169532ea33a9852bc17dc2e47a8de3c5f0729a667281239b82fe5b7" },
+  ],
+  "crates/noble-contracts/src/source/procedures/composition.rs": [
+    { annotation: "rename(\"source_bytes\")", item: "pub source: Vec<u8>,",
+      lines: 1, sha256: "7c29010ca96d6406da01b4c2cdc4c3c1fc3e4b9660d556ec2a00e6570c6f56ae" },
+  ],
+  "crates/noble-contracts/src/source/procedures/persistence.rs": [
+    { annotation: "exclude", item: "pub fn load_with_verifier(",
+      lines: 11, sha256: "e22871f069591f46ea2943379becdaabfb95c1ab68544f0b2a82deb55e9a0c1b" },
+  ],
+  "crates/noble-contracts/src/source/proof.rs": [
+    { annotation: "rename(\"source_bytes\")", item: "source: &'a [u8],",
+      lines: 1, sha256: "7050702421e87f3b3367a803261c9d474601086ec47bc543ea9dda2409d7528d" },
+  ],
+  "crates/noble-contracts/src/source/sizechange.rs": [
+    { annotation: "rename(\"source_measure\")", item: "pub source: MeasureIndex,",
+      lines: 1, sha256: "72a7bb809b2fe238b1125f59e4f9b6258286ce18db6e0fab30f45a209737ebf9" },
+  ],
+  "crates/noble-kernel/src/contracts.rs": [
+    { annotation: "variants_suffix(\"Behavior\")", item: "pub enum Behavior {",
+      lines: 97, sha256: "db4039e28f2c3c31f922385970681af448ca4b40e22f46469ad13949638ba1d4" },
+  ],
+  "crates/noble-kernel/src/shapes.rs": [
+    { annotation: "variants_suffix(\"Pattern\")", item: "pub enum Pattern {",
+      lines: 54, sha256: "f7fc9508b3800a321d135d076731a5875dd87663bc2e3231afc8b0b32a3bbb96" },
+  ],
+  "crates/noble-kernel/src/types.rs": [
+    { annotation: "variants_suffix(\"Type\")", item: "pub enum Ty {",
+      lines: 53, sha256: "1b8e93751128a4cfb9fba5f2caf00d1303a26884236b8192c8b5563949898936" },
+  ],
+  "crates/noble-kernel/src/untrusted.rs": [
+    { annotation: "variants_suffix(\"Lit\")", item: "pub enum Lit {",
+      lines: 10, sha256: "edc9296e1952411253c49b15ec493c14c977fe5a8002cdb35a904b682a953072" },
+  ],
+  "crates/noble-wasm/src/lowering.rs": [
+    { annotation: "variants_suffix(\"Operation\")", item: "pub(crate) enum Operation {",
+      lines: 8, sha256: "2be3576075a157a74201477e92c74e51f232201791496bb4f1be844bee13d68a" },
+  ],
+  "crates/noble-wasm/src/source/mod.rs": [
+    { annotation: "opaque", item: "fn debug_origin(",
+      lines: 60, sha256: "a1af6f7d8ea9b8fa5872606c13875afe8882c682316962d90c09b27b60a4d573" },
+  ],
+  "crates/noble-wasm/src/source/plan.rs": [
+    { annotation: "variants_suffix(\"Action\")", item: "pub(super) enum Action {",
+      lines: 38, sha256: "5f2fac6a106b0f670c8bbd804f4adf0afabcf9d8704444ba010ee5f38a6b0694" },
+  ],
 };
 
 function opaqueBody(source, name) {
@@ -157,6 +358,94 @@ function opaqueBody(source, name) {
   }
   fail('OPAQUE-MODEL', `${name}: unterminated function body`);
 }
+// Preserve offsets/newlines while removing Rust comments and literal contents.
+// Delimiters inside strings, raw strings, characters or nested block comments
+// cannot terminate a reviewed item or introduce an extraction annotation.
+function rustCode(text, file) {
+  const code = text.split('');
+  const blank = (start, end) => {
+    for (let index = start; index < end; index++) if (code[index] !== '\n') code[index] = ' ';
+  };
+  for (let at = 0; at < text.length;) {
+    const start = at;
+    if (text.startsWith('//', at)) {
+      at = text.indexOf('\n', at);
+      if (at < 0) at = text.length;
+    } else if (text.startsWith('/*', at)) {
+      at += 2;
+      let depth = 1;
+      while (at < text.length && depth) {
+        if (text.startsWith('/*', at)) { depth++; at += 2; }
+        else if (text.startsWith('*/', at)) { depth--; at += 2; }
+        else at++;
+      }
+      if (depth) fail('SOURCE-FILTER', `${file}: unterminated Rust comment`);
+    } else {
+      const raw = ['r', 'b', 'c'].includes(text[at]) &&
+        text.slice(at).match(/^(?:b|c)?r(#{0,255})"/);
+      if (raw) {
+        const closing = text.indexOf(`"${raw[1]}`, at + raw[0].length);
+        if (closing < 0) fail('SOURCE-FILTER', `${file}: unterminated Rust raw string`);
+        at = closing + 1 + raw[1].length;
+      } else if (text[at] === '"') {
+        at++;
+        while (at < text.length && text[at] !== '"') at += text[at] === '\\' ? 2 : 1;
+        if (at >= text.length) fail('SOURCE-FILTER', `${file}: unterminated Rust string`);
+        at++;
+      } else if (text[at] === "'") {
+        const character = text.slice(at).match(/^'(?:\\(?:u\{[\da-fA-F_]+\}|x[\da-fA-F]{2}|[^\n])|[^'\\\n])'/u);
+        if (character) at += character[0].length;
+        else { at++; continue; } // A lifetime, not a character literal.
+      } else { at++; continue; }
+    }
+    blank(start, at);
+  }
+  return code.join('');
+}
+// The annotation (with its argument) at `start`, the first line of the item it
+// decorates (after further attributes, comments and blank lines), and the
+// complete item text from that line through the end of its body.
+export function annotatedItem(text, start, file, code = rustCode(text, file)) {
+  const matched = text.slice(start).match(/^charon\s*::\s*([A-Za-z_][A-Za-z_0-9]*)(?:\s*\(\s*("[^"\n]*")\s*\))?\s*\]/);
+  if (!matched) fail('SOURCE-FILTER', `${file}: unsupported Charon annotation`);
+  // Normalize syntax around the argument, never bytes inside its quotes.
+  const annotation = matched[1] + (matched[2] === undefined ? '' : `(${matched[2]})`);
+  let at = start + matched[0].length;
+  while (at < code.length) {
+    if (/\s/.test(code[at])) { at++; continue; }
+    if (!code.startsWith('#[', at)) break;
+    at += 2;
+    let depth = 1;
+    while (at < code.length && depth) {
+      if (code[at] === '[') depth++;
+      if (code[at] === ']') depth--;
+      at++;
+    }
+    if (depth) fail('SOURCE-FILTER', `${file}: unterminated Rust attribute`);
+  }
+  if (at === code.length) fail('SOURCE-FILTER', `${file}: annotation without an item`);
+  const lineEnd = text.indexOf('\n', at);
+  const item = text.slice(at, lineEnd < 0 ? text.length : lineEnd).trim();
+  // A function ends at the brace that closes its body. Another item ends at
+  // `;` or `,` outside parentheses, brackets and generic arguments (a tuple
+  // struct or field), or at the brace that closes its body. The arrow in an
+  // Fn bound is not a generic closing bracket.
+  let depth = 0;
+  let braces = 0;
+  for (let index = at; index < code.length; index++) {
+    const character = code[index];
+    if (braces > 0) {
+      if (character === '{') braces++;
+      else if (character === '}' && --braces === 0) return { annotation, item, text: text.slice(at, index + 1) };
+    } else if (character === '(' || character === '[' || character === '<') depth++;
+    else if (character === ')' || character === ']' || character === '>' && code[index - 1] !== '-') depth--;
+    else if (depth === 0 && character === '{') braces = 1;
+    else if (depth === 0 && (character === ';' || character === ',')) {
+      return { annotation, item, text: text.slice(at, index + 1) };
+    }
+  }
+  fail('SOURCE-FILTER', `${file}: unterminated annotated item ${item}`);
+}
 const kinds = { functions: 'fun_decls', types: 'type_decls', globals: 'global_decls',
   trait_decls: 'trait_decls', trait_impls: 'trait_impls' };
 
@@ -171,21 +460,70 @@ export function sourcePolicy(sourceFiles, readSource) {
   for (const file of Object.keys(sourceFiles).filter(file =>
     lanes.some(lane => file.startsWith(`crates/${lane.package}/src/`)) && file.endsWith('.rs'))) {
     const text = readSource(file);
-    for (const match of text.matchAll(/charon\s*::\s*([A-Za-z_][A-Za-z_0-9]*)/g)) {
-      if (match[1] !== 'variants_suffix' && !(match[1] === 'opaque' && inheritedOpaqueSources[file])) {
+    const code = rustCode(text, file);
+    const annotations = [];
+    const annotationControls = new Set();
+    for (const match of code.matchAll(/#\[\s*(charon\s*::\s*([A-Za-z_][A-Za-z_0-9]*))/g)) {
+      const start = match.index + match[0].indexOf('charon');
+      annotationControls.add(start);
+      if (match[2] === 'opaque' && inheritedOpaqueSources[file]) continue;
+      if (!['rename', 'opaque', 'exclude', 'variants_suffix'].includes(match[2])) {
         fail('SOURCE-FILTER', `${file}: unreviewed Charon annotation ${match[1]}`);
       }
+      annotations.push(annotatedItem(text, start, file, code));
+    }
+    // Every live control path must own one recognized attribute occurrence.
+    // Macro-fed paths and alternative attribute spellings are not absences.
+    for (const match of code.matchAll(/\bcharon\s*::/g)) {
+      if (!annotationControls.delete(match.index)) {
+        fail('SOURCE-FILTER', `${file}: unreviewed Charon control token`);
+      }
+    }
+    const reviewed = reviewedAnnotations[file] ?? [];
+    equal(annotations.map(({ annotation, item }) => ({ annotation, item })),
+      reviewed.map(({ annotation, item }) => ({ annotation, item })),
+      'SOURCE-FILTER', `${file}: unreviewed Charon annotation set`);
+    for (const [index, row] of reviewed.entries()) {
+      equal(annotations[index].text.split('\n').length, row.lines,
+        'SOURCE-FILTER', `${file}::${row.item}: item extent`);
+      equal(sha(annotations[index].text), row.sha256,
+        row.annotation === 'opaque' ? 'OPAQUE-MODEL' : 'SOURCE-FILTER', `${file}::${row.item}`);
     }
     // The extraction targets the non-test library, so exact cfg(test) items
-    // cannot select production bodies. Every other cfg branch needs review.
-    for (const match of text.matchAll(/#\[\s*(cfg(?:_attr)?)\s*\(([^\n]*)/g)) {
+    // cannot select production bodies, and test-only derives add no production
+    // impl. Every other cfg branch needs review.
+    const debugDerives = [];
+    const conditionalControls = new Set();
+    for (const match of code.matchAll(/#\[\s*(cfg(?:_attr)?)\s*\(([^\n]*)/g)) {
+      conditionalControls.add(match.index + match[0].indexOf(match[1]));
+      const exact = text.slice(match.index, match.index + match[0].length);
+      const following = code.slice(match.index + match[0].length).split('\n').slice(1)
+        .map(line => line.trim()).find(line => line && !line.startsWith('#['));
       const allowed = match[1] === 'cfg' && match[2] === 'test)]' ||
         match[1] === 'cfg_attr' && ['crates/noble-kernel/src/words.rs',
           'crates/noble-kernel/src/untrusted.rs'].includes(file) && match[2] === 'test, derive(PartialEq, Eq))]' ||
         match[1] === 'cfg_attr' && file === 'crates/noble-kernel/src/types.rs' &&
           match[2] === 'test, derive(Eq))]' &&
-          text.slice(match.index + match[0].length).startsWith('\npub enum NominalShape {');
+          text.slice(match.index + match[0].length).startsWith('\npub enum NominalShape {') ||
+        // #97: Debug for the proof-term trees is derived only for test diagnostics.
+        match[1] === 'cfg_attr' && file === 'crates/noble-contracts/src/intrinsic.rs' &&
+          match[2] === 'test, derive(Debug))]' &&
+          ['enum Code {', 'enum Sort {', 'enum Proposition {'].includes(following);
       if (!allowed) fail('SOURCE-FILTER', `${file}: unreviewed conditional source selection`);
+      if (file === 'crates/noble-contracts/src/intrinsic.rs' && exact === '#[cfg_attr(test, derive(Debug))]') {
+        debugDerives.push(following);
+      }
+    }
+    // Conditional metadata must have the same exact attribution as Charon
+    // controls. Runtime cfg!(...) macros are not item-selection metadata.
+    for (const match of code.matchAll(/\bcfg(?:_attr)?\s*\(/g)) {
+      if (!conditionalControls.delete(match.index)) {
+        fail('SOURCE-FILTER', `${file}: unreviewed conditional source-selection token`);
+      }
+    }
+    if (file === 'crates/noble-contracts/src/intrinsic.rs') {
+      equal(debugDerives, ['enum Code {', 'enum Sort {', 'enum Proposition {'],
+        'SOURCE-FILTER', `${file}: test Debug derive set`);
     }
   }
 }
@@ -209,6 +547,34 @@ function isDropGlue(decl, crate) {
 }
 function isVTable(decl) {
   return decl?.src?.VTableInstance && decl.item_meta.name.some(part => part.Builtin?.[0] === 'VTable');
+}
+function loweredClosureMethods(decl, crate, functions) {
+  const kind = decl.src.Closure.kind;
+  const trait = crate.trait_decls[decl.impl_trait?.id];
+  if (!['Fn', 'FnMut', 'FnOnce'].includes(kind) ||
+      trait?.item_meta.is_local !== false || trait.item_meta.lang_item !== kind ||
+      directRustName(trait) !== `core::ops::function::${kind}` ||
+      decl.is_negative !== false || decl.is_unsafe !== false ||
+      decl.consts?.length !== 0 || decl.types?.length !== 0 || decl.methods?.length !== 1) {
+    fail('CLOSURE-INSTANCE', `invalid compiler call-trait instance ${decl.def_id}`);
+  }
+  const method = decl.methods[0];
+  const body = crate.fun_decls[method.skip_binder?.id];
+  const owner = body?.src?.TraitImpl;
+  equal(method.kind, { TraitMethod: [decl.impl_trait.id, 0] }, 'CLOSURE-INSTANCE', 'method slot');
+  if (!Number.isInteger(method.skip_binder?.id) || body?.def_id !== method.skip_binder.id ||
+      body?.item_meta.is_local !== true || !body.body?.Structured ||
+      owner?.impl_ref?.id !== decl.def_id || owner.trait_ref?.id !== decl.impl_trait.id ||
+      owner.item_id !== 0 || owner.reuses_default !== false) {
+    fail('CLOSURE-INSTANCE', `method does not belong to compiler instance ${decl.def_id}`);
+  }
+  equal(body.item_meta.span, decl.item_meta.span, 'CLOSURE-INSTANCE', 'closure source span');
+  const methodName = { Fn: 'call', FnMut: 'call_mut', FnOnce: 'call_once' }[kind];
+  const translated = functions.filter(row => row.is_local && !row.is_opaque && !row.loop &&
+    row.def_id === body.def_id && row.rust_name.endsWith(`::${methodName}`) &&
+    row.lean_name.endsWith(`.${methodName}`));
+  if (translated.length !== 1) fail('CLOSURE-INSTANCE', `method is not independently translated: ${body.def_id}`);
+  return translated.map(row => ({ def_id: row.def_id, lean_name: row.lean_name }));
 }
 function directRustName(decl) {
   return decl.item_meta.name.every(part => part.Ident)
@@ -257,10 +623,10 @@ function loopOrigin(item, declaration, translation, crate, spans) {
 }
 
 export function account(lane, llbc, translation, sources) {
-  if (llbc.has_errors !== false || llbc.charon_version !== '0.1.254') fail('LLBC', `${lane.id}: failed/unreviewed Charon output`);
+  if (llbc.has_errors !== false || llbc.charon_version !== '0.1.291') fail('LLBC', `${lane.id}: failed/unreviewed Charon output`);
   const crate = llbc.translated;
   if (crate?.crate_name !== lane.crate || translation.crate !== lane.crate ||
-      translation.aeneas_version !== '505b6ca' || translation.charon_version !== '0.1.254') {
+      translation.aeneas_version !== '1238879' || translation.charon_version !== '0.1.291') {
     fail('TRANSLATOR', lane.id);
   }
   for (const option of ['start_from', 'start_from_if_exists', 'start_from_attribute', 'include', 'exclude', 'opaque', 'rustc_args', 'targets']) {
@@ -270,6 +636,8 @@ export function account(lane, llbc, translation, sources) {
     equal(crate.options?.[option], false, 'EXTRACTION-SCOPE', `${lane.id}: ${option}`);
   }
   if (crate.options?.preset !== 'Aeneas' || crate.options?.error_on_warnings !== true) fail('EXTRACTION-SCOPE', lane.id);
+  // The reviewed `'static` promoted-constant caveat covers exactly this mode.
+  if (crate.options?.inline_anon_consts !== true) fail('EXTRACTION-SCOPE', `${lane.id}: inline_anon_consts`);
   const targets = crate.target_information;
   if (targets?.length !== 1 || targets[0].key !== 'x86_64-unknown-linux-gnu' ||
       targets[0].value?.target_pointer_size !== 8 || targets[0].value?.is_little_endian !== true) fail('TARGET', lane.id);
@@ -284,12 +652,24 @@ export function account(lane, llbc, translation, sources) {
     equal(digest, sources[name], 'LLBC-SOURCE', `${lane.id}: source contents differ: ${name}`);
     collectedFiles[name] = digest;
   }
+  const testOnlySources = {};
   for (const file of Object.keys(sources).filter(file => file.startsWith(`crates/${lane.package}/src/`) && file.endsWith('.rs'))) {
-    if (!collectedFiles[file]) fail('SOURCE-COVERAGE', `${lane.id}: uncollected production source ${file}`);
+    if (collectedFiles[file]) continue;
+    const review = testOnlySourceModules[file];
+    const parent = review && crate.files.find(item => item?.name?.Local === review.parent && item.crate_name === lane.crate);
+    if (!parent || !collectedFiles[review.parent] ||
+        rustCode(parent.contents, review.parent).split(review.directive).length !== 2) {
+      fail('SOURCE-COVERAGE', `${lane.id}: uncollected production source ${file}`);
+    }
+    testOnlySources[file] = { source_sha256: sources[file], parent: review.parent,
+      parent_sha256: collectedFiles[review.parent], directive: review.directive,
+      disposition: 'compiler-uncollected-exact-test-only-module' };
   }
   const inventories = {};
   const collector = {};
   const spans = compilerSpans(crate);
+  const opaqueFunctions = lane.id === 'kernel' ? inheritedOpaque : reviewedOpaque[lane.id];
+  const opaqueTypes = lane.id === 'kernel' ? [] : reviewedOpaqueTypes[lane.id];
   for (const [kind, field] of Object.entries(kinds)) {
     if (!Array.isArray(translation[kind]) || !Array.isArray(crate[field])) fail('INVENTORY', `${lane.id}: ${kind}`);
     uniqueNames(translation[kind], `${lane.id}/${kind}`);
@@ -315,7 +695,8 @@ export function account(lane, llbc, translation, sources) {
           if (item.is_opaque !== (declaration.body === 'Opaque')) fail('OPACITY', item.rust_name);
           if (declaration.signature?.is_unsafe !== false) fail('UNSAFE', item.rust_name);
         }
-        const expectedFile = kind === 'types' || kind === 'trait_decls' ? 'Types.lean' : 'Funs.lean';
+        const expectedFile = kind === 'types' && opaqueTypes.includes(item.rust_name) ? 'TypesExternal_Template.lean'
+          : kind === 'types' || kind === 'trait_decls' ? 'Types.lean' : 'Funs.lean';
         if (!(kind === 'functions' && item.is_opaque) && item.lean_file !== expectedFile) {
           fail('LOCAL-OWNER', `${item.rust_name}: ${item.lean_file}`);
         }
@@ -325,6 +706,7 @@ export function account(lane, llbc, translation, sources) {
     collector[kind] = local.map(decl => {
       let translated = rows.filter(row => row.is_local && row.def_id === decl.def_id);
       let disposition = 'translated';
+      let loweredMethods = null;
       if (kind === 'functions' && decl.src?.GlobalInitializer) {
         const global = crate.global_decls[decl.src.GlobalInitializer.id];
         translated = translation.globals.filter(row => row.is_local && row.def_id === decl.src.GlobalInitializer.id);
@@ -339,9 +721,15 @@ export function account(lane, llbc, translation, sources) {
       } else if (kind === 'types' && decl.kind?.Alias && !translated.length) {
         // Aliases have no independent body; the translator expands their type.
         disposition = 'type-alias-expanded';
+      } else if (kind === 'trait_impls' && decl.src?.Closure && !translated.length) {
+        // Aeneas may lower a compiler closure instance to its own call method.
+        // Every real method body must already have passed function accounting.
+        loweredMethods = loweredClosureMethods(decl, crate, inventories.functions);
+        disposition = 'compiler-closure-instance-methods-translated';
       }
       if (!translated.length && !['compiler-generated-destruct-not-translated',
-        'compiler-generated-vtable-not-translated', 'type-alias-expanded'].includes(disposition)) {
+        'compiler-generated-vtable-not-translated', 'type-alias-expanded',
+        'compiler-closure-instance-methods-translated'].includes(disposition)) {
         fail('OMITTED-BODY', `${lane.id}: ${kind} ${decl.def_id} ${directRustName(decl) ?? ''}`);
       }
       // An ADT constructor has a real compiler body and a real translated
@@ -355,22 +743,31 @@ export function account(lane, llbc, translation, sources) {
       if (kind === 'functions' && decl.body === 'Opaque' &&
           !['compiler-generated-vtable-not-translated', 'compiler-generated-destruct-not-translated'].includes(disposition)) {
         const names = translated.map(row => row.rust_name);
-        if (!names.length || names.some(name => !inheritedOpaque.includes(name))) fail('LOCAL-OPAQUE', names.join(','));
-        disposition = 'inherited-opaque-model';
+        if (!names.length || names.some(name => !opaqueFunctions.includes(name))) fail('LOCAL-OPAQUE', names.join(','));
+        disposition = lane.id === 'kernel' ? 'inherited-opaque-model' : 'reviewed-opaque-model';
+      }
+      if (kind === 'types' && decl.kind === 'Opaque') {
+        const names = translated.map(row => row.rust_name);
+        if (!names.length || names.some(name => !opaqueTypes.includes(name))) fail('LOCAL-OPAQUE', names.join(','));
+        disposition = 'reviewed-opaque-type-model';
       }
       return { def_id: decl.def_id, source_name: decl.item_meta.name, source_span: decl.item_meta.span,
         disposition, expanded_alias: disposition === 'type-alias-expanded' ? decl.kind.Alias : null,
+        ...(loweredMethods === null ? {} : { lowered_methods: loweredMethods }),
         lean_names: translated.map(row => row.lean_name).sort() };
     }).sort((a, b) => a.def_id - b.def_id);
     inventories[kind] = rows;
   }
   equal(inventories.functions.filter(item => item.is_local && item.is_opaque).map(item => item.rust_name).sort(),
-    lane.id === 'kernel' ? inheritedOpaque : [], 'LOCAL-OPAQUE', lane.id);
+    [...opaqueFunctions].sort(), 'LOCAL-OPAQUE', lane.id);
+  equal(inventories.types.filter(item => item.is_local && item.lean_file !== 'Types.lean').map(item => item.rust_name).sort(),
+    [...opaqueTypes].sort(), 'LOCAL-OPAQUE', `${lane.id} types`);
   for (const kind of ['trait_decls', 'trait_impls']) {
     if (inventories[kind].some(item => item.lean_file.includes('External'))) fail('EXTERNAL-KIND', `${lane.id}/${kind}`);
   }
   if (!collector.functions.length || !inventories.functions.some(item => item.is_local && !item.is_opaque)) fail('INVENTORY', `${lane.id}: empty`);
-  return { crate: lane.crate, collected_files: collectedFiles, collector, translation: inventories };
+  return { crate: lane.crate, collected_files: collectedFiles, test_only_sources: testOnlySources,
+    collector, translation: inventories };
 }
 
 const sourceRoot = (lane, type, method) => ({ lane, kind: 'functions', type, method, source: true });

@@ -2,7 +2,7 @@
 # Task-4.5 refusal matrix for the M2 proof gate.
 #
 # Runs the positive baseline (verification/m2-proof-gate.sh on the repository
-# proof root), then four mutated scratch copies of proofs/m2. Every mutation
+# proof root), then six mutated scratch copies of proofs/m2. Every mutation
 # must be REFUSED: the gate exits non-zero at its named check. The scratch
 # copies share the lake package cache through hard links (the mutable
 # .lake/build and .lake/config directories are real copies), so each run is
@@ -21,6 +21,18 @@
 #   external       FunsExternal.lean (generated module breaks)
 #   unexecuted-    the coverage_positive theorem file deleted with -> REQUIRED-
 #   coverage       the tree kept building                              THEOREMS
+#   foreign-       a `_native.decide` axiom of another type (a     -> REQUIRED-
+#   native-type    local Nat bound) in the generated kernel's         THEOREMS
+#                  external models, reached by acceptance.check
+#   kernel-owned-  the exact literal-size `_native.decide` shape   -> REQUIRED-
+#   literal        (a `toStr` literal) in the same kernel model       THEOREMS
+#   foreign-       the exact literal-size `_native.decide` shape   -> REQUIRED-
+#   owner-literal  owned by another module (a `toStr` literal in      THEOREMS
+#                  embedEnv)
+# The last three show that the gate admits no `_native.decide` axiom on a
+# required theorem: not another type in a kernel module, and not the
+# literal-size shape under any owner. The gate admitted that shape in the
+# kernel modules until #97 removed every literal from the checker.
 set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -140,6 +152,54 @@ DECEQ
     [ ! -f "$copy/NobleM2/Termination.lean" ] \
       || { echo "APPLY FAILED"; return 1; }
     ;;
+  foreign-native-type)
+    # A local `decide +native` on a Nat bound inside the external model of
+    # slice/array equality, which acceptance.check reaches: a kernel-owned
+    # `_native.decide` axiom whose type is not a literal size. Written to a
+    # temp file and moved, so the hard-linked repository file is untouched.
+    awk '
+      /^def Shared0Slice\.Insts\.CoreCmpPartialEqArray\.eq$/ { target = 1 }
+      { print }
+      target && /^  \(left : Slice T\) \(right : Array U N\) : Result Bool :=$/ {
+        print "  have _nonLiteral : (4 : Nat) ≤ 2 ^ 32 - 1 := by decide +native"
+        target = 0
+      }
+    ' "$PROOF_ROOT/NobleKernel/FunsExternal.lean" > "$SCRATCH/foreign-native-type.lean"
+    [ "$(grep -c '_nonLiteral' "$SCRATCH/foreign-native-type.lean")" -eq 1 ] \
+      || { echo "APPLY FAILED"; return 1; }
+    mv "$SCRATCH/foreign-native-type.lean" "$copy/NobleKernel/FunsExternal.lean"
+    ;;
+  kernel-owned-literal)
+    # A `toStr` literal in the same kernel external model: exactly the
+    # generated literal-size axiom shape, owned by NobleKernel.FunsExternal
+    # and reached by acceptance.check. Admitted until #97 removed every
+    # literal from the checker; it must now refuse.
+    awk '
+      /^def Shared0Slice\.Insts\.CoreCmpPartialEqArray\.eq$/ { target = 1 }
+      { print }
+      target && /^  \(left : Slice T\) \(right : Array U N\) : Result Bool :=$/ {
+        print "  have _kernelLiteral : Aeneas.Std.Str := Aeneas.Std.toStr \"refusal-probe\""
+        target = 0
+      }
+    ' "$PROOF_ROOT/NobleKernel/FunsExternal.lean" > "$SCRATCH/kernel-owned-literal.lean"
+    [ "$(grep -c '_kernelLiteral' "$SCRATCH/kernel-owned-literal.lean")" -eq 1 ] \
+      || { echo "APPLY FAILED"; return 1; }
+    mv "$SCRATCH/kernel-owned-literal.lean" "$copy/NobleKernel/FunsExternal.lean"
+    ;;
+  foreign-owner-literal)
+    # The exact literal-size shape (a `toStr` literal) elaborated inside
+    # embedEnv, so every refinement theorem depends on an axiom of that shape
+    # owned by NobleM2.Embed instead of the generated kernel modules.
+    awk '
+      { print }
+      /^def embedEnv \(env : Env\) : noble_kernel\.contracts\.Env :=$/ {
+        print "  have _foreignLiteral : Aeneas.Std.Str := Aeneas.Std.toStr \"refusal-probe\""
+      }
+    ' "$PROOF_ROOT/NobleM2/Embed.lean" > "$SCRATCH/foreign-owner-literal.lean"
+    [ "$(grep -c '_foreignLiteral' "$SCRATCH/foreign-owner-literal.lean")" -eq 1 ] \
+      || { echo "APPLY FAILED"; return 1; }
+    mv "$SCRATCH/foreign-owner-literal.lean" "$copy/NobleM2/Embed.lean"
+    ;;
   *) echo "unknown case $label"; return 1 ;;
   esac
 
@@ -154,6 +214,23 @@ DECEQ
   if ! printf '%s\n' "$out" | grep -q "^\[m2-gate\] FAIL $expect"; then
     echo "REFUSAL at wrong check (expected $expect)"; return 1
   fi
+  # The three native-axiom controls must be refused for their probe axiom, not
+  # for an unrelated reason that happens to fail the same check.
+  local reason=''
+  case "$label" in
+    foreign-native-type|kernel-owned-literal) reason='CoreCmpPartialEqArray.eq._native.decide.ax_' ;;
+    foreign-owner-literal) reason='embedEnv._native.decide.ax_' ;;
+  esac
+  if [ -n "$reason" ]; then
+    # Lean wraps the axiom list over several lines, so the two facts are
+    # matched separately: the audit refused, and its output names the probe.
+    if ! printf '%s\n' "$out" | grep -q 'm2-gate: forbidden axiom' \
+        || ! printf '%s\n' "$out" | grep -q "$reason"; then
+      echo "REFUSAL without naming the probe axiom (*$reason*)"
+      return 1
+    fi
+    echo "refused for the probe axiom: *$reason*"
+  fi
   echo "refused: gate exit $rc at $expect"
   return 0
 }
@@ -163,7 +240,10 @@ for case_label in \
   'proof-hole NO-SORRY' \
   'substituted-subject REFINEMENT-SUBJECT' \
   'unexplained-external BUILD' \
-  'unexecuted-coverage REQUIRED-THEOREMS'
+  'unexecuted-coverage REQUIRED-THEOREMS' \
+  'foreign-native-type REQUIRED-THEOREMS' \
+  'kernel-owned-literal REQUIRED-THEOREMS' \
+  'foreign-owner-literal REQUIRED-THEOREMS'
 do
   # shellcheck disable=SC2086
   run_case $case_label || rc_all=1
@@ -171,7 +251,7 @@ done
 
 echo
 if [ "$rc_all" -eq 0 ]; then
-  echo "== refusal matrix complete: baseline passes, all four mutations refused =="
+  echo "== refusal matrix complete: baseline passes, all seven mutations refused =="
 else
   echo "== refusal matrix INCOMPLETE =="
 fi

@@ -12,6 +12,14 @@ pub(super) enum Material {
     Stack(alloc::vec::Vec<noble_kernel::types::Ty>, Extent),
 }
 
+/// Outcome of comparing one position of two stacks in `stack_difference`.
+#[octet::sealed_enum]
+enum StackWalk {
+    Next(u32, u32),
+    Differ(u32, alloc::string::String, alloc::string::String),
+    Alike,
+}
+
 /// Two independent measures of one materialized value or stack.
 ///
 /// `constructors` is the logical language type size checked against
@@ -67,26 +75,72 @@ impl super::Arena {
         )]
         // Every pushed entry follows its own successful unit work charge.
         let work_limit = attempt!(crate::offset(meter.limits.work, span));
+        let mut failure = None;
         loop {
-            attempt!(meter.charge(1, span));
-            id = attempt!(self.root(id, span, meter));
-            match attempt!(self.get(id, span)) {
-                super::Term::Push(stack, value) => {
-                    let described = attempt!(self.describe_stack(value, span, meter));
-                    if suffix.len() >= work_limit {
-                        return Err(crate::internal(span));
-                    }
-                    suffix.push(described);
-                    id = stack;
+            match self.suffix_step(id, &mut suffix, work_limit, span, meter) {
+                Ok(Some(stack)) => id = stack,
+                Ok(None) => break,
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
                 }
-                super::Term::Hole(super::Sort::Stack)
-                | super::Term::Empty
-                | super::Term::RigidStack(_) => break,
-                _ => return Err(crate::internal(span)),
             }
+        }
+        if let Some(problem) = failure {
+            return Err(problem);
         }
         suffix.reverse();
         Ok(suffix)
+    }
+
+    #[expect(
+        tigerstyle::missing_const_fn,
+        tigerstyle::numeric_units,
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; the step charges the meter, resolves links and renders a type through non-const arena calls and pushes onto the caller's String suffix, so it needs the Vec rather than a slice; work_limit is the entry count the caller derives from the meter's work limit, named as in editor_stack_suffix."
+    )]
+    /// One charged step of `editor_stack_suffix`: the next stack below a push, or `None` at its base.
+    fn suffix_step(
+        &self,
+        id: u32,
+        suffix: &mut alloc::vec::Vec<alloc::string::String>,
+        work_limit: usize,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<Option<u32>, crate::Diagnostic> {
+        attempt!(meter.charge(1, span));
+        let id = attempt!(self.root(id, span, meter));
+        match attempt!(self.get(id, span)) {
+            super::Term::Push(stack, value) => {
+                let described = attempt!(self.describe_stack(value, span, meter));
+                if suffix.len() >= work_limit {
+                    return Err(crate::internal(span));
+                }
+                suffix.push(described);
+                Ok(Some(stack))
+            }
+            super::Term::Hole(super::Sort::Stack)
+            | super::Term::Empty
+            | super::Term::RigidStack(_) => Ok(None),
+            super::Term::Hole(super::Sort::Value)
+            | super::Term::RigidValue(_)
+            | super::Term::Link(_)
+            | super::Term::Unit
+            | super::Term::Bool
+            | super::Term::I64
+            | super::Term::Text
+            | super::Term::Syntax
+            | super::Term::Contract
+            | super::Term::Evidence
+            | super::Term::Certified
+            | super::Term::Resource(_)
+            | super::Term::Nominal(_)
+            | super::Term::GenericNominal(_, _, _)
+            | super::Term::Pair(_, _)
+            | super::Term::Sum(_, _)
+            | super::Term::List(_)
+            | super::Term::Program(_, _) => Err(crate::internal(span)),
+        }
     }
 
     pub(crate) fn describe_stack(
@@ -260,18 +314,9 @@ impl super::Arena {
                 Material::Value(noble_kernel::types::Ty::Resource(kind), Extent::LEAF)
             }
             super::Term::Nominal(id) => {
-                let mut shape = None;
-                let mut at = 0usize;
-                while at < self.nominals.len() {
-                    let (known, candidate) = &self.nominals[at];
-                    if *known == id {
-                        shape = Some(candidate);
-                        break;
-                    }
-                    at += 1;
-                }
-                let shape = match shape {
-                    Some(shape) => shape,
+                let shape = match crate::scan::find_first(&self.nominals, |(known, _)| *known == id)
+                {
+                    Some((_, shape)) => shape,
                     None => return Err(crate::internal(span)),
                 };
                 // The registered descriptor is copied into every occurrence;
@@ -378,43 +423,77 @@ impl super::Arena {
         let mut expected = attempt!(self.root(expected, span, meter));
         let mut actual = attempt!(self.root(actual, span, meter));
         let mut shared = 0_u32;
+        let mut outcome = Ok(None);
         while shared < super::STACK_CAP {
-            attempt!(meter.charge(1, span));
-            let expected_top =
-                if let super::Term::Push(rest, top) = attempt!(self.get(expected, span)) {
-                    Some((rest, top))
-                } else {
-                    None
-                };
-            let actual_top = if let super::Term::Push(rest, top) = attempt!(self.get(actual, span))
-            {
-                Some((rest, top))
-            } else {
-                None
-            };
-            let expected_text = attempt!(rendering::describe(
-                self,
-                expected_top.map_or(expected, |(_, top)| top),
-                span,
-                meter
-            ));
-            let actual_text = attempt!(rendering::describe(
-                self,
-                actual_top.map_or(actual, |(_, top)| top),
-                span,
-                meter
-            ));
-            if expected_text != actual_text {
-                return Ok(Some((shared, expected_text, actual_text)));
+            match self.difference_step(expected, actual, shared, span, meter) {
+                Ok(StackWalk::Next(expected_rest, actual_rest)) => {
+                    expected = expected_rest;
+                    actual = actual_rest;
+                    shared = shared.saturating_add(1);
+                }
+                Ok(StackWalk::Differ(at, expected_text, actual_text)) => {
+                    outcome = Ok(Some((at, expected_text, actual_text)));
+                    break;
+                }
+                Ok(StackWalk::Alike) => break,
+                Err(problem) => {
+                    outcome = Err(problem);
+                    break;
+                }
             }
-            let (Some((expected_rest, _)), Some((actual_rest, _))) = (expected_top, actual_top)
-            else {
-                return Ok(None);
-            };
-            expected = attempt!(self.root(expected_rest, span, meter));
-            actual = attempt!(self.root(actual_rest, span, meter));
-            shared = shared.saturating_add(1);
         }
-        Ok(None)
+        outcome
+    }
+
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-maintainers; expected and actual are ordered IDs in the same term arena from the rejected stack equation."
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the step charges the meter, reads the term arena and renders types into owned Strings through non-const calls."
+    )]
+    /// One charged position of `stack_difference`: both rests when the tops render alike.
+    fn difference_step(
+        &self,
+        expected: u32,
+        actual: u32,
+        shared: u32,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<StackWalk, crate::Diagnostic> {
+        attempt!(meter.charge(1, span));
+        let expected_top = if let super::Term::Push(rest, top) = attempt!(self.get(expected, span))
+        {
+            Some((rest, top))
+        } else {
+            None
+        };
+        let actual_top = if let super::Term::Push(rest, top) = attempt!(self.get(actual, span)) {
+            Some((rest, top))
+        } else {
+            None
+        };
+        let expected_text = attempt!(rendering::describe(
+            self,
+            expected_top.map_or(expected, |(_, top)| top),
+            span,
+            meter
+        ));
+        let actual_text = attempt!(rendering::describe(
+            self,
+            actual_top.map_or(actual, |(_, top)| top),
+            span,
+            meter
+        ));
+        if expected_text != actual_text {
+            return Ok(StackWalk::Differ(shared, expected_text, actual_text));
+        }
+        let (Some((expected_rest, _)), Some((actual_rest, _))) = (expected_top, actual_top) else {
+            return Ok(StackWalk::Alike);
+        };
+        let expected = attempt!(self.root(expected_rest, span, meter));
+        let actual = attempt!(self.root(actual_rest, span, meter));
+        Ok(StackWalk::Next(expected, actual))
     }
 }

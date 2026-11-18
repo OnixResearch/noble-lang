@@ -28,13 +28,16 @@ const evidence = {
   commands: [], versions: {}, extractions: {},
   assumptions: [
     'Pinned Charon/Aeneas translation and Lean kernel/tool binaries are trusted.',
-    'The separately extracted actual kernel is connected by a transparent total representation bridge.',
+    'The separately extracted actual kernel and frontend are connected by transparent total representation bridges.',
     'Handwritten external models and the pinned Aeneas library remain explicit semantic trust boundaries.',
+    'Every external boundary is listed in verification/m3-wasm/boundaries.json with the module that defines its model and its review class.',
+    'Boundaries reviewed as undefined outside the value model (allocation identity, type layout, raw-pointer projections, hasher write splitting) return fail .undef and support no ok result.',
+    'The BTreeMap model agrees with the B-tree for key orders whose comparison is total and always returns; the subject compares u128 and byte-vector keys.',
     'Inherited kernel copy/format boundaries are enumerated, not claimed to be extracted Rust bodies.',
     'Allocation identity, spare capacity, allocation failure and formatting layout are abstracted by the inherited models.',
     'The pinned abstract Formatter type is audited separately and forbidden from compile dependencies and strict bridge theorems.',
     'Dependency package build caches are reused only with clean sources at the exact locked revisions; Noble project build products are fresh.',
-    'Native evaluation, when reported, is restricted to generated/inherited literal UTF-8 byte-array size bounds and is not a strict proof equation.',
+    'Native evaluation, when reported, is restricted to generated/inherited literal UTF-8 byte-array size bounds; strict bridge theorems that reach the inherited checker list those axioms separately and they never count as strict axioms.',
   ],
   non_claims: [
     'No universal Rust-to-Lean or checked-lowering refinement theorem.',
@@ -68,6 +71,7 @@ function snapshot() {
   const inputs = new Set([
     ...Object.keys(selection.file_sha256), 'policy/tool-selection.json',
     'nix/tool-selection-files.nix', 'verification/m3-wasm/implementation.mjs',
+    'verification/m3-wasm/boundaries.json',
     'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml',
     // Cargo resolves every workspace member and local path dependency, even
     // when the selected extraction subject is only noble-kernel or noble-wasm.
@@ -75,6 +79,8 @@ function snapshot() {
     ...files('proofs/m3-wasm'), ...files('proofs/m3/NobleKernel'),
     'proofs/m3/NobleKernel.lean', 'proofs/m3/lake-manifest.json',
     'proofs/m3/lakefile.toml', 'proofs/m3/lean-toolchain',
+    // The emitter imports the actual frontend extraction and its models.
+    ...files('proofs/mc1/NobleContractImpl'),
   ]);
   return Object.fromEntries([...inputs].sort().map(file => {
     if (path.isAbsolute(file) || file.split('/').includes('..')) throw Error(`unbound source path: ${file}`);
@@ -82,7 +88,8 @@ function snapshot() {
     return [file, fileSha(path.join(root, file))];
   }));
 }
-function run(label, binary, args, cwd = workspace, extraEnvironment = {}, timeout = 900_000) {
+function run(label, binary, args, cwd = workspace, extraEnvironment = {},
+  timeout = selection.configuration.lean_timeout_seconds * 1000) {
   const log = `${label}.log`;
   const fd = fs.openSync(path.join(artifacts, log), 'wx');
   const command = { label, binary, args, cwd, timeout_ms: timeout, log,
@@ -140,9 +147,11 @@ function extract(label, manifest, basename, prefix, checked, allowedOpaque) {
   const record = { manifest, llbc: path.relative(artifacts, llbc), comparisons: [] };
   evidence.extractions[label] = record;
   run(`${label}-charon`, tool('charon', 'charon'), ['cargo', ...selection.configuration.charon_args,
-    '--dest-file', llbc, '--', '--manifest-path', manifest, ...selection.configuration.cargo_args]);
+    '--dest-file', llbc, '--', '--manifest-path', manifest, ...selection.configuration.cargo_args],
+  workspace, {}, selection.configuration.charon_timeout_seconds * 1000);
   run(`${label}-aeneas`, tool('aeneas', 'aeneas'), [...selection.configuration.aeneas_args,
-    '-split-files', '-gen-lib-entry', '-all-computable', '-dest', generated, llbc]);
+    '-split-files', '-gen-lib-entry', '-all-computable', '-dest', generated, llbc],
+  workspace, {}, selection.configuration.translator_timeout_seconds * 1000);
   record.llbc_sha256 = fileSha(llbc);
   const translationFile = path.join(generated, 'translation.json');
   const translation = json(translationFile);
@@ -167,9 +176,12 @@ function extract(label, manifest, basename, prefix, checked, allowedOpaque) {
   record.external_functions = translation.functions.filter(item => !item.is_local);
   record.external_types = translation.types.filter(item => item.lean_file === 'TypesExternal_Template.lean');
   record.translated_dependency_types = translation.types.filter(item => !item.is_local && item.lean_file === 'Types.lean');
-  record.other_external_boundaries = ['globals', 'trait_decls', 'trait_impls'].flatMap(kind =>
+  record.external_globals = translation.globals.filter(item => item.lean_file?.includes('External'));
+  record.other_external_boundaries = ['trait_decls', 'trait_impls'].flatMap(kind =>
     translation[kind].filter(item => item.lean_file?.includes('External')).map(item => ({ kind, ...item })));
-  if (record.other_external_boundaries.length) throw Error(`unreviewed external global/trait boundary: ${label}`);
+  if (record.other_external_boundaries.length) throw Error(`unreviewed external trait boundary: ${label}`);
+  // Reviewed external globals are checked against the boundary records by the caller.
+  if (label === 'kernel' && record.external_globals.length) throw Error(`unreviewed external global boundary: ${label}`);
   record.local_definitions = [...local.filter(item => !item.is_opaque), ...translation.globals,
     ...translation.trait_impls].filter(item => item.is_local).map(item => item.lean_name).sort();
   for (const name of ['Types.lean', 'Funs.lean']) record.comparisons.push(compareFile(path.join(generated, name), `${checked}/${name}`));
@@ -309,20 +321,35 @@ try {
     'noble_kernel::shapes::impls::clone_parts', 'noble_kernel::shapes::impls::debug_parts',
     'noble_kernel::shapes::impls::debug_slots',
   ]);
-  const wasm = extract('wasm', 'crates/noble-wasm/Cargo.toml', 'noble_wasm_impl', 'NobleWasmImpl', 'proofs/m3-wasm/NobleWasmImpl', []);
-  const expectedExternal = ['I64.Insts.CoreConvertFromU32.from', 'Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from',
-    'U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from', 'U8.Insts.CoreConvertTryFromU64TryFromIntError.try_from',
-    'core.num.I64.unsigned_abs', 'core.slice.Slice.last', 'core.str.Str.as_bytes',
-    'alloc.vec.Vec.pop', 'alloc.vec.Vec.is_empty',
-    'noble_kernel.acceptance.check', 'noble_kernel.contracts.environment',
-    'noble_kernel.types.Ty.Insts.CoreCloneClone.clone', 'noble_kernel.types.EffSet.is_empty'];
-  equal(wasm.external_functions.map(item => item.lean_name).sort(), expectedExternal.sort(), 'unreviewed emitter external function boundary');
-  equal(wasm.external_types.map(item => item.lean_name), ['noble_kernel.types.EffSet'], 'unreviewed emitter external type boundary');
-  const auditInput = { schema: 'm3-extraction-audit/v1', local_definitions: wasm.local_definitions,
-    external_functions: wasm.external_functions.map(item => boundaryName('noble_wasm', item)),
-    external_types: wasm.external_types.map(item => boundaryName('noble_wasm', item)),
-    kernel_boundary: [...kernel.external_functions, ...kernel.local_opaque_functions, ...kernel.external_types]
-      .map(item => boundaryName('noble_kernel', item)) };
+  // The crate's one reviewed opaque body renders the Rc-recursive origin types for Debug.
+  const wasm = extract('wasm', 'crates/noble-wasm/Cargo.toml', 'noble_wasm_impl', 'NobleWasmImpl', 'proofs/m3-wasm/NobleWasmImpl',
+    ['noble_wasm::source::debug_origin']);
+  // Every boundary is reviewed in verification/m3-wasm/boundaries.json: the translation's boundary
+  // set must equal the reviewed set exactly, and the Lean audit checks each recorded model module.
+  const reviewed = json(path.join(root, 'verification/m3-wasm/boundaries.json'));
+  if (reviewed.schema !== 'm3-wasm-boundaries/v1') throw Error('unreviewed boundary record schema');
+  const reviewClasses = new Set(Object.keys(reviewed.review_classes ?? {}));
+  for (const item of reviewed.boundaries) {
+    if (!reviewClasses.has(item.review)) throw Error(`unreviewed boundary class: ${item.lean_name}`);
+  }
+  const boundaryKey = (kind, item) => `${kind}\u0000${item.lean_name}\u0000${item.rust_name}`;
+  const observedBoundaries = [
+    ...wasm.external_functions.map(item => boundaryKey('function', item)),
+    ...wasm.external_globals.map(item => boundaryKey('global', item)),
+    ...wasm.external_types.map(item => boundaryKey('type', item)),
+    ...wasm.local_opaque_functions.map(item => boundaryKey('local-opaque', item)),
+  ].sort();
+  equal(observedBoundaries, reviewed.boundaries.map(item => boundaryKey(item.kind, item)).sort(),
+    'unreviewed emitter external boundary');
+  evidence.reviewed_boundaries = { file: 'verification/m3-wasm/boundaries.json',
+    sha256: sourceFiles['verification/m3-wasm/boundaries.json'], count: reviewed.boundaries.length };
+  const auditInput = { schema: 'm3-extraction-audit/v2', local_definitions: wasm.local_definitions,
+    // Keys in Lean's JSON order, so the compiled verdict compares byte for byte.
+    boundaries: reviewed.boundaries.map(item => ({ kind: item.kind, model: item.model,
+      name: boundaryName('noble_wasm', item) })),
+    kernel_boundary_functions: [...kernel.external_functions, ...kernel.local_opaque_functions]
+      .map(item => boundaryName('noble_kernel', item)),
+    kernel_boundary_types: kernel.external_types.map(item => boundaryName('noble_kernel', item)) };
   save('audit-input.json', auditInput);
   evidence.audit_input_sha256 = fileSha(path.join(artifacts, 'audit-input.json'));
   run('lean-build', binaries.lake, ['build', 'NobleWasmImpl'], proofRoot);
@@ -333,9 +360,9 @@ try {
   if (records.length !== 1 || records[0].schema !== auditInput.schema || records[0].result !== 'passed') throw Error('missing compiled extraction audit verdict');
   evidence.audit = records[0];
   equal(evidence.audit.local_definitions, auditInput.local_definitions, 'incomplete compiled local definition audit');
-  equal(evidence.audit.external_functions, auditInput.external_functions, 'incomplete compiled external function audit');
-  equal(evidence.audit.external_types, auditInput.external_types, 'incomplete compiled external type audit');
-  equal(evidence.audit.kernel_boundary, auditInput.kernel_boundary, 'incomplete compiled kernel boundary audit');
+  equal(evidence.audit.boundaries, auditInput.boundaries, 'incomplete compiled boundary audit');
+  equal(evidence.audit.kernel_boundary_functions, auditInput.kernel_boundary_functions, 'incomplete compiled kernel boundary audit');
+  equal(evidence.audit.kernel_boundary_types, auditInput.kernel_boundary_types, 'incomplete compiled kernel type boundary audit');
   evidence.dependencies_after = packagePins(proofRoot, 'after', git);
   equal(evidence.dependencies_after, evidence.dependencies, 'Lean dependency sources changed during gate');
   for (const [name, binary] of Object.entries(binaries)) equal(identity(binary), evidence.tools[name], `tool changed during gate: ${name}`);

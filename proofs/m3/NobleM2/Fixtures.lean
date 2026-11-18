@@ -66,6 +66,8 @@ def constraintEq : Constraint → Constraint → Bool
   | .invalidType, .invalidType => true
   | .invalidContract, .invalidContract => true
   | .privateDefinition a, .privateDefinition b => a == b
+  | .borrowProvenance, .borrowProvenance => true
+  | .slotSite, .slotSite => true
   | _, _ => false
 
 def diagnosticEq (a b : Diagnostic) : Bool :=

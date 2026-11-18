@@ -125,6 +125,56 @@ fn records_must_resolve_to_an_earlier_entry() -> Result<(), String> {
 }
 
 #[test]
+fn the_first_unresolved_record_is_reported_at_its_position() -> Result<(), String> {
+    let mut entries = library();
+    let session = noble_contracts::source::Session::without_test_hosts();
+    let base = Recipe {
+        nodes: vec![Node::I64(1)],
+        entry: vec![0],
+    };
+    let base_envelope = envelope(&[], &[Ty::I64], base, b"1 ");
+    entries
+        .admit(&session, base_envelope.clone())
+        .map_err(|refusal| format!("admit base: {refusal:?}"))?;
+    let record = definition_ref(&base_envelope);
+    let stale = DefinitionRef {
+        source_revision: revision(9),
+        ..record
+    };
+    let body = Recipe {
+        nodes: vec![
+            Node::Invoke {
+                dependency: 0,
+                instantiation: 0,
+            },
+            Node::Invoke {
+                dependency: 1,
+                instantiation: 0,
+            },
+            Node::Operation {
+                op: Op::Add,
+                instantiation: 0,
+            },
+        ],
+        entry: vec![0, 1, 2],
+    };
+    // The resolving record is passed over; the first stale record is reported
+    // at its own position, and nothing is retained.
+    let mut invoking = envelope(&[], &[Ty::I64], body, b"1 1 + ");
+    invoking.dependencies = vec![record, stale, stale];
+    invoking.instantiations = vec![Instantiation {
+        bindings: Vec::new(),
+    }];
+    invoking.chunk_id = chunk::chunk_identity_of(&invoking);
+    let refusal = entries.admit(&session, invoking).expect_err("stale record");
+    assert_eq!(refusal.class_name(), "invalid");
+    assert_eq!(refusal.location.field, "envelope.dependencies");
+    assert_eq!(refusal.location.index, Some(1));
+    assert_eq!(entries.entries().len(), 1);
+    Ok(())
+}
+
+#[test]
 fn changed_record_is_rejected_by_the_envelope_identity() -> Result<(), String> {
     let mut entries = library();
     let session = noble_contracts::source::Session::without_test_hosts();

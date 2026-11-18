@@ -74,10 +74,12 @@ fn check_node(
 ) -> Result<(), crate::Diagnostic> {
     attempt!(work.charge(1));
     match &body.candidate.nodes[at] {
-        noble_kernel::untrusted::Node::Quotation { body, .. }
-            if body.len() > super::super::NODE_LIMIT =>
-        {
-            Err(crate::Diagnostic::Exhausted)
+        noble_kernel::untrusted::Node::Quotation { body, .. } => {
+            if body.len() > super::super::NODE_LIMIT {
+                Err(crate::Diagnostic::Exhausted)
+            } else {
+                Ok(())
+            }
         }
         noble_kernel::untrusted::Node::Literal {
             lit: noble_kernel::untrusted::Lit::Text,

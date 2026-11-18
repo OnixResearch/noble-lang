@@ -248,7 +248,7 @@ fn require_pattern(
             Ok(work)
         }
         Pattern::GenericNominal(_, args, _) => {
-            let [first, second] = *args;
+            let (first, second) = take_generic_args(*args);
             work.push(Step::Pattern(first));
             work.push(Step::Pattern(second));
             Ok(work)
@@ -275,6 +275,18 @@ fn require_pattern(
         | Pattern::Resource(_)
         | Pattern::Nominal(_, _) => Ok(work),
     }
+}
+
+/// Move a generic family's two argument patterns out of their array, in order.
+///
+/// Equivalent to `let [first, second] = args;`: each slot is swapped for the
+/// field-free `Pattern::Unit` before the emptied array is dropped. Charon
+/// lowers a by-value array destructure to moves out of `index_mut` borrows,
+/// which the selected Aeneas cannot read.
+pub(crate) fn take_generic_args(mut args: [Pattern; 2]) -> (Pattern, Pattern) {
+    let first = core::mem::replace(&mut args[0], Pattern::Unit);
+    let second = core::mem::replace(&mut args[1], Pattern::Unit);
+    (first, second)
 }
 
 /// Validate one signature's parts and effects against the declared kinds.

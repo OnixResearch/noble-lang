@@ -651,5 +651,43 @@ fn equal_recipe_identity_cannot_swap_resolved_named_target() -> Result<(), Strin
     Ok(())
 }
 
+/// Borrowed-slot selection meters each host-issued candidate before ranking it: the first
+/// admitting work bound is pinned and every smaller bound refuses as exhaustion.
+#[test]
+fn live_slot_invoke_meters_a_fixed_work_bound() -> Result<(), String> {
+    use noble_kernel::types::{EffSet, Ty};
+    let session = live()?;
+    let leaf = Ty::LiveRef(
+        Box::new(vec![Ty::I64]),
+        Box::new(vec![Ty::I64]),
+        EffSet::from_ids(&[]),
+    );
+    let forwarding = Ty::LiveRef(
+        Box::new(vec![Ty::I64, leaf.clone()]),
+        Box::new(vec![Ty::I64]),
+        EffSet::from_ids(&[noble_kernel::contracts::LIVE_DISPATCH]),
+    );
+    let inputs = [Ty::I64, leaf, forwarding];
+    let mut work = 0;
+    loop {
+        let limits = noble_contracts::Limits { work, ..LIMITS };
+        match session.prepare(b"slot.invoke", &inputs, limits) {
+            Ok(prepared) => {
+                assert_eq!(prepared.live_sites().map(|sites| sites.len()), Some(1));
+                break;
+            }
+            Err(error) => assert_eq!(
+                error.diagnostic().kind,
+                noble_contracts::DiagnosticKind::Exhausted,
+                "bound {work}: {error:?}"
+            ),
+        }
+        work += 1;
+        assert!(work <= 10_000, "no admitting work bound");
+    }
+    assert_eq!(work, 189);
+    Ok(())
+}
+
 #[path = "source_proof/part2.rs"]
 mod part2;

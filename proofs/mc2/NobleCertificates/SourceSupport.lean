@@ -23,4 +23,11 @@ def prepare (source : Str) :
   let limits ← noble_contracts.Limits.Insts.CoreDefaultDefault.default
   noble_contracts.prepare source limits
 
+/-- A concrete empty public observation for refusal checks with no retained
+contract. It cannot provide evidence authority or mask a failed computation. -/
+def emptyObservation : Result noble_contracts.companion.Subject :=
+  noble_contracts.companion.core.Core.observe
+    (alloc.vec.Vec.deref (alloc.vec.Vec.new (U32 × U64)))
+    { input := 0#u64, output := 0#u64 }
+
 end NobleCertificates.SourceSupport

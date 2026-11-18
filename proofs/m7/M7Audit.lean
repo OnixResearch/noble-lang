@@ -64,10 +64,12 @@ private def contracts : List (Name × Name × List Name × List Name) := [
     [``dataspace.decide_publication],
     [``dataspace.decide_publication, ``M7Syndicate.publication_refines, ``M7Syndicate.decide])]
 
+-- Compiler declaration IDs of the reviewed extraction, renewed with the packet's
+-- `exactRoots` in verification/m7/extraction.mjs (31-33 at M7, 42-44 at #97).
 private def implementations : List (Name × Nat) := [
-  (``dataspace.admit_shared_memory, 31),
-  (``dataspace.decide_publication, 32),
-  (``dataspace.permits, 33)]
+  (``dataspace.admit_shared_memory, 42),
+  (``dataspace.decide_publication, 43),
+  (``dataspace.permits, 44)]
 private def references : List Name :=
   [``M7Syndicate.admit, ``M7Syndicate.decide, ``M7Syndicate.allowed]
 -- Packet-internal admission only. The M4 driver hashes checkout files, checks the
@@ -122,7 +124,8 @@ private def hostAdapterSources : List String := [
   "crates/noble-syndicate/tests/choreography/failures.rs",
   "crates/noble-syndicate/tests/choreography/flow.rs",
   "crates/noble-syndicate/tests/choreography/ingress.rs",
-  "crates/noble-syndicate/tests/service.rs"]
+  "crates/noble-syndicate/tests/service.rs",
+  "crates/noble-syndicate/tests/service/trace130.rs"]
 private def sha256Digest (digest : String) : Bool :=
   digest.length == 64 &&
     digest.toList.all (fun c => c.isDigit || (decide ('a' ≤ c) && decide (c ≤ 'f')))

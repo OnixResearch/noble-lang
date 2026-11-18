@@ -27,6 +27,203 @@ macro_rules! attempt {
     };
 }
 
+/// Sequence and text searches written as explicit index walks.
+///
+/// The pinned Aeneas cannot translate `Iterator::find` (its predicate has a
+/// higher-ranked bound) nor `core::str::pattern::Pattern`. Each helper visits
+/// in the same order, stops at the same element and returns the same value as
+/// the standard method it replaces.
+pub(crate) mod scan {
+    /// The first element satisfying `predicate`, as `items.iter().find(..)`:
+    /// elements are tested in order and none after the first match.
+    pub(crate) fn find_first<T>(items: &[T], mut predicate: impl FnMut(&T) -> bool) -> Option<&T> {
+        let mut index = 0;
+        let mut found = None;
+        while found.is_none() && index < items.len() {
+            if predicate(&items[index]) {
+                found = Some(index);
+            }
+            index += 1;
+        }
+        match found {
+            Some(position) => Some(&items[position]),
+            None => None,
+        }
+    }
+
+    /// The first element satisfying `predicate`, mutably, as
+    /// `items.iter_mut().find(..)`.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; the helper replaces `iter_mut().find(..)`: lending the caller a mutable element of its own slice is the operation, and the helper itself writes nothing"
+    )]
+    pub(crate) fn find_first_mut<T>(
+        items: &mut [T],
+        mut predicate: impl FnMut(&T) -> bool,
+    ) -> Option<&mut T> {
+        let mut index = 0;
+        let mut found = None;
+        while found.is_none() && index < items.len() {
+            if predicate(&items[index]) {
+                found = Some(index);
+            }
+            index += 1;
+        }
+        match found {
+            Some(position) => Some(&mut items[position]),
+            None => None,
+        }
+    }
+
+    /// `text.split_once(separator as char)` for an ASCII `separator`: split
+    /// around its first occurrence. An ASCII byte never occurs inside a
+    /// multi-byte UTF-8 sequence, so both halves are on character boundaries.
+    pub(crate) fn split_once_byte(text: &str, separator: u8) -> Option<(&str, &str)> {
+        debug_assert!(separator.is_ascii());
+        let bytes = text.as_bytes();
+        let mut index = 0;
+        let mut found = None;
+        while found.is_none() && index < bytes.len() {
+            if bytes[index] == separator {
+                found = Some(index);
+            }
+            index += 1;
+        }
+        let at = found?;
+        split_around(text, at, 1)
+    }
+
+    /// `text.rsplit_once(separator as char)` for an ASCII `separator`: split
+    /// around its last occurrence.
+    pub(crate) fn rsplit_once_byte(text: &str, separator: u8) -> Option<(&str, &str)> {
+        debug_assert!(separator.is_ascii());
+        let bytes = text.as_bytes();
+        let mut remaining = bytes.len();
+        let mut found = None;
+        while found.is_none() && remaining > 0 {
+            remaining -= 1;
+            if bytes[remaining] == separator {
+                found = Some(remaining);
+            }
+        }
+        let at = found?;
+        split_around(text, at, 1)
+    }
+
+    /// `text.strip_prefix(prefix)` for a string prefix.
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the (text, prefix) order is that of the `str::strip_prefix` call each use replaces"
+    )]
+    pub(crate) fn strip_prefix_str<'a>(text: &'a str, prefix: &str) -> Option<&'a str> {
+        if text.as_bytes().starts_with(prefix.as_bytes()) {
+            text.get(prefix.len()..)
+        } else {
+            None
+        }
+    }
+
+    /// `text.strip_suffix(suffix)` for a string suffix.
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the (text, suffix) order is that of the `str::strip_suffix` call each use replaces"
+    )]
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; the subtraction runs only after `ends_with` proved `suffix.len() <= text.len()`"
+    )]
+    pub(crate) fn strip_suffix_str<'a>(text: &'a str, suffix: &str) -> Option<&'a str> {
+        if text.as_bytes().ends_with(suffix.as_bytes()) {
+            text.get(..text.len() - suffix.len())
+        } else {
+            None
+        }
+    }
+
+    /// The text before and after `width` bytes matched at byte offset `at`.
+    /// The match is a whole UTF-8 sequence, so both slices always exist.
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; `at` and `width` are the offset and length of the match, in the order the callers found them"
+    )]
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; `at` indexes a byte of the text and `width` is the one-byte separator, so the sum is at most the text length"
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; `str::get` with a range is not callable in a const context"
+    )]
+    fn split_around(text: &str, at: usize, width: usize) -> Option<(&str, &str)> {
+        match (text.get(..at), text.get(at + width..)) {
+            (Some(before), Some(after)) => Some((before, after)),
+            (None, _) | (_, None) => None,
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        #[test]
+        fn find_first_visits_in_order_and_stops_at_the_first_match() {
+            let items = [3u32, 5, 4, 5, 6];
+            let mut visited = alloc::vec::Vec::new();
+            let found = super::find_first(&items, |item| {
+                visited.push(*item);
+                *item == 5
+            });
+            assert_eq!(found, items.iter().find(|item| **item == 5));
+            assert!(core::ptr::eq(found.unwrap_or(&0), &items[1]));
+            assert_eq!(visited, [3, 5]);
+            assert_eq!(super::find_first(&items, |item| *item == 9), None);
+            assert_eq!(super::find_first(&[] as &[u32], |_| true), None);
+            let mut mutable = items;
+            if let Some(item) = super::find_first_mut(&mut mutable, |item| *item == 5) {
+                *item = 7;
+            }
+            assert_eq!(mutable, [3, 7, 4, 5, 6]);
+            assert!(super::find_first_mut(&mut mutable, |item| *item == 9).is_none());
+        }
+
+        #[test]
+        fn text_helpers_match_the_standard_methods() {
+            let texts = [
+                "",
+                ".",
+                "a.b",
+                "a.b.c",
+                "abc",
+                "@1",
+                "x@",
+                "m@1.f",
+                "\u{e9}.\u{e9}",
+                "..",
+            ];
+            for text in texts {
+                for separator in [b'.', b'@', b'<'] {
+                    assert_eq!(
+                        super::split_once_byte(text, separator),
+                        text.split_once(char::from(separator))
+                    );
+                    assert_eq!(
+                        super::rsplit_once_byte(text, separator),
+                        text.rsplit_once(char::from(separator))
+                    );
+                }
+                for affix in ["", ">", "a", "forall<", "\u{e9}", "a.b.c."] {
+                    assert_eq!(
+                        super::strip_prefix_str(text, affix),
+                        text.strip_prefix(affix)
+                    );
+                    assert_eq!(
+                        super::strip_suffix_str(text, affix),
+                        text.strip_suffix(affix)
+                    );
+                }
+            }
+        }
+    }
+}
+
 pub mod companion;
 pub mod component;
 mod frontend;
@@ -108,7 +305,10 @@ pub struct JoinDiagnostic {
     pub word: alloc::string::String,
     pub expected_stack: alloc::string::String,
     pub actual_stack: alloc::string::String,
-    pub constraint: &'static str,
+    /// The violated constraint's stable name (for example `stack-type`). Owned
+    /// rather than `&'static str`: a `'static` borrow inside the crate-wide error
+    /// type makes the pinned Aeneas refuse every `?` and loop that carries it.
+    pub constraint: alloc::string::String,
     pub value_origin: Option<Span>,
     /// Where the two stacks first differ, when the mismatch is positional.
     pub difference: Option<StackDifference>,

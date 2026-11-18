@@ -1,18 +1,20 @@
 {
-  "schema": "noble-service-wire-refinement-inputs/v1",
-  "extraction_receipt": "verification/declared-modules-v1/extraction.json",
-  "extraction_receipt_sha256": "2849724f8eb8c2527e6ee83ef9a7f15ca954e961965edd61a1aca8e33aff365c",
+  "schema": "noble-service-wire-refinement-inputs/v2",
+  "extraction_receipt": "verification/m4/implementation.json",
+  "extraction_receipt_sha256": "e44a259e235e9592650bd28d2f02d69561cba23fe6d435ffda65dd10fe400a2a",
   "extraction_lock": "verification/m4/extraction-lock.json",
   "extraction_lock_sha256": "1942596d2aa448ad36914b570bd6740c8c981f351d4d3ea3e73c1523695e6ed9",
   "generated_inputs": {
-    "proofs/m3/NobleKernel.lean": "3cad0c3dd3e10a7c030124ad47e550f70367de25defcd1923c180d48d814b237",
-    "proofs/m3/NobleKernel/Types.lean": "af81688c0aad67e10274f19d70abbfd75bd8402d1fd0f9761138e1ad9dfd5dab",
-    "proofs/m3/NobleKernel/TypesExternal.lean": "286ff4005d18e83aaf99bc405162e2ce8c7b5dc399e69f2daa338a189e327f9c",
-    "proofs/m3/NobleKernel/Funs.lean": "0ca1f67fa86c0237616d16a75affb34881343f990e2b3c74b7862f2591ed0e71",
-    "proofs/m3/NobleKernel/FunsExternal.lean": "d2907d53341cdd929463e2361ec75854874d3e707e9405021e8cdd51726bfd84"
+    "proofs/m3/NobleKernel.lean": "bd411e329236cb36c38920ca57b4c810a40a30a71a7954f2529225ef0966d9ec",
+    "proofs/m3/NobleKernel/Types.lean": "45b7510f9dc08f3d2a3b0f92085dc2a8e1a447dd1426136dd3fde748613fc1e9",
+    "proofs/m3/NobleKernel/Funs.lean": "37552261ed005b2a50046f3fa7728847ae490456c589a21867137d723ac0742f"
+  },
+  "handwritten_inputs": {
+    "proofs/m3/NobleKernel/TypesExternal.lean": "816e8689319559c016245838f8a6524ccbb660de9e85a5b8a87b4ebf6826ee6f",
+    "proofs/m3/NobleKernel/FunsExternal.lean": "65c26944eecd2b24ea6a5ec49c7cbee82519fc5c4f33ad0d26653694bced25cb"
   },
   "model": {
-    "proofs/foundation/NobleFoundation/ServiceWire.lean": "3d395fe311a205e6db5db693367c9744d808c6e32b1bb367d002814663c63855"
+    "proofs/foundation/NobleFoundation/ServiceWire.lean": "3e61096e8ecd7e95b0d640007455d626d89c759b53b303d5dbe46991487ed863"
   },
   "toolchain_reference": "proofs/m7",
   "aeneas_revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",

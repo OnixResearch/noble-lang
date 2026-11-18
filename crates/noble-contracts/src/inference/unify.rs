@@ -1,3 +1,7 @@
+#[expect(
+    tigerstyle::type_accumulation,
+    reason = "Owner: noble-maintainers; inference is one term arena whose cohesive phases (term building, construction, effects, materialization, unification) each live in a focused module extending it; merging them would only collapse those modules."
+)]
 impl super::Arena {
     #[expect(
         clippy::vec_init_then_push,

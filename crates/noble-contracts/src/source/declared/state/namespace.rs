@@ -13,18 +13,13 @@ impl super::ModuleSession {
         version: u32,
         exported_name: &str,
     ) -> Option<&noble_kernel::words::Scheme> {
-        let module = self
-            .modules
-            .iter()
-            .find(|module| module.name == module_name && module.version == version)?;
-        let export = module
-            .exports
-            .iter()
-            .find(|export| export.name == exported_name)?;
-        let (_, crate::source::Target::Named(index)) = export
-            .words
-            .iter()
-            .find(|(name, _)| name == exported_name)?
+        let module = crate::scan::find_first(&self.modules, |module| {
+            module.name == module_name && module.version == version
+        })?;
+        let export =
+            crate::scan::find_first(&module.exports, |export| export.name == exported_name)?;
+        let (_, crate::source::Target::Named(index)) =
+            crate::scan::find_first(&export.words, |(name, _)| name == exported_name)?
         else {
             return None;
         };
@@ -46,86 +41,88 @@ impl super::ModuleSession {
                 crate::source::Stage::Resolve,
                 "expected versioned exported type"
             )));
-        let located = if let Some((name, version)) = super::super::split_once_ascii(module, b'@') {
-            let version = attempt!(super::super::canonical_version(version).ok_or_else(|| {
-                super::super::error(crate::source::Stage::Resolve, "invalid type module version")
-            }));
-            let mut found = None;
-            let mut at = 0usize;
-            while at < self.modules.len() {
-                let entry = &self.modules[at];
-                if entry.name == name && entry.version == version {
-                    found = Some(entry);
-                    break;
-                }
-                at += 1;
-            }
-            found
-        } else {
-            let mut found = None;
-            let mut at = self.aliases.len();
-            while at != 0 {
-                at -= 1;
-                let alias = &self.aliases[at];
-                if !alias.pending && alias.spelling == module {
-                    found = self.modules.get(alias.module);
-                    break;
-                }
-            }
-            found
-        };
-        let mut ty = None;
-        if let Some(entry) = located {
-            let mut types = alloc::vec::Vec::new();
-            let mut families = alloc::vec::Vec::new();
-            let mut at = 0usize;
-            while at < entry.exports.len() {
-                let export = &entry.exports[at];
-                if export.name == type_name && export.ty.is_some() {
-                    ty = export.ty.clone();
-                    break;
-                }
-                if let Some(value) = &export.ty {
-                    // One entry per scanned export, so this bound is never reached.
-                    if types.len() >= entry.exports.len() {
-                        return Err(super::super::error(
-                            crate::source::Stage::Resolve,
-                            "type export scan exceeds module exports",
-                        ));
-                    }
-                    types.push((export.name.clone(), value.clone()));
-                }
-                if let Some(id) = export.generic {
-                    if families.len() >= entry.exports.len() {
-                        return Err(super::super::error(
-                            crate::source::Stage::Resolve,
-                            "type export scan exceeds module exports",
-                        ));
-                    }
-                    families.push((export.name.clone(), id));
-                }
-                at += 1;
-            }
-            if ty.is_none() && !families.is_empty() {
-                if let Some(context) = &self.source.declared {
-                    ty = super::super::types::parse_with_families(
-                        type_name,
-                        &types,
-                        &families,
-                        Some(&context.environment),
-                        super::super::SPAN,
-                    )
-                    .ok()
-                    .map(|parsed| parsed.ty);
-                }
-            }
-        }
+        let located = attempt!(self.type_module(module));
+        let ty = attempt!(self.exported_type(located, type_name));
         ty.ok_or_else(|| {
             super::super::error(
                 crate::source::Stage::Resolve,
                 "unknown or unexported versioned type",
             )
         })
+    }
+
+    /// The concrete type a located module exports under `type_name`, else a
+    /// checked instance of one of its generic families.
+    fn exported_type(
+        &self,
+        located: Option<&super::super::Module>,
+        type_name: &str,
+    ) -> Result<Option<noble_kernel::types::Ty>, crate::source::Error> {
+        let Some(entry) = located else {
+            return Ok(None);
+        };
+        let (exported, (types, families)) = attempt!(scan_type_exports(entry, type_name));
+        if exported.is_some() || families.is_empty() {
+            return Ok(exported);
+        }
+        Ok(self.family_type(type_name, &types, &families))
+    }
+
+    /// The generic family instance `type_name` spells, checked in the declared
+    /// environment; no declared context resolves none.
+    fn family_type(
+        &self,
+        type_name: &str,
+        types: &[(alloc::string::String, noble_kernel::types::Ty)],
+        families: &[(alloc::string::String, noble_kernel::types::NominalTypeId)],
+    ) -> Option<noble_kernel::types::Ty> {
+        let context = self.source.declared.as_ref()?;
+        super::super::types::parse_with_families(
+            type_name,
+            types,
+            families,
+            Some(&context.environment),
+            super::super::SPAN,
+        )
+        .ok()
+        .map(|parsed| parsed.ty)
+    }
+
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
+    /// The module a type spelling's module part names: `name@version`, else
+    /// the latest checked alias spelled that way.
+    fn type_module(
+        &self,
+        module: &str,
+    ) -> Result<Option<&super::super::Module>, crate::source::Error> {
+        let Some((name, version)) = super::super::split_once_ascii(module, b'@') else {
+            return Ok(self.aliased_module(module));
+        };
+        let version = attempt!(super::super::canonical_version(version).ok_or_else(|| {
+            super::super::error(crate::source::Stage::Resolve, "invalid type module version")
+        }));
+        Ok(crate::scan::find_first(&self.modules, |entry| {
+            entry.name == name && entry.version == version
+        }))
+    }
+
+    /// The module of the latest checked alias spelled `spelling`.
+    fn aliased_module(&self, spelling: &str) -> Option<&super::super::Module> {
+        let mut found_at = None;
+        let mut at = self.aliases.len();
+        while found_at.is_none() && at != 0 {
+            at -= 1;
+            if checked_alias_spelled(&self.aliases[at], spelling) {
+                found_at = Some(at);
+            }
+        }
+        match found_at {
+            Some(alias_at) => self.modules.get(self.aliases[alias_at].module),
+            None => None,
+        }
     }
 
     pub fn bindings(&self) -> &[super::super::BoundOperation] {
@@ -209,14 +206,13 @@ impl super::ModuleSession {
         version: u32,
         alias: alloc::string::String,
     ) -> Result<Self, crate::source::Error> {
-        let index = attempt!(self
-            .modules
-            .iter()
-            .position(|module| module.name == name && module.version == version)
-            .ok_or_else(|| super::super::error(
-                crate::source::Stage::Resolve,
-                "missing immutable module version"
-            )));
+        let index = attempt!(super::position_first(&self.modules, |module| {
+            module.name == name && module.version == version
+        })
+        .ok_or_else(|| super::super::error(
+            crate::source::Stage::Resolve,
+            "missing immutable module version"
+        )));
         if self.alias_conflicts(index, alias.as_str()) {
             return Err(super::super::error(
                 crate::source::Stage::Resolve,
@@ -239,77 +235,32 @@ impl super::ModuleSession {
         self.outside_words()
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-contracts; iterator adapters and slice comparisons in the body are not const."
-    )]
     fn module_has_unverified_signed_owner(&self, module_index: usize) -> bool {
         let Some(module) = self.modules.get(module_index) else {
             return true;
         };
-        self.source
-            .definitions
-            .iter()
-            .enumerate()
-            .any(|(index, definition)| {
-                definition.owner == Some(module.identity)
-                    && definition.signed.is_some()
-                    && u32::try_from(index)
-                        .ok()
-                        .is_none_or(|slot| !module.verified_signed_slots.contains(&slot))
-            })
+        let mut is_unverified = false;
+        let mut index = 0usize;
+        while !is_unverified && index < self.source.definitions.len() {
+            is_unverified = unverified_signed_owner(module, &self.source.definitions[index], index);
+            index += 1;
+        }
+        is_unverified
     }
 
     /// Pending aliases remain unresolvable until each signed owner in their
     /// module has a concrete kernel-checked and original-source-paired body.
-    #[expect(
-        tigerstyle::sentinel_fallback,
-        reason = "Owner: noble-contracts; an unrepresentable slot maps to usize::MAX, which get() reports as absent, so the lookup fails closed with its diagnostic."
-    )]
     pub(super) fn record_signed_certified(
         mut self,
         submission: &noble_kernel::execution::Submission,
     ) -> Result<Self, crate::source::Error> {
-        for definition in &submission.definitions {
-            if !definition
-                .body
-                .candidate
-                .nodes
-                .iter()
-                .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. }))
-            {
-                continue;
-            }
-            let slot = definition.owner_slot.ok_or_else(|| {
-                super::super::error(
-                    crate::source::Stage::Check,
-                    "certified signed owner has no source slot",
-                )
-            })?;
-            let source = self
-                .source
-                .definitions
-                .get(usize::try_from(slot).unwrap_or(usize::MAX))
-                .ok_or_else(|| {
-                    super::super::error(
-                        crate::source::Stage::Check,
-                        "certified signed owner source slot is absent",
-                    )
-                })?;
-            let module = self
-                .modules
-                .iter_mut()
-                .find(|module| source.owner == Some(module.identity))
-                .ok_or_else(|| {
-                    super::super::error(
-                        crate::source::Stage::Check,
-                        "certified signed owner module is absent",
-                    )
-                })?;
-            if !module.verified_signed_slots.contains(&slot) {
-                module.verified_signed_slots.push(slot);
-            }
+        let mut certified = Ok(());
+        let mut definition_at = 0usize;
+        while certified.is_ok() && definition_at < submission.definitions.len() {
+            certified = self.certify_signed_owner(&submission.definitions[definition_at]);
+            definition_at += 1;
         }
+        attempt!(certified);
         let mut at = 0usize;
         while at < self.aliases.len() {
             if self.aliases[at].pending
@@ -320,6 +271,57 @@ impl super::ModuleSession {
             at += 1;
         }
         self.outside_words()
+    }
+
+    /// Marks the source slot of one certified signed owner definition as
+    /// verified in its module; any other definition is left alone.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    #[expect(
+        tigerstyle::sentinel_fallback,
+        reason = "Owner: noble-contracts; an unrepresentable slot maps to usize::MAX, which get() reports as absent, so the lookup fails closed with its diagnostic."
+    )]
+    fn certify_signed_owner(
+        &mut self,
+        definition: &noble_kernel::execution::Definition,
+    ) -> Result<(), crate::source::Error> {
+        if !super::has_signed_self(&definition.body.candidate.nodes) {
+            return Ok(());
+        }
+        let slot = definition.owner_slot.ok_or_else(|| {
+            super::super::error(
+                crate::source::Stage::Check,
+                "certified signed owner has no source slot",
+            )
+        })?;
+        let owner = self
+            .source
+            .definitions
+            .get(usize::try_from(slot).unwrap_or(usize::MAX))
+            .ok_or_else(|| {
+                super::super::error(
+                    crate::source::Stage::Check,
+                    "certified signed owner source slot is absent",
+                )
+            })?
+            .owner;
+        // The first matching module is located by index, so no mutable
+        // borrow passes through an Option combinator.
+        let Some(module_at) =
+            super::position_first(&self.modules, |module| owner == Some(module.identity))
+        else {
+            return Err(super::super::error(
+                crate::source::Stage::Check,
+                "certified signed owner module is absent",
+            ));
+        };
+        let module = &mut self.modules[module_at];
+        if !module.verified_signed_slots.contains(&slot) {
+            module.verified_signed_slots.push(slot);
+        }
+        Ok(())
     }
 
     fn alias_conflicts(&self, index: usize, alias: &str) -> bool {
@@ -335,4 +337,104 @@ impl super::ModuleSession {
         }
         is_conflicting
     }
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+/// Whether a checked, non-pending alias is spelled `spelling`.
+fn checked_alias_spelled(alias: &super::super::Alias, spelling: &str) -> bool {
+    !alias.pending && alias.spelling == spelling
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+/// Whether an export is the concrete type named `type_name`.
+fn is_type_export(export: &super::super::Export, type_name: &str) -> bool {
+    export.name == type_name && export.ty.is_some()
+}
+
+/// Concrete and generic family type exports of one module, by name.
+type TypeRows = (
+    alloc::vec::Vec<(alloc::string::String, noble_kernel::types::Ty)>,
+    alloc::vec::Vec<(alloc::string::String, noble_kernel::types::NominalTypeId)>,
+);
+
+/// Scans a module's exports in order: the concrete type named `type_name`
+/// once it is reached, and every concrete and generic family row before it.
+fn scan_type_exports(
+    entry: &super::super::Module,
+    type_name: &str,
+) -> Result<(Option<noble_kernel::types::Ty>, TypeRows), crate::source::Error> {
+    let mut ty = None;
+    let mut rows = Ok((alloc::vec::Vec::new(), alloc::vec::Vec::new()));
+    let mut at = 0usize;
+    while ty.is_none() && rows.is_ok() && at < entry.exports.len() {
+        let export = &entry.exports[at];
+        if is_type_export(export, type_name) {
+            ty = export.ty.clone();
+        } else {
+            rows = match rows {
+                Ok(scanned) => record_type_export(export, entry.exports.len(), scanned),
+                Err(problem) => Err(problem),
+            };
+        }
+        at += 1;
+    }
+    let rows = attempt!(rows);
+    Ok((ty, rows))
+}
+
+/// Appends one export's concrete type and generic family rows; a row past
+/// `bound`, which one row per scanned export never reaches, is refused.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+fn record_type_export(
+    export: &super::super::Export,
+    bound: usize,
+    rows: TypeRows,
+) -> Result<TypeRows, crate::source::Error> {
+    let (mut types, mut families) = rows;
+    if let Some(value) = &export.ty {
+        if types.len() >= bound {
+            return Err(super::super::error(
+                crate::source::Stage::Resolve,
+                "type export scan exceeds module exports",
+            ));
+        }
+        types.push((export.name.clone(), value.clone()));
+    }
+    if let Some(id) = export.generic {
+        if families.len() >= bound {
+            return Err(super::super::error(
+                crate::source::Stage::Resolve,
+                "type export scan exceeds module exports",
+            ));
+        }
+        families.push((export.name.clone(), id));
+    }
+    Ok((types, families))
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+/// Whether the definition at `index` is a signed owner in `module` whose
+/// slot the module has not verified.
+fn unverified_signed_owner(
+    module: &super::super::Module,
+    definition: &crate::source::Named,
+    index: usize,
+) -> bool {
+    definition.owner == Some(module.identity)
+        && definition.signed.is_some()
+        && u32::try_from(index)
+            .ok()
+            .is_none_or(|slot| !module.verified_signed_slots.contains(&slot))
 }

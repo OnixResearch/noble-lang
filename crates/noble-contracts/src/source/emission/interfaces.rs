@@ -57,18 +57,16 @@ fn install_interface(
         // the concrete Env. Its fresh, exact owner Inst is materialized
         // separately from this body's source-derived variables and checked
         // against the body's concrete expected interface by the kernel.
-        let is_signed = body
-            .nodes
-            .iter()
-            .any(|node| matches!(node.kind, super::super::inference::DraftKind::SignedSelf(_)));
+        let is_signed = crate::scan::find_first(&body.nodes, |node| {
+            matches!(node.kind, super::super::inference::DraftKind::SignedSelf(_))
+        })
+        .is_some();
         let scheme = if is_signed {
-            let source = body
-                .owner_slot
-                .and_then(|slot| usize::try_from(slot).ok())
-                .and_then(|slot| definitions.get(slot))
-                .ok_or_else(|| {
-                    crate::invalid(body.span, "signed body has no original source owner")
-                })?;
+            let source = match body.owner_slot.and_then(|slot| usize::try_from(slot).ok()) {
+                Some(slot) => definitions.get(slot),
+                None => None,
+            }
+            .ok_or_else(|| crate::invalid(body.span, "signed body has no original source owner"))?;
             if Some(source.identity) != body.identity
                 || source.owner != body.owner
                 || source.signed.is_none()

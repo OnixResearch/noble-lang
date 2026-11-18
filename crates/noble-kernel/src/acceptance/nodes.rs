@@ -189,6 +189,10 @@ pub(super) fn fold_node(
     tigerstyle::ambiguous_params,
     reason = "Owner: noble-kernel; the same-typed parameters are positional by contract and named at every call site"
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; fold_slot clones interface stacks, joins the owned frame and allocates the LiveSite vectors; reassess only if those owned transitions become const-capable."
+)]
 /// Derive a live invocation solely from the host-owned root input and the
 /// checked forwarding positions. A raw ordinal is never type authority.
 fn fold_slot(
@@ -239,25 +243,7 @@ fn fold_slot(
     let crate::types::Ty::LiveRef(stack_in, stack_out, ceiling) = &root.ty else {
         return Err(super::Fail::Internal);
     };
-    let mut value_in = alloc::vec::Vec::with_capacity(stack_in.len());
-    let mut next_forward = 0usize;
-    let mut formal_index = 0;
-    // The single-pass fold records its first refusal instead of returning from
-    // inside the loop: the extraction tool (Aeneas) rejects early returns inside
-    // loops, and the recorded refusal leaves the walked prefix identical.
-    let mut refusal: Option<super::Fail> = None;
-    while formal_index < stack_in.len() && refusal.is_none() {
-        let formal = &stack_in[formal_index];
-        match forwarded_ref_matches(formal, forwarded, next_forward, at, context) {
-            Ok(true) => next_forward += 1,
-            Ok(false) => value_in.push(formal.clone()),
-            Err(failure) => refusal = Some(failure),
-        }
-        formal_index += 1;
-    }
-    if let Some(refusal) = refusal {
-        return Err(refusal);
-    }
+    let (value_in, next_forward) = attempt!(fold_formals(stack_in, forwarded, at, *context));
     if next_forward != forwarded.len() {
         return Err(super::parts::invalid_without_stacks(
             at,
@@ -305,9 +291,72 @@ fn fold_slot(
     Ok((cost, joined, interface, Some(site)))
 }
 
+/// Split a live reference's formal inputs into the value inputs that stay on
+/// the stack and the count of forwarded borrowed references, in order.
+///
+/// The context is taken by value: the selected Aeneas cannot join control
+/// flow while a borrow of the borrow-carrying `Ctx` is in scope. The
+/// single-pass fold records its first refusal and stops, leaving the walked
+/// prefix identical to returning from inside the loop.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; fold_formals records the first forwarded-reference refusal as a typed Fail and stops the walk; untrusted formals must not reach assertion panics."
+)]
+fn fold_formals(
+    stack_in: &[crate::types::Ty],
+    forwarded: &[u32],
+    at: super::parts::Site,
+    context: super::parts::Ctx<'_>,
+) -> Result<(alloc::vec::Vec<crate::types::Ty>, usize), super::Fail> {
+    let mut value_in = alloc::vec::Vec::with_capacity(stack_in.len());
+    let mut next_forward = 0usize;
+    let mut formal_index = 0;
+    let mut refusal: Option<super::Fail> = None;
+    while formal_index < stack_in.len() && refusal.is_none() {
+        match fold_formal(
+            &stack_in[formal_index],
+            forwarded,
+            next_forward,
+            at,
+            &context,
+        ) {
+            Ok(None) => next_forward += 1,
+            Ok(Some(value)) => value_in.push(value),
+            Err(failure) => refusal = Some(failure),
+        }
+        formal_index += 1;
+    }
+    match refusal {
+        Some(refusal) => Err(refusal),
+        None => Ok((value_in, next_forward)),
+    }
+}
+
+/// Fold one formal input: `None` for a forwarded borrowed reference, or the
+/// copied value input that stays on the stack. Loop-free and join-free.
+fn fold_formal(
+    formal: &crate::types::Ty,
+    forwarded: &[u32],
+    next_forward: usize,
+    at: super::parts::Site,
+    context: &super::parts::Ctx,
+) -> Result<Option<crate::types::Ty>, super::Fail> {
+    if attempt!(forwarded_ref_matches(
+        formal,
+        forwarded,
+        next_forward,
+        at,
+        context
+    )) {
+        return Ok(None);
+    }
+    Ok(Some(formal.clone()))
+}
+
 /// Check one formal borrowed reference against the host-owned logical input.
 /// The loop caller records the first refusal; this helper stays loop-free so
-/// its early returns remain extractable.
+/// its early returns remain extractable. The constructor test is a separate
+/// helper so no join happens while the borrowed `Ctx` is in scope.
 fn forwarded_ref_matches(
     formal: &crate::types::Ty,
     forwarded: &[u32],
@@ -315,7 +364,7 @@ fn forwarded_ref_matches(
     at: super::parts::Site,
     context: &super::parts::Ctx,
 ) -> Result<bool, super::Fail> {
-    if !matches!(formal, crate::types::Ty::LiveRef(_, _, _)) {
+    if !is_live_ref(formal) {
         return Ok(false);
     }
     let logical_position = attempt!(forwarded_position(forwarded, next_forward, at));
@@ -326,6 +375,11 @@ fn forwarded_ref_matches(
         context
     ));
     Ok(true)
+}
+
+/// Whether a formal input is a borrowed live reference.
+const fn is_live_ref(formal: &crate::types::Ty) -> bool {
+    matches!(formal, crate::types::Ty::LiveRef(_, _, _))
 }
 
 fn forwarded_position(
@@ -441,4 +495,61 @@ pub(super) fn open_quotation(
         claimed_effects,
     };
     Ok((cost, frame, child))
+}
+
+#[cfg(test)]
+mod tests {
+    fn live_ref(output: crate::types::Ty) -> crate::types::Ty {
+        crate::types::Ty::LiveRef(
+            alloc::boxed::Box::default(),
+            alloc::boxed::Box::new(alloc::vec![output]),
+            crate::types::EffSet::empty(),
+        )
+    }
+
+    #[test]
+    fn the_first_forwarded_refusal_is_reported() {
+        let env = crate::contracts::Env::default();
+        let request = crate::untrusted::Request {
+            input_bytes: 0,
+            expected: crate::untrusted::Expected {
+                stack_in: alloc::vec![live_ref(crate::types::Ty::I64)],
+                stack_out: alloc::vec![],
+                allowed_effects: crate::types::EffSet::empty(),
+            },
+            limits: crate::untrusted::Limits {
+                bytes: 1024,
+                nodes: 64,
+                depth: 8,
+                type_size: 64,
+                stack_height: 64,
+                work: 1024,
+                diagnostics: 16,
+            },
+        };
+        let context = super::super::parts::Ctx {
+            request: &request,
+            env: &env,
+            signed_owner: None,
+        };
+        let first = live_ref(crate::types::Ty::Unit);
+        let second = live_ref(crate::types::Ty::Bool);
+        let folded = super::fold_formals(
+            &[first.clone(), second],
+            &[0],
+            super::super::parts::site(None, None),
+            context,
+        );
+        assert!(matches!(
+            &folded,
+            Err(super::super::Fail::Invalid(diagnostic))
+                if diagnostic.constraint == crate::untrusted::Constraint::StackJoin
+        ));
+        assert!(matches!(
+            &folded,
+            Err(super::super::Fail::Invalid(diagnostic))
+                if diagnostic.expected == [first.clone()]
+                    && diagnostic.actual == [live_ref(crate::types::Ty::I64)]
+        ));
+    }
 }

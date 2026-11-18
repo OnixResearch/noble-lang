@@ -4,17 +4,8 @@ pub(in crate::source) fn text(
     body: &noble_kernel::execution::Body,
     node: noble_kernel::untrusted::NodeId,
 ) -> Result<&[u8], crate::Diagnostic> {
-    let mut index = 0usize;
-    let mut found = None;
-    while index < body.texts.len() {
-        if body.texts[index].node == node {
-            found = Some(body.texts[index].bytes.as_slice());
-            break;
-        }
-        index += 1;
-    }
-    match found {
-        Some(bytes) => Ok(bytes),
+    match crate::scan::find_first(&body.texts, |text| text.node == node) {
+        Some(text) => Ok(text.bytes.as_slice()),
         None => Err(crate::Diagnostic::Invalid),
     }
 }

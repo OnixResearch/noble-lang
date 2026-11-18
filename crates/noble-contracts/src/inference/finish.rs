@@ -70,7 +70,7 @@ fn generic_nominal(
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<super::materialize::Material, crate::Diagnostic> {
-    let Some(declaration) = generics.iter().find(|decl| decl.id == id) else {
+    let Some(declaration) = crate::scan::find_first(generics, |decl| decl.id == id) else {
         return Err(crate::internal(span));
     };
     let (
@@ -252,97 +252,152 @@ fn push(
     }
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
-)]
 /// Count, and charge one work unit per node for, the owned `Ty` nodes of a
 /// registered nominal descriptor before a materialized occurrence clones it.
-/// Nodes are counted as they are scheduled, so the worklist stays within
-/// `TYPE_NODE_CAP`.
+/// Each node is counted before the walk descends into it, so the walk is
+/// never more than `TYPE_NODE_CAP + 1` nodes deep, whatever the descriptor.
+/// Every node costs the same charge and count, so the outcome does not depend
+/// on the visiting order. The recursive frames carry only references: the
+/// first refusal is parked in the walk state and each frame returns a flag.
 pub(super) fn reserve_descriptor(
     shape: &noble_kernel::types::NominalShape,
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> Result<u32, crate::Diagnostic> {
     let mut walk = Reservation {
-        pending: alloc::vec::Vec::with_capacity(2),
         nodes: 0,
+        failure: None,
     };
-    attempt!(walk.descriptor(shape, span, meter));
-    while let Some(ty) = walk.pending.pop() {
-        match ty {
-            noble_kernel::types::Ty::Pair(left, right)
-            | noble_kernel::types::Ty::Sum(left, right) => {
-                attempt!(walk.enter(left, span, meter));
-                attempt!(walk.enter(right, span, meter));
-            }
-            noble_kernel::types::Ty::List(item) => attempt!(walk.enter(item, span, meter)),
-            noble_kernel::types::Ty::Program(input, output, _)
-            | noble_kernel::types::Ty::LiveRef(input, output, _) => {
-                for item in input.iter().chain(output.iter()) {
-                    attempt!(walk.enter(item, span, meter));
-                }
-            }
-            noble_kernel::types::Ty::Nominal(_, nested) => {
-                attempt!(walk.descriptor(nested, span, meter));
-            }
-            noble_kernel::types::Ty::GenericNominal(_, arguments, nested) => {
-                attempt!(walk.enter(&arguments[0], span, meter));
-                attempt!(walk.enter(&arguments[1], span, meter));
-                attempt!(walk.descriptor(nested, span, meter));
-            }
-            noble_kernel::types::Ty::Unit
-            | noble_kernel::types::Ty::Bool
-            | noble_kernel::types::Ty::I64
-            | noble_kernel::types::Ty::Text
-            | noble_kernel::types::Ty::Syntax
-            | noble_kernel::types::Ty::Contract
-            | noble_kernel::types::Ty::Evidence
-            | noble_kernel::types::Ty::Certified
-            | noble_kernel::types::Ty::Resource(_) => {}
-        }
+    if reserve_shape(shape, &mut walk, span, meter) {
+        return Ok(walk.nodes);
     }
-    Ok(walk.nodes)
+    match walk.failure {
+        Some(problem) => Err(problem),
+        None => Err(crate::internal(span)),
+    }
 }
 
-struct Reservation<'a> {
-    pending: alloc::vec::Vec<&'a noble_kernel::types::Ty>,
+/// Owned state of one descriptor reservation.
+struct Reservation {
     nodes: u32,
+    failure: Option<crate::Diagnostic>,
 }
 
-impl<'a> Reservation<'a> {
-    fn enter(
-        &mut self,
-        ty: &'a noble_kernel::types::Ty,
-        span: crate::Span,
-        meter: &mut crate::Meter,
-    ) -> Result<(), crate::Diagnostic> {
-        attempt!(meter.charge(1, span));
-        self.nodes = attempt!(type_nodes(self.nodes, 1, span));
-        self.pending.push(ty);
-        Ok(())
+/// Charge one work unit and count one node; record the refusal and return
+/// `false` when either limit is reached.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; metering is non-const and a refusal stores an owned diagnostic."
+)]
+fn reserve_node(walk: &mut Reservation, span: crate::Span, meter: &mut crate::Meter) -> bool {
+    if let Err(problem) = meter.charge(1, span) {
+        walk.failure = Some(problem);
+        return false;
     }
-
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
-    )]
-    fn descriptor(
-        &mut self,
-        shape: &'a noble_kernel::types::NominalShape,
-        span: crate::Span,
-        meter: &mut crate::Meter,
-    ) -> Result<(), crate::Diagnostic> {
-        match shape {
-            noble_kernel::types::NominalShape::Opaque(representation) => {
-                self.enter(representation, span, meter)
-            }
-            noble_kernel::types::NominalShape::Variant(left, right) => {
-                attempt!(self.enter(left, span, meter));
-                self.enter(right, span, meter)
-            }
+    match type_nodes(walk.nodes, 1, span) {
+        Ok(nodes) => {
+            walk.nodes = nodes;
+            true
         }
+        Err(problem) => {
+            walk.failure = Some(problem);
+            false
+        }
+    }
+}
+
+/// Reserve the payload types of one nominal descriptor, in order; `false`
+/// once a refusal is recorded.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the reservation charges the non-const work meter for every node."
+)]
+fn reserve_shape(
+    shape: &noble_kernel::types::NominalShape,
+    walk: &mut Reservation,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> bool {
+    match shape {
+        noble_kernel::types::NominalShape::Opaque(representation) => {
+            reserve_ty(representation, walk, span, meter)
+        }
+        noble_kernel::types::NominalShape::Variant(left, right) => {
+            reserve_ty(left, walk, span, meter) && reserve_ty(right, walk, span, meter)
+        }
+    }
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; every node is charged and counted against TYPE_NODE_CAP before the walk descends into it; direct recursion avoids a borrowed work stack the pinned Aeneas cannot translate."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the reservation charges the non-const work meter for every node."
+)]
+/// Charge and count one node, then reserve the nodes it owns; `false` once a
+/// refusal is recorded.
+fn reserve_ty(
+    ty: &noble_kernel::types::Ty,
+    walk: &mut Reservation,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> bool {
+    if !reserve_node(walk, span, meter) {
+        return false;
+    }
+    match ty {
+        noble_kernel::types::Ty::Pair(left, right) | noble_kernel::types::Ty::Sum(left, right) => {
+            reserve_ty(left, walk, span, meter) && reserve_ty(right, walk, span, meter)
+        }
+        noble_kernel::types::Ty::List(item) => reserve_ty(item, walk, span, meter),
+        noble_kernel::types::Ty::Program(input, output, _)
+        | noble_kernel::types::Ty::LiveRef(input, output, _) => {
+            reserve_stack(input, walk, span, meter) && reserve_stack(output, walk, span, meter)
+        }
+        noble_kernel::types::Ty::Nominal(_, nested) => reserve_shape(nested, walk, span, meter),
+        noble_kernel::types::Ty::GenericNominal(_, arguments, nested) => {
+            reserve_ty(&arguments[0], walk, span, meter)
+                && reserve_ty(&arguments[1], walk, span, meter)
+                && reserve_shape(nested, walk, span, meter)
+        }
+        noble_kernel::types::Ty::Unit
+        | noble_kernel::types::Ty::Bool
+        | noble_kernel::types::Ty::I64
+        | noble_kernel::types::Ty::Text
+        | noble_kernel::types::Ty::Syntax
+        | noble_kernel::types::Ty::Contract
+        | noble_kernel::types::Ty::Evidence
+        | noble_kernel::types::Ty::Certified
+        | noble_kernel::types::Ty::Resource(_) => true,
+    }
+}
+
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; each call consumes one entry, and every entry is a node counted against TYPE_NODE_CAP before it is walked, so the depth stays within the node cap; recursion instead of a loop keeps the reservation cycle free of loops, which the pinned Aeneas cannot prove monotone."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the reservation charges the non-const work meter for every node."
+)]
+/// Reserve every type of a stack in order, stopping at the first refusal.
+fn reserve_stack(
+    items: &[noble_kernel::types::Ty],
+    walk: &mut Reservation,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> bool {
+    match items.split_first() {
+        Some((first, rest)) => {
+            reserve_ty(first, walk, span, meter) && reserve_stack(rest, walk, span, meter)
+        }
+        None => true,
     }
 }
 
@@ -564,5 +619,262 @@ mod tests {
             // Formerly depth 12 (16381 owned nodes) materialized for 62 work.
             assert!(accepted < 6, "{payload_params:?} accepted depth {accepted}");
         }
+    }
+
+    #[test]
+    fn registered_descriptor_reservation_counts_and_charges_every_owned_node() {
+        let nested = NominalShape::Opaque(alloc::boxed::Box::new(Ty::Bool));
+        let shape = NominalShape::Variant(
+            alloc::boxed::Box::new(Ty::program(
+                alloc::vec![Ty::I64, Ty::Nominal(FAMILY, alloc::boxed::Box::new(nested))],
+                alloc::vec![Ty::List(alloc::boxed::Box::new(Ty::I64))],
+                noble_kernel::types::EffSet::empty(),
+            )),
+            alloc::boxed::Box::new(Ty::Pair(
+                alloc::boxed::Box::new(Ty::I64),
+                alloc::boxed::Box::new(Ty::Unit),
+            )),
+        );
+        let limits = |work| crate::Limits {
+            work,
+            ..crate::Limits::default()
+        };
+        let mut meter = crate::Meter::new(limits(9));
+        assert_eq!(
+            super::reserve_descriptor(&shape, SPAN, &mut meter).ok(),
+            Some(9)
+        );
+        assert_eq!(meter.work, 0);
+        let mut meter = crate::Meter::new(limits(8));
+        let refused = super::reserve_descriptor(&shape, SPAN, &mut meter)
+            .expect_err("nine owned nodes need nine work units");
+        assert_eq!(refused.kind, crate::DiagnosticKind::Exhausted);
+        assert_eq!(refused.message, "frontend work limit exceeded");
+        assert_eq!(meter.work, 0);
+    }
+
+    /// `base` with `values` pushed in order, so the last value is on top.
+    fn stack_of(arena: &mut Arena, base: Term, values: &[Term], meter: &mut crate::Meter) -> u32 {
+        let mut stack = arena.add(base, SPAN, meter).expect("stack base fits");
+        for value in values {
+            let value = arena.add(*value, SPAN, meter).expect("stack value fits");
+            stack = arena
+                .add(Term::Push(stack, value), SPAN, meter)
+                .expect("stack push fits");
+        }
+        stack
+    }
+
+    #[test]
+    fn stack_difference_reports_the_first_differing_position_from_the_top() {
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        let mut arena = Arena::new();
+        let expected = stack_of(
+            &mut arena,
+            Term::Empty,
+            &[Term::Bool, Term::I64],
+            &mut meter,
+        );
+        let actual = stack_of(
+            &mut arena,
+            Term::Empty,
+            &[Term::Text, Term::I64],
+            &mut meter,
+        );
+        let alike = stack_of(
+            &mut arena,
+            Term::Empty,
+            &[Term::Bool, Term::I64],
+            &mut meter,
+        );
+        let (shared, expected_text, actual_text) = arena
+            .stack_difference(expected, actual, SPAN, &mut meter)
+            .expect("both stacks render")
+            .expect("the second position differs");
+        assert_eq!(shared, 1);
+        assert_ne!(expected_text, actual_text);
+        assert!(arena
+            .stack_difference(expected, alike, SPAN, &mut meter)
+            .expect("both stacks render")
+            .is_none());
+        let mut starved = crate::Meter::new(crate::Limits {
+            work: 0,
+            ..crate::Limits::default()
+        });
+        let refused = arena
+            .stack_difference(expected, actual, SPAN, &mut starved)
+            .expect_err("the walk is charged");
+        assert_eq!(refused.message, "frontend work limit exceeded");
+    }
+
+    #[test]
+    fn editor_stack_suffix_lists_the_solved_suffix_bottom_first() {
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        let mut arena = Arena::new();
+        let open = stack_of(
+            &mut arena,
+            Term::Hole(super::super::Sort::Stack),
+            &[Term::I64, Term::Bool],
+            &mut meter,
+        );
+        let bottom = arena.add(Term::I64, SPAN, &mut meter).expect("value fits");
+        let top = arena.add(Term::Bool, SPAN, &mut meter).expect("value fits");
+        let suffix = arena
+            .editor_stack_suffix(open, SPAN, &mut meter)
+            .expect("an open stack has a solved suffix");
+        assert_eq!(suffix.len(), 2);
+        assert_eq!(
+            suffix[0],
+            arena
+                .describe_stack(bottom, SPAN, &mut meter)
+                .expect("renders")
+        );
+        assert_eq!(
+            suffix[1],
+            arena
+                .describe_stack(top, SPAN, &mut meter)
+                .expect("renders")
+        );
+        let malformed = stack_of(&mut arena, Term::Unit, &[Term::I64], &mut meter);
+        let refused = arena
+            .editor_stack_suffix(malformed, SPAN, &mut meter)
+            .expect_err("a value is not a stack base");
+        assert_eq!(refused.kind, crate::DiagnosticKind::Internal);
+    }
+
+    #[test]
+    fn types_and_stacks_build_children_first_with_one_charge_per_step() {
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        let mut arena = Arena::new();
+        let pair = Ty::Pair(
+            alloc::boxed::Box::new(Ty::I64),
+            alloc::boxed::Box::new(Ty::List(alloc::boxed::Box::new(Ty::Bool))),
+        );
+        // Four type steps and two joins, each charged once, plus four nodes.
+        let root = arena.ty(&pair, SPAN, &mut meter).expect("pair builds");
+        assert_eq!(meter.spent(), 10);
+        assert_eq!(root, 3);
+        assert!(matches!(arena.get(0, SPAN), Ok(Term::I64)));
+        assert!(matches!(arena.get(1, SPAN), Ok(Term::Bool)));
+        assert!(matches!(arena.get(2, SPAN), Ok(Term::List(1))));
+        assert!(matches!(arena.get(3, SPAN), Ok(Term::Pair(0, 2))));
+
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        let mut arena = Arena::new();
+        // The base, two entry scans, two entries and two pushes.
+        let root = arena
+            .stack(&[Ty::I64, Ty::Bool], SPAN, &mut meter)
+            .expect("stack builds");
+        assert_eq!(meter.spent(), 12);
+        assert_eq!(root, 4);
+        assert!(matches!(arena.get(0, SPAN), Ok(Term::Empty)));
+        assert!(matches!(arena.get(1, SPAN), Ok(Term::I64)));
+        assert!(matches!(arena.get(2, SPAN), Ok(Term::Push(0, 1))));
+        assert!(matches!(arena.get(3, SPAN), Ok(Term::Bool)));
+        assert!(matches!(arena.get(4, SPAN), Ok(Term::Push(2, 3))));
+
+        let mut starved = crate::Meter::new(crate::Limits {
+            work: 11,
+            ..crate::Limits::default()
+        });
+        let refused = Arena::new()
+            .stack(&[Ty::I64, Ty::Bool], SPAN, &mut starved)
+            .expect_err("the final push node needs the twelfth unit");
+        assert_eq!(refused.message, "frontend work limit exceeded");
+    }
+
+    /// `List` nested `depth` times around `I64`: `depth + 1` owned nodes in one chain.
+    fn list_chain(depth: u32) -> Ty {
+        let mut ty = Ty::I64;
+        for _ in 0..depth {
+            ty = Ty::List(alloc::boxed::Box::new(ty));
+        }
+        ty
+    }
+
+    #[test]
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; TYPE_NODE_CAP is the constant 4096, so cap - 1 cannot underflow."
+    )]
+    fn deepest_descriptor_the_node_cap_admits_is_reserved_and_one_deeper_is_refused() {
+        // Reservation counts each node before descending into it, so its
+        // recursion is never deeper than TYPE_NODE_CAP + 1 nodes.
+        let cap = super::super::TYPE_NODE_CAP;
+        let deepest = NominalShape::Opaque(alloc::boxed::Box::new(list_chain(cap - 1)));
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        assert_eq!(
+            super::reserve_descriptor(&deepest, SPAN, &mut meter).ok(),
+            Some(cap)
+        );
+        let deeper = NominalShape::Opaque(alloc::boxed::Box::new(list_chain(cap)));
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        let refused = super::reserve_descriptor(&deeper, SPAN, &mut meter)
+            .expect_err("one node past the cap");
+        assert_eq!(
+            refused.message,
+            "inferred type representation exceeds the 4096-node limit"
+        );
+
+        // The recursion over a stack's entries is bounded the same way: a
+        // Program with cap - 1 inputs owns exactly cap nodes.
+        let widest = |inputs: u32| {
+            let count = usize::try_from(inputs).expect("the input count fits usize");
+            let stack = alloc::vec![Ty::I64; count];
+            NominalShape::Opaque(alloc::boxed::Box::new(Ty::program(
+                stack,
+                alloc::vec::Vec::new(),
+                noble_kernel::types::EffSet::empty(),
+            )))
+        };
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        assert_eq!(
+            super::reserve_descriptor(&widest(cap - 1), SPAN, &mut meter).ok(),
+            Some(cap)
+        );
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        let refused = super::reserve_descriptor(&widest(cap), SPAN, &mut meter)
+            .expect_err("one entry past the cap");
+        assert_eq!(
+            refused.message,
+            "inferred type representation exceeds the 4096-node limit"
+        );
+    }
+
+    #[test]
+    #[expect(
+        tigerstyle::raw_arithmetic_overflow,
+        reason = "Owner: noble-contracts; TYPE_CAP is the constant 256, so TYPE_CAP - 1 cannot underflow."
+    )]
+    fn deepest_admitted_type_at_the_bottom_of_a_full_stack_builds() {
+        // Admitted types have at most TYPE_CAP (256) constructors and stacks
+        // at most STACK_CAP (256) entries; the bottom entry is built at the
+        // deepest scan, so this is the deepest recursion those limits admit.
+        let mut entries = alloc::vec![list_chain(crate::syntax::TYPE_CAP - 1)];
+        for _ in 1..super::super::STACK_CAP {
+            entries.push(Ty::I64);
+        }
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        let mut arena = Arena::new();
+        let root = arena
+            .stack(&entries, SPAN, &mut meter)
+            .expect("a full stack of admitted types builds");
+        assert!(matches!(arena.get(root, SPAN), Ok(Term::Push(_, _))));
+
+        // Program nesting adds stack frames per constructor; 255 nested
+        // Programs around I64 are the deepest such type of 256 constructors.
+        let mut nested = Ty::I64;
+        for _ in 1..crate::syntax::TYPE_CAP {
+            nested = Ty::program(
+                alloc::vec![nested],
+                alloc::vec::Vec::new(),
+                noble_kernel::types::EffSet::empty(),
+            );
+        }
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        let root = Arena::new()
+            .ty(&nested, SPAN, &mut meter)
+            .expect("the deepest admitted Program type builds");
+        assert!(root > 0);
     }
 }

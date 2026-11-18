@@ -178,6 +178,25 @@ inventories, dependencies and axioms against that reviewed lock. Neither
 discovery nor runtime acceptance substitutes for that check, and no universal
 refinement or all-documentation execution claim follows.
 
+The #97 extraction renewal removes data-bearing `format!` calls from the
+contracts subject instead of modelling erased formatter arguments. The Rust
+compatibility tests compare the replacement text with the previous formatting
+expressions; the generated subjects must still come directly from the selected
+extractors. The M4 source policy reviews exactly ten frontend opaque functions,
+four frontend host-handle types, one backend debug function and ten excluded
+frontend host adapters. Complete annotated-item byte hashes and extents bind
+every rename, variant suffix, exclusion and reviewed opaque declaration; these
+are not blanket annotations or extracted-body claims. The three private logical
+tree `Debug` derives remain test-only. The single out-of-line effect oracle is
+accounted separately only under its exact test-only parent-module directive.
+
+The inherited-boundaries inventory remains an immutable historical declaration
+preservation baseline, not a current extraction receipt. A current reviewed lock
+must be produced by discovery from committed source, reviewed separately, then
+checked by an independent extraction. Regenerating subjects or passing an
+individual Lean build does not renew the retained historical implementation
+receipt, nor cover later changes to the procedure-lineage implementation.
+
 ## Calculator amendment to draft.5
 
 Select an exact programmable calculator as the first AI-authoring reference application. Its library uses arbitrary-precision integers and normalized rationals. Decimal input is exact, and division does not truncate. Noble's wrapping `I64` operators and bootstrap scope remain unchanged.

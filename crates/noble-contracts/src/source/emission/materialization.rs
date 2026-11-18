@@ -127,47 +127,17 @@ impl Nodes {
         let node_id =
             noble_kernel::untrusted::NodeId(attempt!(crate::index(self.nodes.len(), draft.span)));
         let variables = core::mem::take(&mut draft.variables);
-        let inst = if matches!(
+        // A slot invocation carries no instantiation; every other draft is
+        // instantiated first. Each branch builds its node directly, so no
+        // provably absent instantiation reaches a generic Option helper.
+        let node = if matches!(
             &draft.kind,
             crate::source::inference::DraftKind::SlotInvoke { .. }
         ) {
-            None
+            attempt!(slot_invoke_node(&mut draft.kind, node_id, draft.span))
         } else {
-            Some(attempt!(arena.instantiation(&variables, draft.span, meter)))
-        };
-        let node = match &mut draft.kind {
-            crate::source::inference::DraftKind::Literal(lit) => {
-                noble_kernel::untrusted::Node::Literal {
-                    lit: *lit,
-                    inst: inst.ok_or_else(|| crate::internal(draft.span))?,
-                }
-            }
-            crate::source::inference::DraftKind::Invocation(def) => {
-                noble_kernel::untrusted::Node::Invocation {
-                    def: *def,
-                    inst: inst.ok_or_else(|| crate::internal(draft.span))?,
-                }
-            }
-            crate::source::inference::DraftKind::SignedSelf(def) => {
-                noble_kernel::untrusted::Node::SignedSelf {
-                    def: *def,
-                    inst: inst.ok_or_else(|| crate::internal(draft.span))?,
-                }
-            }
-            crate::source::inference::DraftKind::Quotation(body) => {
-                noble_kernel::untrusted::Node::Quotation {
-                    body: core::mem::take(body),
-                    inst: inst.ok_or_else(|| crate::internal(draft.span))?,
-                }
-            }
-            crate::source::inference::DraftKind::SlotInvoke {
-                ref_ordinal,
-                forwarded_ref_ordinals,
-            } => noble_kernel::untrusted::Node::SlotInvoke {
-                ref_ordinal: *ref_ordinal,
-                site_id: node_id.0,
-                forwarded_ref_ordinals: core::mem::take(forwarded_ref_ordinals),
-            },
+            let inst = attempt!(arena.instantiation(&variables, draft.span, meter));
+            attempt!(instantiated_node(&mut draft.kind, inst, draft.span))
         };
         if let Some(bytes) = draft.text.take() {
             self.texts.reserve(1);
@@ -179,5 +149,63 @@ impl Nodes {
         self.nodes.push(node);
         self.spans.push(draft.span);
         Ok(())
+    }
+}
+
+/// The kernel node of a slot invocation draft, which carries no
+/// instantiation; any other draft kind here is an internal error.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; it moves the forwarded ordinals out with mem::take, which is not const."
+)]
+fn slot_invoke_node(
+    kind: &mut crate::source::inference::DraftKind,
+    node_id: noble_kernel::untrusted::NodeId,
+    span: crate::Span,
+) -> Result<noble_kernel::untrusted::Node, crate::Diagnostic> {
+    match kind {
+        crate::source::inference::DraftKind::SlotInvoke {
+            ref_ordinal,
+            forwarded_ref_ordinals,
+        } => Ok(noble_kernel::untrusted::Node::SlotInvoke {
+            ref_ordinal: *ref_ordinal,
+            site_id: node_id.0,
+            forwarded_ref_ordinals: core::mem::take(forwarded_ref_ordinals),
+        }),
+        crate::source::inference::DraftKind::Literal(_)
+        | crate::source::inference::DraftKind::Invocation(_)
+        | crate::source::inference::DraftKind::SignedSelf(_)
+        | crate::source::inference::DraftKind::Quotation(_) => Err(crate::internal(span)),
+    }
+}
+
+/// The kernel node of an instantiated draft; a slot invocation, which is
+/// never instantiated, is an internal error here.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; it moves a quotation body out with mem::take, which is not const."
+)]
+fn instantiated_node(
+    kind: &mut crate::source::inference::DraftKind,
+    inst: noble_kernel::words::Inst,
+    span: crate::Span,
+) -> Result<noble_kernel::untrusted::Node, crate::Diagnostic> {
+    match kind {
+        crate::source::inference::DraftKind::Literal(lit) => {
+            Ok(noble_kernel::untrusted::Node::Literal { lit: *lit, inst })
+        }
+        crate::source::inference::DraftKind::Invocation(def) => {
+            Ok(noble_kernel::untrusted::Node::Invocation { def: *def, inst })
+        }
+        crate::source::inference::DraftKind::SignedSelf(def) => {
+            Ok(noble_kernel::untrusted::Node::SignedSelf { def: *def, inst })
+        }
+        crate::source::inference::DraftKind::Quotation(body) => {
+            Ok(noble_kernel::untrusted::Node::Quotation {
+                body: core::mem::take(body),
+                inst,
+            })
+        }
+        crate::source::inference::DraftKind::SlotInvoke { .. } => Err(crate::internal(span)),
     }
 }

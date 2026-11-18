@@ -57,12 +57,7 @@ fn definition_bounds(
         ));
         attempt!(work.charge(contract_work));
     }
-    let is_signed_body = definition
-        .body
-        .candidate
-        .nodes
-        .iter()
-        .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. }));
+    let is_signed_body = super::has_signed_self(&definition.body);
     let owner_inst = match (signed, is_signed_body, definition.owner_inst.as_ref()) {
         (true, true, Some(inst)) => Some(inst),
         (_, false, None) => None,
@@ -150,13 +145,7 @@ fn accept_definition(
     if is_ambient_forbidden(&env, &definition.body) {
         return Err(crate::Diagnostic::Invalid);
     }
-    let signed_owner = if definition
-        .body
-        .candidate
-        .nodes
-        .iter()
-        .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. }))
-    {
+    let signed_owner = if super::has_signed_self(&definition.body) {
         if !signed {
             return Err(crate::Diagnostic::Invalid);
         }
@@ -211,16 +200,21 @@ fn is_ambient_forbidden(
         return false;
     }
     let mut index = 0usize;
-    while index < body.candidate.nodes.len() {
-        match &body.candidate.nodes[index] {
-            noble_kernel::untrusted::Node::Invocation { def, .. } if def.0 == 22 => return true,
-            noble_kernel::untrusted::Node::Invocation { .. }
-            | noble_kernel::untrusted::Node::SignedSelf { .. }
-            | noble_kernel::untrusted::Node::Literal { .. }
-            | noble_kernel::untrusted::Node::Quotation { .. }
-            | noble_kernel::untrusted::Node::SlotInvoke { .. } => {}
-        }
+    let mut is_forbidden = false;
+    while !is_forbidden && index < body.candidate.nodes.len() {
+        is_forbidden = is_ambient_emit(&body.candidate.nodes[index]);
         index += 1;
     }
-    false
+    is_forbidden
+}
+
+/// Whether `node` invokes the fixed ambient host emit operation.
+fn is_ambient_emit(node: &noble_kernel::untrusted::Node) -> bool {
+    match node {
+        noble_kernel::untrusted::Node::Invocation { def, .. } => def.0 == 22,
+        noble_kernel::untrusted::Node::SignedSelf { .. }
+        | noble_kernel::untrusted::Node::Literal { .. }
+        | noble_kernel::untrusted::Node::Quotation { .. }
+        | noble_kernel::untrusted::Node::SlotInvoke { .. } => false,
+    }
 }

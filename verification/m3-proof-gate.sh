@@ -26,6 +26,13 @@
 #   explicit list of eight unrequired fixture theorems. Any other declared
 #   theorem must stay within the strict set, so a new native_decide proof
 #   fails until it is reviewed and listed.
+#   No other axiom shape is admitted. The pinned Aeneas `toStr` proves each
+#   string literal's UTF-8 size bound with `decide +native`, leaving one
+#   `<decl>._native.decide.ax_<n>` axiom per literal. Since #97 the generated
+#   `acceptance.check` reaches none of them: adapter identities are compared
+#   as byte arrays and the `acceptance.parts.join` assertions carry no
+#   message. So such an axiom on any audited name rejects, whatever its
+#   owner (refusal cells `foreign-native-type` and `foreign-owner-literal`).
 #
 # Beyond the reviewed list, the gate enumerates every theorem the m3
 # sources declare, from the elaborated environment: each `.lean` file under
@@ -162,6 +169,7 @@ import NobleM3
 
 open Lean in
 run_cmd do
+  let env ← getEnv
   let strict : List Name := [``propext, ``Classical.choice, ``Quot.sound]
   let evalOk (n : Name) : Bool :=
     strict.contains n || n.toString.contains "_native.native_decide.ax_1_"
@@ -260,7 +268,6 @@ run_cmd do
   -- under NobleM2/ and NobleM3/ plus the roots, so a new theorem or a new
   -- module is audited without editing this gate; a module no checker imports
   -- is an error, because its theorems would be elaborated nowhere.
-  let env ← getEnv
   let nameOf (s : String) : Name := s.splitOn "." |>.foldl (fun n p => n.mkStr p) .anonymous
   let payload ← IO.FS.readFile "MODULES_A"
   let expected : Array Name := (payload.splitOn "\n").filterMap (fun line => if line.isEmpty then none else some (nameOf line)) |>.toArray
@@ -286,6 +293,7 @@ import NobleM2.Refinement
 
 open Lean in
 run_cmd do
+  let env ← getEnv
   let gen := ``noble_kernel.acceptance.check
   let strict : List Name := [``propext, ``Classical.choice, ``Quot.sound]
   let evalOk (n : Name) : Bool :=
@@ -328,7 +336,6 @@ run_cmd do
   -- Enumerated coverage of this checker's module, as in checker A: every
   -- theorem declared in NobleM2/Refinement.lean is audited, including those
   -- outside the reviewed list above.
-  let env ← getEnv
   let nameOf (s : String) : Name := s.splitOn "." |>.foldl (fun n p => n.mkStr p) .anonymous
   let payload ← IO.FS.readFile "MODULES_B"
   let expected : Array Name := (payload.splitOn "\n").filterMap (fun line => if line.isEmpty then none else some (nameOf line)) |>.toArray

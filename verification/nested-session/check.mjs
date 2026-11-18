@@ -115,7 +115,7 @@ writeFileSync(join(project, 'lean-toolchain'), readFileSync(join(root, 'proofs/m
 writeFileSync(join(project, 'lakefile.toml'),
   ['name = "noble_nested_session"', 'defaultTargets = ["NestedSession"]', '',
    '[[lean_lib]]', 'name = "NestedSession"', ''].join('\n'));
-run(join(leanBin, 'lake'), ['build', 'NestedSession'], project);
+run(join(leanBin, 'lake'), ['--no-cache', 'build', 'NestedSession'], project);
 const theorems = auditTheorems(project, inventory, names);
 const final = {
   commit: run(git, ['rev-parse', 'HEAD']).trim(),

@@ -75,12 +75,20 @@ fn accept(
     if let Some(problem) = failure {
         return Err(problem);
     }
-    if visited.iter().any(|slot| !slot) {
+    if crate::scan::find_first(&visited, |slot| !*slot).is_some() {
         Err(crate::Diagnostic::Invalid)
     } else {
         attempt!(checked_interface(env, &request.expected, &checked));
         Ok(checked)
     }
+}
+
+/// Whether a definition body contains a signed self-reference node.
+fn has_signed_self(body: &noble_kernel::execution::Body) -> bool {
+    crate::scan::find_first(&body.candidate.nodes, |node| {
+        matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })
+    })
+    .is_some()
 }
 
 /// Retain only kernel-derived interfaces. In slot mode the entry has a full
@@ -105,46 +113,121 @@ fn checked_interface(
     if !env.live_slots && !checked.live_sites.is_empty() {
         return Err(crate::Diagnostic::Invalid);
     }
-    for site in &checked.live_sites {
-        let position = usize::try_from(site.root_logical_input_position)
-            .map_err(|_| crate::Diagnostic::Invalid)?;
-        let Some(noble_kernel::types::Ty::LiveRef(input, output, ceiling)) =
-            expected.stack_in.get(position)
-        else {
-            return Err(crate::Diagnostic::Invalid);
-        };
-        let preceding_refs = expected.stack_in[..position]
-            .iter()
-            .filter(|ty| matches!(ty, noble_kernel::types::Ty::LiveRef(_, _, _)))
-            .count();
-        let is_ordinal_mismatch =
-            !u32::try_from(preceding_refs).is_ok_and(|refs| refs == site.ref_ordinal);
-        let has_site_shape_mismatch = is_ordinal_mismatch
-            || site.stack_in.as_slice() != input.as_slice()
-            || site.stack_out.as_slice() != output.as_slice()
-            || site.allowed_effects.as_slice() != ceiling.as_slice();
-        if has_site_shape_mismatch {
-            return Err(crate::Diagnostic::Invalid);
-        }
-        let mut forwarded = site.forwarded_ref_ordinals.iter();
-        for formal in input.iter() {
-            if matches!(formal, noble_kernel::types::Ty::LiveRef(_, _, _)) {
-                let Some(position) = forwarded
-                    .next()
-                    .and_then(|position| usize::try_from(*position).ok())
-                else {
-                    return Err(crate::Diagnostic::Invalid);
-                };
-                if expected.stack_in.get(position) != Some(formal) {
-                    return Err(crate::Diagnostic::Invalid);
-                }
-            }
-        }
-        if forwarded.next().is_some() {
-            return Err(crate::Diagnostic::Invalid);
-        }
+    let mut index = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < checked.live_sites.len() {
+        outcome = checked_live_site(expected, &checked.live_sites[index]);
+        index += 1;
+    }
+    outcome
+}
+
+/// One dispatch site resolves to its exact root reference and forwards, in
+/// order and exactly once each, the root inputs its borrowed formals name.
+fn checked_live_site(
+    expected: &noble_kernel::untrusted::Expected,
+    site: &noble_kernel::untrusted::LiveSite,
+) -> Result<(), crate::Diagnostic> {
+    let position = usize::try_from(site.root_logical_input_position)
+        .map_err(|_| crate::Diagnostic::Invalid)?;
+    let Some(root) = expected.stack_in.get(position) else {
+        return Err(crate::Diagnostic::Invalid);
+    };
+    if !matches!(root, noble_kernel::types::Ty::LiveRef(_, _, _)) {
+        return Err(crate::Diagnostic::Invalid);
+    }
+    if is_ordinal_mismatch(&expected.stack_in, position, site.ref_ordinal)
+        || is_root_mismatch(&expected.stack_in, root, site)
+    {
+        return Err(crate::Diagnostic::Invalid);
     }
     Ok(())
+}
+
+/// Whether the site's reference ordinal differs from the number of borrowed
+/// references before its root input `position`.
+fn is_ordinal_mismatch(
+    stack_in: &[noble_kernel::types::Ty],
+    position: usize,
+    ref_ordinal: u32,
+) -> bool {
+    match u32::try_from(live_refs_before(stack_in, position)) {
+        Ok(refs) => refs != ref_ordinal,
+        Err(_) => true,
+    }
+}
+
+/// Whether the site's interface differs from its live root reference `root`
+/// or forwards other root inputs than the root's borrowed formals name.
+fn is_root_mismatch(
+    stack_in: &[noble_kernel::types::Ty],
+    root: &noble_kernel::types::Ty,
+    site: &noble_kernel::untrusted::LiveSite,
+) -> bool {
+    match root {
+        noble_kernel::types::Ty::LiveRef(input, output, ceiling) => {
+            site.stack_in.as_slice() != input.as_slice()
+                || site.stack_out.as_slice() != output.as_slice()
+                || site.allowed_effects.as_slice() != ceiling.as_slice()
+                || has_forwarded_mismatch(stack_in, input, &site.forwarded_ref_ordinals)
+        }
+        _ => true,
+    }
+}
+
+/// The number of borrowed live references among the first `position`
+/// entries of `stack`.
+fn live_refs_before(stack: &[noble_kernel::types::Ty], position: usize) -> usize {
+    let mut refs = 0usize;
+    let mut index = 0usize;
+    while index < position {
+        if matches!(stack[index], noble_kernel::types::Ty::LiveRef(_, _, _)) {
+            refs += 1;
+        }
+        index += 1;
+    }
+    refs
+}
+
+/// Whether `forwarded` fails to name, in order, one root input equal to each
+/// borrowed formal of `formals`, or names more inputs than there are formals.
+fn has_forwarded_mismatch(
+    stack_in: &[noble_kernel::types::Ty],
+    formals: &[noble_kernel::types::Ty],
+    forwarded: &[u32],
+) -> bool {
+    let mut next = 0usize;
+    let mut index = 0usize;
+    let mut has_mismatch = false;
+    while !has_mismatch && index < formals.len() {
+        let formal = &formals[index];
+        if matches!(formal, noble_kernel::types::Ty::LiveRef(_, _, _)) {
+            has_mismatch = is_forwarded_mismatch(stack_in, formal, forwarded, next);
+            next += 1;
+        }
+        index += 1;
+    }
+    has_mismatch || next < forwarded.len()
+}
+
+/// Whether forwarded ordinal `next` is absent or names a root input that is
+/// not exactly `formal`.
+fn is_forwarded_mismatch(
+    stack_in: &[noble_kernel::types::Ty],
+    formal: &noble_kernel::types::Ty,
+    forwarded: &[u32],
+    next: usize,
+) -> bool {
+    let Some(ordinal) = forwarded.get(next) else {
+        return true;
+    };
+    let Ok(position) = usize::try_from(*ordinal) else {
+        return true;
+    };
+    match stack_in.get(position) {
+        Some(root) => *root != *formal,
+        None => true,
+    }
 }
 
 #[expect(
@@ -172,7 +255,7 @@ pub(super) fn definition_index(
     let mut index = 0usize;
     let mut found = None;
     while index < submission.definitions.len() {
-        if submission.definitions[index].definition == definition {
+        if submission.definitions[index].definition.0 == definition.0 {
             found = Some(index);
             break;
         }

@@ -5,60 +5,101 @@
 
 mod task;
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; independently admitted imports, plans and data segments are emitted in their fixed order; every bounded sink failure propagates a diagnostic, and asserting on producer-derived contents would replace required refusals."
-)]
+// Runtime fragments are named constants so that their large literal text
+// stays out of the branching emitter that selects them.
+const RUNTIME: &str = include_str!("runtime.wat");
+const ASYNC: &str = include_str!("async.wat");
+
 pub(super) fn module(
     world: &noble_contracts::component::World,
     plans: &[super::lower::Plan],
     data: &super::lower::Data,
 ) -> Result<alloc::vec::Vec<u8>, crate::Diagnostic> {
     let mut buffer = crate::output::Buffer::new(16_384);
+    attempt!(sections(world, plans, data, &mut buffer));
+    Ok(buffer.finish())
+}
+
+/// Imports, runtime, functions and data segments in their fixed order. Each
+/// sequence is emitted by its own helper, so no loop follows a branch here.
+fn sections(
+    world: &noble_contracts::component::World,
+    plans: &[super::lower::Plan],
+    data: &super::lower::Data,
+    buffer: &mut crate::output::Buffer,
+) -> Result<(), crate::Diagnostic> {
     attempt!(buffer.append(b"(module\n"));
+    attempt!(imports(world, buffer));
+    if world.is_async() {
+        attempt!(async_imports(plans, buffer));
+    }
+    attempt!(buffer.append(RUNTIME.as_bytes()));
+    if world.is_async() {
+        attempt!(buffer.append(ASYNC.as_bytes()));
+    }
+    attempt!(functions(plans, buffer));
+    attempt!(data_segments(data, buffer));
+    buffer.append(b")\n")
+}
+
+/// Every imported operation, in world order.
+fn imports(
+    world: &noble_contracts::component::World,
+    buffer: &mut crate::output::Buffer,
+) -> Result<(), crate::Diagnostic> {
     let mut at = 0usize;
     let mut failure = None;
     let operation_count = world.imports().len();
     while at < operation_count && failure.is_none() {
-        if let Err(error) = import(&world.imports()[at], &mut buffer) {
+        if let Err(error) = import(&world.imports()[at], buffer) {
             failure = Some(error);
         }
         at = at.saturating_add(1);
     }
-    if let Some(error) = failure {
-        return Err(error);
+    match failure {
+        Some(error) => Err(error),
+        None => Ok(()),
     }
-    if world.is_async() {
-        attempt!(async_imports(plans, &mut buffer));
-    }
-    attempt!(buffer.append(include_str!("runtime.wat").as_bytes()));
-    if world.is_async() {
-        attempt!(buffer.append(include_str!("async.wat").as_bytes()));
-    }
-    at = 0;
+}
+
+/// Every lowered function, in plan order.
+fn functions(
+    plans: &[super::lower::Plan],
+    buffer: &mut crate::output::Buffer,
+) -> Result<(), crate::Diagnostic> {
+    let mut at = 0usize;
+    let mut failure = None;
     let plan_count = plans.len();
     while at < plan_count && failure.is_none() {
-        if let Err(error) = function(&plans[at], &mut buffer) {
+        if let Err(error) = function(&plans[at], buffer) {
             failure = Some(error);
         }
         at = at.saturating_add(1);
     }
-    if let Some(error) = failure {
-        return Err(error);
+    match failure {
+        Some(error) => Err(error),
+        None => Ok(()),
     }
-    at = 0;
+}
+
+/// Every retained text data segment, in allocation order.
+fn data_segments(
+    data: &super::lower::Data,
+    buffer: &mut crate::output::Buffer,
+) -> Result<(), crate::Diagnostic> {
+    let mut at = 0usize;
+    let mut failure = None;
     let segment_count = data.segments.len();
     while at < segment_count && failure.is_none() {
-        if let Err(error) = data_segment(data, at, &mut buffer) {
+        if let Err(error) = data_segment(data, at, buffer) {
             failure = Some(error);
         }
         at = at.saturating_add(1);
     }
-    if let Some(error) = failure {
-        return Err(error);
+    match failure {
+        Some(error) => Err(error),
+        None => Ok(()),
     }
-    attempt!(buffer.append(b")\n"));
-    Ok(buffer.finish())
 }
 
 fn data_segment(

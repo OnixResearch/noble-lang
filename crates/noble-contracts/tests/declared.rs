@@ -1211,3 +1211,87 @@ fn shared_request_work_spans_nested_checking_stages() -> Result<(), String> {
     );
     Ok(())
 }
+
+/// The work bounds below the first admitting one, every one refused as budget exhaustion.
+struct Sweep {
+    /// The first admitting work bound.
+    bound: u32,
+    /// Each change of the refused stage and span as the bound grows.
+    refusals: Vec<(noble_contracts::source::Stage, u32, u32)>,
+}
+
+/// Sweep the work bound from zero up to the first one that admits `attempt`.
+fn first_admitting_bound<T>(
+    mut attempt: impl FnMut(noble_contracts::Limits) -> Result<T, noble_contracts::source::Error>,
+) -> Result<Sweep, String> {
+    let mut refusals = Vec::with_capacity(256);
+    let mut work = 0;
+    loop {
+        match attempt(noble_contracts::Limits { work, ..LIMITS }) {
+            Ok(_) => {
+                return Ok(Sweep {
+                    bound: work,
+                    refusals,
+                })
+            }
+            Err(error) if error.diagnostic().kind == noble_contracts::DiagnosticKind::Exhausted => {
+                let span = error.diagnostic().span;
+                let refusal = (error.stage(), span.start, span.end);
+                if refusals.last() != Some(&refusal) {
+                    refusals.push(refusal);
+                }
+            }
+            Err(error) => return Err(format!("bound {work} refused: {error:?}")),
+        }
+        work += 1;
+        if work > 10_000 {
+            return Err(String::from("no admitting work bound"));
+        }
+    }
+}
+
+/// Alias admission meters each scanned word and alias before resolution, then each checked
+/// alias call: the first admitting bound and the order of exhausted words are pinned.
+#[test]
+fn aliased_definition_admission_meters_a_fixed_work_bound() -> Result<(), String> {
+    let session = noble_contracts::source::ModuleSession::new(&[], retained())
+        .map_err(|error| format!("{error:?}"))?;
+    let session = commit(
+        session,
+        b"module ledger@1 [ export get def get [ 17 ] export inc def inc [ 1 + ] ]",
+    )?;
+    let session = commit(session, b"import ledger@1 as account")?;
+    let sweep = first_admitting_bound(|limits| {
+        session.prepare(b"def run [ account.get account.inc ]", &[], limits)
+    })?;
+    assert_eq!(sweep.bound, 368);
+    assert_eq!(sweep.refusals.len(), 36);
+    let resolved: Vec<(u32, u32)> = sweep
+        .refusals
+        .iter()
+        .filter(|(stage, _, _)| *stage == noble_contracts::source::Stage::Resolve)
+        .map(|(_, start, end)| (*start, *end))
+        .collect();
+    assert_eq!(
+        resolved,
+        [(10, 21), (22, 33), (8, 35), (10, 21), (22, 33), (8, 35)]
+    );
+    Ok(())
+}
+
+/// A signed expression re-verifies its owner's retained certificate under the request budget:
+/// the first admitting work bound is pinned and every smaller bound refuses as exhaustion.
+#[test]
+fn signed_expression_verification_meters_a_fixed_work_bound() -> Result<(), String> {
+    let session = noble_contracts::source::ModuleSession::new_declared_text(&[], true, retained())
+        .map_err(|error| format!("{error:?}"))?;
+    let session = commit(session,
+        b"module countdown@1 [ signature go forall<S:stack> [ S I64 -- S I64 ! pure ] export go def go [ dup [ let n n 0 = ] dip swap [ ] [ 1 - go ] if ] ]")?;
+    let sweep = first_admitting_bound(|limits| session.prepare(b"3 countdown@1.go", &[], limits))?;
+    assert_eq!(sweep.bound, 3_754);
+    assert!(sweep
+        .refusals
+        .iter()
+        .any(|(stage, _, _)| *stage == noble_contracts::source::Stage::Acceptance));
+    Ok(())
+}
