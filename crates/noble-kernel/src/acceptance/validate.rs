@@ -18,16 +18,24 @@ struct DepWalk {
 }
 
 /// The dependency list of one definition, when it declares any.
+///
+/// The list is borrowed from the environment, never cloned: external
+/// environment data bounds neither its length nor the definition count, so
+/// copying it would spend input-sized work the per-edge charges never meter.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; deps_of converts a definition identity through usize::try_from and borrows the dependency arena through Vec::get and Vec::as_slice, so the pinned compiler cannot evaluate it in a const context; reassess when those operations become const-capable."
+)]
 fn deps_of(
     env: &crate::contracts::Env,
     def: crate::contracts::Definition,
-) -> alloc::vec::Vec<crate::contracts::Definition> {
+) -> Option<&[crate::contracts::Definition]> {
     match usize::try_from(def.0) {
         Ok(index) => match env.deps.get(index) {
-            Some(list) => list.clone(),
-            None => alloc::vec::Vec::new(),
+            Some(list) => Some(list.as_slice()),
+            None => None,
         },
-        Err(_) => alloc::vec::Vec::new(),
+        Err(_) => None,
     }
 }
 
@@ -137,6 +145,10 @@ fn dep_root(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; dep_step checks definition/color membership, charges each edge before following it and returns RecursiveDependency or Work exhaustion; missing definitions remain sinks rather than panic conditions."
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; dep_step mutates the walk's color arena and definition stack through Vec indexing and Vec::pop and calls the non-const dep_edges, so it cannot be const; the visit sequence is exercised by the recursion-schema-cycle controls."
+)]
 fn dep_step(
     env: &crate::contracts::Env,
     mut walk: DepWalk,
@@ -166,7 +178,29 @@ fn dep_step(
     }
     // Newly reached: turn on-path, then charge and follow each edge.
     walk.colors[index] = 1;
-    let deps = deps_of(env, top);
+    match deps_of(env, top) {
+        Some(deps) => dep_edges(deps, walk, remaining),
+        None => (walk, Ok(())),
+    }
+}
+
+/// Charge and follow the edges of one entered definition.
+///
+/// The caller's list is only borrowed, so an entered definition costs nothing
+/// until an edge is charged. Each edge is charged before it is read: a walk
+/// that has spent its allowance stops here without touching the list. An edge
+/// to an on-path definition closes a cycle and rejects, naming that
+/// definition; an edge to an unvisited definition enqueues it; a missing or
+/// completed definition is a sink.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; dep_edges charges each edge before reading it, returns RecursiveDependency or Work exhaustion in first-failure order, and treats malformed graphs as outcomes rather than assertion failures."
+)]
+fn dep_edges(
+    deps: &[crate::contracts::Definition],
+    mut walk: DepWalk,
+    remaining: u32,
+) -> (DepWalk, Result<(), super::Fail>) {
     let mut failure: Option<super::Fail> = None;
     let mut dep_index: usize = 0;
     while dep_index < deps.len() {

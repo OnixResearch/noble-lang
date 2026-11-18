@@ -14,10 +14,19 @@
 //! outcome must be `Exhausted(Work)` and the whole loop must finish inside a
 //! wall-clock budget with a wide margin on both sides.
 //!
-//! Measured pre-fix: 7.05 s (the list is cloned once per check). Measured
-//! post-fix: 0.0018 s (the walk charges the first edge and stops; no list is
-//! materialized). The budget of 1 s leaves room for a loaded machine while
-//! still failing the pre-fix checker.
+//! Measured pre-fix: 47.76 s (the list was cloned once per check, so
+//! 3840 input-sized copies). Measured post-fix: 0.016 s (the walk charges the
+//! first edge and stops; no list is materialized). The budget of 250 ms sits
+//! 191x below the pre-fix measurement and 15x above the post-fix one, so a
+//! loaded machine does not flake it and the pre-fix checker cannot pass it.
+//!
+//! The sibling preflight walkers were audited for the same root cause and
+//! none has it: the schema scan reads `Env::schemas` through one borrowed
+//! index after charging each entry, the nominal budget charges the declared
+//! `nominals`/`generic_variants`/`bound_adapters` count before scanning them,
+//! `signed_self_check` borrows its candidate node and charges before it, and
+//! the calculator clone budget measures lengths without cloning. Only the
+//! dependency walk copied external data before its charge.
 
 use std::time::{Duration, Instant};
 
