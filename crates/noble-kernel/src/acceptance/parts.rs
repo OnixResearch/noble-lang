@@ -221,17 +221,11 @@ pub(crate) fn join(
     ));
     // A join replaces exactly the matched suffix and appends exactly the
     // interface's output, and the height it validated is the height it
-    // returns.
-    debug_assert_eq!(
-        joined.stack.len(),
-        keep.saturating_add(interface.stack_out.len()),
-        "a join appends exactly the interface output"
-    );
-    debug_assert!(
-        u64::try_from(joined.stack.len())
-            .is_ok_and(|height| height <= u64::from(ctx.request.limits.stack_height)),
-        "a joined frame stays inside the declared stack height"
-    );
+    // returns. The assertions carry no message: an extracted message literal
+    // would bring a native-evaluated size bound into strict checker theorems.
+    debug_assert!(joined.stack.len() == keep.saturating_add(interface.stack_out.len()));
+    debug_assert!(u64::try_from(joined.stack.len())
+        .is_ok_and(|height| height <= u64::from(ctx.request.limits.stack_height)));
     Ok(joined)
 }
 

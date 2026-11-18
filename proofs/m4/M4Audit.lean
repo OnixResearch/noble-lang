@@ -273,7 +273,9 @@ elab "check_m4_extraction" laneSyntax:str : command => do
           (owner == `NobleContractImpl.Funs &&
             root.getObjValAs? String "method" == .ok "prepare") ||
           root.getObjValAs? String "rust" == .ok "noble_wasm::compile" then
-        unless closure.contains ``noble_kernel.acceptance.check do
+        -- `check`, `check_with_work` and the signed-structure variant all run the
+        -- same extracted machine; source preparation calls the budgeted entrypoints.
+        unless closure.contains ``noble_kernel.acceptance.run do
           throwError "M4-ACCEPTANCE-DEPENDENCY: {declName} bypasses the actual extracted checker"
     for dependency in closure do rootReachable := rootReachable.insert dependency
     let axioms ← auditAxioms env declName false
