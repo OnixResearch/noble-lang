@@ -8,11 +8,13 @@ order-variation harness and records whether bounded parallel execution may be pr
 | File | Content |
 |---|---|
 | [criteria.md](criteria.md) | frozen comparison rules (revision 1), committed before any measurement |
+| [criteria-oracle.md](criteria-oracle.md) | frozen table-level oracle rules (revision 2), committed before its measurement |
 | [inventory.md](inventory.md) | analyses, retained state (semantic or opportunistic), order sensitivity, cycles, diagnostics |
 | [invariants.md](invariants.md) | invariants I1-I9, allowed differences A1-A5, unsupported cases U1-U10 |
 | [decision.md](decision.md) | frozen NO-GO for parallel execution, gate evaluation and reopen conditions |
 | [run.mjs](run.mjs) | source-bound receipt runner |
 | [receipts/2026-11-16-422283f.json](receipts/2026-11-16-422283f.json) | the harness receipt on clean commit `422283f9` |
+| [receipts/2026-11-18-8f360fc.json](receipts/2026-11-18-8f360fc.json) | the table-oracle receipt on clean commit `8f360fc0` |
 
 ## The harness
 
@@ -41,7 +43,19 @@ analysis crate except `noble-wasm`.
   configurations, each result compared with a cold run, and the cache invariants checked after every
   request.
 - `threads.rs` (F2, F9): four barrier-synchronized threads issuing the same query, eight rounds.
-- `retained.rs`: the minimized schedules that diverged before their fixes, replayed as fixtures.
+- `retained.rs`: the minimized schedules that diverged before their fixes, replayed as fixtures, and
+  the table oracle's planted control.
+
+Every observation of every family also emits one row of the table oracle that
+[criteria-oracle.md](criteria-oracle.md) revision 2 freezes: the input digest, the schedule, the
+normalized-output digest and the presentation digest. When a family emits its tally it groups its
+rows by input digest and requires one normalized output per input; a row whose observation is a
+permitted A3 exhaustion carries no normalized output and is counted by class; presentation
+differences are counted per input as allowed. A conflict retains exactly two rows of one input with
+two schedules and prints them with their replay tokens. The planted control
+`oracle-control/position-leak` observes the position of the queried item: the serial and reversed
+orders agree on it and only the seeded orders expose it, so the oracle must catch it with exactly
+two retained rows.
 
 The issue's counterexample families map onto the cases as follows.
 
@@ -65,6 +79,10 @@ cargo test --offline --locked -p noble-ngraph --test schedule_correspondence --a
 Each family prints one `NOBLE_SCHEDULE_FAMILY` line with its case, schedule and comparison counts
 and its allowed differences by class. To replay one schedule, run the replay test with the token a
 divergence printed:
+
+Each family also prints one `NOBLE_SCHEDULE_ORACLE` line with its row, input and
+allowed-difference counts, and the planted control prints one `NOBLE_SCHEDULE_ORACLE_CONTROL` line
+with the two rows it retains.
 
 ```sh
 NOBLE_SCHEDULE_REPLAY='<case>@<order>' cargo test --offline --locked -p noble-ngraph \
@@ -117,6 +135,32 @@ differ between schedules (F7 exercises it as an A3 difference).
 
 ## Results
 
+### The table-level oracle
+
+The owner follow-up of 2026-11-17 asked for the comparison to be stated as a table. On the clean
+commit `8f360fc0` the harness emitted 7,290 rows over 160 input digests: no input digest maps to more
+than one normalized output, 52 input digests present an allowed presentation difference, and 479
+rows are exempt A3 exhaustions counted by class (275 from the F1 tight-work budgets and 204 from the
+F7 worklist cap). The seeded control is caught once and retains exactly two rows, one of them
+seeded; both rows re-execute to their recorded digests and the seeded row replays the divergence
+through `NOBLE_SCHEDULE_REPLAY=<case>@<order>`.
+
+| Family | Rows | Inputs | Normalized conflicts | Presentation-difference inputs | Exempt rows (A3) |
+|---|---:|---:|---:|---:|---:|
+| F1 kernel-dependencies | 730 | 32 | 0 | 8 | 275 |
+| F2 kernel-threads | 528 | 16 | 0 | 0 | 0 |
+| F3 contracts-queries | 828 | 12 | 0 | 4 | 0 |
+| F4 contracts-commits | 110 | 10 | 0 | 5 | 0 |
+| F5 contracts-modules | 75 | 3 | 0 | 1 | 0 |
+| F6 graph-orders | 204 | 6 | 0 | 2 | 0 |
+| F7 net-schedules | 1,224 | 18 | 0 | 12 | 204 |
+| F8 cache-sequences | 2,898 | 42 | 0 | 20 | 0 |
+| F9 threads | 693 | 21 | 0 | 0 | 0 |
+
+A pass is evidence about the sampled table only: the finite relation from input digest to normalized
+output over the rows the harness ran. It is not a proof of schedule independence, and it says nothing
+about orders outside the admitted set of criteria section 1.
+
 [`receipts/2026-11-16-422283f.json`](receipts/2026-11-16-422283f.json) was produced by `run.mjs` on
 the clean commit `422283f9` with the pinned 1.96 nightly toolchain, under criteria revision 1
 (SHA-256 `92df81a30516c543af1336b3ae76b54d45f3f585e36cb498963efa61513ffd14`):
@@ -143,3 +187,11 @@ of confluence, not a Rust-to-Lean refinement, and not a performance measurement.
 are kernel-checked facts about the reference model on concrete environments, not a general theorem
 about the walk. Analyses outside the harness (inventory rows marked as covered elsewhere) keep their
 own lanes; see the unsupported cases in [invariants.md](invariants.md).
+
+The table oracle is the same kind of evidence: a pass is the sampled relation from input digest to
+normalized output, not a confluence theorem. Two proved results already cover the net level and stay
+separate from it: issue #124's selected revision-3 row (`i64_normal_form_unique`,
+`i64_equal_interaction_count`, `parallel_sub_schedules_agree`) and, in the `inets` development,
+`MRun.confluent`, which proves the same memory and the same claim count across schedules and thread
+counts. Both are about reducing interaction nets, not about compiler analyses, so they do not
+discharge this issue and this table does not stand in for them.
