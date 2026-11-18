@@ -20,6 +20,14 @@ where
 {
     let serial = (0..queries).map(&observe).collect::<Vec<_>>();
     let mut tally = Tally::default();
+    for (query, observation) in serial.iter().enumerate() {
+        tally.row(super::observed_row(
+            &format!("{family}/{query}"),
+            format!("{family}#serial"),
+            &format!("{observation:?}"),
+            query,
+        ));
+    }
     for round in 0..ROUNDS {
         let barrier = std::sync::Barrier::new(WORKERS);
         let seen = std::thread::scope(|scope| {
@@ -46,6 +54,12 @@ where
                     observation, &serial[query],
                     "{family}: round {round}, worker {worker}, query {query} diverged from the serial run"
                 );
+                tally.row(super::observed_row(
+                    &format!("{family}/{query}"),
+                    format!("{family}#round-{round}/worker-{worker}"),
+                    &format!("{observation:?}"),
+                    query,
+                ));
             }
         }
     }

@@ -1,7 +1,7 @@
 //! F3 contracts-queries, F4 contracts-commits and F5 contracts-modules: the source frontend's
 //! queries, commit orders and declared-module definition orders.
 
-use super::{Allowed, Case, Tally, Verdict};
+use super::{Allowed, Case, Normalized, Tabulate, Tally, Verdict};
 
 const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     bytes: 65_536,
@@ -115,6 +115,28 @@ impl Case for Queries {
     }
 }
 
+impl Tabulate for Queries {
+    fn input(&self, query: usize) -> String {
+        format!("contracts-queries/{}/{:?}", self.label, self.queries[query])
+    }
+
+    fn normalized(&self, _query: usize, seen: &QuerySeen) -> Normalized {
+        // Revision 1 compares the complete rendering exactly, so it is all normalized output.
+        Normalized::Output(match seen {
+            QuerySeen::Prepared(text) => format!("prepared:{text}"),
+            QuerySeen::Refused(rendered) => format!("refused:{rendered:?}"),
+        })
+    }
+
+    fn presentation(&self, _query: usize, _seen: &QuerySeen) -> String {
+        String::new()
+    }
+
+    fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
+        super::row_identifier(&self.name(), label, position)
+    }
+}
+
 /// F3 on a declared-module session whose queries share one request-work pool (A5): with an
 /// ample pool the results agree, while the remaining balance depends on the query history.
 pub(super) struct Pooled {
@@ -179,6 +201,25 @@ impl Case for Pooled {
 
     fn item_schedules(&self) -> Option<u64> {
         None
+    }
+}
+
+impl Tabulate for Pooled {
+    fn input(&self, query: usize) -> String {
+        format!("contracts-queries/{}/{:?}", self.label, self.queries[query])
+    }
+
+    fn normalized(&self, _query: usize, seen: &PooledSeen) -> Normalized {
+        Normalized::Output(format!("{:?}", seen.result))
+    }
+
+    fn presentation(&self, _query: usize, seen: &PooledSeen) -> String {
+        // A5: the remaining balance of a shared request-work pool after the query history.
+        format!("remaining-{:?}", seen.remaining)
+    }
+
+    fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
+        super::row_identifier(&self.name(), label, position)
     }
 }
 
@@ -285,6 +326,40 @@ impl Case for Commits {
 
     fn item_schedules(&self) -> Option<u64> {
         None
+    }
+}
+
+impl Tabulate for Commits {
+    fn input(&self, query: usize) -> String {
+        if query < self.queries.len() {
+            return format!(
+                "contracts-commits/{}/query-{query}/{:?}",
+                self.label, self.queries[query]
+            );
+        }
+        let (name, _, _) = &self.definitions[query - self.queries.len()];
+        format!("contracts-commits/{}/definition-{name}", self.label)
+    }
+
+    fn normalized(&self, _query: usize, seen: &CommitSeen) -> Normalized {
+        Normalized::Output(match seen {
+            CommitSeen::Query(rendered) => format!("query:{rendered:?}"),
+            CommitSeen::Definition { dependents, .. } => {
+                format!("dependents:{dependents:?}")
+            }
+        })
+    }
+
+    fn presentation(&self, _query: usize, seen: &CommitSeen) -> String {
+        match seen {
+            // A1: the session-local identity follows commit order.
+            CommitSeen::Definition { identity, .. } => format!("identity-{identity:?}"),
+            CommitSeen::Query(_) => String::new(),
+        }
+    }
+
+    fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
+        super::row_identifier(&self.name(), label, position)
     }
 }
 
@@ -395,6 +470,34 @@ impl Case for Module {
 
     fn item_schedules(&self) -> Option<u64> {
         None
+    }
+}
+
+impl Tabulate for Module {
+    fn input(&self, _query: usize) -> String {
+        format!("contracts-modules/{}", self.label)
+    }
+
+    fn normalized(&self, _query: usize, seen: &ModuleSeen) -> Normalized {
+        // With several independent defects only the refusal's stage and kind are semantic (A2).
+        match (&seen.main, self.variants.is_empty()) {
+            (Rendered::Refused { stage, kind, .. }, false) => {
+                Normalized::Output(format!("refused:{stage}:{kind}"))
+            }
+            (main, _) => Normalized::Output(format!("{main:?}")),
+        }
+    }
+
+    fn presentation(&self, _query: usize, seen: &ModuleSeen) -> String {
+        match (&seen.main, self.variants.is_empty()) {
+            (Rendered::Refused { .. }, false) => format!("reported-{:?}", seen.main),
+            (Rendered::Refused { .. } | Rendered::Prepared(_), true)
+            | (Rendered::Prepared(_), false) => String::new(),
+        }
+    }
+
+    fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
+        super::row_identifier(&self.name(), label, position)
     }
 }
 

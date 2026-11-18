@@ -11,12 +11,20 @@ defects it found were fixed (README, "Defects found").
 
 | Gate | Requirement (criteria section 7) | Evidence | Result |
 |---|---|---|---|
-| G1 correctness | zero divergences for F1-F9 at the section 5 minimums, threaded families included | [receipts/2026-11-16-422283f.json](receipts/2026-11-16-422283f.json) (`run.mjs` on clean commit `422283f9`): nine families, zero divergences, two retained minimized fixtures | **pass** |
+| G1 correctness | zero divergences for F1-F9 at the section 5 minimums, threaded families included | [receipts/2026-11-16-422283f.json](receipts/2026-11-16-422283f.json) (`run.mjs` on clean commit `422283f9`): nine families, zero divergences, two retained minimized fixtures; and [receipts/2026-11-18-8f360fc.json](receipts/2026-11-18-8f360fc.json) (clean commit `8f360fc0`): the table oracle of [criteria-oracle.md](criteria-oracle.md), 7,290 rows over 160 input digests with zero normalized-output conflicts | **pass** |
 | G2 isolation | parallel analyses take only shared references to `Sync` inputs; shared memos are single-owner or single-flight; no new interior mutability | the kernel checker qualifies (F2 shares one environment between four threads). The frontend `Session`/`ModuleSession` and the checked graph types are `!Send` (`Rc`), `IdentityScheme` has no `Sync` bound, and the specialization cache is a single-owner `&mut` session with no single-flight (inventory, "Concurrency surface") | **fail** for any mode that shares frontend, graph or cache state; met only by per-worker state |
 | G3 throughput | a preregistered optimized-build benchmark with a median speedup of at least 1.5x at four workers and at most 5% serial regression | no such benchmark exists and none was run; debug-build test timings are not a throughput measurement | **not measured: fail** |
 | G4 reproducibility | byte-identical artifacts between serial and parallel runs of identical ordered inputs; only semantic equality for reordered equivalent inputs | F9 compares residual graph text, residual source, graph identities and cache keys across four threads byte for byte; reordered equivalent inputs change identities by design (invariants, "Semantic determinism versus bit-for-bit reproducibility") | **pass** for the covered artifacts |
 
 GO requires all four gates; G2 and G3 fail, so the decision is NO-GO.
+
+The table oracle is evidence for G1 only, and only about the sampled table: 7,290 rows over 160
+input digests, no input with more than one normalized output, 52 inputs with an allowed presentation
+difference and 479 exempt A3 exhaustion rows. It is not a confluence proof, it does not cover orders
+outside criteria section 1, and it changes no gate: G2 and G3 still fail, so the decision stays
+NO-GO. The proved net-level results (issue #124's revision-3 row and `inets` `MRun.confluent`) are
+about interaction-net reduction, not about compiler analyses, so they neither qualify a gate here nor
+discharge issue #134.
 
 ## Semantic determinism and bit-for-bit reproducibility
 
