@@ -1409,6 +1409,11 @@ implementation status.
 The reviewed nixpkgs input's Bun 1.3.10 supplies the Markdown parser; the site
 has no new Cargo target, npm dependency tree, remote fonts, scripts, or runtime
 fetches. The build refuses any other Bun version.
+Known rendering defect: Bun 1.3.10 applies a later table's column alignment to
+an earlier table with the same column count. In the canonical family this
+right-aligns the Meaning column of the program-contracts arithmetic-model
+table, which takes the alignment of the MC1 exit-code table. Bun 1.4.4 renders
+both tables correctly; select it when the reviewed nixpkgs input provides it.
 With the repository's Nix inputs available:
 
 ```sh
