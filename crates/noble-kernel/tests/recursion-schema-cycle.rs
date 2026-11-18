@@ -27,6 +27,8 @@
 
 #[path = "recursion_schema_cycle/builders.rs"]
 mod builders;
+#[path = "recursion_schema_cycle/dep_copy_bound.rs"]
+mod dep_copy_bound;
 #[path = "recursion_schema_cycle/orders.rs"]
 mod orders;
 #[path = "recursion_schema_cycle/witnesses.rs"]
