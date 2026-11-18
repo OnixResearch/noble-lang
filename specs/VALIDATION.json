@@ -1549,7 +1549,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "c4969124872864d07fa4f8896dd81bdce3bb3d1e4a7a77beb1e33235dc4f4c04"
+      "sha256": "5e03a7ab915aca29a4ffaa56937daaef4c3795742290ca23a17ff062248c6a81"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -2228,12 +2228,16 @@
       "sha256": "10620294e3b79d3f556f5bc0e635dc6ff5144f6ac575dd723784d46bf10b4c00"
     },
     {
+      "file": "verification/schedule-independence/criteria-oracle.md",
+      "sha256": "8e2c354a126398714a25a9a71b4a24b1117c5da50409fc5b98c9da254fdcdf97"
+    },
+    {
       "file": "verification/schedule-independence/criteria.md",
       "sha256": "92df81a30516c543af1336b3ae76b54d45f3f585e36cb498963efa61513ffd14"
     },
     {
       "file": "verification/schedule-independence/decision.md",
-      "sha256": "55fe3adf9a840df6aee20c4f81f60859ce96a1dbb05d5b96fe191da5cc06d7e5"
+      "sha256": "65ae48e9aa93aa7f817059fc154071595a4ff77bfd91b6338fed78edd46a1bd9"
     },
     {
       "file": "verification/schedule-independence/invariants.md",
@@ -2245,7 +2249,7 @@
     },
     {
       "file": "verification/schedule-independence/README.md",
-      "sha256": "7b637a5dd9195fc4caa02d5f17a4ece1e8b53290ee330fde2340200a56d6efb2"
+      "sha256": "c3e19124ca68257c3ee587323a0ec52c177445c4eb27592578d58a526312781d"
     },
     {
       "file": "verification/service-wire-refinement/README.md",
