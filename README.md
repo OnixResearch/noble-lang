@@ -1406,8 +1406,9 @@ README, with explicit bounded-scope and draft caveats. Historical status prose
 inside the canonical documents is preserved and distinguished from current
 implementation status.
 
-The existing pinned Bun 1.4.4 supplies the Markdown parser; the site has no new
-Cargo target, npm dependency tree, remote fonts, scripts, or runtime fetches.
+The reviewed nixpkgs input's Bun 1.3.10 supplies the Markdown parser; the site
+has no new Cargo target, npm dependency tree, remote fonts, scripts, or runtime
+fetches. The build refuses any other Bun version.
 With the repository's Nix inputs available:
 
 ```sh
@@ -1415,7 +1416,7 @@ nix build .#site --out-link result-site
 nix build .#checks.x86_64-linux.site --no-link
 ```
 
-For a docs-only build, use Bun 1.4.4 directly (also available in `nix develop`).
+For a docs-only build, use Bun 1.3.10 directly (also available in `nix develop`).
 Run publication builds from a clean committed checkout. The output directory
 must be fresh; omitting `--revision` selects `main` source links for a local
 preview, not an immutable publication identity.
