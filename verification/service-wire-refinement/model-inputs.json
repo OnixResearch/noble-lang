@@ -1,17 +1,17 @@
 {
   "schema": "noble-service-wire-refinement-inputs/v2",
-  "extraction_receipt": "verification/m4/implementation.json",
-  "extraction_receipt_sha256": "e44a259e235e9592650bd28d2f02d69561cba23fe6d435ffda65dd10fe400a2a",
-  "extraction_lock": "verification/m4/extraction-lock.json",
-  "extraction_lock_sha256": "1942596d2aa448ad36914b570bd6740c8c981f351d4d3ea3e73c1523695e6ed9",
+  "extraction_receipt": "verification/m4/implementation.json.gz",
+  "extraction_receipt_sha256": "9bef99417c60639d1cb1c751c176d98698010ce444d71eea14ff8633e86e16b3",
+  "extraction_lock": "verification/m4/extraction-lock.json.gz",
+  "extraction_lock_sha256": "2d4d8c8ecabbad03a3cfbb9778ea77eda99ed06201de71159a4af65045fb5de6",
   "generated_inputs": {
     "proofs/m3/NobleKernel.lean": "bd411e329236cb36c38920ca57b4c810a40a30a71a7954f2529225ef0966d9ec",
-    "proofs/m3/NobleKernel/Types.lean": "45b7510f9dc08f3d2a3b0f92085dc2a8e1a447dd1426136dd3fde748613fc1e9",
-    "proofs/m3/NobleKernel/Funs.lean": "37552261ed005b2a50046f3fa7728847ae490456c589a21867137d723ac0742f"
+    "proofs/m3/NobleKernel/Types.lean": "a4f9336dfa6b207f7e9ec4f888e81eb86371615ed669594e8dc653c8f4c3c6e9",
+    "proofs/m3/NobleKernel/Funs.lean": "bf16493271c984f3e2166f1c5bf42c8cb1efc4a048e32f2d3eaec2a01560b9e9"
   },
   "handwritten_inputs": {
     "proofs/m3/NobleKernel/TypesExternal.lean": "816e8689319559c016245838f8a6524ccbb660de9e85a5b8a87b4ebf6826ee6f",
-    "proofs/m3/NobleKernel/FunsExternal.lean": "65c26944eecd2b24ea6a5ec49c7cbee82519fc5c4f33ad0d26653694bced25cb"
+    "proofs/m3/NobleKernel/FunsExternal.lean": "34bed5cb58eb8c879732e27235efff52a3844380a93190b88291623b95dd48b1"
   },
   "model": {
     "proofs/foundation/NobleFoundation/ServiceWire.lean": "3e61096e8ecd7e95b0d640007455d626d89c759b53b303d5dbe46991487ed863"
