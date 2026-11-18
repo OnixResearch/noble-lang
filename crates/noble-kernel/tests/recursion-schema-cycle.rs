@@ -12,6 +12,11 @@
     tigerstyle::function_length,
     reason = "test crate: one linear scenario, kept in reading order"
 )]
+#![expect(
+    tigerstyle::ambient_clock,
+    tigerstyle::underscore_in_module_filename,
+    reason = "this target also owns the dependency-copy resource bound, which measures elapsed time against a wall-clock budget and lives in a named module file"
+)]
 //! B-CHECK-02/05 rejection controls: recursive definition dependencies,
 //! user-declared recursive schemas, and cyclic substitution witnesses
 //! (fragment v1).
