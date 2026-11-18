@@ -171,6 +171,7 @@
   "proofs/m7/lean-toolchain"
   "nix/reviewed-vendor.nix"
   "nix/vendor-only.nix"
+  "nix/site.nix"
   "nix/tool-selection-files.nix"
   "nix/tool-selection.nix"
   "nix/source-inventory-app.nix"
