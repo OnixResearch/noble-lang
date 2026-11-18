@@ -1398,13 +1398,22 @@ and how to edit specifications.
 
 ### Building and publishing the draft website
 
-The static website renders all sixteen canonical `.cairn/specs/*/spec.md`
-documents directly. It does not render the generated compatibility views as
-authority, run Noble, generate Lean proof HTML, or provide a browser playground.
-The landing page takes its introduction and complete quickstart from this
-README, with explicit bounded-scope and draft caveats. Historical status prose
-inside the canonical documents is preserved and distinguished from current
-implementation status.
+The static website is generated from this repository. It does not render the
+generated compatibility views as authority, run Noble, generate Lean proof
+HTML, or compile Noble in the browser.
+
+| Page | Source |
+|---|---|
+| `/` | This README's introduction and [Programs as values](#programs-as-values), plus worked examples A.1 and A.2 from the language specification |
+| `/guide/` | [Programs as values](#programs-as-values), language-spec sections 3, 4, and 6, and Appendix A. Cairn scenario-link regions stay on the specification pages |
+| `/start/` | The install commands above, the host Wasmtime prerequisite, [persistent sessions](#persistent-sessions), [what works today](#what-works-today), and [working on Noble](#working-on-noble) |
+| `/docs/` | Every Markdown file in [`docs/`](docs) |
+| `/spec/` | All sixteen canonical `.cairn/specs/*/spec.md` documents |
+| `/playground/` | A follow-up note. This tree has no in-browser compiler |
+
+Historical status prose inside the canonical documents is preserved and
+distinguished from current implementation status. The words on `/guide/` and
+`/start/` are the source sections, not a rewritten tutorial.
 
 The reviewed nixpkgs input's Bun 1.3.10 supplies the Markdown parser; the site
 has no new Cargo target, npm dependency tree, remote fonts, scripts, or runtime
@@ -1438,14 +1447,18 @@ link schemes, and records canonical source SHA-256 digests in `build.json`.
 Referenced family documents have stable `/spec/<family>/` routes; supporting
 repository files link to their source revision on GitHub. Regression tests
 exercise GFM/code preservation, canonical-versus-generated provenance,
-complete quickstart extraction, hostile links, anchors, and byte-reproducible
+the install-page extraction, hostile links, anchors, and byte-reproducible
 output. The site is a publication of draft text, not additional conformance or
 implementation-refinement evidence.
 
-The [Pages workflow](.github/workflows/site.yml) is configured to build on every
-push to `main` and direct-upload the static tree with pinned Actions, Bun and
-Wrangler versions. It needs these operator-provided settings before it can
-publish:
+[`.github/workflows/site-ci.yml`](.github/workflows/site-ci.yml) builds the tree
+on every pull request and on every push to `main`. It does not publish.
+
+[`.github/workflows/site.yml`](.github/workflows/site.yml) is a manual
+`workflow_dispatch` deploy. It direct-uploads the static tree with pinned
+Actions, Bun, and Wrangler versions, and only from `main`. It needs these
+operator-provided settings before a dispatch can publish. Until the zone and
+the secrets exist, leave the workflow manual; do not add a `push` trigger.
 
 - A Cloudflare Pages **Direct Upload** project named `noble-lang`, with
   production branch `main`; the output is `site-dist` as configured in
@@ -1456,9 +1469,9 @@ publish:
   does not need zone/DNS permissions. Do not require manual environment approval
   if unattended main-branch updates are intended. Repository token permissions
   remain `contents: read`, and checkout credentials are not persisted.
-  Until both secrets exist, each run still tests and builds the tree, then
-  skips publication with a workflow warning. Once they exist, a failed
-  publication fails the job.
+  A manual dispatch still tests and builds the tree, then skips publication
+  with a workflow warning when either secret is absent. Once both exist, a
+  failed publication fails the job.
 - Add `noble-lang.org` and `www.noble-lang.org` as Pages custom domains before
   configuring their proxied DNS to the Pages-provided target. Enable Cloudflare
   **Always Use HTTPS** for HTTP-to-HTTPS at the apex. Import the build's
@@ -1475,6 +1488,34 @@ publish:
 
 No production deployment or domain readiness is established by a local build.
 Advertise the public site in repository/homepage, README and Cargo/flake
-metadata only after HTTPS and redirects have been verified. Registrar renewal
-and lock, delegation, null MX/SPF/DMARC, issuer-specific CAA and any DNSSEC
-activation are separate operator tasks, not actions performed by this workflow.
+metadata only after HTTPS and redirects have been verified. This workflow does
+not change DNS, the registrar, or any Cloudflare account.
+
+Operator steps still required for `noble-lang.org`, none of which this
+repository performs:
+
+1. Add the `noble-lang.org` zone on the Cloudflare account that will host it.
+   Nameservers were `eric.ns.cloudflare.com` and `lucy.ns.cloudflare.com` when
+   the domain was registered; after the zone exists, confirm the pair
+   Cloudflare assigns and update the registrar if it differs. Wait until the
+   `.org` TLD delegates the name.
+2. Create the Pages project and `docs-production` secrets described above.
+   Add `noble-lang.org` and `www.noble-lang.org` as custom domains. Let Pages
+   create the proxied records, then enable **Always Use HTTPS**. Import
+   `cloudflare-bulk-redirects.csv` as the Bulk Redirect list
+   `noble_lang_www_to_apex` and enable its rule. Confirm certificates, the
+   HTTP-to-HTTPS redirect, and the `www` redirect, including a nested path
+   with a query string.
+3. This name is not for mail. Publish a null MX (`noble-lang.org. MX 0 .`,
+   [RFC 7505](https://www.rfc-editor.org/rfc/rfc7505)), a TXT record
+   `v=spf1 -all`, and a TXT record at `_dmarc.noble-lang.org` of
+   `v=DMARC1; p=reject`.
+4. Publish CAA records that allow only the certificate authorities Cloudflare
+   documents for its certificates
+   ([Pages debugging](https://developers.cloudflare.com/pages/configuration/debugging-pages/)):
+   `0 issue "letsencrypt.org"`, `0 issue "pki.goog; cansignhttpexchanges=yes"`,
+   `0 issue "ssl.com"`, and the same three values with `issuewild`. Re-check
+   that page before publishing, and drop any authority Cloudflare no longer
+   lists.
+5. Confirm registrar auto-renew and keep the registrar lock. Consider DNSSEC
+   only after the zone is serving.

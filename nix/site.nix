@@ -12,6 +12,10 @@ let
     # Realize the complete static tree as part of the check, not only fixtures.
     test -s ${site}/spec/language/index.html
     test -s ${site}/spec/core-bootstrap/index.html
+    test -s ${site}/guide/index.html
+    test -s ${site}/start/index.html
+    test -s ${site}/docs/index.html
+    test -s ${site}/playground/index.html
     mkdir -p "$out"
     printf '%s\n' 'site: canonical family, link checks and reproducibility tests passed' > "$out/validated.txt"
   '';
