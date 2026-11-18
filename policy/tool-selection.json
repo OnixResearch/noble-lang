@@ -309,7 +309,7 @@
     "nix/source-inventory-tests.nix": "68cb117f575fc639150026b2cd38ba6822e39b2a9eb032a3bf2c5f3e03323567",
     "nix/source-inventory.nix": "cfe6a4ad827bdb4400b32103920e85b7b29528d621be933c8cfabb7f4623ff49",
     "nix/tool-selection-app.nix": "ecce946f78bc030d179ffb7f16d4ca15bcfb19c682af49d49b7611a734be2f05",
-    "nix/tool-selection-files.nix": "a4bb2202ade8ec61728bce1b4b2d019328be0b35e33493f866d4da82f6fddeab",
+    "nix/tool-selection-files.nix": "109e721fc0510974140e5543c4353ab6faa53330367bbaa39c103b8c26f44185",
     "nix/tool-selection-observation.nix": "1913777df366e807602e9c6879d9a3dc1167584007e62ebacd601d07fac678b8",
     "nix/tool-selection-tests.nix": "e054566d1a0e4dd1df1c612d57ea3a131e6ecd21d1f0816b5a6426217e58a92d",
     "nix/tool-selection.nix": "b18a7d7d7dcd0e74eca21acea0123814f1008ad04595a059c773ad44da9d9e16",
