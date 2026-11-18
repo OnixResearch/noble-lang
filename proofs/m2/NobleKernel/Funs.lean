@@ -2091,7 +2091,7 @@ def contracts.Env.knows_effect
   contracts.Env.knows_effect_loop self id 0#usize
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::contracts::nominal::validation::valid_program_components::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 696:23-696:60 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 695:23-695:60 -/
 def
   contracts.nominal.validation.valid_program_components.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool.call_once
   (c : contracts.nominal.validation.valid_program_components.closure)
@@ -2102,7 +2102,7 @@ def
   ok (tupled_args <= i)
 
 /-- Trait implementation: [noble_kernel::contracts::nominal::validation::valid_program_components::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::contracts::nominal::validation::valid_program_components::{closure}<'_0>}]
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 696:23-696:60 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 695:23-695:60 -/
 @[reducible]
 def
   contracts.nominal.validation.valid_program_components.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool
@@ -2114,7 +2114,7 @@ def
 }
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 690:4-693:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 689:4-692:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.valid_program_components_loop.body
   (env : contracts.Env) (ids : Slice types.EffId) (index : Std.Usize)
@@ -2134,7 +2134,7 @@ def contracts.nominal.validation.valid_program_components_loop.body
   else ok (done is_effect_set_known)
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 690:4-693:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 689:4-692:5 -/
 @[rust_loop]
 def contracts.nominal.validation.valid_program_components_loop
   (env : contracts.Env) (ids : Slice types.EffId) (index : Std.Usize)
@@ -2148,7 +2148,7 @@ def contracts.nominal.validation.valid_program_components_loop
     (index, is_effect_set_known)
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 680:0-697:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 679:0-696:1 -/
 def contracts.nominal.validation.valid_program_components
   (env : contracts.Env) (stack_in : Slice types.Ty)
   (stack_out : Slice types.Ty) (effects : types.EffSet) (max_nodes : Std.U32) :
@@ -9750,7 +9750,7 @@ impl_def contracts.Definition.Insts.CoreCmpPartialEqDefinition :
 }
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop body 1:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 670:8-674:9 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 669:8-673:9 -/
 @[rust_loop_body]
 def contracts.nominal.validation.bound_adapters_unique_loop0_loop0.body
   (v : alloc.vec.Vec contracts.BoundAdapter) (index : Std.Usize)
@@ -9778,7 +9778,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0_loop0.body
   else ok (done is_unique)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop 1:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 670:8-674:9 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 669:8-673:9 -/
 @[rust_loop]
 def contracts.nominal.validation.bound_adapters_unique_loop0_loop0
   (v : alloc.vec.Vec contracts.BoundAdapter) (index : Std.Usize)
@@ -9793,7 +9793,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0_loop0
     (is_unique, prior)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 659:4-676:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 658:4-675:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.bound_adapters_unique_loop0.body
   (env : contracts.Env) (index : Std.Usize) (is_unique : Bool) :
@@ -9884,7 +9884,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0.body
   else ok (done is_unique)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 659:4-676:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 658:4-675:5 -/
 @[rust_loop]
 def contracts.nominal.validation.bound_adapters_unique_loop0
   (env : contracts.Env) (index : Std.Usize) (is_unique : Bool) :
@@ -9897,7 +9897,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0
     (index, is_unique)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 656:0-678:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 655:0-677:1 -/
 @[reducible]
 def contracts.nominal.validation.bound_adapters_unique
   (env : contracts.Env) : Result Bool := do
@@ -9925,7 +9925,7 @@ def contracts.TEST_CODE_EXPORT : types.EffId := 6#u32
 @[global_simps, irreducible] def contracts.TEST_EMIT : types.EffId := 0#u32
 
 /-- [noble_kernel::contracts::nominal::validation::definition_has_owner]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 648:0-650:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 647:0-649:1 -/
 def contracts.nominal.validation.definition_has_owner
   (env : contracts.Env) (index : Std.Usize) : Result Bool := do
   let s := alloc.vec.Vec.deref env.definition_owners
@@ -9939,7 +9939,7 @@ def contracts.nominal.validation.definition_has_owner
                | some _ => ok true
 
 /-- [noble_kernel::contracts::nominal::validation::bound_row_has_only_effect]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 639:0-645:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 638:0-644:1 -/
 def contracts.nominal.validation.bound_row_has_only_effect
   (env : contracts.Env) (index : Std.Usize) (effect : types.EffId) :
   Result Bool
@@ -9952,7 +9952,7 @@ def contracts.nominal.validation.bound_row_has_only_effect
     types.EffId.Insts.CoreCmpPartialEqEffId s (Array.make 1#usize [ effect ])
 
 /-- [noble_kernel::contracts::nominal::validation::bound_row_names]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 621:0-632:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 620:0-631:1 -/
 def contracts.nominal.validation.bound_row_names
   (env : contracts.Env) (index : Std.Usize) («def» : contracts.Definition)
   (slot : Std.U32) :
@@ -9970,7 +9970,7 @@ def contracts.nominal.validation.bound_row_names
   else ok (row.adapter_slot = slot)
 
 /-- [noble_kernel::contracts::nominal::validation::first_bound_row]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 607:4-612:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 606:4-611:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.first_bound_row_loop.body
   (env : contracts.Env) («def» : contracts.Definition) (slot : Std.U32)
@@ -9994,7 +9994,7 @@ def contracts.nominal.validation.first_bound_row_loop.body
   else ok (done found)
 
 /-- [noble_kernel::contracts::nominal::validation::first_bound_row]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 607:4-612:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 606:4-611:5 -/
 @[rust_loop]
 def contracts.nominal.validation.first_bound_row_loop
   (env : contracts.Env) («def» : contracts.Definition) (slot : Std.U32)
@@ -10008,7 +10008,7 @@ def contracts.nominal.validation.first_bound_row_loop
     (index, found)
 
 /-- [noble_kernel::contracts::nominal::validation::first_bound_row]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 600:0-614:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 599:0-613:1 -/
 @[reducible]
 def contracts.nominal.validation.first_bound_row
   (env : contracts.Env) («def» : contracts.Definition) (slot : Std.U32) :
@@ -10017,21 +10017,20 @@ def contracts.nominal.validation.first_bound_row
   contracts.nominal.validation.first_bound_row_loop env «def» slot 0#usize
     none
 
-/-- [noble_kernel::contracts::TEST_SEND_ADAPTER_IDENTITY_BYTES]
+/-- [noble_kernel::contracts::TEST_SEND_IDENTITY_BYTES]
     Source: 'crates/noble-kernel/src/contracts.rs', lines 42:0-43:31 -/
 @[global_simps, irreducible]
-def contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES : Array Std.U8 22#usize :=
+def contracts.TEST_SEND_IDENTITY_BYTES : Array Std.U8 22#usize :=
   Array.make 22#usize [
     119#u8, 111#u8, 114#u8, 107#u8, 101#u8, 114#u8, 45#u8, 116#u8, 101#u8,
     115#u8, 116#u8, 45#u8, 115#u8, 101#u8, 110#u8, 100#u8, 64#u8, 49#u8, 46#u8,
     48#u8, 46#u8, 48#u8
     ]
 
-/-- [noble_kernel::contracts::TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 35:0-36:48 -/
+/-- [noble_kernel::contracts::TEST_CODE_EXPORT_IDENTITY_BYTES]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 35:0-36:38 -/
 @[global_simps, irreducible]
-def contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
-  : Array Std.U8 29#usize :=
+def contracts.TEST_CODE_EXPORT_IDENTITY_BYTES : Array Std.U8 29#usize :=
   Array.make 29#usize [
     119#u8, 111#u8, 114#u8, 107#u8, 101#u8, 114#u8, 45#u8, 116#u8, 101#u8,
     115#u8, 116#u8, 45#u8, 99#u8, 111#u8, 100#u8, 101#u8, 45#u8, 101#u8,
@@ -10040,7 +10039,7 @@ def contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
     ]
 
 /-- [noble_kernel::contracts::nominal::validation::bound_row_contract]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 201:0-220:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 201:0-219:1 -/
 def contracts.nominal.validation.bound_row_contract
   (row : contracts.BoundAdapter) : Result Bool := do
   let b ← alloc.string.String.is_empty row.adapter_identity
@@ -10089,7 +10088,7 @@ def contracts.nominal.validation.bound_row_contract
                 let b7 ←
                   Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                     core.cmp.PartialEqU8 s4
-                    contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
+                    contracts.TEST_CODE_EXPORT_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10113,7 +10112,7 @@ def contracts.nominal.validation.bound_row_contract
                         let b10 ←
                           Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                             core.cmp.PartialEqU8 s5
-                            contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                            contracts.TEST_SEND_IDENTITY_BYTES
                         if b10
                         then
                           let b11 ←
@@ -10135,7 +10134,7 @@ def contracts.nominal.validation.bound_row_contract
                       let b9 ←
                         Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                           core.cmp.PartialEqU8 s5
-                          contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                          contracts.TEST_SEND_IDENTITY_BYTES
                       if b9
                       then
                         let b10 ←
@@ -10157,7 +10156,7 @@ def contracts.nominal.validation.bound_row_contract
                     let b9 ←
                       Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                         core.cmp.PartialEqU8 s5
-                        contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                        contracts.TEST_SEND_IDENTITY_BYTES
                     if b9
                     then
                       let b10 ←
@@ -10179,7 +10178,7 @@ def contracts.nominal.validation.bound_row_contract
                   let b8 ←
                     Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                       core.cmp.PartialEqU8 s5
-                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                      contracts.TEST_SEND_IDENTITY_BYTES
                   if b8
                   then
                     let b9 ←
@@ -10204,7 +10203,7 @@ def contracts.nominal.validation.bound_row_contract
               let b6 ←
                 Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                   core.cmp.PartialEqU8 s4
-                  contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
+                  contracts.TEST_CODE_EXPORT_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -10228,7 +10227,7 @@ def contracts.nominal.validation.bound_row_contract
                       let b9 ←
                         Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                           core.cmp.PartialEqU8 s5
-                          contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                          contracts.TEST_SEND_IDENTITY_BYTES
                       if b9
                       then
                         let b10 ←
@@ -10250,7 +10249,7 @@ def contracts.nominal.validation.bound_row_contract
                     let b8 ←
                       Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                         core.cmp.PartialEqU8 s5
-                        contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                        contracts.TEST_SEND_IDENTITY_BYTES
                     if b8
                     then
                       let b9 ←
@@ -10272,7 +10271,7 @@ def contracts.nominal.validation.bound_row_contract
                   let b8 ←
                     Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                       core.cmp.PartialEqU8 s5
-                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                      contracts.TEST_SEND_IDENTITY_BYTES
                   if b8
                   then
                     let b9 ←
@@ -10293,8 +10292,7 @@ def contracts.nominal.validation.bound_row_contract
                 let s5 ← core.str.Str.as_bytes s3
                 let b7 ←
                   Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                    core.cmp.PartialEqU8 s5
-                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                    core.cmp.PartialEqU8 s5 contracts.TEST_SEND_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10318,7 +10316,7 @@ def contracts.nominal.validation.bound_row_contract
             let s3 ← core.str.Str.as_bytes s2
             let b5 ←
               Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
-                s3 contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
+                s3 contracts.TEST_CODE_EXPORT_IDENTITY_BYTES
             if b5
             then
               let b6 ←
@@ -10340,7 +10338,7 @@ def contracts.nominal.validation.bound_row_contract
                     let b8 ←
                       Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                         core.cmp.PartialEqU8 s4
-                        contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                        contracts.TEST_SEND_IDENTITY_BYTES
                     if b8
                     then
                       let b9 ←
@@ -10362,7 +10360,7 @@ def contracts.nominal.validation.bound_row_contract
                   let b7 ←
                     Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                       core.cmp.PartialEqU8 s4
-                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                      contracts.TEST_SEND_IDENTITY_BYTES
                   if b7
                   then
                     let b8 ←
@@ -10383,8 +10381,7 @@ def contracts.nominal.validation.bound_row_contract
                 let s4 ← core.str.Str.as_bytes s2
                 let b7 ←
                   Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                    core.cmp.PartialEqU8 s4
-                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                    core.cmp.PartialEqU8 s4 contracts.TEST_SEND_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10405,8 +10402,7 @@ def contracts.nominal.validation.bound_row_contract
               let s4 ← core.str.Str.as_bytes s2
               let b6 ←
                 Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                  core.cmp.PartialEqU8 s4
-                  contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                  core.cmp.PartialEqU8 s4 contracts.TEST_SEND_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -10449,7 +10445,7 @@ def contracts.nominal.validation.bound_row_contract
               let b6 ←
                 Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                   core.cmp.PartialEqU8 s4
-                  contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
+                  contracts.TEST_CODE_EXPORT_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -10473,7 +10469,7 @@ def contracts.nominal.validation.bound_row_contract
                       let b9 ←
                         Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                           core.cmp.PartialEqU8 s5
-                          contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                          contracts.TEST_SEND_IDENTITY_BYTES
                       if b9
                       then
                         let b10 ←
@@ -10495,7 +10491,7 @@ def contracts.nominal.validation.bound_row_contract
                     let b8 ←
                       Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                         core.cmp.PartialEqU8 s5
-                        contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                        contracts.TEST_SEND_IDENTITY_BYTES
                     if b8
                     then
                       let b9 ←
@@ -10517,7 +10513,7 @@ def contracts.nominal.validation.bound_row_contract
                   let b8 ←
                     Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                       core.cmp.PartialEqU8 s5
-                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                      contracts.TEST_SEND_IDENTITY_BYTES
                   if b8
                   then
                     let b9 ←
@@ -10538,8 +10534,7 @@ def contracts.nominal.validation.bound_row_contract
                 let s5 ← core.str.Str.as_bytes s3
                 let b7 ←
                   Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                    core.cmp.PartialEqU8 s5
-                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                    core.cmp.PartialEqU8 s5 contracts.TEST_SEND_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10563,7 +10558,7 @@ def contracts.nominal.validation.bound_row_contract
             let s3 ← core.str.Str.as_bytes s2
             let b5 ←
               Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
-                s3 contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
+                s3 contracts.TEST_CODE_EXPORT_IDENTITY_BYTES
             if b5
             then
               let b6 ←
@@ -10586,7 +10581,7 @@ def contracts.nominal.validation.bound_row_contract
                     let b8 ←
                       Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                         core.cmp.PartialEqU8 s5
-                        contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                        contracts.TEST_SEND_IDENTITY_BYTES
                     if b8
                     then
                       let b9 ←
@@ -10608,7 +10603,7 @@ def contracts.nominal.validation.bound_row_contract
                   let b7 ←
                     Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                       core.cmp.PartialEqU8 s4
-                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                      contracts.TEST_SEND_IDENTITY_BYTES
                   if b7
                   then
                     let b8 ←
@@ -10630,8 +10625,7 @@ def contracts.nominal.validation.bound_row_contract
                 let s4 ← core.str.Str.as_bytes s2
                 let b7 ←
                   Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                    core.cmp.PartialEqU8 s4
-                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                    core.cmp.PartialEqU8 s4 contracts.TEST_SEND_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10653,8 +10647,7 @@ def contracts.nominal.validation.bound_row_contract
               let s4 ← core.str.Str.as_bytes s2
               let b6 ←
                 Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                  core.cmp.PartialEqU8 s4
-                  contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                  core.cmp.PartialEqU8 s4 contracts.TEST_SEND_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -10679,7 +10672,7 @@ def contracts.nominal.validation.bound_row_contract
           let s2 ← core.str.Str.as_bytes s1
           let b4 ←
             Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 s2
-              contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
+              contracts.TEST_CODE_EXPORT_IDENTITY_BYTES
           if b4
           then
             let b5 ←
@@ -10702,7 +10695,7 @@ def contracts.nominal.validation.bound_row_contract
                   let b7 ←
                     Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                       core.cmp.PartialEqU8 s4
-                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                      contracts.TEST_SEND_IDENTITY_BYTES
                   if b7
                   then
                     let b8 ←
@@ -10723,8 +10716,7 @@ def contracts.nominal.validation.bound_row_contract
                 let s3 ← core.str.Str.as_bytes s1
                 let b6 ←
                   Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                    core.cmp.PartialEqU8 s3
-                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                    core.cmp.PartialEqU8 s3 contracts.TEST_SEND_IDENTITY_BYTES
                 if b6
                 then
                   let b7 ←
@@ -10746,8 +10738,7 @@ def contracts.nominal.validation.bound_row_contract
               let s3 ← core.str.Str.as_bytes s1
               let b6 ←
                 Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                  core.cmp.PartialEqU8 s3
-                  contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                  core.cmp.PartialEqU8 s3 contracts.TEST_SEND_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -10769,7 +10760,7 @@ def contracts.nominal.validation.bound_row_contract
             let s3 ← core.str.Str.as_bytes s1
             let b5 ←
               Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
-                s3 contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                s3 contracts.TEST_SEND_IDENTITY_BYTES
             if b5
             then
               let b6 ←
@@ -10812,7 +10803,7 @@ def contracts.nominal.validation.bound_row_contract
             let s4 ← core.str.Str.as_bytes s3
             let b5 ←
               Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
-                s4 contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
+                s4 contracts.TEST_CODE_EXPORT_IDENTITY_BYTES
             if b5
             then
               let b6 ←
@@ -10835,7 +10826,7 @@ def contracts.nominal.validation.bound_row_contract
                     let b9 ←
                       Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                         core.cmp.PartialEqU8 s5
-                        contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                        contracts.TEST_SEND_IDENTITY_BYTES
                     if b9
                     then
                       let b10 ←
@@ -10857,7 +10848,7 @@ def contracts.nominal.validation.bound_row_contract
                   let b8 ←
                     Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                       core.cmp.PartialEqU8 s5
-                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                      contracts.TEST_SEND_IDENTITY_BYTES
                   if b8
                   then
                     let b9 ←
@@ -10878,8 +10869,7 @@ def contracts.nominal.validation.bound_row_contract
                 let s5 ← core.str.Str.as_bytes s3
                 let b7 ←
                   Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                    core.cmp.PartialEqU8 s5
-                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                    core.cmp.PartialEqU8 s5 contracts.TEST_SEND_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10901,8 +10891,7 @@ def contracts.nominal.validation.bound_row_contract
               let s5 ← core.str.Str.as_bytes s3
               let b6 ←
                 Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                  core.cmp.PartialEqU8 s5
-                  contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                  core.cmp.PartialEqU8 s5 contracts.TEST_SEND_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -10927,7 +10916,7 @@ def contracts.nominal.validation.bound_row_contract
           let s3 ← core.str.Str.as_bytes s2
           let b4 ←
             Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 s3
-              contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
+              contracts.TEST_CODE_EXPORT_IDENTITY_BYTES
           if b4
           then
             let b5 ←
@@ -10951,7 +10940,7 @@ def contracts.nominal.validation.bound_row_contract
                   let b8 ←
                     Shared0Slice.Insts.CoreCmpPartialEqArray.eq
                       core.cmp.PartialEqU8 s5
-                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                      contracts.TEST_SEND_IDENTITY_BYTES
                   if b8
                   then
                     let b9 ←
@@ -10972,8 +10961,7 @@ def contracts.nominal.validation.bound_row_contract
                 let s4 ← core.str.Str.as_bytes s2
                 let b7 ←
                   Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                    core.cmp.PartialEqU8 s4
-                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                    core.cmp.PartialEqU8 s4 contracts.TEST_SEND_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10995,8 +10983,7 @@ def contracts.nominal.validation.bound_row_contract
               let s4 ← core.str.Str.as_bytes s2
               let b6 ←
                 Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                  core.cmp.PartialEqU8 s4
-                  contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                  core.cmp.PartialEqU8 s4 contracts.TEST_SEND_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -11019,7 +11006,7 @@ def contracts.nominal.validation.bound_row_contract
             let s4 ← core.str.Str.as_bytes s2
             let b5 ←
               Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
-                s4 contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                s4 contracts.TEST_SEND_IDENTITY_BYTES
             if b5
             then
               let b6 ←
@@ -11045,7 +11032,7 @@ def contracts.nominal.validation.bound_row_contract
         let s2 ← core.str.Str.as_bytes s1
         let b3 ←
           Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 s2
-            contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
+            contracts.TEST_CODE_EXPORT_IDENTITY_BYTES
         if b3
         then
           let b4 ←
@@ -11068,8 +11055,7 @@ def contracts.nominal.validation.bound_row_contract
                 let s4 ← core.str.Str.as_bytes s1
                 let b7 ←
                   Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                    core.cmp.PartialEqU8 s4
-                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                    core.cmp.PartialEqU8 s4 contracts.TEST_SEND_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -11090,8 +11076,7 @@ def contracts.nominal.validation.bound_row_contract
               let s3 ← core.str.Str.as_bytes s1
               let b6 ←
                 Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                  core.cmp.PartialEqU8 s3
-                  contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                  core.cmp.PartialEqU8 s3 contracts.TEST_SEND_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -11113,7 +11098,7 @@ def contracts.nominal.validation.bound_row_contract
             let s3 ← core.str.Str.as_bytes s1
             let b5 ←
               Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
-                s3 contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+                s3 contracts.TEST_SEND_IDENTITY_BYTES
             if b5
             then
               let b6 ←
@@ -11136,7 +11121,7 @@ def contracts.nominal.validation.bound_row_contract
           let s3 ← core.str.Str.as_bytes s1
           let b4 ←
             Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 s3
-              contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+              contracts.TEST_SEND_IDENTITY_BYTES
           if b4
           then
             let b5 ←
@@ -12131,7 +12116,7 @@ def contracts.nominal.schemes.valid_emit_scheme
   else ok false
 
 /-- [noble_kernel::contracts::nominal::validation::bound_definition_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 560:0-592:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 559:0-591:1 -/
 def contracts.nominal.validation.bound_definition_matches
   (env : contracts.Env) (index : Std.Usize) (slot : Std.U32)
   (effect : types.EffId) :
@@ -13074,7 +13059,7 @@ def contracts.nominal.schemes.same_scheme
   else ok false
 
 /-- [noble_kernel::contracts::nominal::validation::declared_definition_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 534:0-550:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 533:0-549:1 -/
 def contracts.nominal.validation.declared_definition_matches
   (env : contracts.Env) (index : Std.Usize) (kind : contracts.Behavior)
   (id : types.NominalTypeId) :
@@ -13294,7 +13279,7 @@ def contracts.nominal.schemes.expected_generic_scheme
   | contracts.Behavior.NamedBehavior => ok none
 
 /-- [noble_kernel::contracts::nominal::validation::generic_definition_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 512:0-528:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 511:0-527:1 -/
 def contracts.nominal.validation.generic_definition_matches
   (env : contracts.Env) (index : Std.Usize) (kind : contracts.Behavior)
   (id : types.NominalTypeId) :
@@ -13327,7 +13312,7 @@ def contracts.nominal.validation.generic_definition_matches
         contracts.nominal.schemes.same_scheme s1 expected
 
 /-- [noble_kernel::contracts::nominal::validation::bound_operation]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 448:0-506:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 447:0-505:1 -/
 def contracts.nominal.validation.bound_operation
   (kind : contracts.Behavior) : Result (Option (Std.U32 × types.EffId)) := do
   match kind with
@@ -13386,7 +13371,7 @@ def contracts.nominal.validation.bound_operation
   | contracts.Behavior.NamedBehavior => ok none
 
 /-- [noble_kernel::contracts::nominal::validation::generic_operation_id]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 372:0-428:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 371:0-427:1 -/
 def contracts.nominal.validation.generic_operation_id
   (kind : contracts.Behavior) : Result (Option types.NominalTypeId) := do
   match kind with
@@ -13441,7 +13426,7 @@ def contracts.nominal.validation.generic_operation_id
   | contracts.Behavior.NamedBehavior => ok none
 
 /-- [noble_kernel::contracts::nominal::validation::operation_identity_slot]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 339:0-358:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 338:0-357:1 -/
 def contracts.nominal.validation.operation_identity_slot
   (kind : contracts.Behavior) :
   Result (Option (types.NominalTypeId × Std.Usize))
@@ -13498,7 +13483,7 @@ def contracts.nominal.validation.operation_identity_slot
   | contracts.Behavior.NamedBehavior => ok none
 
 /-- [noble_kernel::contracts::nominal::validation::kind_matches_definition]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 430:0-445:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 429:0-444:1 -/
 def contracts.nominal.validation.kind_matches_definition
   (env : contracts.Env) (index : Std.Usize) (kind : contracts.Behavior) :
   Result Bool
@@ -13523,7 +13508,7 @@ def contracts.nominal.validation.kind_matches_definition
     contracts.nominal.validation.bound_definition_matches env index slot effect
 
 /-- [noble_kernel::contracts::nominal::validation::definitions_match]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 363:4-368:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 362:4-367:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.definitions_match_loop.body
   (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
@@ -13545,7 +13530,7 @@ def contracts.nominal.validation.definitions_match_loop.body
   else ok (done is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::definitions_match]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 363:4-368:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 362:4-367:5 -/
 @[rust_loop]
 def contracts.nominal.validation.definitions_match_loop
   (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
@@ -13558,14 +13543,14 @@ def contracts.nominal.validation.definitions_match_loop
     (index, is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::definitions_match]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 360:0-370:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 359:0-369:1 -/
 @[reducible]
 def contracts.nominal.validation.definitions_match
   (env : contracts.Env) : Result Bool := do
   contracts.nominal.validation.definitions_match_loop env 0#usize true
 
 /-- [noble_kernel::contracts::nominal::validation::operation_slot]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 325:0-337:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 324:0-336:1 -/
 def contracts.nominal.validation.operation_slot
   (kind : contracts.Behavior) (id : types.NominalTypeId) :
   Result (Option Std.Usize)
@@ -13582,7 +13567,7 @@ def contracts.nominal.validation.operation_slot
     else ok none
 
 /-- [noble_kernel::contracts::nominal::validation::declaration_counts_match]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 307:4-312:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 306:4-311:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.declaration_counts_match_loop.body
   (env : contracts.Env) (decl : contracts.NominalDecl)
@@ -13610,7 +13595,7 @@ def contracts.nominal.validation.declaration_counts_match_loop.body
   else ok (done (env.live_resource_nominals, decl, actual))
 
 /-- [noble_kernel::contracts::nominal::validation::declaration_counts_match]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 307:4-312:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 306:4-311:5 -/
 @[rust_loop]
 def contracts.nominal.validation.declaration_counts_match_loop
   (env : contracts.Env) (decl : contracts.NominalDecl)
@@ -13625,7 +13610,7 @@ def contracts.nominal.validation.declaration_counts_match_loop
     (actual, index)
 
 /-- [noble_kernel::contracts::nominal::validation::declaration_counts_match]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 304:0-323:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 303:0-322:1 -/
 def contracts.nominal.validation.declaration_counts_match
   (env : contracts.Env) (decl : contracts.NominalDecl) : Result Bool := do
   let actual := Array.repeat 5#usize 0#u8
@@ -13661,7 +13646,7 @@ def contracts.nominal.validation.declaration_counts_match
       else ok false
 
 /-- [noble_kernel::contracts::nominal::validation::counts_match]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 293:4-296:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 292:4-295:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.counts_match_loop.body
   (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
@@ -13683,7 +13668,7 @@ def contracts.nominal.validation.counts_match_loop.body
   else ok (done is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::counts_match]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 293:4-296:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 292:4-295:5 -/
 @[rust_loop]
 def contracts.nominal.validation.counts_match_loop
   (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
@@ -13696,7 +13681,7 @@ def contracts.nominal.validation.counts_match_loop
     (index, is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::counts_match]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 290:0-298:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 289:0-297:1 -/
 @[reducible]
 def contracts.nominal.validation.counts_match
   (env : contracts.Env) : Result Bool := do
@@ -14542,7 +14527,7 @@ def contracts.bootstrap.data.table
   ok (alloc.slice.Slice.into_vec y)
 
 /-- [noble_kernel::contracts::nominal::validation::fixed_definitions_match]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 281:4-286:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 280:4-285:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.fixed_definitions_match_loop.body
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -14578,7 +14563,7 @@ def contracts.nominal.validation.fixed_definitions_match_loop.body
   else ok (done is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::fixed_definitions_match]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 281:4-286:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 280:4-285:5 -/
 @[rust_loop]
 def contracts.nominal.validation.fixed_definitions_match_loop
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -14593,7 +14578,7 @@ def contracts.nominal.validation.fixed_definitions_match_loop
     (index, is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::fixed_definitions_match]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 274:0-288:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 273:0-287:1 -/
 def contracts.nominal.validation.fixed_definitions_match
   (env : contracts.Env) : Result Bool := do
   let fixed ← contracts.bootstrap.data.table
@@ -14617,7 +14602,7 @@ def contracts.FIXTURE_RESOURCE : types.ResourceKind := 0#u32
 @[global_simps, irreducible] def contracts.LIVE_DISPATCH : types.EffId := 5#u32
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapter_kinds]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 261:4-270:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 260:4-269:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.bound_adapter_kinds_loop.body
   (env : contracts.Env) (has_clock : Bool) (has_code_export : Bool)
@@ -14736,7 +14721,7 @@ def contracts.nominal.validation.bound_adapter_kinds_loop.body
   else ok (done (has_clock, has_code_export, has_send))
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapter_kinds]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 261:4-270:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 260:4-269:5 -/
 @[rust_loop]
 def contracts.nominal.validation.bound_adapter_kinds_loop
   (env : contracts.Env) (has_clock : Bool) (has_code_export : Bool)
@@ -14750,7 +14735,7 @@ def contracts.nominal.validation.bound_adapter_kinds_loop
     (has_clock, has_code_export, has_send, index)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapter_kinds]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 256:0-272:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 255:0-271:1 -/
 @[reducible]
 def contracts.nominal.validation.bound_adapter_kinds
   (env : contracts.Env) : Result (Bool × Bool × Bool) := do
@@ -14758,7 +14743,7 @@ def contracts.nominal.validation.bound_adapter_kinds
     0#usize
 
 /-- [noble_kernel::contracts::nominal::validation::bootstrap_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 230:0-250:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 229:0-249:1 -/
 def contracts.nominal.validation.bootstrap_matches
   (env : contracts.Env) : Result Bool := do
   if env.declared_modules
@@ -38400,7 +38385,7 @@ def contracts.nominal.register_generic_variant
           contracts.NominalError.InvalidRepresentation)
 
 /-- [noble_kernel::contracts::nominal::bound_adapter]:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 438:0-450:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 437:0-449:1 -/
 def contracts.nominal.bound_adapter
   (definition : contracts.Definition) (row : contracts.BoundEmitRegistration) :
   Result contracts.BoundAdapter
@@ -38416,7 +38401,7 @@ def contracts.nominal.bound_adapter
     }
 
 /-- [noble_kernel::contracts::nominal::checked_bound_registration]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 413:4-420:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 412:4-419:1 -/
 @[rust_loop_body]
 def contracts.nominal.checked_bound_registration_loop.body
   (env : contracts.Env) (s : String) (i : Std.U32) (i1 : Std.U64)
@@ -38449,7 +38434,7 @@ def contracts.nominal.checked_bound_registration_loop.body
       }))
 
 /-- [noble_kernel::contracts::nominal::checked_bound_registration]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 413:4-420:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 412:4-419:1 -/
 @[rust_loop]
 def contracts.nominal.checked_bound_registration_loop
   (env : contracts.Env) (s : String) (i : Std.U32) (i1 : Std.U64)
@@ -38464,7 +38449,7 @@ def contracts.nominal.checked_bound_registration_loop
     index
 
 /-- [noble_kernel::contracts::nominal::checked_bound_registration]:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 400:0-420:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 399:0-419:1 -/
 def contracts.nominal.checked_bound_registration
   (env : contracts.Env) (registration : contracts.BoundEmitRegistration) :
   Result (core.result.Result contracts.BoundEmitRegistration
@@ -38529,7 +38514,7 @@ def contracts.nominal.register_bound_emit
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::contracts::nominal::adapter_slot_taken]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 429:4-436:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 428:4-435:1 -/
 @[rust_loop_body]
 def contracts.nominal.adapter_slot_taken_loop.body
   (env : contracts.Env) (slot : Std.U32) (index : Std.Usize) :
@@ -38548,7 +38533,7 @@ def contracts.nominal.adapter_slot_taken_loop.body
   else ok (done false)
 
 /-- [noble_kernel::contracts::nominal::adapter_slot_taken]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 429:4-436:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 428:4-435:1 -/
 @[rust_loop]
 def contracts.nominal.adapter_slot_taken_loop
   (env : contracts.Env) (slot : Std.U32) (index : Std.Usize) :
@@ -38560,7 +38545,7 @@ def contracts.nominal.adapter_slot_taken_loop
     index
 
 /-- [noble_kernel::contracts::nominal::adapter_slot_taken]:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 427:0-436:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 426:0-435:1 -/
 @[reducible]
 def contracts.nominal.adapter_slot_taken
   (env : contracts.Env) (slot : Std.U32) : Result Bool := do
@@ -38644,7 +38629,7 @@ def contracts.nominal.register_bound_clock
   else ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
 
 /-- [noble_kernel::contracts::nominal::register_bound_code_export]:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 328:0-360:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 328:0-359:1 -/
 def contracts.nominal.register_bound_code_export
   (env : contracts.Env) (registration : contracts.BoundCodeExportRegistration)
   :
@@ -38657,7 +38642,7 @@ def contracts.nominal.register_bound_code_export
   let s1 ← core.str.Str.as_bytes s
   let b ←
     Shared0Slice.Insts.CoreCmpPartialEqArray.ne core.cmp.PartialEqU8 s1
-      contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
+      contracts.TEST_CODE_EXPORT_IDENTITY_BYTES
   if b
   then ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
   else
@@ -38735,7 +38720,7 @@ def contracts.nominal.register_bound_code_export
           contracts.NominalError.InvalidRepresentation)
 
 /-- [noble_kernel::contracts::nominal::register_bound_send]:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 367:0-398:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 366:0-397:1 -/
 def contracts.nominal.register_bound_send
   (env : contracts.Env) (registration : contracts.BoundSendRegistration) :
   Result (core.result.Result (contracts.Env × contracts.Definition)
@@ -38747,7 +38732,7 @@ def contracts.nominal.register_bound_send
   let s1 ← core.str.Str.as_bytes s
   let b ←
     Shared0Slice.Insts.CoreCmpPartialEqArray.ne core.cmp.PartialEqU8 s1
-      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
+      contracts.TEST_SEND_IDENTITY_BYTES
   if b
   then ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
   else

@@ -516,7 +516,7 @@ structure types.size.Walk where
   sizes : alloc.vec.Vec Std.U32
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components::{closure}]
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 696:23-696:60 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 695:23-695:60 -/
 @[reducible]
 def contracts.nominal.validation.valid_program_components.closure := Std.U32
 
