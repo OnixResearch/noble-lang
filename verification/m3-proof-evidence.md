@@ -414,6 +414,13 @@ With the selected Lean 4.35.0 first on `PATH`:
 
 ### 7.5 The coverage record
 
+**Historical for the subject below: §8 records the 2026-11-18
+re-extraction (two closure adapters became direct helpers), which changed
+the generated surface again. The classification summary in this subsection —
+2,343 functions, 2,269 generated and 74 external, 29 citations, 302
+matchers, 4 packed fixpoints — still holds; what moved are the two entries
+and 647 restated line/span facts.**
+
 `verification/m3-coverage.json` was re-derived from the regenerated subject
 with `m3-coverage-join.mjs emit`: 2,343 functions, 2,269 generated and 74
 external. Every generated definition is `extracted` except
@@ -434,3 +441,119 @@ uses it. The `borrowed-mutual-suffix` refusal cell shows that a definition
 which only borrows the suffix still fails `ENV-UNCLASSIFIED`. The gate passes
 with 302 elaborator matchers and 4 packed fixpoints tolerated; STRENGTH
 computes the 29 citations as recorded.
+
+## 8. The 2026-11-18 subject: direct checked-I64 helpers
+
+The kernel was regenerated once more after §7: in
+`crates/noble-kernel/src/contracts.rs` (Rust subject commit `e1a14cb4`) the
+two `checked_i64_environment` closure adapters became the ordinary helper
+functions `binary`/`unary`, so the generated `Types.lean` lost the two
+`@[reducible]` closure aliases and the generated `Funs.lean` lost the two
+`Fn`-impl `call`s in favour of `contracts.checked_i64_environment.binary`
+(`Funs.lean:40647`) and `.unary` (`:40621`). The scheme construction is the
+same; the captured tail is now an ordinary parameter. The M2 lane's copies
+of `Types.lean`/`Funs.lean` are the same bytes
+(`md5 e09e7688131f2bf2fc68fa68453cc86e`,
+`f27ba9d7370a147f7be2015ca04f2287`), which `verification/m2-coverage.md` §10
+records.
+
+**Coverage record.** `verification/m3-coverage.json` was rebuilt from
+`derive(proofs/m3)` with the reviewed `status`/`citations`/`note` fields
+carried over by function name: the two stale closure entries
+(`…checked_i64_environment.closure{,_1}.Insts.CoreOpsFunctionFnTuplePatternScheme.call`)
+were dropped, `…checked_i64_environment.{binary,unary}` were added as
+`extracted`, and 644 entries restate the current generated facts (647
+moved facts: 640 Lean `line`, 7 Rust `source` span, 3 entries both). The
+status counts are unchanged — 2,343 functions: 2,268 `extracted`, 1
+`fixture-checked` (`acceptance.check`, 29 citations), 69 `modeled`, 5
+`excepted` — and the 29 citations were re-verified against the new
+environment, not taken on trust.
+
+**Runs (2026-11-18, records at commit `589b2d7e`, pinned Lean 4.35.0 and
+`bun` first on PATH).** `verification/m3-coverage-gate.sh` (result lines;
+the suite's per-citation `STRENGTH` echo lines are elided):
+
+```
+[m3-coverage] PASS SETUP (bun + lean 4.35.0)
+[m3-coverage] PASS BUILD (lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel)
+[m3-coverage] PASS ANCHOR (check_total_v1 present in the m3 sources)
+[m3-coverage] PASS COVERAGE-DERIVE (Funs.lean + FunsExternal.lean defs with rust names and source spans; keyword parity holds)
+[m3-coverage] PASS COVERAGE-JOIN (total=2343 classified=2343 extracted=2268 proved=0 fixture-checked=1 modeled=69 excepted=5 open=0)
+[m3-coverage] PASS EXCEPTED-DISCLOSURE (5 excepted entries == #[charon::opaque] declarations in the crate)
+[m3-coverage] PASS OPEN-SUBJECT (0 open entries; every generated function is classified)
+info: m3-coverage: ENV-A-PASS 2343 classified constants bound to their modules; 302 elaborator matchers and 4 partial_fixpoint mutual packings tolerated
+info: m3-coverage: ENV-B-PASS 13 citations verified (theorem exists, statement mentions the constant)
+info: m3-coverage: ENV-C-PASS 16 citations verified (theorem exists, statement mentions the constant)
+[m3-coverage] PASS ENV-BINDING (constants bound in the elaborated environment; citations are theorems mentioning their constants)
+[m3-coverage] PASS STRENGTH (citations=29 fixture=26 conditional=3 universal=0 strict=0 native=29 strict_universal=0)
+[m3-coverage] PASS (all checks, no handoff mode) — subject: …/proofs/m3; record: …/verification/m3-coverage.json
+```
+
+`verification/m3-proof-gate.sh`:
+
+```
+[m3-gate] PASS TOOLCHAIN (lean 4.35.0)
+[m3-gate] PASS BUILD (lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel)
+[m3-gate] PASS NO-PROOF-HOLE (lean-source-scan: 76 sources, no forbidden construct; proof sources: lean-source-scan: 70 sources, no forbidden construct)
+[m3-gate] PASS GENERATED-KERNEL (Aeneas entry point, Funs.lean, acceptance.check)
+[m3-gate] PASS REFINEMENT-SUBJECT (NobleM3/Refine.lean and NobleM2/Embed.lean import NobleKernel)
+[m3-gate] PASS REQUIRED-THEOREMS (the v1 theorem inventory of m3-proof-evidence.md §6, axiom policy, subject binding, enumerated coverage of every declared theorem)
+[m3-gate] PASS EXTERNAL-MODELS (no template axioms in FunsExternal/TypesExternal)
+[m3-gate] PASS (all checks, no handoff tier) — proof root: …/proofs/m3
+```
+
+`verification/m3-coverage-refusals.sh` (result lines; case label in
+parentheses):
+
+```
+baseline: gate exit 0 (all checks pass)
+refused at UNCLASSIFIED (gate exit 1)      (missing-per-word-coverage-case)
+refused at UNCLASSIFIED (gate exit 1)      (unclassified-def)
+refused at CITATION (gate exit 1)          (dangling-citation)
+refused at CITATION-BINDING (gate exit 1)  (misbound-citation)
+refused at STALE-ENTRY (gate exit 1)       (stale-entry)
+refused at STATUS (gate exit 1)            (bad-status)
+refused at PARSE-PARITY (gate exit 1)      (unparsed-external-def)
+refused at UNCLASSIFIED (gate exit 1)      (unclassified-external-model)
+refused at ENV-UNCLASSIFIED (gate exit 1)  (borrowed-mutual-suffix)
+refused at STRENGTH-STATUS (gate exit 1)   (native-fixtures-as-proved)
+refused at STRENGTH-DRIFT (gate exit 1)    (conditional-claimed-universal)
+== all refusals demonstrated ==
+```
+
+`verification/m3-proof-gate-refusals.sh` (result lines; the baseline and
+every cell's PASS lines are elided, only the refusing check is shown):
+
+```
+baseline: gate exit 0 (all checks pass)
+refused: gate exit 1 at NO-PROOF-HOLE   (proof-hole)
+refused: gate exit 1 at BUILD           (broken-build)
+refused: gate exit 1 at NO-PROOF-HOLE   (admit-tactic)
+refused: gate exit 1 at NO-PROOF-HOLE   (local-axiom)
+refused: gate exit 1 at REQUIRED-THEOREMS (unreviewed-native-decide)
+refused: gate exit 1 at REQUIRED-THEOREMS (foreign-native-type)
+refused for the probe axiom: *CoreCmpPartialEqArray.eq._native.decide.ax_*
+refused: gate exit 1 at REQUIRED-THEOREMS (foreign-owner-literal)
+refused for the probe axiom: *embedEnv._native.decide.ax_*
+refused: gate exit 1 at REQUIRED-THEOREMS (missing-per-word-theorem)
+refused: gate exit 1 at GENERATED-KERNEL (substituted-subject)
+refused: gate exit 1 at EXTERNAL-MODELS  (unexplained-external)
+kernel-harness: cargo test --test property exit 1
+test oracle_table_covers_every_pool_word ... FAILED
+refused: harness exit 1                 (removed-eliminator-oracle-arm)
+kernel-harness: cargo test --test docexamples exit 1
+test documented_noble_check_examples_run_through_the_actual_checker ... FAILED
+refused: harness exit 1                 (schema-revision-regression)
+== all refusals demonstrated ==
+```
+
+Every cell keeps its semantic target on the new subject; no cell was
+retargeted, deleted or weakened. The two kernel-harness cells ran against a
+scratch copy of the workspace with an offline `CARGO_HOME` (the user
+registry), an explicit `RUST_BIN` and no injected linker flags, as the
+script's usage header instructs.
+
+All four scripts were re-run on a clean tree with explicit exit capture and
+each exited 0 — `EXIT m3-coverage-gate = 0`, `EXIT m3-proof-gate = 0`,
+`EXIT m3-coverage-refusals = 0`, `EXIT m3-proof-gate-refusals = 0` — and the
+re-run reproduced the lines quoted above.
