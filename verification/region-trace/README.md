@@ -62,6 +62,23 @@ earlier explicit width-sensitive total model is retained as the definition
 stated about the checked-in model and audited with the same strict axiom set;
 `iscalar_hcast_usize_val` is the width fact the agreement rests on.
 
+**Observed results (2026-11-18, source `4857932e`).** Every lane below was run
+from that clean commit with the pinned Node, Charon and Aeneas binaries named in
+`policy/tool-selection.json` and an offline reviewed Cargo vendor home:
+
+| Lane | Result line | Exit |
+|---|---|---|
+| `region-cut-check.mjs --output <new directory>` | `REGION-CUT: 19 implementation theorems; pinned extraction and strict axioms accepted` | 0 |
+| `check.mjs --output <new directory>` | `REGION-TRACE: 135 model theorems; 19 bounded implementation theorems; strict axioms accepted` | 0 |
+| `verification/host-locality/check.mjs --output <new directory>` | `clean_source: true`, `theorems: 43`, `reused_m5_theorems: 5` | 0 |
+| `verification/region-table/check.mjs --output <new directory>` | `clean_source: true`, `theorems: 30`, `reused_theorems: 4` | 0 |
+
+The extraction receipt is the nested run the model check itself performs, which
+is why the model receipt's `implementation_cut.receipt_sha256` names it. The
+host-locality and region-table receipts stay in their own lanes; they were
+re-run to show that the whole-crate subject and this retarget did not disturb
+them, and they report the same `source_commit`.
+
 **Abstraction and effects.** The retained `Host.owner` handle and `Host.table`
 records correspond to `Request.retained` and M5 `resources.table.Table`; the
 guest representation and signed offset/length map unchanged in value to
@@ -273,8 +290,10 @@ proves emitted-step correspondence.
 
 The current bounded-cut replay retains `verification/region-trace/receipt-20261118-region-cut-v4.json`
 and `verification/region-trace/receipt-20261118-region-cut-v4-extraction.json`
-from a clean committed source tree. The former's `bindings.implementation_cut`
-carries the SHA-256 of the latter fresh selected-extraction receipt. The
+from the clean source `4857932ed10f1feb99d35c8a2ab384c7630e0530`. The former's
+`bindings.implementation_cut` carries the SHA-256 of the latter fresh
+selected-extraction receipt,
+`c607276bd715303bd5d0cc2cde1db1d6096f2a646c232719138a30c27951a7ea`. The
 extraction receipt records, per declaration, the byte comparison between the
 fresh bounded extraction and the checked-in whole-crate subject, the zero
 redeclarations under `proofs/m5`, and the nineteen strictly audited
