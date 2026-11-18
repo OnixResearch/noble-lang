@@ -552,3 +552,8 @@ retargeted, deleted or weakened. The two kernel-harness cells ran against a
 scratch copy of the workspace with an offline `CARGO_HOME` (the user
 registry), an explicit `RUST_BIN` and no injected linker flags, as the
 script's usage header instructs.
+
+All four scripts were re-run on a clean tree with explicit exit capture and
+each exited 0 — `EXIT m3-coverage-gate = 0`, `EXIT m3-proof-gate = 0`,
+`EXIT m3-coverage-refusals = 0`, `EXIT m3-proof-gate-refusals = 0` — and the
+re-run reproduced the lines quoted above.
