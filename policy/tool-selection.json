@@ -89,7 +89,7 @@
     "panic": "unwind",
     "quality_rust": "nightly-2026-03-21",
     "target": "x86_64-unknown-linux-gnu",
-    "translator_timeout_seconds": 300,
+    "translator_timeout_seconds": 900,
     "word_bits": 64,
     "workspace_features": [
       "live-test-barrier",
@@ -368,7 +368,7 @@
     "verification/m4/accounting.mjs": "ccb35e0c31e6adb4eb4c2f22341b125382606a4e1a5c4c4f4553b59e92f46526",
     "verification/m4/documentation.mjs": "7a0cb970a34ae325a702494c171ad7a92468fff9fda37f6af48fa8a800176970",
     "verification/m4/gate.mjs": "f65c516f592ae9e8885a4be9f75bf2924bc9da0f7183e83aeb99549a274b148b",
-    "verification/m4/implementation.mjs": "8b0137a5f2c39a5798e552140dcca14ce39e8d10bf39f4ced065686a58369936",
+    "verification/m4/implementation.mjs": "a66fdafb0ee9a16fdf9f857176793b0d58b6d77a7ca172148ad969f2e466afc7",
     "verification/m4/inherited-boundaries.json": "0724a876b1e337aec268aea9b6dafbcd910cdc450d58e0af9e6564c17737acc8",
     "verification/m4/opaque-model-review.test.mjs": "0bdf28e4769825b986700b91745e5e021f21047fed287960618db3c1819fe021",
     "verification/m4/property.mjs": "406faa4e99cbc9b02a122a476797428fb38b49f2506754bf428f0cb7e77ff02f",

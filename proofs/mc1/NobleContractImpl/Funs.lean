@@ -121305,7 +121305,7 @@ def source.chunks.run_candidate_queue
     ok (core.result.Result.Err r, search, capture, back, back1)
 
 /-- [noble_contracts::source::chunks::complete_shortlex]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7823:4-7832:5 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7829:4-7838:5 -/
 @[rust_loop_body]
 def source.chunks.complete_shortlex_loop.body
   (order : alloc.vec.Vec Std.U16)
@@ -121363,7 +121363,7 @@ def source.chunks.complete_shortlex_loop.body
       fun o => back1 { shortlex_capture with observer := o }))
 
 /-- [noble_contracts::source::chunks::complete_shortlex]: loop 0:
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7823:4-7832:5 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7829:4-7838:5 -/
 @[rust_loop]
 def source.chunks.complete_shortlex_loop
   (back : source.chunks.CandidateCapture → source.chunks.MonotonicClock)
@@ -121391,7 +121391,7 @@ def source.chunks.complete_shortlex_loop
     (back, back1, search, shortlex_capture, chunk_count, next_ordinal, outcome)
 
 /-- [noble_contracts::source::chunks::complete_shortlex]:
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7793:0-7840:1 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7799:0-7846:1 -/
 def source.chunks.complete_shortlex
   (search : source.chunks.Search) (library : source.chunks.Library)
   (request : source.chunks.Request) (capture : source.chunks.CandidateCapture)
@@ -122122,7 +122122,7 @@ def source.chunks.ranked_candidate_ids
     library identities 0#usize
 
 /-- [noble_contracts::source::chunks::complete_with_stored_ranking]:
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7756:0-7791:1 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7762:0-7797:1 -/
 def source.chunks.complete_with_stored_ranking
   (search : source.chunks.Search) (library : source.chunks.Library)
   (stored : source.chunks.StoredRankingControl)
@@ -122185,8 +122185,19 @@ def source.chunks.complete_with_stored_ranking
     let response ← source.chunks.response_of_search refusal search1
     ok (response, capture, capture, ranking)
 
+/-- [noble_contracts::source::chunks::finite_score]:
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7628:0-7633:1 -/
+def source.chunks.finite_score (score : Option F32) : Result (Option F32) := do
+  match score with
+  | none => ok none
+  | some value =>
+    let b ← core.f32.F32.is_finite value
+    if b
+    then ok score
+    else ok none
+
 /-- [noble_contracts::source::chunks::sort_ranked_candidates::{closure#1}::{impl core::ops::function::FnOnce<(), core::cmp::Ordering> for noble_contracts::source::chunks::sort_ranked_candidates::{closure#1}::{closure}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7620:27-7620:62 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7618:27-7618:62 -/
 def
   source.chunks.sort_ranked_candidates.closure_1.closure.Insts.CoreOpsFunctionFnOnceTupleOrdering.call_once
   (c : source.chunks.sort_ranked_candidates.closure_1.closure) (_ : Unit) :
@@ -122196,7 +122207,7 @@ def
   ok (core.cmp.impls.OrdU32.cmp qc.ordinal qc1.ordinal)
 
 /-- Trait implementation: [noble_contracts::source::chunks::sort_ranked_candidates::{closure#1}::{impl core::ops::function::FnOnce<(), core::cmp::Ordering> for noble_contracts::source::chunks::sort_ranked_candidates::{closure#1}::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7620:27-7620:62 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7618:27-7618:62 -/
 @[reducible]
 def
   source.chunks.sort_ranked_candidates.closure_1.closure.Insts.CoreOpsFunctionFnOnceTupleOrdering
@@ -122207,7 +122218,7 @@ def
 }
 
 /-- [noble_contracts::source::chunks::sort_ranked_candidates::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::chunks::QueueCandidate, &'_1 noble_contracts::source::chunks::QueueCandidate), core::cmp::Ordering> for noble_contracts::source::chunks::sort_ranked_candidates::{closure#1}}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7613:38-7625:5 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7613:38-7623:5 -/
 def
   source.chunks.sort_ranked_candidates.closure_1.Insts.CoreOpsFunctionFnMutPairShared0QueueCandidateShared1QueueCandidateOrdering.call_mut
   (c : source.chunks.sort_ranked_candidates.closure_1)
@@ -122216,33 +122227,30 @@ def
   Result (Ordering × source.chunks.sort_ranked_candidates.closure_1)
   := do
   let (left, right) := tupled_args
-  let fl ← core.f32.F32.NAN
-  let left_score ← lift (core.option.Option.unwrap_or left.score fl)
-  let right_score ← lift (core.option.Option.unwrap_or right.score fl)
-  let b ← core.f32.F32.is_finite left_score
-  let b1 ← core.f32.F32.is_finite right_score
-  if b
-  then
-    if b1
-    then
-      let o ←
-        F32.Insts.CoreCmpPartialOrdF32.partial_cmp right_score left_score
-      let o1 ← lift (core.option.Option.unwrap_or o Ordering.eq)
+  let o ← source.chunks.finite_score left.score
+  let o1 ← source.chunks.finite_score right.score
+  match o with
+  | none =>
+    match o1 with
+    | none =>
+      let o2 ← lift (core.cmp.impls.OrdU32.cmp left.ordinal right.ordinal)
+      ok (o2, c)
+    | some _ => ok (Ordering.gt, c)
+  | some left_score =>
+    match o1 with
+    | none => ok (Ordering.lt, c)
+    | some right_score =>
       let o2 ←
+        F32.Insts.CoreCmpPartialOrdF32.partial_cmp right_score left_score
+      let o3 ← lift (core.option.Option.unwrap_or o2 Ordering.eq)
+      let o4 ←
         core.cmp.Ordering.then_with
           source.chunks.sort_ranked_candidates.closure_1.closure.Insts.CoreOpsFunctionFnOnceTupleOrdering
-          o1 (left, right)
-      ok (o2, c)
-    else ok (Ordering.lt, c)
-  else
-    if b1
-    then ok (Ordering.gt, c)
-    else
-      let o ← lift (core.cmp.impls.OrdU32.cmp left.ordinal right.ordinal)
-      ok (o, c)
+          o3 (left, right)
+      ok (o4, c)
 
 /-- [noble_contracts::source::chunks::sort_ranked_candidates::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::chunks::QueueCandidate, &'_1 noble_contracts::source::chunks::QueueCandidate), core::cmp::Ordering> for noble_contracts::source::chunks::sort_ranked_candidates::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7613:38-7625:5 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7613:38-7623:5 -/
 def
   source.chunks.sort_ranked_candidates.closure_1.Insts.CoreOpsFunctionFnOncePairShared0QueueCandidateShared1QueueCandidateOrdering.call_once
   (c : source.chunks.sort_ranked_candidates.closure_1)
@@ -122255,7 +122263,7 @@ def
   ok o
 
 /-- Trait implementation: [noble_contracts::source::chunks::sort_ranked_candidates::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::chunks::QueueCandidate, &'_1 noble_contracts::source::chunks::QueueCandidate), core::cmp::Ordering> for noble_contracts::source::chunks::sort_ranked_candidates::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7613:38-7625:5 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7613:38-7623:5 -/
 @[reducible]
 def
   source.chunks.sort_ranked_candidates.closure_1.Insts.CoreOpsFunctionFnOncePairShared0QueueCandidateShared1QueueCandidateOrdering
@@ -122266,7 +122274,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::chunks::sort_ranked_candidates::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::chunks::QueueCandidate, &'_1 noble_contracts::source::chunks::QueueCandidate), core::cmp::Ordering> for noble_contracts::source::chunks::sort_ranked_candidates::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7613:38-7625:5 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7613:38-7623:5 -/
 @[reducible]
 def
   source.chunks.sort_ranked_candidates.closure_1.Insts.CoreOpsFunctionFnMutPairShared0QueueCandidateShared1QueueCandidateOrdering
@@ -122320,7 +122328,7 @@ def
 }
 
 /-- [noble_contracts::source::chunks::sort_ranked_candidates]:
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7600:0-7627:1 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7600:0-7625:1 -/
 def source.chunks.sort_ranked_candidates
   (queue : source.chunks.CandidateQueue) (invalid_scores : Std.U32) :
   Result (source.chunks.RankingDisposition × source.chunks.CandidateQueue)
@@ -123229,7 +123237,7 @@ def source.chunks.rank_candidate_queue
     ok (r1, search1, session, back, clock)
 
 /-- [noble_contracts::source::chunks::complete_with_ranker]:
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7715:0-7754:1 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7721:0-7760:1 -/
 def source.chunks.complete_with_ranker
   (search : source.chunks.Search) (library : source.chunks.Library)
   (ranker : source.chunks.RankerSession)
@@ -123295,7 +123303,7 @@ def source.chunks.complete_with_ranker
       capture, { capture with clock }, ranking)
 
 /-- [noble_contracts::source::chunks::initialize_search::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::source::chunks::initialize_search::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7661:62-7661:97 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7667:62-7667:97 -/
 def
   source.chunks.initialize_search.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
   (c : source.chunks.initialize_search.closure) (tupled_args : Std.Usize) :
@@ -123305,7 +123313,7 @@ def
   ok (i <= tupled_args)
 
 /-- Trait implementation: [noble_contracts::source::chunks::initialize_search::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::source::chunks::initialize_search::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7661:62-7661:97 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7667:62-7667:97 -/
 @[reducible]
 def
   source.chunks.initialize_search.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool
@@ -123316,7 +123324,7 @@ def
 }
 
 /-- [noble_contracts::source::chunks::initialize_search]:
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7629:0-7676:1 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7635:0-7682:1 -/
 def source.chunks.initialize_search
   («namespace» : source.Session) (library : source.chunks.Library)
   (request : source.chunks.Request) :
@@ -123392,7 +123400,7 @@ def source.chunks.initialize_search
     ok (core.result.Result.Err r1)
 
 /-- [noble_contracts::source::chunks::complete_inner]:
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7682:0-7713:1 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7688:0-7719:1 -/
 def source.chunks.complete_inner
   («namespace» : source.Session) (library : source.chunks.Library)
   (request : source.chunks.Request) (control : source.chunks.CompletionControl)

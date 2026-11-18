@@ -6154,12 +6154,12 @@ def source.chunks.charge_ranking_queue.closure := Unit
 def source.chunks.charge_ranking_queue.closure_1 := Unit
 
 /-- [noble_contracts::source::chunks::sort_ranked_candidates::{closure#1}::{closure}]
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7620:27-7620:62 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7618:27-7618:62 -/
 def source.chunks.sort_ranked_candidates.closure_1.closure :=
   source.chunks.QueueCandidate × source.chunks.QueueCandidate
 
 /-- [noble_contracts::source::chunks::sort_ranked_candidates::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7613:38-7625:5 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7613:38-7623:5 -/
 @[reducible]
 def source.chunks.sort_ranked_candidates.closure_1 := Unit
 
@@ -6174,7 +6174,7 @@ def source.chunks.sort_ranked_candidates.closure := Std.U32
 def source.chunks.sort_ranked_candidates.closure_2 := Std.U32
 
 /-- [noble_contracts::source::chunks::initialize_search::{closure}]
-    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7661:62-7661:97 -/
+    Source: 'crates/noble-contracts/src/source/chunks.rs', lines 7667:62-7667:97 -/
 @[reducible]
 def source.chunks.initialize_search.closure :=
   alloc.vec.Vec noble_kernel.types.Ty
