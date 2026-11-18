@@ -15354,7 +15354,7 @@ def contracts.text_cursor_environment
       contracts.Env (core.convert.FromSame shapes.Defect) residual
 
 /-- [noble_kernel::contracts::calculator_environment]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 846:4-857:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 856:4-867:1
     Visibility: public -/
 @[rust_loop_body]
 def contracts.calculator_environment_loop.body
@@ -15436,7 +15436,7 @@ def contracts.calculator_environment_loop.body
       ok (done r1)
 
 /-- [noble_kernel::contracts::calculator_environment]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 846:4-857:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 856:4-867:1
     Visibility: public -/
 @[rust_loop]
 def contracts.calculator_environment_loop
@@ -15460,7 +15460,7 @@ def contracts.calculator_environment_loop
     (iter, v, v1)
 
 /-- [noble_kernel::contracts::calculator_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 766:0-857:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 776:0-867:1
     Visibility: public -/
 def contracts.calculator_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -15758,7 +15758,7 @@ def contracts.nominal.validation.calculator_prefix_matches
   | core.result.Result.Err _ => ok false
 
 /-- [noble_kernel::contracts::declared_text_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 866:0-886:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 876:0-896:1
     Visibility: public -/
 def contracts.declared_text_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -40616,26 +40616,22 @@ def contracts.Env.is_empty (self : contracts.Env) : Result Bool := do
   let i := alloc.vec.Vec.len self.defs
   ok (i = 0#usize)
 
-/-- [noble_kernel::contracts::checked_i64_environment::{impl core::ops::function::Fn<(noble_kernel::shapes::Pattern,), noble_kernel::words::Scheme> for noble_kernel::contracts::checked_i64_environment::{closure#1}<'_0>}::call]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 727:16-732:5 -/
-def
-  contracts.checked_i64_environment.closure_1.Insts.CoreOpsFunctionFnTuplePatternScheme.call
-  (c : contracts.checked_i64_environment.closure_1)
-  (tupled_args : shapes.Pattern) :
-  Result words.Scheme
-  := do
+/-- [noble_kernel::contracts::checked_i64_environment::unary]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 732:4-742:5 -/
+def contracts.checked_i64_environment.unary
+  (tail : shapes.Pattern) (output : shapes.Pattern) : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice (Array.make 1#usize [ words.VariableKind.Stack ] :
       Array words.VariableKind 1#usize))
   let ret := alloc.slice.Slice.into_vec y
-  let p ← shapes.Pattern.Insts.CoreCloneClone.clone c
+  let p ← shapes.Pattern.Insts.CoreCloneClone.clone tail
   let y1 ←
     lift (Std.Array.to_slice
       (Array.make 2#usize [ p, shapes.Pattern.I64Pattern ] : Array
       shapes.Pattern 2#usize))
   let ret1 := alloc.slice.Slice.into_vec y1
   let y2 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, tupled_args ] : Array
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, output ] : Array
       shapes.Pattern 2#usize))
   let ret2 := alloc.slice.Slice.into_vec y2
   ok
@@ -40646,19 +40642,15 @@ def
       effects := (alloc.vec.Vec.new shapes.EffectSlot)
     }
 
-/-- [noble_kernel::contracts::checked_i64_environment::{impl core::ops::function::Fn<(noble_kernel::shapes::Pattern,), noble_kernel::words::Scheme> for noble_kernel::contracts::checked_i64_environment::{closure}<'_0>}::call]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 717:17-726:5 -/
-def
-  contracts.checked_i64_environment.closure.Insts.CoreOpsFunctionFnTuplePatternScheme.call
-  (c : contracts.checked_i64_environment.closure)
-  (tupled_args : shapes.Pattern) :
-  Result words.Scheme
-  := do
+/-- [noble_kernel::contracts::checked_i64_environment::binary]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 717:4-731:5 -/
+def contracts.checked_i64_environment.binary
+  (tail : shapes.Pattern) (output : shapes.Pattern) : Result words.Scheme := do
   let y ←
     lift (Std.Array.to_slice (Array.make 1#usize [ words.VariableKind.Stack ] :
       Array words.VariableKind 1#usize))
   let ret := alloc.slice.Slice.into_vec y
-  let p ← shapes.Pattern.Insts.CoreCloneClone.clone c
+  let p ← shapes.Pattern.Insts.CoreCloneClone.clone tail
   let y1 ←
     lift (Std.Array.to_slice
       (Array.make 3#usize [
@@ -40666,7 +40658,7 @@ def
          ] : Array shapes.Pattern 3#usize))
   let ret1 := alloc.slice.Slice.into_vec y1
   let y2 ←
-    lift (Std.Array.to_slice (Array.make 2#usize [ p, tupled_args ] : Array
+    lift (Std.Array.to_slice (Array.make 2#usize [ p, output ] : Array
       shapes.Pattern 2#usize))
   let ret2 := alloc.slice.Slice.into_vec y2
   ok
@@ -40678,7 +40670,7 @@ def
     }
 
 /-- [noble_kernel::contracts::checked_i64_environment]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 747:4-754:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 757:4-764:1
     Visibility: public -/
 @[rust_loop_body]
 def contracts.checked_i64_environment_loop.body
@@ -40740,7 +40732,7 @@ def contracts.checked_i64_environment_loop.body
       ok (done r1)
 
 /-- [noble_kernel::contracts::checked_i64_environment]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 747:4-754:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 757:4-764:1
     Visibility: public -/
 @[rust_loop]
 def contracts.checked_i64_environment_loop
@@ -40765,7 +40757,7 @@ def contracts.checked_i64_environment_loop
     (iter, v, v1, v8)
 
 /-- [noble_kernel::contracts::checked_i64_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 703:0-754:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 703:0-764:1
     Visibility: public -/
 def contracts.checked_i64_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -40777,29 +40769,29 @@ def contracts.checked_i64_environment
       shapes.Pattern.Insts.CoreCloneClone.clone (shapes.Pattern.SumPattern
         shapes.Pattern.I64Pattern shapes.Pattern.I64Pattern)
     let s ←
-      contracts.checked_i64_environment.closure.Insts.CoreOpsFunctionFnTuplePatternScheme.call
-        (shapes.Pattern.StackVarPattern 0#u32) p
+      contracts.checked_i64_environment.binary (shapes.Pattern.StackVarPattern
+        0#u32) p
     let s1 ←
-      contracts.checked_i64_environment.closure.Insts.CoreOpsFunctionFnTuplePatternScheme.call
-        (shapes.Pattern.StackVarPattern 0#u32) p
+      contracts.checked_i64_environment.binary (shapes.Pattern.StackVarPattern
+        0#u32) p
     let s2 ←
-      contracts.checked_i64_environment.closure.Insts.CoreOpsFunctionFnTuplePatternScheme.call
-        (shapes.Pattern.StackVarPattern 0#u32) p
+      contracts.checked_i64_environment.binary (shapes.Pattern.StackVarPattern
+        0#u32) p
     let s3 ←
-      contracts.checked_i64_environment.closure_1.Insts.CoreOpsFunctionFnTuplePatternScheme.call
-        (shapes.Pattern.StackVarPattern 0#u32) p
+      contracts.checked_i64_environment.unary (shapes.Pattern.StackVarPattern
+        0#u32) p
     let s4 ←
-      contracts.checked_i64_environment.closure_1.Insts.CoreOpsFunctionFnTuplePatternScheme.call
-        (shapes.Pattern.StackVarPattern 0#u32) (shapes.Pattern.SumPattern
-        shapes.Pattern.I64Pattern shapes.Pattern.I64Pattern)
+      contracts.checked_i64_environment.unary (shapes.Pattern.StackVarPattern
+        0#u32) (shapes.Pattern.SumPattern shapes.Pattern.I64Pattern
+        shapes.Pattern.I64Pattern)
     let s5 ←
-      contracts.checked_i64_environment.closure.Insts.CoreOpsFunctionFnTuplePatternScheme.call
-        (shapes.Pattern.StackVarPattern 0#u32) shapes.Pattern.BoolPattern
+      contracts.checked_i64_environment.binary (shapes.Pattern.StackVarPattern
+        0#u32) shapes.Pattern.BoolPattern
     let s6 ←
-      contracts.checked_i64_environment.closure.Insts.CoreOpsFunctionFnTuplePatternScheme.call
-        (shapes.Pattern.StackVarPattern 0#u32) (shapes.Pattern.SumPattern
-        (shapes.Pattern.PairPattern shapes.Pattern.I64Pattern
-        shapes.Pattern.I64Pattern) shapes.Pattern.I64Pattern)
+      contracts.checked_i64_environment.binary (shapes.Pattern.StackVarPattern
+        0#u32) (shapes.Pattern.SumPattern (shapes.Pattern.PairPattern
+        shapes.Pattern.I64Pattern shapes.Pattern.I64Pattern)
+        shapes.Pattern.I64Pattern)
     let s7 ←
       lift (Array.to_slice
         (Array.make 7#usize [

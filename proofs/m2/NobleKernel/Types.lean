@@ -1693,16 +1693,6 @@ structure contracts.ClockPlan where
   allowed : Bool
   script : Slice Std.I64
 
-/-- [noble_kernel::contracts::checked_i64_environment::{closure#1}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 727:16-732:5 -/
-@[reducible]
-def contracts.checked_i64_environment.closure_1 := shapes.Pattern
-
-/-- [noble_kernel::contracts::checked_i64_environment::{closure}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 717:17-726:5 -/
-@[reducible]
-def contracts.checked_i64_environment.closure := shapes.Pattern
-
 /-- [noble_kernel::dataspace::Error]
     Source: 'crates/noble-kernel/src/dataspace/mod.rs', lines 18:0-26:1
     Visibility: public -/
