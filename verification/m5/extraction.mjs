@@ -97,7 +97,9 @@ export function componentPacket(accounts, sources, packet) {
     // handle entrypoints instead go through Table.decide's checked lookup.
     if (required.group === 'resources' && required.method === 'retire_context') requiredDependencies.push(transition);
     const requiresAcceptance = required.method === 'prepare_export' || required.group === 'component-backend';
-    if (requiresAcceptance) requiredDependencies.push('noble_kernel.acceptance.check');
+    // check, check_with_work and the signed-structure variant all run the same
+    // extracted machine; source preparation calls the budgeted entrypoints.
+    if (requiresAcceptance) requiredDependencies.push('noble_kernel.acceptance.run');
     return { ...required, lane: row.lane, kind: row.kind, rust: row.rust,
       declaration: row.declaration, owner: row.owner, requires_acceptance: requiresAcceptance,
       required_dependencies: requiredDependencies };
