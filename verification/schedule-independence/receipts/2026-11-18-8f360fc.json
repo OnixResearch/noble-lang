@@ -1,0 +1,323 @@
+{
+  "schema": "noble-schedule-independence-receipt/v2",
+  "issue": 134,
+  "source_commit": "8f360fc07b50445cdd23cb9062db0abde6c1a551",
+  "source_tree": "41d2643f3f8c06ccb46d3bcf19dd2e053e17d124",
+  "dirty": false,
+  "criteria": {
+    "path": "verification/schedule-independence/criteria.md",
+    "revision": 1,
+    "sha256": "92df81a30516c543af1336b3ae76b54d45f3f585e36cb498963efa61513ffd14"
+  },
+  "oracle_criteria": {
+    "path": "verification/schedule-independence/criteria-oracle.md",
+    "revision": 2,
+    "sha256": "8e2c354a126398714a25a9a71b4a24b1117c5da50409fc5b98c9da254fdcdf97"
+  },
+  "command": "cargo test --offline --locked -p noble-ngraph --test schedule_correspondence --all-features -- schedule_independence --nocapture --test-threads=1",
+  "toolchain": {
+    "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)",
+    "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0"
+  },
+  "test_executable_sha256": "7b531fa7efcae263b0e0ecba46736be435bee18cab9031d33d5c6ee64ade624e",
+  "test_summary": "test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 82 filtered out; finished in 70.24s",
+  "families": [
+    {
+      "family": "F1 kernel-dependencies",
+      "cases": 40,
+      "schedules": 730,
+      "comparisons": 730,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 122,
+        "a3_exhaustion": 30,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F2 kernel-threads",
+      "cases": 16,
+      "schedules": 32,
+      "comparisons": 512,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F3 contracts-queries",
+      "cases": 2,
+      "schedules": 70,
+      "comparisons": 828,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 259
+      }
+    },
+    {
+      "family": "F4 contracts-commits",
+      "cases": 1,
+      "schedules": 11,
+      "comparisons": 110,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 31,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F5 contracts-modules",
+      "cases": 3,
+      "schedules": 75,
+      "comparisons": 75,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 12,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F6 graph-orders",
+      "cases": 6,
+      "schedules": 204,
+      "comparisons": 204,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 27,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F7 net-schedules",
+      "cases": 6,
+      "schedules": 204,
+      "comparisons": 1224,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 204,
+        "a4_metadata": 126,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F8 cache-sequences",
+      "cases": 6,
+      "schedules": 210,
+      "comparisons": 2898,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 340,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F9 threads",
+      "cases": 21,
+      "schedules": 96,
+      "comparisons": 672,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    }
+  ],
+  "oracle": [
+    {
+      "family": "F1 kernel-dependencies",
+      "rows": 730,
+      "groups": 32,
+      "normalized_conflicts": 0,
+      "presentation_difference_groups": 8,
+      "exhaustion_difference_groups": 6,
+      "exempt": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 275,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F2 kernel-threads",
+      "rows": 528,
+      "groups": 16,
+      "normalized_conflicts": 0,
+      "presentation_difference_groups": 0,
+      "exhaustion_difference_groups": 0,
+      "exempt": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F3 contracts-queries",
+      "rows": 828,
+      "groups": 12,
+      "normalized_conflicts": 0,
+      "presentation_difference_groups": 4,
+      "exhaustion_difference_groups": 0,
+      "exempt": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F4 contracts-commits",
+      "rows": 110,
+      "groups": 10,
+      "normalized_conflicts": 0,
+      "presentation_difference_groups": 5,
+      "exhaustion_difference_groups": 0,
+      "exempt": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F5 contracts-modules",
+      "rows": 75,
+      "groups": 3,
+      "normalized_conflicts": 0,
+      "presentation_difference_groups": 1,
+      "exhaustion_difference_groups": 0,
+      "exempt": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F6 graph-orders",
+      "rows": 204,
+      "groups": 6,
+      "normalized_conflicts": 0,
+      "presentation_difference_groups": 2,
+      "exhaustion_difference_groups": 0,
+      "exempt": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F7 net-schedules",
+      "rows": 1224,
+      "groups": 18,
+      "normalized_conflicts": 0,
+      "presentation_difference_groups": 12,
+      "exhaustion_difference_groups": 6,
+      "exempt": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 204,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F8 cache-sequences",
+      "rows": 2898,
+      "groups": 42,
+      "normalized_conflicts": 0,
+      "presentation_difference_groups": 20,
+      "exhaustion_difference_groups": 0,
+      "exempt": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F9 threads",
+      "rows": 693,
+      "groups": 21,
+      "normalized_conflicts": 0,
+      "presentation_difference_groups": 0,
+      "exhaustion_difference_groups": 0,
+      "exempt": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    }
+  ],
+  "oracle_control": {
+    "case": "oracle-control/position-leak",
+    "rows": [
+      {
+        "input": "1ea9d020ec1426e485500d8c2c811f8f",
+        "schedule": "oracle-control/position-leak#reversed-repeated#0",
+        "normalized": "c332ed76e060e431f0f2359aa5cb2b68",
+        "presentation": "b45772bc11117739f299b6efc1eacfc2",
+        "query": 1,
+        "replay": "oracle-control/position-leak@2,1,0,2,1,0"
+      },
+      {
+        "input": "1ea9d020ec1426e485500d8c2c811f8f",
+        "schedule": "oracle-control/position-leak#seed-0x06d0d6b8d1abaa35#0",
+        "normalized": "c332ea76e060df18f0f2389aa5cb3081",
+        "presentation": "b45772bc11117739f299b6efc1eacfc2",
+        "query": 1,
+        "replay": "oracle-control/position-leak@0,0,1,1,2,2"
+      }
+    ],
+    "reproduced": 2,
+    "replayed": 1,
+    "allowed_presentation_differences": 0
+  },
+  "retained_fixtures": 2,
+  "divergences": 0,
+  "elapsed_ms": 70750,
+  "non_claims": [
+    "finite order-variation evidence for the listed cases, not a proof of confluence",
+    "no Rust-to-Lean refinement and no performance result",
+    "allowed differences are counted by class, not compared",
+    "the table oracle's digests are a 128-bit table fixpoint, not a cryptographic identity claim",
+    "the net-level proved results (#124 and inets MRun.confluent) are not re-proved and do not discharge #134"
+  ]
+}
