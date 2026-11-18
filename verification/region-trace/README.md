@@ -12,10 +12,16 @@ what the lane enforces is the declaration set and the axiom set.
 
 ```sh
 env -i HOME="$HOME" USER="$USER" LOGNAME="$USER" PATH=/run/current-system/sw/bin:/usr/bin:/bin \
+  CARGO_HOME="<absolute path of a Cargo home carrying the reviewed offline vendor config>" \
+  CARGO_TARGET_DIR="<absolute path of a bounded Cargo target directory>" \
   "<absolute path to the Node executable pinned in policy/tool-selection.json>" \
   verification/region-trace/check.mjs \
   --output "<new directory outside the repository>"
 ```
+
+The nested region-cut check compiles the two Rust decision functions with the pinned
+Charon/Aeneas pair, so the caller must supply the offline vendor configuration and a bounded
+Cargo target directory; the check forwards both to its children and refuses to run without them.
 
 The harness refuses a caller environment carrying `LEAN*`, `LAKE*`, `BASH*`, `GIT_*`, `NIX_*` or
 `ELAN*` variables, refuses an output directory inside the source tree, and refuses a dirty worktree
