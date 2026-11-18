@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSyn
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const BUN_VERSION = '1.4.4'; // Same Bun as the reviewed nixpkgs input and Pages workflow.
+export const BUN_VERSION = '1.3.10'; // Same Bun as the reviewed nixpkgs input and Pages workflow.
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const REPO = 'https://github.com/OnixResearch/noble-lang';
 const ORIGIN = 'https://noble-lang.org';
