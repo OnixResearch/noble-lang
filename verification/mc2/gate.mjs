@@ -25,6 +25,14 @@ const canonicalPath = join(root, 'specs/conformance/contract-cases.json');
 const canonicalBytes = await readFile(canonicalPath);
 const canonical = JSON.parse(canonicalBytes);
 const cases = new Map(canonical.cases.map(item => [item.id, item]));
+// MC2 closed over CONTRACT-01..15 (verification/mc2/acceptance.json). The shared
+// canonical file later gained CONTRACT-16, the still-unexecuted owner-law release
+// case, and the Intrinsic-Proofs-Draft cases, which their own gates execute. Any
+// other added case makes the run incomplete until it is explicitly scoped.
+const mc2Ids = Array.from({ length: 15 }, (_, index) => `CONTRACT-${String(index + 1).padStart(2, '0')}`);
+const outOfScope = canonical.cases.filter(item => !mc2Ids.includes(item.id))
+  .map(item => ({ id: item.id, profile: item.profile }));
+const scopedOut = outOfScope.every(item => item.id === 'CONTRACT-16' || item.profile === 'Intrinsic-Proofs-Draft');
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const frozenExecutables = [];
 async function freezeExecutable(source, name) {
@@ -55,7 +63,9 @@ const acceptance = {
   environment: Object.fromEntries([...Object.keys(reviewed), 'XDG_RUNTIME_DIR', 'NOBLE_MC2_CORE_TEST_BINARY']
     .map(key => [key, environment[key] ?? null])),
   conformance: { path: canonicalPath, sha256: hash(canonicalBytes),
-    workload: canonical.cases.map(({ id, input, expected }) => ({ id, input, expected })) },
+    mc2_cases: mc2Ids, out_of_scope: outOfScope,
+    workload: canonical.cases.filter(item => mc2Ids.includes(item.id))
+      .map(({ id, input, expected }) => ({ id, input, expected })) },
   cases: [], commands: [], inputs: {}, executables: {},
 };
 const retained = new Set([canonicalPath, fileURLToPath(import.meta.url)]);
@@ -291,7 +301,8 @@ async function coreControls(row, id) {
       assert.equal(artifacts.length, 1, 'cargo must identify exactly one CLI unit-test executable');
       controlBinary = await freezeExecutable(artifacts[0].executable, 'controls-executed');
     }
-    const run = await command(row, [test, '--exact', '--nocapture'], { executable: controlBinary, timeout: 3600000,
+    // The harness is #[ignore]d so a plain test run cannot count it as passed.
+    const run = await command(row, [test, '--exact', '--ignored', '--nocapture'], { executable: controlBinary, timeout: 3600000,
       env: { NOBLE_MC2_CONTROL_RECEIPT: receipt, NOBLE_MC2_CHECKER_BINARY: binary } });
     coreRun = { run, receipt: null, error: null };
     try {
@@ -809,9 +820,9 @@ await runCase('CONTRACT-15', async (row, item) => {
 });
 
 // Never shrink a summary to whichever cases happened to produce reports.
-const expectedIds = canonical.cases.map(item => item.id).sort();
+const expectedIds = [...mc2Ids].sort();
 const actualIds = acceptance.cases.map(item => item.case).sort();
-let complete = cases.size === canonical.cases.length;
+let complete = scopedOut && mc2Ids.every(id => cases.has(id));
 try { assert.deepStrictEqual(actualIds, expectedIds); } catch { complete = false; }
 for (const path of retained) {
   try { const bytes = await readFile(path); acceptance.inputs[path] = { sha256: hash(bytes), utf8: bytes.toString('utf8') }; }
@@ -829,10 +840,11 @@ for (const executable of frozenExecutables) {
 try { acceptance.binary_sha256 = hash(await readFile(binary)); }
 catch (error) { acceptance.binary_error = String(error); complete = false; }
 acceptance.gate_sha256 = acceptance.inputs[fileURLToPath(import.meta.url)]?.sha256;
-acceptance.summary = { cases: canonical.cases.length, executed: acceptance.cases.length,
+acceptance.summary = { cases: mc2Ids.length, canonical_cases: canonical.cases.length,
+  out_of_scope: outOfScope.map(item => item.id), executed: acceptance.cases.length,
   passed: acceptance.cases.filter(row => row.passed).length,
   failed: acceptance.cases.filter(row => !row.passed).map(row => row.case), complete };
-acceptance.passed = complete && acceptance.summary.passed === canonical.cases.length;
+acceptance.passed = complete && acceptance.summary.passed === mc2Ids.length;
 await writeFile(destination, `${JSON.stringify(acceptance, null, 2)}\n`);
-console.log(`${acceptance.summary.passed}/${canonical.cases.length} MC2 cases passed; ${destination}`);
+console.log(`${acceptance.summary.passed}/${mc2Ids.length} MC2 cases passed; ${destination}`);
 process.exitCode = acceptance.passed ? 0 : 1;
