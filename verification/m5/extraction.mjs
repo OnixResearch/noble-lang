@@ -41,8 +41,12 @@ const requiredRoots = [
     'cancel_invocation', 'fail_invocation', 'deliver_success', 'receipt', 'admit_receipt',
     'counters', 'requested_effects', 'invocation_outcome', 'witness_snapshot', 'attempt_snapshot']
     .map(method => ({ group: 'authority', type: 'Authority', method })),
-  ...['parse', 'prepare_export', 'check_import_effect', 'environment', 'session', 'build_context']
+  // World::check_import_effect is a reviewed extraction exclusion: its `&[&str]`
+  // claim list is a nested borrow the pinned Aeneas cannot represent. Its
+  // checked logic is the extracted import_identity and import_effect_verdict.
+  ...['parse', 'prepare_export', 'import_identity', 'environment', 'session', 'build_context']
     .map(method => ({ group: 'component-frontend', type: 'World', method })),
+  { group: 'component-frontend', rust: 'noble_contracts::component::preparation::import_effect_verdict' },
   { group: 'component-backend', rust: 'noble_wasm::component::compile' },
 ];
 const tableTransitions = ['validate', 'begin', 'native_access', 'complete', 'revoke',
