@@ -74254,7 +74254,7 @@ def source.declared.parsing.logical_name («name» : Str) : Result Bool := do
   else ok false
 
 /-- [noble_contracts::source::declared::parsing::members::exported_name]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 706:4-708:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 702:4-704:5 -/
 @[rust_loop_body]
 def source.declared.parsing.members.exported_name_loop.body
   (bytes : Slice Std.U8) (split : Std.Usize) :
@@ -74271,7 +74271,7 @@ def source.declared.parsing.members.exported_name_loop.body
   else ok (done split)
 
 /-- [noble_contracts::source::declared::parsing::members::exported_name]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 706:4-708:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 702:4-704:5 -/
 @[rust_loop]
 def source.declared.parsing.members.exported_name_loop
   (bytes : Slice Std.U8) (split : Std.Usize) : Result Std.Usize := do
@@ -74281,7 +74281,7 @@ def source.declared.parsing.members.exported_name_loop
     split
 
 /-- [noble_contracts::source::declared::parsing::members::exported_name]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 703:0-718:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 699:0-714:1 -/
 def source.declared.parsing.members.exported_name
   (target : Str) : Result Bool := do
   let bytes ← core.str.Str.as_bytes target
@@ -74333,7 +74333,7 @@ def source.declared.parsing.members.exported_name
     else ok false
 
 /-- [noble_contracts::source::declared::parsing::members::export]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 686:0-701:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 682:0-697:1 -/
 def source.declared.parsing.members.export
   (cursor : source.declared.parsing.Cursor) :
   Result (core.result.Result (source.declared.parsing.Cursor ×
@@ -74399,7 +74399,7 @@ def source.declared.parsing.Cursor.ident
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::parsing::members::require]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 644:0-684:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 640:0-680:1 -/
 def source.declared.parsing.members.require
   (cursor : source.declared.parsing.Cursor) :
   Result (core.result.Result (source.declared.parsing.Cursor ×
@@ -74585,7 +74585,7 @@ def source.declared.parsing.Cursor.public
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::parsing::members::variant_arm]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 613:0-638:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 609:0-634:1 -/
 def source.declared.parsing.members.variant_arm
   (cursor : source.declared.parsing.Cursor) :
   Result (core.result.Result (source.declared.parsing.Cursor × String ×
@@ -74712,7 +74712,7 @@ def scan.split_once_byte
       (Str × Str) residual
 
 /-- [noble_contracts::source::declared::parsing::members::variant_name]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 567:0-611:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 563:0-607:1 -/
 def source.declared.parsing.members.variant_name
   (spelling : Str) (span : Span) :
   Result (core.result.Result (String × (alloc.vec.Vec String)) Diagnostic)
@@ -74798,7 +74798,7 @@ def source.declared.parsing.members.variant_name
           ok (core.result.Result.Err d)
 
 /-- [noble_contracts::source::declared::parsing::members::variant]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 537:0-557:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 533:0-553:1 -/
 def source.declared.parsing.members.variant
   (cursor : source.declared.parsing.Cursor) :
   Result (core.result.Result (source.declared.parsing.Cursor ×
@@ -74829,7 +74829,7 @@ def source.declared.parsing.members.variant
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::parsing::members::opaque]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 527:0-535:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 523:0-531:1 -/
 def source.declared.parsing.members.opaque
   (cursor : source.declared.parsing.Cursor) :
   Result (core.result.Result (source.declared.parsing.Cursor ×
@@ -74876,7 +74876,7 @@ def source.declared.parsing.open_at
     | source.lexer.TokenKind.LogicalBody _ => ok false
 
 /-- [noble_contracts::source::declared::parsing::members::signature_word]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 512:0-525:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 508:0-521:1 -/
 def source.declared.parsing.members.signature_word
   (cursor : source.declared.parsing.Cursor) (count : Std.Usize) :
   Result (core.result.Result (source.declared.parsing.Cursor × Str)
@@ -74897,7 +74897,7 @@ def source.declared.parsing.members.signature_word
   | core.result.Result.Err _ => ok r
 
 /-- [noble_contracts::source::declared::parsing::members::signature]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 468:4-487:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 464:4-483:5 -/
 @[rust_loop_body]
 def source.declared.parsing.members.signature_loop.body
   (tokens : Slice source.lexer.Token) (tokens1 : Slice source.lexer.Token)
@@ -75025,7 +75025,7 @@ def source.declared.parsing.members.signature_loop.body
   else ok (done (tokens1, i, s, words, «end», problem))
 
 /-- [noble_contracts::source::declared::parsing::members::signature]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 468:4-487:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 464:4-483:5 -/
 @[rust_loop]
 def source.declared.parsing.members.signature_loop
   (tokens : Slice source.lexer.Token) (i : Std.Usize) (s : Span)
@@ -75041,7 +75041,7 @@ def source.declared.parsing.members.signature_loop
     (tokens, i, s, words, «end», problem)
 
 /-- [noble_contracts::source::declared::parsing::members::signature]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 445:0-509:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 441:0-505:1 -/
 def source.declared.parsing.members.signature
   (cursor : source.declared.parsing.Cursor) :
   Result (core.result.Result (source.declared.parsing.Cursor ×
@@ -75135,7 +75135,7 @@ def source.declared.parsing.Cursor.logical_ident
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::parsing::members::end_before]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 428:0-435:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 424:0-431:1 -/
 def source.declared.parsing.members.end_before
   (tokens : Slice source.lexer.Token) («at» : Std.Usize) :
   Result (Option Std.U32)
@@ -75154,7 +75154,7 @@ def source.declared.parsing.members.end_before
       Std.U32 residual
 
 /-- [noble_contracts::source::declared::parsing::members::proof::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::lexer::Token,), noble_contracts::Span> for noble_contracts::source::declared::parsing::members::proof::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 385:69-385:87 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 381:69-381:87 -/
 def
   source.declared.parsing.members.proof.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TokenSpan.call_once
   (c : source.declared.parsing.members.proof.closure)
@@ -75164,7 +75164,7 @@ def
   ok tupled_args.span
 
 /-- Trait implementation: [noble_contracts::source::declared::parsing::members::proof::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::lexer::Token,), noble_contracts::Span> for noble_contracts::source::declared::parsing::members::proof::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 385:69-385:87 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 381:69-381:87 -/
 @[reducible]
 def
   source.declared.parsing.members.proof.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TokenSpan
@@ -75175,7 +75175,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::parsing::members::reference_name]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 281:0-287:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 277:0-283:1 -/
 def source.declared.parsing.members.reference_name
   («name» : Str) (logical_target : Bool) : Result Bool := do
   if logical_target
@@ -75183,7 +75183,7 @@ def source.declared.parsing.members.reference_name
   else source.declared.parsing.name «name»
 
 /-- [noble_contracts::source::declared::parsing::members::reference]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 261:0-277:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 257:0-273:1 -/
 def source.declared.parsing.members.reference
   (text : Str) (logical_target : Bool) : Result Bool := do
   let o ← scan.split_once_byte text 46#u8
@@ -75793,7 +75793,7 @@ def source.declared.parsing.members.revision
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::parsing::members::proof]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 361:0-425:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 357:0-421:1 -/
 def source.declared.parsing.members.proof
   (cursor : source.declared.parsing.Cursor) (span : Span) :
   Result (core.result.Result (source.declared.parsing.Cursor ×
@@ -75967,7 +75967,7 @@ def source.declared.parsing.members.proof
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::parsing::members::contract::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::lexer::Token,), noble_contracts::Span> for noble_contracts::source::declared::parsing::members::contract::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 307:62-307:80 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 303:62-303:80 -/
 def
   source.declared.parsing.members.contract.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TokenSpan.call_once
   (c : source.declared.parsing.members.contract.closure)
@@ -75977,7 +75977,7 @@ def
   ok tupled_args.span
 
 /-- Trait implementation: [noble_contracts::source::declared::parsing::members::contract::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::lexer::Token,), noble_contracts::Span> for noble_contracts::source::declared::parsing::members::contract::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 307:62-307:80 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 303:62-303:80 -/
 @[reducible]
 def
   source.declared.parsing.members.contract.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TokenSpan
@@ -76182,7 +76182,7 @@ def source.declared.parsing.members.binding_block
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::source::declared::parsing::members::contract]:
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 293:0-355:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 289:0-351:1 -/
 def source.declared.parsing.members.contract
   (cursor : source.declared.parsing.Cursor) (span : Span) :
   Result (core.result.Result (source.declared.parsing.Cursor ×

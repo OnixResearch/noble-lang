@@ -3329,7 +3329,7 @@ def source.declared.parsing.name.closure := Unit
 def source.declared.parsing.logical_name.closure := Unit
 
 /-- [noble_contracts::source::declared::parsing::members::proof::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 385:69-385:87 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 381:69-381:87 -/
 @[reducible]
 def source.declared.parsing.members.proof.closure := Unit
 
@@ -3371,7 +3371,7 @@ def source.declared.parsing.logic.parse.closure := Unit
 def source.declared.parsing.members.revision.closure := source.lexer.Token
 
 /-- [noble_contracts::source::declared::parsing::members::contract::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 307:62-307:80 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 303:62-303:80 -/
 @[reducible]
 def source.declared.parsing.members.contract.closure := Unit
 
