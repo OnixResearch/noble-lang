@@ -162,9 +162,9 @@ impl Tabulate for Shape {
         if let Some(reason) = &seen.disagreement {
             text.push_str(&format!("disagreement:{reason};"));
         }
-        let site_is_allowed = !self.variants.is_empty() || !self.back.is_empty();
+        let is_site_allowed = !self.variants.is_empty() || !self.back.is_empty();
         match &seen.main {
-            ShapeSeen::Refused { code, .. } if site_is_allowed => {
+            ShapeSeen::Refused { code, .. } if is_site_allowed => {
                 text.push_str(&format!("refused:{code};"));
             }
             ShapeSeen::Refused { code, site } => {
@@ -188,9 +188,9 @@ impl Tabulate for Shape {
 
     fn presentation(&self, _query: usize, seen: &Observed) -> String {
         let mut text = String::new();
-        let site_is_allowed = !self.variants.is_empty() || !self.back.is_empty();
+        let is_site_allowed = !self.variants.is_empty() || !self.back.is_empty();
         if let ShapeSeen::Refused { site, .. } = &seen.main {
-            if site_is_allowed {
+            if is_site_allowed {
                 text.push_str(&format!("site:{site};"));
             }
         }
@@ -204,6 +204,10 @@ impl Tabulate for Shape {
             }
         }
         text
+    }
+
+    fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
+        super::schedule_id(&self.name(), label, position)
     }
 }
 
@@ -811,6 +815,10 @@ impl Tabulate for NetSchedules {
         format!("{}/cap-{cap:?}", self.name())
     }
 
+    #[expect(
+        tigerstyle::fragile_exhaustive_enum_match,
+        reason = "Owner: noble-maintainers; a new resource-cap kind must choose the normalized projection of its runs, so the harness fails to compile until it does."
+    )]
     fn normalized(&self, query: usize, seen: &NetSeen) -> Normalized {
         let (_, cap) = pair_selection(query);
         let exhausted = match &seen.obs {
@@ -834,6 +842,10 @@ impl Tabulate for NetSchedules {
         Normalized::Output(text)
     }
 
+    #[expect(
+        tigerstyle::fragile_exhaustive_enum_match,
+        reason = "Owner: noble-maintainers; a new resource-cap kind must choose what its runs present, so the harness fails to compile until it does."
+    )]
     fn presentation(&self, query: usize, seen: &NetSeen) -> String {
         let (_, cap) = pair_selection(query);
         match cap {

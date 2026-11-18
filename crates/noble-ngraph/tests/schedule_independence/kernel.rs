@@ -188,6 +188,10 @@ impl Tabulate for Dependencies {
             Seen::Accepted | Seen::Other(_) => String::new(),
         }
     }
+
+    fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
+        super::schedule_id(&self.name(), label, position)
+    }
 }
 
 /// One extra named definition: `S -- S Unit`.

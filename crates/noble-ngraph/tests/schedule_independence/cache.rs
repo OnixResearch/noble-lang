@@ -241,6 +241,10 @@ impl Tabulate for Requests {
         // A4: cache status and lookup metadata are opportunistic.
         format!("status-{:?}", seen.status)
     }
+
+    fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
+        super::schedule_id(&self.name(), label, position)
+    }
 }
 
 /// `x * y + 7 + (x or y)`, an extracted-subject I64 graph the frontend can readmit.

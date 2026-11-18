@@ -131,6 +131,10 @@ impl Tabulate for Queries {
     fn presentation(&self, _query: usize, _seen: &QuerySeen) -> String {
         String::new()
     }
+
+    fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
+        super::schedule_id(&self.name(), label, position)
+    }
 }
 
 /// F3 on a declared-module session whose queries share one request-work pool (A5): with an
@@ -212,6 +216,10 @@ impl Tabulate for Pooled {
     fn presentation(&self, _query: usize, seen: &PooledSeen) -> String {
         // A5: the remaining balance of a shared request-work pool after the query history.
         format!("remaining-{:?}", seen.remaining)
+    }
+
+    fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
+        super::schedule_id(&self.name(), label, position)
     }
 }
 
@@ -349,6 +357,10 @@ impl Tabulate for Commits {
             CommitSeen::Query(_) => String::new(),
         }
     }
+
+    fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
+        super::schedule_id(&self.name(), label, position)
+    }
 }
 
 /// F5: one declared module whose local definitions are permuted; `variants` are the same
@@ -482,6 +494,10 @@ impl Tabulate for Module {
             (Rendered::Refused { .. } | Rendered::Prepared(_), true)
             | (Rendered::Prepared(_), false) => String::new(),
         }
+    }
+
+    fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
+        super::schedule_id(&self.name(), label, position)
     }
 }
 

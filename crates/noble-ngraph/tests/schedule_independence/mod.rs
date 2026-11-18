@@ -19,7 +19,6 @@ mod contracts;
 mod graph;
 mod kernel;
 mod retained;
-mod table;
 mod threads;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -81,9 +80,12 @@ pub(super) trait Tabulate: Case {
     /// The section 3 fields the criteria allow to vary.
     fn presentation(&self, query: usize, seen: &Self::Seen) -> String;
     /// The schedule identifier of one row: the case, the admitted order and the row's position.
-    fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
-        format!("{}#{label}#{position}", self.name())
-    }
+    fn schedule(&self, query: usize, label: &str, position: usize) -> String;
+}
+
+/// The default schedule identifier: the case, the admitted order and the row's position.
+pub(super) fn schedule_id(name: &str, label: &str, position: usize) -> String {
+    format!("{name}#{label}#{position}")
 }
 
 /// The outcome of comparing one observation with its baseline.
@@ -520,6 +522,18 @@ fn token(name: &str, order: &[usize]) -> String {
     format!("{name}@{positions}")
 }
 
+/// Splits one projection into the digest of its normalized output and its exemption class.
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; a new normalized-output shape must decide whether it is compared by digest or exempted by a class, so the harness fails to compile until it does."
+)]
+fn project(normalized: Normalized) -> (Option<String>, Option<Allowed>) {
+    match normalized {
+        Normalized::Output(text) => (Some(digest(&text)), None),
+        Normalized::Exempt(class) => (None, Some(class)),
+    }
+}
+
 /// The table rows of one run, in run order (criteria-oracle section 1).
 fn rows<C: Tabulate>(
     case: &C,
@@ -532,18 +546,12 @@ fn rows<C: Tabulate>(
         .iter()
         .enumerate()
         .map(|(position, (query, seen))| {
-            let normalized = case.normalized(*query, seen);
+            let (normalized, exempt) = project(case.normalized(*query, seen));
             Row {
                 input: digest(&case.input(*query)),
                 schedule: case.schedule(*query, label, position),
-                normalized: match &normalized {
-                    Normalized::Output(text) => Some(digest(text)),
-                    Normalized::Exempt(_) => None,
-                },
-                exempt: match normalized {
-                    Normalized::Output(_) => None,
-                    Normalized::Exempt(class) => Some(class),
-                },
+                normalized,
+                exempt,
                 presentation: digest(&case.presentation(*query, seen)),
                 query: *query,
                 replay: Some(replay.clone()),
@@ -669,7 +677,7 @@ fn replay_requested_order() {
         .or_else(|| contracts::replay(&name, &order))
         .or_else(|| graph::replay(&name, &order))
         .or_else(|| cache::replay(&name, &order))
-        .or_else(|| table::replay(&name, &order))
+        .or_else(|| retained::replay(&name, &order))
         .unwrap_or_else(|| panic!("no case named {name}"));
     if let Err(reason) = outcome {
         panic!("replayed divergence for {requested}: {reason}");
