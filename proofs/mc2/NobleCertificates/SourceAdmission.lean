@@ -137,7 +137,7 @@ def provedAndReleased (guarded : Bool) : Result Bool := do
   let program ← noble_contracts.companion.core.Core.contract_program engine contract
   let .Ok events := program | fail .panic
   let [retained] := engine.registry.contracts.val | fail .panic
-  let subject ← noble_contracts.companion.core.Core.observe (alloc.vec.Vec.deref events)
+  let subject ← noble_contracts.companion.core.Core.observe events
     { input := retained.input_signature, output := retained.output_signature }
   let release ← noble_contracts.companion.core.Core.release engine evidence subject
   let claim ← noble_contracts.companion.core.Core.claim engine evidence
