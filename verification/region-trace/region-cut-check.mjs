@@ -1,12 +1,15 @@
 // One real synchronous Host::read_region decision cut: fresh selected Charon/Aeneas
-// translation, exact checked-in join, pinned Lean build and transitive theorem audit.
+// translation, byte-exact join with the checked-in whole-crate subject, pinned Lean
+// build of the proof project and transitive theorem audit.
 // Output is an immutable, commit-bound receipt in a new directory outside this tree.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { userInfo } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { declaration, reusedTableSubjects, selectedDeclarationText, selectedSubjects }
+  from './region-cut-generate.mjs';
 
 const root = resolve(fileURLToPath(import.meta.url), '../../..');
 const selection = JSON.parse(readFileSync(join(root, 'policy/tool-selection.json')));
@@ -76,32 +79,38 @@ run(charon, ['cargo', '--preset=aeneas', '--error-on-warnings', '--inline-anon-c
   '--target', 'x86_64-unknown-linux-gnu', '--locked', '--offline']);
 run(aeneas, ['-backend', 'lean', '-abort-on-error', '-warnings-as-errors', '-no-progress-bar',
   '-emit-json', '-split-files', '-gen-lib-entry', '-all-computable', '-dest', generated, llbc]);
-const joined = join(output, 'RegionCutExtracted.lean');
-run(node, ['verification/region-trace/region-cut-generate.mjs', generated, joined]);
-const source = 'proofs/m5/RegionCutExtracted.lean';
-requireThat(readFileSync(joined).equals(readFileSync(join(root, source))),
-  'checked-in extracted cut is not verbatim fresh pinned Aeneas output');
-const freshFuns = readFileSync(join(generated, 'Funs.lean'), 'utf8');
-const archivedFuns = readFileSync(join(root, 'proofs/m3/NobleKernel/Funs.lean'), 'utf8');
-function generatedBody(text, name) {
-  const anchor = `/-- [${name}]`;
-  const start = text.indexOf(anchor);
-  requireThat(start >= 0 && text.indexOf(anchor, start + 1) < 0,
-    `missing or duplicate generated table function: ${name}`);
-  const end = text.indexOf('\n/-- [', start + anchor.length);
-  requireThat(end >= 0, `unterminated generated function: ${name}`);
-  return text.slice(start, end).trimEnd();
-}
-const reusedTableBodies = [
-  'noble_kernel::resources::table::access::{noble_kernel::resources::table::Table}::begin',
-  'noble_kernel::resources::table::access::{noble_kernel::resources::table::Table}::native_access',
-  'noble_kernel::resources::table::access::{noble_kernel::resources::table::Table}::complete',
-  'noble_kernel::resources::table::{noble_kernel::resources::table::Table}::commit',
-];
-for (const subject of reusedTableBodies) {
-  requireThat(generatedBody(freshFuns, subject) === generatedBody(archivedFuns, subject),
-    `the compiled historical M5 table body differs from fresh selected Rust extraction: ${subject}`);
-}
+// The proof project builds the checked-in whole-crate subject, never a second copy of the
+// generated declarations. Every declaration this lane proves something about must therefore
+// be the fresh pinned bounded extraction's own text, and the subject is where it is read from.
+const freshSelected = join(output, 'fresh-selected.lean');
+run(node, ['verification/region-trace/region-cut-generate.mjs', generated, freshSelected]);
+const fresh = {
+  'Types.lean': readFileSync(join(generated, 'Types.lean'), 'utf8'),
+  'Funs.lean': readFileSync(join(generated, 'Funs.lean'), 'utf8'),
+};
+const subject = {
+  'Types.lean': readFileSync(join(root, 'proofs/m3/NobleKernel/Types.lean'), 'utf8'),
+  'Funs.lean': readFileSync(join(root, 'proofs/m3/NobleKernel/Funs.lean'), 'utf8'),
+};
+requireThat(readFileSync(freshSelected).equals(Buffer.from(selectedDeclarationText(subject))),
+  'checked-in whole-crate subject is not the fresh pinned extraction of the selected declarations');
+const selectedSubjectsChecked = selectedSubjects.map(({ file, rust }) => {
+  requireThat(declaration(fresh[file], rust) === declaration(subject[file], rust),
+    `selected declaration differs from the checked-in whole-crate subject: ${rust}`);
+  return rust;
+});
+const reusedTableBodies = reusedTableSubjects.map(rust => {
+  requireThat(declaration(fresh['Funs.lean'], rust) === declaration(subject['Funs.lean'], rust),
+    `the compiled historical M5 table body differs from fresh selected Rust extraction: ${rust}`);
+  return rust;
+});
+const duplicated = readdirSync(join(root, 'proofs/m5'))
+  .filter(name => name.endsWith('.lean'))
+  .flatMap(name => [...readFileSync(join(root, 'proofs/m5', name), 'utf8')
+    .matchAll(/^(?:def|abbrev|structure|inductive)\s+(?:region_read\.|Usize\.Insts\.CoreConvertTryFromI64)/gm)]
+    .map(match => `${name}: ${match[0]}`));
+requireThat(duplicated.length === 0,
+  `proofs/m5 redeclares whole-crate generated declarations: ${duplicated}`);
 const proof = 'proofs/m5/RegionCutProof.lean';
 const inventory = JSON.parse(readFileSync(join(root, 'proofs/m5/region-cut-inventory.json')));
 const names = inventory.theorems.map(row => row.name);
@@ -146,27 +155,35 @@ const theorems = inventory.theorems.map(row => {
 const final = gitState();
 requireThat(final.commit === initial.commit && final.tree === initial.tree && final.status === initial.status,
   'source changed during extraction or proof');
-const paths = [source, proof, 'proofs/m5/HostLocality.lean', 'proofs/m5/M5Resources.lean',
-  'proofs/m3/NobleKernel/Funs.lean',
+const paths = [proof, 'proofs/m5/HostLocality.lean', 'proofs/m5/M5Resources.lean',
+  'proofs/m3/NobleKernel/Types.lean', 'proofs/m3/NobleKernel/Funs.lean',
+  'proofs/m3/NobleKernel/FunsExternal.lean', 'proofs/m3/NobleKernel.lean',
   'proofs/m5/region-cut-inventory.json', 'proofs/m5/lakefile.toml',
   'crates/noble-kernel/src/region/read.rs',
   'crates/noble-kernel/src/lib.rs', 'crates/noble-cli/src/component/bounded_region.rs',
   'verification/host-locality/model-inputs.json',
   'verification/region-trace/region-cut-generate.mjs', 'verification/region-trace/region-cut-check.mjs',
   'verification/region-trace/region-cut-controls.mjs'];
-const receipt = { schema: 'noble-region-cut-extraction/v1', result: 'passed',
+const receipt = { schema: 'noble-region-cut-extraction/v2', result: 'passed',
   source_commit: initial.commit, source_tree: initial.tree, clean_source: initial.status === '',
   selected_roots: roots, generated_sha256: Object.fromEntries(
     ['Funs.lean', 'Types.lean', 'translation.json'].map(name => [name, fileHash(join(generated, name))])),
   llbc_sha256: fileHash(llbc), source_sha256: Object.fromEntries(paths.map(path => [path, sourceHash(path)])),
-  reused_table_functions_checked_byte_for_byte: reusedTableBodies,
+  proof_subject: {
+    files: ['proofs/m3/NobleKernel/Types.lean', 'proofs/m3/NobleKernel/Funs.lean',
+      'proofs/m3/NobleKernel/FunsExternal.lean'],
+    provenance: 'the reviewed whole-crate subject bound by the M4 extraction lock, not this lane',
+    selected_declarations_checked_byte_for_byte: selectedSubjectsChecked,
+    reused_table_functions_checked_byte_for_byte: reusedTableBodies,
+    duplicate_declarations_in_proofs_m5: duplicated.length,
+  },
   inherited_m5_resource_source_sha256: profile.historical_resource_source_sha256,
   external_models: {
     'core.result.Result.is_err': 'existing pinned Aeneas M5 external',
     'core.option.Option.Insts.CoreCmpPartialEqOption.eq': 'existing pinned Aeneas M5 external',
     'Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from':
-      'explicit width-sensitive total model in RegionCutExtracted.lean; conversion theorems audited below',
+      'the checked-in whole-crate model in proofs/m3/NobleKernel/FunsExternal.lean; RegionCutProof.conversion_models_agree proves it equals the lane reference model and the conversion theorems are audited below',
   }, theorems, controls, commands,
-  scope: 'Two extracted Rust decision functions and the existing M5 table functions, not the imperative wrapper, allocator, emitted component, Canonical ABI or Wasmtime semantics.' };
+  scope: 'Two extracted Rust decision functions and the existing M5 table functions, proved over the checked-in whole-crate generated declarations; not the imperative wrapper, allocator, emitted component, Canonical ABI or Wasmtime semantics.' };
 writeFileSync(join(output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
 process.stdout.write(`REGION-CUT: ${theorems.length} implementation theorems; pinned extraction and strict axioms accepted\n`);

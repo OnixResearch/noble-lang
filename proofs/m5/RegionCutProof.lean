@@ -1,4 +1,4 @@
-import RegionCutExtracted
+import M5Resources
 import HostLocality
 import RegionTrace
 
@@ -10,13 +10,98 @@ set_option maxRecDepth 4096
 
 namespace RegionCutProof
 
-/-- The only new external translation model is exact for signed-to-unsigned
-    conversion on this pinned usize width. Its success has a nonnegative source. -/
+/-- The lane's earlier explicit width-sensitive total model for Rust's `i64 -> usize`
+    conversion, retained only as the reference the checked-in whole-crate external
+    model (`proofs/m3/NobleKernel/FunsExternal.lean`) is proved to agree with. -/
+def laneConversionModel (value : Std.I64) :
+    Result (core.result.Result Std.Usize core.num.error.TryFromIntError) :=
+  if value.val < 0 then ok (.Err ())
+  else match UScalar.tryMkOpt .Usize value.val.toNat with
+    | some converted => ok (.Ok converted)
+    | none => ok (.Err ())
+
+/-- `Usize.max + 1` is exactly the width's power of two, so an in-range signed
+    value lies below it on the extraction target. -/
+theorem usize_max_succ_pow :
+    (Usize.max : Int) + 1 = (2 : Int) ^ UScalarTy.Usize.numBits := by
+  have h : Usize.max + 1 = 2 ^ UScalarTy.Usize.numBits := by
+    rw [UScalarTy.Usize_numBits_eq]
+    exact Usize.max_succ_eq_pow
+  have cast : ((Usize.max + 1 : Nat) : Int) = ((2 ^ UScalarTy.Usize.numBits : Nat) : Int) := by
+    rw [h]
+  push_cast at cast ⊢
+  exact cast
+
+/-- A nonnegative `i64` inside the `usize` range keeps its value when cast. -/
+theorem iscalar_hcast_usize_val (value : Std.I64) (nonnegative : 0 ≤ value.val)
+    (upper : value.val ≤ (Usize.max : Int)) :
+    (IScalar.hcast .Usize value).val = value.val.toNat := by
+  rw [IScalar.hcast_val_eq]
+  have bound : value.val < (2 : Int) ^ UScalarTy.Usize.numBits := by
+    have := usize_max_succ_pow
+    omega
+  rw [Int.emod_eq_of_lt nonnegative bound]
+
+/-- The checked-in whole-crate external model and the lane's explicit
+    width-sensitive total model are the same function on every `i64`. -/
+theorem conversion_models_agree (value : Std.I64) :
+    Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from value =
+      laneConversionModel value := by
+  unfold Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from laneConversionModel
+  have powCast : ((2 ^ UScalarTy.Usize.numBits : Nat) : Int) =
+      (2 : Int) ^ UScalarTy.Usize.numBits := by
+    push_cast
+    rfl
+  by_cases low : 0 ≤ value.val
+  · by_cases high : value.val ≤ (Usize.max : Int)
+    · have negative : ¬ value.val < 0 := by omega
+      have bound : value.val < (2 : Int) ^ UScalarTy.Usize.numBits := by
+        have := usize_max_succ_pow
+        omega
+      have fit : UScalar.inBounds .Usize value.val.toNat := by
+        show value.val.toNat < 2 ^ UScalarTy.Usize.numBits
+        exact (Int.toNat_lt low).mpr (by rw [powCast]; exact bound)
+      rw [ite_eq_left ⟨low, high⟩, ite_eq_right negative]
+      cases converted : UScalar.tryMkOpt .Usize value.val.toNat with
+      | some result =>
+        have shape := UScalar.tryMkOpt_eq .Usize value.val.toNat
+        rw [converted] at shape
+        have hcast : IScalar.hcast .Usize value = result :=
+          UScalar.eq_of_val_eq (by
+            rw [iscalar_hcast_usize_val value low high]
+            exact shape.1.symm)
+        rw [hcast]
+      | none =>
+        have shape := UScalar.tryMkOpt_eq .Usize value.val.toNat
+        rw [converted] at shape
+        exact absurd fit shape
+    · have negative : ¬ value.val < 0 := by omega
+      rw [ite_eq_right (by tauto), ite_eq_right negative]
+      cases converted : UScalar.tryMkOpt .Usize value.val.toNat with
+      | some result =>
+        have shape := UScalar.tryMkOpt_eq .Usize value.val.toNat
+        rw [converted] at shape
+        have boundNat : value.val < ((2 ^ UScalarTy.Usize.numBits : Nat) : Int) :=
+          (Int.toNat_lt low).mp shape.2
+        have bound : value.val < (2 : Int) ^ UScalarTy.Usize.numBits := by
+          rw [powCast] at boundNat
+          exact boundNat
+        have leMax : value.val ≤ (Usize.max : Int) := by
+          have := usize_max_succ_pow
+          omega
+        exact absurd leMax high
+      | none => rfl
+  · have negative : value.val < 0 := by omega
+    rw [ite_eq_right (by tauto), ite_eq_left negative]
+
+/-- The checked-in external model is exact for signed-to-unsigned conversion on
+    this pinned usize width. Its success has a nonnegative source. -/
 theorem conversion_success_nonnegative (x : Std.I64) (converted : Std.Usize)
     (h : Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from x =
       Result.ok (.Ok converted)) :
     0 ≤ x.val ∧ converted.val = x.val.toNat := by
-  unfold Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from at h
+  rw [conversion_models_agree] at h
+  unfold laneConversionModel at h
   split at h
   · simp at h
   · split at h
@@ -36,7 +121,8 @@ theorem conversion_success_nonnegative (x : Std.I64) (converted : Std.Usize)
 theorem conversion_refuses_negative (x : Std.I64) (negative : x.val < 0) :
     Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from x =
       Result.ok (.Err ()) := by
-  simp [Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from, negative]
+  rw [conversion_models_agree]
+  simp [laneConversionModel, negative]
 
 /-- The same signed arguments as the host report determine this exact
     nonnegative range; no refused input is granted any of these premises. -/
@@ -116,7 +202,7 @@ theorem successful_preflight_binds_signed_range
     have exactAddition := I64.checked_add_bv_spec request.offset_bytes request.length_bytes
     change core.num.checked_add_IScalar request.offset_bytes request.length_bytes = some total at addition
     rw [addition] at exactAddition
-    simp only [Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from] at accepted
+    simp only [conversion_models_agree, laneConversionModel] at accepted
     repeat (split at accepted <;> simp_all)
     grind [usize_tryMkOpt_value]
 
