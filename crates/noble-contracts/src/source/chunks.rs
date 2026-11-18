@@ -7611,19 +7611,25 @@ fn sort_ranked_candidates(queue: &mut CandidateQueue, invalid_scores: u32) -> Ra
         RankingDisposition::AppliedWithInvalidScores
     };
     queue.candidates.sort_unstable_by(|left, right| {
-        let left_score = left.score.unwrap_or(f32::NAN);
-        let right_score = right.score.unwrap_or(f32::NAN);
-        match (left_score.is_finite(), right_score.is_finite()) {
-            (true, true) => right_score
+        match (finite_score(left.score), finite_score(right.score)) {
+            (Some(left_score), Some(right_score)) => right_score
                 .partial_cmp(&left_score)
                 .unwrap_or(core::cmp::Ordering::Equal)
                 .then_with(|| left.ordinal.cmp(&right.ordinal)),
-            (true, false) => core::cmp::Ordering::Less,
-            (false, true) => core::cmp::Ordering::Greater,
-            (false, false) => left.ordinal.cmp(&right.ordinal),
+            (Some(_), None) => core::cmp::Ordering::Less,
+            (None, Some(_)) => core::cmp::Ordering::Greater,
+            (None, None) => left.ordinal.cmp(&right.ordinal),
         }
     });
     disposition
+}
+
+/// A scorer result that ranks ahead of missing and non-finite scores.
+const fn finite_score(score: Option<f32>) -> Option<f32> {
+    match score {
+        Some(value) if value.is_finite() => Some(value),
+        Some(_) | None => None,
+    }
 }
 
 fn initialize_search<'a>(

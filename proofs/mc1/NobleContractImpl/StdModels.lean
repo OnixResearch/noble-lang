@@ -1255,12 +1255,6 @@ def F32.Insts.CoreFmtDebug.fmt (_ : F32) (formatter : core.fmt.Formatter) :
     Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
   ok (.Ok (), formatter)
 
-/-- Rust defines `f32::NAN` as `0.0 / 0.0`. NaN payloads are not observable
-through any operation the translation calls. -/
-@[rust_const "core::f32::{f32}::NAN"]
-def core.f32.F32.NAN : Result F32 :=
-  ok Float32.nan
-
 @[rust_fun "core::f32::{f32}::is_finite"]
 def core.f32.F32.is_finite (value : F32) : Result Bool :=
   ok (Float32.isFinite value)
