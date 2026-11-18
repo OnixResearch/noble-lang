@@ -8604,7 +8604,7 @@ def words.Scheme.validate
   shapes.validate s s1 s2 s3
 
 /-- [noble_kernel::acceptance::validate::schemas]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 214:4-234:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 248:4-268:5 -/
 @[rust_loop_body]
 def acceptance.validate.schemas_loop.body
   (env : contracts.Env) (remaining : Std.U32) (spent : Std.U32)
@@ -8640,7 +8640,7 @@ def acceptance.validate.schemas_loop.body
   else ok (done (spent, none))
 
 /-- [noble_kernel::acceptance::validate::schemas]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 214:4-234:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 248:4-268:5 -/
 @[rust_loop]
 def acceptance.validate.schemas_loop
   (env : contracts.Env) (remaining : Std.U32) (spent : Std.U32)
@@ -8653,7 +8653,7 @@ def acceptance.validate.schemas_loop
     (spent, index)
 
 /-- [noble_kernel::acceptance::validate::schemas]:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 210:0-241:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 244:0-275:1 -/
 def acceptance.validate.schemas
   (env : contracts.Env) (remaining : Std.U32) :
   Result (core.result.Result Std.U32 acceptance.Fail)
@@ -8668,7 +8668,7 @@ def acceptance.validate.schemas
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::acceptance::validate::colored_slot::{impl core::ops::function::FnOnce<(&'_1 u8,), (usize, u8)> for noble_kernel::acceptance::validate::colored_slot::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 41:43-41:66 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 49:43-49:66 -/
 def
   acceptance.validate.colored_slot.closure.Insts.CoreOpsFunctionFnOnceTupleShared1U8PairUsizeU8.call_once
   (c : acceptance.validate.colored_slot.closure) (tupled_args : Std.U8) :
@@ -8677,7 +8677,7 @@ def
   ok (c, tupled_args)
 
 /-- Trait implementation: [noble_kernel::acceptance::validate::colored_slot::{impl core::ops::function::FnOnce<(&'_1 u8,), (usize, u8)> for noble_kernel::acceptance::validate::colored_slot::{closure}<'_0>}]
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 41:43-41:66 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 49:43-49:66 -/
 @[reducible]
 def
   acceptance.validate.colored_slot.closure.Insts.CoreOpsFunctionFnOnceTupleShared1U8PairUsizeU8
@@ -8688,7 +8688,7 @@ def
 }
 
 /-- [noble_kernel::acceptance::validate::colored_slot]:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 39:0-44:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 47:0-52:1 -/
 def acceptance.validate.colored_slot
   (colors : Slice Std.U8) (definition : contracts.Definition) :
   Result (Option (Std.Usize × Std.U8))
@@ -8705,26 +8705,79 @@ def acceptance.validate.colored_slot
       o index
   | core.result.Result.Err _ => ok none
 
-/-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Definition}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 17:9-17:14
-    Visibility: public -/
-def contracts.Definition.Insts.CoreCloneClone.clone
-  (self : contracts.Definition) : Result contracts.Definition := do
-  ok self
+/-- [noble_kernel::acceptance::validate::dep_edges]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 206:4-225:5 -/
+@[rust_loop_body]
+def acceptance.validate.dep_edges_loop.body
+  (deps : Slice contracts.Definition) (remaining : Std.U32)
+  (walk : acceptance.validate.DepWalk) (dep_index : Std.Usize) :
+  Result (ControlFlow (acceptance.validate.DepWalk × Std.Usize)
+    (acceptance.validate.DepWalk × (Option acceptance.Fail)))
+  := do
+  let i := Slice.len deps
+  if dep_index < i
+  then
+    if walk.spent >= remaining
+    then
+      ok (done (walk, some (acceptance.Fail.Exhausted
+        untrusted.LimitKind.Work)))
+    else
+      let i1 ← walk.spent + 1#u32
+      let dep ← Slice.index_usize deps dep_index
+      let s := alloc.vec.Vec.deref walk.colors
+      let o ← acceptance.validate.colored_slot s dep
+      match o with
+      | none =>
+        let dep_index1 ← dep_index + 1#usize
+        ok (cont ({ walk with spent := i1 }, dep_index1))
+      | some p =>
+        let (_, i2) := p
+        match i2 with
+        | 1#uscalar =>
+          ok (done ({ walk with spent := i1 }, some
+            (acceptance.Fail.Unsupported
+            (untrusted.UnsupportedKind.RecursiveDependency dep))))
+        | 0#uscalar =>
+          let v ← alloc.vec.Vec.push walk.stack dep
+          let dep_index1 ← dep_index + 1#usize
+          ok (cont ({ walk with stack := v, spent := i1 }, dep_index1))
+        | _ =>
+          let dep_index1 ← dep_index + 1#usize
+          ok (cont ({ walk with spent := i1 }, dep_index1))
+  else ok (done (walk, none))
 
-/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Definition}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 17:9-17:14 -/
-@[reducible]
-def contracts.Definition.Insts.CoreCloneClone : core.clone.Clone
-  contracts.Definition := {
-  clone := contracts.Definition.Insts.CoreCloneClone.clone
-}
+/-- [noble_kernel::acceptance::validate::dep_edges]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 206:4-225:5 -/
+@[rust_loop]
+def acceptance.validate.dep_edges_loop
+  (deps : Slice contracts.Definition) (walk : acceptance.validate.DepWalk)
+  (remaining : Std.U32) (dep_index : Std.Usize) :
+  Result (acceptance.validate.DepWalk × (Option acceptance.Fail))
+  := do
+  loop
+    (fun (walk1, dep_index1) => acceptance.validate.dep_edges_loop.body deps
+      remaining walk1 dep_index1)
+    (walk, dep_index)
+
+/-- [noble_kernel::acceptance::validate::dep_edges]:
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 199:0-231:1 -/
+def acceptance.validate.dep_edges
+  (deps : Slice contracts.Definition) (walk : acceptance.validate.DepWalk)
+  (remaining : Std.U32) :
+  Result (acceptance.validate.DepWalk × (core.result.Result Unit
+    acceptance.Fail))
+  := do
+  let (walk1, failure) ←
+    acceptance.validate.dep_edges_loop deps walk remaining 0#usize
+  match failure with
+  | none => ok (walk1, core.result.Result.Ok ())
+  | some problem => ok (walk1, core.result.Result.Err problem)
 
 /-- [noble_kernel::acceptance::validate::deps_of]:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 21:0-32:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 29:0-40:1 -/
 def acceptance.validate.deps_of
   (env : contracts.Env) («def» : contracts.Definition) :
-  Result (alloc.vec.Vec contracts.Definition)
+  Result (Option (Slice contracts.Definition))
   := do
   let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from «def»
   match r with
@@ -8734,73 +8787,13 @@ def acceptance.validate.deps_of
       core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
         (alloc.vec.Vec contracts.Definition)) s index
     match o with
-    | none => ok (alloc.vec.Vec.new contracts.Definition)
-    | some list =>
-      alloc.vec.CloneVec.clone contracts.Definition.Insts.CoreCloneClone list
-  | core.result.Result.Err _ => ok (alloc.vec.Vec.new contracts.Definition)
-
-/-- [noble_kernel::acceptance::validate::dep_step]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 172:4-191:5 -/
-@[rust_loop_body]
-def acceptance.validate.dep_step_loop.body
-  (v : alloc.vec.Vec Std.U8) (remaining : Std.U32)
-  (deps : alloc.vec.Vec contracts.Definition)
-  (v1 : alloc.vec.Vec contracts.Definition) (i : Std.U32)
-  (dep_index : Std.Usize) :
-  Result (ControlFlow ((alloc.vec.Vec contracts.Definition) × Std.U32 ×
-    Std.Usize) ((alloc.vec.Vec contracts.Definition) × Std.U32 × (Option
-    acceptance.Fail)))
-  := do
-  let i1 := alloc.vec.Vec.len deps
-  if dep_index < i1
-  then
-    if i >= remaining
-    then
-      ok (done (v1, i, some (acceptance.Fail.Exhausted
-        untrusted.LimitKind.Work)))
-    else
-      let i2 ← i + 1#u32
-      let dep ←
-        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-          contracts.Definition) deps dep_index
-      let s := alloc.vec.Vec.deref v
-      let o ← acceptance.validate.colored_slot s dep
-      match o with
-      | none =>
-        let dep_index1 ← dep_index + 1#usize
-        ok (cont (v1, i2, dep_index1))
-      | some p =>
-        let (_, i3) := p
-        match i3 with
-        | 1#uscalar =>
-          ok (done (v1, i2, some (acceptance.Fail.Unsupported
-            (untrusted.UnsupportedKind.RecursiveDependency dep))))
-        | 0#uscalar =>
-          let v2 ← alloc.vec.Vec.push v1 dep
-          let dep_index1 ← dep_index + 1#usize
-          ok (cont (v2, i2, dep_index1))
-        | _ =>
-          let dep_index1 ← dep_index + 1#usize
-          ok (cont (v1, i2, dep_index1))
-  else ok (done (v1, i, none))
-
-/-- [noble_kernel::acceptance::validate::dep_step]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 172:4-191:5 -/
-@[rust_loop]
-def acceptance.validate.dep_step_loop
-  (v : alloc.vec.Vec Std.U8) (v1 : alloc.vec.Vec contracts.Definition)
-  (i : Std.U32) (remaining : Std.U32)
-  (deps : alloc.vec.Vec contracts.Definition) (dep_index : Std.Usize) :
-  Result ((alloc.vec.Vec contracts.Definition) × Std.U32 × (Option
-    acceptance.Fail))
-  := do
-  loop
-    (fun (v2, i1, dep_index1) => acceptance.validate.dep_step_loop.body v
-      remaining deps v2 i1 dep_index1)
-    (v1, i, dep_index)
+    | none => ok none
+    | some list => let s1 ← alloc.vec.Vec.as_slice Global list
+                   ok (some s1)
+  | core.result.Result.Err _ => ok none
 
 /-- [noble_kernel::acceptance::validate::dep_step]:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 140:0-197:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 152:0-185:1 -/
 def acceptance.validate.dep_step
   (env : contracts.Env) (walk : acceptance.validate.DepWalk)
   (remaining : Std.U32) :
@@ -8837,21 +8830,18 @@ def acceptance.validate.dep_step
           let (_, index_mut_back) ←
             alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
               Std.U8) walk.colors index
-          let deps ← acceptance.validate.deps_of env top
-          let v := index_mut_back 1#u8
-          let (v1, i, failure) ←
-            acceptance.validate.dep_step_loop v walk.stack walk.spent remaining
-              deps 0#usize
-          match failure with
+          let o2 ← acceptance.validate.deps_of env top
+          match o2 with
           | none =>
-            ok ({ colors := v, stack := v1, spent := i }, core.result.Result.Ok
-              ())
-          | some problem =>
-            ok ({ colors := v, stack := v1, spent := i },
-              core.result.Result.Err problem)
+            let v := index_mut_back 1#u8
+            ok ({ walk with colors := v }, core.result.Result.Ok ())
+          | some deps =>
+            let v := index_mut_back 1#u8
+            acceptance.validate.dep_edges deps { walk with colors := v }
+              remaining
 
 /-- [noble_kernel::acceptance::validate::dep_root]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 111:4-121:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 119:4-129:5 -/
 @[rust_loop_body]
 def acceptance.validate.dep_root_loop.body
   (env : contracts.Env) (remaining : Std.U32)
@@ -8869,7 +8859,7 @@ def acceptance.validate.dep_root_loop.body
     | core.result.Result.Err problem => ok (done (next, some problem))
 
 /-- [noble_kernel::acceptance::validate::dep_root]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 111:4-121:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 119:4-129:5 -/
 @[rust_loop]
 def acceptance.validate.dep_root_loop
   (env : contracts.Env) (remaining : Std.U32)
@@ -8881,7 +8871,7 @@ def acceptance.validate.dep_root_loop
     walk
 
 /-- [noble_kernel::acceptance::validate::dep_root]:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 102:0-126:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 110:0-134:1 -/
 def acceptance.validate.dep_root
   (env : contracts.Env) (root : contracts.Definition)
   (walk : acceptance.validate.DepWalk) (remaining : Std.U32) :
@@ -8896,7 +8886,7 @@ def acceptance.validate.dep_root
   | some problem => ok (walk1, core.result.Result.Err problem)
 
 /-- [noble_kernel::acceptance::validate::dependencies]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 72:4-88:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 80:4-96:5 -/
 @[rust_loop_body]
 def acceptance.validate.dependencies_loop.body
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -8959,7 +8949,7 @@ def acceptance.validate.dependencies_loop.body
   else ok (done (walk, failure))
 
 /-- [noble_kernel::acceptance::validate::dependencies]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 72:4-88:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 80:4-96:5 -/
 @[rust_loop]
 def acceptance.validate.dependencies_loop
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -8984,7 +8974,7 @@ def acceptance.validate.dependencies_loop
     (walk, failure, root)
 
 /-- [noble_kernel::acceptance::validate::dependencies]:
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 60:0-95:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 68:0-103:1 -/
 def acceptance.validate.dependencies
   (env : contracts.Env) (remaining : Std.U32) :
   Result (core.result.Result Std.U32 acceptance.Fail)
@@ -21444,6 +21434,13 @@ def acceptance.preflight.check_request
     Visibility: public -/
 def untrusted.Lit.Insts.CoreCloneClone.clone
   (self : untrusted.Lit) : Result untrusted.Lit := do
+  ok self
+
+/-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Definition}::clone]:
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 17:9-17:14
+    Visibility: public -/
+def contracts.Definition.Insts.CoreCloneClone.clone
+  (self : contracts.Definition) : Result contracts.Definition := do
   ok self
 
 /-- [noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Node}::clone]:
@@ -38807,6 +38804,14 @@ def contracts.nominal.register_bound_send
       else
         ok (core.result.Result.Err
           contracts.NominalError.InvalidRepresentation)
+
+/-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Definition}]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 17:9-17:14 -/
+@[reducible]
+def contracts.Definition.Insts.CoreCloneClone : core.clone.Clone
+  contracts.Definition := {
+  clone := contracts.Definition.Insts.CoreCloneClone.clone
+}
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::Definition}]
     Source: 'crates/noble-kernel/src/contracts.rs', lines 17:16-17:20 -/

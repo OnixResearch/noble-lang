@@ -667,7 +667,7 @@ inductive shapes.Step where
 | Slots : alloc.vec.Vec shapes.EffectSlot → shapes.Step
 
 /-- [noble_kernel::acceptance::validate::colored_slot::{closure}]
-    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 41:43-41:66 -/
+    Source: 'crates/noble-kernel/src/acceptance/validate.rs', lines 49:43-49:66 -/
 @[reducible]
 def acceptance.validate.colored_slot.closure := Std.Usize
 
