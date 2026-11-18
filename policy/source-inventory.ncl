@@ -542,6 +542,11 @@
 #   cargo graph 026d74e820ef4ce6949d8a53a2f7a5e829b2f984ba2fc6cf8f36f0f946b7ac5e; collector policy 49fb49992c5790e26ab6572f4a2380078416c2bdefd2c55f571b7bb759c73395.
 #   23507 production paths = 11692 body/open + 7481 generated + 4334 structural;
 #   15196 test-only paths; 91 macro origins. Earlier header counts are historical.
+# Renewed renew for issue #138: the dependency preflight borrows external edge lists instead of cloning them before the work charge from a complete 110-unit selected collection:
+#   IR 0f8aea02ad73d34055b8a419fff2ac134e1def8cf216d654ecc7ce2c83b8b994; coverage 3c1327359a02dd8a476d615d7fc2296c47d6bb1b619512f265860dae2b2fb067;
+#   cargo graph 026d74e820ef4ce6949d8a53a2f7a5e829b2f984ba2fc6cf8f36f0f946b7ac5e; collector policy 49fb49992c5790e26ab6572f4a2380078416c2bdefd2c55f571b7bb759c73395.
+#   23508 production paths = 11693 body/open + 7481 generated + 4334 structural;
+#   15205 test-only paths; 91 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -24214,6 +24219,10 @@ let
     body "noble_wasm::source::types::emission::predicate" "noble-wasm" "Renewed batch 16: #97 literal-free kernel checker (contracts.rs identity bytes, nominal/validation comparisons, parts::join assertions) on top of batch 15b from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble_wasm::source::types::emission::prologue" "noble-wasm" "Renewed batch 16: #97 literal-free kernel checker (contracts.rs identity bytes, nominal/validation comparisons, parts::join assertions) on top of batch 15b from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
     body "noble_wasm::source::types::emission::resource_locals" "noble-wasm" "Renewed batch 16: #97 literal-free kernel checker (contracts.rs identity bytes, nominal/validation comparisons, parts::join assertions) on top of batch 15b from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+    # Renewed renew for issue #138: the dependency preflight borrows external edge lists instead of cloning them before the work charge: 1 newly observed production paths,
+    # classified from compiler facts only (see tools/source-inventory-renew.mjs).
+    # Bodies keep OPEN extraction and refinement obligations.
+    body "noble_kernel::acceptance::validate::dep_edges" "noble-kernel" "Renewed renew for issue #138: the dependency preflight borrows external edge lists instead of cloning them before the work charge from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
   ],
   # Test-only compiler-observed paths; not excluded production obligations.
   test_subjects | Array String = [
@@ -33865,21 +33874,23 @@ let
     "noble-kernel::closure@crates/noble-kernel/tests/property/shrink.rs:2042:2044",
     "noble-kernel::closure@crates/noble-kernel/tests/property/shrink.rs:5315:5333",
     "noble-kernel::closure@crates/noble-kernel/tests/property/shrink.rs:6753:6771",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:10193:14300",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:10346:10354",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:11086:11094",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:1350:1926",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:1936:2589",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:2855:4030",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:4040:4868",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:5127:5980",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:5290:5298",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:6247:7625",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:6413:6421",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:7635:8826",
-    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:8836:10183",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:10520:14627",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:10673:10681",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:11413:11421",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:1677:2253",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:2263:2916",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:3182:4357",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:4367:5195",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:5454:6307",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:5617:5625",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:6574:7952",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:6740:6748",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:7962:9153",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion-schema-cycle.rs:9163:10510",
     "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/builders.rs:3988:3996",
     "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/builders.rs:4291:4295",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/dep_copy_bound.rs:2351:4173",
+    "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/dep_copy_bound.rs:2503:2511",
     "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/orders.rs:10132:10136",
     "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/orders.rs:10247:10251",
     "noble-kernel::closure@crates/noble-kernel/tests/recursion_schema_cycle/orders.rs:10973:12573",
@@ -35778,6 +35789,13 @@ let
     "recursion_schema_cycle::builders::unit_like",
     "recursion_schema_cycle::builders::unsupported_of",
     "recursion_schema_cycle::builders::value",
+    "recursion_schema_cycle::dep_copy_bound",
+    "recursion_schema_cycle::dep_copy_bound::ALLOWANCES",
+    "recursion_schema_cycle::dep_copy_bound::BUDGET",
+    "recursion_schema_cycle::dep_copy_bound::EDGE_COUNT",
+    "recursion_schema_cycle::dep_copy_bound::REPEATS",
+    "recursion_schema_cycle::dep_copy_bound::test",
+    "recursion_schema_cycle::dep_copy_bound::unbudgeted_dependency_edges_are_not_materialized",
     "recursion_schema_cycle::dependency_and_schema_walks_share_request_work",
     "recursion_schema_cycle::external_dependency_data_is_validated_before_any_body_check",
     "recursion_schema_cycle::main",
