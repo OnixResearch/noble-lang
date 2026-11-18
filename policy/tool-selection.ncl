@@ -75,7 +75,9 @@ let Pin = { rev | String, narHash | String } in
     # 147-166 s idle and 425 s under concurrent builds, so it shares the
     # Charon and Lean bound.
     translator_timeout_seconds | Number = 900,
-    lean_timeout_seconds | Number = 900,
+    # Also a hang guard: the fresh three-subject build exceeded 900 s when
+    # NobleContractImpl.Funs alone took 720 s at load 45 on 32 cores.
+    lean_timeout_seconds | Number = 1800,
     lean_heartbeats | Number = 1000000,
     lean_recursion_depth | Number = 2048,
   },

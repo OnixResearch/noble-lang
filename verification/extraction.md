@@ -185,6 +185,12 @@ so the historical 120-second limit no longer fits. This resource change does not
 relax source, generated-byte, model or axiom checks; receipts produced under the
 old configuration remain historical.
 
+The gate's Lean commands share a second hang guard, now 1800 seconds. Its
+fresh build compiles all three subjects from scratch, and
+`NobleContractImpl.Funs` alone took 335 to 381 seconds idle but 720 seconds at a
+load average of 45 on 32 cores, and that build reached the historical
+900-second bound with three of its 1813 modules still to compile.
+
 ## Allocators at this boundary (#121)
 
 This route erases the allocator, so it cannot report on one. Charon sets `hide_allocator: true` under

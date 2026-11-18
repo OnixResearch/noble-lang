@@ -177,7 +177,7 @@ function validateSelection() {
   for (const [name, expected] of Object.entries({ target: 'x86_64-unknown-linux-gnu', word_bits: 64,
     extraction_rust: 'nightly-2026-09-17', extraction_profile: 'dev', all_features: true,
     default_features: true, overflow_checks: true, panic: 'unwind', lean_heartbeats: 1000000,
-    lean_recursion_depth: 2048, charon_timeout_seconds: 900, lean_timeout_seconds: 900,
+    lean_recursion_depth: 2048, charon_timeout_seconds: 900, lean_timeout_seconds: 1800,
     translator_timeout_seconds: 900 })) {
     equal(selection.configuration[name], expected, 'SELECTION', name);
   }
