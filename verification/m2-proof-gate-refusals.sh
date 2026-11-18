@@ -24,12 +24,15 @@
 #   foreign-       a `_native.decide` axiom of another type (a     -> REQUIRED-
 #   native-type    local Nat bound) in the generated kernel's         THEOREMS
 #                  external models, reached by acceptance.check
+#   kernel-owned-  the exact literal-size `_native.decide` shape   -> REQUIRED-
+#   literal        (a `toStr` literal) in the same kernel model       THEOREMS
 #   foreign-       the exact literal-size `_native.decide` shape   -> REQUIRED-
 #   owner-literal  owned by another module (a `toStr` literal in      THEOREMS
 #                  embedEnv)
-# The last two show that the gate's generated literal-size allowance admits
-# neither another axiom type in a kernel module nor the literal shape under
-# any other owner.
+# The last three show that the gate admits no `_native.decide` axiom on a
+# required theorem: not another type in a kernel module, and not the
+# literal-size shape under any owner. The gate admitted that shape in the
+# kernel modules until #97 removed every literal from the checker.
 set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -151,9 +154,9 @@ DECEQ
     ;;
   foreign-native-type)
     # A local `decide +native` on a Nat bound inside the external model of
-    # slice/array equality, which acceptance.check reaches: owner and axiom
-    # name have the generated shape, the type does not. Written to a temp file
-    # and moved, so the hard-linked repository file is untouched.
+    # slice/array equality, which acceptance.check reaches: a kernel-owned
+    # `_native.decide` axiom whose type is not a literal size. Written to a
+    # temp file and moved, so the hard-linked repository file is untouched.
     awk '
       /^def Shared0Slice\.Insts\.CoreCmpPartialEqArray\.eq$/ { target = 1 }
       { print }
@@ -165,6 +168,23 @@ DECEQ
     [ "$(grep -c '_nonLiteral' "$SCRATCH/foreign-native-type.lean")" -eq 1 ] \
       || { echo "APPLY FAILED"; return 1; }
     mv "$SCRATCH/foreign-native-type.lean" "$copy/NobleKernel/FunsExternal.lean"
+    ;;
+  kernel-owned-literal)
+    # A `toStr` literal in the same kernel external model: exactly the
+    # generated literal-size axiom shape, owned by NobleKernel.FunsExternal
+    # and reached by acceptance.check. Admitted until #97 removed every
+    # literal from the checker; it must now refuse.
+    awk '
+      /^def Shared0Slice\.Insts\.CoreCmpPartialEqArray\.eq$/ { target = 1 }
+      { print }
+      target && /^  \(left : Slice T\) \(right : Array U N\) : Result Bool :=$/ {
+        print "  have _kernelLiteral : Aeneas.Std.Str := Aeneas.Std.toStr \"refusal-probe\""
+        target = 0
+      }
+    ' "$PROOF_ROOT/NobleKernel/FunsExternal.lean" > "$SCRATCH/kernel-owned-literal.lean"
+    [ "$(grep -c '_kernelLiteral' "$SCRATCH/kernel-owned-literal.lean")" -eq 1 ] \
+      || { echo "APPLY FAILED"; return 1; }
+    mv "$SCRATCH/kernel-owned-literal.lean" "$copy/NobleKernel/FunsExternal.lean"
     ;;
   foreign-owner-literal)
     # The exact literal-size shape (a `toStr` literal) elaborated inside
@@ -194,11 +214,11 @@ DECEQ
   if ! printf '%s\n' "$out" | grep -q "^\[m2-gate\] FAIL $expect"; then
     echo "REFUSAL at wrong check (expected $expect)"; return 1
   fi
-  # The two literal-size controls must be refused for their probe axiom, not
+  # The three native-axiom controls must be refused for their probe axiom, not
   # for an unrelated reason that happens to fail the same check.
   local reason=''
   case "$label" in
-    foreign-native-type) reason='CoreCmpPartialEqArray.eq._native.decide.ax_' ;;
+    foreign-native-type|kernel-owned-literal) reason='CoreCmpPartialEqArray.eq._native.decide.ax_' ;;
     foreign-owner-literal) reason='embedEnv._native.decide.ax_' ;;
   esac
   if [ -n "$reason" ]; then
@@ -222,6 +242,7 @@ for case_label in \
   'unexplained-external BUILD' \
   'unexecuted-coverage REQUIRED-THEOREMS' \
   'foreign-native-type REQUIRED-THEOREMS' \
+  'kernel-owned-literal REQUIRED-THEOREMS' \
   'foreign-owner-literal REQUIRED-THEOREMS'
 do
   # shellcheck disable=SC2086
@@ -230,7 +251,7 @@ done
 
 echo
 if [ "$rc_all" -eq 0 ]; then
-  echo "== refusal matrix complete: baseline passes, all six mutations refused =="
+  echo "== refusal matrix complete: baseline passes, all seven mutations refused =="
 else
   echo "== refusal matrix INCOMPLETE =="
 fi

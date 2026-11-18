@@ -26,25 +26,13 @@
 #   explicit list of eight unrequired fixture theorems. Any other declared
 #   theorem must stay within the strict set, so a new native_decide proof
 #   fails until it is reviewed and listed.
-#   One further axiom shape is admitted on every audited name, strict and
-#   evaluation-closed alike, and logged on its own line as "generated
-#   literal-size evaluation (not strict)": the pinned Aeneas `toStr` proves
-#   each string literal's UTF-8 size bound with `decide +native`, which
-#   leaves one `<decl>._native.decide.ax_<n>` axiom per literal in the
-#   generated kernel. Since the #97 re-extraction `acceptance.check` reaches
-#   three of them (the adapter identities `TEST_SEND_ADAPTER_IDENTITY` and
-#   `TEST_CODE_EXPORT_ADAPTER_IDENTITY`, and the assertion message in
-#   `acceptance.parts.join`). Trust note: each such axiom trusts the
-#   compiled evaluation of `(String.toByteArray "<literal>").size ≤
-#   U32.max` for one closed literal; it is the shape proofs/m4/M4Audit.lean
-#   already reviews as `nativeStringBound`, matched by
-#   `generatedLiteralSizeAxiom` (identical in verification/m2-proof-gate.sh):
-#   owner NobleKernel.Funs or NobleKernel.FunsExternal, that name pattern,
-#   an axiom with no universe parameters, and a type that is exactly
-#   `decide ((String.toByteArray <string literal>).size ≤
-#   Aeneas.Std.U32.max) = true`. A `_native.decide` axiom of any other type
-#   or owner still rejects (refusal cells `foreign-native-type` and
-#   `foreign-owner-literal`).
+#   No other axiom shape is admitted. The pinned Aeneas `toStr` proves each
+#   string literal's UTF-8 size bound with `decide +native`, leaving one
+#   `<decl>._native.decide.ax_<n>` axiom per literal. Since #97 the generated
+#   `acceptance.check` reaches none of them: adapter identities are compared
+#   as byte arrays and the `acceptance.parts.join` assertions carry no
+#   message. So such an axiom on any audited name rejects, whatever its
+#   owner (refusal cells `foreign-native-type` and `foreign-owner-literal`).
 #
 # Beyond the reviewed list, the gate enumerates every theorem the m3
 # sources declare, from the elaborated environment: each `.lean` file under
@@ -180,44 +168,6 @@ import NobleM2
 import NobleM3
 
 open Lean in
-/-- The pinned Aeneas `toStr` proves each string literal's UTF-8 size bound
-    with `decide +native`, which leaves one `<decl>._native.decide.ax_<n>`
-    axiom per literal in the generated module. This is M4Audit's reviewed
-    `nativeStringBound` shape (proofs/m4/M4Audit.lean), restricted to the
-    generated kernel modules: exactly that axiom shape is admitted, logged as
-    generated literal-size evaluation (not strict); a `_native.decide` axiom
-    of any other type or owner still rejects. -/
-def generatedLiteralSizeAxiom (env : Environment) (decl : Name) : Bool := Id.run do
-  let owner := match env.getModuleIdxFor? decl with
-    | some index => env.header.moduleNames[index.toNat]?.getD .anonymous
-    | none => .anonymous
-  unless [`NobleKernel.Funs, `NobleKernel.FunsExternal].contains owner do return false
-  match decl with
-  | .str (.str (.str _ "_native") "decide") suffix =>
-    unless suffix.startsWith "ax_" && suffix.length > 3 &&
-        (suffix.toList.drop 3).all Char.isDigit do return false
-  | _ => return false
-  let some (.axiomInfo info) := env.find? decl | return false
-  if info.isUnsafe || !info.levelParams.isEmpty then return false
-  let type := info.type.consumeMData
-  unless type.isAppOfArity ``Eq 3 do return false
-  let equation := type.getAppArgs
-  unless equation[0]!.isConstOf ``Bool && equation[2]!.isConstOf ``Bool.true do return false
-  let decision := equation[1]!.consumeMData
-  unless decision.isAppOfArity ``decide 2 do return false
-  let proposition := decision.getAppArgs[0]!.consumeMData
-  unless proposition.isAppOfArity ``LE.le 4 do return false
-  let bound := proposition.getAppArgs
-  unless bound[0]!.isConstOf ``Nat && bound[3]!.isConstOf ``Aeneas.Std.U32.max do return false
-  let size := bound[2]!.consumeMData
-  unless size.isAppOfArity ``ByteArray.size 1 do return false
-  let bytes := size.appArg!.consumeMData
-  unless bytes.isAppOfArity ``String.toByteArray 1 do return false
-  match bytes.appArg!.consumeMData with
-  | .lit (.strVal _) => return true
-  | _ => return false
-
-open Lean in
 run_cmd do
   let env ← getEnv
   let strict : List Name := [``propext, ``Classical.choice, ``Quot.sound]
@@ -300,10 +250,7 @@ run_cmd do
     | some _ =>
       let axs ← Lean.collectAxioms n
       logInfo m!"m3-gate: axioms {n} {axs}"
-      let literal := axs.filter (generatedLiteralSizeAxiom env)
-      if !literal.isEmpty then
-        logInfo m!"m3-gate: generated literal-size evaluation (not strict) {n} {literal}"
-      let bad := axs.filter (fun a => !(okAxiom isStrict a) && !(generatedLiteralSizeAxiom env a))
+      let bad := axs.filter (fun a => !(okAxiom isStrict a))
       if !bad.isEmpty then
         logError m!"m3-gate: forbidden axioms on {n}: {bad}"
   -- The only unrequired declarations reviewed to carry the per-declaration
@@ -335,11 +282,7 @@ run_cmd do
     if !expectedSet.contains env.header.moduleNames[idx]! then continue
     audited := audited + 1
     let axs ← Lean.collectAxioms n
-    let literal := axs.filter (generatedLiteralSizeAxiom env)
-    if !literal.isEmpty then
-      logInfo m!"m3-gate: generated literal-size evaluation (not strict) {n} {literal}"
-    let bad := axs.filter (fun a =>
-      !(okAxiom (!nativeReviewed.contains n) a) && !(generatedLiteralSizeAxiom env a))
+    let bad := axs.filter (fun a => !(okAxiom (!nativeReviewed.contains n) a))
     if !bad.isEmpty then
       logError m!"m3-gate: forbidden axiom on declared theorem {n}: {bad} (native_decide is admitted only on reviewed names)"
   logInfo m!"m3-gate: audited {audited} theorems declared in {expected.size} m3 modules"
@@ -347,44 +290,6 @@ LEAN_A
 cat > "$GATE_B" <<'LEAN_B'
 import Lean.Elab.Command
 import NobleM2.Refinement
-
-open Lean in
-/-- The pinned Aeneas `toStr` proves each string literal's UTF-8 size bound
-    with `decide +native`, which leaves one `<decl>._native.decide.ax_<n>`
-    axiom per literal in the generated module. This is M4Audit's reviewed
-    `nativeStringBound` shape (proofs/m4/M4Audit.lean), restricted to the
-    generated kernel modules: exactly that axiom shape is admitted, logged as
-    generated literal-size evaluation (not strict); a `_native.decide` axiom
-    of any other type or owner still rejects. -/
-def generatedLiteralSizeAxiom (env : Environment) (decl : Name) : Bool := Id.run do
-  let owner := match env.getModuleIdxFor? decl with
-    | some index => env.header.moduleNames[index.toNat]?.getD .anonymous
-    | none => .anonymous
-  unless [`NobleKernel.Funs, `NobleKernel.FunsExternal].contains owner do return false
-  match decl with
-  | .str (.str (.str _ "_native") "decide") suffix =>
-    unless suffix.startsWith "ax_" && suffix.length > 3 &&
-        (suffix.toList.drop 3).all Char.isDigit do return false
-  | _ => return false
-  let some (.axiomInfo info) := env.find? decl | return false
-  if info.isUnsafe || !info.levelParams.isEmpty then return false
-  let type := info.type.consumeMData
-  unless type.isAppOfArity ``Eq 3 do return false
-  let equation := type.getAppArgs
-  unless equation[0]!.isConstOf ``Bool && equation[2]!.isConstOf ``Bool.true do return false
-  let decision := equation[1]!.consumeMData
-  unless decision.isAppOfArity ``decide 2 do return false
-  let proposition := decision.getAppArgs[0]!.consumeMData
-  unless proposition.isAppOfArity ``LE.le 4 do return false
-  let bound := proposition.getAppArgs
-  unless bound[0]!.isConstOf ``Nat && bound[3]!.isConstOf ``Aeneas.Std.U32.max do return false
-  let size := bound[2]!.consumeMData
-  unless size.isAppOfArity ``ByteArray.size 1 do return false
-  let bytes := size.appArg!.consumeMData
-  unless bytes.isAppOfArity ``String.toByteArray 1 do return false
-  match bytes.appArg!.consumeMData with
-  | .lit (.strVal _) => return true
-  | _ => return false
 
 open Lean in
 run_cmd do
@@ -418,10 +323,7 @@ run_cmd do
     | some ci =>
       let axs ← Lean.collectAxioms n
       logInfo m!"m3-gate: axioms {n} {axs}"
-      let literal := axs.filter (generatedLiteralSizeAxiom env)
-      if !literal.isEmpty then
-        logInfo m!"m3-gate: generated literal-size evaluation (not strict) {n} {literal}"
-      let bad := axs.filter (fun a => !(okAxiom isStrict a) && !(generatedLiteralSizeAxiom env a))
+      let bad := axs.filter (fun a => !(okAxiom isStrict a))
       if !bad.isEmpty then
         logError m!"m3-gate: forbidden axioms on {n}: {bad}"
       if n != gen then
@@ -448,11 +350,7 @@ run_cmd do
     if !expectedSet.contains env.header.moduleNames[idx]! then continue
     audited := audited + 1
     let axs ← Lean.collectAxioms n
-    let literal := axs.filter (generatedLiteralSizeAxiom env)
-    if !literal.isEmpty then
-      logInfo m!"m3-gate: generated literal-size evaluation (not strict) {n} {literal}"
-    let bad := axs.filter (fun a =>
-      !(okAxiom (!nativeReviewed.contains n) a) && !(generatedLiteralSizeAxiom env a))
+    let bad := axs.filter (fun a => !(okAxiom (!nativeReviewed.contains n) a))
     if !bad.isEmpty then
       logError m!"m3-gate: forbidden axiom on declared theorem {n}: {bad} (native_decide is admitted only on reviewed names)"
   logInfo m!"m3-gate: audited {audited} theorems declared in {expected.size} checker-B modules"

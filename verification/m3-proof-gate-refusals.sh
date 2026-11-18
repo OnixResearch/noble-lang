@@ -49,8 +49,12 @@
 #   foreign-native-type       a `decide +native` on a Nat bound inside   -> REQUIRED-
 #                             the external model of slice/array          THEOREMS
 #                             equality, which acceptance.check reaches:
-#                             owner and axiom name have the generated
-#                             literal-size shape, the type does not
+#                             a kernel-owned `_native.decide` axiom of
+#                             another type
+#   kernel-owned-literal      the exact literal-size shape (a `toStr`    -> REQUIRED-
+#                             literal) in the same kernel external       THEOREMS
+#                             model; the gate admitted this shape until
+#                             #97 removed every literal from the checker
 #   foreign-owner-literal     the exact literal-size shape (a `toStr`    -> REQUIRED-
 #                             literal) elaborated inside embedEnv, so    THEOREMS
 #                             every refinement theorem depends on an
@@ -251,9 +255,9 @@ STUB
   foreign-native-type)
     fresh_copy "$copy"
     # A local `decide +native` on a Nat bound inside the external model of
-    # slice/array equality, which acceptance.check reaches: owner and axiom
-    # name have the generated shape, the type does not. Written to a temp file
-    # and moved, so the hard-linked repository file is untouched.
+    # slice/array equality, which acceptance.check reaches: a kernel-owned
+    # `_native.decide` axiom whose type is not a literal size. Written to a
+    # temp file and moved, so the hard-linked repository file is untouched.
     awk '
       /^def Shared0Slice\.Insts\.CoreCmpPartialEqArray\.eq$/ { target = 1 }
       { print }
@@ -265,6 +269,26 @@ STUB
     [ "$(grep -c '_nonLiteral' "$SCRATCH/foreign-native-type.lean")" -eq 1 ] \
       || { echo "APPLY FAILED"; return 1; }
     mv "$SCRATCH/foreign-native-type.lean" "$copy/NobleKernel/FunsExternal.lean"
+    out="$("$GATE" "$copy" 2>&1)"; rc=$?
+    ;;
+
+  kernel-owned-literal)
+    fresh_copy "$copy"
+    # A `toStr` literal in the same kernel external model: exactly the
+    # generated literal-size axiom shape, owned by NobleKernel.FunsExternal
+    # and reached by acceptance.check. The gate admitted this shape until #97
+    # removed every literal from the checker; it must now refuse it.
+    awk '
+      /^def Shared0Slice\.Insts\.CoreCmpPartialEqArray\.eq$/ { target = 1 }
+      { print }
+      target && /^  \(left : Slice T\) \(right : Array U N\) : Result Bool :=$/ {
+        print "  have _kernelLiteral : Aeneas.Std.Str := Aeneas.Std.toStr \"refusal-probe\""
+        target = 0
+      }
+    ' "$PROOF_ROOT/NobleKernel/FunsExternal.lean" > "$SCRATCH/kernel-owned-literal.lean"
+    [ "$(grep -c '_kernelLiteral' "$SCRATCH/kernel-owned-literal.lean")" -eq 1 ] \
+      || { echo "APPLY FAILED"; return 1; }
+    mv "$SCRATCH/kernel-owned-literal.lean" "$copy/NobleKernel/FunsExternal.lean"
     out="$("$GATE" "$copy" 2>&1)"; rc=$?
     ;;
 
@@ -347,11 +371,11 @@ STUB
     printf '%s\n' "$out" | grep '^\[m3-gate\] FAIL' | head -3
     return 1
   fi
-  # The two literal-size controls must be refused for their probe axiom, not
+  # The three native-axiom controls must be refused for their probe axiom, not
   # for an unrelated reason that happens to fail the same check.
   local reason=''
   case "$label" in
-    foreign-native-type) reason='CoreCmpPartialEqArray.eq._native.decide.ax_' ;;
+    foreign-native-type|kernel-owned-literal) reason='CoreCmpPartialEqArray.eq._native.decide.ax_' ;;
     foreign-owner-literal) reason='embedEnv._native.decide.ax_' ;;
   esac
   if [ -n "$reason" ]; then
@@ -376,6 +400,7 @@ for case_label in \
   'local-axiom NO-PROOF-HOLE' \
   'unreviewed-native-decide REQUIRED-THEOREMS' \
   'foreign-native-type REQUIRED-THEOREMS' \
+  'kernel-owned-literal REQUIRED-THEOREMS' \
   'foreign-owner-literal REQUIRED-THEOREMS' \
   'missing-per-word-theorem REQUIRED-THEOREMS' \
   'substituted-subject GENERATED-KERNEL' \
