@@ -55,7 +55,11 @@ function snapshot() {
 }
 // Status/evidence annotations in the canonical file are documentation outputs;
 // every case's id, input and expected result remain immutable gate inputs.
+// MC2 closed over CONTRACT-01..15; gate.mjs applies the same scope and refuses
+// any later case that is neither CONTRACT-16 nor an Intrinsic-Proofs-Draft case.
+const mc2Ids = Array.from({ length: 15 }, (_, index) => `CONTRACT-${String(index + 1).padStart(2, '0')}`);
 const workload = () => json(path.join(root, 'specs/conformance/contract-cases.json')).cases
+  .filter(({ id }) => mc2Ids.includes(id))
   .map(({ id, input, expected }) => ({ id, input, expected }));
 const sourceFiles = snapshot();
 const declaredWorkload = workload();
