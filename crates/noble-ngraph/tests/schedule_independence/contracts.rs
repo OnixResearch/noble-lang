@@ -133,7 +133,7 @@ impl Tabulate for Queries {
     }
 
     fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
-        super::schedule_id(&self.name(), label, position)
+        super::row_identifier(&self.name(), label, position)
     }
 }
 
@@ -219,7 +219,7 @@ impl Tabulate for Pooled {
     }
 
     fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
-        super::schedule_id(&self.name(), label, position)
+        super::row_identifier(&self.name(), label, position)
     }
 }
 
@@ -359,7 +359,7 @@ impl Tabulate for Commits {
     }
 
     fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
-        super::schedule_id(&self.name(), label, position)
+        super::row_identifier(&self.name(), label, position)
     }
 }
 
@@ -497,7 +497,7 @@ impl Tabulate for Module {
     }
 
     fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
-        super::schedule_id(&self.name(), label, position)
+        super::row_identifier(&self.name(), label, position)
     }
 }
 

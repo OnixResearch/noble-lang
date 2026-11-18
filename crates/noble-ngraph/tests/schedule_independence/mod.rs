@@ -84,7 +84,7 @@ pub(super) trait Tabulate: Case {
 }
 
 /// The default schedule identifier: the case, the admitted order and the row's position.
-pub(super) fn schedule_id(name: &str, label: &str, position: usize) -> String {
+pub(super) fn row_identifier(name: &str, label: &str, position: usize) -> String {
     format!("{name}#{label}#{position}")
 }
 

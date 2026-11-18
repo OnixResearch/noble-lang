@@ -190,7 +190,7 @@ impl Tabulate for Dependencies {
     }
 
     fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
-        super::schedule_id(&self.name(), label, position)
+        super::row_identifier(&self.name(), label, position)
     }
 }
 

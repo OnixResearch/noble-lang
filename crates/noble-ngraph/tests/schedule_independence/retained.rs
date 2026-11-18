@@ -79,7 +79,7 @@ impl Tabulate for PositionLeak {
     }
 
     fn schedule(&self, _query: usize, label: &str, position: usize) -> String {
-        super::schedule_id(&self.name(), label, position)
+        super::row_identifier(&self.name(), label, position)
     }
 }
 
@@ -110,7 +110,7 @@ fn minimized_divergences_stay_fixed() {
 }
 
 #[test]
-fn planted_order_dependence_is_caught_and_retained() {
+fn planted_order_dependence_is_caught_with_two_rows() {
     let control = PositionLeak;
     let analysis = super::analyse(&rows_of(&control));
     assert_eq!(
