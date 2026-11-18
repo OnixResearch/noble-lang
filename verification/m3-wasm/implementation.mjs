@@ -88,7 +88,8 @@ function snapshot() {
     return [file, fileSha(path.join(root, file))];
   }));
 }
-function run(label, binary, args, cwd = workspace, extraEnvironment = {}, timeout = 900_000) {
+function run(label, binary, args, cwd = workspace, extraEnvironment = {},
+  timeout = selection.configuration.lean_timeout_seconds * 1000) {
   const log = `${label}.log`;
   const fd = fs.openSync(path.join(artifacts, log), 'wx');
   const command = { label, binary, args, cwd, timeout_ms: timeout, log,
@@ -146,9 +147,11 @@ function extract(label, manifest, basename, prefix, checked, allowedOpaque) {
   const record = { manifest, llbc: path.relative(artifacts, llbc), comparisons: [] };
   evidence.extractions[label] = record;
   run(`${label}-charon`, tool('charon', 'charon'), ['cargo', ...selection.configuration.charon_args,
-    '--dest-file', llbc, '--', '--manifest-path', manifest, ...selection.configuration.cargo_args]);
+    '--dest-file', llbc, '--', '--manifest-path', manifest, ...selection.configuration.cargo_args],
+  workspace, {}, selection.configuration.charon_timeout_seconds * 1000);
   run(`${label}-aeneas`, tool('aeneas', 'aeneas'), [...selection.configuration.aeneas_args,
-    '-split-files', '-gen-lib-entry', '-all-computable', '-dest', generated, llbc]);
+    '-split-files', '-gen-lib-entry', '-all-computable', '-dest', generated, llbc],
+  workspace, {}, selection.configuration.translator_timeout_seconds * 1000);
   record.llbc_sha256 = fileSha(llbc);
   const translationFile = path.join(generated, 'translation.json');
   const translation = json(translationFile);

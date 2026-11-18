@@ -52,7 +52,7 @@ const environment = { ...process.env, RUSTC_WRAPPER: '',
   PATH: `${selection.tool_paths.extraction_rust.output}/bin:${selection.tool_paths.lean.output}/bin:${process.env.PATH}`,
   CARGO_TARGET_DIR: path.join(artifacts, 'cargo-target') };
 const commands = [];
-function run(label, binary, args, cwd = root, timeout = 900_000) {
+function run(label, binary, args, cwd = root, timeout = selection.configuration.lean_timeout_seconds * 1000) {
   const result = spawnSync(binary, args, { cwd, env: environment, encoding: 'utf8',
     timeout, maxBuffer: 16 * 1024 * 1024 });
   const output = (result.stdout ?? '') + (result.stderr ?? '');
@@ -116,9 +116,11 @@ function extract(label, manifest, basename, checkedDirectory, allowedOpaque) {
   const generated = path.join(directory, 'generated');
   fs.mkdirSync(generated);
   run(`${label}-charon`, tool('charon', 'charon'), ['cargo', ...selection.configuration.charon_args,
-    '--dest-file', llbc, '--', '--manifest-path', manifest, ...selection.configuration.cargo_args]);
+    '--dest-file', llbc, '--', '--manifest-path', manifest, ...selection.configuration.cargo_args],
+  root, selection.configuration.charon_timeout_seconds * 1000);
   run(`${label}-aeneas`, tool('aeneas', 'aeneas'), [...selection.configuration.aeneas_args,
-    '-split-files', '-gen-lib-entry', '-all-computable', '-dest', generated, llbc]);
+    '-split-files', '-gen-lib-entry', '-all-computable', '-dest', generated, llbc],
+  root, selection.configuration.translator_timeout_seconds * 1000);
   const prefix = label === 'kernel' ? 'NobleKernel' : 'NobleContractImpl';
   for (const file of ['Types.lean', 'Funs.lean']) {
     identical(path.join(generated, file), path.join(root, checkedDirectory, file));

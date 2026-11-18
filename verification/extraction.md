@@ -190,6 +190,9 @@ fresh build compiles all three subjects from scratch, and
 `NobleContractImpl.Funs` alone took 335 to 381 seconds idle but 720 seconds at a
 load average of 45 on 32 cores, and that build reached the historical
 900-second bound with three of its 1813 modules still to compile.
+The MC1 and M3-Wasm gates now take their Charon, translator and Lean bounds
+from the same selected configuration instead of a fixed 900 seconds, since each
+also builds the contracts subject fresh.
 
 ## Allocators at this boundary (#121)
 
