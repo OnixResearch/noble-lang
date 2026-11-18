@@ -137,6 +137,24 @@ theorems are checked again against the selected new subject and trusted models.
 
 ## Retained runs
 
+### `2739a352`: [receipt-2739a352.json](receipt-2739a352.json)
+
+This is the first passing run of the lane after `a3cba761` ported it to the
+whole-crate kernel subject. It is also the first against the renewed #97
+extraction records, `verification/m4/extraction-lock.json.gz` and
+`implementation.json.gz`. It is a clean run at source `2739a352`, and all 61
+theorems compile:
+
+| Axioms | Theorems |
+|---|---|
+| `propext, Classical.choice, Quot.sound` | 37 |
+| `propext, Quot.sound` | 13 |
+| `propext` | 10 |
+| none | 1 |
+
+All eleven mutation controls are refused, each losing between 3 and 10 of the
+strict theorems it targets.
+
 ### `48965967`: [receipt-48965967.json](receipt-48965967.json)
 
 This is a clean run at source `48965967`, and all 60 theorems compile:
