@@ -27,19 +27,40 @@ The production wrapper in `crates/noble-cli/src/component/bounded_region.rs` cal
 `noble_kernel::region_read::preflight` (physically in
 `crates/noble-kernel/src/region/read.rs`) before the table borrow and
 `region_read::authorize_copy` after `table.native_access`, before the protected
-copy. The pinned Charon/Aeneas M5 lane freshly extracts these **same Rust
-functions** and the existing `resources::table::access` module. Its
-`verification/region-trace/region-cut-check.mjs` verifies that the generated
-decision core equals `RegionCutExtracted.lean` byte for byte and that the
-generated `Table.begin`, `Table.native_access`, `Table.complete` and
-`Table.commit` bodies equal the already checked-in M5 extracted bodies byte for
-byte. The only new external model is the explicit width-sensitive
-`i64`-to-`usize` conversion; the two Option/Result external models are inherited
-from M5. `RegionCutProof.lean` proves exact handle and native-scope identity,
-range bounds, negative-conversion refusal, signed successful-range binding, a
-RegionTrace read-commit range bridge, failed-access refusal, and the exact
-extracted table completion/owner return.
-The inventory audits every theorem statement and its transitive axioms.
+copy. `RegionCutProof.lean` states its theorems about the **checked-in whole-crate
+generated subject**, `proofs/m3/NobleKernel/Types.lean`,
+`proofs/m3/NobleKernel/Funs.lean` and `proofs/m3/NobleKernel/FunsExternal.lean`,
+whose provenance is the reviewed M4 extraction lock, not this lane. It proves
+exact handle and native-scope identity, range bounds, negative-conversion
+refusal, signed successful-range binding, a RegionTrace read-commit range
+bridge, failed-access refusal, and the exact extracted table
+completion/owner return. The inventory audits every theorem statement and its
+transitive axioms.
+
+**The fresh extraction is a check, not a second copy.** The pinned
+Charon/Aeneas M5 lane still freshly extracts the same three roots
+(`noble_kernel::region_read::preflight`, `region_read::authorize_copy`,
+`resources::table::access`). `verification/region-trace/region-cut-check.mjs`
+now requires every selected declaration of that bounded run — `Refusal`,
+`Request`, `Range`, `MAX_REGION_BYTES`, `preflight`, `authorize_copy` — to be
+byte-identical to the corresponding declaration of the checked-in whole-crate
+subject, and likewise the four reused table bodies `Table.begin`,
+`Table.native_access`, `Table.complete` and `Table.commit`. The lane therefore
+compiles no generated declaration of its own: the check refuses any
+`region_read.*` or `i64`-to-`usize` conversion redeclaration under `proofs/m5`.
+The bounded run's own external dependencies are pinned to exactly
+`core.result.Result.is_err`, `core.option.Option.Insts.CoreCmpPartialEqOption.eq`
+and `Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from`.
+
+**Signed conversion.** The subject's `i64`-to-`usize` conversion is the
+`FunsExternal.lean` external model (`Err` below zero, otherwise the guarded
+`as` cast); the two Option/Result externals are inherited from M5. The lane's
+earlier explicit width-sensitive total model is retained as the definition
+`RegionCutProof.laneConversionModel` only as a reference, and
+`conversion_models_agree` proves the checked-in model equals it on every
+`i64`. `conversion_success_nonnegative` and `conversion_refuses_negative` are
+stated about the checked-in model and audited with the same strict axiom set;
+`iscalar_hcast_usize_val` is the width fact the agreement rests on.
 
 **Abstraction and effects.** The retained `Host.owner` handle and `Host.table`
 records correspond to `Request.retained` and M5 `resources.table.Table`; the
@@ -250,14 +271,23 @@ The fixtures are finite tests of recorded traces. The region-trace receipt binds
 receipt and the component, helper and engine revisions; neither that binding nor these finite tests
 proves emitted-step correspondence.
 
-The current bounded-cut replay retains `verification/region-trace/receipt-20261115-region-cut-v3.json`
-and `verification/region-trace/receipt-20261115-region-cut-v3-extraction.json`
+The current bounded-cut replay retains `verification/region-trace/receipt-20261118-region-cut-v4.json`
+and `verification/region-trace/receipt-20261118-region-cut-v4-extraction.json`
 from a clean committed source tree. The former's `bindings.implementation_cut`
-carries the SHA-256 of the latter fresh selected-extraction receipt (including all
-generated-body comparisons and the sixteen strictly audited implementation
-theorems); the 135 model/runtime fixture theorems stay in their own inventory.
-The source commit, generated artifacts and actual tool commands are retained
-in those receipts; the emitted-component correspondence remains open.
+carries the SHA-256 of the latter fresh selected-extraction receipt. The
+extraction receipt records, per declaration, the byte comparison between the
+fresh bounded extraction and the checked-in whole-crate subject, the zero
+redeclarations under `proofs/m5`, and the nineteen strictly audited
+implementation theorems; the 135 model/runtime fixture theorems stay in their
+own inventory. The source commit, generated artifacts and actual tool commands
+are retained in those receipts; the emitted-component correspondence remains
+open.
+
+The v3 receipts (`receipt-20261115-region-cut-v3.json`,
+`receipt-20261115-region-cut-v3-extraction.json`) remain immutable evidence for
+the earlier source and its own `proofs/m5/RegionCutExtracted.lean` join, which
+the regenerated whole-crate subject now declares itself; that module was removed
+in the v4 cut rather than kept as a second copy.
 
 The immutable v2 receipts bind the earlier `d05c6c8c` source with the new
 decision file physically inside `resources/`. That placement extended the exact
