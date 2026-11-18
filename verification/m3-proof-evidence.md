@@ -375,6 +375,9 @@ derivable from this model.
 
 ### 7.3 Generated literal-size evaluation axioms
 
+**Historical: §9 removes these three literals from the checker and the
+allowance below from the gate.**
+
 The pinned Aeneas library's `toStr` proves each string literal's UTF-8 size
 bound with `decide +native`, which leaves one `<decl>._native.decide.ax_<n>`
 axiom per literal in the generated module. Since this regeneration
@@ -557,3 +560,151 @@ All four scripts were re-run on a clean tree with explicit exit capture and
 each exited 0 — `EXIT m3-coverage-gate = 0`, `EXIT m3-proof-gate = 0`,
 `EXIT m3-coverage-refusals = 0`, `EXIT m3-proof-gate-refusals = 0` — and the
 re-run reproduced the lines quoted above.
+
+## 9. The literal-free checker (#97, 2026-11-18)
+
+§8's checker reached the three generated literal-size axioms of §7.3. The
+M4 strict audit refuses them on its strict bridge theorems, so the kernel no
+longer contains them on the checker path (Rust subject commit `12be5375`):
+
+- `contracts::nominal::register_bound_code_export`, `register_bound_send`
+  and `validation::bound_row_contract` compare the adapter identity's bytes
+  (`str::as_bytes`) with the new byte arrays
+  `contracts::TEST_CODE_EXPORT_IDENTITY_BYTES` and
+  `TEST_SEND_IDENTITY_BYTES`. Their lengths are typed from the unchanged
+  public `&str` constants, and the host still registers those constants.
+- The two `debug_assert!`s at the end of `acceptance::parts::join` keep their
+  invariants without messages.
+
+The regenerated subject is the selected Charon `9e95cf31` and Aeneas
+`1238879f` output for that commit, copied unchanged into both lanes:
+
+```
+a4f9336dfa6b207f7e9ec4f888e81eb86371615ed669594e8dc653c8f4c3c6e9  proofs/m3/NobleKernel/Types.lean
+bf16493271c984f3e2166f1c5bf42c8cb1efc4a048e32f2d3eaec2a01560b9e9  proofs/m3/NobleKernel/Funs.lean
+34bed5cb58eb8c879732e27235efff52a3844380a93190b88291623b95dd48b1  proofs/m3/NobleKernel/FunsExternal.lean
+```
+
+The identity comparisons now go through the existing `str::as_bytes`,
+`String` deref and slice/array equality models with Aeneas's `U8` equality
+instance. The constants are `Array.make` of `U8` literals, and `join` uses
+`massert` on the two conditions. The kernel no longer calls
+`alloc::string::{PartialEq<&str> for String}::ne`, so its unused model is
+removed from `FunsExternal.lean`. Every other change is a shifted `Source`
+span.
+
+**Axioms.** `noble_kernel.acceptance.check` now depends on exactly
+`propext`, `Classical.choice` and `Quot.sound`. No audited theorem reports a
+generated literal-size axiom, so `verification/m3-proof-gate.sh` (and the M2
+gate) drop the §7.3 allowance: a `_native.decide` axiom on any audited name
+is refused again whatever its owner. The new `kernel-owned-literal` refusal
+cell plants the exact formerly admitted shape, a `toStr` literal owned by
+`NobleKernel.FunsExternal` inside the slice/array equality model that
+`acceptance.check` reaches. The gate must refuse it for that probe axiom.
+
+**Coverage record.** `verification/m3-coverage.json` was rebuilt from
+`emit(proofs/m3)` with the reviewed `status`/`citations`/`note` fields carried
+over by name. The two identity-byte constants are added as `extracted`, the
+removed `ne` model is dropped, and 2,119 entries restate moved facts (2,232
+facts: 2,101 Lean `line`, 131 Rust `source` span, 113 entries both). The
+counts are now 2,344 functions: 2,270 `extracted`, 1 `fixture-checked`, 68
+`modeled` and 5 `excepted`. The three conditional handoffs
+(`accepted_via_refinement`, `accepted_via_refinement_v1`,
+`outcomes_via_refinement_v1`) are now computed as strict-axiom citations. The
+26 fixture citations stay `native` through their own `native_decide`.
+
+**Runs (2026-11-18, records at commit `13d97944`, pinned Lean 4.35.0 and
+`bun` first on PATH).** `verification/m3-coverage-gate.sh` (result lines):
+
+```
+[m3-coverage] PASS SETUP (bun + lean 4.35.0)
+[m3-coverage] PASS BUILD (lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel)
+[m3-coverage] PASS ANCHOR (check_total_v1 present in the m3 sources)
+[m3-coverage] PASS COVERAGE-DERIVE (Funs.lean + FunsExternal.lean defs with rust names and source spans; keyword parity holds)
+[m3-coverage] PASS COVERAGE-JOIN (total=2344 classified=2344 extracted=2270 proved=0 fixture-checked=1 modeled=68 excepted=5 open=0)
+[m3-coverage] PASS EXCEPTED-DISCLOSURE (5 excepted entries == #[charon::opaque] declarations in the crate)
+[m3-coverage] PASS OPEN-SUBJECT (0 open entries; every generated function is classified)
+info: m3-coverage: ENV-A-PASS 2344 classified constants bound to their modules; 302 elaborator matchers and 4 partial_fixpoint mutual packings tolerated
+info: m3-coverage: ENV-B-PASS 13 citations verified (theorem exists, statement mentions the constant)
+info: m3-coverage: ENV-C-PASS 16 citations verified (theorem exists, statement mentions the constant)
+[m3-coverage] PASS ENV-BINDING (constants bound in the elaborated environment; citations are theorems mentioning their constants)
+[m3-coverage] PASS STRENGTH (citations=29 fixture=26 conditional=3 universal=0 strict=3 native=26 strict_universal=0)
+[m3-coverage] PASS (all checks, no handoff mode) — subject: …/proofs/m3; record: …/verification/m3-coverage.json
+```
+
+Before the record was re-derived, the same gate on the new subject failed only
+at `STRENGTH-DRIFT`, once for each of the three handoffs: "record says native
+axioms, the transitive axiom set is strict".
+
+`verification/m3-proof-gate.sh` (checker A audits 2390 theorems in 69
+modules, checker B 110 in one module):
+
+```
+[m3-gate] PASS TOOLCHAIN (lean 4.35.0)
+[m3-gate] PASS BUILD (lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel)
+[m3-gate] PASS NO-PROOF-HOLE (lean-source-scan: 76 sources, no forbidden construct; proof sources: lean-source-scan: 70 sources, no forbidden construct)
+[m3-gate] PASS GENERATED-KERNEL (Aeneas entry point, Funs.lean, acceptance.check)
+[m3-gate] PASS REFINEMENT-SUBJECT (NobleM3/Refine.lean and NobleM2/Embed.lean import NobleKernel)
+[m3-gate] PASS REQUIRED-THEOREMS (the v1 theorem inventory of m3-proof-evidence.md §6, axiom policy, subject binding, enumerated coverage of every declared theorem)
+[m3-gate] PASS EXTERNAL-MODELS (no template axioms in FunsExternal/TypesExternal)
+[m3-gate] PASS (all checks, no handoff tier) — proof root: …/proofs/m3
+```
+
+`verification/m3-coverage-refusals.sh` (result lines; case label in
+parentheses):
+
+```
+baseline: gate exit 0 (all checks pass)
+refused at UNCLASSIFIED (gate exit 1)      (missing-per-word-coverage-case)
+refused at UNCLASSIFIED (gate exit 1)      (unclassified-def)
+refused at CITATION (gate exit 1)          (dangling-citation)
+refused at CITATION-BINDING (gate exit 1)  (misbound-citation)
+refused at STALE-ENTRY (gate exit 1)       (stale-entry)
+refused at STATUS (gate exit 1)            (bad-status)
+refused at PARSE-PARITY (gate exit 1)      (unparsed-external-def)
+refused at UNCLASSIFIED (gate exit 1)      (unclassified-external-model)
+refused at ENV-UNCLASSIFIED (gate exit 1)  (borrowed-mutual-suffix)
+refused at STRENGTH-STATUS (gate exit 1)   (native-fixtures-as-proved)
+refused at STRENGTH-DRIFT (gate exit 1)    (conditional-claimed-universal)
+== all refusals demonstrated ==
+```
+
+`verification/m3-proof-gate-refusals.sh` (result lines; the baseline and
+every cell's PASS lines are elided, only the refusing check is shown):
+
+```
+baseline: gate exit 0 (all checks pass)
+refused: gate exit 1 at NO-PROOF-HOLE      (proof-hole)
+refused: gate exit 1 at BUILD              (broken-build)
+refused: gate exit 1 at NO-PROOF-HOLE      (admit-tactic)
+refused: gate exit 1 at NO-PROOF-HOLE      (local-axiom)
+refused: gate exit 1 at REQUIRED-THEOREMS  (unreviewed-native-decide)
+refused for the probe axiom: *CoreCmpPartialEqArray.eq._native.decide.ax_*
+refused: gate exit 1 at REQUIRED-THEOREMS  (foreign-native-type)
+refused for the probe axiom: *CoreCmpPartialEqArray.eq._native.decide.ax_*
+refused: gate exit 1 at REQUIRED-THEOREMS  (kernel-owned-literal)
+refused for the probe axiom: *embedEnv._native.decide.ax_*
+refused: gate exit 1 at REQUIRED-THEOREMS  (foreign-owner-literal)
+refused: gate exit 1 at REQUIRED-THEOREMS  (missing-per-word-theorem)
+refused: gate exit 1 at GENERATED-KERNEL   (substituted-subject)
+refused: gate exit 1 at EXTERNAL-MODELS    (unexplained-external)
+kernel-harness: cargo test --test property exit 1
+test oracle_table_covers_every_pool_word ... FAILED
+refused: harness exit 1                    (removed-eliminator-oracle-arm)
+kernel-harness: cargo test --test docexamples exit 1
+test documented_noble_check_examples_run_through_the_actual_checker ... FAILED
+refused: harness exit 1                    (schema-revision-regression)
+== all refusals demonstrated ==
+```
+
+The new `kernel-owned-literal` cell is refused for its probe axiom,
+`…FunsExternal.0.noble_kernel.Shared0Slice.Insts.CoreCmpPartialEqArray.eq._native.decide.ax_1`,
+which has exactly the literal-size shape the removed allowance admitted.
+No other cell was retargeted, deleted or weakened. The two kernel-harness
+cells ran against a scratch copy of the workspace with the offline reviewed
+vendor `CARGO_HOME`, the default `RUST_BIN` and no injected linker flags.
+The gates ran at commit `13d97944` and the refusal matrices at `8bbc7975`,
+which leaves every M2/M3 input unchanged. All four ran with explicit exit
+capture, and each exited 0: `EXIT m3-coverage-gate = 0`,
+`EXIT m3-proof-gate = 0`, `EXIT m3-coverage-refusals = 0`,
+`EXIT m3-proof-gate-refusals = 0`.

@@ -422,6 +422,9 @@ the fragment v0 checker never emits (`NobleM2/Candidate.lean`); the
 kernel's live-site list is dropped because the embedded environment
 disables live slots. No theorem statement changed.
 
+**Historical: §10 removes these three literals from the checker and the
+allowance below from the gate.**
+
 **Axioms (supersedes the "Extracted checker" paragraph of §3).** The
 pinned Aeneas library's
 `toStr (s) (h : s.toByteArray.size ≤ U32.max := by decide +native)`
@@ -562,3 +565,65 @@ refused: gate exit 1 at REQUIRED-THEOREMS       (foreign-owner-literal)
 Both scripts above were re-run on a clean tree with explicit exit capture —
 `EXIT m2-proof-gate = 0`, `EXIT m2-proof-gate-refusals = 0` — and the re-run
 reproduced the quoted lines.
+
+## 10. The literal-free checker (#97, 2026-11-18)
+
+The kernel no longer reaches the three literal-size axioms of §8 on the
+checker path (Rust subject commit `12be5375`; see
+[the M3 proof evidence §9](m3-proof-evidence.md) for the source change).
+Adapter identities are compared as byte arrays, and the
+`acceptance::parts::join` assertions carry no message. The M2 copies are
+again the exact bytes of the M3 lane's regenerated files:
+
+```
+a4f9336dfa6b207f7e9ec4f888e81eb86371615ed669594e8dc653c8f4c3c6e9  proofs/m2/NobleKernel/Types.lean
+bf16493271c984f3e2166f1c5bf42c8cb1efc4a048e32f2d3eaec2a01560b9e9  proofs/m2/NobleKernel/Funs.lean
+34bed5cb58eb8c879732e27235efff52a3844380a93190b88291623b95dd48b1  proofs/m2/NobleKernel/FunsExternal.lean
+```
+
+`FunsExternal.lean` loses the unused `String`/`&str` `ne` model in both
+lanes. No theorem statement changed.
+
+**Axioms.** `noble_kernel.acceptance.check` and `accepted_via_refinement`
+are trifecta-only again. Each `refinement_*` theorem has the trifecta plus
+its own `native_decide.ax_1_1`. The gate's checker B no longer admits the
+generated literal-size shape, so §1's policy holds unchanged on every
+required theorem. The new `kernel-owned-literal` cell is that shape, a `toStr`
+literal owned by `NobleKernel.FunsExternal` in the slice/array equality
+model that the checker reaches. It must be refused for its probe axiom.
+
+**Gate run (2026-11-18, commit `13d97944`, pinned Lean 4.35.0 first on
+PATH).**
+
+```
+[m2-gate] PASS TOOLCHAIN (lean 4.35.0)
+[m2-gate] PASS BUILD (lake build NobleM2 NobleM2.Refinement NobleKernel)
+[m2-gate] PASS NO-SORRY (no 'sorry' outside .lake)
+[m2-gate] PASS GENERATED-KERNEL (Aeneas entry point, Funs.lean, acceptance.check)
+[m2-gate] PASS REFINEMENT-SUBJECT (Refinement.lean and Embed.lean import NobleKernel)
+[m2-gate] PASS REQUIRED-THEOREMS (inventory, axiom policy, subject binding)
+[m2-gate] PASS EXTERNAL-MODELS (no template axioms in FunsExternal/TypesExternal)
+[m2-gate] PASS (all checks) — proof root: …/proofs/m2
+```
+
+`verification/m2-proof-gate-refusals.sh` (result lines; case label in
+parentheses):
+
+```
+baseline: gate exit 0 (all checks pass)
+refused: gate exit 1 at NO-SORRY           (proof-hole)
+refused: gate exit 1 at REFINEMENT-SUBJECT (substituted-subject)
+refused: gate exit 1 at BUILD              (unexplained-external)
+refused: gate exit 1 at REQUIRED-THEOREMS  (unexecuted-coverage)
+refused for the probe axiom: *CoreCmpPartialEqArray.eq._native.decide.ax_*
+refused: gate exit 1 at REQUIRED-THEOREMS  (foreign-native-type)
+refused for the probe axiom: *CoreCmpPartialEqArray.eq._native.decide.ax_*
+refused: gate exit 1 at REQUIRED-THEOREMS  (kernel-owned-literal)
+refused for the probe axiom: *embedEnv._native.decide.ax_*
+refused: gate exit 1 at REQUIRED-THEOREMS  (foreign-owner-literal)
+== refusal matrix complete: baseline passes, all seven mutations refused ==
+```
+
+The gate ran at commit `13d97944` and the refusal matrix at `8bbc7975`, which
+leaves every M2 input unchanged. Both ran with explicit exit capture, and each
+exited 0: `EXIT m2-proof-gate = 0`, `EXIT m2-proof-gate-refusals = 0`.

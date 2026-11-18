@@ -194,6 +194,39 @@ The MC1 and M3-Wasm gates now take their Charon, translator and Lean bounds
 from the same selected configuration instead of a fixed 900 seconds, since each
 also builds the contracts subject fresh.
 
+### Checker literals and strict bridge theorems
+
+The pinned Aeneas Lean library proves each extracted string literal's UTF-8
+size bound with `decide +native` (`Aeneas.Std.toStr`), so every literal
+leaves one `<decl>._native.decide.ax_<n>` axiom. `M4Audit` admits exactly
+that shape (`nativeStringBound`) on non-strict declarations only. The strict
+bridge theorems `KernelBridge.check_from_inputs` of the contracts and Wasm
+lanes must use only `propext`, `Classical.choice` and `Quot.sound`.
+
+The regenerated checker reached three literals: the two test adapter
+identities `contracts::TEST_CODE_EXPORT_ADAPTER_IDENTITY` and
+`TEST_SEND_ADAPTER_IDENTITY`, and one `debug_assert_eq!` message in
+`acceptance::parts::join`. Both lane audits refused them with `M4-AXIOM`.
+The kernel now compares a registration's or bound row's identity bytes
+(`str::as_bytes`) with `TEST_CODE_EXPORT_IDENTITY_BYTES` and
+`TEST_SEND_IDENTITY_BYTES`, whose lengths are typed from the unchanged public
+`&str` constants. The two `join` assertions keep their invariants without
+messages. The comparisons reuse the existing `str::as_bytes`, `String` deref
+and slice/array equality models, so the regenerated checker depends only on
+the three strict axioms. The kernel's unused `String`/`&str` `ne` model is
+removed. The M2 and M3 proof gates no longer need their literal-size
+allowance. Each now refuses a planted kernel-owned literal; see
+[the M3 proof evidence §9](m3-proof-evidence.md).
+
+Since `1c19a86f`, source preparation calls the budgeted
+`acceptance::check_with_work` and `check_signed_structure_with_work`. These
+run the same extracted machine, `acceptance::run`, as `acceptance::check`.
+`M4Audit`'s acceptance-dependency rule and the M5 and M6 packets therefore
+require each acceptance root to reach `noble_kernel.acceptance.run`.
+Requiring `check` itself refused `prepare_export` as detached even though it
+runs the same checker. The renewed M4 lock's root audits record
+`World.prepare_export` and `component::compile` both reaching it.
+
 ## Allocators at this boundary (#121)
 
 This route erases the allocator, so it cannot report on one. Charon sets `hide_allocator: true` under

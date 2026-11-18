@@ -349,7 +349,8 @@ emitter skeleton (§6) with these classifications:
 | `open` | 0 | |
 | **total** | **2343** | `Funs.lean` 2269 + `FunsExternal.lean` 74 |
 
-Every citation's axiom class is now `native`: the generated checker itself
+Every citation's axiom class is now `native` (historical: §11 restores
+`strict` for `accepted_via_refinement`): the generated checker itself
 depends on three literal-size evaluation axioms that the pinned Aeneas
 `toStr` emits for string literals of the generated code (see
 [the M2 proof evidence §8](m2-proof-evidence.md)), so `accepted_via_refinement`
@@ -496,3 +497,68 @@ cell needed retargeting, so none was deleted or weakened.
 Both scripts were re-run on a clean tree with explicit exit capture; each
 exited 0 (`EXIT m2-coverage-gate = 0`, `EXIT m2-coverage-refusals = 0`), and
 the re-run reproduced the lines quoted above.
+
+## 11. Literal-free checker and re-derived record (#97, 2026-11-18)
+
+The kernel subject was regenerated at Rust commit `12be5375`. Adapter
+identities are now compared as byte arrays, and the
+`acceptance::parts::join` assertions carry no message, so the generated
+checker no longer reaches the three literal-size axioms §9 describes. See
+[the M2 proof evidence §10](m2-proof-evidence.md) for the bytes, which are
+identical to the M3 lane's. `m2-coverage.json` was rebuilt from
+`emit(proofs/m2)` with the reviewed fields carried over by name (§6):
+
+| Change | Count |
+|---|---|
+| entries whose restated generated facts moved (2,232 facts: 2,101 Lean `line`, 131 Rust `source` span, 113 entries both) | 2,119 |
+| added as `extracted`: `contracts.TEST_CODE_EXPORT_IDENTITY_BYTES`, `contracts.TEST_SEND_IDENTITY_BYTES` | 2 |
+| dropped as `STALE-ENTRY`: the unused `alloc.string.String.Insts.CoreCmpPartialEqShared0Str.ne` model | 1 |
+| status counts after the re-derivation | 2,270 `extracted`, 1 `fixture-checked`, 68 `modeled`, 5 `excepted` (2,344 total) |
+
+`accepted_via_refinement` is computed as a `conditional`/`strict` citation
+again, its pre-#97 class. The twelve fixtures stay `native` through their own
+`native_decide`. Before the record was re-derived, the gate on the new subject
+failed only at `STRENGTH-DRIFT`: "record says native axioms, the transitive
+axiom set is strict".
+
+**Gate run (2026-11-18, commit `13d97944`, pinned Lean 4.35.0 and `bun`
+first on PATH).** `verification/m2-coverage-gate.sh` (result lines, elided as
+in §10):
+
+```
+[m2-coverage] PASS SETUP (bun + lean 4.35.0)
+[m2-coverage] PASS BUILD (lake build NobleM2 NobleM2.Refinement NobleKernel)
+[m2-coverage] PASS COVERAGE-DERIVE (Funs.lean + FunsExternal.lean defs with rust names and source spans; keyword parity holds)
+[m2-coverage] PASS COVERAGE-JOIN (total=2344 classified=2344 extracted=2270 proved=0 fixture-checked=1 modeled=68 excepted=5 open=0)
+[m2-coverage] PASS EXCEPTED-DISCLOSURE (5 excepted entries == #[charon::opaque] declarations in the crate)
+[m2-coverage] PASS OPEN-SUBJECT (0 open entries; every generated function is classified)
+info: m2-coverage: ENV-A-PASS 2344 classified constants bound to their modules; 302 elaborator matchers and 4 partial_fixpoint mutual packings tolerated
+info: m2-coverage: ENV-B-PASS 13 refinement citations verified (theorem exists, statement mentions the constant)
+[m2-coverage] PASS ENV-BINDING (constants bound in the elaborated environment; citations are theorems mentioning their constants)
+[m2-coverage] PASS STRENGTH (citations=13 fixture=12 conditional=1 universal=0 strict=1 native=12 strict_universal=0)
+[m2-coverage] PASS (all checks) — subject: …/proofs/m2; record: …/verification/m2-coverage.json
+```
+
+`verification/m2-coverage-refusals.sh` (same PATH; result lines, case label
+in parentheses):
+
+```
+baseline: gate exit 0 (all checks pass)
+refused at UNCLASSIFIED (gate exit 1)      (unclassified-def)
+refused at CITATION (gate exit 1)          (dangling-citation)
+refused at CITATION-BINDING (gate exit 1)  (misbound-citation)
+refused at STALE-ENTRY (gate exit 1)       (stale-entry)
+refused at STATUS (gate exit 1)            (bad-status)
+refused at STRENGTH-STATUS (gate exit 1)   (native-fixtures-as-proved)
+refused at STRENGTH-DRIFT (gate exit 1)    (conditional-claimed-universal)
+refused at ENV-UNCLASSIFIED (gate exit 1)  (borrowed-mutual-suffix)
+accepted: the universal probe is classified universal/strict and its function is proved (universal-probe)
+== all refusals demonstrated ==
+```
+
+Every cell keeps its semantic target. `conditional-claimed-universal` now
+refuses only for the universal claim, because the strict-axiom claim it also
+forges is true of `accepted_via_refinement` again. The gate ran at commit
+`13d97944` and the refusal matrix at `8bbc7975`, which leaves every M2 input
+unchanged. Both ran with explicit exit capture, and each exited 0:
+`EXIT m2-coverage-gate = 0`, `EXIT m2-coverage-refusals = 0`.
