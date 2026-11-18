@@ -32,14 +32,14 @@ pub const TEST_CODE_EXPORT_ADAPTER_IDENTITY: &str = "worker-test-code-export@1.0
 /// The same identity as bytes. Acceptance compares registrations with these
 /// bytes, not the `&str`: every extracted string literal carries a
 /// native-evaluated size bound, which strict theorems about the checker refuse.
-pub(crate) const TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES: [u8; TEST_CODE_EXPORT_ADAPTER_IDENTITY
-    .len()] = *b"worker-test-code-export@1.0.0";
+pub(crate) const TEST_CODE_EXPORT_IDENTITY_BYTES: [u8; TEST_CODE_EXPORT_ADAPTER_IDENTITY.len()] =
+    *b"worker-test-code-export@1.0.0";
 /// The reserved identity of the required, host-observed `test.send` effect.
 pub const TEST_SEND: crate::types::EffId = crate::types::EffId(7);
 /// Host-selected identity of the WORKER-10 observed-send source adapter.
 pub const TEST_SEND_ADAPTER_IDENTITY: &str = "worker-test-send@1.0.0";
 /// The same identity as bytes, for the reason given on the code-export bytes.
-pub(crate) const TEST_SEND_ADAPTER_IDENTITY_BYTES: [u8; TEST_SEND_ADAPTER_IDENTITY.len()] =
+pub(crate) const TEST_SEND_IDENTITY_BYTES: [u8; TEST_SEND_ADAPTER_IDENTITY.len()] =
     *b"worker-test-send@1.0.0";
 /// The reserved, opt-in effect of selecting a preadmitted live program.
 pub const LIVE_DISPATCH: crate::types::EffId = crate::types::EffId(5);

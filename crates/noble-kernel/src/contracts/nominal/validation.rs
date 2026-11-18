@@ -208,12 +208,11 @@ fn bound_row_contract(row: &super::super::BoundAdapter) -> bool {
         || (row.input.is_empty()
             && row.output.as_slice() == [crate::types::Ty::I64]
             && row.effects.as_slice() == [super::super::TEST_CLOCK])
-        || (str::as_bytes(&row.adapter_identity)
-            == super::super::TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
+        || (str::as_bytes(&row.adapter_identity) == super::super::TEST_CODE_EXPORT_IDENTITY_BYTES
             && row.input.as_slice() == [crate::types::Ty::Text, crate::types::Ty::Text]
             && row.output.is_empty()
             && row.effects.as_slice() == [super::super::TEST_CODE_EXPORT])
-        || (str::as_bytes(&row.adapter_identity) == super::super::TEST_SEND_ADAPTER_IDENTITY_BYTES
+        || (str::as_bytes(&row.adapter_identity) == super::super::TEST_SEND_IDENTITY_BYTES
             && row.input.as_slice() == [crate::types::Ty::Text]
             && row.output.is_empty()
             && row.effects.as_slice() == [super::super::TEST_SEND])

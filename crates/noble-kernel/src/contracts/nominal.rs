@@ -329,8 +329,7 @@ pub(super) fn register_bound_code_export(
     env: super::Env,
     registration: super::BoundCodeExportRegistration,
 ) -> Result<(super::Env, super::Definition), super::NominalError> {
-    if str::as_bytes(&registration.adapter_identity)
-        != super::TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
+    if str::as_bytes(&registration.adapter_identity) != super::TEST_CODE_EXPORT_IDENTITY_BYTES
         || registration.input.as_slice() != [crate::types::Ty::Text, crate::types::Ty::Text]
         || !registration.output.is_empty()
         || registration.effects.as_slice() != [super::TEST_CODE_EXPORT]
@@ -368,7 +367,7 @@ pub(super) fn register_bound_send(
     env: super::Env,
     registration: super::BoundSendRegistration,
 ) -> Result<(super::Env, super::Definition), super::NominalError> {
-    if str::as_bytes(&registration.adapter_identity) != super::TEST_SEND_ADAPTER_IDENTITY_BYTES
+    if str::as_bytes(&registration.adapter_identity) != super::TEST_SEND_IDENTITY_BYTES
         || registration.input.as_slice() != [crate::types::Ty::Text]
         || !registration.output.is_empty()
         || registration.effects.as_slice() != [super::TEST_SEND]
