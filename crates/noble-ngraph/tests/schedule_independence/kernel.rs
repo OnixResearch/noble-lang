@@ -5,7 +5,7 @@
 //! only presentation. Soundness is judged against an independent reachability reference: an
 //! accepted input is acyclic, and a named definition lies on a cycle of the abstract graph.
 
-use super::{Allowed, Case, Tally, Verdict};
+use super::{Allowed, Case, Normalized, Tabulate, Tally, Verdict};
 
 /// Definitions in the bootstrap table; extra definitions are numbered from here.
 const BOOTSTRAP: u32 = 23;
@@ -156,6 +156,37 @@ impl Case for Dependencies {
 
     fn item_schedules(&self) -> Option<u64> {
         None
+    }
+}
+
+impl Tabulate for Dependencies {
+    fn input(&self, _query: usize) -> String {
+        // The abstract graph and the work budget: both dependency-list orders of one graph share
+        // one input, so their rows are compared (criteria-oracle section 1).
+        format!("kernel-dependencies/{}/work-{}", self.label, self.work)
+    }
+
+    fn normalized(&self, _query: usize, seen: &Seen) -> Normalized {
+        let edges = u64::try_from(self.edges()).expect("edge count fits u64");
+        match seen {
+            // A3: a budget below the edge count may give out where another order decides.
+            Seen::Exhausted if u64::from(self.work) < edges => {
+                Normalized::Exempt(Allowed::Exhaustion)
+            }
+            Seen::Accepted => Normalized::Output(String::from("accepted")),
+            Seen::Cycle(_) => Normalized::Output(String::from("refused-cyclic")),
+            Seen::Exhausted => Normalized::Output(String::from("exhausted")),
+            Seen::Other(text) => Normalized::Output(format!("unexpected:{text}")),
+        }
+    }
+
+    fn presentation(&self, _query: usize, seen: &Seen) -> String {
+        match seen {
+            // A2: which member of a cycle is named.
+            Seen::Cycle(item) => format!("cycle-member-{item}"),
+            Seen::Exhausted => String::from("exhausted"),
+            Seen::Accepted | Seen::Other(_) => String::new(),
+        }
     }
 }
 

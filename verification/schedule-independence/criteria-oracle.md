@@ -62,11 +62,12 @@ For one family, group the rows by `input_digest`. In each group:
    worklist-capped run that exhausts the reservation. An exempt row is counted by class; a group that
    mixes compared and exempt rows records one allowed exhaustion difference and is not a conflict,
    because revision 1 permits exhaustion to replace a verdict.
-3. **Presentation check.** Among the compared rows of a group, more than one distinct presentation
-   digest is recorded as one allowed presentation difference, with the group counted. It is never a
+3. **Presentation check.** Among a group's compared rows, more than one distinct presentation digest
+   is recorded as one allowed presentation difference, with the group counted. It is never a
    defect. This is the same functional-dependence check applied to presentation, and its failures are
    the expected allowed differences of revision 1 section 3.
-4. A group with no compared rows is counted and checked only for presentation.
+4. A group with no compared rows contributes no normalized check and is checked for presentation
+   among all its rows; such a group is counted as an exhaustion group.
 
 Each family prints one `NOBLE_SCHEDULE_ORACLE` line with its row count, group count, normalized
 conflict count (zero for a pass), allowed presentation difference groups and exempt rows by class.

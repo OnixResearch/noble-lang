@@ -1,7 +1,7 @@
 //! F6 graph-orders and F7 net-schedules: checking and evaluating one abstract graph under every
 //! admitted node order, and reducing its interaction net under every pair-selection schedule.
 
-use super::{Allowed, Case, Tally, Verdict};
+use super::{Allowed, Case, Normalized, Tabulate, Tally, Verdict};
 use crate::common::IDS;
 use noble_ngraph::ir::{GraphBuilder, Op, ScalarType, SlotKind, SubProfile, Subject};
 use noble_ngraph::sem::Value;
@@ -147,6 +147,63 @@ impl Shape {
             }
         }
         false
+    }
+}
+
+impl Tabulate for Shape {
+    fn input(&self, _query: usize) -> String {
+        format!("graph-orders/{}", self.label)
+    }
+
+    fn normalized(&self, _query: usize, seen: &Observed) -> Normalized {
+        // A refusal's site is semantic unless revision 1 permits A2 for this shape; which guard a
+        // multi-violation row reports is A2; an evaluator disagreement is a defect.
+        let mut text = String::new();
+        if let Some(reason) = &seen.disagreement {
+            text.push_str(&format!("disagreement:{reason};"));
+        }
+        let site_is_allowed = !self.variants.is_empty() || !self.back.is_empty();
+        match &seen.main {
+            ShapeSeen::Refused { code, .. } if site_is_allowed => {
+                text.push_str(&format!("refused:{code};"));
+            }
+            ShapeSeen::Refused { code, site } => {
+                text.push_str(&format!("refused:{code}:{site};"));
+            }
+            ShapeSeen::Checked(rows) => {
+                text.push_str(&format!("checked:{};", rows.len()));
+                for (index, row) in rows.iter().enumerate() {
+                    if matches!(row, RowSeen::GuardFailed(_))
+                        && !self.rows[index].alternatives.is_empty()
+                    {
+                        text.push_str(&format!("row{index}:guard-failed;"));
+                    } else {
+                        text.push_str(&format!("row{index}:{row:?};"));
+                    }
+                }
+            }
+        }
+        Normalized::Output(text)
+    }
+
+    fn presentation(&self, _query: usize, seen: &Observed) -> String {
+        let mut text = String::new();
+        let site_is_allowed = !self.variants.is_empty() || !self.back.is_empty();
+        if let ShapeSeen::Refused { site, .. } = &seen.main {
+            if site_is_allowed {
+                text.push_str(&format!("site:{site};"));
+            }
+        }
+        if let ShapeSeen::Checked(rows) = &seen.main {
+            for (index, row) in rows.iter().enumerate() {
+                if let RowSeen::GuardFailed(site) = row {
+                    if !self.rows[index].alternatives.is_empty() {
+                        text.push_str(&format!("row{index}:site-{site};"));
+                    }
+                }
+            }
+        }
+        text
     }
 }
 
@@ -744,6 +801,64 @@ impl Case for NetSchedules {
 
     fn item_schedules(&self) -> Option<u64> {
         Some(NET_SCHEDULES)
+    }
+}
+
+impl Tabulate for NetSchedules {
+    fn input(&self, query: usize) -> String {
+        // The resource variant is part of the input: a fuel or worklist cap is a different run.
+        let (_, cap) = pair_selection(query);
+        format!("{}/cap-{cap:?}", self.name())
+    }
+
+    fn normalized(&self, query: usize, seen: &NetSeen) -> Normalized {
+        let (_, cap) = pair_selection(query);
+        let exhausted = match &seen.obs {
+            noble_ngraph::net::Obs::Exhausted { limit, .. } => Some(*limit),
+            _ => None,
+        };
+        // A3: a worklist reservation cap below the schedule's queue high-water mark may exhaust.
+        if cap == Cap::Worklist && exhausted == Some(noble_ngraph::net::Limit::WorklistReservation)
+        {
+            return Normalized::Exempt(Allowed::Exhaustion);
+        }
+        let text = match cap {
+            // Revision 1 compares the fuel-capped observation exactly; the run never completes, so
+            // its counts and wires are presentation.
+            Cap::Fuel => format!("observation:{:?}", seen.obs),
+            Cap::None | Cap::Worklist => format!(
+                "observation:{:?};interactions:{};wires:{:?};live:{}",
+                seen.obs, seen.interactions, seen.final_wires, seen.peak_live_agents
+            ),
+        };
+        Normalized::Output(text)
+    }
+
+    fn presentation(&self, query: usize, seen: &NetSeen) -> String {
+        let (_, cap) = pair_selection(query);
+        match cap {
+            Cap::Fuel => format!(
+                "queue:{};interactions:{};wires:{:?};live:{}",
+                seen.queue_high_water, seen.interactions, seen.final_wires, seen.peak_live_agents
+            ),
+            Cap::None => format!("queue:{}", seen.queue_high_water),
+            Cap::Worklist => format!(
+                "queue:{};observation:{:?};interactions:{}",
+                seen.queue_high_water, seen.obs, seen.interactions
+            ),
+        }
+    }
+
+    fn schedule(&self, query: usize, _label: &str, _position: usize) -> String {
+        let (schedule, cap) = pair_selection(query);
+        let selection = match schedule {
+            noble_ngraph::net::Schedule::Lifo => String::from("lifo"),
+            noble_ngraph::net::Schedule::Fifo => String::from("fifo"),
+            noble_ngraph::net::Schedule::SplitMix64 { seed } => {
+                format!("splitmix64-{seed:#018x}")
+            }
+        };
+        format!("{}#{selection}#{cap:?}", self.name())
     }
 }
 

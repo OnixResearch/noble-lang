@@ -5,7 +5,7 @@
 //! limits (generated artifacts byte for byte); cache status is opportunistic metadata (A4). The
 //! session's memoization invariants are checked after every request.
 
-use super::{Allowed, Case, Tally, Verdict};
+use super::{Allowed, Case, Normalized, Tabulate, Tally, Verdict};
 use crate::common::IDS;
 use noble_ngraph::specialize::cache::{Limits, Session, Status};
 
@@ -216,6 +216,30 @@ impl Case for Requests {
 
     fn item_schedules(&self) -> Option<u64> {
         None
+    }
+}
+
+impl Tabulate for Requests {
+    fn input(&self, query: usize) -> String {
+        // The limits are part of the case, so they are part of the input's identity.
+        format!("cache-sequences/{}/request-{query}", self.label)
+    }
+
+    fn normalized(&self, _query: usize, seen: &RequestSeen) -> Normalized {
+        let mut text = match &seen.semantic {
+            Semantic::Specialized(artifacts) => format!("specialized:{artifacts:?}"),
+            Semantic::Refused(diagnostic) => format!("refused:{diagnostic:?}"),
+        };
+        if let Some(reason) = &seen.invariant {
+            // A violated memoization invariant is a section 2 failure, never presentation.
+            text.push_str(&format!(";invariant:{reason}"));
+        }
+        Normalized::Output(text)
+    }
+
+    fn presentation(&self, _query: usize, seen: &RequestSeen) -> String {
+        // A4: cache status and lookup metadata are opportunistic.
+        format!("status-{:?}", seen.status)
     }
 }
 
