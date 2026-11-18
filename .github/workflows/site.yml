@@ -19,6 +19,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: docs-production
+    env:
+      # Secrets cannot appear in step conditions; expose only whether both exist.
+      PUBLISH_CONFIGURED: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
     steps:
       - name: Check out the exact source revision
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -34,7 +37,11 @@ jobs:
         run: |
           bun test tools/site.test.mjs
           bun tools/site.mjs build --out site-dist --revision "$SITE_REVISION"
+      - name: Report unconfigured publication credentials
+        if: env.PUBLISH_CONFIGURED != 'true'
+        run: echo "::warning title=Publication skipped::docs-production lacks CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID; the site was tested and built but not published."
       - name: Publish to the Cloudflare Pages production branch
+        if: env.PUBLISH_CONFIGURED == 'true'
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

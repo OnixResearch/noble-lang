@@ -1450,6 +1450,9 @@ publish:
   does not need zone/DNS permissions. Do not require manual environment approval
   if unattended main-branch updates are intended. Repository token permissions
   remain `contents: read`, and checkout credentials are not persisted.
+  Until both secrets exist, each run still tests and builds the tree, then
+  skips publication with a workflow warning. Once they exist, a failed
+  publication fails the job.
 - Add `noble-lang.org` and `www.noble-lang.org` as Pages custom domains before
   configuring their proxied DNS to the Pages-provided target. Enable Cloudflare
   **Always Use HTTPS** for HTTP-to-HTTPS at the apex. Import the build's
