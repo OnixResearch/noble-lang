@@ -551,7 +551,9 @@ reviewed extraction lock, full deny-all/architecture and source-coverage gates,
 and all 13 Nix checks, alongside integrated runtime execution. The
 durable receipt authorities are `verification/m4/evidence.json`,
 `verification/m4/acceptance.json`, `verification/m4/implementation.json` and
-`verification/m4/extraction-lock.json`; raw runtime/workflow and assurance
+`verification/m4/extraction-lock.json` (#97 later renewed the last two as
+`implementation.json.gz` and `extraction-lock.json.gz`; the closeout revisions
+remain in git history); raw runtime/workflow and assurance
 artifacts belong in `verification/m4/runtime.tar.gz` and
 `verification/m4/assurance.tar.gz`. Discovery alone is not a passing extraction
 gate: independent check mode must re-extract and compare source/generated

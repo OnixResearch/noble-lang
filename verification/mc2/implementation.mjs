@@ -49,7 +49,7 @@ function snapshot() {
     ...files('verification/mc2').filter(file => /\.(mjs|lean|contract|noble)$/.test(file)),
     ...files('verification/mc1').filter(file => /\.(mjs|noble-contract|lean)$/.test(file)),
     ...files('verification/m4').filter(file => file.endsWith('.mjs')),
-    'verification/m4/extraction-lock.json', 'verification/m4/inherited-boundaries.json',
+    'verification/m4/extraction-lock.json.gz', 'verification/m4/inherited-boundaries.json',
   ]);
   return Object.fromEntries([...inputs].sort().map(file => [file, fileSha(path.join(root, file))]));
 }

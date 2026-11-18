@@ -36,9 +36,9 @@ The harness refuses three things:
 1. **The generated and handwritten inputs.** The generated entry, Types and Funs
    must match [the profile](model-inputs.json) and two independently produced
    records of the same extraction:
-   - `verification/m4/implementation.json`, a passed independent extraction in
+   - `verification/m4/implementation.json.gz`, a passed independent extraction in
      check mode, whose reviewed-lock hash must equal the selected lock;
-   - `verification/m4/extraction-lock.json`.
+   - `verification/m4/extraction-lock.json.gz`.
 
    Extractor and library revisions must agree, and both records must name the
    policy-selected Charon/Aeneas binary identities. The checker walks the local

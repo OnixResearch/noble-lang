@@ -9,6 +9,7 @@ import { mkdirSync, readFileSync, realpathSync, symlinkSync, writeFileSync } fro
 import { userInfo } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gunzipSync } from 'node:zlib';
 import { digest, fileHash } from '../foundation/execution.mjs';
 
 const root = resolve(fileURLToPath(import.meta.url), '../../..');
@@ -147,14 +148,14 @@ function kernelImportClosure() {
  *  modules are real source inputs of that same extraction. Its receipt and reviewed lock must agree. */
 function verifyProfile(profile) {
   requireThat(profile.schema === 'noble-service-wire-refinement-inputs/v2', 'wrong model-input schema');
-  requireThat(profile.extraction_receipt === 'verification/m4/implementation.json' &&
-    profile.extraction_lock === 'verification/m4/extraction-lock.json', 'unselected extraction records');
+  requireThat(profile.extraction_receipt === 'verification/m4/implementation.json.gz' &&
+    profile.extraction_lock === 'verification/m4/extraction-lock.json.gz', 'unselected extraction records');
   requireThat(fileHash(join(root, profile.extraction_receipt)) === profile.extraction_receipt_sha256,
     'extraction receipt changed');
   requireThat(fileHash(join(root, profile.extraction_lock)) === profile.extraction_lock_sha256,
     'extraction lock changed');
-  const receipt = JSON.parse(readFileSync(join(root, profile.extraction_receipt)));
-  const lock = JSON.parse(readFileSync(join(root, profile.extraction_lock)));
+  const receipt = JSON.parse(gunzipSync(readFileSync(join(root, profile.extraction_receipt))));
+  const lock = JSON.parse(gunzipSync(readFileSync(join(root, profile.extraction_lock))));
   requireThat(receipt.schema === 'm4-implementation-evidence/v1' && receipt.mode === 'check' &&
     receipt.result === 'passed', 'recorded independent extraction check did not pass');
   requireThat(lock.schema === 'm4-extraction-lock/v1' &&
@@ -567,7 +568,7 @@ try {
     assumptions: [
       'Pinned Lean and the imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.',
       'The checked-in kernel subjects match the recorded extraction and build against the selected Aeneas Lean library without compatibility aliases; matching the library pin alone does not renew extraction provenance.',
-      'The independently checked Charon/Aeneas translation (verification/m4/implementation.json and extraction-lock.json) is trusted to model the bound Rust sources; this lane does not re-run it.',
+      'The independently checked Charon/Aeneas translation (verification/m4/implementation.json.gz and extraction-lock.json.gz) is trusted to model the bound Rust sources; this lane does not re-run it.',
       'Reachable handwritten external models are part of the trusted base and are listed in binding.external_models; core.str.converts.from_utf8 is modelled as returning its input on valid UTF-8 and Utf8Error.Invalid otherwise.',
       'The Aeneas library models of slices, arrays, range indexing and range writes, slice copies, scalars, checked arithmetic and loops are trusted.',
     ],
