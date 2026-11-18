@@ -328,7 +328,7 @@ structure acceptance.parts.Site where
   «def» : Option contracts.Definition
 
 /-- [noble_kernel::contracts::BoundAdapter]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 206:0-213:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 214:0-221:1
     Visibility: public -/
 structure contracts.BoundAdapter where
   definition : contracts.Definition
@@ -339,7 +339,7 @@ structure contracts.BoundAdapter where
   effects : types.EffSet
 
 /-- [noble_kernel::contracts::GenericVariantDecl]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 180:0-185:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 188:0-193:1
     Visibility: public -/
 structure contracts.GenericVariantDecl where
   id : types.NominalTypeId
@@ -348,7 +348,7 @@ structure contracts.GenericVariantDecl where
   «public» : Array Bool 2#usize
 
 /-- [noble_kernel::contracts::NominalDecl]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 168:0-175:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 176:0-183:1
     Visibility: public -/
 structure contracts.NominalDecl where
   id : types.NominalTypeId
@@ -357,13 +357,13 @@ structure contracts.NominalDecl where
   «public» : Array Bool 2#usize
 
 /-- [noble_kernel::contracts::SchemaId]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 44:0-44:29
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:0-52:29
     Visibility: public -/
 @[reducible]
 def contracts.SchemaId := Std.U32
 
 /-- [noble_kernel::contracts::SchemaDecl]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 157:0-164:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 165:0-172:1
     Visibility: public -/
 structure contracts.SchemaDecl where
   id : contracts.SchemaId
@@ -371,7 +371,7 @@ structure contracts.SchemaDecl where
   recursive : Bool
 
 /-- [noble_kernel::contracts::Behavior]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 53:0-149:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 61:0-157:1
     Visibility: public -/
 @[discriminant isize]
 inductive contracts.Behavior where
@@ -426,7 +426,7 @@ inductive contracts.Behavior where
 | NamedBehavior : contracts.Behavior
 
 /-- [noble_kernel::contracts::Env]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 331:0-371:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 339:0-379:1
     Visibility: public -/
 structure contracts.Env where
   defs : alloc.vec.Vec words.Scheme
@@ -516,7 +516,7 @@ structure types.size.Walk where
   sizes : alloc.vec.Vec Std.U32
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components::{closure}]
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 695:23-695:60 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 696:23-696:60 -/
 @[reducible]
 def contracts.nominal.validation.valid_program_components.closure := Std.U32
 
@@ -545,7 +545,7 @@ structure contracts.nominal.type.walk.Scope where
   caller : Option Std.U64
 
 /-- [noble_kernel::acceptance::parts::join::{closure}]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 232:23-232:84 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 228:19-228:80 -/
 @[reducible]
 def acceptance.parts.join.closure := untrusted.Request
 
@@ -1599,7 +1599,7 @@ structure contracts.clone_budget.Counter where
   allocations : Std.U64
 
 /-- [noble_kernel::contracts::NominalError]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 198:0-202:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 206:0-210:1
     Visibility: public -/
 @[discriminant isize]
 inductive contracts.NominalError where
@@ -1608,7 +1608,7 @@ inductive contracts.NominalError where
 | TooManyDefinitions : contracts.NominalError
 
 /-- [noble_kernel::contracts::NominalOps]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 189:0-195:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 197:0-203:1
     Visibility: public -/
 structure contracts.NominalOps where
   new : Option contracts.Definition
@@ -1628,7 +1628,7 @@ def contracts.nominal.has_definition_space.closure := Unit
 def contracts.nominal.register_generic_variant.closure := Unit
 
 /-- [noble_kernel::contracts::BoundEmitRegistration]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 216:0-223:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 224:0-231:1
     Visibility: public -/
 structure contracts.BoundEmitRegistration where
   adapter_identity : String
@@ -1639,7 +1639,7 @@ structure contracts.BoundEmitRegistration where
   effects : types.EffSet
 
 /-- [noble_kernel::contracts::BoundClockRegistration]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 226:0-233:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 234:0-241:1
     Visibility: public -/
 structure contracts.BoundClockRegistration where
   adapter_identity : String
@@ -1650,7 +1650,7 @@ structure contracts.BoundClockRegistration where
   effects : types.EffSet
 
 /-- [noble_kernel::contracts::BoundCodeExportRegistration]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 236:0-243:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 244:0-251:1
     Visibility: public -/
 structure contracts.BoundCodeExportRegistration where
   adapter_identity : String
@@ -1661,7 +1661,7 @@ structure contracts.BoundCodeExportRegistration where
   effects : types.EffSet
 
 /-- [noble_kernel::contracts::BoundSendRegistration]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 246:0-253:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 254:0-261:1
     Visibility: public -/
 structure contracts.BoundSendRegistration where
   adapter_identity : String
@@ -1672,7 +1672,7 @@ structure contracts.BoundSendRegistration where
   effects : types.EffSet
 
 /-- [noble_kernel::contracts::ClockDecision]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 257:0-262:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 265:0-270:1
     Visibility: public -/
 @[discriminant isize]
 inductive contracts.ClockDecision where
@@ -1682,7 +1682,7 @@ inductive contracts.ClockDecision where
 | UnexpectedOperation : contracts.ClockDecision
 
 /-- [noble_kernel::contracts::ClockPlan]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 266:0-274:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 274:0-282:1
     Visibility: public -/
 structure contracts.ClockPlan where
   operation : Str

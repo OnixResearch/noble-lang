@@ -663,15 +663,6 @@ def alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq (left : String) (rig
   | some decoded => ok (left == decoded)
   | none => ok false
 
-/-- std's `impl_eq!` defines `ne` as `str` inequality of the two byte views
-    (`PartialEq::ne(&self[..], &other[..])`), the negation of the `eq`
-    model above. -/
-@[rust_fun "alloc::string::{core::cmp::PartialEq<alloc::string::String, &'0 str>}::ne"]
-def alloc.string.String.Insts.CoreCmpPartialEqShared0Str.ne (left : String) (right : Str) :
-    Result Bool := do
-  let equal ← alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq left right
-  ok (!equal)
-
 /-- [alloc::string::{impl core::fmt::Debug for alloc::string::String}::fmt]: a
     successful, formatter-preserving step in the abstract formatter model
     (see the header). -/

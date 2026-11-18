@@ -236,7 +236,7 @@ structure noble_kernel.untrusted.Diagnostic where
   truncated : Bool
 
 /-- [noble_kernel::contracts::SchemaId]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 44:0-44:19
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:0-52:19
     Name pattern: [noble_kernel::contracts::SchemaId]
     Visibility: public -/
 @[reducible, rust_type "noble_kernel::contracts::SchemaId"]
@@ -522,7 +522,7 @@ structure noble_kernel.words.Scheme where
   effects : alloc.vec.Vec noble_kernel.shapes.EffectSlot
 
 /-- [noble_kernel::contracts::BoundAdapter]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 206:0-206:23
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 214:0-214:23
     Name pattern: [noble_kernel::contracts::BoundAdapter]
     Visibility: public -/
 @[rust_type "noble_kernel::contracts::BoundAdapter"]
@@ -535,7 +535,7 @@ structure noble_kernel.contracts.BoundAdapter where
   effects : noble_kernel.types.EffSet
 
 /-- [noble_kernel::contracts::GenericVariantDecl]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 180:0-180:29
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 188:0-188:29
     Name pattern: [noble_kernel::contracts::GenericVariantDecl]
     Visibility: public -/
 @[rust_type "noble_kernel::contracts::GenericVariantDecl"]
@@ -546,7 +546,7 @@ structure noble_kernel.contracts.GenericVariantDecl where
   «public» : Array Bool 2#usize
 
 /-- [noble_kernel::contracts::NominalDecl]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 168:0-168:22
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 176:0-176:22
     Name pattern: [noble_kernel::contracts::NominalDecl]
     Visibility: public -/
 @[rust_type "noble_kernel::contracts::NominalDecl"]
@@ -557,7 +557,7 @@ structure noble_kernel.contracts.NominalDecl where
   «public» : Array Bool 2#usize
 
 /-- [noble_kernel::contracts::SchemaDecl]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 157:0-157:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 165:0-165:21
     Name pattern: [noble_kernel::contracts::SchemaDecl]
     Visibility: public -/
 @[rust_type "noble_kernel::contracts::SchemaDecl"]
@@ -567,7 +567,7 @@ structure noble_kernel.contracts.SchemaDecl where
   recursive : Bool
 
 /-- [noble_kernel::contracts::Behavior]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 53:0-53:17
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 61:0-61:17
     Name pattern: [noble_kernel::contracts::Behavior]
     Visibility: public -/
 @[discriminant isize, rust_type "noble_kernel::contracts::Behavior"]
@@ -639,7 +639,7 @@ inductive noble_kernel.contracts.Behavior where
 | NamedBehavior : noble_kernel.contracts.Behavior
 
 /-- [noble_kernel::contracts::Env]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 331:0-331:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 339:0-339:14
     Name pattern: [noble_kernel::contracts::Env]
     Visibility: public -/
 @[rust_type "noble_kernel::contracts::Env"]
@@ -673,7 +673,7 @@ structure noble_kernel.contracts.clone_budget.CloneBudget where
   reserved_bytes : Std.U64
 
 /-- [noble_kernel::contracts::NominalOps]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 189:0-189:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 197:0-197:21
     Name pattern: [noble_kernel::contracts::NominalOps]
     Visibility: public -/
 @[rust_type "noble_kernel::contracts::NominalOps"]
@@ -685,7 +685,7 @@ structure noble_kernel.contracts.NominalOps where
   matcher : Option noble_kernel.contracts.Definition
 
 /-- [noble_kernel::contracts::NominalError]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 198:0-198:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 206:0-206:21
     Name pattern: [noble_kernel::contracts::NominalError]
     Visibility: public -/
 @[discriminant isize, rust_type "noble_kernel::contracts::NominalError"]
@@ -695,7 +695,7 @@ inductive noble_kernel.contracts.NominalError where
 | TooManyDefinitions : noble_kernel.contracts.NominalError
 
 /-- [noble_kernel::contracts::BoundEmitRegistration]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 216:0-216:32
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 224:0-224:32
     Name pattern: [noble_kernel::contracts::BoundEmitRegistration]
     Visibility: public -/
 @[rust_type "noble_kernel::contracts::BoundEmitRegistration"]
@@ -708,7 +708,7 @@ structure noble_kernel.contracts.BoundEmitRegistration where
   effects : noble_kernel.types.EffSet
 
 /-- [noble_kernel::contracts::BoundClockRegistration]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 226:0-226:33
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 234:0-234:33
     Name pattern: [noble_kernel::contracts::BoundClockRegistration]
     Visibility: public -/
 @[rust_type "noble_kernel::contracts::BoundClockRegistration"]
@@ -721,7 +721,7 @@ structure noble_kernel.contracts.BoundClockRegistration where
   effects : noble_kernel.types.EffSet
 
 /-- [noble_kernel::contracts::BoundCodeExportRegistration]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 236:0-236:38
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 244:0-244:38
     Name pattern: [noble_kernel::contracts::BoundCodeExportRegistration]
     Visibility: public -/
 @[rust_type "noble_kernel::contracts::BoundCodeExportRegistration"]
@@ -734,7 +734,7 @@ structure noble_kernel.contracts.BoundCodeExportRegistration where
   effects : noble_kernel.types.EffSet
 
 /-- [noble_kernel::contracts::BoundSendRegistration]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 246:0-246:32
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 254:0-254:32
     Name pattern: [noble_kernel::contracts::BoundSendRegistration]
     Visibility: public -/
 @[rust_type "noble_kernel::contracts::BoundSendRegistration"]

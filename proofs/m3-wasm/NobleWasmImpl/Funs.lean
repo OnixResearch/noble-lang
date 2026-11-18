@@ -407,7 +407,7 @@ impl_def noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition :
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:9-52:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 60:9-60:14
     Name pattern: [core::clone::Clone<noble_kernel::contracts::Behavior>] -/
 @[reducible, rust_trait_impl
   "core::clone::Clone<noble_kernel::contracts::Behavior>"]
@@ -417,7 +417,7 @@ def noble_kernel.contracts.Behavior.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:16-52:20
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 60:16-60:20
     Name pattern: [core::marker::Copy<noble_kernel::contracts::Behavior>] -/
 @[reducible, rust_trait_impl
   "core::marker::Copy<noble_kernel::contracts::Behavior>"]
@@ -427,7 +427,7 @@ def noble_kernel.contracts.Behavior.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Behavior> for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:29-52:38
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 60:29-60:38
     Name pattern: [core::cmp::PartialEq<noble_kernel::contracts::Behavior, noble_kernel::contracts::Behavior>] -/
 @[reducible, rust_trait_impl
   "core::cmp::PartialEq<noble_kernel::contracts::Behavior, noble_kernel::contracts::Behavior>"]
@@ -440,7 +440,7 @@ impl_def noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior :
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::NominalDecl}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 167:16-167:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 175:16-175:21
     Name pattern: [core::fmt::Debug<noble_kernel::contracts::NominalDecl>] -/
 @[reducible, rust_trait_impl
   "core::fmt::Debug<noble_kernel::contracts::NominalDecl>"]

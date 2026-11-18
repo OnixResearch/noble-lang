@@ -1213,7 +1213,7 @@ impl_def types.Ty.Insts.CoreCmpPartialEqTy : core.cmp.PartialEq types.Ty
 }
 
 /-- [noble_kernel::acceptance::parts::invalid]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 341:0-368:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 335:0-362:1 -/
 def acceptance.parts.invalid
   (ctx : acceptance.parts.Ctx) («at» : acceptance.parts.Site)
   (expected : alloc.vec.Vec types.Ty) (actual : alloc.vec.Vec types.Ty)
@@ -1375,7 +1375,7 @@ def acceptance.parts.multiset.same
     acceptance.parts.multiset.same_loop left right used true 0#usize
 
 /-- [noble_kernel::acceptance::parts::mismatch_constraint]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 294:0-303:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 288:0-297:1 -/
 def acceptance.parts.mismatch_constraint
   (expected : Slice types.Ty) (actual : Slice types.Ty) :
   Result untrusted.Constraint
@@ -1554,7 +1554,7 @@ def types.EffSet.union
   ok out1
 
 /-- [noble_kernel::acceptance::parts::tail_copy]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 309:0-318:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 303:0-312:1 -/
 def acceptance.parts.tail_copy
   (stack : Slice types.Ty) (needed : Std.Usize) :
   Result (alloc.vec.Vec types.Ty)
@@ -1572,7 +1572,7 @@ def acceptance.parts.tail_copy
   else alloc.slice.Slice.to_vec types.Ty.Insts.CoreCloneClone stack
 
 /-- [noble_kernel::acceptance::parts::match_tail]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 281:4-289:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 275:4-283:5 -/
 @[rust_loop_body]
 def acceptance.parts.match_tail_loop.body
   (stack : Slice types.Ty) (expected : Slice types.Ty) (tail_start : Std.Usize)
@@ -1599,7 +1599,7 @@ def acceptance.parts.match_tail_loop.body
   else ok (done none)
 
 /-- [noble_kernel::acceptance::parts::match_tail]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 281:4-289:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 275:4-283:5 -/
 @[rust_loop]
 def acceptance.parts.match_tail_loop
   (stack : Slice types.Ty) (expected : Slice types.Ty) (tail_start : Std.Usize)
@@ -1612,7 +1612,7 @@ def acceptance.parts.match_tail_loop
     index
 
 /-- [noble_kernel::acceptance::parts::match_tail]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 271:0-291:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 265:0-285:1 -/
 def acceptance.parts.match_tail
   (stack : Slice types.Ty) (expected : Slice types.Ty) :
   Result (Option untrusted.Constraint)
@@ -2026,7 +2026,7 @@ def words.bounds.check_sizes
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::acceptance::parts::invalid_without_stacks]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 322:0-335:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 316:0-329:1 -/
 def acceptance.parts.invalid_without_stacks
   («at» : acceptance.parts.Site) (constraint : untrusted.Constraint) :
   Result acceptance.Fail
@@ -2050,7 +2050,7 @@ def types.EffSet.as_slice
   ok (alloc.vec.Vec.deref self)
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 564:8-571:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 572:8-579:5
     Visibility: public -/
 @[rust_loop_body]
 def contracts.Env.knows_effect_loop.body
@@ -2071,7 +2071,7 @@ def contracts.Env.knows_effect_loop.body
   else ok (done false)
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 564:8-571:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 572:8-579:5
     Visibility: public -/
 @[rust_loop]
 def contracts.Env.knows_effect_loop
@@ -2083,7 +2083,7 @@ def contracts.Env.knows_effect_loop
     index
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::knows_effect]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 562:4-571:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 570:4-579:5
     Visibility: public -/
 @[reducible]
 def contracts.Env.knows_effect
@@ -2091,7 +2091,7 @@ def contracts.Env.knows_effect
   contracts.Env.knows_effect_loop self id 0#usize
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::contracts::nominal::validation::valid_program_components::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 695:23-695:60 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 696:23-696:60 -/
 def
   contracts.nominal.validation.valid_program_components.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool.call_once
   (c : contracts.nominal.validation.valid_program_components.closure)
@@ -2102,7 +2102,7 @@ def
   ok (tupled_args <= i)
 
 /-- Trait implementation: [noble_kernel::contracts::nominal::validation::valid_program_components::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::contracts::nominal::validation::valid_program_components::{closure}<'_0>}]
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 695:23-695:60 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 696:23-696:60 -/
 @[reducible]
 def
   contracts.nominal.validation.valid_program_components.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool
@@ -2114,7 +2114,7 @@ def
 }
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 689:4-692:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 690:4-693:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.valid_program_components_loop.body
   (env : contracts.Env) (ids : Slice types.EffId) (index : Std.Usize)
@@ -2134,7 +2134,7 @@ def contracts.nominal.validation.valid_program_components_loop.body
   else ok (done is_effect_set_known)
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 689:4-692:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 690:4-693:5 -/
 @[rust_loop]
 def contracts.nominal.validation.valid_program_components_loop
   (env : contracts.Env) (ids : Slice types.EffId) (index : Std.Usize)
@@ -2148,7 +2148,7 @@ def contracts.nominal.validation.valid_program_components_loop
     (index, is_effect_set_known)
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 679:0-696:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 680:0-697:1 -/
 def contracts.nominal.validation.valid_program_components
   (env : contracts.Env) (stack_in : Slice types.Ty)
   (stack_out : Slice types.Ty) (effects : types.EffSet) (max_nodes : Std.U32) :
@@ -2571,7 +2571,7 @@ def types.data.Ty.valid_generic_argument (self : types.Ty) : Result Bool := do
     types.data.Ty.valid_generic_argument_loop4 work1 0#usize
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_variant]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 433:8-435:9
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 441:8-443:9
     Visibility: public -/
 @[rust_loop_body]
 def contracts.Env.generic_variant_loop.body
@@ -2595,7 +2595,7 @@ def contracts.Env.generic_variant_loop.body
   else ok (done (self.generic_variants, index))
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_variant]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 433:8-435:9
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 441:8-443:9
     Visibility: public -/
 @[rust_loop]
 def contracts.Env.generic_variant_loop
@@ -2607,7 +2607,7 @@ def contracts.Env.generic_variant_loop
     index
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_variant]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 431:4-437:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 439:4-445:5
     Visibility: public -/
 def contracts.Env.generic_variant
   (self : contracts.Env) (id : types.NominalTypeId) :
@@ -4090,7 +4090,7 @@ def contracts.live.valid_ref
   else ok false
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::valid_live_ref]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 417:4-419:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 425:4-427:5
     Visibility: public -/
 def contracts.Env.valid_live_ref
   (self : contracts.Env) (ty : types.Ty) : Result Bool := do
@@ -4227,7 +4227,7 @@ def acceptance.parts.limits_of
   acceptance.parts.limits_of_with stack ctx false
 
 /-- [noble_kernel::acceptance::parts::limits_of_join]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 245:0-264:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 239:0-258:1 -/
 def acceptance.parts.limits_of_join
   (height : Std.Usize) (appended : Slice types.Ty) (ctx : acceptance.parts.Ctx)
   :
@@ -4248,7 +4248,7 @@ def acceptance.parts.limits_of_join
       untrusted.LimitKind.StackHeight))
 
 /-- [noble_kernel::acceptance::parts::join::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::acceptance::parts::join::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 232:23-232:84 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 228:19-228:80 -/
 def
   acceptance.parts.join.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool.call_once
   (c : acceptance.parts.join.closure) (tupled_args : Std.U64) :
@@ -4258,7 +4258,7 @@ def
   ok (tupled_args <= i)
 
 /-- Trait implementation: [noble_kernel::acceptance::parts::join::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::acceptance::parts::join::{closure}<'_0>}]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 232:23-232:84 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 228:19-228:80 -/
 @[reducible]
 def acceptance.parts.join.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool :
   core.ops.function.FnOnce acceptance.parts.join.closure Std.U64 Bool := {
@@ -4267,7 +4267,7 @@ def acceptance.parts.join.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool :
 }
 
 /-- [noble_kernel::acceptance::parts::join]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 197:0-236:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 197:0-230:1 -/
 def acceptance.parts.join
   (frame : acceptance.Frame) (interface : untrusted.Interface)
   («at» : acceptance.parts.Site) (ctx : acceptance.parts.Ctx) :
@@ -4291,24 +4291,18 @@ def acceptance.parts.join
     let r ← acceptance.parts.limits_of_join i2 s3 ctx
     match r with
     | core.result.Result.Ok _ =>
-      let left_val := alloc.vec.Vec.len v1
-      let i3 := alloc.vec.Vec.len interface.stack_out
-      let right_val ← lift (core.num.Usize.saturating_add keep i3)
-      if left_val = right_val
-      then
-        let i4 := alloc.vec.Vec.len v1
-        let r1 ← U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from i4
-        let b ←
-          core.result.Result.is_ok_and
-            acceptance.parts.join.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool
-            r1 ctx.request
-        massert b
-        ok (core.result.Result.Ok { frame with stack := v1, effects := es })
-      else
-        let _ ←
-          core.fmt.Arguments.from_str (toStr
-            "a join appends exactly the interface output")
-        fail panic
+      let i3 := alloc.vec.Vec.len v1
+      let i4 := alloc.vec.Vec.len interface.stack_out
+      let i5 ← lift (core.num.Usize.saturating_add keep i4)
+      massert (i3 = i5)
+      let i6 := alloc.vec.Vec.len v1
+      let r1 ← U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from i6
+      let b ←
+        core.result.Result.is_ok_and
+          acceptance.parts.join.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool
+          r1 ctx.request
+      massert b
+      ok (core.result.Result.Ok { frame with stack := v1, effects := es })
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
   | some constraint =>
     let v ←
@@ -6755,7 +6749,7 @@ def words.Scheme.check_inst
     | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::effect_count]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 583:4-585:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 591:4-593:5
     Visibility: public -/
 def contracts.Env.effect_count
   (self : contracts.Env) : Result (Option Std.U64) := do
@@ -7476,21 +7470,21 @@ def acceptance.frames.complete_frame
 @[global_simps, irreducible] def untrusted.CANDIDATE_FORMAT : Std.U32 := 1#u32
 
 /-- [noble_kernel::contracts::index]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 593:0-595:1 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 601:0-603:1 -/
 def contracts.index
   («def» : contracts.Definition) : Result (Option Std.Usize) := do
   let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from «def»
   core.result.Result.ok r
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Behavior}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:9-52:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 60:9-60:14
     Visibility: public -/
 def contracts.Behavior.Insts.CoreCloneClone.clone
   (self : contracts.Behavior) : Result contracts.Behavior := do
   ok self
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:9-52:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 60:9-60:14 -/
 @[reducible]
 def contracts.Behavior.Insts.CoreCloneClone : core.clone.Clone
   contracts.Behavior := {
@@ -7498,7 +7492,7 @@ def contracts.Behavior.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:16-52:20 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 60:16-60:20 -/
 @[reducible]
 def contracts.Behavior.Insts.CoreMarkerCopy : core.marker.Copy
   contracts.Behavior := {
@@ -7506,7 +7500,7 @@ def contracts.Behavior.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::kind]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 554:4-559:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 562:4-567:5
     Visibility: public -/
 def contracts.Env.kind
   (self : contracts.Env) («def» : contracts.Definition) :
@@ -7524,7 +7518,7 @@ def contracts.Env.kind
       o1
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::scheme]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 546:4-551:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 554:4-559:5
     Visibility: public -/
 def contracts.Env.scheme
   (self : contracts.Env) («def» : contracts.Definition) :
@@ -7539,7 +7533,7 @@ def contracts.Env.scheme
       index
 
 /-- [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Behavior> for noble_kernel::contracts::Behavior}::eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:29-52:38
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 60:29-60:38
     Visibility: public -/
 def contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq
   (self : contracts.Behavior) (other : contracts.Behavior) : Result Bool := do
@@ -8220,7 +8214,7 @@ def contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq
   else ok false
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Behavior> for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:29-52:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 60:29-60:38 -/
 @[reducible]
 impl_def contracts.Behavior.Insts.CoreCmpPartialEqBehavior : core.cmp.PartialEq
   contracts.Behavior contracts.Behavior := {
@@ -9121,7 +9115,7 @@ def contracts.nominal.inspection.Env.enqueue_program_pattern
   else ok none
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::nominal]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 424:8-426:9
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 432:8-434:9
     Visibility: public -/
 @[rust_loop_body]
 def contracts.Env.nominal_loop.body
@@ -9145,7 +9139,7 @@ def contracts.Env.nominal_loop.body
   else ok (done (self.nominals, index))
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::nominal]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 424:8-426:9
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 432:8-434:9
     Visibility: public -/
 @[rust_loop]
 def contracts.Env.nominal_loop
@@ -9157,7 +9151,7 @@ def contracts.Env.nominal_loop
     index
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::nominal]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 422:4-428:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 430:4-436:5
     Visibility: public -/
 def contracts.Env.nominal
   (self : contracts.Env) (id : types.NominalTypeId) :
@@ -9756,7 +9750,7 @@ impl_def contracts.Definition.Insts.CoreCmpPartialEqDefinition :
 }
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop body 1:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 669:8-673:9 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 670:8-674:9 -/
 @[rust_loop_body]
 def contracts.nominal.validation.bound_adapters_unique_loop0_loop0.body
   (v : alloc.vec.Vec contracts.BoundAdapter) (index : Std.Usize)
@@ -9784,7 +9778,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0_loop0.body
   else ok (done is_unique)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop 1:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 669:8-673:9 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 670:8-674:9 -/
 @[rust_loop]
 def contracts.nominal.validation.bound_adapters_unique_loop0_loop0
   (v : alloc.vec.Vec contracts.BoundAdapter) (index : Std.Usize)
@@ -9799,7 +9793,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0_loop0
     (is_unique, prior)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 658:4-675:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 659:4-676:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.bound_adapters_unique_loop0.body
   (env : contracts.Env) (index : Std.Usize) (is_unique : Bool) :
@@ -9890,7 +9884,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0.body
   else ok (done is_unique)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 658:4-675:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 659:4-676:5 -/
 @[rust_loop]
 def contracts.nominal.validation.bound_adapters_unique_loop0
   (env : contracts.Env) (index : Std.Usize) (is_unique : Bool) :
@@ -9903,14 +9897,14 @@ def contracts.nominal.validation.bound_adapters_unique_loop0
     (index, is_unique)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 655:0-677:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 656:0-678:1 -/
 @[reducible]
 def contracts.nominal.validation.bound_adapters_unique
   (env : contracts.Env) : Result Bool := do
   contracts.nominal.validation.bound_adapters_unique_loop0 env 0#usize true
 
 /-- [noble_kernel::contracts::TEST_SEND]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 33:0-33:66
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 38:0-38:66
     Visibility: public -/
 @[global_simps, irreducible] def contracts.TEST_SEND : types.EffId := 7#u32
 
@@ -9931,7 +9925,7 @@ def contracts.TEST_CODE_EXPORT : types.EffId := 6#u32
 @[global_simps, irreducible] def contracts.TEST_EMIT : types.EffId := 0#u32
 
 /-- [noble_kernel::contracts::nominal::validation::definition_has_owner]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 647:0-649:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 648:0-650:1 -/
 def contracts.nominal.validation.definition_has_owner
   (env : contracts.Env) (index : Std.Usize) : Result Bool := do
   let s := alloc.vec.Vec.deref env.definition_owners
@@ -9945,7 +9939,7 @@ def contracts.nominal.validation.definition_has_owner
                | some _ => ok true
 
 /-- [noble_kernel::contracts::nominal::validation::bound_row_has_only_effect]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 638:0-644:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 639:0-645:1 -/
 def contracts.nominal.validation.bound_row_has_only_effect
   (env : contracts.Env) (index : Std.Usize) (effect : types.EffId) :
   Result Bool
@@ -9958,7 +9952,7 @@ def contracts.nominal.validation.bound_row_has_only_effect
     types.EffId.Insts.CoreCmpPartialEqEffId s (Array.make 1#usize [ effect ])
 
 /-- [noble_kernel::contracts::nominal::validation::bound_row_names]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 620:0-631:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 621:0-632:1 -/
 def contracts.nominal.validation.bound_row_names
   (env : contracts.Env) (index : Std.Usize) («def» : contracts.Definition)
   (slot : Std.U32) :
@@ -9976,7 +9970,7 @@ def contracts.nominal.validation.bound_row_names
   else ok (row.adapter_slot = slot)
 
 /-- [noble_kernel::contracts::nominal::validation::first_bound_row]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 606:4-611:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 607:4-612:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.first_bound_row_loop.body
   (env : contracts.Env) («def» : contracts.Definition) (slot : Std.U32)
@@ -10000,7 +9994,7 @@ def contracts.nominal.validation.first_bound_row_loop.body
   else ok (done found)
 
 /-- [noble_kernel::contracts::nominal::validation::first_bound_row]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 606:4-611:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 607:4-612:5 -/
 @[rust_loop]
 def contracts.nominal.validation.first_bound_row_loop
   (env : contracts.Env) («def» : contracts.Definition) (slot : Std.U32)
@@ -10014,7 +10008,7 @@ def contracts.nominal.validation.first_bound_row_loop
     (index, found)
 
 /-- [noble_kernel::contracts::nominal::validation::first_bound_row]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 599:0-613:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 600:0-614:1 -/
 @[reducible]
 def contracts.nominal.validation.first_bound_row
   (env : contracts.Env) («def» : contracts.Definition) (slot : Std.U32) :
@@ -10023,22 +10017,30 @@ def contracts.nominal.validation.first_bound_row
   contracts.nominal.validation.first_bound_row_loop env «def» slot 0#usize
     none
 
-/-- [noble_kernel::contracts::TEST_SEND_ADAPTER_IDENTITY]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 35:0-35:70
-    Visibility: public -/
+/-- [noble_kernel::contracts::TEST_SEND_ADAPTER_IDENTITY_BYTES]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 42:0-43:31 -/
 @[global_simps, irreducible]
-def contracts.TEST_SEND_ADAPTER_IDENTITY : Str :=
-  toStr "worker-test-send@1.0.0"
+def contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES : Array Std.U8 22#usize :=
+  Array.make 22#usize [
+    119#u8, 111#u8, 114#u8, 107#u8, 101#u8, 114#u8, 45#u8, 116#u8, 101#u8,
+    115#u8, 116#u8, 45#u8, 115#u8, 101#u8, 110#u8, 100#u8, 64#u8, 49#u8, 46#u8,
+    48#u8, 46#u8, 48#u8
+    ]
 
-/-- [noble_kernel::contracts::TEST_CODE_EXPORT_ADAPTER_IDENTITY]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 31:0-31:84
-    Visibility: public -/
+/-- [noble_kernel::contracts::TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 35:0-36:48 -/
 @[global_simps, irreducible]
-def contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY : Str :=
-  toStr "worker-test-code-export@1.0.0"
+def contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
+  : Array Std.U8 29#usize :=
+  Array.make 29#usize [
+    119#u8, 111#u8, 114#u8, 107#u8, 101#u8, 114#u8, 45#u8, 116#u8, 101#u8,
+    115#u8, 116#u8, 45#u8, 99#u8, 111#u8, 100#u8, 101#u8, 45#u8, 101#u8,
+    120#u8, 112#u8, 111#u8, 114#u8, 116#u8, 64#u8, 49#u8, 46#u8, 48#u8, 46#u8,
+    48#u8
+    ]
 
 /-- [noble_kernel::contracts::nominal::validation::bound_row_contract]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 201:0-219:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 201:0-220:1 -/
 def contracts.nominal.validation.bound_row_contract
   (row : contracts.BoundAdapter) : Result Bool := do
   let b ← alloc.string.String.is_empty row.adapter_identity
@@ -10080,10 +10082,14 @@ def contracts.nominal.validation.bound_row_contract
               if b6
               then ok true
               else
-                let b7 ←
-                  alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
+                let s3 ←
+                  alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
                     row.adapter_identity
-                    contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY
+                let s4 ← core.str.Str.as_bytes s3
+                let b7 ←
+                  Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                    core.cmp.PartialEqU8 s4
+                    contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10103,10 +10109,11 @@ def contracts.nominal.validation.bound_row_contract
                       if b9
                       then ok true
                       else
+                        let s5 ← core.str.Str.as_bytes s3
                         let b10 ←
-                          alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                            row.adapter_identity
-                            contracts.TEST_SEND_ADAPTER_IDENTITY
+                          Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                            core.cmp.PartialEqU8 s5
+                            contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                         if b10
                         then
                           let b11 ←
@@ -10124,10 +10131,11 @@ def contracts.nominal.validation.bound_row_contract
                           else ok false
                         else ok false
                     else
+                      let s5 ← core.str.Str.as_bytes s3
                       let b9 ←
-                        alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                          row.adapter_identity
-                          contracts.TEST_SEND_ADAPTER_IDENTITY
+                        Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                          core.cmp.PartialEqU8 s5
+                          contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                       if b9
                       then
                         let b10 ←
@@ -10145,10 +10153,11 @@ def contracts.nominal.validation.bound_row_contract
                         else ok false
                       else ok false
                   else
+                    let s5 ← core.str.Str.as_bytes s3
                     let b9 ←
-                      alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                        row.adapter_identity
-                        contracts.TEST_SEND_ADAPTER_IDENTITY
+                      Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                        core.cmp.PartialEqU8 s5
+                        contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                     if b9
                     then
                       let b10 ←
@@ -10166,9 +10175,11 @@ def contracts.nominal.validation.bound_row_contract
                       else ok false
                     else ok false
                 else
+                  let s5 ← core.str.Str.as_bytes s3
                   let b8 ←
-                    alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                      row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                    Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                      core.cmp.PartialEqU8 s5
+                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                   if b8
                   then
                     let b9 ←
@@ -10186,10 +10197,14 @@ def contracts.nominal.validation.bound_row_contract
                     else ok false
                   else ok false
             else
-              let b6 ←
-                alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
+              let s3 ←
+                alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
                   row.adapter_identity
-                  contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY
+              let s4 ← core.str.Str.as_bytes s3
+              let b6 ←
+                Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                  core.cmp.PartialEqU8 s4
+                  contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -10209,10 +10224,11 @@ def contracts.nominal.validation.bound_row_contract
                     if b8
                     then ok true
                     else
+                      let s5 ← core.str.Str.as_bytes s3
                       let b9 ←
-                        alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                          row.adapter_identity
-                          contracts.TEST_SEND_ADAPTER_IDENTITY
+                        Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                          core.cmp.PartialEqU8 s5
+                          contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                       if b9
                       then
                         let b10 ←
@@ -10230,10 +10246,11 @@ def contracts.nominal.validation.bound_row_contract
                         else ok false
                       else ok false
                   else
+                    let s5 ← core.str.Str.as_bytes s3
                     let b8 ←
-                      alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                        row.adapter_identity
-                        contracts.TEST_SEND_ADAPTER_IDENTITY
+                      Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                        core.cmp.PartialEqU8 s5
+                        contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                     if b8
                     then
                       let b9 ←
@@ -10251,9 +10268,11 @@ def contracts.nominal.validation.bound_row_contract
                       else ok false
                     else ok false
                 else
+                  let s5 ← core.str.Str.as_bytes s3
                   let b8 ←
-                    alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                      row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                    Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                      core.cmp.PartialEqU8 s5
+                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                   if b8
                   then
                     let b9 ←
@@ -10271,9 +10290,11 @@ def contracts.nominal.validation.bound_row_contract
                     else ok false
                   else ok false
               else
+                let s5 ← core.str.Str.as_bytes s3
                 let b7 ←
-                  alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                    row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                  Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                    core.cmp.PartialEqU8 s5
+                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10291,10 +10312,13 @@ def contracts.nominal.validation.bound_row_contract
                   else ok false
                 else ok false
           else
-            let b5 ←
-              alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
+            let s2 ←
+              alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
                 row.adapter_identity
-                contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY
+            let s3 ← core.str.Str.as_bytes s2
+            let b5 ←
+              Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
+                s3 contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
             if b5
             then
               let b6 ←
@@ -10312,10 +10336,11 @@ def contracts.nominal.validation.bound_row_contract
                   if b7
                   then ok true
                   else
+                    let s4 ← core.str.Str.as_bytes s2
                     let b8 ←
-                      alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                        row.adapter_identity
-                        contracts.TEST_SEND_ADAPTER_IDENTITY
+                      Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                        core.cmp.PartialEqU8 s4
+                        contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                     if b8
                     then
                       let b9 ←
@@ -10333,9 +10358,11 @@ def contracts.nominal.validation.bound_row_contract
                       else ok false
                     else ok false
                 else
+                  let s4 ← core.str.Str.as_bytes s2
                   let b7 ←
-                    alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                      row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                    Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                      core.cmp.PartialEqU8 s4
+                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                   if b7
                   then
                     let b8 ←
@@ -10353,9 +10380,11 @@ def contracts.nominal.validation.bound_row_contract
                     else ok false
                   else ok false
               else
+                let s4 ← core.str.Str.as_bytes s2
                 let b7 ←
-                  alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                    row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                  Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                    core.cmp.PartialEqU8 s4
+                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10373,9 +10402,11 @@ def contracts.nominal.validation.bound_row_contract
                   else ok false
                 else ok false
             else
+              let s4 ← core.str.Str.as_bytes s2
               let b6 ←
-                alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                  row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                  core.cmp.PartialEqU8 s4
+                  contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -10411,10 +10442,14 @@ def contracts.nominal.validation.bound_row_contract
             if b5
             then ok true
             else
-              let b6 ←
-                alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
+              let s3 ←
+                alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
                   row.adapter_identity
-                  contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY
+              let s4 ← core.str.Str.as_bytes s3
+              let b6 ←
+                Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                  core.cmp.PartialEqU8 s4
+                  contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -10434,10 +10469,11 @@ def contracts.nominal.validation.bound_row_contract
                     if b8
                     then ok true
                     else
+                      let s5 ← core.str.Str.as_bytes s3
                       let b9 ←
-                        alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                          row.adapter_identity
-                          contracts.TEST_SEND_ADAPTER_IDENTITY
+                        Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                          core.cmp.PartialEqU8 s5
+                          contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                       if b9
                       then
                         let b10 ←
@@ -10455,10 +10491,11 @@ def contracts.nominal.validation.bound_row_contract
                         else ok false
                       else ok false
                   else
+                    let s5 ← core.str.Str.as_bytes s3
                     let b8 ←
-                      alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                        row.adapter_identity
-                        contracts.TEST_SEND_ADAPTER_IDENTITY
+                      Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                        core.cmp.PartialEqU8 s5
+                        contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                     if b8
                     then
                       let b9 ←
@@ -10476,9 +10513,11 @@ def contracts.nominal.validation.bound_row_contract
                       else ok false
                     else ok false
                 else
+                  let s5 ← core.str.Str.as_bytes s3
                   let b8 ←
-                    alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                      row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                    Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                      core.cmp.PartialEqU8 s5
+                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                   if b8
                   then
                     let b9 ←
@@ -10496,9 +10535,11 @@ def contracts.nominal.validation.bound_row_contract
                     else ok false
                   else ok false
               else
+                let s5 ← core.str.Str.as_bytes s3
                 let b7 ←
-                  alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                    row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                  Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                    core.cmp.PartialEqU8 s5
+                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10516,10 +10557,13 @@ def contracts.nominal.validation.bound_row_contract
                   else ok false
                 else ok false
           else
-            let b5 ←
-              alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
+            let s2 ←
+              alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
                 row.adapter_identity
-                contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY
+            let s3 ← core.str.Str.as_bytes s2
+            let b5 ←
+              Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
+                s3 contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
             if b5
             then
               let b6 ←
@@ -10530,18 +10574,19 @@ def contracts.nominal.validation.bound_row_contract
               then
                 if b2
                 then
-                  let s2 ← types.EffSet.as_slice row.effects
+                  let s4 ← types.EffSet.as_slice row.effects
                   let b7 ←
                     Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                      types.EffId.Insts.CoreCmpPartialEqEffId s2
+                      types.EffId.Insts.CoreCmpPartialEqEffId s4
                       (Array.make 1#usize [ contracts.TEST_CODE_EXPORT ])
                   if b7
                   then ok true
                   else
+                    let s5 ← core.str.Str.as_bytes s2
                     let b8 ←
-                      alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                        row.adapter_identity
-                        contracts.TEST_SEND_ADAPTER_IDENTITY
+                      Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                        core.cmp.PartialEqU8 s5
+                        contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                     if b8
                     then
                       let b9 ←
@@ -10553,15 +10598,17 @@ def contracts.nominal.validation.bound_row_contract
                         if b2
                         then
                           Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                            types.EffId.Insts.CoreCmpPartialEqEffId s2
+                            types.EffId.Insts.CoreCmpPartialEqEffId s4
                             (Array.make 1#usize [ contracts.TEST_SEND ])
                         else ok false
                       else ok false
                     else ok false
                 else
+                  let s4 ← core.str.Str.as_bytes s2
                   let b7 ←
-                    alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                      row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                    Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                      core.cmp.PartialEqU8 s4
+                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                   if b7
                   then
                     let b8 ←
@@ -10572,17 +10619,19 @@ def contracts.nominal.validation.bound_row_contract
                     then
                       if b2
                       then
-                        let s2 ← types.EffSet.as_slice row.effects
+                        let s5 ← types.EffSet.as_slice row.effects
                         Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                          types.EffId.Insts.CoreCmpPartialEqEffId s2
+                          types.EffId.Insts.CoreCmpPartialEqEffId s5
                           (Array.make 1#usize [ contracts.TEST_SEND ])
                       else ok false
                     else ok false
                   else ok false
               else
+                let s4 ← core.str.Str.as_bytes s2
                 let b7 ←
-                  alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                    row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                  Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                    core.cmp.PartialEqU8 s4
+                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10593,17 +10642,19 @@ def contracts.nominal.validation.bound_row_contract
                   then
                     if b2
                     then
-                      let s2 ← types.EffSet.as_slice row.effects
+                      let s5 ← types.EffSet.as_slice row.effects
                       Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                        types.EffId.Insts.CoreCmpPartialEqEffId s2
+                        types.EffId.Insts.CoreCmpPartialEqEffId s5
                         (Array.make 1#usize [ contracts.TEST_SEND ])
                     else ok false
                   else ok false
                 else ok false
             else
+              let s4 ← core.str.Str.as_bytes s2
               let b6 ←
-                alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                  row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                  core.cmp.PartialEqU8 s4
+                  contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -10614,17 +10665,21 @@ def contracts.nominal.validation.bound_row_contract
                 then
                   if b2
                   then
-                    let s2 ← types.EffSet.as_slice row.effects
+                    let s5 ← types.EffSet.as_slice row.effects
                     Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                      types.EffId.Insts.CoreCmpPartialEqEffId s2
+                      types.EffId.Insts.CoreCmpPartialEqEffId s5
                       (Array.make 1#usize [ contracts.TEST_SEND ])
                   else ok false
                 else ok false
               else ok false
         else
+          let s1 ←
+            alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
+              row.adapter_identity
+          let s2 ← core.str.Str.as_bytes s1
           let b4 ←
-            alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-              row.adapter_identity contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY
+            Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 s2
+              contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
           if b4
           then
             let b5 ←
@@ -10635,17 +10690,19 @@ def contracts.nominal.validation.bound_row_contract
             then
               if b2
               then
-                let s1 ← types.EffSet.as_slice row.effects
+                let s3 ← types.EffSet.as_slice row.effects
                 let b6 ←
                   Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                    types.EffId.Insts.CoreCmpPartialEqEffId s1
+                    types.EffId.Insts.CoreCmpPartialEqEffId s3
                     (Array.make 1#usize [ contracts.TEST_CODE_EXPORT ])
                 if b6
                 then ok true
                 else
+                  let s4 ← core.str.Str.as_bytes s1
                   let b7 ←
-                    alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                      row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                    Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                      core.cmp.PartialEqU8 s4
+                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                   if b7
                   then
                     let b8 ←
@@ -10657,15 +10714,17 @@ def contracts.nominal.validation.bound_row_contract
                       if b2
                       then
                         Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                          types.EffId.Insts.CoreCmpPartialEqEffId s1
+                          types.EffId.Insts.CoreCmpPartialEqEffId s3
                           (Array.make 1#usize [ contracts.TEST_SEND ])
                       else ok false
                     else ok false
                   else ok false
               else
+                let s3 ← core.str.Str.as_bytes s1
                 let b6 ←
-                  alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                    row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                  Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                    core.cmp.PartialEqU8 s3
+                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                 if b6
                 then
                   let b7 ←
@@ -10676,17 +10735,19 @@ def contracts.nominal.validation.bound_row_contract
                   then
                     if b2
                     then
-                      let s1 ← types.EffSet.as_slice row.effects
+                      let s4 ← types.EffSet.as_slice row.effects
                       Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                        types.EffId.Insts.CoreCmpPartialEqEffId s1
+                        types.EffId.Insts.CoreCmpPartialEqEffId s4
                         (Array.make 1#usize [ contracts.TEST_SEND ])
                     else ok false
                   else ok false
                 else ok false
             else
+              let s3 ← core.str.Str.as_bytes s1
               let b6 ←
-                alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                  row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                  core.cmp.PartialEqU8 s3
+                  contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -10697,17 +10758,18 @@ def contracts.nominal.validation.bound_row_contract
                 then
                   if b2
                   then
-                    let s1 ← types.EffSet.as_slice row.effects
+                    let s4 ← types.EffSet.as_slice row.effects
                     Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                      types.EffId.Insts.CoreCmpPartialEqEffId s1
+                      types.EffId.Insts.CoreCmpPartialEqEffId s4
                       (Array.make 1#usize [ contracts.TEST_SEND ])
                   else ok false
                 else ok false
               else ok false
           else
+            let s3 ← core.str.Str.as_bytes s1
             let b5 ←
-              alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+              Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
+                s3 contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
             if b5
             then
               let b6 ←
@@ -10718,9 +10780,9 @@ def contracts.nominal.validation.bound_row_contract
               then
                 if b2
                 then
-                  let s1 ← types.EffSet.as_slice row.effects
+                  let s4 ← types.EffSet.as_slice row.effects
                   Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                    types.EffId.Insts.CoreCmpPartialEqEffId s1
+                    types.EffId.Insts.CoreCmpPartialEqEffId s4
                     (Array.make 1#usize [ contracts.TEST_SEND ])
                 else ok false
               else ok false
@@ -10744,10 +10806,13 @@ def contracts.nominal.validation.bound_row_contract
           if b4
           then ok true
           else
-            let b5 ←
-              alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
+            let s3 ←
+              alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
                 row.adapter_identity
-                contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY
+            let s4 ← core.str.Str.as_bytes s3
+            let b5 ←
+              Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
+                s4 contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
             if b5
             then
               let b6 ←
@@ -10766,10 +10831,11 @@ def contracts.nominal.validation.bound_row_contract
                   if b8
                   then ok true
                   else
+                    let s5 ← core.str.Str.as_bytes s3
                     let b9 ←
-                      alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                        row.adapter_identity
-                        contracts.TEST_SEND_ADAPTER_IDENTITY
+                      Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                        core.cmp.PartialEqU8 s5
+                        contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                     if b9
                     then
                       let b10 ←
@@ -10787,9 +10853,11 @@ def contracts.nominal.validation.bound_row_contract
                       else ok false
                     else ok false
                 else
+                  let s5 ← core.str.Str.as_bytes s3
                   let b8 ←
-                    alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                      row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                    Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                      core.cmp.PartialEqU8 s5
+                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                   if b8
                   then
                     let b9 ←
@@ -10807,9 +10875,11 @@ def contracts.nominal.validation.bound_row_contract
                     else ok false
                   else ok false
               else
+                let s5 ← core.str.Str.as_bytes s3
                 let b7 ←
-                  alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                    row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                  Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                    core.cmp.PartialEqU8 s5
+                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10828,9 +10898,11 @@ def contracts.nominal.validation.bound_row_contract
                   else ok false
                 else ok false
             else
+              let s5 ← core.str.Str.as_bytes s3
               let b6 ←
-                alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                  row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                  core.cmp.PartialEqU8 s5
+                  contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -10849,9 +10921,13 @@ def contracts.nominal.validation.bound_row_contract
                 else ok false
               else ok false
         else
+          let s2 ←
+            alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
+              row.adapter_identity
+          let s3 ← core.str.Str.as_bytes s2
           let b4 ←
-            alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-              row.adapter_identity contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY
+            Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 s3
+              contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
           if b4
           then
             let b5 ←
@@ -10863,17 +10939,19 @@ def contracts.nominal.validation.bound_row_contract
               let b6 ← alloc.vec.Vec.is_empty Global row.output
               if b6
               then
-                let s2 ← types.EffSet.as_slice row.effects
+                let s4 ← types.EffSet.as_slice row.effects
                 let b7 ←
                   Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                    types.EffId.Insts.CoreCmpPartialEqEffId s2
+                    types.EffId.Insts.CoreCmpPartialEqEffId s4
                     (Array.make 1#usize [ contracts.TEST_CODE_EXPORT ])
                 if b7
                 then ok true
                 else
+                  let s5 ← core.str.Str.as_bytes s2
                   let b8 ←
-                    alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                      row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                    Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                      core.cmp.PartialEqU8 s5
+                      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                   if b8
                   then
                     let b9 ←
@@ -10885,15 +10963,17 @@ def contracts.nominal.validation.bound_row_contract
                       if b6
                       then
                         Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                          types.EffId.Insts.CoreCmpPartialEqEffId s2
+                          types.EffId.Insts.CoreCmpPartialEqEffId s4
                           (Array.make 1#usize [ contracts.TEST_SEND ])
                       else ok false
                     else ok false
                   else ok false
               else
+                let s4 ← core.str.Str.as_bytes s2
                 let b7 ←
-                  alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                    row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                  Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                    core.cmp.PartialEqU8 s4
+                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10904,17 +10984,19 @@ def contracts.nominal.validation.bound_row_contract
                   then
                     if b6
                     then
-                      let s2 ← types.EffSet.as_slice row.effects
+                      let s5 ← types.EffSet.as_slice row.effects
                       Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                        types.EffId.Insts.CoreCmpPartialEqEffId s2
+                        types.EffId.Insts.CoreCmpPartialEqEffId s5
                         (Array.make 1#usize [ contracts.TEST_SEND ])
                     else ok false
                   else ok false
                 else ok false
             else
+              let s4 ← core.str.Str.as_bytes s2
               let b6 ←
-                alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                  row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                  core.cmp.PartialEqU8 s4
+                  contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -10926,17 +11008,18 @@ def contracts.nominal.validation.bound_row_contract
                   let b8 ← alloc.vec.Vec.is_empty Global row.output
                   if b8
                   then
-                    let s2 ← types.EffSet.as_slice row.effects
+                    let s5 ← types.EffSet.as_slice row.effects
                     Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                      types.EffId.Insts.CoreCmpPartialEqEffId s2
+                      types.EffId.Insts.CoreCmpPartialEqEffId s5
                       (Array.make 1#usize [ contracts.TEST_SEND ])
                   else ok false
                 else ok false
               else ok false
           else
+            let s4 ← core.str.Str.as_bytes s2
             let b5 ←
-              alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+              Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
+                s4 contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
             if b5
             then
               let b6 ←
@@ -10948,17 +11031,21 @@ def contracts.nominal.validation.bound_row_contract
                 let b7 ← alloc.vec.Vec.is_empty Global row.output
                 if b7
                 then
-                  let s2 ← types.EffSet.as_slice row.effects
+                  let s5 ← types.EffSet.as_slice row.effects
                   Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                    types.EffId.Insts.CoreCmpPartialEqEffId s2
+                    types.EffId.Insts.CoreCmpPartialEqEffId s5
                     (Array.make 1#usize [ contracts.TEST_SEND ])
                 else ok false
               else ok false
             else ok false
       else
+        let s1 ←
+          alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
+            row.adapter_identity
+        let s2 ← core.str.Str.as_bytes s1
         let b3 ←
-          alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-            row.adapter_identity contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY
+          Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 s2
+            contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
         if b3
         then
           let b4 ←
@@ -10970,17 +11057,19 @@ def contracts.nominal.validation.bound_row_contract
             let b5 ← alloc.vec.Vec.is_empty Global row.output
             if b5
             then
-              let s1 ← types.EffSet.as_slice row.effects
+              let s3 ← types.EffSet.as_slice row.effects
               let b6 ←
                 Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                  types.EffId.Insts.CoreCmpPartialEqEffId s1
+                  types.EffId.Insts.CoreCmpPartialEqEffId s3
                   (Array.make 1#usize [ contracts.TEST_CODE_EXPORT ])
               if b6
               then ok true
               else
+                let s4 ← core.str.Str.as_bytes s1
                 let b7 ←
-                  alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                    row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                  Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                    core.cmp.PartialEqU8 s4
+                    contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
                 if b7
                 then
                   let b8 ←
@@ -10992,15 +11081,17 @@ def contracts.nominal.validation.bound_row_contract
                     if b5
                     then
                       Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                        types.EffId.Insts.CoreCmpPartialEqEffId s1
+                        types.EffId.Insts.CoreCmpPartialEqEffId s3
                         (Array.make 1#usize [ contracts.TEST_SEND ])
                     else ok false
                   else ok false
                 else ok false
             else
+              let s3 ← core.str.Str.as_bytes s1
               let b6 ←
-                alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                  row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+                Shared0Slice.Insts.CoreCmpPartialEqArray.eq
+                  core.cmp.PartialEqU8 s3
+                  contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
               if b6
               then
                 let b7 ←
@@ -11011,17 +11102,18 @@ def contracts.nominal.validation.bound_row_contract
                 then
                   if b5
                   then
-                    let s1 ← types.EffSet.as_slice row.effects
+                    let s4 ← types.EffSet.as_slice row.effects
                     Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                      types.EffId.Insts.CoreCmpPartialEqEffId s1
+                      types.EffId.Insts.CoreCmpPartialEqEffId s4
                       (Array.make 1#usize [ contracts.TEST_SEND ])
                   else ok false
                 else ok false
               else ok false
           else
+            let s3 ← core.str.Str.as_bytes s1
             let b5 ←
-              alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-                row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+              Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8
+                s3 contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
             if b5
             then
               let b6 ←
@@ -11033,17 +11125,18 @@ def contracts.nominal.validation.bound_row_contract
                 let b7 ← alloc.vec.Vec.is_empty Global row.output
                 if b7
                 then
-                  let s1 ← types.EffSet.as_slice row.effects
+                  let s4 ← types.EffSet.as_slice row.effects
                   Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                    types.EffId.Insts.CoreCmpPartialEqEffId s1
+                    types.EffId.Insts.CoreCmpPartialEqEffId s4
                     (Array.make 1#usize [ contracts.TEST_SEND ])
                 else ok false
               else ok false
             else ok false
         else
+          let s3 ← core.str.Str.as_bytes s1
           let b4 ←
-            alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq
-              row.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+            Shared0Slice.Insts.CoreCmpPartialEqArray.eq core.cmp.PartialEqU8 s3
+              contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
           if b4
           then
             let b5 ←
@@ -11055,9 +11148,9 @@ def contracts.nominal.validation.bound_row_contract
               let b6 ← alloc.vec.Vec.is_empty Global row.output
               if b6
               then
-                let s1 ← types.EffSet.as_slice row.effects
+                let s4 ← types.EffSet.as_slice row.effects
                 Shared0Slice.Insts.CoreCmpPartialEqArray.eq
-                  types.EffId.Insts.CoreCmpPartialEqEffId s1
+                  types.EffId.Insts.CoreCmpPartialEqEffId s4
                   (Array.make 1#usize [ contracts.TEST_SEND ])
               else ok false
             else ok false
@@ -12038,7 +12131,7 @@ def contracts.nominal.schemes.valid_emit_scheme
   else ok false
 
 /-- [noble_kernel::contracts::nominal::validation::bound_definition_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 559:0-591:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 560:0-592:1 -/
 def contracts.nominal.validation.bound_definition_matches
   (env : contracts.Env) (index : Std.Usize) (slot : Std.U32)
   (effect : types.EffId) :
@@ -12981,7 +13074,7 @@ def contracts.nominal.schemes.same_scheme
   else ok false
 
 /-- [noble_kernel::contracts::nominal::validation::declared_definition_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 533:0-549:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 534:0-550:1 -/
 def contracts.nominal.validation.declared_definition_matches
   (env : contracts.Env) (index : Std.Usize) (kind : contracts.Behavior)
   (id : types.NominalTypeId) :
@@ -13201,7 +13294,7 @@ def contracts.nominal.schemes.expected_generic_scheme
   | contracts.Behavior.NamedBehavior => ok none
 
 /-- [noble_kernel::contracts::nominal::validation::generic_definition_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 511:0-527:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 512:0-528:1 -/
 def contracts.nominal.validation.generic_definition_matches
   (env : contracts.Env) (index : Std.Usize) (kind : contracts.Behavior)
   (id : types.NominalTypeId) :
@@ -13234,7 +13327,7 @@ def contracts.nominal.validation.generic_definition_matches
         contracts.nominal.schemes.same_scheme s1 expected
 
 /-- [noble_kernel::contracts::nominal::validation::bound_operation]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 447:0-505:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 448:0-506:1 -/
 def contracts.nominal.validation.bound_operation
   (kind : contracts.Behavior) : Result (Option (Std.U32 × types.EffId)) := do
   match kind with
@@ -13293,7 +13386,7 @@ def contracts.nominal.validation.bound_operation
   | contracts.Behavior.NamedBehavior => ok none
 
 /-- [noble_kernel::contracts::nominal::validation::generic_operation_id]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 371:0-427:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 372:0-428:1 -/
 def contracts.nominal.validation.generic_operation_id
   (kind : contracts.Behavior) : Result (Option types.NominalTypeId) := do
   match kind with
@@ -13348,7 +13441,7 @@ def contracts.nominal.validation.generic_operation_id
   | contracts.Behavior.NamedBehavior => ok none
 
 /-- [noble_kernel::contracts::nominal::validation::operation_identity_slot]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 338:0-357:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 339:0-358:1 -/
 def contracts.nominal.validation.operation_identity_slot
   (kind : contracts.Behavior) :
   Result (Option (types.NominalTypeId × Std.Usize))
@@ -13405,7 +13498,7 @@ def contracts.nominal.validation.operation_identity_slot
   | contracts.Behavior.NamedBehavior => ok none
 
 /-- [noble_kernel::contracts::nominal::validation::kind_matches_definition]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 429:0-444:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 430:0-445:1 -/
 def contracts.nominal.validation.kind_matches_definition
   (env : contracts.Env) (index : Std.Usize) (kind : contracts.Behavior) :
   Result Bool
@@ -13430,7 +13523,7 @@ def contracts.nominal.validation.kind_matches_definition
     contracts.nominal.validation.bound_definition_matches env index slot effect
 
 /-- [noble_kernel::contracts::nominal::validation::definitions_match]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 362:4-367:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 363:4-368:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.definitions_match_loop.body
   (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
@@ -13452,7 +13545,7 @@ def contracts.nominal.validation.definitions_match_loop.body
   else ok (done is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::definitions_match]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 362:4-367:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 363:4-368:5 -/
 @[rust_loop]
 def contracts.nominal.validation.definitions_match_loop
   (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
@@ -13465,14 +13558,14 @@ def contracts.nominal.validation.definitions_match_loop
     (index, is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::definitions_match]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 359:0-369:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 360:0-370:1 -/
 @[reducible]
 def contracts.nominal.validation.definitions_match
   (env : contracts.Env) : Result Bool := do
   contracts.nominal.validation.definitions_match_loop env 0#usize true
 
 /-- [noble_kernel::contracts::nominal::validation::operation_slot]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 324:0-336:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 325:0-337:1 -/
 def contracts.nominal.validation.operation_slot
   (kind : contracts.Behavior) (id : types.NominalTypeId) :
   Result (Option Std.Usize)
@@ -13489,7 +13582,7 @@ def contracts.nominal.validation.operation_slot
     else ok none
 
 /-- [noble_kernel::contracts::nominal::validation::declaration_counts_match]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 306:4-311:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 307:4-312:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.declaration_counts_match_loop.body
   (env : contracts.Env) (decl : contracts.NominalDecl)
@@ -13517,7 +13610,7 @@ def contracts.nominal.validation.declaration_counts_match_loop.body
   else ok (done (env.live_resource_nominals, decl, actual))
 
 /-- [noble_kernel::contracts::nominal::validation::declaration_counts_match]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 306:4-311:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 307:4-312:5 -/
 @[rust_loop]
 def contracts.nominal.validation.declaration_counts_match_loop
   (env : contracts.Env) (decl : contracts.NominalDecl)
@@ -13532,7 +13625,7 @@ def contracts.nominal.validation.declaration_counts_match_loop
     (actual, index)
 
 /-- [noble_kernel::contracts::nominal::validation::declaration_counts_match]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 303:0-322:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 304:0-323:1 -/
 def contracts.nominal.validation.declaration_counts_match
   (env : contracts.Env) (decl : contracts.NominalDecl) : Result Bool := do
   let actual := Array.repeat 5#usize 0#u8
@@ -13568,7 +13661,7 @@ def contracts.nominal.validation.declaration_counts_match
       else ok false
 
 /-- [noble_kernel::contracts::nominal::validation::counts_match]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 292:4-295:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 293:4-296:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.counts_match_loop.body
   (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
@@ -13590,7 +13683,7 @@ def contracts.nominal.validation.counts_match_loop.body
   else ok (done is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::counts_match]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 292:4-295:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 293:4-296:5 -/
 @[rust_loop]
 def contracts.nominal.validation.counts_match_loop
   (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
@@ -13603,7 +13696,7 @@ def contracts.nominal.validation.counts_match_loop
     (index, is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::counts_match]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 289:0-297:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 290:0-298:1 -/
 @[reducible]
 def contracts.nominal.validation.counts_match
   (env : contracts.Env) : Result Bool := do
@@ -14449,7 +14542,7 @@ def contracts.bootstrap.data.table
   ok (alloc.slice.Slice.into_vec y)
 
 /-- [noble_kernel::contracts::nominal::validation::fixed_definitions_match]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 280:4-285:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 281:4-286:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.fixed_definitions_match_loop.body
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -14485,7 +14578,7 @@ def contracts.nominal.validation.fixed_definitions_match_loop.body
   else ok (done is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::fixed_definitions_match]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 280:4-285:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 281:4-286:5 -/
 @[rust_loop]
 def contracts.nominal.validation.fixed_definitions_match_loop
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -14500,7 +14593,7 @@ def contracts.nominal.validation.fixed_definitions_match_loop
     (index, is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::fixed_definitions_match]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 273:0-287:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 274:0-288:1 -/
 def contracts.nominal.validation.fixed_definitions_match
   (env : contracts.Env) : Result Bool := do
   let fixed ← contracts.bootstrap.data.table
@@ -14513,18 +14606,18 @@ def contracts.nominal.validation.fixed_definitions_match
       env.kinds fixed 0#usize true
 
 /-- [noble_kernel::contracts::FIXTURE_RESOURCE]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 40:0-40:87
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 48:0-48:87
     Visibility: public -/
 @[global_simps, irreducible]
 def contracts.FIXTURE_RESOURCE : types.ResourceKind := 0#u32
 
 /-- [noble_kernel::contracts::LIVE_DISPATCH]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 37:0-37:70
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 45:0-45:70
     Visibility: public -/
 @[global_simps, irreducible] def contracts.LIVE_DISPATCH : types.EffId := 5#u32
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapter_kinds]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 260:4-269:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 261:4-270:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.bound_adapter_kinds_loop.body
   (env : contracts.Env) (has_clock : Bool) (has_code_export : Bool)
@@ -14643,7 +14736,7 @@ def contracts.nominal.validation.bound_adapter_kinds_loop.body
   else ok (done (has_clock, has_code_export, has_send))
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapter_kinds]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 260:4-269:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 261:4-270:5 -/
 @[rust_loop]
 def contracts.nominal.validation.bound_adapter_kinds_loop
   (env : contracts.Env) (has_clock : Bool) (has_code_export : Bool)
@@ -14657,7 +14750,7 @@ def contracts.nominal.validation.bound_adapter_kinds_loop
     (has_clock, has_code_export, has_send, index)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapter_kinds]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 255:0-271:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 256:0-272:1 -/
 @[reducible]
 def contracts.nominal.validation.bound_adapter_kinds
   (env : contracts.Env) : Result (Bool × Bool × Bool) := do
@@ -14665,7 +14758,7 @@ def contracts.nominal.validation.bound_adapter_kinds
     0#usize
 
 /-- [noble_kernel::contracts::nominal::validation::bootstrap_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 229:0-249:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 230:0-250:1 -/
 def contracts.nominal.validation.bootstrap_matches
   (env : contracts.Env) : Result Bool := do
   if env.declared_modules
@@ -15042,7 +15135,7 @@ def words.Scheme.Insts.CoreCloneClone : core.clone.Clone words.Scheme := {
 }
 
 /-- [noble_kernel::contracts::environment]: loop body 1:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 618:4-626:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 626:4-634:5
     Visibility: public -/
 @[rust_loop_body]
 def contracts.environment_loop0_loop0.body
@@ -15069,7 +15162,7 @@ def contracts.environment_loop0_loop0.body
   else ok (done (defs, deps))
 
 /-- [noble_kernel::contracts::environment]: loop 1:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 618:4-626:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 626:4-634:5
     Visibility: public -/
 @[rust_loop]
 def contracts.environment_loop0_loop0
@@ -15086,7 +15179,7 @@ def contracts.environment_loop0_loop0
     (defs, deps, table_index)
 
 /-- [noble_kernel::contracts::environment]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 608:4-646:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 616:4-654:1
     Visibility: public -/
 @[rust_loop_body]
 def contracts.environment_loop0.body
@@ -15149,7 +15242,7 @@ def contracts.environment_loop0.body
       }))
 
 /-- [noble_kernel::contracts::environment]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 608:4-646:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 616:4-654:1
     Visibility: public -/
 @[rust_loop]
 def contracts.environment_loop0
@@ -15166,7 +15259,7 @@ def contracts.environment_loop0
     (kinds, index)
 
 /-- [noble_kernel::contracts::environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 602:0-646:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 610:0-654:1
     Visibility: public -/
 def contracts.environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -15221,7 +15314,7 @@ def P.Insts.CoreOpsFunctionFnMutTupleVecDefinition : core.ops.function.FnMut
 }
 
 /-- [noble_kernel::contracts::text_cursor_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 654:0-695:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 662:0-703:1
     Visibility: public -/
 def contracts.text_cursor_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -15354,7 +15447,7 @@ def contracts.text_cursor_environment
       contracts.Env (core.convert.FromSame shapes.Defect) residual
 
 /-- [noble_kernel::contracts::calculator_environment]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 856:4-867:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 864:4-875:1
     Visibility: public -/
 @[rust_loop_body]
 def contracts.calculator_environment_loop.body
@@ -15436,7 +15529,7 @@ def contracts.calculator_environment_loop.body
       ok (done r1)
 
 /-- [noble_kernel::contracts::calculator_environment]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 856:4-867:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 864:4-875:1
     Visibility: public -/
 @[rust_loop]
 def contracts.calculator_environment_loop
@@ -15460,7 +15553,7 @@ def contracts.calculator_environment_loop
     (iter, v, v1)
 
 /-- [noble_kernel::contracts::calculator_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 776:0-867:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 784:0-875:1
     Visibility: public -/
 def contracts.calculator_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -15758,7 +15851,7 @@ def contracts.nominal.validation.calculator_prefix_matches
   | core.result.Result.Err _ => ok false
 
 /-- [noble_kernel::contracts::declared_text_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 876:0-896:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 884:0-904:1
     Visibility: public -/
 def contracts.declared_text_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do
@@ -19451,7 +19544,7 @@ def acceptance.preflight.validate_nominals
   | core.result.Result.Err _ => ok r
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::has_checked_i64]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 405:4-407:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 413:4-415:5
     Visibility: public -/
 def contracts.Env.has_checked_i64 (self : contracts.Env) : Result Bool := do
   let s := alloc.vec.Vec.deref self.kinds
@@ -19459,7 +19552,7 @@ def contracts.Env.has_checked_i64 (self : contracts.Env) : Result Bool := do
     contracts.Behavior.CheckedI64AddBehavior
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::ambient_test_emit_visible]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 391:4-401:5 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 399:4-409:5 -/
 def contracts.Env.ambient_test_emit_visible
   (self : contracts.Env) : Result Bool := do
   if self.text_cursor
@@ -38307,7 +38400,7 @@ def contracts.nominal.register_generic_variant
           contracts.NominalError.InvalidRepresentation)
 
 /-- [noble_kernel::contracts::nominal::bound_adapter]:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 437:0-449:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 438:0-450:1 -/
 def contracts.nominal.bound_adapter
   (definition : contracts.Definition) (row : contracts.BoundEmitRegistration) :
   Result contracts.BoundAdapter
@@ -38323,7 +38416,7 @@ def contracts.nominal.bound_adapter
     }
 
 /-- [noble_kernel::contracts::nominal::checked_bound_registration]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 412:4-419:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 413:4-420:1 -/
 @[rust_loop_body]
 def contracts.nominal.checked_bound_registration_loop.body
   (env : contracts.Env) (s : String) (i : Std.U32) (i1 : Std.U64)
@@ -38356,7 +38449,7 @@ def contracts.nominal.checked_bound_registration_loop.body
       }))
 
 /-- [noble_kernel::contracts::nominal::checked_bound_registration]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 412:4-419:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 413:4-420:1 -/
 @[rust_loop]
 def contracts.nominal.checked_bound_registration_loop
   (env : contracts.Env) (s : String) (i : Std.U32) (i1 : Std.U64)
@@ -38371,7 +38464,7 @@ def contracts.nominal.checked_bound_registration_loop
     index
 
 /-- [noble_kernel::contracts::nominal::checked_bound_registration]:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 399:0-419:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 400:0-420:1 -/
 def contracts.nominal.checked_bound_registration
   (env : contracts.Env) (registration : contracts.BoundEmitRegistration) :
   Result (core.result.Result contracts.BoundEmitRegistration
@@ -38436,7 +38529,7 @@ def contracts.nominal.register_bound_emit
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::contracts::nominal::adapter_slot_taken]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 428:4-435:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 429:4-436:1 -/
 @[rust_loop_body]
 def contracts.nominal.adapter_slot_taken_loop.body
   (env : contracts.Env) (slot : Std.U32) (index : Std.Usize) :
@@ -38455,7 +38548,7 @@ def contracts.nominal.adapter_slot_taken_loop.body
   else ok (done false)
 
 /-- [noble_kernel::contracts::nominal::adapter_slot_taken]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 428:4-435:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 429:4-436:1 -/
 @[rust_loop]
 def contracts.nominal.adapter_slot_taken_loop
   (env : contracts.Env) (slot : Std.U32) (index : Std.Usize) :
@@ -38467,7 +38560,7 @@ def contracts.nominal.adapter_slot_taken_loop
     index
 
 /-- [noble_kernel::contracts::nominal::adapter_slot_taken]:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 426:0-435:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 427:0-436:1 -/
 @[reducible]
 def contracts.nominal.adapter_slot_taken
   (env : contracts.Env) (slot : Std.U32) : Result Bool := do
@@ -38551,23 +38644,27 @@ def contracts.nominal.register_bound_clock
   else ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
 
 /-- [noble_kernel::contracts::nominal::register_bound_code_export]:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 328:0-359:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 328:0-360:1 -/
 def contracts.nominal.register_bound_code_export
   (env : contracts.Env) (registration : contracts.BoundCodeExportRegistration)
   :
   Result (core.result.Result (contracts.Env × contracts.Definition)
     contracts.NominalError)
   := do
+  let s ←
+    alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
+      registration.adapter_identity
+  let s1 ← core.str.Str.as_bytes s
   let b ←
-    alloc.string.String.Insts.CoreCmpPartialEqShared0Str.ne
-      registration.adapter_identity contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY
+    Shared0Slice.Insts.CoreCmpPartialEqArray.ne core.cmp.PartialEqU8 s1
+      contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY_BYTES
   if b
   then ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
   else
-    let s ← alloc.vec.Vec.as_slice Global registration.input
+    let s2 ← alloc.vec.Vec.as_slice Global registration.input
     let b1 ←
       Shared0Slice.Insts.CoreCmpPartialEqArray.ne
-        types.Ty.Insts.CoreCmpPartialEqTy s
+        types.Ty.Insts.CoreCmpPartialEqTy s2
         (Array.make 2#usize [ types.Ty.TextType, types.Ty.TextType ])
     if b1
     then
@@ -38576,10 +38673,10 @@ def contracts.nominal.register_bound_code_export
       let b2 ← alloc.vec.Vec.is_empty Global registration.output
       if b2
       then
-        let s1 ← types.EffSet.as_slice registration.effects
+        let s3 ← types.EffSet.as_slice registration.effects
         let b3 ←
           Shared0Slice.Insts.CoreCmpPartialEqArray.ne
-            types.EffId.Insts.CoreCmpPartialEqEffId s1
+            types.EffId.Insts.CoreCmpPartialEqEffId s3
             (Array.make 1#usize [ contracts.TEST_CODE_EXPORT ])
         if b3
         then
@@ -38593,9 +38690,9 @@ def contracts.nominal.register_bound_code_export
             ok (core.result.Result.Err
               contracts.NominalError.InvalidRepresentation)
           else
-            let s2 ← contracts.nominal.schemes.code_export_scheme
+            let s4 ← contracts.nominal.schemes.code_export_scheme
             let r ←
-              contracts.nominal.append env s2
+              contracts.nominal.append env s4
                 (contracts.Behavior.BoundCodeExportBehavior
                 registration.adapter_slot) registration.owner
             match r with
@@ -38611,10 +38708,10 @@ def contracts.nominal.register_bound_code_export
                      output := registration.output,
                      effects := registration.effects
                    } : contracts.BoundAdapter)
-              let s3 := alloc.vec.Vec.deref env1.effects
+              let s5 := alloc.vec.Vec.deref env1.effects
               let b5 ←
                 core.slice.Slice.contains
-                  types.EffId.Insts.CoreCmpPartialEqEffId s3
+                  types.EffId.Insts.CoreCmpPartialEqEffId s5
                   contracts.TEST_CODE_EXPORT
               if b5
               then
@@ -38638,22 +38735,26 @@ def contracts.nominal.register_bound_code_export
           contracts.NominalError.InvalidRepresentation)
 
 /-- [noble_kernel::contracts::nominal::register_bound_send]:
-    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 366:0-397:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal.rs', lines 367:0-398:1 -/
 def contracts.nominal.register_bound_send
   (env : contracts.Env) (registration : contracts.BoundSendRegistration) :
   Result (core.result.Result (contracts.Env × contracts.Definition)
     contracts.NominalError)
   := do
+  let s ←
+    alloc.string.String.Insts.CoreOpsDerefDerefStr.deref
+      registration.adapter_identity
+  let s1 ← core.str.Str.as_bytes s
   let b ←
-    alloc.string.String.Insts.CoreCmpPartialEqShared0Str.ne
-      registration.adapter_identity contracts.TEST_SEND_ADAPTER_IDENTITY
+    Shared0Slice.Insts.CoreCmpPartialEqArray.ne core.cmp.PartialEqU8 s1
+      contracts.TEST_SEND_ADAPTER_IDENTITY_BYTES
   if b
   then ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
   else
-    let s ← alloc.vec.Vec.as_slice Global registration.input
+    let s2 ← alloc.vec.Vec.as_slice Global registration.input
     let b1 ←
       Shared0Slice.Insts.CoreCmpPartialEqArray.ne
-        types.Ty.Insts.CoreCmpPartialEqTy s
+        types.Ty.Insts.CoreCmpPartialEqTy s2
         (Array.make 1#usize [ types.Ty.TextType ])
     if b1
     then
@@ -38662,10 +38763,10 @@ def contracts.nominal.register_bound_send
       let b2 ← alloc.vec.Vec.is_empty Global registration.output
       if b2
       then
-        let s1 ← types.EffSet.as_slice registration.effects
+        let s3 ← types.EffSet.as_slice registration.effects
         let b3 ←
           Shared0Slice.Insts.CoreCmpPartialEqArray.ne
-            types.EffId.Insts.CoreCmpPartialEqEffId s1
+            types.EffId.Insts.CoreCmpPartialEqEffId s3
             (Array.make 1#usize [ contracts.TEST_SEND ])
         if b3
         then
@@ -38679,9 +38780,9 @@ def contracts.nominal.register_bound_send
             ok (core.result.Result.Err
               contracts.NominalError.InvalidRepresentation)
           else
-            let s2 ← contracts.nominal.schemes.send_scheme
+            let s4 ← contracts.nominal.schemes.send_scheme
             let r ←
-              contracts.nominal.append env s2
+              contracts.nominal.append env s4
                 (contracts.Behavior.BoundSendBehavior
                 registration.adapter_slot) registration.owner
             match r with
@@ -38697,10 +38798,10 @@ def contracts.nominal.register_bound_send
                      output := registration.output,
                      effects := registration.effects
                    } : contracts.BoundAdapter)
-              let s3 := alloc.vec.Vec.deref env1.effects
+              let s5 := alloc.vec.Vec.deref env1.effects
               let b5 ←
                 core.slice.Slice.contains
-                  types.EffId.Insts.CoreCmpPartialEqEffId s3
+                  types.EffId.Insts.CoreCmpPartialEqEffId s5
                   contracts.TEST_SEND
               if b5
               then
@@ -38772,15 +38873,29 @@ def contracts.Definition.Insts.CoreCmpEq : core.cmp.Eq contracts.Definition
     contracts.Definition.Insts.CoreCmpEq.assert_fields_are_eq
 }
 
+/-- [noble_kernel::contracts::TEST_CODE_EXPORT_ADAPTER_IDENTITY]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 31:0-31:84
+    Visibility: public -/
+@[global_simps, irreducible]
+def contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY : Str :=
+  toStr "worker-test-code-export@1.0.0"
+
+/-- [noble_kernel::contracts::TEST_SEND_ADAPTER_IDENTITY]
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 40:0-40:70
+    Visibility: public -/
+@[global_simps, irreducible]
+def contracts.TEST_SEND_ADAPTER_IDENTITY : Str :=
+  toStr "worker-test-send@1.0.0"
+
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::SchemaId}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 43:9-43:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 51:9-51:14
     Visibility: public -/
 def contracts.SchemaId.Insts.CoreCloneClone.clone
   (self : contracts.SchemaId) : Result contracts.SchemaId := do
   ok self
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::SchemaId}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 43:9-43:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 51:9-51:14 -/
 @[reducible]
 def contracts.SchemaId.Insts.CoreCloneClone : core.clone.Clone
   contracts.SchemaId := {
@@ -38788,7 +38903,7 @@ def contracts.SchemaId.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::SchemaId}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 43:16-43:20 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 51:16-51:20 -/
 @[reducible]
 def contracts.SchemaId.Insts.CoreMarkerCopy : core.marker.Copy
   contracts.SchemaId := {
@@ -38796,7 +38911,7 @@ def contracts.SchemaId.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::SchemaId}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 43:22-43:27
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 51:22-51:27
     Visibility: public -/
 def contracts.SchemaId.Insts.CoreFmtDebug.fmt
   (self : contracts.SchemaId) (f : core.fmt.Formatter) :
@@ -38806,7 +38921,7 @@ def contracts.SchemaId.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_tuple_field1_finish f (toStr "SchemaId") dyn
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::SchemaId}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 43:22-43:27 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 51:22-51:27 -/
 @[reducible]
 def contracts.SchemaId.Insts.CoreFmtDebug : core.fmt.Debug contracts.SchemaId
   := {
@@ -38814,21 +38929,21 @@ def contracts.SchemaId.Insts.CoreFmtDebug : core.fmt.Debug contracts.SchemaId
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::StructuralPartialEq for noble_kernel::contracts::SchemaId}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 43:29-43:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 51:29-51:38 -/
 @[reducible]
 def contracts.SchemaId.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq contracts.SchemaId := {
 }
 
 /-- [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::SchemaId> for noble_kernel::contracts::SchemaId}::eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 43:29-43:38
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 51:29-51:38
     Visibility: public -/
 def contracts.SchemaId.Insts.CoreCmpPartialEqSchemaId.eq
   (self : contracts.SchemaId) (other : contracts.SchemaId) : Result Bool := do
   ok (self = other)
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::SchemaId> for noble_kernel::contracts::SchemaId}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 43:29-43:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 51:29-51:38 -/
 @[reducible]
 impl_def contracts.SchemaId.Insts.CoreCmpPartialEqSchemaId : core.cmp.PartialEq
   contracts.SchemaId contracts.SchemaId := {
@@ -38838,14 +38953,14 @@ impl_def contracts.SchemaId.Insts.CoreCmpPartialEqSchemaId : core.cmp.PartialEq
 }
 
 /-- [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::SchemaId}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 43:40-43:42
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 51:40-51:42
     Visibility: public -/
 def contracts.SchemaId.Insts.CoreCmpEq.assert_fields_are_eq
   (self : contracts.SchemaId) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::SchemaId}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 43:40-43:42 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 51:40-51:42 -/
 @[reducible]
 def contracts.SchemaId.Insts.CoreCmpEq : core.cmp.Eq contracts.SchemaId := {
   partialEqInst := contracts.SchemaId.Insts.CoreCmpPartialEqSchemaId
@@ -38874,7 +38989,7 @@ def types.NominalTypeId.Insts.CoreFmtDebug : core.fmt.Debug types.NominalTypeId
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Behavior}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:22-52:27
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 60:22-60:27
     Visibility: public -/
 def contracts.Behavior.Insts.CoreFmtDebug.fmt
   (self : contracts.Behavior) (f : core.fmt.Formatter) :
@@ -39021,7 +39136,7 @@ def contracts.Behavior.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "Named")
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:22-52:27 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 60:22-60:27 -/
 @[reducible]
 def contracts.Behavior.Insts.CoreFmtDebug : core.fmt.Debug contracts.Behavior
   := {
@@ -39029,21 +39144,21 @@ def contracts.Behavior.Insts.CoreFmtDebug : core.fmt.Debug contracts.Behavior
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::StructuralPartialEq for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:29-52:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 60:29-60:38 -/
 @[reducible]
 def contracts.Behavior.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq contracts.Behavior := {
 }
 
 /-- [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::Behavior}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:40-52:42
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 60:40-60:42
     Visibility: public -/
 def contracts.Behavior.Insts.CoreCmpEq.assert_fields_are_eq
   (self : contracts.Behavior) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:40-52:42 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 60:40-60:42 -/
 @[reducible]
 def contracts.Behavior.Insts.CoreCmpEq : core.cmp.Eq contracts.Behavior := {
   partialEqInst := contracts.Behavior.Insts.CoreCmpPartialEqBehavior
@@ -39052,7 +39167,7 @@ def contracts.Behavior.Insts.CoreCmpEq : core.cmp.Eq contracts.Behavior := {
 }
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::SchemaDecl}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 156:9-156:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 164:9-164:14
     Visibility: public -/
 def contracts.SchemaDecl.Insts.CoreCloneClone.clone
   (self : contracts.SchemaDecl) : Result contracts.SchemaDecl := do
@@ -39062,7 +39177,7 @@ def contracts.SchemaDecl.Insts.CoreCloneClone.clone
   ok { id := si, scheme := s, recursive := b }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::SchemaDecl}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 156:9-156:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 164:9-164:14 -/
 @[reducible]
 def contracts.SchemaDecl.Insts.CoreCloneClone : core.clone.Clone
   contracts.SchemaDecl := {
@@ -39625,7 +39740,7 @@ def words.Scheme.Insts.CoreFmtDebug : core.fmt.Debug words.Scheme := {
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::SchemaDecl}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 156:16-156:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 164:16-164:21
     Visibility: public -/
 def contracts.SchemaDecl.Insts.CoreFmtDebug.fmt
   (self : contracts.SchemaDecl) (f : core.fmt.Formatter) :
@@ -39638,7 +39753,7 @@ def contracts.SchemaDecl.Insts.CoreFmtDebug.fmt
     "id") dyn (toStr "scheme") dyn1 (toStr "recursive") dyn2
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::SchemaDecl}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 156:16-156:21 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 164:16-164:21 -/
 @[reducible]
 def contracts.SchemaDecl.Insts.CoreFmtDebug : core.fmt.Debug
   contracts.SchemaDecl := {
@@ -39653,7 +39768,7 @@ def types.NominalTypeId.Insts.CoreCloneClone.clone
   ok self
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::NominalDecl}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 167:9-167:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 175:9-175:14
     Visibility: public -/
 def contracts.NominalDecl.Insts.CoreCloneClone.clone
   (self : contracts.NominalDecl) : Result contracts.NominalDecl := do
@@ -39664,7 +39779,7 @@ def contracts.NominalDecl.Insts.CoreCloneClone.clone
   ok { id := nti, shape := ns, exported := b, «public» := a }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::NominalDecl}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 167:9-167:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 175:9-175:14 -/
 @[reducible]
 def contracts.NominalDecl.Insts.CoreCloneClone : core.clone.Clone
   contracts.NominalDecl := {
@@ -39680,7 +39795,7 @@ def types.NominalShape.Insts.CoreFmtDebug : core.fmt.Debug types.NominalShape
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::NominalDecl}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 167:16-167:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 175:16-175:21
     Visibility: public -/
 def contracts.NominalDecl.Insts.CoreFmtDebug.fmt
   (self : contracts.NominalDecl) (f : core.fmt.Formatter) :
@@ -39697,7 +39812,7 @@ def contracts.NominalDecl.Insts.CoreFmtDebug.fmt
     dyn3
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::NominalDecl}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 167:16-167:21 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 175:16-175:21 -/
 @[reducible]
 def contracts.NominalDecl.Insts.CoreFmtDebug : core.fmt.Debug
   contracts.NominalDecl := {
@@ -39705,7 +39820,7 @@ def contracts.NominalDecl.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::GenericVariantDecl}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 179:9-179:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 187:9-187:14
     Visibility: public -/
 def contracts.GenericVariantDecl.Insts.CoreCloneClone.clone
   (self : contracts.GenericVariantDecl) :
@@ -39718,7 +39833,7 @@ def contracts.GenericVariantDecl.Insts.CoreCloneClone.clone
   ok { id := nti, payload_params := a, exported := b, «public» := a1 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::GenericVariantDecl}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 179:9-179:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 187:9-187:14 -/
 @[reducible]
 def contracts.GenericVariantDecl.Insts.CoreCloneClone : core.clone.Clone
   contracts.GenericVariantDecl := {
@@ -39726,7 +39841,7 @@ def contracts.GenericVariantDecl.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::GenericVariantDecl}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 179:16-179:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 187:16-187:21
     Visibility: public -/
 def contracts.GenericVariantDecl.Insts.CoreFmtDebug.fmt
   (self : contracts.GenericVariantDecl) (f : core.fmt.Formatter) :
@@ -39745,7 +39860,7 @@ def contracts.GenericVariantDecl.Insts.CoreFmtDebug.fmt
     (toStr "public") dyn3
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::GenericVariantDecl}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 179:16-179:21 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 187:16-187:21 -/
 @[reducible]
 def contracts.GenericVariantDecl.Insts.CoreFmtDebug : core.fmt.Debug
   contracts.GenericVariantDecl := {
@@ -39753,14 +39868,14 @@ def contracts.GenericVariantDecl.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::NominalOps}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 188:9-188:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 196:9-196:14
     Visibility: public -/
 def contracts.NominalOps.Insts.CoreCloneClone.clone
   (self : contracts.NominalOps) : Result contracts.NominalOps := do
   ok self
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::NominalOps}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 188:9-188:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 196:9-196:14 -/
 @[reducible]
 def contracts.NominalOps.Insts.CoreCloneClone : core.clone.Clone
   contracts.NominalOps := {
@@ -39768,7 +39883,7 @@ def contracts.NominalOps.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::NominalOps}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 188:16-188:20 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 196:16-196:20 -/
 @[reducible]
 def contracts.NominalOps.Insts.CoreMarkerCopy : core.marker.Copy
   contracts.NominalOps := {
@@ -39776,7 +39891,7 @@ def contracts.NominalOps.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::NominalOps}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 188:22-188:27
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 196:22-196:27
     Visibility: public -/
 def contracts.NominalOps.Insts.CoreFmtDebug.fmt
   (self : contracts.NominalOps) (f : core.fmt.Formatter) :
@@ -39802,7 +39917,7 @@ def contracts.NominalOps.Insts.CoreFmtDebug.fmt
     (toStr "matcher") dyn4
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::NominalOps}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 188:22-188:27 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 196:22-196:27 -/
 @[reducible]
 def contracts.NominalOps.Insts.CoreFmtDebug : core.fmt.Debug
   contracts.NominalOps := {
@@ -39810,14 +39925,14 @@ def contracts.NominalOps.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::NominalError}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 197:9-197:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 205:9-205:14
     Visibility: public -/
 def contracts.NominalError.Insts.CoreCloneClone.clone
   (self : contracts.NominalError) : Result contracts.NominalError := do
   ok self
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::NominalError}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 197:9-197:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 205:9-205:14 -/
 @[reducible]
 def contracts.NominalError.Insts.CoreCloneClone : core.clone.Clone
   contracts.NominalError := {
@@ -39825,7 +39940,7 @@ def contracts.NominalError.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::NominalError}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 197:16-197:20 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 205:16-205:20 -/
 @[reducible]
 def contracts.NominalError.Insts.CoreMarkerCopy : core.marker.Copy
   contracts.NominalError := {
@@ -39833,7 +39948,7 @@ def contracts.NominalError.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::NominalError}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 197:22-197:27
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 205:22-205:27
     Visibility: public -/
 def contracts.NominalError.Insts.CoreFmtDebug.fmt
   (self : contracts.NominalError) (f : core.fmt.Formatter) :
@@ -39848,7 +39963,7 @@ def contracts.NominalError.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "TooManyDefinitions")
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::NominalError}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 197:22-197:27 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 205:22-205:27 -/
 @[reducible]
 def contracts.NominalError.Insts.CoreFmtDebug : core.fmt.Debug
   contracts.NominalError := {
@@ -39856,14 +39971,14 @@ def contracts.NominalError.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::StructuralPartialEq for noble_kernel::contracts::NominalError}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 197:29-197:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 205:29-205:38 -/
 @[reducible]
 def contracts.NominalError.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq contracts.NominalError := {
 }
 
 /-- [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::NominalError> for noble_kernel::contracts::NominalError}::eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 197:29-197:38
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 205:29-205:38
     Visibility: public -/
 def contracts.NominalError.Insts.CoreCmpPartialEqNominalError.eq
   (self : contracts.NominalError) (other : contracts.NominalError) :
@@ -39874,7 +39989,7 @@ def contracts.NominalError.Insts.CoreCmpPartialEqNominalError.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::NominalError> for noble_kernel::contracts::NominalError}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 197:29-197:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 205:29-205:38 -/
 @[reducible]
 impl_def contracts.NominalError.Insts.CoreCmpPartialEqNominalError :
   core.cmp.PartialEq contracts.NominalError contracts.NominalError := {
@@ -39884,7 +39999,7 @@ impl_def contracts.NominalError.Insts.CoreCmpPartialEqNominalError :
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::NominalError}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 197:40-197:42 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 205:40-205:42 -/
 @[reducible]
 impl_def contracts.NominalError.Insts.CoreCmpEq : core.cmp.Eq
   contracts.NominalError := {
@@ -39894,7 +40009,7 @@ impl_def contracts.NominalError.Insts.CoreCmpEq : core.cmp.Eq
 }
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::BoundAdapter}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 205:9-205:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 213:9-213:14
     Visibility: public -/
 def contracts.BoundAdapter.Insts.CoreCloneClone.clone
   (self : contracts.BoundAdapter) : Result contracts.BoundAdapter := do
@@ -39916,7 +40031,7 @@ def contracts.BoundAdapter.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::BoundAdapter}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 205:9-205:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 213:9-213:14 -/
 @[reducible]
 def contracts.BoundAdapter.Insts.CoreCloneClone : core.clone.Clone
   contracts.BoundAdapter := {
@@ -39931,7 +40046,7 @@ def types.EffSet.Insts.CoreFmtDebug : core.fmt.Debug types.EffSet := {
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::BoundAdapter}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 205:16-205:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 213:16-213:21
     Visibility: public -/
 def contracts.BoundAdapter.Insts.CoreFmtDebug.fmt
   (self : contracts.BoundAdapter) (f : core.fmt.Formatter) :
@@ -39960,7 +40075,7 @@ def contracts.BoundAdapter.Insts.CoreFmtDebug.fmt
     values
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::BoundAdapter}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 205:16-205:21 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 213:16-213:21 -/
 @[reducible]
 def contracts.BoundAdapter.Insts.CoreFmtDebug : core.fmt.Debug
   contracts.BoundAdapter := {
@@ -39968,14 +40083,14 @@ def contracts.BoundAdapter.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::ClockDecision}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 256:9-256:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 264:9-264:14
     Visibility: public -/
 def contracts.ClockDecision.Insts.CoreCloneClone.clone
   (self : contracts.ClockDecision) : Result contracts.ClockDecision := do
   ok self
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::ClockDecision}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 256:9-256:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 264:9-264:14 -/
 @[reducible]
 def contracts.ClockDecision.Insts.CoreCloneClone : core.clone.Clone
   contracts.ClockDecision := {
@@ -39983,7 +40098,7 @@ def contracts.ClockDecision.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::ClockDecision}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 256:16-256:20 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 264:16-264:20 -/
 @[reducible]
 def contracts.ClockDecision.Insts.CoreMarkerCopy : core.marker.Copy
   contracts.ClockDecision := {
@@ -39991,7 +40106,7 @@ def contracts.ClockDecision.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::ClockDecision}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 256:22-256:27
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 264:22-264:27
     Visibility: public -/
 def contracts.ClockDecision.Insts.CoreFmtDebug.fmt
   (self : contracts.ClockDecision) (f : core.fmt.Formatter) :
@@ -40009,7 +40124,7 @@ def contracts.ClockDecision.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "UnexpectedOperation")
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::ClockDecision}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 256:22-256:27 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 264:22-264:27 -/
 @[reducible]
 def contracts.ClockDecision.Insts.CoreFmtDebug : core.fmt.Debug
   contracts.ClockDecision := {
@@ -40017,14 +40132,14 @@ def contracts.ClockDecision.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::StructuralPartialEq for noble_kernel::contracts::ClockDecision}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 256:29-256:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 264:29-264:38 -/
 @[reducible]
 def contracts.ClockDecision.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq contracts.ClockDecision := {
 }
 
 /-- [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::ClockDecision> for noble_kernel::contracts::ClockDecision}::eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 256:29-256:38
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 264:29-264:38
     Visibility: public -/
 def contracts.ClockDecision.Insts.CoreCmpPartialEqClockDecision.eq
   (self : contracts.ClockDecision) (other : contracts.ClockDecision) :
@@ -40048,7 +40163,7 @@ def contracts.ClockDecision.Insts.CoreCmpPartialEqClockDecision.eq
   else ok false
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::ClockDecision> for noble_kernel::contracts::ClockDecision}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 256:29-256:38 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 264:29-264:38 -/
 @[reducible]
 impl_def contracts.ClockDecision.Insts.CoreCmpPartialEqClockDecision :
   core.cmp.PartialEq contracts.ClockDecision contracts.ClockDecision := {
@@ -40058,14 +40173,14 @@ impl_def contracts.ClockDecision.Insts.CoreCmpPartialEqClockDecision :
 }
 
 /-- [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::ClockDecision}::assert_fields_are_eq]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 256:40-256:42
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 264:40-264:42
     Visibility: public -/
 def contracts.ClockDecision.Insts.CoreCmpEq.assert_fields_are_eq
   (self : contracts.ClockDecision) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::Eq for noble_kernel::contracts::ClockDecision}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 256:40-256:42 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 264:40-264:42 -/
 @[reducible]
 def contracts.ClockDecision.Insts.CoreCmpEq : core.cmp.Eq
   contracts.ClockDecision := {
@@ -40075,14 +40190,14 @@ def contracts.ClockDecision.Insts.CoreCmpEq : core.cmp.Eq
 }
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::ClockPlan<'a>}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 265:9-265:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 273:9-273:14
     Visibility: public -/
 def contracts.ClockPlan.Insts.CoreCloneClone.clone
   (self : contracts.ClockPlan) : Result contracts.ClockPlan := do
   ok self
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::ClockPlan<'a>}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 265:9-265:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 273:9-273:14 -/
 @[reducible]
 def contracts.ClockPlan.Insts.CoreCloneClone : core.clone.Clone
   contracts.ClockPlan := {
@@ -40090,7 +40205,7 @@ def contracts.ClockPlan.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::marker::Copy for noble_kernel::contracts::ClockPlan<'a>}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 265:16-265:20 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 273:16-273:20 -/
 @[reducible]
 def contracts.ClockPlan.Insts.CoreMarkerCopy : core.marker.Copy
   contracts.ClockPlan := {
@@ -40098,7 +40213,7 @@ def contracts.ClockPlan.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::contracts::decide_clock]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 300:0-326:1 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 308:0-334:1 -/
 def contracts.decide_clock
   (plan : contracts.ClockPlan) (requested : Str) (index : Std.Usize) :
   Result (core.result.Result contracts.ClockDecision contracts.NominalError)
@@ -40155,7 +40270,7 @@ def contracts.decide_clock
   else ok (core.result.Result.Err contracts.NominalError.InvalidRepresentation)
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::ClockPlan<'_0>}::decide]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 283:4-285:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 291:4-293:5
     Visibility: public -/
 def contracts.ClockPlan.decide
   (self : contracts.ClockPlan) (requested : Str) (index : Std.Usize) :
@@ -40180,7 +40295,7 @@ def types.ResourceKind.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}::clone]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:9-330:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 338:9-338:14
     Visibility: public -/
 def contracts.Env.Insts.CoreCloneClone.clone
   (self : contracts.Env) : Result contracts.Env := do
@@ -40244,14 +40359,14 @@ def contracts.Env.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:9-330:14 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 338:9-338:14 -/
 @[reducible]
 def contracts.Env.Insts.CoreCloneClone : core.clone.Clone contracts.Env := {
   clone := contracts.Env.Insts.CoreCloneClone.clone
 }
 
 /-- [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Env}::fmt]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:16-330:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 338:16-338:21
     Visibility: public -/
 def contracts.Env.Insts.CoreFmtDebug.fmt
   (self : contracts.Env) (f : core.fmt.Formatter) :
@@ -40316,14 +40431,14 @@ def contracts.Env.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "Env") s values
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:16-330:21 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 338:16-338:21 -/
 @[reducible]
 def contracts.Env.Insts.CoreFmtDebug : core.fmt.Debug contracts.Env := {
   fmt := contracts.Env.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_kernel::contracts::{impl core::default::Default for noble_kernel::contracts::Env}::default]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:23-330:30
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 338:23-338:30
     Visibility: public -/
 def contracts.Env.Insts.CoreDefaultDefault.default : Result contracts.Env := do
   let v ← alloc.vec.Vec.Insts.CoreDefaultDefault.default words.Scheme
@@ -40367,7 +40482,7 @@ def contracts.Env.Insts.CoreDefaultDefault.default : Result contracts.Env := do
     }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::default::Default for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:23-330:30 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 338:23-338:30 -/
 @[reducible]
 def contracts.Env.Insts.CoreDefaultDefault : core.default.Default contracts.Env
   := {
@@ -40375,7 +40490,7 @@ def contracts.Env.Insts.CoreDefaultDefault : core.default.Default contracts.Env
 }
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::enable_live_slots]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 375:4-382:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 383:4-390:5
     Visibility: public -/
 def contracts.Env.enable_live_slots
   (self : contracts.Env) : Result contracts.Env := do
@@ -40386,14 +40501,14 @@ def contracts.Env.enable_live_slots
     ok { self with live_slots := true, declared_modules := true, effects := v }
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::enable_live_test_hosts]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 386:4-389:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 394:4-397:5
     Visibility: public -/
 def contracts.Env.enable_live_test_hosts
   (self : contracts.Env) : Result contracts.Env := do
   ok { self with live_test_hosts := true }
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::register_live_resource]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 411:4-413:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 419:4-421:5
     Visibility: public -/
 def contracts.Env.register_live_resource
   (self : contracts.Env) (decl : contracts.NominalDecl) :
@@ -40402,7 +40517,7 @@ def contracts.Env.register_live_resource
   contracts.live.register_resource self decl
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_instance]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 441:4-463:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 449:4-471:5
     Visibility: public -/
 def contracts.Env.generic_instance
   (self : contracts.Env) (id : types.NominalTypeId)
@@ -40474,7 +40589,7 @@ def contracts.Env.generic_instance
       types.Ty residual
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_instance_matches]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 467:4-479:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 475:4-487:5
     Visibility: public -/
 def contracts.Env.generic_instance_matches
   (self : contracts.Env) (ty : types.Ty) (id : types.NominalTypeId) :
@@ -40510,7 +40625,7 @@ def contracts.Env.generic_instance_matches
       else ok false
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::valid_generic_instance]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 482:4-487:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 490:4-495:5
     Visibility: public -/
 def contracts.Env.valid_generic_instance
   (self : contracts.Env) (ty : types.Ty) : Result Bool := do
@@ -40534,7 +40649,7 @@ def contracts.Env.valid_generic_instance
     contracts.Env.generic_instance_matches self ty id
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_nominal]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 491:4-497:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 499:4-505:5
     Visibility: public -/
 def contracts.Env.declare_nominal
   (self : contracts.Env) (decl : contracts.NominalDecl) :
@@ -40551,7 +40666,7 @@ def contracts.Env.declare_nominal
   else contracts.nominal.register self decl
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_generic_variant]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 501:4-506:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 509:4-514:5
     Visibility: public -/
 def contracts.Env.declare_generic_variant
   (self : contracts.Env) (decl : contracts.GenericVariantDecl) :
@@ -40561,7 +40676,7 @@ def contracts.Env.declare_generic_variant
   contracts.nominal.register_generic_variant self decl
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_emit]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 511:4-516:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 519:4-524:5
     Visibility: public -/
 def contracts.Env.declare_bound_emit
   (self : contracts.Env) (registration : contracts.BoundEmitRegistration) :
@@ -40571,7 +40686,7 @@ def contracts.Env.declare_bound_emit
   contracts.nominal.register_bound_emit self registration
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_clock]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 520:4-525:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 528:4-533:5
     Visibility: public -/
 def contracts.Env.declare_bound_clock
   (self : contracts.Env) (registration : contracts.BoundClockRegistration) :
@@ -40581,7 +40696,7 @@ def contracts.Env.declare_bound_clock
   contracts.nominal.register_bound_clock self registration
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_code_export]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 529:4-534:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 537:4-542:5
     Visibility: public -/
 def contracts.Env.declare_bound_code_export
   (self : contracts.Env) (registration : contracts.BoundCodeExportRegistration)
@@ -40592,7 +40707,7 @@ def contracts.Env.declare_bound_code_export
   contracts.nominal.register_bound_code_export self registration
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_send]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 538:4-543:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 546:4-551:5
     Visibility: public -/
 def contracts.Env.declare_bound_send
   (self : contracts.Env) (registration : contracts.BoundSendRegistration) :
@@ -40602,7 +40717,7 @@ def contracts.Env.declare_bound_send
   contracts.nominal.register_bound_send self registration
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::len]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 574:4-576:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 582:4-584:5
     Visibility: public -/
 def contracts.Env.len (self : contracts.Env) : Result (Option Std.U64) := do
   let i := alloc.vec.Vec.len self.defs
@@ -40610,14 +40725,14 @@ def contracts.Env.len (self : contracts.Env) : Result (Option Std.U64) := do
   core.result.Result.ok r
 
 /-- [noble_kernel::contracts::{noble_kernel::contracts::Env}::is_empty]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 588:4-590:5
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 596:4-598:5
     Visibility: public -/
 def contracts.Env.is_empty (self : contracts.Env) : Result Bool := do
   let i := alloc.vec.Vec.len self.defs
   ok (i = 0#usize)
 
 /-- [noble_kernel::contracts::checked_i64_environment::unary]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 732:4-742:5 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 740:4-750:5 -/
 def contracts.checked_i64_environment.unary
   (tail : shapes.Pattern) (output : shapes.Pattern) : Result words.Scheme := do
   let y ←
@@ -40643,7 +40758,7 @@ def contracts.checked_i64_environment.unary
     }
 
 /-- [noble_kernel::contracts::checked_i64_environment::binary]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 717:4-731:5 -/
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 725:4-739:5 -/
 def contracts.checked_i64_environment.binary
   (tail : shapes.Pattern) (output : shapes.Pattern) : Result words.Scheme := do
   let y ←
@@ -40670,7 +40785,7 @@ def contracts.checked_i64_environment.binary
     }
 
 /-- [noble_kernel::contracts::checked_i64_environment]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 757:4-764:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 765:4-772:1
     Visibility: public -/
 @[rust_loop_body]
 def contracts.checked_i64_environment_loop.body
@@ -40732,7 +40847,7 @@ def contracts.checked_i64_environment_loop.body
       ok (done r1)
 
 /-- [noble_kernel::contracts::checked_i64_environment]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 757:4-764:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 765:4-772:1
     Visibility: public -/
 @[rust_loop]
 def contracts.checked_i64_environment_loop
@@ -40757,7 +40872,7 @@ def contracts.checked_i64_environment_loop
     (iter, v, v1, v8)
 
 /-- [noble_kernel::contracts::checked_i64_environment]:
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 703:0-764:1
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 711:0-772:1
     Visibility: public -/
 def contracts.checked_i64_environment
   : Result (core.result.Result contracts.Env shapes.Defect) := do

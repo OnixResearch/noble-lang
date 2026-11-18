@@ -622,7 +622,7 @@ impl_def noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition :
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Behavior> for noble_kernel::contracts::Behavior}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 52:29-52:38
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 60:29-60:38
     Name pattern: [core::cmp::PartialEq<noble_kernel::contracts::Behavior, noble_kernel::contracts::Behavior>] -/
 @[reducible, rust_trait_impl
   "core::cmp::PartialEq<noble_kernel::contracts::Behavior, noble_kernel::contracts::Behavior>"]
@@ -635,7 +635,7 @@ impl_def noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior :
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::GenericVariantDecl}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 179:9-179:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 187:9-187:14
     Name pattern: [core::clone::Clone<noble_kernel::contracts::GenericVariantDecl>] -/
 @[reducible, rust_trait_impl
   "core::clone::Clone<noble_kernel::contracts::GenericVariantDecl>"]
@@ -647,7 +647,7 @@ impl_def noble_kernel.contracts.GenericVariantDecl.Insts.CoreCloneClone :
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:9-330:14
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 338:9-338:14
     Name pattern: [core::clone::Clone<noble_kernel::contracts::Env>] -/
 @[reducible, rust_trait_impl
   "core::clone::Clone<noble_kernel::contracts::Env>"]
@@ -659,7 +659,7 @@ impl_def noble_kernel.contracts.Env.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:16-330:21
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 338:16-338:21
     Name pattern: [core::fmt::Debug<noble_kernel::contracts::Env>] -/
 @[reducible, rust_trait_impl "core::fmt::Debug<noble_kernel::contracts::Env>"]
 def noble_kernel.contracts.Env.Insts.CoreFmtDebug : core.fmt.Debug
@@ -668,7 +668,7 @@ def noble_kernel.contracts.Env.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_kernel::contracts::{impl core::default::Default for noble_kernel::contracts::Env}]
-    Source: 'crates/noble-kernel/src/contracts.rs', lines 330:23-330:30
+    Source: 'crates/noble-kernel/src/contracts.rs', lines 338:23-338:30
     Name pattern: [core::default::Default<noble_kernel::contracts::Env>] -/
 @[reducible, rust_trait_impl
   "core::default::Default<noble_kernel::contracts::Env>"]
