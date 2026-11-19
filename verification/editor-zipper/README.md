@@ -102,10 +102,12 @@ either verdict leaves the layer default-off.
 
 ## Method
 
-The harness is `crates/noble-cli/tests/editor_zipper/measurement.rs`, declared from the existing
+The harness is `crates/noble-cli/tests/editor_zipper/measurement.rs` plus its
+`measurement/{corpus,paired,receipt,transport,walk}.rs` modules, declared from the existing
 `crates/noble-cli/tests/editor.rs` target with one `#[path]` module line, so no test target is
 added. It includes `crates/noble-cli/src/core/editor/zipper.rs` with `#[path]`: the code measured
-is byte-identical to the module the `noble-cli` test build declares.
+is byte-identical to the module the `noble-cli` test build compiles, and every file of both sides
+stays inside the repository's 300-line file budget.
 
 Every cell is a pair — the document the cursor produces and the corpus's independent JSON edit:
 
@@ -131,11 +133,11 @@ comparison would fail.
 
 ## Receipt summary
 
-`receipt-dcbeb019.json` was produced from source commit `dcbeb019` on clean tree `659266ae`,
-with corpus sha256 `c17a922f4baa3604bd9fb890460791d82494b75e104bd86cd154f07cd00ba515` and
-criteria sha256 `59466b4d07456dce…` (both recorded in full in the receipt, together with the
-sha256 of the three implementation files, the toolchain versions and the command that ran). Its
-`summary` block counts the cells:
+`receipt-34035390.json` was produced from source commit `34035390` on a clean tree, with corpus
+sha256 `c17a922f4baa3604bd9fb890460791d82494b75e104bd86cd154f07cd00ba515` and criteria sha256
+`59466b4d07456dce…` (both recorded in full in the receipt, together with the sha256 of the
+implementation files, the toolchain versions and the command that ran). Its `summary` block
+counts the cells:
 
 | Criterion | Cells | Result |
 |---|---|---|
@@ -156,20 +158,21 @@ including a whole-tree replacement of the underflowing word and of the empty quo
 cover added nodes, changed nodes, nested quotations and whole-tree replacement.
 
 The retained receipt records the command that produced it: the compiled `editor` test binary
-invoked with `--exact zipper::editor_zipper_corpus_measurement` and
-`NOBLE_EDITOR_ZIPPER_RECEIPT` set, because the build environment used here clears unknown
-environment variables. `cargo test` with the same variable is the documented recipe below and
-runs exactly the same assertions.
+invoked with `--exact zipper::walk::cursor_corpus_cells` and `NOBLE_EDITOR_ZIPPER_RECEIPT` set,
+because the build environment used here clears unknown environment variables. `cargo test` with
+the same variable is the documented recipe below and runs exactly the same assertions.
+`receipt-dcbeb019.json` is retained unchanged as the earlier file layout's evidence; it measures
+the same corpus with the same counts.
 
 ## Reproducing
 
 From the repository root, with the repository's pinned toolchain:
 
 ```sh
-cargo test -p noble-cli --test editor
+cargo test -p noble-cli --test editor -- cursor_corpus_cells
 # the same assertions plus the receipt, which refuses a dirty tree:
 NOBLE_EDITOR_ZIPPER_RECEIPT=<absolute path outside the repository> \
-  cargo test -p noble-cli --test editor -- editor_zipper
+  cargo test -p noble-cli --test editor -- cursor_corpus_cells
 ```
 
 The receipt is written to the path given, outside the repository; it is copied in as
