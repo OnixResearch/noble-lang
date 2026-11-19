@@ -552,6 +552,11 @@
 #   cargo graph 026d74e820ef4ce6949d8a53a2f7a5e829b2f984ba2fc6cf8f36f0f946b7ac5e; collector policy 49fb49992c5790e26ab6572f4a2380078416c2bdefd2c55f571b7bb759c73395.
 #   23567 production paths = 11717 body/open + 7500 generated + 4350 structural;
 #   15968 test-only paths; 92 macro origins. Earlier header counts are historical.
+# Renewed renew after keeping the #142 receipt metadata out of the hermetic test run from a complete 110-unit selected collection:
+#   IR 3b7ec9b3ea21f874e5bcf834f93d5f1d82dfb785752501f77261a3f7bc17f563; coverage 6554c3ca3ddaf88e6eb69f2a82fcf0bc7fcf46fb3674142e6911994e46923106;
+#   cargo graph 026d74e820ef4ce6949d8a53a2f7a5e829b2f984ba2fc6cf8f36f0f946b7ac5e; collector policy 49fb49992c5790e26ab6572f4a2380078416c2bdefd2c55f571b7bb759c73395.
+#   23567 production paths = 11717 body/open + 7500 generated + 4350 structural;
+#   15968 test-only paths; 92 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -32329,7 +32334,7 @@ let
     "noble-cli::closure@crates/noble-cli/tests/editor_zipper/measurement/paired.rs:7964:7971",
     "noble-cli::closure@crates/noble-cli/tests/editor_zipper/measurement/transport.rs:3303:3312",
     "noble-cli::closure@crates/noble-cli/tests/editor_zipper/measurement/transport.rs:3793:3801",
-    "noble-cli::closure@crates/noble-cli/tests/editor_zipper/measurement/walk.rs:886:2092",
+    "noble-cli::closure@crates/noble-cli/tests/editor_zipper/measurement/walk.rs:886:2325",
     "noble-cli::closure@crates/noble-cli/tests/live_repl.rs:100213:102307",
     "noble-cli::closure@crates/noble-cli/tests/live_repl.rs:102952:103201",
     "noble-cli::closure@crates/noble-cli/tests/live_repl.rs:103211:103425",

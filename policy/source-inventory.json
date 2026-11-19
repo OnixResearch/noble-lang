@@ -196809,7 +196809,7 @@
     "noble-cli::closure@crates/noble-cli/tests/editor_zipper/measurement/paired.rs:7964:7971",
     "noble-cli::closure@crates/noble-cli/tests/editor_zipper/measurement/transport.rs:3303:3312",
     "noble-cli::closure@crates/noble-cli/tests/editor_zipper/measurement/transport.rs:3793:3801",
-    "noble-cli::closure@crates/noble-cli/tests/editor_zipper/measurement/walk.rs:886:2092",
+    "noble-cli::closure@crates/noble-cli/tests/editor_zipper/measurement/walk.rs:886:2325",
     "noble-cli::closure@crates/noble-cli/tests/live_repl.rs:100213:102307",
     "noble-cli::closure@crates/noble-cli/tests/live_repl.rs:102952:103201",
     "noble-cli::closure@crates/noble-cli/tests/live_repl.rs:103211:103425",
