@@ -410,7 +410,7 @@ fn guard_fill_depth(path: &[u32], fill: &Fill) -> Result<(), Refusal> {
     Ok(())
 }
 
-fn replace(nodes: &mut Vec<Node>, path: &[u32], replacement: Node) -> Result<(), Refusal> {
+fn replace(nodes: &mut [Node], path: &[u32], replacement: Node) -> Result<(), Refusal> {
     let Some((index, rest)) = path.split_first() else {
         return Err(Refusal::new(
             "path-not-found",
@@ -430,7 +430,7 @@ fn replace(nodes: &mut Vec<Node>, path: &[u32], replacement: Node) -> Result<(),
         return Ok(());
     }
     match slot {
-        Node::Quotation(children) => replace(children, rest, replacement),
+        Node::Quotation(children) => replace(children.as_mut_slice(), rest, replacement),
         _ => Err(Refusal::new(
             "path-not-found",
             "the node path descends through a node that is not a quotation",
