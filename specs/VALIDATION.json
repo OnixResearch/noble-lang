@@ -1549,7 +1549,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "5e03a7ab915aca29a4ffaa56937daaef4c3795742290ca23a17ff062248c6a81"
+      "sha256": "09087cbb13e17473c39e89c667e4377352c9bccaee9c13b6c3b9bf9101b558c1"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1773,7 +1773,7 @@
     },
     {
       "file": "verification/aeneas-re-extraction/README.md",
-      "sha256": "27fd57555509f323bac9049555dcbdc381c12dc84d3c7ba9cc140c835731b23a"
+      "sha256": "d48e59d4af166be5718a0c102ecba2cb974a9f419e240cb8eafe941304b39739"
     },
     {
       "file": "verification/allocator-admission/decision.md",
@@ -1922,6 +1922,14 @@
     {
       "file": "verification/foundation/receipts/README.md",
       "sha256": "27def5f6e1885e5aa34a79ccd069accb68fcbe975d03ec78be4e248a9d7c1113"
+    },
+    {
+      "file": "verification/frostbite/decision.md",
+      "sha256": "c1cd7648421141cc4881384a917c512fb04968b79b3f1afc5876fca13aec9bdd"
+    },
+    {
+      "file": "verification/frostbite/README.md",
+      "sha256": "89fcf6c5a5b42ed97a6aa9161752643da1ac014f7054acdb900f08e282c110e1"
     },
     {
       "file": "verification/grad-ordered/README.md",
@@ -2253,7 +2261,7 @@
     },
     {
       "file": "verification/service-wire-refinement/README.md",
-      "sha256": "13ccaf23eb630ba4017a9d58a67996f36aade6008275def08c6dd21e51b8cede"
+      "sha256": "495e433935c75fb364b63102a7f87bd5eca28e93accbcba33cc69d00018644ef"
     },
     {
       "file": "verification/shared-candidates/criteria.md",
