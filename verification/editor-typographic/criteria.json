@@ -1,0 +1,19 @@
+{
+ "schema": "noble-editor-typographic-criteria/v1",
+ "issue": 141,
+ "frozen": "committed before the receipt-producing measurement run; the criteria ids and order are checked by the lane's harness",
+ "criteria": [
+  {"id": "default-off", "rule": "the renderer is compiled only into the experiment's integration target, adds no `noble editor` action, and no production source file is edited"},
+  {"id": "five-kinds", "rule": "the frozen corpus exercises exactly the five editor node kinds Integer, Boolean, Word, Quotation and Hole, and each renders as its own widget"},
+  {"id": "hole-coverage", "rule": "every `analyze` hole report in the corpus has a rendered hole, in source order, carrying the reported input stack, required output stack, required output suffix and effect; a report hole count that disagrees with the rendered holes is refused"},
+  {"id": "identity-tree", "rule": "re-encoding the rendered tree with no edits is node-tree equal to the frozen document"},
+  {"id": "identity-verdict", "rule": "`analyze` and `admit` verdicts (exit code, stage, outcome, category, source stage, node path, accepted-program flag, guest requests, protected operations, and the whole printed report) are equal between the frozen document and the re-encoded view document"},
+  {"id": "identity-source", "rule": "for every hole-free tree, `admitted_source` bytes are equal between the frozen document and the re-encoded view document; for a refused tree both refusals carry the same stage and category"},
+  {"id": "edit-tree", "rule": "each documented widget edit yields a node tree equal to the frozen equivalent JSON-tree edit authored independently in the corpus"},
+  {"id": "edit-verdict", "rule": "the gesture-produced tree and the frozen JSON-tree edit have equal `analyze` and `admit` verdicts, neither is refused at stage transport, and a hole-free result reaches execution"},
+  {"id": "negative-refusal", "rule": "every frozen negative control is refused by the renderer with its frozen code, no CLI invocation runs, and the frozen hostile transport documents are still refused by the ingress with no accepted program and no guest request"},
+  {"id": "hole-admission", "rule": "every tree that still contains a hole is refused by `admit` at stage admission with category invalid, accepted_program_created false, guest_requests 0 and protected_operations 0"}
+ ],
+ "corpus": "corpus.json",
+ "receipt": "receipt-<source commit>.json, produced from a clean committed tree by the lane's integration harness"
+}

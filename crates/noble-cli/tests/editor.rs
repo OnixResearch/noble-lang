@@ -10,6 +10,11 @@
 )]
 use std::{io::Write, path::Path, process::Command};
 
+// Issue #141 experiment lane: a default-off typographic view measured only
+// through this CLI; compiled into this test target, never into the binary.
+#[path = "editor_typographic/mod.rs"]
+mod editor_typographic;
+
 fn invoke(
     temporary: &Path,
     action: &str,

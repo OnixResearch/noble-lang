@@ -133,6 +133,13 @@ parse stage instead of being transliterated: the word grammar admits ASCII
 words only, so Unicode coverage is that refusal rather than a silently mapped
 node.
 
+An experiment lane under `verification/editor-typographic/` (#141) measures a
+default-off typographic view over these same five node kinds: numeric controls,
+checkboxes, visible holes carrying their `analyze` constraints, and typographic
+words and quotations. The view is test-only, adds no `editor` action, and
+re-encodes through the document described above, so this ingress and this report
+contract are unchanged.
+
 The runtime uses pinned Node/V8, wasm-tools, and Binaryen paths from
 [its configuration](crates/noble-cli/src/core/runtime/config.json). Missing or
 incompatible tools produce an explicit refusal. The development shell alone
