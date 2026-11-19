@@ -1773,7 +1773,7 @@
     },
     {
       "file": "verification/aeneas-re-extraction/README.md",
-      "sha256": "74c02a962e017ef8e5dc5ee13e5424593b470752ee5056f8c0db65a4f8770599"
+      "sha256": "27fd57555509f323bac9049555dcbdc381c12dc84d3c7ba9cc140c835731b23a"
     },
     {
       "file": "verification/allocator-admission/decision.md",
@@ -2053,7 +2053,7 @@
     },
     {
       "file": "verification/m5-authority/README.md",
-      "sha256": "cea1cbed7fe5cc499e16be1a21322dcaa9b922ebc7eaf218c9d7ecb77610b5b9"
+      "sha256": "bfdcabebf214d1772861346d6a71d3b561b345008f5d408b8dd8c33a71651d24"
     },
     {
       "file": "verification/m7/trace130/profile.md",
@@ -2225,7 +2225,7 @@
     },
     {
       "file": "verification/region-trace/README.md",
-      "sha256": "2ed41a813b61f9bc28a71d0a6611eee8e65ef8917b52bfd6236088299a1180e4"
+      "sha256": "c8ff79fd7717dd114d58b26f3e4a2f90a5b1bad79eab6c88bc1025131345a0a3"
     },
     {
       "file": "verification/schedule-independence/criteria-oracle.md",
@@ -2253,7 +2253,7 @@
     },
     {
       "file": "verification/service-wire-refinement/README.md",
-      "sha256": "f56a2c3647709d74df5cfad0b82017141448e290f5f2afa2eb57278577048fb3"
+      "sha256": "13ccaf23eb630ba4017a9d58a67996f36aade6008275def08c6dd21e51b8cede"
     },
     {
       "file": "verification/shared-candidates/criteria.md",
