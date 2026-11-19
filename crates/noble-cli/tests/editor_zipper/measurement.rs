@@ -23,6 +23,8 @@
 #[path = "../../src/core/editor/zipper.rs"]
 mod navigation;
 
+#[path = "measurement/cells.rs"]
+mod cells;
 #[path = "measurement/corpus.rs"]
 mod corpus;
 #[path = "measurement/paired.rs"]
@@ -43,12 +45,17 @@ type Document = serde_json::Value;
 
 const CORPUS_PATH: &str = "verification/editor-zipper/corpus.json";
 const CRITERIA_PATH: &str = "verification/editor-zipper/criteria.json";
-const IMPLEMENTATION: [&str; 6] = [
+const IMPLEMENTATION: [&str; 11] = [
     "crates/noble-cli/src/core/editor/zipper.rs",
     "crates/noble-cli/src/core/editor/zipper/document.rs",
     "crates/noble-cli/src/core/editor/zipper/tests.rs",
     "crates/noble-cli/tests/editor_zipper/measurement.rs",
+    "crates/noble-cli/tests/editor_zipper/measurement/cells.rs",
+    "crates/noble-cli/tests/editor_zipper/measurement/corpus.rs",
     "crates/noble-cli/tests/editor_zipper/measurement/paired.rs",
+    "crates/noble-cli/tests/editor_zipper/measurement/receipt.rs",
+    "crates/noble-cli/tests/editor_zipper/measurement/transport.rs",
+    "crates/noble-cli/tests/editor_zipper/measurement/walk.rs",
     "crates/noble-cli/tests/editor.rs",
 ];
 const RECEIPT_VARIABLE: &str = "NOBLE_EDITOR_ZIPPER_RECEIPT";
@@ -116,6 +123,11 @@ enum Operation {
     Previous,
 }
 
+#[allow(
+    tigerstyle::missing_const_fn,
+    // Justification: the lookup compares corpus text and formats an unknown
+    // name into its refusal, which allocates.
+)]
 fn operation(name: &str) -> Result<Operation, Error> {
     match name {
         "focus" => Ok(Operation::Focus),
@@ -127,11 +139,22 @@ fn operation(name: &str) -> Result<Operation, Error> {
     }
 }
 
+#[allow(
+    tigerstyle::missing_const_fn,
+    // Justification: the refusal formats the cursor's class name, which
+    // allocates.
+)]
 fn refused(refusal: Refusal) -> Error {
     std::format!("cursor refused with {}", refusal.class()).into()
 }
 
 /// Address a node and, unless the step only addresses it, apply one move.
+#[allow(
+    tigerstyle::fragile_exhaustive_enum_match,
+    // Justification: the five cursor operations are a closed vocabulary the
+    // corpus names, so an exhaustive dispatch is the point: a sixth operation
+    // must reach this match and the corpus together.
+)]
 fn attempt(tree: &[Node], address: &[u32], step: Operation) -> Result<Cursor, Refusal> {
     let cursor = Cursor::at(tree, address)?;
     match step {

@@ -8,7 +8,7 @@ use noble_contracts::source::editor::Node;
 
 /// Encode a node list as the editor transport's format-1 JSON document.
 pub(crate) fn encode(tree: &[Node]) -> String {
-    let mut document = Document {
+    let mut document = Writer {
         out: String::from("{\"format\":1,\"nodes\":["),
     };
     document.list(tree);
@@ -17,7 +17,7 @@ pub(crate) fn encode(tree: &[Node]) -> String {
 }
 
 /// One document under construction.
-struct Document {
+struct Writer {
     out: String,
 }
 
@@ -25,7 +25,7 @@ struct Document {
 // integer), so none of them can be `const fn`; the advisory heuristic only
 // reads the signature.
 #[allow(tigerstyle::missing_const_fn)]
-impl Document {
+impl Writer {
     fn list(&mut self, nodes: &[Node]) {
         let mut at = 0;
         while at < nodes.len() {

@@ -79,7 +79,7 @@ fn identity_reconstruction_covers_every_address() {
 }
 
 #[test]
-fn navigation_moves_the_focus_and_keeps_the_tree() {
+fn moves_the_focus_and_keeps_the_tree() {
     let tree = sample();
     let original = encode(&tree);
     let root = Cursor::at(&tree, &[1]).expect("root quotation focuses");

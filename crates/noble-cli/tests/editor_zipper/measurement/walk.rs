@@ -5,14 +5,14 @@
 //! commands printed or asks the cursor for a class the corpus already states,
 //! and the test fails on the first cell that disagrees.
 
-use super::corpus::{collect_addresses, decode, decode_node};
-use super::navigation::document::encode;
+use super::cells::{identity_sweep, refusal_cell, replacement_cell, sequence_cell};
+use super::corpus::{collect_addresses, decode};
 use super::paired::pair;
 use super::receipt::{assemble, write, Tally};
-use super::transport::{contains, repository_root, same_document, Editor};
+use super::transport::{contains, repository_root, Editor};
 use super::{
-    attempt, focus, operation, Case, Corpus, Document, Error, RefusalCell, Replacement, Sequence,
-    CORPUS_PATH, CRITERIA_PATH, CURSOR_MARKERS, IMPLEMENTATION, RECEIPT_VARIABLE, SHIPPED_CONTROL,
+    focus, Case, Corpus, Document, Error, CORPUS_PATH, CRITERIA_PATH, CURSOR_MARKERS,
+    IMPLEMENTATION, RECEIPT_VARIABLE, SHIPPED_CONTROL,
 };
 use noble_contracts::source::editor::Node;
 use std::path::Path;
@@ -104,15 +104,11 @@ fn case_cells(editor: &Editor, case: &Case, tally: &mut Tally) -> Result<Vec<Doc
             .saturating_add(case.refusals.len())
             .saturating_add(2),
     );
-    cells.push(identity_cells(case, &tree, &addresses, tally)?);
-    let original = match addresses.first() {
-        Some(first) => focus(&tree, first)?.reconstruct(),
-        None => tree.clone(),
-    };
+    cells.push(identity_sweep(case, &tree, &addresses, tally)?);
     cells.push(pair(
         editor,
         &std::format!("original:{}", case.name),
-        &original,
+        &original(&tree, &addresses),
         &case.tree.to_string(),
     )?);
     tally.pairs = tally.pairs.saturating_add(1);
@@ -138,182 +134,19 @@ fn case_cells(editor: &Editor, case: &Case, tally: &mut Tally) -> Result<Vec<Doc
     Ok(cells)
 }
 
-/// C1: every address reconstructs the original tree, and the cursor reports
-/// the address it was given.
+/// The tree the cursor reconstructs from the first root address, or the
+/// decoded tree when the root list is empty and there is no node to focus.
 #[allow(
     tigerstyle::missing_const_fn,
-    // Justification: the sweep enumerates and encodes trees, which allocates.
+    // Justification: the reconstruction clones the node list, which
+    // allocates.
 )]
-fn identity_cells(
-    case: &Case,
-    tree: &[Node],
-    addresses: &[Vec<u32>],
-    tally: &mut Tally,
-) -> Result<Document, Error> {
-    let original = encode(tree);
-    for address in addresses {
-        let at = focus(tree, address)?;
-        if at.node_path() != *address {
-            return Err(std::format!(
-                "{}: the cursor reported {:?} for {address:?}",
-                case.name,
-                at.node_path()
-            )
-            .into());
-        }
-        if encode(&at.reconstruct()) != original {
-            return Err(std::format!(
-                "{}: reconstruction at {address:?} is not the original tree",
-                case.name
-            )
-            .into());
-        }
-        if encode(&at.candidate().nodes) != original {
-            return Err(std::format!(
-                "{}: the candidate at {address:?} is not the original tree",
-                case.name
-            )
-            .into());
-        }
+fn original(tree: &[Node], addresses: &[Vec<u32>]) -> Vec<Node> {
+    match addresses.first() {
+        Some(first) => match focus(tree, first) {
+            Ok(cursor) => cursor.reconstruct(),
+            Err(_) => tree.to_vec(),
+        },
+        None => tree.to_vec(),
     }
-    tally.addresses = tally.addresses.saturating_add(addresses.len());
-    Ok(serde_json::json!({
-        "cell": std::format!("identity:{}", case.name),
-        "origin": case.origin,
-        "addresses": addresses.len(),
-        "reconstruction": "original",
-    }))
-}
-
-/// C2: each step reaches its documented address, and the sequence reconstructs
-/// the documented tree.
-#[allow(
-    tigerstyle::missing_const_fn,
-    // Justification: the walk encodes the reconstruction and parses the
-    // expected document.
-)]
-fn sequence_cell(tree: &[Node], case: &Case, sequence: &Sequence) -> Result<Document, Error> {
-    if sequence.steps.len() != sequence.addresses.len() {
-        return Err(std::format!(
-            "{}:{}: steps and addresses differ in length",
-            case.name,
-            sequence.name
-        )
-        .into());
-    }
-    let mut at = focus(tree, &sequence.at)?;
-    for (step, address) in sequence.steps.iter().zip(sequence.addresses.iter()) {
-        at = attempt(tree, &at.node_path(), operation(&step.op)?).map_err(|refusal| {
-            std::format!(
-                "{}:{}: {} refused with {}",
-                case.name,
-                sequence.name,
-                step.op,
-                refusal.class()
-            )
-        })?;
-        if at.node_path() != *address {
-            return Err(std::format!(
-                "{}:{}: {} reached {:?}, not {address:?}",
-                case.name,
-                sequence.name,
-                step.op,
-                at.node_path()
-            )
-            .into());
-        }
-    }
-    let expected: Document = match &sequence.tree {
-        Some(document) => document.clone(),
-        None => serde_json::from_str(&encode(tree))?,
-    };
-    let reconstructed: Document = serde_json::from_str(&encode(&at.reconstruct()))?;
-    same_document(&reconstructed, &expected, &sequence.name)?;
-    Ok(serde_json::json!({
-        "cell": std::format!("sequence:{}:{}", case.name, sequence.name),
-        "steps": sequence.steps.len(),
-        "addresses": sequence.addresses,
-        "tree": "reconstructed",
-    }))
-}
-
-/// C3 without the transport half: the replacement equals the independent JSON
-/// edit, at the address the corpus states.
-#[allow(
-    tigerstyle::missing_const_fn,
-    // Justification: the comparison decodes a node, replaces the focus and
-    // encodes the result.
-)]
-fn replacement_cell(
-    tree: &[Node],
-    case: &Case,
-    replacement: &Replacement,
-) -> Result<Vec<Node>, Error> {
-    let at = focus(tree, &replacement.at)?;
-    let replaced = at.replace(decode_node(&replacement.node)?);
-    if replaced.node_path() != replacement.at {
-        return Err(std::format!(
-            "{}:{}: the replacement moved the focus to {:?}",
-            case.name,
-            replacement.name,
-            replaced.node_path()
-        )
-        .into());
-    }
-    let produced = replaced.reconstruct();
-    let document: Document = serde_json::from_str(&encode(&produced))?;
-    same_document(&document, &replacement.tree, &replacement.name)?;
-    Ok(produced)
-}
-
-/// C5: the documented class, and no editor command while the refusal is
-/// produced.
-#[allow(
-    tigerstyle::missing_const_fn,
-    // Justification: the refusal check accounts editor invocations and formats
-    // its diagnostics.
-)]
-fn refusal_cell(
-    editor: &Editor,
-    tree: &[Node],
-    case: &Case,
-    refusal: &RefusalCell,
-) -> Result<Document, Error> {
-    let before = editor.invocations();
-    let outcome = attempt(tree, &refusal.at, operation(&refusal.op)?);
-    if editor.invocations() != before {
-        return Err(std::format!(
-            "{}:{}: a refused move reached an editor command",
-            case.name,
-            refusal.name
-        )
-        .into());
-    }
-    let class = match outcome {
-        Ok(_) => {
-            return Err(std::format!(
-                "{}:{}: {} was not refused",
-                case.name,
-                refusal.name,
-                refusal.op
-            )
-            .into())
-        }
-        Err(class) => class,
-    };
-    if class.class() != refusal.class {
-        return Err(std::format!(
-            "{}:{}: refused with {}, not {}",
-            case.name,
-            refusal.name,
-            class.class(),
-            refusal.class
-        )
-        .into());
-    }
-    Ok(serde_json::json!({
-        "cell": std::format!("refusal:{}:{}", case.name, refusal.name),
-        "class": class.class(),
-        "editor_commands": 0,
-    }))
 }

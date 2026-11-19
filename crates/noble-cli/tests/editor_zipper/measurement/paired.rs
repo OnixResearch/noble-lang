@@ -91,6 +91,11 @@ fn same_outcome(cell: &str, cursor: &Outcome, edit: &Outcome) -> Result<(), Erro
 /// C6: the report contract itself is unchanged. An analysis answers with the
 /// editor report; an admission answers with the core report or the editor
 /// refusal, and never with a third shape.
+#[allow(
+    tigerstyle::missing_const_fn,
+    // Justification: the check clones parsed report fields and formats a
+    // refusal, which allocates.
+)]
 fn report_schemas(cell: &str, analyze: &Outcome, admit: &Outcome) -> Result<Document, Error> {
     let analyze_schema = field(&analyze.report, "schema");
     let admit_schema = field(&admit.report, "schema");
