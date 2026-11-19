@@ -43,8 +43,11 @@ fn cursor_corpus_cells() -> Result<(), Error> {
     if tally.refusals == 0 || tally.sequences == 0 || tally.replacements == 0 {
         return Err("the frozen corpus left a cell family unexercised".into());
     }
-    let receipt = assemble(&root, &criteria, &editor, &tally, cells)?;
     if let Ok(destination) = std::env::var(RECEIPT_VARIABLE) {
+        // Receipt metadata (git commit and tree, file digests) needs `git` and
+        // `sha256sum`; the cells above are the measurement and run everywhere,
+        // including the hermetic flake sandbox, which has no `git`.
+        let receipt = assemble(&root, &criteria, &editor, &tally, cells)?;
         write(&root, &destination, &receipt)?;
     }
     editor.cleanup()?;
