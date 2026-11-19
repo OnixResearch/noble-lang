@@ -294,12 +294,14 @@ The fixtures are finite tests of recorded traces. The region-trace receipt binds
 receipt and the component, helper and engine revisions; neither that binding nor these finite tests
 proves emitted-step correspondence.
 
-The current bounded-cut replay retains `verification/region-trace/receipt-20261118-region-cut-v5.json`
-and `verification/region-trace/receipt-20261118-region-cut-v5-extraction.json`
-from the clean source `40de107f06815de9c08ecb690460fbf7a669be66`. The former's
+The current bounded-cut replay retains `verification/region-trace/receipt-20261118-region-cut-v6.json`
+and `verification/region-trace/receipt-20261118-region-cut-v6-extraction.json`
+from the clean source `77f7d29349c66e76f64b4eb0020506c4fe7b5417`. The former's
 `bindings.implementation_cut` carries the SHA-256 of the latter fresh
 selected-extraction receipt,
-`ca7b37acf4069a8d29d9c7ff0d178e92717449a5508f5dccaf5fc51f777e6870`. The
+`f2484ba64bdd0a399f70e0ab04dc8bbd7aaef4f3e54d0c2d7f0eb55199a145bf` (its
+`receipt` field keeps the lane's fixed v4 path label; the hash identifies the
+v6 file). The
 extraction receipt records, per declaration, the byte comparison between the
 fresh bounded extraction and the checked-in whole-crate subject, the zero
 redeclarations under `proofs/m5`, and the nineteen strictly audited
@@ -307,6 +309,11 @@ implementation theorems; the 135 model/runtime fixture theorems stay in their
 own inventory. The source commit, generated artifacts and actual tool commands
 are retained in those receipts; the emitted-component correspondence remains
 open.
+
+The v5 receipts bind the same cut over the #97 subject, from source `40de107f`.
+The #138 regeneration of the dependency walk changed none of the selected
+declarations, only the bound subject files' hashes, so v6 re-ran the same check
+unchanged.
 
 The v4 receipts bind the same cut over the whole-crate subject before the #97
 literal-free checker regeneration, from source `4857932e`. That regeneration

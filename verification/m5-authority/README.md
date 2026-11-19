@@ -87,6 +87,16 @@ commit steps, the quota frames, and three `countP` list lemmas.
 
 ## Retained runs
 
+### 2026-11-18: archived replay at `77f7d293` (#138 tree)
+
+[`receipt-20261118-77f7d293.json`](receipt-20261118-77f7d293.json) repeats the archived replay on
+the source tree where #138 renewed the M4 lock and every extraction lane passed: the same **95**
+inventoried theorems and all seven mutation controls, with remaining strict-theorem counts 89, 85,
+93, 93, 84, 85 and 87. The region-table lane on the same commit passed with 30 table-refinement
+theorems plus four reused roots ([receipt](../region-table/receipt-20261118-77f7d293.json)), and
+the foundation CI's host-locality stage passed there (43 bounded model theorems plus five reused
+roots). The archive and its compatibility hook are unchanged.
+
 ### 2026-11-17: archived replay at `879bfd66`
 
 [`receipt-20261117-879bfd66.json`](receipt-20261117-879bfd66.json) records a clean-source Lean

@@ -137,6 +137,15 @@ theorems are checked again against the selected new subject and trusted models.
 
 ## Retained runs
 
+### `77f7d293`: [receipt-77f7d293.json](receipt-77f7d293.json)
+
+This run is over the #138 regenerated kernel subject. The profile binds the
+#138 M4 lock and receipt and the new `Types.lean` and `Funs.lean` hashes; all
+eleven mutation anchors still occur exactly once. It is a clean run at source
+`77f7d293`, with the same 61 theorems and axiom profile as the `2739a352` run,
+and all eleven mutation controls are refused, each losing between 3 and 10 of
+the strict theorems it targets.
+
 ### `2739a352`: [receipt-2739a352.json](receipt-2739a352.json)
 
 This is the first passing run of the lane after `a3cba761` ported it to the
