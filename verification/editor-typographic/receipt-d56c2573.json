@@ -1,0 +1,2060 @@
+{
+  "corpus_blake3": "e7513071673e748a9b7153c10a660d1b98cdb902c2c42c07a2c2f61dcf4ab998",
+  "counts": {
+    "cli_invocations": 174,
+    "edits": 23,
+    "fixtures": 10,
+    "hole_states": 5,
+    "negative_controls": 25
+  },
+  "coverage": [
+    {
+      "admit": {
+        "accepted_program_created": null,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "normal",
+        "protected_operations": 0,
+        "report_blake3": "239eea87b05f9ee226e502ac2889aa14a49babf71c8938e11e8a2ecacfaf5758",
+        "schema": "noble-core-report/v1",
+        "source_stage": null,
+        "stage": "wasm"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "fixture": "complete",
+      "holes": 0,
+      "kinds": [
+        "integer",
+        "integer",
+        "word"
+      ],
+      "program_effect": {
+        "known": [],
+        "unresolved": false
+      },
+      "rendered": "effects(known[] unresolved=false)\ngroup(num(1), num(2), word(+))"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "[1]",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "dc03ed4cf67d7f7bac09d041cf4c76254a80e1029f57ccdcd1a6a767bf132aea",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "acceptance",
+        "stage": "admission"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "77d3489d31ba6c6bb5d3b35351846c594e604a41149615cf6a59a0efce8ec634",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "fixture": "incomplete",
+      "holes": 1,
+      "kinds": [
+        "integer",
+        "hole",
+        "word"
+      ],
+      "program_effect": {
+        "known": [],
+        "unresolved": true
+      },
+      "rendered": "effects(known[] unresolved=true)\ngroup(num(1), hole{input=?stack I64; output=?stack I64 I64; suffix=[I64]; effect=known[] unresolved=true}, word(+))"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "[1]",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "dc03ed4cf67d7f7bac09d041cf4c76254a80e1029f57ccdcd1a6a767bf132aea",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "acceptance",
+        "stage": "admission"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "0dafd7da3e1e002ef9a34a6a2dc3e2a01a3cdd72cd12aba3b39aab68a4a34c59",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "fixture": "effectful",
+      "holes": 1,
+      "kinds": [
+        "integer",
+        "hole",
+        "word"
+      ],
+      "program_effect": {
+        "known": [
+          0
+        ],
+        "unresolved": true
+      },
+      "rendered": "effects(known[0] unresolved=true)\ngroup(num(1), hole{input=?stack I64; output=?stack Text; suffix=[Text]; effect=known[] unresolved=true}, word(test.emit))"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "[0,0]",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "ce6e6b670d1867c96253199a81e962eba1179b402824eba84f2748cb5a43f147",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "acceptance",
+        "stage": "admission"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "48b0949230d6dac0237869e6956abf5076f0352b7c69b1570fb570628ded89f9",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "fixture": "nested_hole",
+      "holes": 1,
+      "kinds": [
+        "quotation",
+        "hole"
+      ],
+      "program_effect": {
+        "known": [],
+        "unresolved": false
+      },
+      "rendered": "effects(known[] unresolved=false)\ngroup(group(hole{input=?stack; output=?stack; suffix=[]; effect=known[] unresolved=true}))"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "[0]",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "ead06e6345dce4d9964fee4ce0cd3cf4131a952039c7f10e098d5a9b272d0aee",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "acceptance",
+        "stage": "admission"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "a813711be98dbe70e25067457022a94fbd11bc52ce521ae70a03f5775ab710ba",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "fixture": "root_hole",
+      "holes": 1,
+      "kinds": [
+        "hole"
+      ],
+      "program_effect": {
+        "known": [],
+        "unresolved": true
+      },
+      "rendered": "effects(known[] unresolved=true)\ngroup(hole{input=?stack; output=?stack; suffix=[]; effect=known[] unresolved=true})"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "[1,0]",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "dcf709a455b905a7a85d54175e7e6c90ee97efc64d34b24cc95c2d2b5c6d8914",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "acceptance",
+        "stage": "admission"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "4030841ffb032f3ce1861cd3b9ed2a9bbf85510514dd130e56caa2afaefa6666",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "fixture": "two_holes",
+      "holes": 2,
+      "kinds": [
+        "integer",
+        "quotation",
+        "hole",
+        "hole"
+      ],
+      "program_effect": {
+        "known": [],
+        "unresolved": true
+      },
+      "rendered": "effects(known[] unresolved=true)\ngroup(num(1), group(hole{input=?stack; output=?stack; suffix=[]; effect=known[] unresolved=true}), hole{input=?stack I64 Program<?stack -- ?stack>; output=?stack; suffix=[]; effect=known[] unresolved=true})"
+    },
+    {
+      "admit": {
+        "accepted_program_created": null,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "normal",
+        "protected_operations": 0,
+        "report_blake3": "a0016106dd9835be2a4a7ede8058e36de03a48e58a84dcc3f43a7c7537579593",
+        "schema": "noble-core-report/v1",
+        "source_stage": null,
+        "stage": "wasm"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "fixture": "boolean",
+      "holes": 0,
+      "kinds": [
+        "boolean"
+      ],
+      "program_effect": {
+        "known": [],
+        "unresolved": false
+      },
+      "rendered": "effects(known[] unresolved=false)\ngroup(bool(true))"
+    },
+    {
+      "admit": {
+        "accepted_program_created": null,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "normal",
+        "protected_operations": 0,
+        "report_blake3": "eec87689b86896993ca220b20e72362a8ca00881f8a76f2db089738b5940679d",
+        "schema": "noble-core-report/v1",
+        "source_stage": null,
+        "stage": "wasm"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "fixture": "word",
+      "holes": 0,
+      "kinds": [
+        "integer",
+        "word",
+        "word"
+      ],
+      "program_effect": {
+        "known": [],
+        "unresolved": false
+      },
+      "rendered": "effects(known[] unresolved=false)\ngroup(num(1), word(dup), word(+))"
+    },
+    {
+      "admit": {
+        "accepted_program_created": null,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "normal",
+        "protected_operations": 0,
+        "report_blake3": "a0f979a47504446250dd3d943050416120531b11d76bb09275207000acce22bf",
+        "schema": "noble-core-report/v1",
+        "source_stage": null,
+        "stage": "wasm"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "fixture": "nested_quotation",
+      "holes": 0,
+      "kinds": [
+        "quotation",
+        "integer",
+        "integer",
+        "word"
+      ],
+      "program_effect": {
+        "known": [],
+        "unresolved": false
+      },
+      "rendered": "effects(known[] unresolved=false)\ngroup(group(num(1), num(2), word(+)))"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "[1]",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "dc03ed4cf67d7f7bac09d041cf4c76254a80e1029f57ccdcd1a6a767bf132aea",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "acceptance",
+        "stage": "admission"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "21dd9635c1992545e8b2e47a3180b798263abd5aa5c4bf81056a4151aed7cfbd",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "fixture": "unresolved_effect_hole",
+      "holes": 1,
+      "kinds": [
+        "integer",
+        "hole"
+      ],
+      "program_effect": {
+        "known": [],
+        "unresolved": true
+      },
+      "rendered": "effects(known[] unresolved=true)\ngroup(num(1), hole{input=?stack I64; output=?stack; suffix=[]; effect=known[] unresolved=true})"
+    }
+  ],
+  "criteria_blake3": "4c9f69fec2ecc1846a56bcb2d0e278905fe876c62030f40c8934900c713dbeda",
+  "fixtures": [
+    {
+      "admit": {
+        "accepted_program_created": null,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "normal",
+        "protected_operations": 0,
+        "report_blake3": "239eea87b05f9ee226e502ac2889aa14a49babf71c8938e11e8a2ecacfaf5758",
+        "schema": "noble-core-report/v1",
+        "source_stage": null,
+        "stage": "wasm"
+      },
+      "admitted_source": {
+        "blake3": "80f6d3e6727e11f3a06582a25c46dceb20610cee28060801675f02bdf978fdb4",
+        "bytes": 6,
+        "result": "equal"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "edits": [
+        {
+          "admit": {
+            "accepted_program_created": null,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "normal",
+            "protected_operations": 0,
+            "report_blake3": "48737b035e05bffae88b1d20a8cec0854d8c8551199f3146ef952e8c4c4b5c12",
+            "schema": "noble-core-report/v1",
+            "source_stage": null,
+            "stage": "wasm"
+          },
+          "admitted_source": {
+            "blake3": "c20652155edfe2bf6721e33164abbfb5d3eda30452c291f8ccd8989182df1be1",
+            "bytes": 7,
+            "result": "equal"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "change-integer"
+        },
+        {
+          "admit": {
+            "accepted_program_created": null,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "normal",
+            "protected_operations": 0,
+            "report_blake3": "049a07520e0e6ce6d46e8b121805e00dc8aba630bc281629c9e4b3d8db921f62",
+            "schema": "noble-core-report/v1",
+            "source_stage": null,
+            "stage": "wasm"
+          },
+          "admitted_source": {
+            "blake3": "4694e9de02851db279ecc9d34305b3902d006e8e216fa8cc9e680abaa86fc9a5",
+            "bytes": 6,
+            "result": "equal"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "edit-word"
+        }
+      ],
+      "fixture": "complete"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "[1]",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "dc03ed4cf67d7f7bac09d041cf4c76254a80e1029f57ccdcd1a6a767bf132aea",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "acceptance",
+        "stage": "admission"
+      },
+      "admitted_source": {
+        "category": "invalid",
+        "result": "refused",
+        "stage": "Acceptance"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "77d3489d31ba6c6bb5d3b35351846c594e604a41149615cf6a59a0efce8ec634",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "edits": [
+        {
+          "admit": {
+            "accepted_program_created": false,
+            "category": "invalid",
+            "exit": 2,
+            "guest_requests": 0,
+            "node_path": "[1]",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "report_blake3": "16f9ba307a8cb25c5cf6dd14e68a54018a320f042a830078916ee313272e6a8a",
+            "schema": "noble-editor-report/v1",
+            "source_stage": "acceptance",
+            "stage": "admission"
+          },
+          "admitted_source": {
+            "category": "invalid",
+            "result": "refused",
+            "stage": "Acceptance"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "77d3489d31ba6c6bb5d3b35351846c594e604a41149615cf6a59a0efce8ec634",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "change-integer"
+        },
+        {
+          "admit": {
+            "accepted_program_created": false,
+            "category": "invalid",
+            "exit": 2,
+            "guest_requests": 0,
+            "node_path": "[1]",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "report_blake3": "dc03ed4cf67d7f7bac09d041cf4c76254a80e1029f57ccdcd1a6a767bf132aea",
+            "schema": "noble-editor-report/v1",
+            "source_stage": "acceptance",
+            "stage": "admission"
+          },
+          "admitted_source": {
+            "category": "invalid",
+            "result": "refused",
+            "stage": "Acceptance"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "77d3489d31ba6c6bb5d3b35351846c594e604a41149615cf6a59a0efce8ec634",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "leave-hole"
+        },
+        {
+          "admit": {
+            "accepted_program_created": null,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "normal",
+            "protected_operations": 0,
+            "report_blake3": "3d8c9aa38a44bfe780e22a863d81eb6e4f399680cd0f83312f6ce5ed084487a0",
+            "schema": "noble-core-report/v1",
+            "source_stage": null,
+            "stage": "wasm"
+          },
+          "admitted_source": {
+            "blake3": "dde24b67900536d607ecc3016973e81c47548a4345f815c50101e38fed008127",
+            "bytes": 6,
+            "result": "equal"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "fill-hole"
+        },
+        {
+          "admit": {
+            "accepted_program_created": false,
+            "category": "invalid",
+            "exit": 2,
+            "guest_requests": 0,
+            "node_path": "[1]",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "report_blake3": "dc03ed4cf67d7f7bac09d041cf4c76254a80e1029f57ccdcd1a6a767bf132aea",
+            "schema": "noble-editor-report/v1",
+            "source_stage": "acceptance",
+            "stage": "admission"
+          },
+          "admitted_source": {
+            "category": "invalid",
+            "result": "refused",
+            "stage": "Acceptance"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "77d3489d31ba6c6bb5d3b35351846c594e604a41149615cf6a59a0efce8ec634",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "edit-word"
+        }
+      ],
+      "fixture": "incomplete"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "[1]",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "dc03ed4cf67d7f7bac09d041cf4c76254a80e1029f57ccdcd1a6a767bf132aea",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "acceptance",
+        "stage": "admission"
+      },
+      "admitted_source": {
+        "category": "invalid",
+        "result": "refused",
+        "stage": "Acceptance"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "0dafd7da3e1e002ef9a34a6a2dc3e2a01a3cdd72cd12aba3b39aab68a4a34c59",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "edits": [
+        {
+          "admit": {
+            "accepted_program_created": false,
+            "category": "invalid",
+            "exit": 2,
+            "guest_requests": 0,
+            "node_path": "[1]",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "report_blake3": "dc03ed4cf67d7f7bac09d041cf4c76254a80e1029f57ccdcd1a6a767bf132aea",
+            "schema": "noble-editor-report/v1",
+            "source_stage": "acceptance",
+            "stage": "admission"
+          },
+          "admitted_source": {
+            "category": "invalid",
+            "result": "refused",
+            "stage": "Acceptance"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "0dafd7da3e1e002ef9a34a6a2dc3e2a01a3cdd72cd12aba3b39aab68a4a34c59",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "change-integer"
+        },
+        {
+          "admit": {
+            "accepted_program_created": false,
+            "category": "invalid",
+            "exit": 2,
+            "guest_requests": 0,
+            "node_path": "[1]",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "report_blake3": "dc03ed4cf67d7f7bac09d041cf4c76254a80e1029f57ccdcd1a6a767bf132aea",
+            "schema": "noble-editor-report/v1",
+            "source_stage": "acceptance",
+            "stage": "admission"
+          },
+          "admitted_source": {
+            "category": "invalid",
+            "result": "refused",
+            "stage": "Acceptance"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "0dafd7da3e1e002ef9a34a6a2dc3e2a01a3cdd72cd12aba3b39aab68a4a34c59",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "leave-hole"
+        }
+      ],
+      "fixture": "effectful"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "[0,0]",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "ce6e6b670d1867c96253199a81e962eba1179b402824eba84f2748cb5a43f147",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "acceptance",
+        "stage": "admission"
+      },
+      "admitted_source": {
+        "category": "invalid",
+        "result": "refused",
+        "stage": "Acceptance"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "48b0949230d6dac0237869e6956abf5076f0352b7c69b1570fb570628ded89f9",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "edits": [
+        {
+          "admit": {
+            "accepted_program_created": null,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "normal",
+            "protected_operations": 0,
+            "report_blake3": "e5b9d9074370f9bfe6726b3204e15f6b8a65b7b41bbbe596b7c3e6fb438ea0e5",
+            "schema": "noble-core-report/v1",
+            "source_stage": null,
+            "stage": "wasm"
+          },
+          "admitted_source": {
+            "blake3": "5039169484500eb45cac5bd631492ef58b9d7b1e63d3c859e1d33c160525db2b",
+            "bytes": 6,
+            "result": "equal"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "fill-hole"
+        },
+        {
+          "admit": {
+            "accepted_program_created": null,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "normal",
+            "protected_operations": 0,
+            "report_blake3": "5063fd4275dedcb13d265b33459c4a0232e97eec33d5b42c0a8960d834bf652c",
+            "schema": "noble-core-report/v1",
+            "source_stage": null,
+            "stage": "wasm"
+          },
+          "admitted_source": {
+            "blake3": "b4a0c7d7f9ce655f7c24393e510d88f2f83cb7fbb8aeb9759706db5c76f3b68b",
+            "bytes": 8,
+            "result": "equal"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "fill-hole-quotation"
+        },
+        {
+          "admit": {
+            "accepted_program_created": null,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "normal",
+            "protected_operations": 0,
+            "report_blake3": "7b778244f11da475981db96430dba5165475f88355249a7d36397f7914644a96",
+            "schema": "noble-core-report/v1",
+            "source_stage": null,
+            "stage": "wasm"
+          },
+          "admitted_source": {
+            "blake3": "f480aaf4d124091159b4228cec781c141d2a20ff11789922980866f685a9fda5",
+            "bytes": 58,
+            "result": "equal"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "fill-hole-boundary"
+        },
+        {
+          "admit": {
+            "accepted_program_created": false,
+            "category": "invalid",
+            "exit": 2,
+            "guest_requests": 0,
+            "node_path": "[0,0]",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "report_blake3": "ce6e6b670d1867c96253199a81e962eba1179b402824eba84f2748cb5a43f147",
+            "schema": "noble-editor-report/v1",
+            "source_stage": "acceptance",
+            "stage": "admission"
+          },
+          "admitted_source": {
+            "category": "invalid",
+            "result": "refused",
+            "stage": "Acceptance"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "48b0949230d6dac0237869e6956abf5076f0352b7c69b1570fb570628ded89f9",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "leave-hole"
+        }
+      ],
+      "fixture": "nested_hole"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "[0]",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "ead06e6345dce4d9964fee4ce0cd3cf4131a952039c7f10e098d5a9b272d0aee",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "acceptance",
+        "stage": "admission"
+      },
+      "admitted_source": {
+        "category": "invalid",
+        "result": "refused",
+        "stage": "Acceptance"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "a813711be98dbe70e25067457022a94fbd11bc52ce521ae70a03f5775ab710ba",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "edits": [
+        {
+          "admit": {
+            "accepted_program_created": null,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "normal",
+            "protected_operations": 0,
+            "report_blake3": "a0016106dd9835be2a4a7ede8058e36de03a48e58a84dcc3f43a7c7537579593",
+            "schema": "noble-core-report/v1",
+            "source_stage": null,
+            "stage": "wasm"
+          },
+          "admitted_source": {
+            "blake3": "532f636a4d05e5d4742776b41afec67869f4b94c4e911e7c9f0fda1f173bc11a",
+            "bytes": 5,
+            "result": "equal"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "fill-hole"
+        },
+        {
+          "admit": {
+            "accepted_program_created": false,
+            "category": "invalid",
+            "exit": 2,
+            "guest_requests": 0,
+            "node_path": "[0]",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "report_blake3": "ead06e6345dce4d9964fee4ce0cd3cf4131a952039c7f10e098d5a9b272d0aee",
+            "schema": "noble-editor-report/v1",
+            "source_stage": "acceptance",
+            "stage": "admission"
+          },
+          "admitted_source": {
+            "category": "invalid",
+            "result": "refused",
+            "stage": "Acceptance"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "a813711be98dbe70e25067457022a94fbd11bc52ce521ae70a03f5775ab710ba",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "leave-hole"
+        }
+      ],
+      "fixture": "root_hole"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "[1,0]",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "dcf709a455b905a7a85d54175e7e6c90ee97efc64d34b24cc95c2d2b5c6d8914",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "acceptance",
+        "stage": "admission"
+      },
+      "admitted_source": {
+        "category": "invalid",
+        "result": "refused",
+        "stage": "Acceptance"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "4030841ffb032f3ce1861cd3b9ed2a9bbf85510514dd130e56caa2afaefa6666",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "edits": [
+        {
+          "admit": {
+            "accepted_program_created": false,
+            "category": "invalid",
+            "exit": 2,
+            "guest_requests": 0,
+            "node_path": "[2]",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "report_blake3": "3b9f0c0dddd18825134fbb1a749675cfb43cd4a9584411d916f6c5afea6d8e6e",
+            "schema": "noble-editor-report/v1",
+            "source_stage": "acceptance",
+            "stage": "admission"
+          },
+          "admitted_source": {
+            "category": "invalid",
+            "result": "refused",
+            "stage": "Acceptance"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "154ec4196ddff6178805158e1a0f0d27fec130afc25d7e7081b838f3d1684c63",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "fill-first-hole"
+        },
+        {
+          "admit": {
+            "accepted_program_created": false,
+            "category": "invalid",
+            "exit": 2,
+            "guest_requests": 0,
+            "node_path": "[1,0]",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "report_blake3": "dcf709a455b905a7a85d54175e7e6c90ee97efc64d34b24cc95c2d2b5c6d8914",
+            "schema": "noble-editor-report/v1",
+            "source_stage": "acceptance",
+            "stage": "admission"
+          },
+          "admitted_source": {
+            "category": "invalid",
+            "result": "refused",
+            "stage": "Acceptance"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "4030841ffb032f3ce1861cd3b9ed2a9bbf85510514dd130e56caa2afaefa6666",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "leave-first-hole"
+        }
+      ],
+      "fixture": "two_holes"
+    },
+    {
+      "admit": {
+        "accepted_program_created": null,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "normal",
+        "protected_operations": 0,
+        "report_blake3": "a0016106dd9835be2a4a7ede8058e36de03a48e58a84dcc3f43a7c7537579593",
+        "schema": "noble-core-report/v1",
+        "source_stage": null,
+        "stage": "wasm"
+      },
+      "admitted_source": {
+        "blake3": "532f636a4d05e5d4742776b41afec67869f4b94c4e911e7c9f0fda1f173bc11a",
+        "bytes": 5,
+        "result": "equal"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "edits": [
+        {
+          "admit": {
+            "accepted_program_created": null,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "normal",
+            "protected_operations": 0,
+            "report_blake3": "5ff2483afa980ae2019c67e4280aeb0e8b0a1b3671643aea478fe4555a9e551b",
+            "schema": "noble-core-report/v1",
+            "source_stage": null,
+            "stage": "wasm"
+          },
+          "admitted_source": {
+            "blake3": "04e3028e8b17a10c9caa8bcc87166f2e0c69e9d641282a9d6c692fa246254101",
+            "bytes": 6,
+            "result": "equal"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "toggle"
+        },
+        {
+          "admit": {
+            "accepted_program_created": null,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "normal",
+            "protected_operations": 0,
+            "report_blake3": "5ff2483afa980ae2019c67e4280aeb0e8b0a1b3671643aea478fe4555a9e551b",
+            "schema": "noble-core-report/v1",
+            "source_stage": null,
+            "stage": "wasm"
+          },
+          "admitted_source": {
+            "blake3": "04e3028e8b17a10c9caa8bcc87166f2e0c69e9d641282a9d6c692fa246254101",
+            "bytes": 6,
+            "result": "equal"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "set-checkbox"
+        }
+      ],
+      "fixture": "boolean"
+    },
+    {
+      "admit": {
+        "accepted_program_created": null,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "normal",
+        "protected_operations": 0,
+        "report_blake3": "eec87689b86896993ca220b20e72362a8ca00881f8a76f2db089738b5940679d",
+        "schema": "noble-core-report/v1",
+        "source_stage": null,
+        "stage": "wasm"
+      },
+      "admitted_source": {
+        "blake3": "73836821cfff72855e50e72a9309e16ac8e999418ff7fc811d5c4097084dc4cb",
+        "bytes": 8,
+        "result": "equal"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "edits": [
+        {
+          "admit": {
+            "accepted_program_created": null,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "normal",
+            "protected_operations": 0,
+            "report_blake3": "36c59c9a7e890403068a011fdfd51c921db47b868507b7a7484697c9f95c4b19",
+            "schema": "noble-core-report/v1",
+            "source_stage": null,
+            "stage": "wasm"
+          },
+          "admitted_source": {
+            "blake3": "a73da4a80975623e3177380960a2fc8a8865f414d1195c56ee2104c973787607",
+            "bytes": 8,
+            "result": "equal"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "edit-word"
+        }
+      ],
+      "fixture": "word"
+    },
+    {
+      "admit": {
+        "accepted_program_created": null,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "normal",
+        "protected_operations": 0,
+        "report_blake3": "a0f979a47504446250dd3d943050416120531b11d76bb09275207000acce22bf",
+        "schema": "noble-core-report/v1",
+        "source_stage": null,
+        "stage": "wasm"
+      },
+      "admitted_source": {
+        "blake3": "abef280342908981acd6b9169f84966fcd63a148ae9b33496b2a13edb53ed797",
+        "bytes": 10,
+        "result": "equal"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "edits": [
+        {
+          "admit": {
+            "accepted_program_created": null,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "normal",
+            "protected_operations": 0,
+            "report_blake3": "b764039ab8e242640e0ad88f30fd9486aa26bb7e9ca805b3d00a013b56d57b35",
+            "schema": "noble-core-report/v1",
+            "source_stage": null,
+            "stage": "wasm"
+          },
+          "admitted_source": {
+            "blake3": "410f4534c341115645f461ea0453ff52dd15ebdf079131da06154e0eb333dee1",
+            "bytes": 11,
+            "result": "equal"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "edit-inside-quotation"
+        },
+        {
+          "admit": {
+            "accepted_program_created": null,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "normal",
+            "protected_operations": 0,
+            "report_blake3": "fba32e0c397050c91cf1d6ff476f98f805813c86419726e6b8531490b1c4e9e5",
+            "schema": "noble-core-report/v1",
+            "source_stage": null,
+            "stage": "wasm"
+          },
+          "admitted_source": {
+            "blake3": "b303d8e7151573269f2f3e6dbfbf4ea960bc40f407fd7f3c5e4c617bc58d816b",
+            "bytes": 10,
+            "result": "equal"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "edit-word-inside-quotation"
+        }
+      ],
+      "fixture": "nested_quotation"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "[1]",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "dc03ed4cf67d7f7bac09d041cf4c76254a80e1029f57ccdcd1a6a767bf132aea",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "acceptance",
+        "stage": "admission"
+      },
+      "admitted_source": {
+        "category": "invalid",
+        "result": "refused",
+        "stage": "Acceptance"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 0,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "constraints",
+        "protected_operations": 0,
+        "report_blake3": "21dd9635c1992545e8b2e47a3180b798263abd5aa5c4bf81056a4151aed7cfbd",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "analysis"
+      },
+      "edits": [
+        {
+          "admit": {
+            "accepted_program_created": null,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "normal",
+            "protected_operations": 0,
+            "report_blake3": "5bd97d4ce3b6acf00402446ac690d4fff62f9c40f85708f4fe835730aa85ba0d",
+            "schema": "noble-core-report/v1",
+            "source_stage": null,
+            "stage": "wasm"
+          },
+          "admitted_source": {
+            "blake3": "63ea461a7a93b1720914c5c1a2d77d49ce92f5c504e1773d3d3ca501ae0ce5dc",
+            "bytes": 4,
+            "result": "equal"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "ac6e23541b8f8ba5a7006469ce90135ab83c9e38215e16fadbda7326d50956a4",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "fill-hole"
+        },
+        {
+          "admit": {
+            "accepted_program_created": false,
+            "category": "invalid",
+            "exit": 2,
+            "guest_requests": 0,
+            "node_path": "[1]",
+            "outcome": "reject",
+            "protected_operations": 0,
+            "report_blake3": "dc03ed4cf67d7f7bac09d041cf4c76254a80e1029f57ccdcd1a6a767bf132aea",
+            "schema": "noble-editor-report/v1",
+            "source_stage": "acceptance",
+            "stage": "admission"
+          },
+          "admitted_source": {
+            "category": "invalid",
+            "result": "refused",
+            "stage": "Acceptance"
+          },
+          "analyze": {
+            "accepted_program_created": false,
+            "category": null,
+            "exit": 0,
+            "guest_requests": 0,
+            "node_path": null,
+            "outcome": "constraints",
+            "protected_operations": 0,
+            "report_blake3": "21dd9635c1992545e8b2e47a3180b798263abd5aa5c4bf81056a4151aed7cfbd",
+            "schema": "noble-editor-report/v1",
+            "source_stage": null,
+            "stage": "analysis"
+          },
+          "edit": "leave-hole"
+        }
+      ],
+      "fixture": "unresolved_effect_hole"
+    }
+  ],
+  "hole_states": [
+    {
+      "fixture": "root_hole",
+      "state": "root"
+    },
+    {
+      "fixture": "nested_hole",
+      "state": "nested-quotation"
+    },
+    {
+      "fixture": "two_holes",
+      "state": "multiple"
+    },
+    {
+      "fixture": "incomplete",
+      "state": "unresolved-effect"
+    },
+    {
+      "fixture": "effectful",
+      "state": "known-effect"
+    }
+  ],
+  "hostile_transport": [
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "f155f70d875b31068edc93b559e03a5c7faeb2a893038cd3ed3cb10aedb6628d",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "f155f70d875b31068edc93b559e03a5c7faeb2a893038cd3ed3cb10aedb6628d",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "document": "{\"format\":2,\"nodes\":[]}"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "a44454ffcbfecd3010d237bc63fa2120ee3b5853fa8508d40e4de1d3d9619ad0",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "a44454ffcbfecd3010d237bc63fa2120ee3b5853fa8508d40e4de1d3d9619ad0",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "document": "{\"format\":1,\"nodes\":[{\"kind\":\"integer\",\"value\":1,\"effect\":\"pure\"},{\"kind\":\"hole\"}]}"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "null",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "11ef7f7e03f5e9d784cd9cf0fe86692ed2fa30d4dd1ce8206ad5cb94cca74825",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "parse",
+        "stage": "admission"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "null",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "32cac21a8422d789740cd891754caaa1ac22b1a6dd51788976e21eea5f573e89",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "parse",
+        "stage": "analysis"
+      },
+      "document": "{\"format\":1,\"nodes\":[{\"kind\":\"word\",\"value\":\"1 2 +\"}]}"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "null",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "11ef7f7e03f5e9d784cd9cf0fe86692ed2fa30d4dd1ce8206ad5cb94cca74825",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "parse",
+        "stage": "admission"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "null",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "32cac21a8422d789740cd891754caaa1ac22b1a6dd51788976e21eea5f573e89",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "parse",
+        "stage": "analysis"
+      },
+      "document": "{\"format\":1,\"nodes\":[{\"kind\":\"word\",\"value\":\"[\"},{\"kind\":\"hole\"}]}"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "null",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "11ef7f7e03f5e9d784cd9cf0fe86692ed2fa30d4dd1ce8206ad5cb94cca74825",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "parse",
+        "stage": "admission"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": "invalid",
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": "null",
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "32cac21a8422d789740cd891754caaa1ac22b1a6dd51788976e21eea5f573e89",
+        "schema": "noble-editor-report/v1",
+        "source_stage": "parse",
+        "stage": "analysis"
+      },
+      "document": "{\"format\":1,\"nodes\":[{\"kind\":\"word\",\"value\":\"\\u005b\"}]}"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "a44454ffcbfecd3010d237bc63fa2120ee3b5853fa8508d40e4de1d3d9619ad0",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "a44454ffcbfecd3010d237bc63fa2120ee3b5853fa8508d40e4de1d3d9619ad0",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "document": "{\"format\":1,\"nodes\":[{\"kind\":\"quotation\",\"nodes\":[{\"kind\":\"hole\",\"effect\":\"pure\"}]}]}"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "8d6173c0396484f6f6bd62c0a608a065839e174c18d67395208a3c67b075c585",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "8d6173c0396484f6f6bd62c0a608a065839e174c18d67395208a3c67b075c585",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "document": "{\"format\":1,\"nodes\":[{\"ki\\u006ed\":\"hole\",\"kind\":\"integer\",\"value\":3}]}"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "8d6173c0396484f6f6bd62c0a608a065839e174c18d67395208a3c67b075c585",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "8d6173c0396484f6f6bd62c0a608a065839e174c18d67395208a3c67b075c585",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "document": "{\"format\":1,\"nodes\":[{\"kind\":\"hole\",\"kind\":\"integer\",\"value\":3}]}"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "8d6173c0396484f6f6bd62c0a608a065839e174c18d67395208a3c67b075c585",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "8d6173c0396484f6f6bd62c0a608a065839e174c18d67395208a3c67b075c585",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "document": "{\"format\":1,\"nodes\":[{\"kind\":\"integer\",\"value\":3}],\"nodes\":[]}"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "ba6ebfd3db632ccbe8bd3abe129724260a0128eae8620cfc74e79035be951fdf",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "ba6ebfd3db632ccbe8bd3abe129724260a0128eae8620cfc74e79035be951fdf",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "document": "{\"format\":1,\"nodes\":\"hole\"}"
+    },
+    {
+      "admit": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "77fd7cc045484229d95e4ca24fa2321ade0c6912e57f23170af7f9684bfd0649",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "analyze": {
+        "accepted_program_created": false,
+        "category": null,
+        "exit": 2,
+        "guest_requests": 0,
+        "node_path": null,
+        "outcome": "reject",
+        "protected_operations": 0,
+        "report_blake3": "77fd7cc045484229d95e4ca24fa2321ade0c6912e57f23170af7f9684bfd0649",
+        "schema": "noble-editor-report/v1",
+        "source_stage": null,
+        "stage": "transport"
+      },
+      "document": "!"
+    }
+  ],
+  "issue": 141,
+  "limitations": "measured only over the frozen corpus through the real CLI; no theorem about all editor trees, no GUI, no second admission route, and no claim about the posts' demos",
+  "negative_controls": [
+    {
+      "admit_invocations": 0,
+      "code": "integer-out-of-range",
+      "control": "integer-overflow",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "integer-out-of-range",
+      "control": "integer-underflow",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "integer-not-decimal",
+      "control": "integer-fraction",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "integer-not-decimal",
+      "control": "integer-injection",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "integer-not-decimal",
+      "control": "integer-empty",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "boolean-not-boolean",
+      "control": "boolean-word",
+      "fixture": "boolean"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "boolean-not-boolean",
+      "control": "boolean-digit",
+      "fixture": "boolean"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "word-syntax",
+      "control": "word-whitespace",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "word-syntax",
+      "control": "word-open-bracket",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "word-syntax",
+      "control": "word-close-bracket",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "word-syntax",
+      "control": "word-non-ascii",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "word-syntax",
+      "control": "word-literal-digit",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "word-syntax",
+      "control": "word-reserved-true",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "word-syntax",
+      "control": "word-leading-digit",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "word-syntax",
+      "control": "word-empty",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "not-a-number-control",
+      "control": "number-control-on-word",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "not-a-checkbox",
+      "control": "checkbox-on-integer",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "not-a-word-control",
+      "control": "word-control-on-hole",
+      "fixture": "incomplete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "not-a-hole",
+      "control": "fill-not-hole",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "word-syntax",
+      "control": "fill-word-injection",
+      "fixture": "root_hole"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "boolean-not-boolean",
+      "control": "fill-boolean-word",
+      "fixture": "root_hole"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "depth-limit",
+      "control": "fill-depth-limit",
+      "fixture": "nested_hole"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "path-not-found",
+      "control": "path-not-found",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "path-not-found",
+      "control": "path-not-through-word",
+      "fixture": "complete"
+    },
+    {
+      "admit_invocations": 0,
+      "code": "not-a-hole",
+      "control": "leave-non-hole",
+      "fixture": "complete"
+    }
+  ],
+  "renderer": {
+    "compiled_into_binary": false,
+    "ingress": "noble editor analyze|admit JSON_FILE",
+    "max_envelope_bytes": 65536,
+    "max_quotation_depth": 14
+  },
+  "schema": "noble-editor-typographic-receipt/v1",
+  "source_commit": "d56c257362b01753baf620bbb8c1211c4e7cc183"
+}

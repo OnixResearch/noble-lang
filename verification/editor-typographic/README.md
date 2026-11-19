@@ -97,10 +97,15 @@ and the CLI invocation count.
 
 ## Receipt
 
-`receipt-f32963be.json` is the retained measurement. Its `source_commit` is
-`f32963bee927a674f2bf3d788b4eff42ddd35438`, the clean commit it ran on; the
+`receipt-d56c2573.json` is the authoritative measurement. Its `source_commit`
+is `d56c257362b01753baf620bbb8c1211c4e7cc183`, the clean commit it ran on; the
 corpus and criteria blake3 digests are recorded beside it. The receipt carries
-each fixture's rendered surface and `analyze`/`admit` verdicts, each edit's
-verdicts and admitted-source digest, each negative control's refusal code with
-zero admissions, and the eleven hostile transport refusals. A later receipt
-must be a new file: the producer refuses to overwrite one.
+each fixture's rendered surface, widget kinds, bound hole facts and
+`analyze`/`admit` verdicts; each edit's verdicts and admitted-source digest;
+one row per negative control with its stable refusal code and zero admissions;
+and the eleven hostile transport refusals.
+
+`receipt-f32963be.json` is retained from the earlier code commit: it recorded
+the same corpus and verdicts before the negative-control rows were added to the
+receipt, so it is superseded rather than deleted. A later receipt must be a new
+file: the producer refuses to overwrite one.
