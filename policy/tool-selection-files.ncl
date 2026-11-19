@@ -61,7 +61,7 @@
   "nix/native-assurance-app.nix" = "dacb83263d3d384fec40cff87c5d0495fbb4e10d17dd4c00821c26f16151303b",
   "nix/offline-inputs.nix" = "642b3d1aec4009eeafce107d923a7bec166b18541a369d06c33072903d92f493",
   "nix/reviewed-vendor.nix" = "e9580a6704fbf31eb4f12538ab11ecae48a49751b8fa74b7fbcc995473ed83a7",
-  "nix/site.nix" = "b87dc59d7a04c05f4858d95ca3fe5eb9a94a579238a3731eba8140df3aef15b3",
+  "nix/site.nix" = "56160fcfc9608a24f64cdbec77a5a604643224da883160514cbd2cc7be7cea24",
   "nix/tool-selection-files.nix" = "109e721fc0510974140e5543c4353ab6faa53330367bbaa39c103b8c26f44185",
   "nix/tool-selection.nix" = "b18a7d7d7dcd0e74eca21acea0123814f1008ad04595a059c773ad44da9d9e16",
   "nix/source-inventory-app.nix" = "1dd64568be5dd46eee3d4200ba653f2341e1a5024d731c3e965cf798e3e0504e",
