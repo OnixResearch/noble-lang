@@ -137,6 +137,14 @@ theorems are checked again against the selected new subject and trusted models.
 
 ## Retained runs
 
+### `b8a83681`: [receipt-b8a83681.json](receipt-b8a83681.json)
+
+The M4 lock and receipt were renewed after the batch-17 merge of `a5917b23`,
+which changed no extracted subject. The profile now binds the renewed lock and
+receipt hashes; this clean run at `b8a83681` has the same 61 theorems, and all
+eleven mutation controls are refused with the same strict-theorem losses as the
+`77f7d293` run.
+
 ### `77f7d293`: [receipt-77f7d293.json](receipt-77f7d293.json)
 
 This run is over the #138 regenerated kernel subject. The profile binds the
