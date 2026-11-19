@@ -15,10 +15,10 @@
     "node_api": "26.3.0"
   },
   "documents": 16,
-  "requirements": 612,
+  "requirements": 614,
   "scenarios": 274,
   "scenarios_executed": 194,
-  "open_test_design": 234,
+  "open_test_design": 236,
   "proof_obligations": 30,
   "completed_proofs": 3,
   "self_tests": [],
@@ -844,6 +844,22 @@
       "sha256": "957a52d81eaae70b85766d7da39b41725211741743aff7c412dd4e58fdb67460"
     },
     {
+      "file": ".cairn/archive/2026-11-18-net-request-limits-receipts/design.md",
+      "sha256": "56f9ba59e922ae2724ab08ee208b8571690f4994f5a86a00f3878be7263ffb00"
+    },
+    {
+      "file": ".cairn/archive/2026-11-18-net-request-limits-receipts/proposal.md",
+      "sha256": "9122becc6cf9d7e441944aa3e70025e96295424a4923c7b8350d66bbf1595ac1"
+    },
+    {
+      "file": ".cairn/archive/2026-11-18-net-request-limits-receipts/specs/developer-experience/spec.md",
+      "sha256": "2af08e980f599c47e8d06e648fa8562986b7d8f3cb4629725bf8f48aa6e77147"
+    },
+    {
+      "file": ".cairn/archive/2026-11-18-net-request-limits-receipts/tasks.md",
+      "sha256": "f0ca82b39175e70474068e72863da27bf3c146618df49ebd15753f99acb7d102"
+    },
+    {
       "file": ".cairn/changes/allocation-strategy-contract/design.md",
       "sha256": "6b34ad39dd8180a08464c66daf450af2f6a687f9dee4bf1c5abd0f3436f06b66"
     },
@@ -1465,7 +1481,7 @@
     },
     {
       "file": ".cairn/specs/developer-experience/spec.md",
-      "sha256": "d74e1a4a4e07181cd5a299e9d34040b8e0b9be71f454cc7b983f19b133aaa0b8"
+      "sha256": "dbb3c09fbcc9e09c5010f967d6b710735dee75cdb9d112c204d4eff2ab143850"
     },
     {
       "file": ".cairn/specs/erlang-abstract-backend/spec.md",
@@ -1549,7 +1565,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "8bb903c567dbd0eadf12f1c94c80aa7a3ac3904cf706dc1743e943aaf4a3b82f"
+      "sha256": "31b45c1a66c36a3e369c9e9a0b2c6a311c9d07bdf10fa220b391647bc6dafde2"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1665,7 +1681,7 @@
     },
     {
       "file": "specs/DEVELOPER-EXPERIENCE.md",
-      "sha256": "b4a01fe6eb4d6f434a8f8a40a1c8c69ce8976e603f231130d0c21654086c7440"
+      "sha256": "d2ccd08afd7dae89d1cbbc9c2b2e3f2f895a86fe7a37919d50e96222f447eecc"
     },
     {
       "file": "specs/ERLANG-ABSTRACT-BACKEND.md",
@@ -1693,7 +1709,7 @@
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "0bce5965255d1eab1f357476e0f42a054684e914ea00ee59f45dd62db23550be"
+      "sha256": "e3678997db93031b227d9603bd3300c3aca5b1dea49265eeae2059b22e56d2fe"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
