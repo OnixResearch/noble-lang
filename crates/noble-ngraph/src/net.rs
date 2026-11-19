@@ -228,6 +228,9 @@ impl InteractionGraph {
     }
 }
 
+/// Default [`Limits::max_retained_bytes`]: 256 MiB of accounted net storage.
+pub const DEFAULT_MAX_RETAINED_BYTES: u64 = 268_435_456;
+
 /// Net resource limits charged before allocation/growth.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Limits {
@@ -237,6 +240,18 @@ pub struct Limits {
     pub max_wires: u64,
     /// Maximum interaction steps.
     pub interaction_fuel: u64,
+    /// Ceiling on the accounted bytes of every buffer one lowering, or one
+    /// validation-plus-reduction-plus-read-back, holds at the same time (the
+    /// candidate net, the independent validation rebuild and its temporaries,
+    /// the runtime arena, the output boundary, the active-pair worklist and the
+    /// read-back buffers). Each buffer is charged at `size_of` times its
+    /// requested element capacity *before* it is allocated or grown, with
+    /// checked arithmetic; allocator over-provisioning observed through
+    /// `Vec::capacity` is charged immediately afterwards. Allocator metadata,
+    /// fragmentation, stack frames, the caller's checked graph and the injected
+    /// identity scheme's constant-size hasher state are not counted: this is an
+    /// accounted ceiling, not a process RSS bound.
+    pub max_retained_bytes: u64,
 }
 
 impl Default for Limits {
@@ -245,6 +260,7 @@ impl Default for Limits {
             max_agent_slots: 1_048_576,
             max_wires: 2_097_152,
             interaction_fuel: 2_097_152,
+            max_retained_bytes: DEFAULT_MAX_RETAINED_BYTES,
         }
     }
 }
@@ -264,6 +280,9 @@ pub enum Limit {
     WorklistReservation,
     /// Fixed plan-decoder scratch requirement.
     PlanScratch,
+    /// Accounted bytes of net storage, worklist and read-back buffers
+    /// ([`Limits::max_retained_bytes`]).
+    RetainedBytes,
 }
 
 impl Limit {
@@ -277,6 +296,7 @@ impl Limit {
             Self::ArenaReservation => "arena-reservation",
             Self::WorklistReservation => "worklist-reservation",
             Self::PlanScratch => "plan-scratch",
+            Self::RetainedBytes => "retained-bytes",
         }
     }
 }
@@ -354,6 +374,9 @@ pub enum Invalid {
     PlanReservationFailure,
     /// An injected in-flight interruption rolled back before commit.
     PlanInterrupted,
+    /// A complete reduction's interaction counter differs from the admitted
+    /// net's census `2 * ops + dups + eras`.
+    InteractionCensus,
 }
 
 impl Invalid {
@@ -391,6 +414,7 @@ impl Invalid {
             Self::PlanVersion => "plan-version",
             Self::PlanReservationFailure => "plan-reservation-failure",
             Self::PlanInterrupted => "plan-interrupted",
+            Self::InteractionCensus => "interaction-census",
         }
     }
 }
@@ -536,6 +560,14 @@ pub struct Report {
     pub final_wires: Option<u64>,
     /// Initial net's retained storage estimate.
     pub retained_bytes: u64,
+    /// Peak accounted bytes charged against [`Limits::max_retained_bytes`] by this
+    /// validation, reduction and read-back, the candidate net included.
+    pub retained_bytes_high_water: u64,
+    /// Census `2 * ops + dups + eras` of the validated candidate
+    /// ([`InteractionGraph::expected_interactions`]); `None` when validation refused
+    /// it. A [`Obs::Normal`] observation is returned only when [`Report::interactions`]
+    /// equals it ([`census_check`]).
+    pub expected_interactions: Option<u64>,
     /// Counters and identities for the checked in-place plan path.
     pub plan_stats: PlanStats,
 }
@@ -605,7 +637,24 @@ pub fn lower(
     inputs: &[crate::sem::Value],
     limits: &Limits,
 ) -> Result<InteractionGraph, Refusal> {
-    build_expected(ids, checked, inputs, limits)
+    let mut meter = Meter::new(limits.max_retained_bytes);
+    build_expected(ids, checked, inputs, limits, &mut meter)
+}
+
+/// Executed per-run counter correspondence: the interaction counter of one
+/// complete reduction must equal the validated net's census
+/// `2 * ops + dups + eras` ([`InteractionGraph::expected_interactions`]).
+/// Returns that census. This compares two numbers of one run; it is not a
+/// refinement proof that the reducer implements the interaction system.
+pub fn census_check(interactions: u64, net: &InteractionGraph) -> Result<u64, Invalid> {
+    let census = net
+        .expected_interactions()
+        .ok_or(Invalid::CounterOverflow)?;
+    if interactions == census {
+        Ok(census)
+    } else {
+        Err(Invalid::InteractionCensus)
+    }
 }
 
 /// Independently rebuilds the expected net from the checked graph and supplied
@@ -618,8 +667,33 @@ pub fn validate(
     inputs: &[crate::sem::Value],
     limits: &Limits,
 ) -> Result<(), Refusal> {
+    let mut meter = Meter::new(limits.max_retained_bytes);
+    meter.charge_bytes(net.retained_bytes())?;
+    let request = ReduceRequest {
+        checked,
+        candidate: net,
+        inputs,
+        limits,
+        plan: Plan::default(),
+    };
+    validate_metered(ids, request, &mut meter)
+}
+
+/// [`validate`] with an existing meter; the request's plan is unused.
+fn validate_metered(
+    ids: &dyn IdentityScheme,
+    request: ReduceRequest<'_>,
+    meter: &mut Meter,
+) -> Result<(), Refusal> {
+    let ReduceRequest {
+        checked,
+        candidate: net,
+        inputs,
+        limits,
+        ..
+    } = request;
     admit(checked)?;
-    let input_values = input_values(checked, inputs)?;
+    let input_values = input_values(checked, inputs, meter)?;
     if net.graph_id != checked.id() {
         return Err(Refusal::InternalInvalid(Invalid::GraphIdentity));
     }
@@ -636,8 +710,12 @@ pub fn validate(
     if net.build_key != key {
         return Err(Refusal::InternalInvalid(Invalid::BuildKey));
     }
+    let structure_mark = meter.live;
+    meter.charge_for::<bool>(net.outputs.len())?;
     validate_structure(net, limits).map_err(Refusal::InternalInvalid)?;
-    let expected = build_expected_from_i64(ids, checked, input_values, limits)?;
+    meter.release_to(structure_mark);
+    let expected = build_expected_from_i64(ids, checked, input_values, limits, meter)?;
+    meter.charge_for::<u32>(net.agents.len())?;
     compare_up_to_renaming(&expected, net).map_err(Refusal::InternalInvalid)
 }
 
@@ -645,23 +723,54 @@ pub fn validate(
 ///
 /// Every successful schedule fully normalizes and returns the same ordered
 /// outputs and interaction count. Fuel is checked before the next firing.
+/// Every buffer is charged against [`Limits::max_retained_bytes`] before it is
+/// allocated or grown, and a complete reduction is reported as normal only
+/// after [`census_check`] accepts its interaction counter.
 pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
+    let mut meter = Meter::new(request.limits.max_retained_bytes);
+    let mut census = None;
+    let mut report = reduce_metered(ids, request, &mut meter, &mut census);
+    report.retained_bytes_high_water = meter.high_water;
+    report.expected_interactions = census;
+    report
+}
+
+fn reduce_metered(
+    ids: &dyn IdentityScheme,
+    request: ReduceRequest<'_>,
+    meter: &mut Meter,
+    census: &mut Option<u64>,
+) -> Report {
     let ReduceRequest {
-        checked,
         candidate: net,
-        inputs,
         limits,
         plan,
+        ..
     } = request;
     let retained_bytes = net.retained_bytes();
-    let validation = validate(ids, checked, net, inputs, limits);
+    let validation = meter.charge_bytes(retained_bytes).and_then(|()| {
+        let candidate_mark = meter.live;
+        let validated = validate_metered(ids, request, meter);
+        meter.release_to(candidate_mark);
+        validated
+    });
     if let Err(refusal) = validation {
         let obs = match refusal {
             Refusal::InternalInvalid(invalid) => Obs::InternalInvalid(invalid),
+            Refusal::Exhausted {
+                limit: Limit::RetainedBytes,
+                cap,
+                observed,
+            } => Obs::Exhausted {
+                limit: Limit::RetainedBytes,
+                cap,
+                observed,
+            },
             other => Obs::Refused(other),
         };
         return report(obs, 0, 0, None, retained_bytes);
     }
+    *census = net.expected_interactions();
     let initial_agents = match u64::try_from(net.agents.len()) {
         Ok(value) => value,
         Err(_) => {
@@ -686,6 +795,19 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
             );
         }
     };
+    if let Err(refusal) = meter
+        .charge_for::<Slot>(net.agents.len())
+        .and_then(|()| meter.charge_for::<PortRef>(net.outputs.len()))
+        .and_then(|()| meter.charge_for::<Pair>(net.agents.len()))
+    {
+        return report(
+            metered_obs(refusal),
+            0,
+            initial_agents,
+            Some(initial_wires),
+            retained_bytes,
+        );
+    }
     let mut slots = alloc::vec::Vec::with_capacity(net.agents.len());
     for agent in &net.agents {
         slots.push(Slot {
@@ -844,6 +966,28 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
             .max_plan_scratch_bytes
             .unwrap_or(rewrite::MAX_PLAN_BYTES as u64);
         let max_queue_entries = plan.max_worklist_entries.unwrap_or(limits.max_agent_slots);
+        let growth = Growth {
+            buffer: &mut slots,
+            count_cap: limits.max_agent_slots,
+        }
+        .reserve(checked_plan.arena_reservation, meter)
+        .and_then(|()| {
+            Growth {
+                buffer: &mut worklist.entries,
+                count_cap: max_queue_entries,
+            }
+            .reserve(checked_plan.queue_reservation, meter)
+        });
+        if let Err(refusal) = growth {
+            return report_with_stats(ReportInput {
+                obs: metered_obs(refusal),
+                interactions,
+                peak_live_agents: initial_agents,
+                final_wires: Some(live_wires),
+                retained_bytes,
+                plan_stats,
+            });
+        }
         let execution = match rewrite::execute(
             checked_plan,
             &mut rewrite::ExecutionState {
@@ -947,6 +1091,19 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
             }
         };
     }
+    if let Err(refusal) = meter
+        .charge_for::<crate::sem::Value>(outputs.len())
+        .and_then(|()| meter.charge_for::<bool>(slots.len()))
+    {
+        return report_with_stats(ReportInput {
+            obs: metered_obs(refusal),
+            interactions,
+            peak_live_agents: initial_agents,
+            final_wires: Some(live_wires),
+            retained_bytes,
+            plan_stats,
+        });
+    }
     match read_back(&slots, &outputs, &net.output_types) {
         Ok(values) => {
             let actual_live = slots.iter().filter(|slot| slot.agent.is_some()).count();
@@ -954,6 +1111,16 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
             {
                 return report_with_stats(ReportInput {
                     obs: Obs::InternalInvalid(Invalid::LeftoverAgent),
+                    interactions,
+                    peak_live_agents: initial_agents,
+                    final_wires: Some(live_wires),
+                    retained_bytes,
+                    plan_stats,
+                });
+            }
+            if let Err(invalid) = census_check(interactions, net) {
+                return report_with_stats(ReportInput {
+                    obs: Obs::InternalInvalid(invalid),
                     interactions,
                     peak_live_agents: initial_agents,
                     final_wires: Some(live_wires),
@@ -1008,6 +1175,7 @@ struct ReportInput {
     plan_stats: PlanStats,
 }
 
+/// The reduce wrapper replaces the two metering fields once the run ends.
 fn report_with_stats(input: ReportInput) -> Report {
     Report {
         obs: input.obs,
@@ -1015,7 +1183,120 @@ fn report_with_stats(input: ReportInput) -> Report {
         peak_live_agents: input.peak_live_agents,
         final_wires: input.final_wires,
         retained_bytes: input.retained_bytes,
+        retained_bytes_high_water: 0,
+        expected_interactions: None,
         plan_stats: input.plan_stats,
+    }
+}
+
+/// Accounted bytes charged against [`Limits::max_retained_bytes`]. `live` is
+/// the sum of the charges whose buffers may still be held; `high_water` its
+/// maximum. Every charge uses checked arithmetic and is refused, without
+/// changing either total, when it would exceed `cap`.
+#[derive(Clone, Copy, Debug)]
+struct Meter {
+    cap: u64,
+    live: u64,
+    high_water: u64,
+}
+
+impl Meter {
+    const fn new(cap: u64) -> Self {
+        Self {
+            cap,
+            live: 0,
+            high_water: 0,
+        }
+    }
+
+    /// Charges `bytes`; an overflowing total is reported as `u64::MAX`, which
+    /// exceeds every representable cap except `u64::MAX` itself and is
+    /// refused there too because the true total is larger.
+    fn charge_bytes(&mut self, bytes: u64) -> Result<(), Refusal> {
+        match self.live.checked_add(bytes) {
+            Some(total) if total <= self.cap => {
+                self.live = total;
+                self.high_water = self.high_water.max(total);
+                Ok(())
+            }
+            total => Err(Refusal::Exhausted {
+                limit: Limit::RetainedBytes,
+                cap: self.cap,
+                observed: total.unwrap_or(u64::MAX),
+            }),
+        }
+    }
+
+    /// Charges `elements` values of `T` (its `size_of`, alignment padding
+    /// included).
+    fn charge_for<T>(&mut self, elements: usize) -> Result<(), Refusal> {
+        let bytes = u64::try_from(elements)
+            .ok()
+            .zip(u64::try_from(core::mem::size_of::<T>()).ok())
+            .and_then(|(count, size)| count.checked_mul(size))
+            .unwrap_or(u64::MAX);
+        self.charge_bytes(bytes)
+    }
+
+    /// Releases every charge made after `mark` (a previous `live`), once the
+    /// buffers they paid for have been dropped.
+    fn release_to(&mut self, mark: u64) {
+        self.live = self.live.min(mark);
+    }
+}
+
+/// The observation of a refusal raised while metering a reduction.
+fn metered_obs(refusal: Refusal) -> Obs {
+    match refusal {
+        Refusal::Exhausted {
+            limit,
+            cap,
+            observed,
+        } => Obs::Exhausted {
+            limit,
+            cap,
+            observed,
+        },
+        Refusal::InternalInvalid(invalid) => Obs::InternalInvalid(invalid),
+        other => Obs::Refused(other),
+    }
+}
+
+/// One growable reducer buffer and the element-count cap its executor enforces.
+struct Growth<'a, T> {
+    buffer: &'a mut alloc::vec::Vec<T>,
+    count_cap: u64,
+}
+
+impl<T> Growth<'_, T> {
+    /// Charges, then reserves exactly, the growth a checked plan needs, so the
+    /// executor's own `try_reserve` finds the capacity in place and never grows
+    /// the buffer by an uncharged amortized step. Growth past `count_cap` is
+    /// left to the executor's count refusal (arena or worklist reservation),
+    /// which keeps its precedence.
+    fn reserve(self, additional: u32, meter: &mut Meter) -> Result<(), Refusal> {
+        let additional = usize::try_from(additional)
+            .map_err(|_| Refusal::InternalInvalid(Invalid::CounterOverflow))?;
+        let required = self
+            .buffer
+            .len()
+            .checked_add(additional)
+            .ok_or(Refusal::InternalInvalid(Invalid::CounterOverflow))?;
+        let reserved = self.buffer.capacity();
+        if required <= reserved
+            || u64::try_from(required).map_or(true, |count| count > self.count_cap)
+        {
+            return Ok(());
+        }
+        meter.charge_for::<T>(required.saturating_sub(reserved))?;
+        self.buffer
+            .try_reserve_exact(additional)
+            .map_err(|_| Refusal::InternalInvalid(Invalid::PlanReservationFailure))?;
+        let granted = self.buffer.capacity();
+        if granted > required {
+            meter.charge_for::<T>(granted.saturating_sub(required))?;
+        }
+        Ok(())
     }
 }
 
@@ -1093,11 +1374,13 @@ fn admit(checked: &crate::check::CheckedGraph) -> Result<(), Refusal> {
 fn input_values(
     checked: &crate::check::CheckedGraph,
     inputs: &[crate::sem::Value],
+    meter: &mut Meter,
 ) -> Result<alloc::vec::Vec<i64>, Refusal> {
     let expected = checked.graph().slots.len();
     if inputs.len() != expected {
         return Err(Refusal::Interface);
     }
+    meter.charge_for::<i64>(inputs.len())?;
     let mut values = alloc::vec::Vec::with_capacity(inputs.len());
     for input in inputs {
         match input {
@@ -1116,8 +1399,12 @@ struct Counts {
     wires: u64,
 }
 
-fn counts(checked: &crate::check::CheckedGraph) -> Result<(Counts, alloc::vec::Vec<u64>), Refusal> {
+fn counts(
+    checked: &crate::check::CheckedGraph,
+    meter: &mut Meter,
+) -> Result<(Counts, alloc::vec::Vec<u64>), Refusal> {
     let graph = checked.graph();
+    meter.charge_for::<u64>(graph.nodes.len())?;
     let mut uses = alloc::vec![0u64; graph.nodes.len()];
     for node in &graph.nodes {
         let (a, b) = match &node.op {
@@ -1187,10 +1474,11 @@ fn build_expected(
     checked: &crate::check::CheckedGraph,
     inputs: &[crate::sem::Value],
     limits: &Limits,
+    meter: &mut Meter,
 ) -> Result<InteractionGraph, Refusal> {
     admit(checked)?;
-    let values = input_values(checked, inputs)?;
-    build_expected_from_i64(ids, checked, values, limits)
+    let values = input_values(checked, inputs, meter)?;
+    build_expected_from_i64(ids, checked, values, limits, meter)
 }
 
 fn build_expected_from_i64(
@@ -1198,8 +1486,9 @@ fn build_expected_from_i64(
     checked: &crate::check::CheckedGraph,
     input_values: alloc::vec::Vec<i64>,
     limits: &Limits,
+    meter: &mut Meter,
 ) -> Result<InteractionGraph, Refusal> {
-    let (counts, use_counts) = counts(checked)?;
+    let (counts, use_counts) = counts(checked, meter)?;
     if counts.agents > limits.max_agent_slots {
         return Err(Refusal::Exhausted {
             limit: Limit::Agents,
@@ -1218,6 +1507,8 @@ fn build_expected_from_i64(
         .map_err(|_| Refusal::InternalInvalid(Invalid::CounterOverflow))?;
     let graph = checked.graph();
     let source_count = graph.nodes.len();
+    meter.charge_for::<InteractionGraph>(1)?;
+    meter.charge_for::<Agent>(agent_slots)?;
     let mut agents = alloc::vec::Vec::with_capacity(agent_slots);
     for (index, node) in graph.nodes.iter().enumerate() {
         let node_id = crate::ir::NodeId(
@@ -1248,7 +1539,9 @@ fn build_expected_from_i64(
             ports: [None, None, None],
         });
     }
+    meter.charge_for::<Option<u32>>(source_count)?;
     let mut first_dup = alloc::vec![None; source_count];
+    meter.charge_for::<Option<u32>>(source_count)?;
     let mut era_agent = alloc::vec![None; source_count];
     for (index, use_count) in use_counts.iter().enumerate() {
         let value = crate::ir::NodeId(
@@ -1290,6 +1583,7 @@ fn build_expected_from_i64(
         sum.checked_add(count)
     });
     let total_uses = total_uses.ok_or(Refusal::InternalInvalid(Invalid::CounterOverflow))?;
+    meter.charge_for::<usize>(source_count.saturating_add(1))?;
     let mut use_entry_offsets = alloc::vec::Vec::with_capacity(source_count.saturating_add(1));
     use_entry_offsets.push(0usize);
     for count in &use_counts {
@@ -1302,10 +1596,12 @@ fn build_expected_from_i64(
             .ok_or(Refusal::InternalInvalid(Invalid::CounterOverflow))?;
         use_entry_offsets.push(next_cursor);
     }
+    meter.charge_for::<usize>(source_count)?;
     let mut cursors = alloc::vec::Vec::with_capacity(source_count);
     for entry_offset in use_entry_offsets.iter().take(source_count) {
         cursors.push(*entry_offset);
     }
+    meter.charge_for::<Option<Endpoint>>(total_uses)?;
     let mut uses = alloc::vec![None; total_uses];
     for (index, node) in graph.nodes.iter().enumerate() {
         let node_index =
@@ -1347,6 +1643,7 @@ fn build_expected_from_i64(
             ),
         )?;
     }
+    meter.charge_for::<Option<PortRef>>(graph.outputs.len())?;
     let mut output_links = alloc::vec![None; graph.outputs.len()];
     for (index, use_count) in use_counts.iter().enumerate() {
         let source = match agents.get(index) {
@@ -1462,10 +1759,12 @@ fn build_expected_from_i64(
             }
         }
     }
+    meter.charge_for::<PortRef>(output_links.len())?;
     let mut outputs = alloc::vec::Vec::with_capacity(output_links.len());
     for output in output_links {
         outputs.push(output.ok_or(Refusal::InternalInvalid(Invalid::OutputBoundary))?);
     }
+    meter.charge_for::<crate::ir::ScalarType>(graph.outputs.len())?;
     let mut output_types = alloc::vec::Vec::with_capacity(graph.outputs.len());
     for output in &graph.outputs {
         output_types.push(
@@ -2130,7 +2429,30 @@ mod tests {
             max_agent_slots: agent_slots,
             max_wires: wire_count,
             interaction_fuel,
+            ..Limits::default()
         }
+    }
+
+    fn reduce_with(
+        checked: &crate::check::CheckedGraph,
+        net: &InteractionGraph,
+        row: &[crate::sem::Value],
+        limits: &Limits,
+        policy: StoragePolicy,
+    ) -> Report {
+        reduce(
+            &IDS,
+            ReduceRequest {
+                checked,
+                candidate: net,
+                inputs: row,
+                limits,
+                plan: Plan {
+                    storage_policy: Some(policy),
+                    ..Plan::default()
+                },
+            },
+        )
     }
 
     fn plan_fixture(
@@ -3640,5 +3962,144 @@ mod tests {
         );
         assert_eq!(report.obs, Obs::InternalInvalid(Invalid::InputValues));
         assert_eq!(report.interactions, 0);
+    }
+
+    #[test]
+    fn retained_byte_ceiling_refuses_below_and_admits_at_and_above_high_water() {
+        let (checked, net, row) = sample_interaction_graph(11, 4);
+        assert_eq!(Limit::RetainedBytes.name(), "retained-bytes");
+        for policy in [StoragePolicy::Reuse, StoragePolicy::Allocate] {
+            let unbounded = reduce_with(&checked, &net, &row, &Limits::default(), policy);
+            assert!(matches!(unbounded.obs, Obs::Normal(_)), "{policy:?}");
+            let high_water = unbounded.retained_bytes_high_water;
+            assert!(
+                high_water > net.retained_bytes(),
+                "the candidate plus validation and runtime buffers: {policy:?}"
+            );
+            for cap in [high_water, high_water + 1] {
+                let bounded = Limits {
+                    max_retained_bytes: cap,
+                    ..Limits::default()
+                };
+                let report = reduce_with(&checked, &net, &row, &bounded, policy);
+                assert_eq!(report.obs, unbounded.obs, "cap {cap}, {policy:?}");
+                assert_eq!(report.retained_bytes_high_water, high_water);
+                assert_eq!(report.interactions, unbounded.interactions);
+            }
+            let below = Limits {
+                max_retained_bytes: high_water - 1,
+                ..Limits::default()
+            };
+            let refused = reduce_with(&checked, &net, &row, &below, policy);
+            assert_eq!(
+                refused.obs,
+                Obs::Exhausted {
+                    limit: Limit::RetainedBytes,
+                    cap: high_water - 1,
+                    observed: high_water,
+                },
+                "the first charge past the cap is refused before allocation: {policy:?}"
+            );
+            assert!(refused.retained_bytes_high_water < high_water);
+        }
+    }
+
+    #[test]
+    fn lowering_and_validation_charge_their_buffers_before_allocation() {
+        let checked = sample();
+        let row = inputs(11, 4);
+        let nothing = Limits {
+            max_retained_bytes: 0,
+            ..Limits::default()
+        };
+        assert!(matches!(
+            lower(&IDS, &checked, &row, &nothing),
+            Err(Refusal::Exhausted {
+                limit: Limit::RetainedBytes,
+                cap: 0,
+                observed,
+            }) if observed > 0
+        ));
+        let net = lower(&IDS, &checked, &row, &Limits::default()).expect("sample net");
+        let high_water = reduce_with(
+            &checked,
+            &net,
+            &row,
+            &Limits::default(),
+            StoragePolicy::Reuse,
+        )
+        .retained_bytes_high_water;
+        assert!(matches!(
+            validate(&IDS, &checked, &net, &row, &nothing),
+            Err(Refusal::Exhausted {
+                limit: Limit::RetainedBytes,
+                cap: 0,
+                ..
+            })
+        ));
+        // Validation rebuilds the lowering while the candidate is held, so the
+        // reduction's high water bounds the lowering's own peak.
+        let at_reduction_peak = Limits {
+            max_retained_bytes: high_water,
+            ..Limits::default()
+        };
+        assert_eq!(lower(&IDS, &checked, &row, &at_reduction_peak), Ok(net));
+    }
+
+    #[test]
+    fn census_check_accepts_the_equal_counter_and_refuses_every_mismatch() {
+        let (checked, net, row) = sample_interaction_graph(11, 4);
+        assert_eq!(Invalid::InteractionCensus.name(), "interaction-census");
+        let census = net.expected_interactions().expect("census");
+        assert_eq!(net.rule_counts(), (3, 4, 0));
+        assert_eq!(census, 2 * 3 + 4);
+        assert_eq!(census_check(census, &net), Ok(census));
+        assert_eq!(
+            census_check(census - 1, &net),
+            Err(Invalid::InteractionCensus)
+        );
+        assert_eq!(
+            census_check(census + 1, &net),
+            Err(Invalid::InteractionCensus)
+        );
+        assert_eq!(census_check(0, &net), Err(Invalid::InteractionCensus));
+        let report = reduce_with(
+            &checked,
+            &net,
+            &row,
+            &Limits::default(),
+            StoragePolicy::Reuse,
+        );
+        assert!(matches!(report.obs, Obs::Normal(_)));
+        assert_eq!(report.expected_interactions, Some(census));
+        assert_eq!(report.interactions, census);
+
+        // A refused candidate has no admitted census.
+        let wrong_values = inputs(12, 4);
+        let refused = reduce_with(
+            &checked,
+            &net,
+            &wrong_values,
+            &Limits::default(),
+            StoragePolicy::Reuse,
+        );
+        assert_eq!(refused.obs, Obs::InternalInvalid(Invalid::InputValues));
+        assert_eq!(refused.expected_interactions, None);
+
+        // Fuel exhaustion keeps the admitted census beside the partial counter.
+        let short = Limits {
+            interaction_fuel: census - 1,
+            ..Limits::default()
+        };
+        let exhausted = reduce_with(&checked, &net, &row, &short, StoragePolicy::Reuse);
+        assert!(matches!(
+            exhausted.obs,
+            Obs::Exhausted {
+                limit: Limit::Fuel,
+                ..
+            }
+        ));
+        assert_eq!(exhausted.expected_interactions, Some(census));
+        assert_eq!(exhausted.interactions, census - 1);
     }
 }

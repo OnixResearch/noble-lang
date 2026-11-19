@@ -438,6 +438,15 @@ Each subcommand prints JSON report lines with the schema
 | `noble ngraph train MODEL --loss LOSS --data DATA --policy ngraph-deriv-real/0 --optimizer adam/0 --seed U64 --steps N --out SNAPSHOT` | `--from PARENT`, repeated `--opt-in`, `--adam-lr`, `--adam-beta1`, `--adam-beta2`, `--adam-eps`, checker budgets, `--budget-backward-scratch`, `--budget-snapshot-bytes`, `--budget-steps`. | One line: `snapshot`, `graph`, `parent`, `steps`, `loss_initial`, `loss_final` (binary64 bits). |
 | `noble ngraph verify GRAPH SNAPSHOT` | `--snapshot-id HEX`; `--replay --loss LOSS --data DATA [--from PARENT]`. | One line: `snapshot`, `graph`, `bound: true`, `replayed: true` or `false`. |
 
+`eval --net` selects the opt-in revision-3 interaction-net backend. It also
+accepts `--max-input-bytes N`, `--max-retained-bytes N` and
+`--max-output-bytes N`, which may only lower their defaults; exceeding one is a
+single `E-NET-BUDGET-input-bytes`, `-retained-bytes` or `-output-bytes` line
+(exit 5) instead of any partial report. Its header line binds the producer
+version and declared source revision, the net contract, the effective limits and
+the model-only theorems behind the census-checked interaction count. See
+[the contract, §9](docs/i64-net-contract-v3.md#9-whole-request-limits-and-the-eval---net-receipt).
+
 Report values are typed strings. An `F32` value is its exact binary32 encoding,
 `"f32:0x%08x"`, except that every NaN encoding renders as the single class
 `"f32:nan"`; `I64` and `Bool` values render as `"i64:<decimal>"` and

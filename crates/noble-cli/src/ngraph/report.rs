@@ -3,7 +3,7 @@
 //! family has no guest-runtime path. Reports carry no file path and no timing
 //! (D11).
 
-use crate::workflow::encoding::{string, Json};
+use crate::workflow::encoding::{decimal_len, quoted_len, string, Json};
 
 pub(super) const SCHEMA: &str = "noble-ngraph-report/v1";
 
@@ -166,6 +166,42 @@ impl Line {
         entries.extend(line.fields.iter().cloned());
         Json::Object(entries).encode()
     }
+
+    /// The exact byte length of [`Line::encode`], computed without encoding,
+    /// so an output ceiling can be charged before the text is built.
+    pub(super) fn encoded_len(&self) -> usize {
+        let line = &self.0;
+        let optional = |v: &Option<std::string::String>| v.as_deref().map_or(4, quoted_len);
+        let envelope = [
+            ("schema", quoted_len(SCHEMA)),
+            ("command", quoted_len(line.command)),
+            ("stage", quoted_len(line.stage)),
+            ("outcome", quoted_len(line.outcome.name())),
+            ("code", optional(&line.code)),
+            ("site", optional(&line.site)),
+            ("guest_requests", decimal_len(0)),
+        ];
+        let detail = line.detail.as_deref().map(|d| ("detail", quoted_len(d)));
+        let fields = line
+            .fields
+            .iter()
+            .map(|(key, value)| (*key, value.encoded_len()));
+        let (members, length) = envelope.into_iter().chain(detail).chain(fields).fold(
+            (0usize, 0usize),
+            |(members, length), (key, value)| {
+                (
+                    members.saturating_add(1),
+                    length
+                        .saturating_add(quoted_len(key))
+                        .saturating_add(1)
+                        .saturating_add(value),
+                )
+            },
+        );
+        length
+            .saturating_add(members.saturating_sub(1))
+            .saturating_add(2)
+    }
 }
 
 /// `"0x%016x"` of a binary64 value.
@@ -181,4 +217,36 @@ pub(super) fn digest(d: &[u8; 32]) -> Json {
 /// A count.
 pub(super) fn count(n: usize) -> Json {
     Json::Number(u64::try_from(n).unwrap_or(u64::MAX))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{string, Json, Line};
+
+    #[test]
+    fn encoded_len_is_the_length_of_every_line_shape() {
+        let lines = [
+            Line::normal("eval", "evaluation"),
+            Line::host("eval", "input", "a \"quoted\"\tdetail"),
+            Line::backend_failure(
+                "eval",
+                "output",
+                noble_ngraph::Outcome::Exhausted,
+                "E-NET-BUDGET-output-bytes",
+                "net report needs more bytes",
+            )
+            .with("cap", Json::Number(0))
+            .with("observed", Json::Number(u64::MAX)),
+            Line::normal("eval", "evaluation")
+                .with("vector", Json::Number(7))
+                .with(
+                    "outputs",
+                    Json::Array(std::vec![string("i64:-1"), string("bool:true")]),
+                )
+                .with("nested", Json::Object(std::vec![("a", Json::Null)])),
+        ];
+        for line in &lines {
+            assert_eq!(line.encoded_len(), line.encode().len(), "{}", line.encode());
+        }
+    }
 }
