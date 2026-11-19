@@ -1,0 +1,2585 @@
+{
+  "schema": "noble-m5-authority-proof/v1",
+  "issue": "https://github.com/OnixResearch/noble-lang/issues/66",
+  "source_commit": "77f7d29349c66e76f64b4eb0020506c4fe7b5417",
+  "source_tree": "3b08bddf9cb340f95ab59427f772b5831947d797",
+  "clean_source": true,
+  "allow_dirty": false,
+  "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "lean_path": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+  "lean_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+  "model_inputs": {
+    "schema": "noble-m5-authority-model-inputs/v1",
+    "source": "verification/m5/discovery.tar.gz",
+    "archive_sha256": "833328e02ca406e241442534d8c754b2d94c74f399ce01df48b78329bd3f09a1",
+    "historical_extraction_receipt": "verification/m5/extraction.json",
+    "historical_extraction_receipt_sha256": "ba163c920777ab7cb555471314e5c6567a73d61b63737a33bc2000bd14c1c572",
+    "historical_source_revision": "sha256:2565ee6c1e596ce562058ab146f95da047e9211f00a93fccde1b082ac292bd3d",
+    "members": {
+      "./workspace/proofs/m3/NobleKernel.lean": {
+        "sha256": "3cad0c3dd3e10a7c030124ad47e550f70367de25defcd1923c180d48d814b237",
+        "bytes": 24
+      },
+      "./workspace/proofs/m3/NobleKernel/Types.lean": {
+        "sha256": "1dc658e3196df56a7bd5535fec6e631a5c3bb205f8edb7d60456806457b33bd8",
+        "bytes": 42777
+      },
+      "./workspace/proofs/m3/NobleKernel/TypesExternal.lean": {
+        "sha256": "da81bda2798bdcabaaa2b88d276c929a2db93c56a3d9fc2888177bb73a4b9333",
+        "bytes": 1449
+      },
+      "./workspace/proofs/m3/NobleKernel/Funs.lean": {
+        "sha256": "9a79bac89999e5035da5e68320843d2a5f6965f70aad324e66951e8bbfc81b8a",
+        "bytes": 819809
+      },
+      "./workspace/proofs/m3/NobleKernel/FunsExternal.lean": {
+        "sha256": "4c1db4c216843f5c0c2b1bdd9dbd4231824d6154d6f643b00bf55cde559a7da0",
+        "bytes": 13952
+      }
+    },
+    "lean_version": "4.35.0",
+    "aeneas_revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+    "mathlib_revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+    "scope": "Retained M5 Charon/Aeneas translation of the authority ledger, compiled anew for each run. The checker binds every Rust source file with a generated declaration reachable from the inventoried theorems to its extraction-recorded bytes; the translation step itself is not re-run.",
+    "mutation_controls": [
+      "omitted-quota-charge",
+      "omitted-witness-consumption",
+      "omitted-exact-plan-comparison",
+      "omitted-checkpoint-validation",
+      "omitted-started-refusal",
+      "omitted-protected-operation-count",
+      "retire-consumed-witness"
+    ]
+  },
+  "dependencies": {
+    "aeneas": {
+      "revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+      "tree": "6b9c1d973dbdd9e74415fe8b8d7e0f8388a4f2e4"
+    },
+    "mathlib": {
+      "revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+      "tree": "0db52fa68e6b0c5b917c22bc6383325391a00610"
+    },
+    "plausible": {
+      "revision": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+      "tree": "4cb8bf2ba49da888f56e270a08c7803000c1da89"
+    },
+    "LeanSearchClient": {
+      "revision": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+      "tree": "bf548235194a21930a91aa9ab852dea26ca0f039"
+    },
+    "importGraph": {
+      "revision": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+      "tree": "c50cb794df9a6a8618884d0ea5151f0a26c59257"
+    },
+    "proofwidgets": {
+      "revision": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+      "tree": "6f39a3ce916f1cd8c298b85695b620444719e14b"
+    },
+    "aesop": {
+      "revision": "4a174c490d8707121c4a9290800489f105d85e07",
+      "tree": "883b9af90cca8b2d83811a507a62be85b2f3c312"
+    },
+    "Qq": {
+      "revision": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+      "tree": "356cde3a20d62d1008736a4bb98c632a799c4aa6"
+    },
+    "batteries": {
+      "revision": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+      "tree": "8b834e0208f1bc8eb66f1816519aef3982e7fb8b"
+    },
+    "Cli": {
+      "revision": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+      "tree": "915a71e36b9b7067b2bdf21c7362ec883bcbb214"
+    }
+  },
+  "sources_sha256": {
+    "proofs/m5/M5Authority.lean": "51b5d10b5284e947a205bdb5a36f0d3e6baf8056feaff1c734b02abd8c260bdc",
+    "proofs/m5/authority-inventory.json": "73272c1aa6b171632de72eadaf44c5e49c9e1e2c425360d1c9dfb31a5c783868",
+    "verification/m5-authority/model-inputs.json": "5d340a010eb830803620b11a2e82800e20fe3f6636dc9aab154a4ff226d2a293",
+    "verification/m5-authority/check.mjs": "e8d4afff6b783236138e44660ceac8533f0de696cc867e892d75bed230d78be8",
+    "proofs/m5/lake-manifest.json": "88b20dc276ffc63ed44b5963a80000ba09731ab2e88a104e9a266efda436afd3",
+    "proofs/m5/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "verification/m5/discovery.tar.gz": "833328e02ca406e241442534d8c754b2d94c74f399ce01df48b78329bd3f09a1",
+    "verification/m5/extraction.json": "ba163c920777ab7cb555471314e5c6567a73d61b63737a33bc2000bd14c1c572",
+    "policy/tool-selection.json": "63683e19474a1a165ccd6476f30a4a4c45df257b45e52add2e96f78686bcbd81",
+    "verification/aeneas-library-compatibility.mjs": "f4aba447b662ea07310baeebfbafb5de4e010f634bdde5b0709ccf35851b8027",
+    "verification/m5-archived-library-compatibility.lean": "e31034cbf1dc33c900c73e55c8cc9a6258f0db0c724d8c4fdfbb3d91653c73b7"
+  },
+  "library_compatibility": {
+    "source": "verification/m5-archived-library-compatibility.lean",
+    "sha256": "e31034cbf1dc33c900c73e55c8cc9a6258f0db0c724d8c4fdfbb3d91653c73b7",
+    "appended_to": "NobleKernel/TypesExternal.lean"
+  },
+  "artifacts_sha256": {
+    "Audit.lean": "3b6501dbc6ff94d99d079209cb8a9b84f4c3524c1ad7b3587eb462f51c9f950a",
+    "commands/001/stdout": "4174b8cb6d37177348db0123a0067d316cecf12190299dc5d73af566529d6283",
+    "commands/001/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/001/command.json": "b2c2ade0c96f7487e87ad19ac41faaffdc8d00b932b2c1a37ee6a47394620d4a",
+    "commands/002/stdout": "b25e59f69fe65f27f656dde1f804982b966dc085125f81cd3f88409acd1ebff5",
+    "commands/002/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/002/command.json": "05a7451bbfa20271a1cdd6a1a3810c8ad94f33ba6ab10cb14a7a22c7ee3cf6eb",
+    "commands/003/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/003/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/003/command.json": "9032f89511f07cd751d4b8a15cb8903595d770b87dce5301ceddd593a9a95b3c",
+    "commands/004/stdout": "eb22144228dd41cd51a0c84af4f976cd0cef473102dcf99b60be756b11f2b95a",
+    "commands/004/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/004/command.json": "cd411f570d143c741792ef185227f8c4ef072338a0df4079cb99841e663e3f64",
+    "commands/005/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/005/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/005/command.json": "ab1d745d90feb88dfdc23db3b9acf0354a5b7bce6713aaf3a649e7fecdf7627a",
+    "commands/006/stdout": "bdbde4660eed09fdbaf31abe856dcad17bb6840e9e30086984964fcd9a3dc9bc",
+    "commands/006/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/006/command.json": "e1411e270a762cd7c4990d14e47f1cfd44b7f7aeb74c536c327402f725ee93c3",
+    "commands/007/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/007/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/007/command.json": "2634b84ed0dc56edb4f891266cb670a65410d037b3737bec90108fbf651c5e44",
+    "commands/008/stdout": "90d027909d57051a62d39a286ec8c719703aa849aaed9518d958c5d31b528cba",
+    "commands/008/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/008/command.json": "e8ce75c6fae85b904833ba5f51a90b3e92fec670a4e7101b6aa4c8cd7b300bb4",
+    "commands/009/stdout": "b8229665c405f86369704b424ffcfc2e08db2b809280cab9e0aaaa806fddf2e7",
+    "commands/009/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/009/command.json": "ff5c05100a06c04d45ca4fdcf74a0e4f41e62094d50f34da996032ab29f58c09",
+    "commands/010/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/010/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/010/command.json": "9efe8f497e5de8f69b26aebeb43b5adda6613db832acb02d425d1a9ebd91470f",
+    "commands/011/stdout": "128ac2c255c47dbb266523785fc2d3ebb5c81dcef13c1add564247baca4c5113",
+    "commands/011/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/011/command.json": "22c905c363e9751b590457bef5ab07391ad2abec3638274b0e1545a2faa6c724",
+    "commands/012/stdout": "d730b95c27722b2eb44f818512df47ab62e115e1ed64fe79c5e4ef63a2985415",
+    "commands/012/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/012/command.json": "d86a886591e66ee598c79e753b53972b75023eae09ee80e7333f5d783d078722",
+    "commands/013/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/013/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/013/command.json": "21fc09b76d4cf87920459c931af5195d89273e875a962c84b5233d72f426b493",
+    "commands/014/stdout": "f96c515c4098caa75842067eb83c9162b333c162591442c7282d409de8281937",
+    "commands/014/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/014/command.json": "c782c40335321fd6de79e73b1c7f496d592e7ad29057e2b8e4d5926e6e59cf2b",
+    "commands/015/stdout": "ff5938c8d727868a984ba7e3a53351458fcb498ab525e4541eaab4717936df11",
+    "commands/015/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/015/command.json": "4c9dbba53efdec781cb2195cdfcec90b5d3d40aae419d213cfa7132e2b360005",
+    "commands/016/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/016/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/016/command.json": "5373070373a45bd0c4df67f73bf7f1c088f7e148820f61511ae80d40d9e7b046",
+    "commands/017/stdout": "0e3d56f3491056700a72067a846e3fcfd3bfd917dfa54caf8134daa615604596",
+    "commands/017/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/017/command.json": "4d5ccdbafc1b2928476325cbc80a55bbae1383e96be015d572963187802edb1c",
+    "commands/018/stdout": "e4f2c09ac2341eb19583e9ac452600614f5d57dd481407156846612d23bf52b3",
+    "commands/018/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/018/command.json": "1cb067fb758cd415700b1fe4841a3254bf728c69e9f872200cb6582f3d5a6d53",
+    "commands/019/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/019/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/019/command.json": "bad636550c0be4a56bbb7367745834ec3367d3dd851210acdd5cc596d836d15b",
+    "commands/020/stdout": "5adccfad412cebae4eb5d8fdfc6cdfcd56c32f0831f45ea777332fca2b2ee39c",
+    "commands/020/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/020/command.json": "9ecb0c1f77e534df7a25dbb386b30775abe190c23f6e8eea8f602322efca1642",
+    "commands/021/stdout": "931756f9a8b6c5f48bec79b679703b7b48d31b9c0cdc9ae3b3ed197d3da3b0f8",
+    "commands/021/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/021/command.json": "b4e6b8fdd2238c06a52e0b6859bf7c70a4bc611a1559e5fb44f30ce0fb0fa216",
+    "commands/022/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/022/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/022/command.json": "556120968e5955a2eff011e8aafaff80466a0ab64ba353e365c6ec2634425462",
+    "commands/023/stdout": "0ea7d090a3c4382dae9626d300f1d553e59faf0a433b90be4cde468bb3959f01",
+    "commands/023/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/023/command.json": "18a8078f93d668fe86280259c63246564259d407ea282d5d63d8354e91e64088",
+    "commands/024/stdout": "80e4949281db195075562868091bd1910a4a4f1480a8ec538ed93f50c53e5648",
+    "commands/024/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/024/command.json": "70f03ad060ed9f0a1abdd7fafe7dfddc99aa741dfcb643f8528d3ea0becf3e84",
+    "commands/025/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/025/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/025/command.json": "bf64963e8cd3c81202fe198c220127d1c3e7bee985bdb2fd40c9c090eed34eb8",
+    "commands/026/stdout": "a1a5b11c851755e42ceda1cb2a3e57af442240b1a13f9caf36362f72cf9844d4",
+    "commands/026/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/026/command.json": "c568334dd47d4ef46551fd5b0f7f99d34a051bcc826cadec1d82e967606f77c3",
+    "commands/027/stdout": "02650859e6949cf622ec0737a58200ec93ae4fcb947a26e880259c5a5eb7b23d",
+    "commands/027/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/027/command.json": "a39ae4108d0acd4033384f269ee4c2a07916547110b4502057ff8fb7b2c19a73",
+    "commands/028/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/028/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/028/command.json": "0f06096770361b11b08bc623004001c7f29792902d150c012596c7edf7bacf73",
+    "commands/029/stdout": "7b6e8026f2488f05e72ba684a06ea4bfe7b65c66424646f36ba288dbe5945092",
+    "commands/029/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/029/command.json": "43af2c44921ff44b235313aef725d4df76b3255ddd69b8617d9df2e58f061be9",
+    "commands/030/stdout": "1e0930b192dd58d5d04b1a588f0e2431d4e888cacdc95723384c5dcdfa410ae8",
+    "commands/030/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/030/command.json": "7700843223e653a65d97a00cfb9d6223385f4fae48ad92b3a465380e821772c5",
+    "commands/031/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/031/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/031/command.json": "67709557adba7d76e50488f6cc8d6b2a3dc88d344e1d5bb2e318bcdfa7bcf4b8",
+    "commands/032/stdout": "1dd1c99fa7e263b807afd92e51f3a60d3708efac930d0c4b7c9023242f2b45fa",
+    "commands/032/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/032/command.json": "8b38b0ecca62eada865a5b97cfd5e43256106be7b7c8eff1fae363f1f43953ed",
+    "commands/033/stdout": "74d733b897b8c450f0880d93ab02593440b80760b7ac10cdbe9a2fd8268dd6ec",
+    "commands/033/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/033/command.json": "69a34db3e235916bce8398ab4380c763a5e04a84a5727e93dfc7cfb6abe9e61b",
+    "commands/034/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/034/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/034/command.json": "4204dc16445af2c9084010a05612a7cde0788f21c3acb050457ff5ce4a5f4180",
+    "commands/035/stdout": "3f65c88bdf1d7cff575ae61358b6dbd06b5785b39189c226cf54481dae537572",
+    "commands/035/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/035/command.json": "47774153b0929b91c65a32b0212ff3a34ec50b653ef8776fdeb2b4c58b4e480b",
+    "commands/036/stdout": "f96716f5cde98e9de653b5de568bb1243d5b1710c13983a3c921d093ebc5caf5",
+    "commands/036/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/036/command.json": "b9eccdf9fbca6f6fba6c6d36908d62237e9caf923558e9f7af94cd1317ee50d0",
+    "commands/037/stdout": "cbff07b916bb47f29f4a6c061ce4628042946a1dcda83daea0f6518d13122b05",
+    "commands/037/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/037/command.json": "8d29b70b3ab45f9d40c648b225357f48b1f1572d619edd475fbbef2c22d56824",
+    "commands/038/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/038/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/038/command.json": "08a493233b09f8548fa6263e18654ffe48fa8a6f616ce9d4654031c54697b2a4",
+    "commands/039/stdout": "6e7afe5dfa907c78c1e6d02dad78dfa4582408d4434f8629a67ec7d4af7a0bd5",
+    "commands/039/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/039/command.json": "6e6f64c8084e725d51037fd26d7102d5302421f4e5be1db969a5905e82d67422",
+    "commands/040/stdout": "720e4ae7b4545d7e3498dd1d2970fbca46906de22cd0108713bb77d953ad73f8",
+    "commands/040/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/040/command.json": "bc422c622d5d845e0d0c0896d99b24d7c6b440cdfde7595511354ad929f1c6bb",
+    "commands/041/stdout": "1e118ba055f2d25219d798ef6783da7a44e01adbd033c35069b3c58c9b84b448",
+    "commands/041/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/041/command.json": "eae091844d2f9389adbedc8c87ffbe3467cfd7fdb4c8e30704710ef3cfc2b1bd",
+    "commands/042/stdout": "9ab83cc0d422bad2bf8fd1c2843a5b90a4fd0d9a3606a66e2e494b1aeb91ab02",
+    "commands/042/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/042/command.json": "c44fcbfac600403c67b9e273a5c1ce650509d9d71de0df56e20c356b55e3e968",
+    "commands/043/stdout": "643627952800b8f42df157636f73ac12c63fef93903386d3175c44bebdfb7465",
+    "commands/043/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/043/command.json": "b5d2f3cc612078567129121f25eed95ceeb30796eb9f1f3ba944c76460a8ad8d",
+    "commands/044/stdout": "9c5a01167330a387807c7d071cd173d1e9829f60b842aeea16e0633d899f0acc",
+    "commands/044/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/044/command.json": "800b025c4dbab8bacf7f3c6b47c57cc6f566f14d396e40bf1069f7f20112725d",
+    "commands/045/stdout": "c99c0fd255374ab785088b973ad5b8ccce5a0ecb7c113a689e99ff430b3dc1bc",
+    "commands/045/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/045/command.json": "f6f0a08d22fdbec9e2f95dcb406f10deb5071e4916cd2f8e72be55d009e5d795",
+    "commands/046/stdout": "23321f90e5d828fb2ee6f93e3788cb1340eb8e977cd61c7c8efde3ee33a99863",
+    "commands/046/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/046/command.json": "d38e2b3a40fe802f1b395577d2ca842b3bcb04d7411dde75d9709fb996828705",
+    "commands/047/stdout": "0fc06d4fc8b023826183f2bcb8169914e936f440422e0a13ee19dc42535f84fd",
+    "commands/047/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/047/command.json": "3aa692e3028aeb82d69fb480b426bdc9105354b249a1f7ac78e0ec9b300883c2",
+    "commands/048/stdout": "a00735edee4747e7e62104212b851aa6ea8027588e5717129a7a6cb4c868fbe2",
+    "commands/048/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/048/command.json": "13a98c9941abb8d57eeebee6e56fedf08b70a3dacb0f8c586dbee6918ce20976",
+    "commands/049/stdout": "33e55277dbb3d4b9831e23563f2f20f65efe40bbc90352c26cf87abeb7dbe0e9",
+    "commands/049/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/049/command.json": "63dac0ae62f35c6cf1e8e271803f508673cad40ee4b5c7dc21f3c6b7a44e476b",
+    "commands/050/stdout": "dd4bcd054555eda7405b8b25e6478fd7c3b3a248a42168dd3e3157775bd64ea5",
+    "commands/050/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/050/command.json": "bbf433ad328eb0ad21678c9c96a1b59bb19bb0ce958ba8e092b43a6943f7587e",
+    "commands/051/stdout": "e902278ab4afed3b29b3662053c2a3f164b55a70a41a7f301abf878aeb60056e",
+    "commands/051/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/051/command.json": "4a317782877695ce76af7a6fed40775271d831ec7d391c9f57f5dcee167c70eb",
+    "commands/052/stdout": "4dab718793311f9219a0ed5bd70db7ee816e60a1889965ed556df040a05c3c72",
+    "commands/052/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/052/command.json": "d9b76af193e16bb47e8d916b1867fa24f5ac3e2d8f16541f3f578272f4d7d520",
+    "commands/053/stdout": "4174b8cb6d37177348db0123a0067d316cecf12190299dc5d73af566529d6283",
+    "commands/053/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/053/command.json": "b2c2ade0c96f7487e87ad19ac41faaffdc8d00b932b2c1a37ee6a47394620d4a",
+    "commands/054/stdout": "b25e59f69fe65f27f656dde1f804982b966dc085125f81cd3f88409acd1ebff5",
+    "commands/054/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/054/command.json": "05a7451bbfa20271a1cdd6a1a3810c8ad94f33ba6ab10cb14a7a22c7ee3cf6eb",
+    "commands/055/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/055/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/055/command.json": "9032f89511f07cd751d4b8a15cb8903595d770b87dce5301ceddd593a9a95b3c"
+  },
+  "generated_source_lint_warnings": [
+    "warning: NobleKernel/Funs.lean:9040:4: The declaration 'authority.permit.DebugDenial.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:9051:4: The declaration 'authority.permit.DebugDenial.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:10633:4: The declaration 'authority.report.DebugBoundaryError.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:10644:4: The declaration 'authority.report.DebugBoundaryError.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:12110:4: The declaration 'contracts.DebugBehavior.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:12121:4: The declaration 'contracts.DebugBehavior.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:14865:4: The declaration 'resources.DebugError.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:14875:4: The declaration 'resources.DebugError.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead."
+  ],
+  "theorem_count": 95,
+  "theorems": [
+    {
+      "name": "M5Authority.specIffReturns",
+      "role": "result-inversion",
+      "claim": "A spec judgement is exactly a normal return that satisfies the postcondition; restated here because Aeneas #1384 removed WP.spec_equiv_exists.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@M5Authority.specIffReturns : ∀ {α : Type u_1} {m : Aeneas.Std.Result α} {P : α → Prop}, Aeneas.Std.WP.spec m P ↔ ∃ y, m = Aeneas.Std.Result.ok y ∧ P y",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.specReturns",
+      "role": "result-inversion",
+      "claim": "A spec judgement forces a normal return that satisfies the postcondition (the forward direction of specIffReturns).",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@M5Authority.specReturns : ∀ {α : Type u_1} {m : Aeneas.Std.Result α} {P : α → Prop}, Aeneas.Std.WP.spec m P → ∃ y, m = Aeneas.Std.Result.ok y ∧ P y",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.bind_eq_ok",
+      "role": "result-inversion",
+      "claim": "A bind that returns ok came from an ok computation and an ok continuation.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@M5Authority.bind_eq_ok : ∀ {α β : Type} {m : Aeneas.Std.Result α} {f : α → Aeneas.Std.Result β} {v : β}, m >>= f = Aeneas.Std.Result.ok v → ∃ a, m = Aeneas.Std.Result.ok a ∧ f a = Aeneas.Std.Result.ok v",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.owner_eq",
+      "role": "comparison-model",
+      "claim": "The generated OwnerContext equality returns exactly whether the owners are equal.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.owner_eq : ∀ (a b : noble_kernel.authority.OwnerContext), noble_kernel.authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext.eq a b = Aeneas.Std.Result.ok (decide (a = b))",
+      "subjects": [
+        "noble_kernel.authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext.eq"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.checkpoint_eq",
+      "role": "comparison-model",
+      "claim": "The generated Checkpoint equality returns exactly whether the checkpoints are equal.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.checkpoint_eq : ∀ (a b : noble_kernel.authority.Checkpoint), noble_kernel.authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint.eq a b = Aeneas.Std.Result.ok (decide (a = b))",
+      "subjects": [
+        "noble_kernel.authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint.eq"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.bytes_allM",
+      "role": "comparison-model",
+      "claim": "Element-wise byte comparison over equal-length lists decides list equality.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.bytes_allM : ∀ (l0 l1 : List Aeneas.Std.U8), l0.length = l1.length → List.allM (fun x => match x with | (x0, x1) => Aeneas.Std.core.cmp.PartialEqU8.eq x0 x1) (l0.zip l1) = Aeneas.Std.Result.ok (decide (l0 = l1))",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.bytes_eq",
+      "role": "comparison-model",
+      "claim": "The modeled Vec<u8> equality returns exactly whether the byte vectors are equal.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.bytes_eq : ∀ (v0 v1 : Aeneas.Std.alloc.vec.Vec Aeneas.Std.U8), Aeneas.Std.alloc.vec.partial_eq.PartialEqVec.eq Aeneas.Std.core.cmp.PartialEqU8 v0 v1 = Aeneas.Std.Result.ok (decide (v0 = v1))",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.constraints_eq",
+      "role": "comparison-model",
+      "claim": "The generated Constraints equality decides structural equality.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.constraints_eq : ∀ (a b : noble_kernel.authority.Constraints), noble_kernel.authority.Constraints.Insts.CoreCmpPartialEqConstraints.eq a b = Aeneas.Std.Result.ok (decide (a = b))",
+      "subjects": [
+        "noble_kernel.authority.Constraints.Insts.CoreCmpPartialEqConstraints.eq"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.operation_eq",
+      "role": "comparison-model",
+      "claim": "The generated OperationContract equality decides structural equality.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.operation_eq : ∀ (a b : noble_kernel.authority.OperationContract), noble_kernel.authority.OperationContract.Insts.CoreCmpPartialEqOperationContract.eq a b = Aeneas.Std.Result.ok (decide (a = b))",
+      "subjects": [
+        "noble_kernel.authority.OperationContract.Insts.CoreCmpPartialEqOperationContract.eq"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.description_eq",
+      "role": "comparison-model",
+      "claim": "The generated PlanDescription equality decides structural equality.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.description_eq : ∀ (a b : noble_kernel.authority.PlanDescription), noble_kernel.authority.PlanDescription.Insts.CoreCmpPartialEqPlanDescription.eq a b = Aeneas.Std.Result.ok (decide (a = b))",
+      "subjects": [
+        "noble_kernel.authority.PlanDescription.Insts.CoreCmpPartialEqPlanDescription.eq"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.plan_eq",
+      "role": "comparison-model",
+      "claim": "The generated Plan equality decides structural equality, so the exact-plan check is exact.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.plan_eq : ∀ (a b : noble_kernel.authority.Plan), noble_kernel.authority.Plan.Insts.CoreCmpPartialEqPlan.eq a b = Aeneas.Std.Result.ok (decide (a = b))",
+      "subjects": [
+        "noble_kernel.authority.Plan.Insts.CoreCmpPartialEqPlan.eq"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.claim_eq",
+      "role": "comparison-model",
+      "claim": "The generated WitnessClaim equality decides structural equality.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.claim_eq : ∀ (a b : noble_kernel.authority.permit.WitnessClaim), noble_kernel.authority.permit.WitnessClaim.Insts.CoreCmpPartialEqWitnessClaim.eq a b = Aeneas.Std.Result.ok (decide (a = b))",
+      "subjects": [
+        "noble_kernel.authority.permit.WitnessClaim.Insts.CoreCmpPartialEqWitnessClaim.eq"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.clone_bytes",
+      "role": "clone-model",
+      "claim": "Cloning a modeled byte vector returns the same vector.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.clone_bytes : ∀ (v : Aeneas.Std.alloc.vec.Vec Aeneas.Std.U8), Aeneas.Std.alloc.vec.CloneVec.clone Aeneas.Std.core.clone.CloneU8 v = Aeneas.Std.Result.ok v",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.plan_clone",
+      "role": "clone-model",
+      "claim": "The generated Plan clone returns the same plan.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.plan_clone : ∀ (plan : noble_kernel.authority.Plan), noble_kernel.authority.Plan.Insts.CoreCloneClone.clone plan = Aeneas.Std.Result.ok plan",
+      "subjects": [
+        "noble_kernel.authority.Plan.Insts.CoreCloneClone.clone"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.quota_position_matches",
+      "role": "quota-scan",
+      "claim": "The generated quota scan terminates with ok, and any located record carries the plan quota identity at the authority checkpoint.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.quota_position_matches : ∀ (s : noble_kernel.authority.Authority) (plan : noble_kernel.authority.Plan), ∃ o, noble_kernel.authority.facts.Authority.quota_position s plan = Aeneas.Std.Result.ok o ∧ M5Authority.QuotaMatch s plan o",
+      "subjects": [
+        "noble_kernel.authority.facts.Authority.quota_position"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.attempt_record_ok",
+      "role": "lookup-model",
+      "claim": "The attempt lookup accepts exactly an owned, present, same-generation attempt key.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.attempt_record_ok : ∀ (s : noble_kernel.authority.Authority) (key : noble_kernel.authority.permit.AttemptKey) (record : noble_kernel.authority.AttemptRecord), noble_kernel.authority.admission.Authority.attempt_record s key = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok record) ↔ key.owner = s.profile.owner ∧ (↑s.attempts)[↑key.slot]? = some record ∧ key.generation = record.key.generation",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.attempt_record"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.start_execution_refuses_a_started_attempt",
+      "role": "attempt-start",
+      "claim": "Starting an already-started attempt returns AlreadyStarted and leaves the authority unchanged.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.start_execution_refuses_a_started_attempt : ∀ (self : noble_kernel.authority.Authority) (execution : noble_kernel.authority.permit.Execution) (record : noble_kernel.authority.AttemptRecord), noble_kernel.authority.admission.Authority.attempt_record self execution.attempt = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok record) → record.started = true → noble_kernel.authority.admission.Authority.start_execution self execution = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err noble_kernel.authority.report.BoundaryError.AlreadyStarted, self)",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.attempt_record",
+        "noble_kernel.authority.admission.Authority.start_execution"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.start_execution_refusal_returns_input",
+      "role": "attempt-start",
+      "claim": "Every start refusal returns the unchanged authority.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.start_execution_refusal_returns_input : ∀ (self s' : noble_kernel.authority.Authority) (execution : noble_kernel.authority.permit.Execution) (error : noble_kernel.authority.report.BoundaryError), noble_kernel.authority.admission.Authority.start_execution self execution = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err error, s') → s' = self",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.start_execution"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.start_execution_marks_one_unstarted_attempt",
+      "role": "attempt-start",
+      "claim": "A successful start marks exactly the presented unstarted attempt and counts one protected operation; witnesses, quotas, the profile and the other ledger counters are unchanged.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.start_execution_marks_one_unstarted_attempt : ∀ (self s' : noble_kernel.authority.Authority) (execution : noble_kernel.authority.permit.Execution) (started : noble_kernel.authority.permit.Started), noble_kernel.authority.admission.Authority.start_execution self execution = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok started, s') → ∃ record, noble_kernel.authority.admission.Authority.attempt_record self execution.attempt = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok record) ∧ record.started = false ∧ ↑s'.attempts = (↑self.attempts).set ↑execution.attempt.slot { key := record.key, plan := record.plan, started := true, admitted := record.admitted, unknown := record.unknown, terminal := record.terminal } ∧ ↑s'.counters.protected_operations = ↑self.counters.protected_operations + 1 ∧ s'.witnesses = self.witnesses ∧ s'.quotas = self.quotas ∧ s'.profile = self.profile ∧ started.attempt = record.key ∧ started.plan = record.plan ∧ s'.counters.witnesses_created = self.counters.witnesses_created ∧ s'.counters.witness_consumptions = self.counters.witness_consumptions ∧ s'.counters.attempts_admitted = self.counters.attempts_admitted",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.attempt_record",
+        "noble_kernel.authority.admission.Authority.start_execution"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.started_attempt_cannot_start_again",
+      "role": "attempt-start",
+      "claim": "Attempts start at most once: replaying the execution permit on the resulting state is refused without change.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.started_attempt_cannot_start_again : ∀ (self s' : noble_kernel.authority.Authority) (execution : noble_kernel.authority.permit.Execution) (started : noble_kernel.authority.permit.Started), noble_kernel.authority.admission.Authority.start_execution self execution = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok started, s') → noble_kernel.authority.admission.Authority.start_execution s' execution = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err noble_kernel.authority.report.BoundaryError.AlreadyStarted, s')",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.start_execution"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.invocation_eq",
+      "role": "comparison-model",
+      "claim": "The generated InvocationOutcome equality decides equality through the discriminant.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.invocation_eq : ∀ (a b : noble_kernel.authority.report.InvocationOutcome), noble_kernel.authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome.eq a b = Aeneas.Std.Result.ok (decide (a = b))",
+      "subjects": [
+        "noble_kernel.authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome.eq"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ne_trait_default_owner",
+      "role": "comparison-model",
+      "claim": "The default owner inequality is the negated decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.ne_trait_default_owner : ∀ (a b : noble_kernel.authority.OwnerContext), Aeneas.Std.core.cmp.PartialEq.ne.trait_default noble_kernel.authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext a b = Aeneas.Std.Result.ok !decide (a = b)",
+      "subjects": [
+        "noble_kernel.authority.OwnerContext.Insts.CoreCmpPartialEqOwnerContext"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ne_trait_default_checkpoint",
+      "role": "comparison-model",
+      "claim": "The default checkpoint inequality is the negated decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.ne_trait_default_checkpoint : ∀ (a b : noble_kernel.authority.Checkpoint), Aeneas.Std.core.cmp.PartialEq.ne.trait_default noble_kernel.authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint a b = Aeneas.Std.Result.ok !decide (a = b)",
+      "subjects": [
+        "noble_kernel.authority.Checkpoint.Insts.CoreCmpPartialEqCheckpoint"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ne_trait_default_plan",
+      "role": "comparison-model",
+      "claim": "The default plan inequality is the negated decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.ne_trait_default_plan : ∀ (a b : noble_kernel.authority.Plan), Aeneas.Std.core.cmp.PartialEq.ne.trait_default noble_kernel.authority.Plan.Insts.CoreCmpPartialEqPlan a b = Aeneas.Std.Result.ok !decide (a = b)",
+      "subjects": [
+        "noble_kernel.authority.Plan.Insts.CoreCmpPartialEqPlan"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ne_trait_default_claim",
+      "role": "comparison-model",
+      "claim": "The default witness-claim inequality is the negated decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.ne_trait_default_claim : ∀ (a b : noble_kernel.authority.permit.WitnessClaim), Aeneas.Std.core.cmp.PartialEq.ne.trait_default noble_kernel.authority.permit.WitnessClaim.Insts.CoreCmpPartialEqWitnessClaim a b = Aeneas.Std.Result.ok !decide (a = b)",
+      "subjects": [
+        "noble_kernel.authority.permit.WitnessClaim.Insts.CoreCmpPartialEqWitnessClaim"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ne_trait_default_invocation",
+      "role": "comparison-model",
+      "claim": "The default invocation-outcome inequality is the negated decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.ne_trait_default_invocation : ∀ (a b : noble_kernel.authority.report.InvocationOutcome), Aeneas.Std.core.cmp.PartialEq.ne.trait_default noble_kernel.authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome a b = Aeneas.Std.Result.ok !decide (a = b)",
+      "subjects": [
+        "noble_kernel.authority.report.InvocationOutcome.Insts.CoreCmpPartialEqInvocationOutcome"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ne_trait_default_source",
+      "role": "comparison-model",
+      "claim": "The default source inequality is the negated decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.ne_trait_default_source : ∀ (a b : noble_kernel.authority.SourceId), Aeneas.Std.core.cmp.PartialEq.ne.trait_default noble_kernel.authority.SourceId.Insts.CoreCmpPartialEqSourceId a b = Aeneas.Std.Result.ok !decide (a = b)",
+      "subjects": [
+        "noble_kernel.authority.SourceId.Insts.CoreCmpPartialEqSourceId"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ne_trait_default_kind",
+      "role": "comparison-model",
+      "claim": "The default resource-kind inequality is the negated decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.ne_trait_default_kind : ∀ (a b : noble_kernel.types.ResourceKind), Aeneas.Std.core.cmp.PartialEq.ne.trait_default noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind a b = Aeneas.Std.Result.ok !decide (a = b)",
+      "subjects": [
+        "noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.witness_record_found",
+      "role": "lookup-model",
+      "claim": "An accepted witness lookup is owned by the authority and returns the record at the claimed slot.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.witness_record_found : ∀ (s : noble_kernel.authority.Authority) (claim : noble_kernel.authority.permit.WitnessClaim) (record : noble_kernel.authority.WitnessRecord), noble_kernel.authority.admission.Authority.witness_record s claim = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok record) → claim.owner = s.profile.owner ∧ (↑s.witnesses)[↑claim.slot]? = some record",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.witness_record"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.validate_entry_requires_the_presented_claim",
+      "role": "validator-step",
+      "claim": "Entry validation accepts only a presented witness whose claim equals the requested claim.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.validate_entry_requires_the_presented_claim : ∀ (s : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (available : Aeneas.Std.U64), noble_kernel.authority.admission.Authority.validate_entry s witness request current = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok available) → ∃ presented, witness = some presented ∧ presented.claim = request.claim ∧ request.claim.owner = s.profile.owner",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.validate_entry"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.validate_entry_requires_a_live_witness",
+      "role": "validator-step",
+      "claim": "Entry validation accepts only a live retained witness at the claimed slot.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.validate_entry_requires_a_live_witness : ∀ (s : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (available : Aeneas.Std.U64), noble_kernel.authority.admission.Authority.validate_entry s witness request current = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok available) → ∃ retained, (↑s.witnesses)[↑request.claim.slot]? = some retained ∧ retained.state = noble_kernel.authority.permit.WitnessState.Live",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.validate_entry"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.validate_entry_requires_the_exact_plan",
+      "role": "validator-step",
+      "claim": "Entry validation accepts only a retained witness whose plan equals the requested plan.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.validate_entry_requires_the_exact_plan : ∀ (s : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (available : Aeneas.Std.U64), noble_kernel.authority.admission.Authority.validate_entry s witness request current = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok available) → ∃ retained, (↑s.witnesses)[↑request.claim.slot]? = some retained ∧ retained.plan = request.plan",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.validate_entry"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.validate_entry_requires_valid_facts",
+      "role": "validator-step",
+      "claim": "Entry validation accepts only validated facts and returns their supplied quota snapshot.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.validate_entry_requires_valid_facts : ∀ (s : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (available : Aeneas.Std.U64), noble_kernel.authority.admission.Authority.validate_entry s witness request current = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok available) → noble_kernel.authority.facts.Authority.validate_facts s request.plan current = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok ()) ∧ current.quota_remaining = some available",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.validate_entry",
+        "noble_kernel.authority.facts.Authority.validate_facts"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.validate_facts_requires_the_current_checkpoint",
+      "role": "validator-step",
+      "claim": "Fact validation accepts only facts at the authority checkpoint.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.validate_facts_requires_the_current_checkpoint : ∀ (s : noble_kernel.authority.Authority) (plan : noble_kernel.authority.Plan) (current : noble_kernel.authority.CurrentFacts), noble_kernel.authority.facts.Authority.validate_facts s plan current = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok ()) → current.checkpoint = s.profile.checkpoint",
+      "subjects": [
+        "noble_kernel.authority.facts.Authority.validate_facts"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.validate_facts_requires_current_authority",
+      "role": "validator-step",
+      "claim": "Fact validation requires a pending invocation, the owner, the authority source, a grant of exactly the plan, valid credentials, no revocation, the plan policy, the validity window and an accepted quota check.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.validate_facts_requires_current_authority : ∀ (s : noble_kernel.authority.Authority) (plan : noble_kernel.authority.Plan) (current : noble_kernel.authority.CurrentFacts), noble_kernel.authority.facts.Authority.validate_facts s plan current = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok ()) → s.invocation = noble_kernel.authority.report.InvocationOutcome.Pending ∧ plan.description.owner = s.profile.owner ∧ current.source = s.profile.authority_source ∧ (∃ grant, current.grant = some grant ∧ grant.plan = plan ∧ grant.kind = s.profile.witness_kind) ∧ current.credentials_valid = some true ∧ current.revoked = some false ∧ current.policy = some plan.description.policy ∧ ↑plan.description.constraints.not_before ≤ ↑current.checkpoint.now ∧ ↑current.checkpoint.now < ↑plan.description.constraints.expires_at ∧ noble_kernel.authority.facts.Authority.validate_quota s plan current = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok ())",
+      "subjects": [
+        "noble_kernel.authority.facts.Authority.validate_facts",
+        "noble_kernel.authority.facts.Authority.validate_quota"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.validate_quota_bounds_the_charge",
+      "role": "validator-step",
+      "claim": "The quota check accepts only a charge within the supplied snapshot; an existing checkpoint-local record must carry that same snapshot.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.validate_quota_bounds_the_charge : ∀ (s : noble_kernel.authority.Authority) (plan : noble_kernel.authority.Plan) (current : noble_kernel.authority.CurrentFacts), noble_kernel.authority.facts.Authority.validate_quota s plan current = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok ()) → ∃ available, current.quota_remaining = some available ∧ ∀ (o : Option Aeneas.Std.Usize), noble_kernel.authority.facts.Authority.quota_position s plan = Aeneas.Std.Result.ok o → match o with | none => ↑plan.description.constraints.units ≤ ↑available | some j => ∃ record, (↑s.quotas)[↑j]? = some record ∧ record.available = available ∧ ↑record.spent + ↑plan.description.constraints.units ≤ ↑available",
+      "subjects": [
+        "noble_kernel.authority.facts.Authority.quota_position",
+        "noble_kernel.authority.facts.Authority.validate_quota"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.charge_quota_refusal_returns_input",
+      "role": "refusal-preservation",
+      "claim": "A refused quota charge returns the unchanged authority.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.charge_quota_refusal_returns_input : ∀ (self s' : noble_kernel.authority.Authority) (plan : noble_kernel.authority.Plan) (available : Aeneas.Std.U64) (denial : noble_kernel.authority.permit.Denial), noble_kernel.authority.admission.Authority.charge_quota self plan available = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err denial, s') → s' = self",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.charge_quota"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.commit_refusal_returns_input",
+      "role": "refusal-preservation",
+      "claim": "A refused commit returns the unchanged authority.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.commit_refusal_returns_input : ∀ (self s' : noble_kernel.authority.Authority) (request : noble_kernel.authority.permit.AdmissionRequest) (available : Aeneas.Std.U64) (admitted : Aeneas.Std.U32) (denial : noble_kernel.authority.permit.Denial), noble_kernel.authority.admission.Authority.commit self request available admitted = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err denial, s') → s' = self",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.commit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.refused_admission_preserves_ledger",
+      "role": "refusal-preservation",
+      "claim": "Denial and preflight leave witnesses, attempts, quota records and every ledger counter unchanged; only their request counter and requested effect move.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.refused_admission_preserves_ledger : ∀ (self s' : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (facts : noble_kernel.authority.CurrentFacts) (outcome : noble_kernel.authority.permit.Admission), noble_kernel.authority.admission.Authority.admit self witness request facts = Aeneas.Std.Result.ok (outcome, s') → (∀ (execution : noble_kernel.authority.permit.Execution), outcome ≠ noble_kernel.authority.permit.Admission.Committed execution) → s'.witnesses = self.witnesses ∧ s'.attempts = self.attempts ∧ s'.quotas = self.quotas ∧ M5Authority.CountersKept self.counters s'.counters",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.push_ok",
+      "role": "vector-model",
+      "claim": "A successful modeled Vec push appends exactly the pushed element.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@M5Authority.push_ok : ∀ {α : Type} {v w : Aeneas.Std.alloc.vec.Vec α} {x : α}, v.push x = Aeneas.Std.Result.ok w → ↑w = ↑v ++ [x]",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.index_mut_ok",
+      "role": "vector-model",
+      "claim": "A successful modeled mutable index reads the indexed element and writes back by replacement at that index.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@M5Authority.index_mut_ok : ∀ {α : Type} {v : Aeneas.Std.alloc.vec.Vec α} {i : Aeneas.Std.Usize} {x : α} {back : α → Aeneas.Std.alloc.vec.Vec α}, Aeneas.Std.alloc.vec.Vec.index_mut (Aeneas.Std.core.slice.index.SliceIndexUsizeSlice α) v i = Aeneas.Std.Result.ok (x, back) → (↑v)[↑i]? = some x ∧ ∀ (y : α), ↑(back y) = (↑v).set (↑i) y",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.charge_quota_keeps_the_rest",
+      "role": "commit-step",
+      "claim": "A successful quota charge changes no field other than the quota records.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.charge_quota_keeps_the_rest : ∀ (s s' : noble_kernel.authority.Authority) (plan : noble_kernel.authority.Plan) (available : Aeneas.Std.U64), noble_kernel.authority.admission.Authority.charge_quota s plan available = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok (), s') → s'.profile = s.profile ∧ s'.witnesses = s.witnesses ∧ s'.attempts = s.attempts ∧ s'.counters = s.counters ∧ s'.invocation = s.invocation",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.charge_quota"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.charge_quota_charges_the_plan_units",
+      "role": "commit-step",
+      "claim": "A successful quota charge adds exactly the plan units to the located record, or opens a record for this checkpoint holding the supplied snapshot and exactly those units.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.charge_quota_charges_the_plan_units : ∀ (s s' : noble_kernel.authority.Authority) (plan : noble_kernel.authority.Plan) (available : Aeneas.Std.U64), noble_kernel.authority.admission.Authority.charge_quota s plan available = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok (), s') → ∀ (o : Option Aeneas.Std.Usize), noble_kernel.authority.facts.Authority.quota_position s plan = Aeneas.Std.Result.ok o → match o with | none => ↑s'.quotas = ↑s.quotas ++ [{ quota := plan.description.constraints.quota, checkpoint := s.profile.checkpoint, available := available, spent := plan.description.constraints.units }] | some j => ∃ record spent, (↑s.quotas)[↑j]? = some record ∧ ↑spent = ↑record.spent + ↑plan.description.constraints.units ∧ ↑s'.quotas = (↑s.quotas).set ↑j { quota := record.quota, checkpoint := record.checkpoint, available := record.available, spent := spent }",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.charge_quota",
+        "noble_kernel.authority.facts.Authority.quota_position"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.commit_consumes_the_claimed_witness",
+      "role": "commit-step",
+      "claim": "A successful commit marks exactly the claimed witness slot consumed.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.commit_consumes_the_claimed_witness : ∀ (s s' : noble_kernel.authority.Authority) (request : noble_kernel.authority.permit.AdmissionRequest) (available : Aeneas.Std.U64) (admitted : Aeneas.Std.U32) (execution : noble_kernel.authority.permit.Execution), noble_kernel.authority.admission.Authority.commit s request available admitted = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok execution, s') → ∃ retained, (↑s.witnesses)[↑request.claim.slot]? = some retained ∧ ↑s'.witnesses = (↑s.witnesses).set ↑request.claim.slot { claim := retained.claim, plan := retained.plan, state := noble_kernel.authority.permit.WitnessState.Consumed }",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.commit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.commit_registers_one_unstarted_attempt",
+      "role": "commit-step",
+      "claim": "A successful commit appends exactly one unstarted attempt bound to the requested plan and keyed by the returned permit.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.commit_registers_one_unstarted_attempt : ∀ (s s' : noble_kernel.authority.Authority) (request : noble_kernel.authority.permit.AdmissionRequest) (available : Aeneas.Std.U64) (admitted : Aeneas.Std.U32) (execution : noble_kernel.authority.permit.Execution), noble_kernel.authority.admission.Authority.commit s request available admitted = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok execution, s') → ↑s'.attempts = ↑s.attempts ++ [{ key := execution.attempt, plan := request.plan, started := false, admitted := s.profile.checkpoint, unknown := none, terminal := none }] ∧ execution.attempt.owner = s.profile.owner ∧ ↑execution.attempt.slot = (↑s.attempts).length",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.commit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.commit_charges_the_plan_quota",
+      "role": "commit-step",
+      "claim": "A successful commit applies exactly the quota charge of the requested plan.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.commit_charges_the_plan_quota : ∀ (s s' : noble_kernel.authority.Authority) (request : noble_kernel.authority.permit.AdmissionRequest) (available : Aeneas.Std.U64) (admitted : Aeneas.Std.U32) (execution : noble_kernel.authority.permit.Execution), noble_kernel.authority.admission.Authority.commit s request available admitted = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok execution, s') → ∀ (o : Option Aeneas.Std.Usize), noble_kernel.authority.facts.Authority.quota_position s request.plan = Aeneas.Std.Result.ok o → match o with | none => ↑s'.quotas = ↑s.quotas ++ [{ quota := request.plan.description.constraints.quota, checkpoint := s.profile.checkpoint, available := available, spent := request.plan.description.constraints.units }] | some j => ∃ record spent, (↑s.quotas)[↑j]? = some record ∧ ↑spent = ↑record.spent + ↑request.plan.description.constraints.units ∧ ↑s'.quotas = (↑s.quotas).set ↑j { quota := record.quota, checkpoint := record.checkpoint, available := record.available, spent := spent }",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.commit",
+        "noble_kernel.authority.facts.Authority.quota_position"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.commit_sets_admission_counters",
+      "role": "commit-step",
+      "claim": "A successful commit sets both admission counters to the admitted count and leaves the other counters unchanged.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.commit_sets_admission_counters : ∀ (s s' : noble_kernel.authority.Authority) (request : noble_kernel.authority.permit.AdmissionRequest) (available : Aeneas.Std.U64) (admitted : Aeneas.Std.U32) (execution : noble_kernel.authority.permit.Execution), noble_kernel.authority.admission.Authority.commit s request available admitted = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok execution, s') → s'.counters = have __src := s.counters; { authorization_requests := __src.authorization_requests, admission_requests := __src.admission_requests, witnesses_created := __src.witnesses_created, witness_consumptions := admitted, attempts_admitted := admitted, protected_operations := __src.protected_operations, approved_observations := __src.approved_observations, successful_deliveries := __src.successful_deliveries }",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.commit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_path",
+      "role": "structural-path",
+      "claim": "A committed admission validated the entry and committed on the same request-recorded state, whose ledger fields and creation/protected counters are the caller’s; the admitted count is one more than the caller’s.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.committed_admission_path : ∀ (self s' : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (execution : noble_kernel.authority.permit.Execution), noble_kernel.authority.admission.Authority.admit self witness request current = Aeneas.Std.Result.ok (noble_kernel.authority.permit.Admission.Committed execution, s') → ∃ staged available admitted, staged.profile = self.profile ∧ staged.witnesses = self.witnesses ∧ staged.attempts = self.attempts ∧ staged.quotas = self.quotas ∧ staged.invocation = self.invocation ∧ noble_kernel.authority.admission.Authority.validate_entry staged witness request current = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok available) ∧ noble_kernel.authority.admission.Authority.commit staged request available admitted = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok execution, s') ∧ staged.counters.witnesses_created = self.counters.witnesses_created ∧ staged.counters.protected_operations = self.counters.protected_operations ∧ ↑admitted = ↑self.counters.attempts_admitted + 1",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit",
+        "noble_kernel.authority.admission.Authority.commit",
+        "noble_kernel.authority.admission.Authority.validate_entry"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_presents_the_claim",
+      "role": "committed-admission",
+      "claim": "A committed admission required a presented witness carrying exactly the requested, authority-owned claim.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.committed_admission_presents_the_claim : ∀ (self s' : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (execution : noble_kernel.authority.permit.Execution), noble_kernel.authority.admission.Authority.admit self witness request current = Aeneas.Std.Result.ok (noble_kernel.authority.permit.Admission.Committed execution, s') → ∃ presented, witness = some presented ∧ presented.claim = request.claim ∧ request.claim.owner = self.profile.owner",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_binds_the_exact_plan",
+      "role": "committed-admission",
+      "claim": "Admitted execution stays bound to the independently authorized plan: the retained witness and the current grant both carry exactly the requested plan.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.committed_admission_binds_the_exact_plan : ∀ (self s' : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (execution : noble_kernel.authority.permit.Execution), noble_kernel.authority.admission.Authority.admit self witness request current = Aeneas.Std.Result.ok (noble_kernel.authority.permit.Admission.Committed execution, s') → (∃ retained, (↑self.witnesses)[↑request.claim.slot]? = some retained ∧ retained.plan = request.plan) ∧ ∃ grant, current.grant = some grant ∧ grant.plan = request.plan",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_requires_the_current_checkpoint",
+      "role": "committed-admission",
+      "claim": "Stale facts cannot mint an execution permit: committed admission requires facts at the authority checkpoint.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.committed_admission_requires_the_current_checkpoint : ∀ (self s' : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (execution : noble_kernel.authority.permit.Execution), noble_kernel.authority.admission.Authority.admit self witness request current = Aeneas.Std.Result.ok (noble_kernel.authority.permit.Admission.Committed execution, s') → current.checkpoint = self.profile.checkpoint",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_requires_current_authority",
+      "role": "committed-admission",
+      "claim": "Committed admission requires a pending invocation, owner, authority source, valid credentials, no revocation, the plan policy and the validity window.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.committed_admission_requires_current_authority : ∀ (self s' : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (execution : noble_kernel.authority.permit.Execution), noble_kernel.authority.admission.Authority.admit self witness request current = Aeneas.Std.Result.ok (noble_kernel.authority.permit.Admission.Committed execution, s') → self.invocation = noble_kernel.authority.report.InvocationOutcome.Pending ∧ request.plan.description.owner = self.profile.owner ∧ current.source = self.profile.authority_source ∧ current.credentials_valid = some true ∧ current.revoked = some false ∧ current.policy = some request.plan.description.policy ∧ ↑request.plan.description.constraints.not_before ≤ ↑current.checkpoint.now ∧ ↑current.checkpoint.now < ↑request.plan.description.constraints.expires_at",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_consumes_one_live_witness",
+      "role": "committed-admission",
+      "claim": "Each consumed witness corresponds to one admitted attempt: committed admission consumes exactly the claimed, previously live witness.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.committed_admission_consumes_one_live_witness : ∀ (self s' : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (execution : noble_kernel.authority.permit.Execution), noble_kernel.authority.admission.Authority.admit self witness request current = Aeneas.Std.Result.ok (noble_kernel.authority.permit.Admission.Committed execution, s') → ∃ retained, (↑self.witnesses)[↑request.claim.slot]? = some retained ∧ retained.state = noble_kernel.authority.permit.WitnessState.Live ∧ ↑s'.witnesses = (↑self.witnesses).set ↑request.claim.slot { claim := retained.claim, plan := retained.plan, state := noble_kernel.authority.permit.WitnessState.Consumed }",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_registers_one_unstarted_attempt",
+      "role": "committed-admission",
+      "claim": "Committed admission registers exactly one unstarted attempt bound to the requested plan.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.committed_admission_registers_one_unstarted_attempt : ∀ (self s' : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (execution : noble_kernel.authority.permit.Execution), noble_kernel.authority.admission.Authority.admit self witness request current = Aeneas.Std.Result.ok (noble_kernel.authority.permit.Admission.Committed execution, s') → ↑s'.attempts = ↑self.attempts ++ [{ key := execution.attempt, plan := request.plan, started := false, admitted := self.profile.checkpoint, unknown := none, terminal := none }] ∧ execution.attempt.owner = self.profile.owner ∧ ↑execution.attempt.slot = (↑self.attempts).length",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_charges_within_the_supplied_quota",
+      "role": "committed-admission",
+      "claim": "Committed admission charges exactly the plan units to this checkpoint record for the plan quota, which carries the supplied snapshot, and the charge stays within it.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.committed_admission_charges_within_the_supplied_quota : ∀ (self s' : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (execution : noble_kernel.authority.permit.Execution), noble_kernel.authority.admission.Authority.admit self witness request current = Aeneas.Std.Result.ok (noble_kernel.authority.permit.Admission.Committed execution, s') → ∃ available, current.quota_remaining = some available ∧ ((∃ j record spent, (↑self.quotas)[↑j]? = some record ∧ record.quota = request.plan.description.constraints.quota ∧ record.checkpoint = self.profile.checkpoint ∧ record.available = available ∧ ↑spent = ↑record.spent + ↑request.plan.description.constraints.units ∧ ↑spent ≤ ↑available ∧ ↑s'.quotas = (↑self.quotas).set ↑j { quota := record.quota, checkpoint := record.checkpoint, available := record.available, spent := spent }) ∨ ↑request.plan.description.constraints.units ≤ ↑available ∧ ↑s'.quotas = ↑self.quotas ++ [{ quota := request.plan.description.constraints.quota, checkpoint := self.profile.checkpoint, available := available, spent := request.plan.description.constraints.units }])",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.admission_preserves_quota_within",
+      "role": "quota-invariant",
+      "claim": "Every admission outcome preserves the checkpoint-local quota invariant.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.admission_preserves_quota_within : ∀ (self s' : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (outcome : noble_kernel.authority.permit.Admission), M5Authority.QuotaWithin self → noble_kernel.authority.admission.Authority.admit self witness request current = Aeneas.Std.Result.ok (outcome, s') → M5Authority.QuotaWithin s'",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.authorize_keeps_quotas",
+      "role": "frame",
+      "claim": "Authorization never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.authorize_keeps_quotas : ∀ (s s' : noble_kernel.authority.Authority) (plan : noble_kernel.authority.Plan) (current : noble_kernel.authority.CurrentFacts) (outcome : noble_kernel.authority.permit.Authorization), noble_kernel.authority.facts.Authority.authorize_from_trusted_host s plan current = Aeneas.Std.Result.ok (outcome, s') → s'.quotas = s.quotas",
+      "subjects": [
+        "noble_kernel.authority.facts.Authority.authorize_from_trusted_host"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.advance_keeps_quotas",
+      "role": "frame",
+      "claim": "Checkpoint advancement never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.advance_keeps_quotas : ∀ (s s' : noble_kernel.authority.Authority) (checkpoint : noble_kernel.authority.Checkpoint) (outcome : Aeneas.Std.core.result.Result Unit noble_kernel.authority.SetupError), noble_kernel.authority.facts.Authority.advance_from_trusted_host s checkpoint = Aeneas.Std.Result.ok (outcome, s') → s'.quotas = s.quotas",
+      "subjects": [
+        "noble_kernel.authority.facts.Authority.advance_from_trusted_host"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.start_keeps_quotas",
+      "role": "frame",
+      "claim": "Execution start never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.start_keeps_quotas : ∀ (s s' : noble_kernel.authority.Authority) (execution : noble_kernel.authority.permit.Execution) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.permit.Started noble_kernel.authority.report.BoundaryError), noble_kernel.authority.admission.Authority.start_execution s execution = Aeneas.Std.Result.ok (outcome, s') → s'.quotas = s.quotas",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.start_execution"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.observe_keeps_quotas",
+      "role": "frame",
+      "claim": "Observation never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.observe_keeps_quotas : ∀ (s s' : noble_kernel.authority.Authority) (description : noble_kernel.authority.report.ObservationDescription) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.report.Observation noble_kernel.authority.report.BoundaryError), noble_kernel.authority.observation.Authority.observe_from_trusted_host s description = Aeneas.Std.Result.ok (outcome, s') → s'.quotas = s.quotas",
+      "subjects": [
+        "noble_kernel.authority.observation.Authority.observe_from_trusted_host"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.retire_witness_keeps_quotas",
+      "role": "frame",
+      "claim": "Witness retirement never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.retire_witness_keeps_quotas : ∀ (s s' : noble_kernel.authority.Authority) (witness : noble_kernel.authority.permit.Witness) (outcome : Aeneas.Std.core.result.Result Unit noble_kernel.authority.permit.Denial), noble_kernel.authority.observation.Authority.retire_witness s witness = Aeneas.Std.Result.ok (outcome, s') → s'.quotas = s.quotas",
+      "subjects": [
+        "noble_kernel.authority.observation.Authority.retire_witness"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.retire_live_witnesses_keeps_quotas",
+      "role": "frame",
+      "claim": "The generated live-witness retirement loop terminates and never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.retire_live_witnesses_keeps_quotas : ∀ (s s' : noble_kernel.authority.Authority), noble_kernel.authority.observation.Authority.retire_live_witnesses s = Aeneas.Std.Result.ok s' → s'.quotas = s.quotas",
+      "subjects": [
+        "noble_kernel.authority.observation.Authority.retire_live_witnesses"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.cancel_keeps_quotas",
+      "role": "frame",
+      "claim": "Invocation cancellation never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.cancel_keeps_quotas : ∀ (s s' : noble_kernel.authority.Authority) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.report.InvocationOutcome noble_kernel.authority.report.BoundaryError), noble_kernel.authority.observation.Authority.cancel_invocation s = Aeneas.Std.Result.ok (outcome, s') → s'.quotas = s.quotas",
+      "subjects": [
+        "noble_kernel.authority.observation.Authority.cancel_invocation"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.fail_keeps_quotas",
+      "role": "frame",
+      "claim": "Invocation failure never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.fail_keeps_quotas : ∀ (s s' : noble_kernel.authority.Authority) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.report.InvocationOutcome noble_kernel.authority.report.BoundaryError), noble_kernel.authority.observation.Authority.fail_invocation s = Aeneas.Std.Result.ok (outcome, s') → s'.quotas = s.quotas",
+      "subjects": [
+        "noble_kernel.authority.observation.Authority.fail_invocation"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.deliver_keeps_quotas",
+      "role": "frame",
+      "claim": "Success delivery never writes a quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.deliver_keeps_quotas : ∀ (s s' : noble_kernel.authority.Authority) (attempt : noble_kernel.authority.permit.AttemptKey) (observed : noble_kernel.authority.report.Observation) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.report.Receipt noble_kernel.authority.report.BoundaryError), noble_kernel.authority.observation.Authority.deliver_success s attempt observed = Aeneas.Std.Result.ok (outcome, s') → s'.quotas = s.quotas",
+      "subjects": [
+        "noble_kernel.authority.observation.Authority.deliver_success"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.new_opens_no_quota",
+      "role": "quota-invariant",
+      "claim": "A newly constructed authority has no quota record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.new_opens_no_quota : ∀ (profile : noble_kernel.authority.Profile) (s : noble_kernel.authority.Authority), noble_kernel.authority.facts.Authority.new profile = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok s) → ↑s.quotas = []",
+      "subjects": [
+        "noble_kernel.authority.facts.Authority.new"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.new_starts_within_quota",
+      "role": "quota-invariant",
+      "claim": "Initialization: a new authority satisfies the quota invariant.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.new_starts_within_quota : ∀ (profile : noble_kernel.authority.Profile) (s : noble_kernel.authority.Authority), noble_kernel.authority.facts.Authority.new profile = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok s) → M5Authority.QuotaWithin s",
+      "subjects": [
+        "noble_kernel.authority.facts.Authority.new"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.step_preserves_quota_within",
+      "role": "quota-invariant",
+      "claim": "Preservation: every public state-returning transition preserves the quota invariant.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.step_preserves_quota_within : ∀ (s s' : noble_kernel.authority.Authority), M5Authority.Step s s' → M5Authority.QuotaWithin s → M5Authority.QuotaWithin s'",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit",
+        "noble_kernel.authority.admission.Authority.start_execution",
+        "noble_kernel.authority.facts.Authority.advance_from_trusted_host",
+        "noble_kernel.authority.facts.Authority.authorize_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.cancel_invocation",
+        "noble_kernel.authority.observation.Authority.deliver_success",
+        "noble_kernel.authority.observation.Authority.fail_invocation",
+        "noble_kernel.authority.observation.Authority.observe_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.retire_witness"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.reachable_quota_within",
+      "role": "quota-invariant",
+      "claim": "Over every finite serialized prefix of public transitions from Authority.new, each checkpoint-local quota record stays within its supplied snapshot.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.reachable_quota_within : ∀ (s : noble_kernel.authority.Authority), M5Authority.Reachable s → M5Authority.QuotaWithin s",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit",
+        "noble_kernel.authority.admission.Authority.start_execution",
+        "noble_kernel.authority.facts.Authority.advance_from_trusted_host",
+        "noble_kernel.authority.facts.Authority.authorize_from_trusted_host",
+        "noble_kernel.authority.facts.Authority.new",
+        "noble_kernel.authority.observation.Authority.cancel_invocation",
+        "noble_kernel.authority.observation.Authority.deliver_success",
+        "noble_kernel.authority.observation.Authority.fail_invocation",
+        "noble_kernel.authority.observation.Authority.observe_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.retire_witness"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.advance_moves_ledger",
+      "role": "ledger-move",
+      "claim": "Checkpoint advancement changes neither table nor any ledger counter.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.advance_moves_ledger : ∀ (s s' : noble_kernel.authority.Authority) (checkpoint : noble_kernel.authority.Checkpoint) (outcome : Aeneas.Std.core.result.Result Unit noble_kernel.authority.SetupError), noble_kernel.authority.facts.Authority.advance_from_trusted_host s checkpoint = Aeneas.Std.Result.ok (outcome, s') → M5Authority.LedgerMove s s'",
+      "subjects": [
+        "noble_kernel.authority.facts.Authority.advance_from_trusted_host"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.authorize_moves_ledger",
+      "role": "ledger-move",
+      "claim": "Authorization appends exactly one live witness and counts it, or changes neither table nor any ledger counter.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.authorize_moves_ledger : ∀ (s s' : noble_kernel.authority.Authority) (plan : noble_kernel.authority.Plan) (current : noble_kernel.authority.CurrentFacts) (outcome : noble_kernel.authority.permit.Authorization), noble_kernel.authority.facts.Authority.authorize_from_trusted_host s plan current = Aeneas.Std.Result.ok (outcome, s') → M5Authority.LedgerMove s s'",
+      "subjects": [
+        "noble_kernel.authority.facts.Authority.authorize_from_trusted_host"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.committed_admission_counts",
+      "role": "committed-admission",
+      "claim": "A committed admission sets both admission counters to one more than before and leaves the creation and protected-operation counters unchanged.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.committed_admission_counts : ∀ (self s' : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (execution : noble_kernel.authority.permit.Execution), noble_kernel.authority.admission.Authority.admit self witness request current = Aeneas.Std.Result.ok (noble_kernel.authority.permit.Admission.Committed execution, s') → s'.counters.witnesses_created = self.counters.witnesses_created ∧ ↑s'.counters.attempts_admitted = ↑self.counters.attempts_admitted + 1 ∧ s'.counters.witness_consumptions = s'.counters.attempts_admitted ∧ s'.counters.protected_operations = self.counters.protected_operations",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.admission_moves_ledger",
+      "role": "ledger-move",
+      "claim": "Admission consumes one live witness, registers one unstarted attempt and counts both, or on denial and preflight changes neither table nor any ledger counter.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.admission_moves_ledger : ∀ (self s' : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (outcome : noble_kernel.authority.permit.Admission), noble_kernel.authority.admission.Authority.admit self witness request current = Aeneas.Std.Result.ok (outcome, s') → M5Authority.LedgerMove self s'",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.start_moves_ledger",
+      "role": "ledger-move",
+      "claim": "A start marks one unstarted attempt started and counts one protected operation, or changes nothing.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.start_moves_ledger : ∀ (s s' : noble_kernel.authority.Authority) (execution : noble_kernel.authority.permit.Execution) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.permit.Started noble_kernel.authority.report.BoundaryError), noble_kernel.authority.admission.Authority.start_execution s execution = Aeneas.Std.Result.ok (outcome, s') → M5Authority.LedgerMove s s'",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.start_execution"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.observe_moves_ledger",
+      "role": "ledger-move",
+      "claim": "An observation rewrites at most the observed attempt record, keeping its key, plan and start flag, and moves no ledger counter.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.observe_moves_ledger : ∀ (s s' : noble_kernel.authority.Authority) (description : noble_kernel.authority.report.ObservationDescription) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.report.Observation noble_kernel.authority.report.BoundaryError), noble_kernel.authority.observation.Authority.observe_from_trusted_host s description = Aeneas.Std.Result.ok (outcome, s') → M5Authority.LedgerMove s s'",
+      "subjects": [
+        "noble_kernel.authority.observation.Authority.observe_from_trusted_host"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.retire_moves_ledger",
+      "role": "ledger-move",
+      "claim": "Witness retirement rewrites only a live witness, to Retired; a consumed or retired witness is refused without change.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.retire_moves_ledger : ∀ (s s' : noble_kernel.authority.Authority) (witness : noble_kernel.authority.permit.Witness) (outcome : Aeneas.Std.core.result.Result Unit noble_kernel.authority.permit.Denial), noble_kernel.authority.observation.Authority.retire_witness s witness = Aeneas.Std.Result.ok (outcome, s') → M5Authority.LedgerMove s s'",
+      "subjects": [
+        "noble_kernel.authority.observation.Authority.retire_witness"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.retireIfLive_eq_self",
+      "role": "list-model",
+      "claim": "Retiring live witnesses leaves any non-live record unchanged.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.retireIfLive_eq_self : ∀ (record : noble_kernel.authority.WitnessRecord), record.state ≠ noble_kernel.authority.permit.WitnessState.Live → M5Authority.retireIfLive record = record",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "M5Authority.retire_live_witnesses_effect",
+      "role": "ledger-move",
+      "claim": "The generated live-witness retirement loop terminates, rewrites exactly the live records to Retired and changes neither the attempt table nor the counters.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.retire_live_witnesses_effect : ∀ (s s' : noble_kernel.authority.Authority), noble_kernel.authority.observation.Authority.retire_live_witnesses s = Aeneas.Std.Result.ok s' → ↑s'.witnesses = List.map M5Authority.retireIfLive ↑s.witnesses ∧ s'.attempts = s.attempts ∧ s'.counters = s.counters",
+      "subjects": [
+        "noble_kernel.authority.observation.Authority.retire_live_witnesses"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.cancel_moves_ledger",
+      "role": "ledger-move",
+      "claim": "Invocation cancellation retires every live witness and changes nothing else in the ledger, or changes nothing.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.cancel_moves_ledger : ∀ (s s' : noble_kernel.authority.Authority) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.report.InvocationOutcome noble_kernel.authority.report.BoundaryError), noble_kernel.authority.observation.Authority.cancel_invocation s = Aeneas.Std.Result.ok (outcome, s') → M5Authority.LedgerMove s s'",
+      "subjects": [
+        "noble_kernel.authority.observation.Authority.cancel_invocation"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.fail_moves_ledger",
+      "role": "ledger-move",
+      "claim": "Invocation failure retires every live witness and changes nothing else in the ledger, or changes nothing.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.fail_moves_ledger : ∀ (s s' : noble_kernel.authority.Authority) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.report.InvocationOutcome noble_kernel.authority.report.BoundaryError), noble_kernel.authority.observation.Authority.fail_invocation s = Aeneas.Std.Result.ok (outcome, s') → M5Authority.LedgerMove s s'",
+      "subjects": [
+        "noble_kernel.authority.observation.Authority.fail_invocation"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.deliver_moves_ledger",
+      "role": "ledger-move",
+      "claim": "Success delivery retires every live witness and changes nothing else in the ledger, or changes nothing.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.deliver_moves_ledger : ∀ (s s' : noble_kernel.authority.Authority) (attempt : noble_kernel.authority.permit.AttemptKey) (observed : noble_kernel.authority.report.Observation) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.report.Receipt noble_kernel.authority.report.BoundaryError), noble_kernel.authority.observation.Authority.deliver_success s attempt observed = Aeneas.Std.Result.ok (outcome, s') → M5Authority.LedgerMove s s'",
+      "subjects": [
+        "noble_kernel.authority.observation.Authority.deliver_success"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.step_moves_ledger",
+      "role": "ledger-move",
+      "claim": "Every public state-returning transition is one of the ledger moves.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.step_moves_ledger : ∀ (s s' : noble_kernel.authority.Authority), M5Authority.Step s s' → M5Authority.LedgerMove s s'",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit",
+        "noble_kernel.authority.admission.Authority.start_execution",
+        "noble_kernel.authority.facts.Authority.advance_from_trusted_host",
+        "noble_kernel.authority.facts.Authority.authorize_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.cancel_invocation",
+        "noble_kernel.authority.observation.Authority.deliver_success",
+        "noble_kernel.authority.observation.Authority.fail_invocation",
+        "noble_kernel.authority.observation.Authority.observe_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.retire_witness"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.countP_set_keeps",
+      "role": "list-model",
+      "claim": "Replacing a list element by one with the same predicate value keeps the count.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@M5Authority.countP_set_keeps : ∀ {α : Type} (p : α → Bool) (l : List α) (i : ℕ) (old new : α), l[i]? = some old → p new = p old → List.countP p (l.set i new) = List.countP p l",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.countP_set_adds",
+      "role": "list-model",
+      "claim": "Replacing an element failing the predicate by one satisfying it adds one to the count.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@M5Authority.countP_set_adds : ∀ {α : Type} (p : α → Bool) (l : List α) (i : ℕ) (old new : α), l[i]? = some old → p old = false → p new = true → List.countP p (l.set i new) = List.countP p l + 1",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.countP_map_retire",
+      "role": "list-model",
+      "claim": "Retiring live witnesses keeps the number of consumed witnesses.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.countP_map_retire : ∀ (l : List noble_kernel.authority.WitnessRecord), List.countP M5Authority.isConsumed (List.map M5Authority.retireIfLive l) = List.countP M5Authority.isConsumed l",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "M5Authority.ledger_move_preserves_consistency",
+      "role": "ledger-invariant",
+      "claim": "Every ledger move preserves the agreement of the tables with the ledger counters.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.ledger_move_preserves_consistency : ∀ (s s' : noble_kernel.authority.Authority), M5Authority.LedgerMove s s' → M5Authority.LedgerConsistent s → M5Authority.LedgerConsistent s'",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.new_starts_ledger_consistent",
+      "role": "ledger-invariant",
+      "claim": "Initialization: a new authority has empty tables and zero counters, so they agree.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.new_starts_ledger_consistent : ∀ (profile : noble_kernel.authority.Profile) (s : noble_kernel.authority.Authority), noble_kernel.authority.facts.Authority.new profile = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok s) → M5Authority.LedgerConsistent s",
+      "subjects": [
+        "noble_kernel.authority.facts.Authority.new"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.step_preserves_ledger_consistent",
+      "role": "ledger-invariant",
+      "claim": "Preservation: every public transition keeps the tables and the ledger counters in agreement.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.step_preserves_ledger_consistent : ∀ (s s' : noble_kernel.authority.Authority), M5Authority.Step s s' → M5Authority.LedgerConsistent s → M5Authority.LedgerConsistent s'",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit",
+        "noble_kernel.authority.admission.Authority.start_execution",
+        "noble_kernel.authority.facts.Authority.advance_from_trusted_host",
+        "noble_kernel.authority.facts.Authority.authorize_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.cancel_invocation",
+        "noble_kernel.authority.observation.Authority.deliver_success",
+        "noble_kernel.authority.observation.Authority.fail_invocation",
+        "noble_kernel.authority.observation.Authority.observe_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.retire_witness"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.reachable_ledger_consistent",
+      "role": "ledger-invariant",
+      "claim": "Over every finite serialized prefix of public transitions from Authority.new: consumed witnesses equal registered attempts in number, protected operations count exactly the started attempts, and the creation and admission counters count their tables.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.reachable_ledger_consistent : ∀ (s : noble_kernel.authority.Authority), M5Authority.Reachable s → M5Authority.LedgerConsistent s",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit",
+        "noble_kernel.authority.admission.Authority.start_execution",
+        "noble_kernel.authority.facts.Authority.advance_from_trusted_host",
+        "noble_kernel.authority.facts.Authority.authorize_from_trusted_host",
+        "noble_kernel.authority.facts.Authority.new",
+        "noble_kernel.authority.observation.Authority.cancel_invocation",
+        "noble_kernel.authority.observation.Authority.deliver_success",
+        "noble_kernel.authority.observation.Authority.fail_invocation",
+        "noble_kernel.authority.observation.Authority.observe_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.retire_witness"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.ledger_move_preserves_settled_witnesses",
+      "role": "trace-step",
+      "claim": "No ledger move rewrites a witness record that has left Live.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.ledger_move_preserves_settled_witnesses : ∀ (s s' : noble_kernel.authority.Authority), M5Authority.LedgerMove s s' → ∀ (i : ℕ) (record : noble_kernel.authority.WitnessRecord), (↑s.witnesses)[i]? = some record → record.state ≠ noble_kernel.authority.permit.WitnessState.Live → (↑s'.witnesses)[i]? = some record",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "M5Authority.ledger_move_keeps_started_attempts",
+      "role": "trace-step",
+      "claim": "Every ledger move keeps a started attempt started, with its key and plan.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.ledger_move_keeps_started_attempts : ∀ (s s' : noble_kernel.authority.Authority), M5Authority.LedgerMove s s' → ∀ (i : ℕ) (record : noble_kernel.authority.AttemptRecord), (↑s.attempts)[i]? = some record → record.started = true → ∃ record', (↑s'.attempts)[i]? = some record' ∧ record'.started = true ∧ record'.key = record.key ∧ record'.plan = record.plan",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "M5Authority.settled_witness_is_never_rewritten",
+      "role": "trace",
+      "claim": "Once a witness leaves Live, no finite sequence of public transitions rewrites its record.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.settled_witness_is_never_rewritten : ∀ (s s' : noble_kernel.authority.Authority), Relation.ReflTransGen M5Authority.Step s s' → ∀ (i : ℕ) (record : noble_kernel.authority.WitnessRecord), (↑s.witnesses)[i]? = some record → record.state ≠ noble_kernel.authority.permit.WitnessState.Live → (↑s'.witnesses)[i]? = some record",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit",
+        "noble_kernel.authority.admission.Authority.start_execution",
+        "noble_kernel.authority.facts.Authority.advance_from_trusted_host",
+        "noble_kernel.authority.facts.Authority.authorize_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.cancel_invocation",
+        "noble_kernel.authority.observation.Authority.deliver_success",
+        "noble_kernel.authority.observation.Authority.fail_invocation",
+        "noble_kernel.authority.observation.Authority.observe_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.retire_witness"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.consumed_witness_never_returns_to_live",
+      "role": "trace",
+      "claim": "Denial, preflight, retirement and every other transition cannot resurrect consumed authority: a consumed witness stays consumed over every finite trace.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.consumed_witness_never_returns_to_live : ∀ (s s' : noble_kernel.authority.Authority), Relation.ReflTransGen M5Authority.Step s s' → ∀ (i : ℕ) (record : noble_kernel.authority.WitnessRecord), (↑s.witnesses)[i]? = some record → record.state = noble_kernel.authority.permit.WitnessState.Consumed → ∀ (record' : noble_kernel.authority.WitnessRecord), (↑s'.witnesses)[i]? = some record' → record'.state = noble_kernel.authority.permit.WitnessState.Consumed",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit",
+        "noble_kernel.authority.admission.Authority.start_execution",
+        "noble_kernel.authority.facts.Authority.advance_from_trusted_host",
+        "noble_kernel.authority.facts.Authority.authorize_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.cancel_invocation",
+        "noble_kernel.authority.observation.Authority.deliver_success",
+        "noble_kernel.authority.observation.Authority.fail_invocation",
+        "noble_kernel.authority.observation.Authority.observe_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.retire_witness"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.started_attempt_stays_started",
+      "role": "trace",
+      "claim": "A started attempt stays started, with its key and plan, over every finite sequence of public transitions.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.started_attempt_stays_started : ∀ (s s' : noble_kernel.authority.Authority), Relation.ReflTransGen M5Authority.Step s s' → ∀ (i : ℕ) (record : noble_kernel.authority.AttemptRecord), (↑s.attempts)[i]? = some record → record.started = true → ∃ record', (↑s'.attempts)[i]? = some record' ∧ record'.started = true ∧ record'.key = record.key ∧ record'.plan = record.plan",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit",
+        "noble_kernel.authority.admission.Authority.start_execution",
+        "noble_kernel.authority.facts.Authority.advance_from_trusted_host",
+        "noble_kernel.authority.facts.Authority.authorize_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.cancel_invocation",
+        "noble_kernel.authority.observation.Authority.deliver_success",
+        "noble_kernel.authority.observation.Authority.fail_invocation",
+        "noble_kernel.authority.observation.Authority.observe_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.retire_witness"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Authority.started_attempt_never_starts_again",
+      "role": "trace",
+      "claim": "Attempts start at most once over every trace: once started, no finite sequence of public transitions reaches a state in which the same execution permit starts the attempt again.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "M5Authority.started_attempt_never_starts_again : ∀ (s s' s'' : noble_kernel.authority.Authority), Relation.ReflTransGen M5Authority.Step s s' → ∀ (execution : noble_kernel.authority.permit.Execution) (record : noble_kernel.authority.AttemptRecord), (↑s.attempts)[↑execution.attempt.slot]? = some record → record.started = true → ∀ (started : noble_kernel.authority.permit.Started), noble_kernel.authority.admission.Authority.start_execution s' execution ≠ Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok started, s'')",
+      "subjects": [
+        "noble_kernel.authority.admission.Authority.admit",
+        "noble_kernel.authority.admission.Authority.start_execution",
+        "noble_kernel.authority.facts.Authority.advance_from_trusted_host",
+        "noble_kernel.authority.facts.Authority.authorize_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.cancel_invocation",
+        "noble_kernel.authority.observation.Authority.deliver_success",
+        "noble_kernel.authority.observation.Authority.fail_invocation",
+        "noble_kernel.authority.observation.Authority.observe_from_trusted_host",
+        "noble_kernel.authority.observation.Authority.retire_witness"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  ],
+  "specification": [
+    {
+      "name": "M5Authority.QuotaMatch",
+      "printed": "def M5Authority.QuotaMatch : noble_kernel.authority.Authority → noble_kernel.authority.Plan → Option Aeneas.Std.Usize → Prop := fun s plan x => match x with | none => True | some j => ∃ r, (↑s.quotas)[↑j]? = some r ∧ r.quota = plan.description.constraints.quota ∧ r.checkpoint = s.profile.checkpoint"
+    },
+    {
+      "name": "M5Authority.CountersKept",
+      "printed": "def M5Authority.CountersKept : noble_kernel.authority.Counters → noble_kernel.authority.Counters → Prop := fun c c' => c'.witnesses_created = c.witnesses_created ∧ c'.witness_consumptions = c.witness_consumptions ∧ c'.attempts_admitted = c.attempts_admitted ∧ c'.protected_operations = c.protected_operations"
+    },
+    {
+      "name": "M5Authority.QuotaWithin",
+      "printed": "def M5Authority.QuotaWithin : noble_kernel.authority.Authority → Prop := fun s => ∀ record ∈ ↑s.quotas, ↑record.spent ≤ ↑record.available"
+    },
+    {
+      "name": "M5Authority.Step",
+      "printed": "inductive M5Authority.Step : noble_kernel.authority.Authority → noble_kernel.authority.Authority → Prop number of parameters: 2 constructors: M5Authority.Step.authorize : ∀ (s s' : noble_kernel.authority.Authority) (plan : noble_kernel.authority.Plan) (current : noble_kernel.authority.CurrentFacts) (outcome : noble_kernel.authority.permit.Authorization), noble_kernel.authority.facts.Authority.authorize_from_trusted_host s plan current = Aeneas.Std.Result.ok (outcome, s') → M5Authority.Step s s' M5Authority.Step.advance : ∀ (s s' : noble_kernel.authority.Authority) (checkpoint : noble_kernel.authority.Checkpoint) (outcome : Aeneas.Std.core.result.Result Unit noble_kernel.authority.SetupError), noble_kernel.authority.facts.Authority.advance_from_trusted_host s checkpoint = Aeneas.Std.Result.ok (outcome, s') → M5Authority.Step s s' M5Authority.Step.admission : ∀ (s s' : noble_kernel.authority.Authority) (witness : Option noble_kernel.authority.permit.Witness) (request : noble_kernel.authority.permit.AdmissionRequest) (current : noble_kernel.authority.CurrentFacts) (outcome : noble_kernel.authority.permit.Admission), noble_kernel.authority.admission.Authority.admit s witness request current = Aeneas.Std.Result.ok (outcome, s') → M5Authority.Step s s' M5Authority.Step.start : ∀ (s s' : noble_kernel.authority.Authority) (execution : noble_kernel.authority.permit.Execution) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.permit.Started noble_kernel.authority.report.BoundaryError), noble_kernel.authority.admission.Authority.start_execution s execution = Aeneas.Std.Result.ok (outcome, s') → M5Authority.Step s s' M5Authority.Step.observe : ∀ (s s' : noble_kernel.authority.Authority) (description : noble_kernel.authority.report.ObservationDescription) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.report.Observation noble_kernel.authority.report.BoundaryError), noble_kernel.authority.observation.Authority.observe_from_trusted_host s description = Aeneas.Std.Result.ok (outcome, s') → M5Authority.Step s s' M5Authority.Step.retire : ∀ (s s' : noble_kernel.authority.Authority) (witness : noble_kernel.authority.permit.Witness) (outcome : Aeneas.Std.core.result.Result Unit noble_kernel.authority.permit.Denial), noble_kernel.authority.observation.Authority.retire_witness s witness = Aeneas.Std.Result.ok (outcome, s') → M5Authority.Step s s' M5Authority.Step.cancel : ∀ (s s' : noble_kernel.authority.Authority) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.report.InvocationOutcome noble_kernel.authority.report.BoundaryError), noble_kernel.authority.observation.Authority.cancel_invocation s = Aeneas.Std.Result.ok (outcome, s') → M5Authority.Step s s' M5Authority.Step.fail : ∀ (s s' : noble_kernel.authority.Authority) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.report.InvocationOutcome noble_kernel.authority.report.BoundaryError), noble_kernel.authority.observation.Authority.fail_invocation s = Aeneas.Std.Result.ok (outcome, s') → M5Authority.Step s s' M5Authority.Step.deliver : ∀ (s s' : noble_kernel.authority.Authority) (attempt : noble_kernel.authority.permit.AttemptKey) (observed : noble_kernel.authority.report.Observation) (outcome : Aeneas.Std.core.result.Result noble_kernel.authority.report.Receipt noble_kernel.authority.report.BoundaryError), noble_kernel.authority.observation.Authority.deliver_success s attempt observed = Aeneas.Std.Result.ok (outcome, s') → M5Authority.Step s s'"
+    },
+    {
+      "name": "M5Authority.Reachable",
+      "printed": "inductive M5Authority.Reachable : noble_kernel.authority.Authority → Prop number of parameters: 0 constructors: M5Authority.Reachable.init : ∀ (profile : noble_kernel.authority.Profile) (s : noble_kernel.authority.Authority), noble_kernel.authority.facts.Authority.new profile = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok s) → M5Authority.Reachable s M5Authority.Reachable.step : ∀ (s s' : noble_kernel.authority.Authority), M5Authority.Reachable s → M5Authority.Step s s' → M5Authority.Reachable s'"
+    },
+    {
+      "name": "M5Authority.isConsumed",
+      "printed": "def M5Authority.isConsumed : noble_kernel.authority.WitnessRecord → Bool := fun record => decide (record.state = noble_kernel.authority.permit.WitnessState.Consumed)"
+    },
+    {
+      "name": "M5Authority.retireIfLive",
+      "printed": "def M5Authority.retireIfLive : noble_kernel.authority.WitnessRecord → noble_kernel.authority.WitnessRecord := fun record => if record.state = noble_kernel.authority.permit.WitnessState.Live then { claim := record.claim, plan := record.plan, state := noble_kernel.authority.permit.WitnessState.Retired } else record"
+    },
+    {
+      "name": "M5Authority.SameAttempt",
+      "printed": "def M5Authority.SameAttempt : noble_kernel.authority.AttemptRecord → noble_kernel.authority.AttemptRecord → Prop := fun record record' => record'.key = record.key ∧ record'.plan = record.plan ∧ record'.started = record.started"
+    },
+    {
+      "name": "M5Authority.LedgerMove",
+      "printed": "inductive M5Authority.LedgerMove : noble_kernel.authority.Authority → noble_kernel.authority.Authority → Prop number of parameters: 2 constructors: M5Authority.LedgerMove.unchanged : ∀ {s s' : noble_kernel.authority.Authority}, s'.witnesses = s.witnesses → s'.attempts = s.attempts → M5Authority.CountersKept s.counters s'.counters → M5Authority.LedgerMove s s' M5Authority.LedgerMove.authorized : ∀ {s s' : noble_kernel.authority.Authority} (record : noble_kernel.authority.WitnessRecord), record.state = noble_kernel.authority.permit.WitnessState.Live → ↑s'.witnesses = ↑s.witnesses ++ [record] → s'.attempts = s.attempts → ↑s'.counters.witnesses_created = ↑s.counters.witnesses_created + 1 → s'.counters.witness_consumptions = s.counters.witness_consumptions → s'.counters.attempts_admitted = s.counters.attempts_admitted → s'.counters.protected_operations = s.counters.protected_operations → M5Authority.LedgerMove s s' M5Authority.LedgerMove.admitted : ∀ {s s' : noble_kernel.authority.Authority} (slot : ℕ) (retained : noble_kernel.authority.WitnessRecord) (record : noble_kernel.authority.AttemptRecord), (↑s.witnesses)[slot]? = some retained → retained.state = noble_kernel.authority.permit.WitnessState.Live → ↑s'.witnesses = (↑s.witnesses).set slot { claim := retained.claim, plan := retained.plan, state := noble_kernel.authority.permit.WitnessState.Consumed } → record.started = false → ↑s'.attempts = ↑s.attempts ++ [record] → s'.counters.witnesses_created = s.counters.witnesses_created → ↑s'.counters.attempts_admitted = ↑s.counters.attempts_admitted + 1 → s'.counters.witness_consumptions = s'.counters.attempts_admitted → s'.counters.protected_operations = s.counters.protected_operations → M5Authority.LedgerMove s s' M5Authority.LedgerMove.started : ∀ {s s' : noble_kernel.authority.Authority} (slot : ℕ) (record : noble_kernel.authority.AttemptRecord), (↑s.attempts)[slot]? = some record → record.started = false → ↑s'.attempts = (↑s.attempts).set slot { key := record.key, plan := record.plan, started := true, admitted := record.admitted, unknown := record.unknown, terminal := record.terminal } → s'.witnesses = s.witnesses → s'.counters.witnesses_created = s.counters.witnesses_created → s'.counters.witness_consumptions = s.counters.witness_consumptions → s'.counters.attempts_admitted = s.counters.attempts_admitted → ↑s'.counters.protected_operations = ↑s.counters.protected_operations + 1 → M5Authority.LedgerMove s s' M5Authority.LedgerMove.observed : ∀ {s s' : noble_kernel.authority.Authority} (slot : ℕ) (record record' : noble_kernel.authority.AttemptRecord), (↑s.attempts)[slot]? = some record → M5Authority.SameAttempt record record' → ↑s'.attempts = (↑s.attempts).set slot record' → s'.witnesses = s.witnesses → M5Authority.CountersKept s.counters s'.counters → M5Authority.LedgerMove s s' M5Authority.LedgerMove.retired : ∀ {s s' : noble_kernel.authority.Authority} (slot : ℕ) (retained : noble_kernel.authority.WitnessRecord), (↑s.witnesses)[slot]? = some retained → retained.state = noble_kernel.authority.permit.WitnessState.Live → ↑s'.witnesses = (↑s.witnesses).set slot { claim := retained.claim, plan := retained.plan, state := noble_kernel.authority.permit.WitnessState.Retired } → s'.attempts = s.attempts → M5Authority.CountersKept s.counters s'.counters → M5Authority.LedgerMove s s' M5Authority.LedgerMove.retiredAll : ∀ {s s' : noble_kernel.authority.Authority}, ↑s'.witnesses = List.map M5Authority.retireIfLive ↑s.witnesses → s'.attempts = s.attempts → M5Authority.CountersKept s.counters s'.counters → M5Authority.LedgerMove s s'"
+    },
+    {
+      "name": "M5Authority.LedgerConsistent",
+      "printed": "def M5Authority.LedgerConsistent : noble_kernel.authority.Authority → Prop := fun s => List.countP M5Authority.isConsumed ↑s.witnesses = (↑s.attempts).length ∧ ↑s.counters.protected_operations = List.countP (fun record => record.started) ↑s.attempts ∧ ↑s.counters.witnesses_created = (↑s.witnesses).length ∧ ↑s.counters.attempts_admitted = (↑s.attempts).length ∧ s.counters.witness_consumptions = s.counters.attempts_admitted"
+    }
+  ],
+  "binding": {
+    "reachable_generated_declarations": 112,
+    "reachable_project_constants": 415,
+    "shared_auxiliaries": 38,
+    "source_files": [
+      {
+        "file": "crates/noble-kernel/src/authority/admission.rs",
+        "binding": "exact-file",
+        "sha256": "fc9ecd0c744680c392380f1b140aca6f8861dd88b400d3a659ae599bb65aa26a",
+        "declarations": 7
+      },
+      {
+        "file": "crates/noble-kernel/src/authority/facts.rs",
+        "binding": "exact-file",
+        "sha256": "8f8812cf68385d3d6e02bad49f3a48a5efc908507407c2d5d525d981b16d044e",
+        "declarations": 12
+      },
+      {
+        "file": "crates/noble-kernel/src/authority/mod.rs",
+        "binding": "exact-file",
+        "sha256": "b2d5c908480706a7d061771ce00359d82ea431f963856063593910f61ffc839c",
+        "declarations": 44
+      },
+      {
+        "file": "crates/noble-kernel/src/authority/observation.rs",
+        "binding": "exact-file",
+        "sha256": "c966bf9265551b1f9f352ab6c945a371b4123e4024465ed67eb237a68be20b20",
+        "declarations": 10
+      },
+      {
+        "file": "crates/noble-kernel/src/authority/permit.rs",
+        "binding": "exact-file",
+        "sha256": "d85558ed22d47483ed65e5955086efe4f545500b1f4292291278ecb1743e5c8d",
+        "declarations": 15
+      },
+      {
+        "file": "crates/noble-kernel/src/authority/receipts.rs",
+        "binding": "exact-file",
+        "sha256": "7a4cb2ddc5e9bb4c9316343a38554d159fcca06edc7ac04c6c6229fe55fa84eb",
+        "declarations": 4
+      },
+      {
+        "file": "crates/noble-kernel/src/authority/report.rs",
+        "binding": "exact-file",
+        "sha256": "0b56bc438c3543e56b97d5e3d2a7ba8b0304452be9d5fc9103a4da0def380859",
+        "declarations": 14
+      },
+      {
+        "file": "crates/noble-kernel/src/types.rs",
+        "binding": "item-text",
+        "extraction_sha256": "5a603fe242440fd622b140819f49acb04053183d8efcc6cef88070eaf887d09a",
+        "current_sha256": "6c198899a6d15761ef488ae86ad143dd65dfc7264c79a6083170002ca1520f3f",
+        "items": [
+          {
+            "declaration": "types.EffId",
+            "archived_lines": [
+              26,
+              26
+            ],
+            "sha256": "1eebc42c8813f0806abe4578d933768767c91c08337ea12a058aac2a867385b3"
+          },
+          {
+            "declaration": "types.EffId.Insts.CoreCloneClone.clone",
+            "archived_lines": [
+              25,
+              26
+            ],
+            "sha256": "39cd1fa3f689368270a4e3dfb0390c753c2d34d54dae5024dba45c7e8e5efb41"
+          },
+          {
+            "declaration": "types.EffId.Insts.CoreCmpPartialEqEffId.eq",
+            "archived_lines": [
+              25,
+              26
+            ],
+            "sha256": "39cd1fa3f689368270a4e3dfb0390c753c2d34d54dae5024dba45c7e8e5efb41"
+          },
+          {
+            "declaration": "types.ResourceKind",
+            "archived_lines": [
+              15,
+              15
+            ],
+            "sha256": "5b033d6cac351fa12531a88cc0f3881ae2374e611454057bb5eaa0e53295d79d"
+          },
+          {
+            "declaration": "types.ResourceKind.Insts.CoreCmpPartialEqResourceKind",
+            "archived_lines": [
+              14,
+              15
+            ],
+            "sha256": "7f812553123193277ad7137c17a20354214cc458633857e1343049c9448a60a1"
+          },
+          {
+            "declaration": "types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq",
+            "archived_lines": [
+              14,
+              15
+            ],
+            "sha256": "7f812553123193277ad7137c17a20354214cc458633857e1343049c9448a60a1"
+          }
+        ]
+      }
+    ],
+    "external_models": [
+      "NobleKernel/FunsExternal.lean:Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from",
+      "NobleKernel/FunsExternal.lean:core.option.Option.as_ref"
+    ]
+  },
+  "mutation_controls": [
+    {
+      "id": "omitted-quota-charge",
+      "removes": "the checkpoint-local quota charge in charge_quota (both the existing-record and the new-record branch)",
+      "edits": 2,
+      "mutated_funs_sha256": "ed7c319098fec8d2b40f7942dff1112a3b1e5bae6d4e02127da22405f2a5ee14",
+      "audit_sha256": "1d69e7550aef0b206c74e3adf418613e41b8a6b2a6c31cc7dd7f5a47172b0bf6",
+      "failing_declarations": [
+        "M5Authority.charge_quota_charges_the_plan_units"
+      ],
+      "lost_strict_axioms": [
+        "M5Authority.charge_quota_charges_the_plan_units",
+        "M5Authority.commit_charges_the_plan_quota",
+        "M5Authority.committed_admission_charges_within_the_supplied_quota",
+        "M5Authority.admission_preserves_quota_within",
+        "M5Authority.step_preserves_quota_within",
+        "M5Authority.reachable_quota_within"
+      ],
+      "kept_strict_axioms": 89,
+      "targeted": [
+        "M5Authority.charge_quota_charges_the_plan_units",
+        "M5Authority.committed_admission_charges_within_the_supplied_quota"
+      ]
+    },
+    {
+      "id": "omitted-witness-consumption",
+      "removes": "marking the claimed witness consumed in commit",
+      "edits": 1,
+      "mutated_funs_sha256": "a57d101a845952860a3f80cfa5e9054326035240fa6a7fbb9c354ce7dbc5b4e3",
+      "audit_sha256": "1d69e7550aef0b206c74e3adf418613e41b8a6b2a6c31cc7dd7f5a47172b0bf6",
+      "failing_declarations": [
+        "M5Authority.commit_consumes_the_claimed_witness"
+      ],
+      "lost_strict_axioms": [
+        "M5Authority.commit_consumes_the_claimed_witness",
+        "M5Authority.committed_admission_consumes_one_live_witness",
+        "M5Authority.admission_moves_ledger",
+        "M5Authority.step_moves_ledger",
+        "M5Authority.step_preserves_ledger_consistent",
+        "M5Authority.reachable_ledger_consistent",
+        "M5Authority.settled_witness_is_never_rewritten",
+        "M5Authority.consumed_witness_never_returns_to_live",
+        "M5Authority.started_attempt_stays_started",
+        "M5Authority.started_attempt_never_starts_again"
+      ],
+      "kept_strict_axioms": 85,
+      "targeted": [
+        "M5Authority.commit_consumes_the_claimed_witness",
+        "M5Authority.committed_admission_consumes_one_live_witness"
+      ]
+    },
+    {
+      "id": "omitted-exact-plan-comparison",
+      "removes": "the retained-witness exact-plan comparison in validate_entry",
+      "edits": 1,
+      "mutated_funs_sha256": "bf68e61417d0db217682d049e9f42e5628e58d89f8c6be625eef2a934343732c",
+      "audit_sha256": "1d69e7550aef0b206c74e3adf418613e41b8a6b2a6c31cc7dd7f5a47172b0bf6",
+      "failing_declarations": [
+        "M5Authority.validate_entry_requires_the_exact_plan"
+      ],
+      "lost_strict_axioms": [
+        "M5Authority.validate_entry_requires_the_exact_plan",
+        "M5Authority.committed_admission_binds_the_exact_plan"
+      ],
+      "kept_strict_axioms": 93,
+      "targeted": [
+        "M5Authority.validate_entry_requires_the_exact_plan",
+        "M5Authority.committed_admission_binds_the_exact_plan"
+      ]
+    },
+    {
+      "id": "omitted-checkpoint-validation",
+      "removes": "the facts checkpoint comparison in validate_facts",
+      "edits": 1,
+      "mutated_funs_sha256": "a824491253ff1f4f69e853cf00d642b4b5238f7e37663adb9a9cc0b07c160675",
+      "audit_sha256": "1d69e7550aef0b206c74e3adf418613e41b8a6b2a6c31cc7dd7f5a47172b0bf6",
+      "failing_declarations": [
+        "M5Authority.validate_facts_requires_the_current_checkpoint"
+      ],
+      "lost_strict_axioms": [
+        "M5Authority.validate_facts_requires_the_current_checkpoint",
+        "M5Authority.committed_admission_requires_the_current_checkpoint"
+      ],
+      "kept_strict_axioms": 93,
+      "targeted": [
+        "M5Authority.validate_facts_requires_the_current_checkpoint",
+        "M5Authority.committed_admission_requires_the_current_checkpoint"
+      ]
+    },
+    {
+      "id": "omitted-started-refusal",
+      "removes": "the already-started refusal in start_execution",
+      "edits": 1,
+      "mutated_funs_sha256": "19ad071f5f2f00a240a627f4f9bd284684dabde3056932bb3365e5f1ae66bd56",
+      "audit_sha256": "1d69e7550aef0b206c74e3adf418613e41b8a6b2a6c31cc7dd7f5a47172b0bf6",
+      "failing_declarations": [
+        "M5Authority.start_execution_marks_one_unstarted_attempt",
+        "M5Authority.start_execution_refuses_a_started_attempt"
+      ],
+      "lost_strict_axioms": [
+        "M5Authority.start_execution_refuses_a_started_attempt",
+        "M5Authority.start_execution_marks_one_unstarted_attempt",
+        "M5Authority.started_attempt_cannot_start_again",
+        "M5Authority.start_moves_ledger",
+        "M5Authority.step_moves_ledger",
+        "M5Authority.step_preserves_ledger_consistent",
+        "M5Authority.reachable_ledger_consistent",
+        "M5Authority.settled_witness_is_never_rewritten",
+        "M5Authority.consumed_witness_never_returns_to_live",
+        "M5Authority.started_attempt_stays_started",
+        "M5Authority.started_attempt_never_starts_again"
+      ],
+      "kept_strict_axioms": 84,
+      "targeted": [
+        "M5Authority.start_execution_refuses_a_started_attempt",
+        "M5Authority.started_attempt_cannot_start_again"
+      ]
+    },
+    {
+      "id": "omitted-protected-operation-count",
+      "removes": "the protected-operation increment in start_execution",
+      "edits": 1,
+      "mutated_funs_sha256": "3e0f3379f52b42565fe502c5f7d6ecf89e2f6912cbc3fa5e076576337ef00bc8",
+      "audit_sha256": "1d69e7550aef0b206c74e3adf418613e41b8a6b2a6c31cc7dd7f5a47172b0bf6",
+      "failing_declarations": [
+        "M5Authority.start_execution_marks_one_unstarted_attempt"
+      ],
+      "lost_strict_axioms": [
+        "M5Authority.start_execution_marks_one_unstarted_attempt",
+        "M5Authority.started_attempt_cannot_start_again",
+        "M5Authority.start_moves_ledger",
+        "M5Authority.step_moves_ledger",
+        "M5Authority.step_preserves_ledger_consistent",
+        "M5Authority.reachable_ledger_consistent",
+        "M5Authority.settled_witness_is_never_rewritten",
+        "M5Authority.consumed_witness_never_returns_to_live",
+        "M5Authority.started_attempt_stays_started",
+        "M5Authority.started_attempt_never_starts_again"
+      ],
+      "kept_strict_axioms": 85,
+      "targeted": [
+        "M5Authority.start_execution_marks_one_unstarted_attempt",
+        "M5Authority.reachable_ledger_consistent"
+      ]
+    },
+    {
+      "id": "retire-consumed-witness",
+      "removes": "the live-state guard in retire_witness, which then retires a consumed witness",
+      "edits": 2,
+      "mutated_funs_sha256": "eab40f19ceb80444158aef9a3dca4c87ac5599d974769a8604a93bca50c5e04d",
+      "audit_sha256": "1d69e7550aef0b206c74e3adf418613e41b8a6b2a6c31cc7dd7f5a47172b0bf6",
+      "failing_declarations": [
+        "M5Authority.retire_moves_ledger"
+      ],
+      "lost_strict_axioms": [
+        "M5Authority.retire_moves_ledger",
+        "M5Authority.step_moves_ledger",
+        "M5Authority.step_preserves_ledger_consistent",
+        "M5Authority.reachable_ledger_consistent",
+        "M5Authority.settled_witness_is_never_rewritten",
+        "M5Authority.consumed_witness_never_returns_to_live",
+        "M5Authority.started_attempt_stays_started",
+        "M5Authority.started_attempt_never_starts_again"
+      ],
+      "kept_strict_axioms": 87,
+      "targeted": [
+        "M5Authority.retire_moves_ledger",
+        "M5Authority.consumed_witness_never_returns_to_live",
+        "M5Authority.reachable_ledger_consistent"
+      ]
+    }
+  ],
+  "claims": {
+    "universal_implementation_theorems": 95,
+    "committed_admission_theorems": 8,
+    "quota_invariant_theorems": 5,
+    "ledger_invariant_theorems": 4,
+    "ledger_move_theorems": 11,
+    "trace_theorems": 4,
+    "attempt_start_theorems": 4,
+    "finite_rust_comparisons": "none in this lane; the binding and sequencing Rust controls remain crates/noble-kernel/tests/m5-authority",
+    "correspondence": "statements name the retained generated functions; Charon/Aeneas translation of the bound sources is trusted, not re-run"
+  },
+  "assumptions": [
+    "Pinned Lean and imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.",
+    "The retained Charon/Aeneas translation is trusted to model the bound Rust sources; this lane does not re-run the translation.",
+    "The temporary M5 proof root appends aliases from verification/m5-archived-library-compatibility.lean solely for the archived generated subject; current checked-in subjects do not use them.",
+    "Reachable handwritten external models are part of the trusted base and are listed in binding.external_models.",
+    "Checkpoint renewal is a host premise: a fresh checkpoint opens fresh quota records from fresh host snapshots."
+  ],
+  "non_claims": [
+    "No cross-checkpoint quota conservation: quota records are checkpoint-local.",
+    "Consumed witnesses and registered attempts agree in number; no trace-level pairing of a particular witness with a particular attempt is stated beyond the per-admission theorems.",
+    "No liveness: nothing forces an admitted attempt to start or an invocation to finish.",
+    "No concurrency, crash-recovery, remote-revocation atomicity or exactly-once delivery claim.",
+    "No Rust compiler, Charon or Aeneas correctness claim."
+  ],
+  "scope": "Universal theorems over the retained generated M5 authority transitions: committed-admission guarantees, refusal preservation, one ledger move per public transition, the checkpoint-local quota invariant and the table/counter agreement over every finite serialized prefix from Authority.new, and over every finite trace a settled witness is never rewritten and a started attempt never starts again.",
+  "artifact_directory": "/dev/shm/noble-iss/lanes138/m5-authority",
+  "command_count": 55
+}
