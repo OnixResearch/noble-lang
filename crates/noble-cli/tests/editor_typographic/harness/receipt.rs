@@ -1,8 +1,7 @@
-//! Receipt writer for the typographic experiment.
+//! Receipt writer: only from a clean committed tree of this worktree.
 //!
-//! A receipt is produced only from a clean committed tree of this worktree, is
-//! written outside the repository and is never overwritten, so every retained
-//! receipt names the exact source commit it measured.
+//! A receipt is written outside the repository and is never overwritten, so
+//! every retained receipt names the exact source commit it measured.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;

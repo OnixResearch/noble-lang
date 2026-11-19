@@ -99,7 +99,7 @@ fn optional(value: Option<&serde_json::Value>, key: &str) -> Option<String> {
 /// under one scratch directory, submitted once, and removed again.
 pub struct Runner {
     directory: PathBuf,
-    invocations: usize,
+    attempts: u32,
 }
 
 impl Runner {
@@ -108,12 +108,12 @@ impl Runner {
             .map_err(|error| format!("create runner directory: {error}"))?;
         Ok(Runner {
             directory: directory.to_path_buf(),
-            invocations: 0,
+            attempts: 0,
         })
     }
 
-    pub fn invocations(&self) -> usize {
-        self.invocations
+    pub fn invocations(&self) -> u32 {
+        self.attempts
     }
 
     pub fn analyze(&mut self, name: &str, document: &str) -> Result<Verdict, String> {
@@ -127,15 +127,15 @@ impl Runner {
     fn invoke(&mut self, action: &str, name: &str, document: &str) -> Result<Verdict, String> {
         let path = self
             .directory
-            .join(format!("{name}-{action}-{}.json", self.invocations));
+            .join(format!("{name}-{action}-{}.json", self.attempts));
         std::fs::write(&path, document).map_err(|error| format!("write {name}: {error}"))?;
         let output = Command::new(env!("CARGO_BIN_EXE_noble"))
             .args(["editor", action])
             .arg(&path)
             .output()
             .map_err(|error| format!("launch noble editor {action}: {error}"))?;
-        let _ = std::fs::remove_file(&path);
-        self.invocations = self.invocations.saturating_add(1);
+        remove_probe(&path)?;
+        self.attempts = self.attempts.saturating_add(1);
         let exit = output
             .status
             .code()
@@ -144,6 +144,15 @@ impl Runner {
             .map_err(|error| format!("{name}: report is not UTF-8: {error}"))?;
         Verdict::from_report(exit, &stdout)
             .map_err(|error| format!("{name}/{action}: {error}; stdout={stdout}"))
+    }
+}
+
+/// Remove one submitted probe document, refusing anything but its absence.
+pub fn remove_probe(path: &Path) -> Result<(), String> {
+    match std::fs::remove_file(path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(format!("remove {}: {error}", path.display())),
     }
 }
 

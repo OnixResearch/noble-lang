@@ -11,7 +11,7 @@ use noble_contracts::source::editor::Node;
 use super::Refusal;
 
 /// Largest editor JSON document the CLI ingress reads (`SOURCE_LIMITS.bytes`).
-pub const MAX_DOCUMENT_BYTES: usize = 65_536;
+pub const MAX_ENVELOPE_BYTES: usize = 65_536;
 
 /// Encode one node list as the versioned editor document.
 pub fn encode(nodes: &[Node]) -> Result<String, Refusal> {
@@ -21,7 +21,7 @@ pub fn encode(nodes: &[Node]) -> Result<String, Refusal> {
     });
     let text = serde_json::to_string(&document)
         .map_err(|error| Refusal::new("encode", error.to_string()))?;
-    if text.len() > MAX_DOCUMENT_BYTES {
+    if text.len() > MAX_ENVELOPE_BYTES {
         return Err(Refusal::new(
             "byte-limit",
             "editor JSON byte limit exceeded",
