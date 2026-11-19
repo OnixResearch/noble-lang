@@ -1,0 +1,2094 @@
+{
+  "cells": [
+    {
+      "cell": "default-off:shipped-binary",
+      "control": "noble-editor-report/v1",
+      "cursor_code_in_shipped_artifact": false,
+      "declaration": "#[cfg(test)] mod zipper;",
+      "markers": {
+        "empty-quotation": 0,
+        "no-such-node": 0
+      }
+    },
+    {
+      "addresses": 3,
+      "cell": "identity:complete",
+      "origin": "crates/noble-cli/tests/editor.rs: editor_four_variants_and_hostile_transport (complete)",
+      "reconstruction": "original"
+    },
+    {
+      "admission": {
+        "bytes": 6,
+        "bytes_equal": true,
+        "edit_source_sha256": "37482b4c52eb0fe07e1225dca42c402eec6f042f450e2c73d02615e572066325",
+        "edit_wasm_sha256": "1360ef4a0bd742701f10d70e92eed96aa2a31515551b479e1e86e77d1b8310d8",
+        "source_sha256": "37482b4c52eb0fe07e1225dca42c402eec6f042f450e2c73d02615e572066325",
+        "wasm_sha256": "1360ef4a0bd742701f10d70e92eed96aa2a31515551b479e1e86e77d1b8310d8"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "original:complete",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "addresses": [
+        [
+          1
+        ],
+        [
+          2
+        ],
+        [
+          1
+        ]
+      ],
+      "cell": "sequence:complete:step-forward-then-back",
+      "steps": 3,
+      "tree": "reconstructed"
+    },
+    {
+      "addresses": [
+        [
+          1
+        ],
+        [
+          0
+        ]
+      ],
+      "cell": "sequence:complete:walk-to-the-first-root-node",
+      "steps": 2,
+      "tree": "reconstructed"
+    },
+    {
+      "admission": {
+        "bytes": 7,
+        "bytes_equal": true,
+        "edit_source_sha256": "912b6b998aca35ee6b29c516c4ad99a74f1386306b34370fff8ca39f5f289d72",
+        "edit_wasm_sha256": "a65a6a6564dc35e070ed72048efee9837b0d5c72f8094fb56ef0a3f40279a3be",
+        "source_sha256": "912b6b998aca35ee6b29c516c4ad99a74f1386306b34370fff8ca39f5f289d72",
+        "wasm_sha256": "a65a6a6564dc35e070ed72048efee9837b0d5c72f8094fb56ef0a3f40279a3be"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:complete:replace-root-integer-with-negative",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": {
+        "guest_requests": 0,
+        "hole_refusal": "acceptance",
+        "node_path": [
+          1
+        ]
+      },
+      "admit": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:complete:replace-integer-with-hole",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-editor-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": {
+        "bytes": 10,
+        "bytes_equal": true,
+        "edit_source_sha256": "688d01d58b84633121c4af82846567974c40ff4cdbde3973040d2306f46ad450",
+        "edit_wasm_sha256": "9d48c2b2e17934a6cd17a30ab0fd9ecb16f3a1726a440e9a3977d94ee95ec270",
+        "source_sha256": "688d01d58b84633121c4af82846567974c40ff4cdbde3973040d2306f46ad450",
+        "wasm_sha256": "9d48c2b2e17934a6cd17a30ab0fd9ecb16f3a1726a440e9a3977d94ee95ec270"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:complete:replace-word-with-quotation",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": null,
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 2,
+          "outcome": "type-reject",
+          "stage": "check"
+        },
+        "edit": {
+          "category": null,
+          "exit": 2,
+          "outcome": "type-reject",
+          "stage": "check"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:complete:replace-integer-with-boolean",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "cell": "refusal:complete:enter-a-root-integer",
+      "class": "not-a-quotation",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:complete:leave-from-the-root-list",
+      "class": "at-root",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:complete:previous-before-the-first-root-node",
+      "class": "off-end",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:complete:next-after-the-last-root-node",
+      "class": "off-end",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:complete:address-past-the-root-list",
+      "class": "no-such-node",
+      "editor_commands": 0
+    },
+    {
+      "addresses": 3,
+      "cell": "identity:incomplete",
+      "origin": "crates/noble-cli/tests/editor.rs: editor_four_variants_and_hostile_transport (incomplete)",
+      "reconstruction": "original"
+    },
+    {
+      "admission": {
+        "guest_requests": 0,
+        "hole_refusal": "acceptance",
+        "node_path": [
+          1
+        ]
+      },
+      "admit": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "original:incomplete",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-editor-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "addresses": [
+        [
+          1
+        ],
+        [
+          2
+        ]
+      ],
+      "cell": "sequence:incomplete:step-across-the-hole",
+      "steps": 2,
+      "tree": "reconstructed"
+    },
+    {
+      "admission": {
+        "bytes": 6,
+        "bytes_equal": true,
+        "edit_source_sha256": "37482b4c52eb0fe07e1225dca42c402eec6f042f450e2c73d02615e572066325",
+        "edit_wasm_sha256": "1360ef4a0bd742701f10d70e92eed96aa2a31515551b479e1e86e77d1b8310d8",
+        "source_sha256": "37482b4c52eb0fe07e1225dca42c402eec6f042f450e2c73d02615e572066325",
+        "wasm_sha256": "1360ef4a0bd742701f10d70e92eed96aa2a31515551b479e1e86e77d1b8310d8"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:incomplete:fill-the-hole-with-an-integer",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": null,
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 2,
+          "outcome": "type-reject",
+          "stage": "check"
+        },
+        "edit": {
+          "category": null,
+          "exit": 2,
+          "outcome": "type-reject",
+          "stage": "check"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:incomplete:fill-the-hole-with-an-empty-quotation",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "cell": "refusal:incomplete:enter-a-root-hole",
+      "class": "not-a-quotation",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:incomplete:address-through-a-hole",
+      "class": "no-such-node",
+      "editor_commands": 0
+    },
+    {
+      "addresses": 3,
+      "cell": "identity:effectful",
+      "origin": "crates/noble-cli/tests/editor.rs: editor_four_variants_and_hostile_transport (effectful)",
+      "reconstruction": "original"
+    },
+    {
+      "admission": {
+        "guest_requests": 0,
+        "hole_refusal": "acceptance",
+        "node_path": [
+          1
+        ]
+      },
+      "admit": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "original:effectful",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-editor-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "addresses": [
+        [
+          2
+        ]
+      ],
+      "cell": "sequence:effectful:step-from-the-hole-to-the-effect-word",
+      "steps": 1,
+      "tree": "reconstructed"
+    },
+    {
+      "admission": null,
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 2,
+          "outcome": "type-reject",
+          "stage": "check"
+        },
+        "edit": {
+          "category": null,
+          "exit": 2,
+          "outcome": "type-reject",
+          "stage": "check"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:effectful:fill-the-hole-before-an-effect-word",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "cell": "refusal:effectful:enter-the-effect-word",
+      "class": "not-a-quotation",
+      "editor_commands": 0
+    },
+    {
+      "addresses": 4,
+      "cell": "identity:nested",
+      "origin": "crates/noble-cli/tests/editor.rs: editor_failures_preserve_category_and_bounded_node_paths (nested hole)",
+      "reconstruction": "original"
+    },
+    {
+      "admission": {
+        "guest_requests": 0,
+        "hole_refusal": "acceptance",
+        "node_path": [
+          0,
+          1,
+          0
+        ]
+      },
+      "admit": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "original:nested",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-editor-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "addresses": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0
+        ]
+      ],
+      "cell": "sequence:nested:enter-both-quotations-and-leave",
+      "steps": 5,
+      "tree": "reconstructed"
+    },
+    {
+      "admission": {
+        "bytes": 12,
+        "bytes_equal": true,
+        "edit_source_sha256": "8ffef640b7ba56d8c1172ac02498523bbe1421839388e5a9da81c85984565ac6",
+        "edit_wasm_sha256": "4eed030f119f761ce6224180d023ec855562a02cd2d382c2fdeee83d3350b0df",
+        "source_sha256": "8ffef640b7ba56d8c1172ac02498523bbe1421839388e5a9da81c85984565ac6",
+        "wasm_sha256": "4eed030f119f761ce6224180d023ec855562a02cd2d382c2fdeee83d3350b0df"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:nested:fill-the-nested-hole",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": {
+        "bytes": 8,
+        "bytes_equal": true,
+        "edit_source_sha256": "125df9adc175d63a2feca61e35a520a0ce77a8aef5a573c4d8a756304e31f5a9",
+        "edit_wasm_sha256": "9c0acf00afd20de378fe19f2eae239c0068d9a0940465b4e1b41e503bc192b61",
+        "source_sha256": "125df9adc175d63a2feca61e35a520a0ce77a8aef5a573c4d8a756304e31f5a9",
+        "wasm_sha256": "9c0acf00afd20de378fe19f2eae239c0068d9a0940465b4e1b41e503bc192b61"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:nested:replace-the-nested-quotation-with-an-integer",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "cell": "refusal:nested:enter-a-nested-hole",
+      "class": "not-a-quotation",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:nested:address-past-the-inner-quotation",
+      "class": "no-such-node",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:nested:address-through-an-integer",
+      "class": "no-such-node",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:nested:leave-from-the-root-node",
+      "class": "at-root",
+      "editor_commands": 0
+    },
+    {
+      "addresses": 1,
+      "cell": "identity:root_hole",
+      "origin": "crates/noble-cli/tests/editor.rs: the direct root hole",
+      "reconstruction": "original"
+    },
+    {
+      "admission": {
+        "guest_requests": 0,
+        "hole_refusal": "acceptance",
+        "node_path": [
+          0
+        ]
+      },
+      "admit": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "original:root_hole",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-editor-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": {
+        "bytes": 2,
+        "bytes_equal": true,
+        "edit_source_sha256": "c69b33366ea0bcfb6c30799a4100c6a040ae9073c5f5a9f3c0b2950fa5dd8558",
+        "edit_wasm_sha256": "c3987e524442ff50b019103ddab3c4d66f7c03965347ffbc2fe3772981cb88a4",
+        "source_sha256": "c69b33366ea0bcfb6c30799a4100c6a040ae9073c5f5a9f3c0b2950fa5dd8558",
+        "wasm_sha256": "c3987e524442ff50b019103ddab3c4d66f7c03965347ffbc2fe3772981cb88a4"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:root_hole:fill-the-root-hole",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": {
+        "guest_requests": 0,
+        "hole_refusal": "acceptance",
+        "node_path": [
+          0,
+          0
+        ]
+      },
+      "admit": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:root_hole:replace-the-root-hole-with-a-quotation-hole",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-editor-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "cell": "refusal:root_hole:enter-the-root-hole",
+      "class": "not-a-quotation",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:root_hole:leave-from-the-root-hole",
+      "class": "at-root",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:root_hole:next-after-the-root-hole",
+      "class": "off-end",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:root_hole:previous-before-the-root-hole",
+      "class": "off-end",
+      "editor_commands": 0
+    },
+    {
+      "addresses": 5,
+      "cell": "identity:nested_holes",
+      "origin": "crates/noble-cli/tests/editor.rs: two holes, the first one named",
+      "reconstruction": "original"
+    },
+    {
+      "admission": {
+        "guest_requests": 0,
+        "hole_refusal": "acceptance",
+        "node_path": [
+          1,
+          0,
+          0
+        ]
+      },
+      "admit": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "original:nested_holes",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-editor-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "addresses": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1
+        ],
+        [
+          2
+        ]
+      ],
+      "cell": "sequence:nested_holes:enter-the-nested-holes-and-step-on",
+      "steps": 5,
+      "tree": "reconstructed"
+    },
+    {
+      "addresses": [
+        [
+          1
+        ],
+        [
+          2
+        ],
+        [
+          1
+        ]
+      ],
+      "cell": "sequence:nested_holes:step-across-the-root-holes",
+      "steps": 3,
+      "tree": "reconstructed"
+    },
+    {
+      "admission": {
+        "guest_requests": 0,
+        "hole_refusal": "acceptance",
+        "node_path": [
+          2
+        ]
+      },
+      "admit": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:nested_holes:fill-the-first-hole-and-leave-the-second",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-editor-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": {
+        "guest_requests": 0,
+        "hole_refusal": "acceptance",
+        "node_path": [
+          1,
+          0,
+          0
+        ]
+      },
+      "admit": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:nested_holes:fill-the-root-hole-and-leave-the-nested-one",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-editor-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": {
+        "guest_requests": 0,
+        "hole_refusal": "acceptance",
+        "node_path": [
+          1
+        ]
+      },
+      "admit": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:nested_holes:replace-the-quotation-with-a-hole",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-editor-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "cell": "refusal:nested_holes:enter-the-root-hole",
+      "class": "not-a-quotation",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:nested_holes:next-after-the-root-hole",
+      "class": "off-end",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:nested_holes:previous-before-the-first-node",
+      "class": "off-end",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:nested_holes:address-through-the-outer-quotation-past-its-end",
+      "class": "no-such-node",
+      "editor_commands": 0
+    },
+    {
+      "addresses": 5,
+      "cell": "identity:nested_quotations",
+      "origin": "hole-free nested quotations",
+      "reconstruction": "original"
+    },
+    {
+      "admission": {
+        "bytes": 14,
+        "bytes_equal": true,
+        "edit_source_sha256": "cb5c078939b39d617656ec6f2137e95cc78343a0de00ff84ac747fd8c63a4898",
+        "edit_wasm_sha256": "d32bf81c995c997121458a6edd744b3b8b5019a83144a69844d3bdf25c91dab4",
+        "source_sha256": "cb5c078939b39d617656ec6f2137e95cc78343a0de00ff84ac747fd8c63a4898",
+        "wasm_sha256": "d32bf81c995c997121458a6edd744b3b8b5019a83144a69844d3bdf25c91dab4"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "original:nested_quotations",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "addresses": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "cell": "sequence:nested_quotations:descend-and-return",
+      "steps": 5,
+      "tree": "reconstructed"
+    },
+    {
+      "addresses": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "cell": "sequence:nested_quotations:step-inside-the-inner-quotation",
+      "steps": 3,
+      "tree": "reconstructed"
+    },
+    {
+      "admission": {
+        "guest_requests": 0,
+        "hole_refusal": "acceptance",
+        "node_path": [
+          0,
+          0,
+          2
+        ]
+      },
+      "admit": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:nested_quotations:introduce-a-hole-in-the-inner-quotation",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-editor-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": {
+        "bytes": 6,
+        "bytes_equal": true,
+        "edit_source_sha256": "652098069b3a1dc6649bd55fda97c8261b5ee8f3a1a6ea098a2612029fb79b92",
+        "edit_wasm_sha256": "ef770b10380eaf1e7f4a44599add757c02ed3f454dcbc5ba5aa3f4c011752a62",
+        "source_sha256": "652098069b3a1dc6649bd55fda97c8261b5ee8f3a1a6ea098a2612029fb79b92",
+        "wasm_sha256": "ef770b10380eaf1e7f4a44599add757c02ed3f454dcbc5ba5aa3f4c011752a62"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:nested_quotations:replace-the-inner-quotation-with-integer",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "cell": "refusal:nested_quotations:next-after-the-only-root-node",
+      "class": "off-end",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:nested_quotations:enter-the-plus-word",
+      "class": "not-a-quotation",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:nested_quotations:address-past-the-inner-quotation",
+      "class": "no-such-node",
+      "editor_commands": 0
+    },
+    {
+      "addresses": 1,
+      "cell": "identity:boolean",
+      "origin": "the boolean node kind as a whole tree",
+      "reconstruction": "original"
+    },
+    {
+      "admission": {
+        "bytes": 5,
+        "bytes_equal": true,
+        "edit_source_sha256": "297e64555bdc75e320b79234aa91b5cf9acc06f68cfd2544321fccbec04f4fee",
+        "edit_wasm_sha256": "9adc16f3e7ad2ec11cd209270f04ab38576eae7e38643231e0bc10e23c19cec8",
+        "source_sha256": "297e64555bdc75e320b79234aa91b5cf9acc06f68cfd2544321fccbec04f4fee",
+        "wasm_sha256": "9adc16f3e7ad2ec11cd209270f04ab38576eae7e38643231e0bc10e23c19cec8"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "original:boolean",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": {
+        "bytes": 6,
+        "bytes_equal": true,
+        "edit_source_sha256": "ad568d9861f0561a95efaa70b23d06d29e35764475e25e16ae79a7e95e0782e7",
+        "edit_wasm_sha256": "f54fb9fcce08b282bb509b1ce6944826384751a27730f189826dc8bf0aa8c3a8",
+        "source_sha256": "ad568d9861f0561a95efaa70b23d06d29e35764475e25e16ae79a7e95e0782e7",
+        "wasm_sha256": "f54fb9fcce08b282bb509b1ce6944826384751a27730f189826dc8bf0aa8c3a8"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:boolean:toggle-the-boolean",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": {
+        "bytes": 2,
+        "bytes_equal": true,
+        "edit_source_sha256": "0b0bd7ca2acebad288fe09c9d9595f1f1c8e91de8d0a6762dad9f009f2f8240d",
+        "edit_wasm_sha256": "6d32b12e71ad827a559b0ab7619576ab776a5086fa25ba68e8ef99db7b047799",
+        "source_sha256": "0b0bd7ca2acebad288fe09c9d9595f1f1c8e91de8d0a6762dad9f009f2f8240d",
+        "wasm_sha256": "6d32b12e71ad827a559b0ab7619576ab776a5086fa25ba68e8ef99db7b047799"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:boolean:replace-the-boolean-with-an-integer",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "cell": "refusal:boolean:enter-a-boolean",
+      "class": "not-a-quotation",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:boolean:leave-from-a-boolean-root",
+      "class": "at-root",
+      "editor_commands": 0
+    },
+    {
+      "addresses": 1,
+      "cell": "identity:empty_quotation",
+      "origin": "the empty quotation node kind",
+      "reconstruction": "original"
+    },
+    {
+      "admission": {
+        "bytes": 4,
+        "bytes_equal": true,
+        "edit_source_sha256": "44c63ec47e7501d3622ced9e71b98f51915a4d8805f9ea77e9655e166a8805dd",
+        "edit_wasm_sha256": "dd582dc7aa57330bb049462bd02978f142ff41e68e0f5b0cdf3db91c3ec972c4",
+        "source_sha256": "44c63ec47e7501d3622ced9e71b98f51915a4d8805f9ea77e9655e166a8805dd",
+        "wasm_sha256": "dd582dc7aa57330bb049462bd02978f142ff41e68e0f5b0cdf3db91c3ec972c4"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "original:empty_quotation",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": {
+        "bytes": 2,
+        "bytes_equal": true,
+        "edit_source_sha256": "7daed43814b633951fa277cd01695574df6e05a9cb10523f1763e842b06be0ff",
+        "edit_wasm_sha256": "0b4229a8d0a0fc552a22835bcc90ce8111ddaf82e9cea10f6254aebda8f307de",
+        "source_sha256": "7daed43814b633951fa277cd01695574df6e05a9cb10523f1763e842b06be0ff",
+        "wasm_sha256": "0b4229a8d0a0fc552a22835bcc90ce8111ddaf82e9cea10f6254aebda8f307de"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:empty_quotation:replace-the-empty-quotation-with-an-integer",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "cell": "refusal:empty_quotation:enter-an-empty-quotation",
+      "class": "empty-quotation",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:empty_quotation:next-after-the-empty-quotation",
+      "class": "off-end",
+      "editor_commands": 0
+    },
+    {
+      "addresses": 2,
+      "cell": "identity:hostile_word",
+      "origin": "crates/noble-cli/tests/editor.rs: the word `[` is refused as source word syntax",
+      "reconstruction": "original"
+    },
+    {
+      "admission": {
+        "guest_requests": 0,
+        "hole_refusal": "parse",
+        "node_path": null
+      },
+      "admit": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "original:hostile_word",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-editor-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "addresses": [
+        [
+          1
+        ],
+        [
+          0
+        ]
+      ],
+      "cell": "sequence:hostile_word:step-over-the-hostile-word",
+      "steps": 2,
+      "tree": "reconstructed"
+    },
+    {
+      "admission": {
+        "guest_requests": 0,
+        "hole_refusal": "acceptance",
+        "node_path": [
+          1
+        ]
+      },
+      "admit": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:hostile_word:repair-the-hostile-word-with-an-integer",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-editor-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": {
+        "guest_requests": 0,
+        "hole_refusal": "acceptance",
+        "node_path": [
+          1
+        ]
+      },
+      "admit": {
+        "cursor": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "edit": {
+          "category": "invalid",
+          "exit": 2,
+          "outcome": "reject",
+          "stage": "admission"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:hostile_word:repair-the-hostile-word-with-a-source-word",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-editor-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "cell": "refusal:hostile_word:enter-the-hostile-word",
+      "class": "not-a-quotation",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:hostile_word:next-after-the-hole",
+      "class": "off-end",
+      "editor_commands": 0
+    },
+    {
+      "addresses": 1,
+      "cell": "identity:check_refusal",
+      "origin": "a hole-free tree that type-rejects at the check stage",
+      "reconstruction": "original"
+    },
+    {
+      "admission": null,
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 2,
+          "outcome": "type-reject",
+          "stage": "check"
+        },
+        "edit": {
+          "category": null,
+          "exit": 2,
+          "outcome": "type-reject",
+          "stage": "check"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "original:check_refusal",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": {
+        "bytes": 2,
+        "bytes_equal": true,
+        "edit_source_sha256": "aec400e3e65dc09b31513694bc9893b91a8f4eafb8f1d882e5dcd4e141ebff52",
+        "edit_wasm_sha256": "81714de3473e1f2ebdc15b5ebf84d0e10474c360532f89b0c54f1e9e8c1ffba4",
+        "source_sha256": "aec400e3e65dc09b31513694bc9893b91a8f4eafb8f1d882e5dcd4e141ebff52",
+        "wasm_sha256": "81714de3473e1f2ebdc15b5ebf84d0e10474c360532f89b0c54f1e9e8c1ffba4"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:check_refusal:replace-the-underflowing-word-with-an-integer",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "admission": {
+        "bytes": 4,
+        "bytes_equal": true,
+        "edit_source_sha256": "44c63ec47e7501d3622ced9e71b98f51915a4d8805f9ea77e9655e166a8805dd",
+        "edit_wasm_sha256": "dd582dc7aa57330bb049462bd02978f142ff41e68e0f5b0cdf3db91c3ec972c4",
+        "source_sha256": "44c63ec47e7501d3622ced9e71b98f51915a4d8805f9ea77e9655e166a8805dd",
+        "wasm_sha256": "dd582dc7aa57330bb049462bd02978f142ff41e68e0f5b0cdf3db91c3ec972c4"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "replacement:check_refusal:replace-the-underflowing-word-with-an-empty-quotation",
+      "cursor_document": "cursor_reconstruction",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "cell": "refusal:check_refusal:enter-the-underflowing-word",
+      "class": "not-a-quotation",
+      "editor_commands": 0
+    },
+    {
+      "addresses": 0,
+      "cell": "identity:empty_tree",
+      "origin": "the transport accepts an empty root list; it has no node to focus",
+      "reconstruction": "original"
+    },
+    {
+      "admission": {
+        "bytes": 0,
+        "bytes_equal": true,
+        "edit_source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "edit_wasm_sha256": "5f9a854adae26b798ef90ce0adbb46451182ca6f56fc1a46b6799d30e5044137",
+        "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "wasm_sha256": "5f9a854adae26b798ef90ce0adbb46451182ca6f56fc1a46b6799d30e5044137"
+      },
+      "admit": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "normal",
+          "stage": "wasm"
+        },
+        "equal": true
+      },
+      "analyze": {
+        "cursor": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "edit": {
+          "category": null,
+          "exit": 0,
+          "outcome": "constraints",
+          "stage": "analysis"
+        },
+        "equal": true
+      },
+      "cell": "original:empty_tree",
+      "cursor_document": "encoder_only_empty_root",
+      "schemas": {
+        "admit": "noble-core-report/v1",
+        "analyze": "noble-editor-report/v1"
+      }
+    },
+    {
+      "cell": "refusal:empty_tree:focus-the-empty-root-list",
+      "class": "no-such-node",
+      "editor_commands": 0
+    },
+    {
+      "cell": "refusal:empty_tree:address-the-empty-root-list",
+      "class": "no-such-node",
+      "editor_commands": 0
+    }
+  ],
+  "command": [
+    "/dev/shm/noble-iss/target/b17fold/debug/deps/editor-9be2f2146784081f",
+    "zipper::walk::cursor_corpus_cells",
+    "--exact"
+  ],
+  "corpus": {
+    "path": "verification/editor-zipper/corpus.json",
+    "sha256": "c17a922f4baa3604bd9fb890460791d82494b75e104bd86cd154f07cd00ba515"
+  },
+  "criteria": {
+    "frozen": "2026-11-19",
+    "go_rule": "GO if and only if every criterion below holds on every case of corpus.json with zero mismatches and zero unexercised cells; otherwise NO-GO. Neither verdict adopts the cursor: the layer stays default-off and no editor command reaches it.",
+    "path": "verification/editor-zipper/criteria.json",
+    "sha256": "59466b4d07456dcea358642f67e9854ce8b8bb7bc11517ca99d8564532f15e39"
+  },
+  "implementation": [
+    {
+      "path": "crates/noble-cli/src/core/editor/zipper.rs",
+      "sha256": "b71c1d6015af17112b003b001762a1c8aab0497abe73e7866bb349dc0581287a"
+    },
+    {
+      "path": "crates/noble-cli/src/core/editor/zipper/document.rs",
+      "sha256": "3d8eb45a42a3ac506f6e29fc0aa5c7bb309309b3d259ae5a858dd08d9d565d73"
+    },
+    {
+      "path": "crates/noble-cli/src/core/editor/zipper/tests.rs",
+      "sha256": "0683cf78a5496c9c3031494648f5b5e8058883988a86b4355832992d159362e1"
+    },
+    {
+      "path": "crates/noble-cli/tests/editor_zipper/measurement.rs",
+      "sha256": "b6068a57f3dff4d6abf8c6e23ccb1cbd66f8729c8d9f61dc93b2ba6756a9ecb0"
+    },
+    {
+      "path": "crates/noble-cli/tests/editor_zipper/measurement/cells.rs",
+      "sha256": "1633944d8096c17a008f012835f8cdd94d86ddf69a4c7fc23783442e45a393bf"
+    },
+    {
+      "path": "crates/noble-cli/tests/editor_zipper/measurement/corpus.rs",
+      "sha256": "d14052336c0324f30f13058231e4bbe3df1dc6e0807792446aac91e24321d18c"
+    },
+    {
+      "path": "crates/noble-cli/tests/editor_zipper/measurement/paired.rs",
+      "sha256": "ecb8e21390762650153f42e2ad1a76205dad1589e984b411087d5dc5fed1fa59"
+    },
+    {
+      "path": "crates/noble-cli/tests/editor_zipper/measurement/receipt.rs",
+      "sha256": "3c3860b1ccb44d3a566e5d68570537894b307828c9eef34c00572eac68c46d08"
+    },
+    {
+      "path": "crates/noble-cli/tests/editor_zipper/measurement/transport.rs",
+      "sha256": "0c392e72d58231f2220a0e060e0d72caf3607fcf141cc9fddac54eac164829a8"
+    },
+    {
+      "path": "crates/noble-cli/tests/editor_zipper/measurement/walk.rs",
+      "sha256": "f376c71e8471af3a484868727144d7c65cfbe5708aabc4c2f9327286f0122dcd"
+    },
+    {
+      "path": "crates/noble-cli/tests/editor.rs",
+      "sha256": "cc010a5ee8c9ecd4bd38525c98b59bc3d39aad54bf3e6dcdebc6e54babd5ad08"
+    }
+  ],
+  "issue": 142,
+  "lane": "verification/editor-zipper",
+  "non_claims": [
+    "a passing corpus is not a theorem, a refinement or a model-to-implementation correspondence",
+    "the cited paper's cost bounds, completeness results and timings are the authors' claims and are not measured or gated here",
+    "the cursor is measured only over this frozen corpus of five node kinds; nothing here claims coverage of another editor tree",
+    "the receipt compares verdicts of the unchanged editor transport; it does not establish anything about the kernel, the wasm backend or admission semantics beyond those comparisons"
+  ],
+  "schema": "noble-editor-zipper-receipt/v1",
+  "source": {
+    "clean": true,
+    "commit": "347d9f1a26261fe2567046adeeb0724e0a8a17c8",
+    "tree": "39a1d980ee61233ad6aa1de5c957e5d6f94f6017"
+  },
+  "summary": {
+    "addresses": 29,
+    "cases": 12,
+    "editor_commands": 174,
+    "mismatches": 0,
+    "refusals": 32,
+    "replacements": 23,
+    "sequences": 10,
+    "verdict_pairs": 35
+  },
+  "toolchain": {
+    "cargo": null,
+    "rustc": null
+  }
+}

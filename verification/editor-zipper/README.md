@@ -133,7 +133,7 @@ comparison would fail.
 
 ## Receipt summary
 
-`receipt-e82bf64f.json` is the current receipt: it was produced from source commit `e82bf64f` on
+`receipt-347d9f1a.json` is the current receipt: it was produced from source commit `347d9f1a` on
 a clean tree, with corpus
 sha256 `c17a922f4baa3604bd9fb890460791d82494b75e104bd86cd154f07cd00ba515` and criteria sha256
 `59466b4d07456dce…` (both recorded in full in the receipt, together with the sha256 of the
@@ -162,8 +162,12 @@ The retained receipt records the command that produced it: the compiled `editor`
 invoked with `--exact zipper::walk::cursor_corpus_cells` and `NOBLE_EDITOR_ZIPPER_RECEIPT` set,
 because the build environment used here clears unknown environment variables. `cargo test` with
 the same variable is the documented recipe below and runs exactly the same assertions.
-`receipt-34035390.json` and `receipt-dcbeb019.json` are retained unchanged as the two earlier
-file layouts' evidence; all three measure the same frozen corpus with the same counts.
+`347d9f1a` changed only where the receipt metadata is assembled: the git commit, tree and file
+digests are now computed only when `NOBLE_EDITOR_ZIPPER_RECEIPT` is set, because the hermetic
+flake test sandbox has no `git`. The cells and their assertions are unchanged.
+`receipt-e82bf64f.json`, `receipt-34035390.json` and `receipt-dcbeb019.json` are retained
+unchanged as earlier revisions' evidence; all four measure the same frozen corpus with the same
+counts.
 
 The repository gates at `e82bf64f`, run from the repository root with the pinned toolchain:
 
