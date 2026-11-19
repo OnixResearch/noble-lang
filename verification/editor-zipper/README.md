@@ -133,11 +133,12 @@ comparison would fail.
 
 ## Receipt summary
 
-`receipt-34035390.json` was produced from source commit `34035390` on a clean tree, with corpus
+`receipt-e82bf64f.json` is the current receipt: it was produced from source commit `e82bf64f` on
+a clean tree, with corpus
 sha256 `c17a922f4baa3604bd9fb890460791d82494b75e104bd86cd154f07cd00ba515` and criteria sha256
 `59466b4d07456dce…` (both recorded in full in the receipt, together with the sha256 of the
-implementation files, the toolchain versions and the command that ran). Its `summary` block
-counts the cells:
+eleven implementation files, the toolchain versions and the command that ran). Its `summary`
+block counts the cells:
 
 | Criterion | Cells | Result |
 |---|---|---|
@@ -161,8 +162,17 @@ The retained receipt records the command that produced it: the compiled `editor`
 invoked with `--exact zipper::walk::cursor_corpus_cells` and `NOBLE_EDITOR_ZIPPER_RECEIPT` set,
 because the build environment used here clears unknown environment variables. `cargo test` with
 the same variable is the documented recipe below and runs exactly the same assertions.
-`receipt-dcbeb019.json` is retained unchanged as the earlier file layout's evidence; it measures
-the same corpus with the same counts.
+`receipt-34035390.json` and `receipt-dcbeb019.json` are retained unchanged as the two earlier
+file layouts' evidence; all three measure the same frozen corpus with the same counts.
+
+The repository gates at `e82bf64f`, run from the repository root with the pinned toolchain:
+
+| Gate | Result |
+|---|---|
+| `cargo fmt --all -- --check` | exit 0 |
+| `cargo clippy --workspace --all-targets --all-features --offline --locked -- -D warnings` | exit 0 |
+| `cargo test -p noble-cli --all-targets --all-features --offline --locked` | 26 suites, 408 passed, 0 failed |
+| Octet deny-all gate (lint + architecture) | `Status: clean`, `Findings: 0`, `Lint phase: clean (static_lint)`, `Architecture phase: clean (policy-check)`, exit 0 |
 
 ## Reproducing
 
