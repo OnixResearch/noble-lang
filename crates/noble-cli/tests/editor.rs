@@ -8,6 +8,10 @@
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
+
+#[path = "editor_zipper/measurement.rs"]
+mod zipper;
+
 use std::{io::Write, path::Path, process::Command};
 
 // Issue #141 experiment lane: a default-off typographic view measured only

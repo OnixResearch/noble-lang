@@ -5,6 +5,9 @@ use noble_contracts::source::editor::{Candidate, Node};
 
 type Value = super::report::Value;
 
+#[cfg(test)]
+mod zipper;
+
 fn fields<'a>(
     value: &'a Value,
     expected: &[&str],

@@ -1,0 +1,60 @@
+{
+  "schema": "noble-editor-zipper-criteria/v1",
+  "issue": 142,
+  "frozen": "2026-11-19",
+  "status": "frozen before the measurement recorded in receipt-*.json; these are the only thresholds this lane has",
+  "go_rule": "GO if and only if every criterion below holds on every case of corpus.json with zero mismatches and zero unexercised cells; otherwise NO-GO. Neither verdict adopts the cursor: the layer stays default-off and no editor command reaches it.",
+  "comparison": {
+    "verdict_fields": ["exit code", "report.stage", "report.outcome", "report.failure.category when the report carries a failure object"],
+    "verdict_report": "the whole parsed report object (byte-for-byte after JSON parsing), so a moved span or a renamed field also fails the cell",
+    "admitted_source": "the literal bytes of engine/module-1.noble written by `noble editor admit JSON --emit DIR`, which are the bytes the editor route passes to submission (the same bytes the report names in module.source_sha256)",
+    "module": "module.source_sha256 and module.wasm_sha256 from the admit report"
+  },
+  "criteria": [
+    {
+      "id": "C1",
+      "name": "identity reconstruction",
+      "statement": "For every node address of every corpus tree, a cursor addressed with that node_path must report the same address and reconstruct the original tree: no navigation and no replacement leaves the node tree unchanged.",
+      "check": "address sweep per case: Cursor::at(tree, address).node_path() == address and encode(reconstruct()) == the case's original document"
+    },
+    {
+      "id": "C2",
+      "name": "documented moves",
+      "statement": "Every documented navigation step must move the focus to the address the corpus states, and the reconstruction after the sequence must equal the case's original tree.",
+      "check": "each case.sequences entry: per-step address equality, then tree equality against the case tree"
+    },
+    {
+      "id": "C3",
+      "name": "replacement equals the JSON edit",
+      "statement": "Every documented replacement must produce the node tree of the corpus's independent JSON edit, and the two trees must have equal analyze and admit verdicts. A hole-free pair must also have equal admitted_source bytes and equal module digests.",
+      "check": "each case.replacements entry: tree equality against replacement.tree, then the four CLI runs (analyze and admit over both documents), then the byte and digest comparison when both admits succeed"
+    },
+    {
+      "id": "C4",
+      "name": "holes still refuse admission",
+      "statement": "Any tree that still contains a Hole is refused by `noble editor admit` before any submission, with accepted_program_created false and no guest request. When the tree's own node syntax builds, the refusal is the hole refusal and it names the first hole's own node_path; a tree whose syntax refuses earlier never reaches hole acceptance and must refuse at that earlier stage instead.",
+      "check": "every hole-bearing document in the corpus and every replacement tree that keeps a hole: admit exits 2 with accepted_program_created false and guest_requests 0; when failure.source_stage is acceptance, failure.node_path_status is mapped and failure.node_path equals the cursor's own first-hole address"
+    },
+    {
+      "id": "C5",
+      "name": "illegal moves refuse before admission",
+      "statement": "Every illegal move the corpus documents (focus off the end or through a non-quotation, entering a non-quotation or an empty quotation, leaving the root list) must be refused with its own class before any editor command runs.",
+      "check": "each case.refusals entry: the refusal class matches, and the harness's editor-command counter does not increase while the refusal is produced"
+    },
+    {
+      "id": "C6",
+      "name": "default-off",
+      "statement": "No shipped path reaches the cursor: the artifact the integration test invokes must contain no cursor code, and `noble editor analyze` / `noble editor admit` must keep the JSON ingress, report schema and exit codes they have today.",
+      "check": "the bytes of CARGO_BIN_EXE_noble contain none of the cursor's refusal-class literals; the module declaration is `#[cfg(test)] mod zipper;`; every analyze/admit report in this receipt is the unchanged noble-editor-report/v1 or noble-core-report/v1 shape"
+    }
+  ],
+  "non_gates": [
+    "the cited paper's prefetching timings, trail-depth affine cost bounds and Lean completeness results are the authors' claims; nothing in this lane measures or gates them",
+    "no threshold on cursor move cost, reconstruction cost, or trail depth beyond the ingress's own node, depth, byte and work limits",
+    "no requirement that any editor command, report field or default path gain the cursor"
+  ],
+  "reopen": [
+    "a corpus case or criterion may be extended only by a commit that freezes the extension before a new receipt is produced",
+    "adopting the cursor into a default editor path requires a separate issue, a spec change, and a fresh receipt under the extended criteria"
+  ]
+}

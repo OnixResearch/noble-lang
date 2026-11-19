@@ -1,0 +1,529 @@
+{
+  "schema": "noble-editor-zipper-corpus/v1",
+  "issue": 142,
+  "frozen": "2026-11-19",
+  "conventions": {
+    "tree": "an editor transport document, format 1, exactly as `noble editor analyze|admit` reads it",
+    "at": "a node_path address: the index of each enclosing quotation, then the focus's own index",
+    "sequence": "navigation only; `addresses` is the focus address the cursor must report after each step, and a null `tree` means the case's original tree must be reconstructed",
+    "replacement.node": "the replacement focus as the transport spells one of the five node kinds",
+    "replacement.tree": "the independent JSON edit: the whole document the same change writes by editing the JSON tree directly",
+    "refusal.op": "focus|enter|leave|next|previous; `focus` addresses the node first and must itself be refused",
+    "refusal.class": "the cursor refusal class the step must return"
+  },
+  "cases": [
+    {
+      "name": "complete",
+      "origin": "crates/noble-cli/tests/editor.rs: editor_four_variants_and_hostile_transport (complete)",
+      "tree": {
+        "format": 1,
+        "nodes": [
+          { "kind": "integer", "value": 1 },
+          { "kind": "integer", "value": 2 },
+          { "kind": "word", "value": "+" }
+        ]
+      },
+      "sequences": [
+        { "name": "step-forward-then-back", "at": [0], "steps": [{ "op": "next" }, { "op": "next" }, { "op": "previous" }], "addresses": [[1], [2], [1]], "tree": null },
+        { "name": "walk-to-the-first-root-node", "at": [2], "steps": [{ "op": "previous" }, { "op": "previous" }], "addresses": [[1], [0]], "tree": null }
+      ],
+      "replacements": [
+        {
+          "name": "replace-root-integer-with-negative",
+          "at": [0],
+          "node": { "kind": "integer", "value": -5 },
+          "tree": {
+            "format": 1,
+            "nodes": [
+              { "kind": "integer", "value": -5 },
+              { "kind": "integer", "value": 2 },
+              { "kind": "word", "value": "+" }
+            ]
+          }
+        },
+        {
+          "name": "replace-integer-with-hole",
+          "at": [1],
+          "node": { "kind": "hole" },
+          "tree": {
+            "format": 1,
+            "nodes": [
+              { "kind": "integer", "value": 1 },
+              { "kind": "hole" },
+              { "kind": "word", "value": "+" }
+            ]
+          }
+        },
+        {
+          "name": "replace-word-with-quotation",
+          "at": [2],
+          "node": { "kind": "quotation", "nodes": [{ "kind": "integer", "value": 4 }] },
+          "tree": {
+            "format": 1,
+            "nodes": [
+              { "kind": "integer", "value": 1 },
+              { "kind": "integer", "value": 2 },
+              { "kind": "quotation", "nodes": [{ "kind": "integer", "value": 4 }] }
+            ]
+          }
+        },
+        {
+          "name": "replace-integer-with-boolean",
+          "at": [0],
+          "node": { "kind": "boolean", "value": true },
+          "tree": {
+            "format": 1,
+            "nodes": [
+              { "kind": "boolean", "value": true },
+              { "kind": "integer", "value": 2 },
+              { "kind": "word", "value": "+" }
+            ]
+          }
+        }
+      ],
+      "refusals": [
+        { "name": "enter-a-root-integer", "at": [0], "op": "enter", "class": "not-a-quotation" },
+        { "name": "leave-from-the-root-list", "at": [1], "op": "leave", "class": "at-root" },
+        { "name": "previous-before-the-first-root-node", "at": [0], "op": "previous", "class": "off-end" },
+        { "name": "next-after-the-last-root-node", "at": [2], "op": "next", "class": "off-end" },
+        { "name": "address-past-the-root-list", "at": [3], "op": "focus", "class": "no-such-node" }
+      ]
+    },
+    {
+      "name": "incomplete",
+      "origin": "crates/noble-cli/tests/editor.rs: editor_four_variants_and_hostile_transport (incomplete)",
+      "tree": {
+        "format": 1,
+        "nodes": [
+          { "kind": "integer", "value": 1 },
+          { "kind": "hole" },
+          { "kind": "word", "value": "+" }
+        ]
+      },
+      "sequences": [
+        { "name": "step-across-the-hole", "at": [0], "steps": [{ "op": "next" }, { "op": "next" }], "addresses": [[1], [2]], "tree": null }
+      ],
+      "replacements": [
+        {
+          "name": "fill-the-hole-with-an-integer",
+          "at": [1],
+          "node": { "kind": "integer", "value": 2 },
+          "tree": {
+            "format": 1,
+            "nodes": [
+              { "kind": "integer", "value": 1 },
+              { "kind": "integer", "value": 2 },
+              { "kind": "word", "value": "+" }
+            ]
+          }
+        },
+        {
+          "name": "fill-the-hole-with-an-empty-quotation",
+          "at": [1],
+          "node": { "kind": "quotation", "nodes": [] },
+          "tree": {
+            "format": 1,
+            "nodes": [
+              { "kind": "integer", "value": 1 },
+              { "kind": "quotation", "nodes": [] },
+              { "kind": "word", "value": "+" }
+            ]
+          }
+        }
+      ],
+      "refusals": [
+        { "name": "enter-a-root-hole", "at": [1], "op": "enter", "class": "not-a-quotation" },
+        { "name": "address-through-a-hole", "at": [1, 0], "op": "focus", "class": "no-such-node" }
+      ]
+    },
+    {
+      "name": "effectful",
+      "origin": "crates/noble-cli/tests/editor.rs: editor_four_variants_and_hostile_transport (effectful)",
+      "tree": {
+        "format": 1,
+        "nodes": [
+          { "kind": "integer", "value": 1 },
+          { "kind": "hole" },
+          { "kind": "word", "value": "test.emit" }
+        ]
+      },
+      "sequences": [
+        { "name": "step-from-the-hole-to-the-effect-word", "at": [1], "steps": [{ "op": "next" }], "addresses": [[2]], "tree": null }
+      ],
+      "replacements": [
+        {
+          "name": "fill-the-hole-before-an-effect-word",
+          "at": [1],
+          "node": { "kind": "integer", "value": 1 },
+          "tree": {
+            "format": 1,
+            "nodes": [
+              { "kind": "integer", "value": 1 },
+              { "kind": "integer", "value": 1 },
+              { "kind": "word", "value": "test.emit" }
+            ]
+          }
+        }
+      ],
+      "refusals": [
+        { "name": "enter-the-effect-word", "at": [2], "op": "enter", "class": "not-a-quotation" }
+      ]
+    },
+    {
+      "name": "nested",
+      "origin": "crates/noble-cli/tests/editor.rs: editor_failures_preserve_category_and_bounded_node_paths (nested hole)",
+      "tree": {
+        "format": 1,
+        "nodes": [
+          {
+            "kind": "quotation",
+            "nodes": [
+              { "kind": "integer", "value": 1 },
+              { "kind": "quotation", "nodes": [{ "kind": "hole" }] }
+            ]
+          }
+        ]
+      },
+      "sequences": [
+        {
+          "name": "enter-both-quotations-and-leave",
+          "at": [0],
+          "steps": [{ "op": "enter" }, { "op": "next" }, { "op": "enter" }, { "op": "leave" }, { "op": "leave" }],
+          "addresses": [[0, 0], [0, 1], [0, 1, 0], [0, 1], [0]],
+          "tree": null
+        }
+      ],
+      "replacements": [
+        {
+          "name": "fill-the-nested-hole",
+          "at": [0, 1, 0],
+          "node": { "kind": "integer", "value": 2 },
+          "tree": {
+            "format": 1,
+            "nodes": [
+              {
+                "kind": "quotation",
+                "nodes": [
+                  { "kind": "integer", "value": 1 },
+                  { "kind": "quotation", "nodes": [{ "kind": "integer", "value": 2 }] }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "replace-the-nested-quotation-with-an-integer",
+          "at": [0, 1],
+          "node": { "kind": "integer", "value": 7 },
+          "tree": {
+            "format": 1,
+            "nodes": [
+              {
+                "kind": "quotation",
+                "nodes": [
+                  { "kind": "integer", "value": 1 },
+                  { "kind": "integer", "value": 7 }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "refusals": [
+        { "name": "enter-a-nested-hole", "at": [0, 1, 0], "op": "enter", "class": "not-a-quotation" },
+        { "name": "address-past-the-inner-quotation", "at": [0, 2], "op": "focus", "class": "no-such-node" },
+        { "name": "address-through-an-integer", "at": [0, 0, 0], "op": "focus", "class": "no-such-node" },
+        { "name": "leave-from-the-root-node", "at": [0], "op": "leave", "class": "at-root" }
+      ]
+    },
+    {
+      "name": "root_hole",
+      "origin": "crates/noble-cli/tests/editor.rs: the direct root hole",
+      "tree": { "format": 1, "nodes": [{ "kind": "hole" }] },
+      "sequences": [],
+      "replacements": [
+        {
+          "name": "fill-the-root-hole",
+          "at": [0],
+          "node": { "kind": "integer", "value": 7 },
+          "tree": { "format": 1, "nodes": [{ "kind": "integer", "value": 7 }] }
+        },
+        {
+          "name": "replace-the-root-hole-with-a-quotation-hole",
+          "at": [0],
+          "node": { "kind": "quotation", "nodes": [{ "kind": "hole" }] },
+          "tree": {
+            "format": 1,
+            "nodes": [{ "kind": "quotation", "nodes": [{ "kind": "hole" }] }]
+          }
+        }
+      ],
+      "refusals": [
+        { "name": "enter-the-root-hole", "at": [0], "op": "enter", "class": "not-a-quotation" },
+        { "name": "leave-from-the-root-hole", "at": [0], "op": "leave", "class": "at-root" },
+        { "name": "next-after-the-root-hole", "at": [0], "op": "next", "class": "off-end" },
+        { "name": "previous-before-the-root-hole", "at": [0], "op": "previous", "class": "off-end" }
+      ]
+    },
+    {
+      "name": "nested_holes",
+      "origin": "crates/noble-cli/tests/editor.rs: two holes, the first one named",
+      "tree": {
+        "format": 1,
+        "nodes": [
+          { "kind": "integer", "value": 1 },
+          {
+            "kind": "quotation",
+            "nodes": [{ "kind": "quotation", "nodes": [{ "kind": "hole" }] }]
+          },
+          { "kind": "hole" }
+        ]
+      },
+      "sequences": [
+        {
+          "name": "enter-the-nested-holes-and-step-on",
+          "at": [1],
+          "steps": [{ "op": "enter" }, { "op": "enter" }, { "op": "leave" }, { "op": "leave" }, { "op": "next" }],
+          "addresses": [[1, 0], [1, 0, 0], [1, 0], [1], [2]],
+          "tree": null
+        },
+        { "name": "step-across-the-root-holes", "at": [0], "steps": [{ "op": "next" }, { "op": "next" }, { "op": "previous" }], "addresses": [[1], [2], [1]], "tree": null }
+      ],
+      "replacements": [
+        {
+          "name": "fill-the-first-hole-and-leave-the-second",
+          "at": [1, 0, 0],
+          "node": { "kind": "integer", "value": 1 },
+          "tree": {
+            "format": 1,
+            "nodes": [
+              { "kind": "integer", "value": 1 },
+              {
+                "kind": "quotation",
+                "nodes": [{ "kind": "quotation", "nodes": [{ "kind": "integer", "value": 1 }] }]
+              },
+              { "kind": "hole" }
+            ]
+          }
+        },
+        {
+          "name": "fill-the-root-hole-and-leave-the-nested-one",
+          "at": [2],
+          "node": { "kind": "integer", "value": 2 },
+          "tree": {
+            "format": 1,
+            "nodes": [
+              { "kind": "integer", "value": 1 },
+              {
+                "kind": "quotation",
+                "nodes": [{ "kind": "quotation", "nodes": [{ "kind": "hole" }] }]
+              },
+              { "kind": "integer", "value": 2 }
+            ]
+          }
+        },
+        {
+          "name": "replace-the-quotation-with-a-hole",
+          "at": [1],
+          "node": { "kind": "hole" },
+          "tree": {
+            "format": 1,
+            "nodes": [
+              { "kind": "integer", "value": 1 },
+              { "kind": "hole" },
+              { "kind": "hole" }
+            ]
+          }
+        }
+      ],
+      "refusals": [
+        { "name": "enter-the-root-hole", "at": [2], "op": "enter", "class": "not-a-quotation" },
+        { "name": "next-after-the-root-hole", "at": [2], "op": "next", "class": "off-end" },
+        { "name": "previous-before-the-first-node", "at": [0], "op": "previous", "class": "off-end" },
+        { "name": "address-through-the-outer-quotation-past-its-end", "at": [1, 1], "op": "focus", "class": "no-such-node" }
+      ]
+    },
+    {
+      "name": "nested_quotations",
+      "origin": "hole-free nested quotations",
+      "tree": {
+        "format": 1,
+        "nodes": [
+          {
+            "kind": "quotation",
+            "nodes": [
+              {
+                "kind": "quotation",
+                "nodes": [
+                  { "kind": "integer", "value": 1 },
+                  { "kind": "integer", "value": 2 },
+                  { "kind": "word", "value": "+" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "sequences": [
+        {
+          "name": "descend-and-return",
+          "at": [0],
+          "steps": [{ "op": "enter" }, { "op": "enter" }, { "op": "next" }, { "op": "leave" }, { "op": "leave" }],
+          "addresses": [[0, 0], [0, 0, 0], [0, 0, 1], [0, 0], [0]],
+          "tree": null
+        },
+        { "name": "step-inside-the-inner-quotation", "at": [0, 0, 2], "steps": [{ "op": "previous" }, { "op": "previous" }, { "op": "next" }], "addresses": [[0, 0, 1], [0, 0, 0], [0, 0, 1]], "tree": null }
+      ],
+      "replacements": [
+        {
+          "name": "introduce-a-hole-in-the-inner-quotation",
+          "at": [0, 0, 2],
+          "node": { "kind": "hole" },
+          "tree": {
+            "format": 1,
+            "nodes": [
+              {
+                "kind": "quotation",
+                "nodes": [
+                  {
+                    "kind": "quotation",
+                    "nodes": [
+                      { "kind": "integer", "value": 1 },
+                      { "kind": "integer", "value": 2 },
+                      { "kind": "hole" }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "replace-the-inner-quotation-with-integer",
+          "at": [0, 0],
+          "node": { "kind": "integer", "value": 9 },
+          "tree": {
+            "format": 1,
+            "nodes": [{ "kind": "quotation", "nodes": [{ "kind": "integer", "value": 9 }] }]
+          }
+        }
+      ],
+      "refusals": [
+        { "name": "next-after-the-only-root-node", "at": [0], "op": "next", "class": "off-end" },
+        { "name": "enter-the-plus-word", "at": [0, 0, 2], "op": "enter", "class": "not-a-quotation" },
+        { "name": "address-past-the-inner-quotation", "at": [0, 0, 3], "op": "focus", "class": "no-such-node" }
+      ]
+    },
+    {
+      "name": "boolean",
+      "origin": "the boolean node kind as a whole tree",
+      "tree": { "format": 1, "nodes": [{ "kind": "boolean", "value": true }] },
+      "sequences": [],
+      "replacements": [
+        {
+          "name": "toggle-the-boolean",
+          "at": [0],
+          "node": { "kind": "boolean", "value": false },
+          "tree": { "format": 1, "nodes": [{ "kind": "boolean", "value": false }] }
+        },
+        {
+          "name": "replace-the-boolean-with-an-integer",
+          "at": [0],
+          "node": { "kind": "integer", "value": 4 },
+          "tree": { "format": 1, "nodes": [{ "kind": "integer", "value": 4 }] }
+        }
+      ],
+      "refusals": [
+        { "name": "enter-a-boolean", "at": [0], "op": "enter", "class": "not-a-quotation" },
+        { "name": "leave-from-a-boolean-root", "at": [0], "op": "leave", "class": "at-root" }
+      ]
+    },
+    {
+      "name": "empty_quotation",
+      "origin": "the empty quotation node kind",
+      "tree": { "format": 1, "nodes": [{ "kind": "quotation", "nodes": [] }] },
+      "sequences": [],
+      "replacements": [
+        {
+          "name": "replace-the-empty-quotation-with-an-integer",
+          "at": [0],
+          "node": { "kind": "integer", "value": 0 },
+          "tree": { "format": 1, "nodes": [{ "kind": "integer", "value": 0 }] }
+        }
+      ],
+      "refusals": [
+        { "name": "enter-an-empty-quotation", "at": [0], "op": "enter", "class": "empty-quotation" },
+        { "name": "next-after-the-empty-quotation", "at": [0], "op": "next", "class": "off-end" }
+      ]
+    },
+    {
+      "name": "hostile_word",
+      "origin": "crates/noble-cli/tests/editor.rs: the word `[` is refused as source word syntax",
+      "tree": {
+        "format": 1,
+        "nodes": [{ "kind": "word", "value": "[" }, { "kind": "hole" }]
+      },
+      "sequences": [
+        { "name": "step-over-the-hostile-word", "at": [0], "steps": [{ "op": "next" }, { "op": "previous" }], "addresses": [[1], [0]], "tree": null }
+      ],
+      "replacements": [
+        {
+          "name": "repair-the-hostile-word-with-an-integer",
+          "at": [0],
+          "node": { "kind": "integer", "value": 9 },
+          "tree": {
+            "format": 1,
+            "nodes": [{ "kind": "integer", "value": 9 }, { "kind": "hole" }]
+          }
+        },
+        {
+          "name": "repair-the-hostile-word-with-a-source-word",
+          "at": [0],
+          "node": { "kind": "word", "value": "+" },
+          "tree": {
+            "format": 1,
+            "nodes": [{ "kind": "word", "value": "+" }, { "kind": "hole" }]
+          }
+        }
+      ],
+      "refusals": [
+        { "name": "enter-the-hostile-word", "at": [0], "op": "enter", "class": "not-a-quotation" },
+        { "name": "next-after-the-hole", "at": [1], "op": "next", "class": "off-end" }
+      ]
+    },
+    {
+      "name": "check_refusal",
+      "origin": "a hole-free tree that type-rejects at the check stage",
+      "tree": { "format": 1, "nodes": [{ "kind": "word", "value": "drop" }] },
+      "sequences": [],
+      "replacements": [
+        {
+          "name": "replace-the-underflowing-word-with-an-integer",
+          "at": [0],
+          "node": { "kind": "integer", "value": 5 },
+          "tree": { "format": 1, "nodes": [{ "kind": "integer", "value": 5 }] }
+        },
+        {
+          "name": "replace-the-underflowing-word-with-an-empty-quotation",
+          "at": [0],
+          "node": { "kind": "quotation", "nodes": [] },
+          "tree": { "format": 1, "nodes": [{ "kind": "quotation", "nodes": [] }] }
+        }
+      ],
+      "refusals": [
+        { "name": "enter-the-underflowing-word", "at": [0], "op": "enter", "class": "not-a-quotation" }
+      ]
+    },
+    {
+      "name": "empty_tree",
+      "origin": "the transport accepts an empty root list; it has no node to focus",
+      "tree": { "format": 1, "nodes": [] },
+      "sequences": [],
+      "replacements": [],
+      "refusals": [
+        { "name": "focus-the-empty-root-list", "at": [], "op": "focus", "class": "no-such-node" },
+        { "name": "address-the-empty-root-list", "at": [0], "op": "focus", "class": "no-such-node" }
+      ]
+    }
+  ]
+}
