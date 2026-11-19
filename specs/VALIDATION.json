@@ -1549,7 +1549,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "09087cbb13e17473c39e89c667e4377352c9bccaee9c13b6c3b9bf9101b558c1"
+      "sha256": "8bb903c567dbd0eadf12f1c94c80aa7a3ac3904cf706dc1743e943aaf4a3b82f"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1773,7 +1773,7 @@
     },
     {
       "file": "verification/aeneas-re-extraction/README.md",
-      "sha256": "d48e59d4af166be5718a0c102ecba2cb974a9f419e240cb8eafe941304b39739"
+      "sha256": "02a6547d0c29f76b2369da08262517e8cbc8757ba2e6a29bef25638f3b10f3a3"
     },
     {
       "file": "verification/allocator-admission/decision.md",
@@ -1882,6 +1882,26 @@
     {
       "file": "verification/differential-interactions/README.md",
       "sha256": "d5fc7d39568ce1b12e2c5f0b7fed31ab6230a824275b15041fb45f6e842ca463"
+    },
+    {
+      "file": "verification/editor-typographic/criteria.md",
+      "sha256": "bf6dd1ee7fcc7c417c86bfab5341d876c57d249907ef17d8fe5e80b1aeb8793f"
+    },
+    {
+      "file": "verification/editor-typographic/decision.md",
+      "sha256": "63c1fb809c457cf2872a8c0ed32f975bc2f369840acadde869e05ec2fb2cd4ac"
+    },
+    {
+      "file": "verification/editor-typographic/README.md",
+      "sha256": "88bdb7d3d2b4500de7c01e4b6e00dbed49b92646904577b0c54ccc571c76fe3d"
+    },
+    {
+      "file": "verification/editor-zipper/decision.md",
+      "sha256": "6c63e0f3c33a9f87d0d8edc0dbb7ac52a8871e658b9bad930df7f4bd4db93cf0"
+    },
+    {
+      "file": "verification/editor-zipper/README.md",
+      "sha256": "deeab9c743ee11b87fe9a218348f96c2d10792e55326395a84b3abdb4c27ca7c"
     },
     {
       "file": "verification/effect-causes/README.md",
@@ -2261,7 +2281,7 @@
     },
     {
       "file": "verification/service-wire-refinement/README.md",
-      "sha256": "495e433935c75fb364b63102a7f87bd5eca28e93accbcba33cc69d00018644ef"
+      "sha256": "05c94d31bb8ea1d5b0651759bc7785159812ea2e8a4a08817b0a7c8530260e8d"
     },
     {
       "file": "verification/shared-candidates/criteria.md",
