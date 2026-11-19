@@ -137,6 +137,13 @@ theorems are checked again against the selected new subject and trusted models.
 
 ## Retained runs
 
+### `b9e04f32`: [receipt-b9e04f32.json](receipt-b9e04f32.json)
+
+Batch 17 then merged `main` at `2677ec88`, and the lock and receipt were renewed
+on the merged tree, again with no extracted subject changed. This clean run at
+`b9e04f32` on that binding has the same 61 theorems and the same refusals of
+all eleven mutation controls.
+
 ### `afec3160`: [receipt-afec3160.json](receipt-afec3160.json)
 
 The lock and receipt were renewed once more after the #141 and #142 lanes joined
