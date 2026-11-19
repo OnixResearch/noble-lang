@@ -25,7 +25,12 @@ let case = fun case_id mutation_value statement_value std_value lint_value obser
   # set for the 17-unit M3 workspace and now expires before compilation ends,
   # so every case failed on a missing artifact instead of its boundary. A
   # timeout, unrelated compiler error or missing artifact still never passes.
-  timeout_seconds | Number = 1800,
+  # The 1800-second bound then held for one case at a time only: by November
+  # 2026 a full-workspace Octet run took 1250 to 1900 seconds on the shared
+  # builder, so cases built concurrently timed out (exit 124, no artifact) and
+  # passed when rebuilt alone. 3600 seconds keeps a hard bound while letting
+  # several cases build at once.
+  timeout_seconds | Number = 3600,
   target | String = "x86_64-unknown-linux-gnu",
   kernel_source | String = "crates/noble-kernel/src/lib.rs",
   randomness_dependency = {

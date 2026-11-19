@@ -226,7 +226,7 @@ let
 in
 assert builtins.deepSeq selfTests true;
 assert policy.schema_version == "noble-boundary-controls/v1";
-assert policy.timeout_seconds > 0 && policy.timeout_seconds <= 1800;
+assert policy.timeout_seconds > 0 && policy.timeout_seconds <= 3600;
 assert policy.target == selection.configuration.target;
 assert policy.randomness_dependency.name == "getrandom";
 assert policy.test_source.escaped == "crates/noble-kernel/src/" + policy.test_source.relative;

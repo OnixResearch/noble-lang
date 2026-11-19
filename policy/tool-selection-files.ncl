@@ -56,7 +56,7 @@
   "nix/octet-path-metadata-locked.patch" = "706770a709bb9d3fc4df77fcc6c2d628fb7e927b71abbf9f052369d42c876026",
   "nix/octet-path-resolved-plan-only.patch" = "36b37afc68179c3bda13d33a234dd2a5aed268f4afe9a456ef1e5c7a7c9a7fa4",
   "nix/octet-path-test-lock-fixtures.patch" = "27e6649ad2838412c0e89c42f3b76462ddee3a0e3835c19ed71c3ed682fcc1e8",
-  "nix/boundary-controls.nix" = "86e9bbd342b616c0861775ab336cd8313e7473506c381634fbc1eec6a2cab943",
+  "nix/boundary-controls.nix" = "4cbff5ead9fcb6e4c8fae0712bbc190f00a9284eb9fd3d86cd447c0a2c593476",
   "nix/m3-wasm-app.nix" = "a83a2ea157787803e0fabdf089a7549ffd5737f42a657bf1df383d1908676ad5",
   "nix/native-assurance-app.nix" = "dacb83263d3d384fec40cff87c5d0495fbb4e10d17dd4c00821c26f16151303b",
   "nix/offline-inputs.nix" = "642b3d1aec4009eeafce107d923a7bec166b18541a369d06c33072903d92f493",

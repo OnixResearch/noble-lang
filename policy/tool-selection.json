@@ -276,7 +276,7 @@
     "flake.lock": "a95c2c8aecf2169bc1f8aff45aabab06e17a559a0e7cf86570d6b936b25b3671",
     "flake.nix": "ae663bb2a1018ea3e0eebee140fd833bfae3e3bce1fca86c3f0b1449aa76f223",
     "nix/aeneas-string-escaping.patch": "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
-    "nix/boundary-controls.nix": "86e9bbd342b616c0861775ab336cd8313e7473506c381634fbc1eec6a2cab943",
+    "nix/boundary-controls.nix": "4cbff5ead9fcb6e4c8fae0712bbc190f00a9284eb9fd3d86cd447c0a2c593476",
     "nix/boundary-fixture-tests.nix": "9d008b1cafac6c076c9fb1e58933b476efa0ac31a9569d09f887c1a9be8aa26f",
     "nix/boundary-fixture.nix": "e92570b9285b61096ee72016954d9298313ffd519eaf320b89c930ea2822c935",
     "nix/boundary-observation-tests.nix": "2a9408d322a2724b4c642cb2bb37df5dfb4dd80110cd8335d0d081cc37ec382e",
