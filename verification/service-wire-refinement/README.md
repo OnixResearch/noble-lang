@@ -137,6 +137,13 @@ theorems are checked again against the selected new subject and trusted models.
 
 ## Retained runs
 
+### `afec3160`: [receipt-afec3160.json](receipt-afec3160.json)
+
+The lock and receipt were renewed once more after the #141 and #142 lanes joined
+batch 17, again with no extracted subject changed. This clean run at `afec3160`
+on the final binding has the same 61 theorems and the same refusals of all
+eleven mutation controls.
+
 ### `b8a83681`: [receipt-b8a83681.json](receipt-b8a83681.json)
 
 The M4 lock and receipt were renewed after the batch-17 merge of `a5917b23`,
