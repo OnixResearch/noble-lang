@@ -151,9 +151,8 @@ fn wrong_widget(code: &'static str, expected: &str) -> Refusal {
 }
 
 fn guard_fill_depth(path: &[u32], fill: &Fill) -> Result<(), Refusal> {
-    let enclosing = u32::try_from(path.len().saturating_sub(1)).map_err(|_| {
-        Refusal::new("path-limit", "the node path exceeds a u32 quotation depth")
-    })?;
+    let enclosing = u32::try_from(path.len().saturating_sub(1))
+        .map_err(|_| Refusal::new("path-limit", "the node path exceeds a u32 quotation depth"))?;
     let added = fill.quotation_depth();
     let total = enclosing.saturating_add(added);
     if total > MAX_QUOTATION_DEPTH {

@@ -72,7 +72,7 @@ fn covers_every_kind_and_hole_state_through_the_cli() -> Result<(), Box<dyn std:
     Ok(())
 }
 
-fn check_fixture(runner: &mut Runner, fixture: &Fixture) -> Result<Value, String> {
+pub(super) fn check_fixture(runner: &mut Runner, fixture: &Fixture) -> Result<Value, String> {
     let view = View::from_nodes(&fixture.nodes).map_err(|refusal| refusal.detail)?;
     assert_eq!(
         widget_kinds(&view.root),

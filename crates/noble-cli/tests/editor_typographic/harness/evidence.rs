@@ -17,6 +17,10 @@ fn receipt_records_the_measurement() -> Result<(), Box<dyn std::error::Error>> {
     };
     let corpus = Snapshot::load()?;
     let mut runner = Runner::new(&super::super::scratch("receipt"))?;
+    let mut covered = Vec::with_capacity(corpus.fixtures.len());
+    for fixture in &corpus.fixtures {
+        covered.push(super::coverage::check_fixture(&mut runner, fixture)?);
+    }
     let (measured, exercised) = measurement(&corpus, &mut runner)?;
     assert_documented_edits(&corpus, &exercised)?;
     let hostile = negative_measurement(&corpus, &mut runner)?;
@@ -34,6 +38,7 @@ fn receipt_records_the_measurement() -> Result<(), Box<dyn std::error::Error>> {
             "ingress": "noble editor analyze|admit JSON_FILE",
         },
         "fixtures": Value::Array(measured),
+        "coverage": Value::Array(covered),
         "hole_states": corpus.hole_states.iter().map(|state| json!({
             "state": state.state,
             "fixture": state.fixture,
