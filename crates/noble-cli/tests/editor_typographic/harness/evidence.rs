@@ -23,7 +23,7 @@ fn receipt_records_the_measurement() -> Result<(), Box<dyn std::error::Error>> {
     }
     let (measured, exercised) = measurement(&corpus, &mut runner)?;
     assert_documented_edits(&corpus, &exercised)?;
-    let hostile = negative_measurement(&corpus, &mut runner)?;
+    let (hostile, refused) = negative_measurement(&corpus, &mut runner)?;
     assert_no_new_action(&corpus)?;
     let receipt = json!({
         "schema": "noble-editor-typographic-receipt/v1",
@@ -44,6 +44,7 @@ fn receipt_records_the_measurement() -> Result<(), Box<dyn std::error::Error>> {
             "fixture": state.fixture,
         })).collect::<Vec<Value>>(),
         "hostile_transport": hostile,
+        "negative_controls": refused,
         "counts": {
             "fixtures": corpus.fixtures.len(),
             "edits": exercised.len(),

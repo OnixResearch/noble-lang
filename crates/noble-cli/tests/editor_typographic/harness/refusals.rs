@@ -17,11 +17,13 @@ fn negative_controls_refuse_before_admission() -> Result<(), Box<dyn std::error:
 }
 
 /// Every frozen control is refused by the renderer with no CLI invocation, and
-/// the hostile transport documents still refuse with no accepted program.
+/// the hostile transport documents still refuse with no accepted program. The
+/// refusal rows and the hostile verdicts are returned so the receipt can carry
+/// both.
 pub(super) fn negative_measurement(
     corpus: &Snapshot,
     runner: &mut Runner,
-) -> Result<Vec<Value>, String> {
+) -> Result<(Vec<Value>, Vec<Value>), String> {
     let mut refused = Vec::with_capacity(corpus.negative_controls.len());
     for control in &corpus.negative_controls {
         let fixture = corpus
@@ -72,5 +74,5 @@ pub(super) fn negative_measurement(
             "admit": admit.json(),
         }));
     }
-    Ok(hostile)
+    Ok((hostile, refused))
 }
