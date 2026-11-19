@@ -557,6 +557,11 @@
 #   cargo graph 026d74e820ef4ce6949d8a53a2f7a5e829b2f984ba2fc6cf8f36f0f946b7ac5e; collector policy 49fb49992c5790e26ab6572f4a2380078416c2bdefd2c55f571b7bb759c73395.
 #   23567 production paths = 11717 body/open + 7500 generated + 4350 structural;
 #   15968 test-only paths; 92 macro origins. Earlier header counts are historical.
+# Renewed net-request-limits-receipts-rebase (main, merged into campaign batch 17) from a complete 110-unit selected collection:
+#   IR 2c961d4bd86ed37df5b5d94e287e5b137fe81f674e7cfa1b532bb8d08bfae58d; coverage 9d892561ebac58ce63e51d4acaf89cb9c8c095075974e6c246643760d1c898a3;
+#   cargo graph 026d74e820ef4ce6949d8a53a2f7a5e829b2f984ba2fc6cf8f36f0f946b7ac5e; collector policy 26eb4d141abe0f6d171f1bce08a490b732549e33afc99cf3962bf7cba8033b95.
+#   22008 production paths = 10552 body/open + 7228 generated + 4228 structural;
+#   15167 test-only paths; 93 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,

@@ -160,6 +160,7 @@ fn accepted_corpus() -> Result<String, Box<dyn std::error::Error>> {
         max_agent_slots: 1_048_576,
         max_wires: 2_097_152,
         interaction_fuel: 2_097_152,
+        max_retained_bytes: net::DEFAULT_MAX_RETAINED_BYTES,
     };
     let lowered =
         net::lower(&IDS, &checked, &inputs, &limits).map_err(|error| format!("{error:?}"))?;
@@ -332,6 +333,7 @@ fn byte_checker_refuses_omitted_costs_and_false_premise() -> TestResult {
         max_agent_slots: 1_048_576,
         max_wires: 2_097_152,
         interaction_fuel: 2_097_152,
+        max_retained_bytes: net::DEFAULT_MAX_RETAINED_BYTES,
     };
     let lowered =
         net::lower(&IDS, &checked, &inputs, &limits).map_err(|error| format!("{error:?}"))?;
@@ -623,6 +625,7 @@ fn byte_certificates_replay_against_cli_traces() -> TestResult {
             max_agent_slots: 1_048_576,
             max_wires: 2_097_152,
             interaction_fuel: 2_097_152,
+            max_retained_bytes: net::DEFAULT_MAX_RETAINED_BYTES,
         };
         let net = net::lower(&IDS, &checked, &row, &limits)
             .map_err(|error| format!("lowering: {error:?}"))?;

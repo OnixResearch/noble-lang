@@ -93,9 +93,12 @@ port has one producer endpoint (and fanout is represented by an explicit `dup` a
   on the schedule).
 - **Live agents** never exceed the initial count `#inputs + #constants + #ops + #dups + #eras`
   (no rule increases the number of agents; `dup ⋈ num` keeps it).
-- **Budgets** (Rust): interaction fuel, agent and wire capacities, charged before growth; a refusal
-  below the limit, success at the limit, and exhaustion reported as `exhausted`, never as a partial
-  result.
+- **Budgets** (Rust): interaction fuel, agent and wire capacities and an accounted retained-byte
+  ceiling, charged before growth; a refusal below the limit, success at the limit, and exhaustion
+  reported as `exhausted`, never as a partial result. The `eval --net` request ceilings are §9.
+- **Census check** (Rust, per run): a complete reduction is reported as normal only when its
+  interaction counter equals the validated net's census `2·#ops + #dups + #eras`; otherwise it is
+  `internal-invalid` (`interaction-census`). This is an executed equality, not a refinement proof.
 
 ## 5. Trust and identities
 
@@ -182,3 +185,63 @@ The source-bound [NO-GO decision](../verification/ngraph/net-decision.md) and it
 timing receipt compare backends, not all four worklist schedules. The old
 `fifo_control_schedules_differ` fixture belongs to the rejected revision-2
 operand-delivery control; it is **not** a legal revision-3 schedule counterexample.
+
+## 9. Whole-request limits and the `eval --net` receipt
+
+`noble ngraph eval GRAPH VECTORS --net` evaluates each vector through a freshly lowered and
+independently validated net (LIFO schedule, slot-reuse storage) under three request ceilings in
+addition to `--fuel N` and the fixed agent, wire and worklist capacities. Each flag needs `--net`;
+a value is an unsigned decimal or `0x` hex and may only lower its default (a larger value, a
+malformed value or the flag without `--net` is a usage error, exit 2).
+
+| Flag | Default | Charged | Refusal |
+|---|---|---|---|
+| `--max-input-bytes N` | 134,217,728 | graph file then vector file bytes, before each read: a read never exceeds the bytes the request has left | `E-NET-BUDGET-input-bytes`, stage `input` |
+| `--max-retained-bytes N` | 268,435,456 | per vector, `size_of` × requested capacity of every lowering, validation, arena, output-boundary, worklist and read-back buffer, before allocation or growth (allocator over-provisioning observed through `Vec::capacity` is charged right after); validation temporaries are released when validation returns | `E-NET-BUDGET-retained-bytes`, stage `evaluation`, with `vector` |
+| `--max-output-bytes N` | 67,108,864 | every report line's exact encoded length plus its newline, computed and charged before the line's input-proportional output values are rendered | `E-NET-BUDGET-output-bytes`, stage `output` |
+
+Every refusal has outcome `exhausted` and exit 5, carries `limit`, `cap` and `observed` (the
+accounted total at the refused charge, saturated at `u64::MAX`; for input, the stat length or
+`cap + 1` if the file grew during the read), and **replaces** the whole report: the command prints
+that one line and no header or completed vector line, so a truncated success is never written.
+A row that stops for another reason keeps the existing codes (`E-NET-BUDGET-fuel`,
+`E-NET-INTERNAL-INVALID` with an `invalid` class name, `E-NET-UNSUPPORTED`, `E-NET-INTERFACE`).
+The byte ceilings are accounted ceilings: allocator metadata, fragmentation, stack frames, the
+decoded graph and vector rows (bounded by `--max-input-bytes` and the checker budgets) and the
+identity scheme's constant hasher state are outside them. They are not a process RSS bound.
+
+The header line (`schema` `noble-ngraph-report/v1`, `stage` `evaluation`) adds, beside `graph`,
+`snapshot: null` and `backend: "net"`:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `producer.package`, `producer.version` | string | Cargo package `noble-cli` and its version |
+| `producer.source_revision` | 40-hex string or null | the commit a build declared through `NOBLE_SOURCE_REVISION` (the flake sets its clean `self.rev`) |
+| `producer.source_revision_status` | `build-declared` or `unavailable` | null revision ⇔ `unavailable` |
+| `producer.executable_digest` | null | no digest of the running binary is claimed; bind the executable by an external measurement |
+| `net_contract` | object of strings | `contract` `ngraph-net-i64/3`, `lowering` `ngraph-net-i64-lowering/0`, `rule_table` `noble-net-i64-rules/3`, `plan`, `representation`, `plan_checker`, `plan_executor`, `schedule` `lifo`, `storage_policy` `reuse`, `identity_scheme` `blake3` |
+| `limits` | object of u64 | effective `max_input_bytes`, `max_retained_bytes`, `max_output_bytes` (bytes), `interaction_fuel` (interactions), `max_agent_slots` (agents), `max_wires` (wires), `max_worklist_entries` (entries) |
+| `input_bytes` | u64 | bytes read from the graph and vector files |
+| `semantic_count` | object | the count binding below |
+
+`semantic_count` names the unit `inets-principal-pair-interaction`, the counter
+`noble-net-reducer-interactions`, the boundary `complete-normal-form-and-ordered-read-back`, the
+census `2*ops+dups+eras`, `count_basis` `census-checked`, `assurance` `model-only`, the
+declarations `NobleFoundation.NetI64.i64_normal_form_unique`,
+`NobleFoundation.NetI64.i64_equal_interaction_count` and
+`NobleFoundation.NetI64.Certificate.accepted_exact_count` over `NobleFoundation.NetI64.system`,
+and a `proof_source` object: the module path with its BLAKE3 and its SHA-256 as recorded by the
+receipt, the Lean toolchain, the vendored inets file with its upstream commit, BLAKE3 and SHA-256,
+and the foundation receipt `verification/foundation/receipts/518be7fd5/foundation-check.json` with
+its BLAKE3 and source commit. A unit test re-measures those files and refuses drift.
+`model_boundary` states the boundary: the theorems are model statements (a checked translation
+that reaches a normal form has one normal form and one length; an accepted certificate fixes the
+length at the census), not a refinement proof of the Rust lowering, reducer or read-back.
+
+Each normal vector line carries `vector`, `backend`, `interactions` (the reducer's counter),
+`expected_interactions` (the census, u64), `count_basis` `census-checked`, `peak_live_agents`,
+`final_wires`, `retained_bytes` (the candidate net's storage estimate), `retained_bytes_high_water`
+(the accounted peak of that vector's validation, reduction and read-back, bytes) and `outputs`.
+`census-checked` means only that this run's counter equaled the census of its validated net; a
+mismatch is never a normal line. A failed vector line carries the same counters, with
+`expected_interactions` null when validation refused the candidate.

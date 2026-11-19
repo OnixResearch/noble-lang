@@ -10,27 +10,52 @@ pub(super) const SNAPSHOT_BYTES: u64 = 32 * 1024 * 1024;
 pub(super) const SOURCE_BYTES: u64 = 1024 * 1024;
 pub(super) const SUBMISSION_BYTES: u32 = 65_536;
 
+/// Why a bounded read stopped without its bytes.
+pub(super) enum ReadStop {
+    /// The file holds more than the limit: its stat length, or `limit + 1`
+    /// when it grew past the limit during the read.
+    Over(u64),
+    /// A host condition (missing file, not a regular file, I/O error).
+    Host(std::string::String),
+}
+
 /// Reads a regular file of at most `limit` bytes.
 pub(super) fn read(
     path: &std::path::Path,
     limit: u64,
     what: &str,
 ) -> Result<std::vec::Vec<u8>, std::string::String> {
-    let metadata = attempt!(std::fs::metadata(path).map_err(|e| std::format!("{what}: {e}")));
+    read_bounded(path, limit, what).map_err(|stop| match stop {
+        ReadStop::Over(_) => std::format!("{what} exceeds {limit} bytes"),
+        ReadStop::Host(message) => message,
+    })
+}
+
+/// Reads a regular file of at most `limit` bytes, reporting an oversized
+/// file separately from host conditions. Nothing past `limit + 1` bytes is
+/// ever read.
+pub(super) fn read_bounded(
+    path: &std::path::Path,
+    limit: u64,
+    what: &str,
+) -> Result<std::vec::Vec<u8>, ReadStop> {
+    let host = |e: std::io::Error| ReadStop::Host(std::format!("{what}: {e}"));
+    let metadata = attempt!(std::fs::metadata(path).map_err(host));
     if !metadata.is_file() {
-        return Err(std::format!("{what} is not a regular file"));
+        return Err(ReadStop::Host(std::format!("{what} is not a regular file")));
     }
     if metadata.len() > limit {
-        return Err(std::format!("{what} exceeds {limit} bytes"));
+        return Err(ReadStop::Over(metadata.len()));
     }
-    let file = attempt!(std::fs::File::open(path).map_err(|e| std::format!("{what}: {e}")));
+    let file = attempt!(std::fs::File::open(path).map_err(host));
     let mut bytes = std::vec::Vec::new();
-    attempt!(
-        std::io::Read::read_to_end(&mut std::io::Read::take(file, limit + 1), &mut bytes)
-            .map_err(|e| std::format!("{what}: {e}"))
-    );
+    attempt!(std::io::Read::read_to_end(
+        &mut std::io::Read::take(file, limit.saturating_add(1)),
+        &mut bytes
+    )
+    .map_err(host));
     if u64::try_from(bytes.len()).unwrap_or(u64::MAX) > limit {
-        return Err(std::format!("{what} exceeds {limit} bytes"));
+        return Err(ReadStop::Over(limit.saturating_add(1)));
     }
     Ok(bytes)
 }

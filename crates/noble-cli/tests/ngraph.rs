@@ -43,6 +43,8 @@ mod corpus_codec;
 mod net_resource;
 #[path = "ngraph/pe/cases.rs"]
 mod pe_cases;
+#[path = "ngraph/receipt.rs"]
+mod receipt;
 
 #[test]
 fn resource_serializer_matches_selected_corpus_codec() {

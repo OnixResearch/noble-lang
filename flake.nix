@@ -190,11 +190,22 @@
         postUnpack = ''
           ln -s ${reviewedVendor}/source-registry-0 "$sourceRoot/reviewed-vendor"
         '';
+        # `noble ngraph eval --net` reports this as `producer.source_revision`;
+        # a dirty tree has no `self.rev` and reports the revision unavailable.
+        NOBLE_SOURCE_REVISION = self.rev or "";
         # Neither the exported CLI nor the package's pre-install test build may
         # contain live-test-barrier or LIVE-05 host grants. The all-feature
         # suite is the separate rust-tests check, not the installed artifact.
         cargoBuildFlags = [ "--locked" "--package" "noble-cli" "--bin" "noble" "--no-default-features" ];
         cargoTestFlags = [ "--locked" "--workspace" "--all-targets" "--no-default-features" ];
+        # The sandbox HOME (/homeless-shelter) does not exist. The live-slot
+        # helpers keep their authority under an operator-owned, non-writable-by-
+        # others HOME, so give the check phase a private one, as the rust-tests
+        # check already does.
+        preCheck = ''
+          export HOME="$TMPDIR/home"
+          mkdir -p -m 700 "$HOME"
+        '';
         # `--all-targets` never runs doctests; the shipped configuration must
         # still execute the kernel's compile_fail boundary tests.
         postCheck = ''
