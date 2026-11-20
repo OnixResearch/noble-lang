@@ -105,6 +105,15 @@ fn sequential_publications_expose_a_mixed_compatible_pair() {
     run_lane("live_slot_relocation_controls.mjs");
 }
 
+/// Canonical LSLOT-09 (Core profiles): the exact `slot.invoke` caller that the
+/// opt-in profile installs with a borrowed `LiveRef` input is refused by
+/// Core-Bootstrap `compile` and by an ordinary Core session before any guest
+/// request, and ordinary quotation capture still keeps its old definition.
+#[test]
+fn legacy_core_profiles_refuse_the_checked_slot_caller() {
+    run_lane("live_slot_legacy_refusal.mjs");
+}
+
 #[cfg(not(feature = "live-test-barrier"))]
 #[test]
 fn shipped_cli_does_not_contain_the_test_only_current_map_seam() {
