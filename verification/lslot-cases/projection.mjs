@@ -89,8 +89,7 @@ const spellTypes = list => list.map(normalizeType);
 function interfaceEntries(prefix, canonical, observed, third = 'effects') {
   return [['input', spellTypes(canonical.input), observed.input],
     ['output', spellTypes(canonical.output), observed.output],
-    [third, canonical[third].map(effect => effect === 'pure' ? '{}' : effect),
-      observed[third]]].map(([leaf, want, seen]) =>
+    [third, canonical[third], observed[third]]].map(([leaf, want, seen]) =>
     measured(prefix, leaf, want, seen));
 }
 
@@ -103,9 +102,10 @@ export function normalizeType(type) {
   const parts = splitTop(body, ',');
   assert.equal(parts.length, 3, `three LiveRef components: ${type}`);
   const strip = list => list.trim().replace(/^\[/, '').replace(/\]$/, '');
+  const stripBraces = list => list.trim().replace(/^\{/, '').replace(/\}$/, '');
   const inputs = splitTop(strip(parts[0]), '+').map(normalizeType);
   const outputs = splitTop(strip(parts[1]), '+').map(normalizeType);
-  const effects = splitTop(strip(parts[2]), '+')
+  const effects = splitTop(stripBraces(parts[2]), '+')
     .filter(effect => effect.length > 0 && effect !== 'pure').sort();
   const spell = list => list.length === 1 ? list[0] : `[${list.join(',')}]`;
   return `borrow LiveRef<${spell(inputs)},${spell(outputs)},{${effects.join(',')}}>`;
