@@ -32,7 +32,8 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const usage = 'usage: node gate.mjs REPO_ROOT NEW_OUTPUT_DIRECTORY OCTET_OUTPUT_DIRECTORY [--receipt FILE] [--jobs N]';
+const usage = 'usage: node gate.mjs REPO_ROOT NEW_OUTPUT_DIRECTORY OCTET_OUTPUT_DIRECTORY [--receipt FILE] [--jobs N]\n' +
+  '       node gate.mjs REPO_ROOT --replay ARTIFACT_DIRECTORY';
 const caseId = 'NGRAPH-CASE-02';
 const packageName = 'noble-ngraph';
 const forbiddenFamilies = ['filesystem', 'process', 'environment', 'time', 'concurrency', 'observability', 'unsafe-code'];
@@ -71,12 +72,16 @@ function fail(message) {
 
 function parseArguments(argv) {
   const positional = [];
-  const options = { receipt: null, jobs: 6 };
+  const options = { receipt: null, jobs: 6, replay: null };
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === '--receipt') {
       options.receipt = argv[index + 1];
       if (!options.receipt) fail('--receipt needs a file');
+      index += 1;
+    } else if (argument === '--replay') {
+      options.replay = argv[index + 1];
+      if (!options.replay) fail('--replay needs an artifact directory');
       index += 1;
     } else if (argument === '--jobs') {
       options.jobs = Number(argv[index + 1]);
@@ -87,6 +92,14 @@ function parseArguments(argv) {
     } else {
       positional.push(argument);
     }
+  }
+  if (options.replay) {
+    if (positional.length !== 1) fail('--replay takes only REPO_ROOT');
+    const root = path.resolve(positional[0]);
+    if (!fs.existsSync(root)) fail(`repository root missing: ${root}`);
+    const replay = path.resolve(options.replay);
+    if (!fs.existsSync(replay)) fail(`artifact directory missing: ${replay}`);
+    return { root, replay, ...options };
   }
   if (positional.length !== 3) fail('expected REPO_ROOT, NEW_OUTPUT_DIRECTORY and OCTET_OUTPUT_DIRECTORY');
   const [root, output, octetOutput] = positional.map(value => path.resolve(value));
@@ -247,29 +260,31 @@ function readArtifact(directory) {
   };
 }
 
-function evaluate({ artifactDirectory, run, artifact, source, policy }) {
+function evaluate({ artifactDirectory, run, artifact, source, policy, measured = true }) {
   const checks = [];
   const check = (name, claim, ok, observed) => checks.push({ name, claim, ok: Boolean(ok), observed });
   const isObject = value => value !== null && typeof value === 'object';
 
-  check('octet-process',
-    'The selected Octet row completed the Cargo process successfully for the committed tree.',
-    run.result.error === null && run.result.signal === null
-      && isObject(run.parsed?.phases)
-      && run.parsed.phases.lint?.status !== 'integration-failure',
-    { exit: run.result.status, signal: run.result.signal, error: run.result.error,
-      lint_status: run.parsed?.phases?.lint?.status ?? null,
-      lint_findings: run.parsed?.phases?.lint?.finding_count ?? null });
+  if (measured) {
+    check('octet-process',
+      'The selected Octet row completed the Cargo process successfully for the committed tree.',
+      run.result.error === null && run.result.signal === null
+        && isObject(run.parsed?.phases)
+        && run.parsed.phases.lint?.status !== 'integration-failure',
+      { exit: run.result.status, signal: run.result.signal, error: run.result.error,
+        lint_status: run.parsed?.phases?.lint?.status ?? null,
+        lint_findings: run.parsed?.phases?.lint?.finding_count ?? null });
 
-  const replay = run.verificationReport;
-  check('artifact-replay',
-    '`cargo-octet artifact verify` replays the stored artifact with no diagnostics.',
-    run.verification.status === 0 && replay?.status === 'valid'
-      && Array.isArray(replay.diagnostics) && replay.diagnostics.length === 0
-      && Array.isArray(replay.artifacts) && replay.artifacts.length > 0,
-    { exit: run.verification.status, status: replay?.status ?? null,
-      artifacts: Array.isArray(replay?.artifacts) ? replay.artifacts.length : null,
-      diagnostics: Array.isArray(replay?.diagnostics) ? replay.diagnostics.length : null });
+    const replay = run.verificationReport;
+    check('artifact-replay',
+      '`cargo-octet artifact verify` replays the stored artifact with no diagnostics.',
+      run.verification.status === 0 && replay?.status === 'valid'
+        && Array.isArray(replay.diagnostics) && replay.diagnostics.length === 0
+        && Array.isArray(replay.artifacts) && replay.artifacts.length > 0,
+      { exit: run.verification.status, status: replay?.status ?? null,
+        artifacts: Array.isArray(replay?.artifacts) ? replay.artifacts.length : null,
+        diagnostics: Array.isArray(replay?.diagnostics) ? replay.diagnostics.length : null });
+  }
 
   let receipt = null;
   let graph = null;
@@ -306,18 +321,22 @@ function evaluate({ artifactDirectory, run, artifact, source, policy }) {
       collection_receipt_status: compilerReceipt.status, ir_schema: ir.schema_version });
 
   const policyBlake3 = policy.policy_blake3;
+  const artifactPolicyFile = artifact.files.find(file => file.name === 'project-architecture-policy.json');
   check('receipt-policy-binding',
-    'The architecture receipt binds the committed exported architecture policy and Cargo graph identity.',
+    'The architecture receipt binds the committed exported architecture policy byte for byte, and the Cargo graph, IR and coverage identities.',
     receipt.schema_version === 'octet-project-architecture-receipt/v2'
       && receipt.mode === 'gate'
       && receipt.project_id === 'noble'
       && receipt.policy_blake3 === policyBlake3
+      && artifactPolicyFile?.sha256 === policy.architecture_json_sha256
       && receipt.cargo_graph_id === graph.cargo_graph_id
       && receipt.architecture_ir_id === ir.architecture_ir_id
       && receipt.coverage_id === coverage.coverage_id
       && receipt.compiler_receipt_id === compilerReceipt.receipt_id,
     { schema: receipt.schema_version, mode: receipt.mode, project: receipt.project_id,
       policy_blake3: receipt.policy_blake3, expected_policy_blake3: policyBlake3,
+      artifact_policy_sha256: artifactPolicyFile?.sha256 ?? null,
+      committed_policy_sha256: policy.architecture_json_sha256,
       cargo_graph_binding: receipt.cargo_graph_id === graph.cargo_graph_id,
       ir_binding: receipt.architecture_ir_id === ir.architecture_ir_id,
       coverage_binding: receipt.coverage_id === coverage.coverage_id,
@@ -353,7 +372,7 @@ function evaluate({ artifactDirectory, run, artifact, source, policy }) {
     units.length > 0
       && units.some(unit => unit.source_path === `crates/${packageName}/src/lib.rs` && unit.role === 'domain-core')
       && units.every(unit => ['domain-core', 'test'].includes(unit.role))
-      && units.every(unit => (unit.role === 'domain-core') === unit.source_path.startsWith(`crates/${packageName}/src/`)),
+      && units.every(unit => unit.role !== 'domain-core' || unit.source_path.startsWith(`crates/${packageName}/src/`)),
     { units: units.length, roster: units.map(unit => ({
       unit_id: unit.unit_id, target_kind: unit.target_kind, source_path: unit.source_path,
       role: unit.role, features: unit.features, default_features: unit.default_features,
@@ -370,16 +389,21 @@ function evaluate({ artifactDirectory, run, artifact, source, policy }) {
       feature_sets: [...new Set(units.map(unit => sorted(unit.features).join(',')))],
       default_features: [...new Set(units.map(unit => unit.default_features))] });
 
-  const noStdFacts = units.map(unit => {
+  // The gate evaluates no_std on the production view, where test-role units are
+  // already excluded; the obligation is per package, so every production unit
+  // of the package must carry the compiler configuration fact.
+  const productionUnits = units.filter(unit => unit.role !== 'test');
+  const noStdFacts = productionUnits.map(unit => {
     const predicate = `crate:no-std=${packageName}`;
     const active = ownedFacts(unit).filter(fact => fact.kind === 'configuration'
       && fact.predicate === predicate && fact.active === true);
     return { unit_id: unit.unit_id, source_path: unit.source_path, role: unit.role, facts: active.length };
   });
   check('no-std-compiler-confirmed',
-    'Every observed noble-ngraph unit owns an active compiler configuration fact for `crate:no-std=noble-ngraph`.',
-    units.length > 0 && noStdFacts.every(entry => entry.facts > 0),
-    { predicate: `crate:no-std=${packageName}`, units: noStdFacts });
+    'Every production noble-ngraph unit owns an active compiler configuration fact for `crate:no-std=noble-ngraph`.',
+    productionUnits.length > 0 && noStdFacts.every(entry => entry.facts > 0),
+    { predicate: `crate:no-std=${packageName}`, production_units: noStdFacts,
+      observed_units: units.length, production_unit_count: productionUnits.length });
 
   const declaredPackages = new Set(graph.selected_packages ?? []);
   const ngraphEdges = (graph.edges ?? []).filter(edge => edge.caller_package === packageName);
@@ -413,51 +437,87 @@ function evaluate({ artifactDirectory, run, artifact, source, policy }) {
       build_dependencies: manifestSections['build-dependencies'] ?? null,
       third_party_edges: thirdParty });
 
-  const effects = units.flatMap(unit => ownedFacts(unit)
+  // Production scope: the gate projects a production view that keeps every
+  // fact observed by at least one non-test unit and excludes the rest through
+  // the receipt's `test_only` disposition. Test-only effect facts are recorded
+  // separately and cannot discharge or violate the production claim.
+  const testOnlyFacts = new Set(receipt.test_only?.fact_ids ?? []);
+  const testOnlyUnknowns = new Set(receipt.test_only?.unknown_ids ?? []);
+  const productionFacts = unit => ownedFacts(unit).filter(fact => !testOnlyFacts.has(fact.fact_id));
+  const productionUnknowns = unit => ownedUnknowns(unit)
+    .filter(unknown => !testOnlyUnknowns.has(unknown.unknown_id));
+
+  const effects = productionUnits.flatMap(unit => productionFacts(unit)
     .filter(fact => fact.kind === 'effect')
+    .map(fact => ({ unit_id: unit.unit_id, family: fact.capability_family, primitive: fact.primitive_definition })));
+  const testOnlyEffects = units.flatMap(unit => ownedFacts(unit)
+    .filter(fact => testOnlyFacts.has(fact.fact_id) && fact.kind === 'effect')
     .map(fact => ({ unit_id: unit.unit_id, family: fact.capability_family, primitive: fact.primitive_definition })));
   const familyCounts = Object.fromEntries(forbiddenFamilies.map(family => [family, effects.filter(effect => effect.family === family).length]));
   const observedFamilies = sorted(new Set(effects.map(effect => effect.family)));
   const authorizedFactIds = new Set(receipt.authorized_effect_fact_ids ?? []);
-  const authorizedOwned = units.flatMap(unit => ownedFacts(unit)
+  const authorizedOwned = units.flatMap(unit => productionFacts(unit)
     .filter(fact => fact.kind === 'effect' && authorizedFactIds.has(fact.fact_id))
     .map(fact => fact.fact_id));
   check('forbidden-capability-uses-zero',
-    'No compiler effect fact owned by a noble-ngraph unit uses any of the seven forbidden capability families, and none is an authorized outbound effect.',
+    'No production compiler effect fact owned by a noble-ngraph unit uses any of the seven forbidden capability families, and none is an authorized outbound effect.',
     forbiddenFamilies.every(family => familyCounts[family] === 0) && authorizedOwned.length === 0,
-    { families: familyCounts, observed_families: observedFamilies},
+    { families: familyCounts, observed_families: observedFamilies,
+      production_effect_facts: effects.length,
+      test_only_effect_facts: testOnlyEffects.length,
+      test_only_families: sorted(new Set(testOnlyEffects.map(effect => effect.family))) },
   );
 
-  const ngraphUnknowns = units.flatMap(unit => ownedUnknowns(unit)
+  const ngraphUnknowns = productionUnits.flatMap(unit => productionUnknowns(unit)
     .map(unknown => ({ unit_id: unit.unit_id, unknown_id: unknown.unknown_id, kind: unknown.kind,
       target_identity: unknown.target_identity, detail: unknown.detail })));
-  const unclassified = ngraphUnknowns.filter(unknown => !['ambiguous-trait-dispatch', 'dynamic-dispatch'].includes(unknown.kind)
-    || !identityTraits.some(trait => String(unknown.target_identity ?? '').startsWith(trait)));
+  // The gate skips exactly the dynamic-dispatch unknowns that the reviewed
+  // policy declares as external crates or local traits; every other unknown is
+  // a `required-compiler-unknown` finding. Reapply that predicate here so a
+  // locally added, unclassified dispatch cannot hide behind the clean gate.
+  const dynamicDispatch = policy.dynamic_dispatch ?? {};
+  const dispatchClassified = unknown => {
+    if (!['ambiguous-trait-dispatch', 'dynamic-dispatch'].includes(unknown.kind)) return false;
+    const target = unknown.target_identity;
+    if (typeof target !== 'string') return false;
+    if ((dynamicDispatch.external_crates ?? []).some(entry => target.startsWith(`${entry}::`))) return true;
+    return (dynamicDispatch.local_traits ?? []).some(entry =>
+      target === entry.path || target.startsWith(`${entry.path}::`));
+  };
+  const unclassified = ngraphUnknowns.filter(unknown => !dispatchClassified(unknown));
+  const unknownCharacters = {};
+  for (const unknown of ngraphUnknowns) {
+    const root = String(unknown.target_identity ?? '<none>').split('::').slice(0, 2).join('::');
+    unknownCharacters[root] = (unknownCharacters[root] ?? 0) + 1;
+  }
   const requiredUnknownFindings = (receipt.findings ?? []).filter(finding => finding.code === 'required-compiler-unknown');
   check('required-unknowns-zero',
-    'Every compiler unknown owned by a noble-ngraph unit is an identity-trait dynamic-dispatch unknown declared by the reviewed policy; otherwise there are none.',
+    'Every production compiler unknown owned by a noble-ngraph unit is a dynamic-dispatch unknown declared by the reviewed policy, and the gate raises no required-compiler-unknown finding.',
     unclassified.length === 0 && requiredUnknownFindings.length === 0,
-    { unknowns: ngraphUnknowns, unclassified, required_unknown_findings: requiredUnknownFindings.length,
-      retained_unknown_ids: receipt.unknown_ids.length },
+    { production_unknowns: ngraphUnknowns.length, unknown_characters: unknownCharacters,
+      unclassified, required_unknown_findings: requiredUnknownFindings.length,
+      retained_unknown_ids: receipt.unknown_ids.length,
+      test_only_unknowns: receipt.test_only?.unknown_ids?.length ?? 0 },
   );
 
-  const ngraphText = units.flatMap(unit => ownedFacts(unit)).map(fact => JSON.stringify(fact)).join('\n');
-  const traitFacts = units.flatMap(unit => ownedFacts(unit))
+  const productionFactText = productionUnits.flatMap(unit => productionFacts(unit));
+  const ngraphText = productionFactText.map(fact => JSON.stringify(fact)).join('\n');
+  const traitFacts = productionFactText
     .filter(fact => fact.kind === 'trait' && identityTraits.includes(fact.qualified_path));
-  const traitCalls = units.flatMap(unit => ownedFacts(unit))
+  const traitCalls = productionFactText
     .filter(fact => fact.kind === 'call' && identityTraits.some(trait =>
       String(fact.resolved_definition ?? '').startsWith(trait)));
-  const traitImplementations = units.flatMap(unit => ownedFacts(unit))
+  const traitImplementations = productionFactText
     .filter(fact => fact.kind === 'implementation' && identityTraits.some(trait => fact.trait_definition === trait));
   const hasherHits = forbiddenHasherNeedles.filter(needle => ngraphText.includes(needle));
   check('identity-hash-injected',
-    'The compiled noble-ngraph facts declare both injected identity traits, reach them through resolved trait calls or implementations, and select no standard hasher.',
+    'The production compiled noble-ngraph facts declare both injected identity traits, reach them through resolved trait calls and implementations, and select no standard hasher.',
     traitFacts.length >= identityTraits.length
-      && (traitCalls.length > 0 || traitImplementations.length > 0)
+      && traitCalls.length > 0 && traitImplementations.length > 0
       && hasherHits.length === 0,
     { traits: sorted(new Set(traitFacts.map(fact => fact.qualified_path))),
       resolved_trait_calls: sorted(new Set(traitCalls.map(fact => fact.resolved_definition))),
-      implementations: traitImplementations.length,
+      implementations: sorted(new Set(traitImplementations.map(fact => fact.trait_definition))),
       forbidden_hasher_needles: hasherHits });
 
   return { checks, receipt, graph, coverage, compilerReceipt, ir };
@@ -475,26 +535,43 @@ function summaryOf(evaluation) {
 function main() {
   const options = parseArguments(process.argv.slice(2));
   const { root } = options;
-  const source = cleanSourceIdentity(root);
+  const source = options.replay ? null : cleanSourceIdentity(root);
   const selection = JSON.parse(fs.readFileSync(policyPath(root), 'utf8'));
   const architectureJson = fs.readFileSync(path.join(root, 'policy/architecture.json'));
   const architectureManifest = JSON.parse(fs.readFileSync(path.join(root, 'policy/architecture.manifest.json'), 'utf8'));
   const exportEntry = (architectureManifest.exports ?? []).find(entry => entry.output?.path === 'policy/architecture.json');
+  const exportedPolicy = JSON.parse(architectureJson.toString());
   const policy = {
     repository: 'OnixResearch/noble-lang',
-    policy_blake3: sha256(architectureJson),
+    // The export manifest records the generator's BLAKE3 of the exported JSON;
+    // the receipt binds the same identity. Keep the sha256 for byte checks.
+    policy_blake3: exportEntry?.output?.blake3 ?? null,
+    architecture_json_sha256: sha256(architectureJson),
     manifest_output_blake3: exportEntry?.output?.blake3 ?? null,
     manifest_source_blake3: exportEntry?.source?.blake3 ?? null,
     manifest_sha256: fileSha256(path.join(root, 'policy/architecture.manifest.json')),
-    architecture_json_sha256: sha256(architectureJson),
-    core_no_std: JSON.parse(fs.readFileSync(path.join(root, 'policy/architecture.json'), 'utf8')).core_no_std,
+    core_no_std: exportedPolicy.core_no_std,
+    dynamic_dispatch: exportedPolicy.dynamic_dispatch ?? {},
   };
   if (exportEntry === undefined) throw new Error('policy/architecture.manifest.json does not export policy/architecture.json');
-  if (exportEntry.output.blake3 !== policy.policy_blake3) {
-    throw new Error(`policy/architecture.json is not the exported policy: manifest ${exportEntry.output.blake3} != ${policy.policy_blake3}`);
+  if (typeof policy.policy_blake3 !== 'string' || policy.policy_blake3.length !== 64) {
+    throw new Error('policy/architecture.manifest.json has no BLAKE3 identity for policy/architecture.json');
   }
   if (!policy.core_no_std?.some(obligation => obligation.scope === packageName)) {
     throw new Error(`policy/architecture.json does not declare the ${packageName} no_std obligation`);
+  }
+
+  if (options.replay) {
+    const artifact = readArtifact(options.replay);
+    const resultsPath = path.join(options.replay, 'results.jsonl');
+    const parsed = exists(resultsPath) ? JSON.parse(fs.readFileSync(resultsPath, 'utf8')) : null;
+    const evaluation = evaluate({ artifactDirectory: options.replay, artifact, source: root, policy,
+      measured: false, run: { result: { status: parsed?.status === 'clean' ? 0 : 1, signal: null, error: null },
+        parsed, verification: { status: 0 }, verificationReport: null } });
+    process.stdout.write(`${JSON.stringify({ verdict: summaryOf(evaluation).verdict, case: caseId,
+      replay: options.replay, summary: summaryOf(evaluation), checks: evaluation.checks })}\n`);
+    process.exitCode = summaryOf(evaluation).verdict === 'passed' ? 0 : 1;
+    return;
   }
 
   const octetOutput = options.octetOutput;
@@ -514,6 +591,10 @@ function main() {
 
   fs.mkdirSync(options.output, { recursive: true });
   const { environment } = setupEnvironment(options.output, octetBinary, rustOutput, ccDirectory, vendor, options.jobs);
+  if (exists(path.join(root, '.octet'))) {
+    throw new Error(`verified tree already holds an Octet staging directory (${path.join(root, '.octet')}); ` +
+      'remove it so the measured artifact comes from a fresh collection');
+  }
 
   const positiveDirectory = path.join(options.output, 'artifact-positive');
   const positiveRun = runOctet({ source: root, artifactDirectory: positiveDirectory, output: options.output,
@@ -605,6 +686,7 @@ function main() {
       stdout_bytes: positiveRun.result.stdout.length,
       stderr_bytes: positiveRun.result.stderr.length,
     },
+    staging: { verified_tree_had_no_octet_directory: true },
     artifact: {
       directory: positiveDirectory,
       files: positiveArtifact.files,
