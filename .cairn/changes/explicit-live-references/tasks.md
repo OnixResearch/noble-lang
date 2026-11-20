@@ -64,6 +64,9 @@
   the runtime after merging `cairn/wave1`'s template identity (experimental local identities v4,
   `template_sha256` and template classes): no LSLOT expectation names the identity version or a
   descriptor field, and the companion origin-control lane now asserts the v4 identity directly.
+  Two earlier round-3 runs of the same design are superseded by this receipt; their receipts stay
+  in git history and their raw lane output is retained under `verification/lslot-cases/raw/r3c-150242/`
+  and `verification/lslot-cases/raw/r3e-151546/`.
   - **LSLOT-02 (promoted):** both independent epoch-1 registry boots; the A-to-B-to-B root
     performs two B dispatches that both select B-v1 while B-v2 publishes as epoch 2 (result 22);
     the A-to-B-to-C root keeps A-v1/B-v1/C-v1 with host-issued typed refs passed through ordered
