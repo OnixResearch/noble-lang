@@ -43,8 +43,8 @@
   builds the selected CLI from a committed clean tree, requires one projection entry for every
   canonical leaf path and every variant, and refuses a case for each machine-expressible field
   whose canonical attempt did not run. Receipt: `verification/lslot-cases/acceptance.json`
-  (sha256 `RECEIPT_SHA`, source revision `SOURCE_REVISION`, binary sha256
-  `BINARY_SHA`); raw lane evidence and command output are retained under
+  (sha256 `7925b655b1d624c2e13a64cc6743e47c9ff257ad3b43bc83879a1a1fd313f2a0`, source revision `sha256:5edd74de455377ef0253fb39f7749b78e39088942776d2974cfad50a5ba9a81a`, binary sha256
+  `96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4`); raw lane evidence and command output are retained under
   `verification/lslot-cases/raw/`.
   - **LSLOT-02 (promoted):** both independent epoch-1 registry boots; the A-to-B-to-B root
     performs two B dispatches that both select B-v1 while B-v2 publishes as epoch 2 (result 22);

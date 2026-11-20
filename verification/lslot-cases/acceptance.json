@@ -4,13 +4,15 @@
   "canonical_promotion": [
     "LSLOT-01",
     "LSLOT-02",
+    "LSLOT-03",
+    "LSLOT-06",
     "LSLOT-09"
   ],
   "proof": "open",
   "source": {
-    "commit": "03d88a320100c16c2d5334c495baab8d771e41db",
+    "commit": "326b1b359798f368c37f60a3bb930f0a15e40a6c",
     "clean": true,
-    "revision": "sha256:f1decff84d124b1f5cdf6ecbf062c866e25e38148e1f260d0596ec491883a7c3",
+    "revision": "sha256:5edd74de455377ef0253fb39f7749b78e39088942776d2974cfad50a5ba9a81a",
     "files": {
       "crates/noble-kernel/src/acceptance/frames.rs": "eda1a811d8eb4decdf4f8da213e610ec6e1e3663d85c017aa66371ca5e9d5e28",
       "crates/noble-kernel/src/acceptance/mod.rs": "3b50b0439710e1913932731e7e7160cbade6ad6f894ff30707492f39b12a655f",
@@ -497,7 +499,7 @@
       "crates/noble-cli/src/workflow/verification/named_v2.rs": "6df7cc19656e34ebe39bfe4324d5db4848645c45737791abe20a7881f8179224",
       "crates/noble-cli/src/workflow/verification.rs": "7ad38c5b1d5da74b40372283ed812db07cc0d25aeda8cf5a2562388a5ed3f683",
       "crates/noble-cli/src/workflow.rs": "604f6ded69fa38cf1a9f23074fc6b3a006633c3adf5939de067737a4b0bf2bca",
-      "specs/conformance/live-reference-cases.json": "83b9a68e5aa0f6d0da202ba6ed29721ea4248ddb8a0c8abaa86a99f82c868a63",
+      "specs/conformance/live-reference-cases.json": "bbf8f1cc0ccf1c248196b002a7f2ca7d1b005bc95de4a9c033e882a3166e6ba4",
       "specs/conformance/live-wasm-cases.json": "47b25497314216a05efda7cdf4352adb1f422a280af80dcea36b6af4e70abeca",
       "Cargo.toml": "28f50596ae329c104c28d0c4ae10c35b2ef1f20e95662356e69affda47e13bf9",
       "Cargo.lock": "582a7c91d10c3a6cbdaec2968b61e878821acc9781dfb84d53df096a778a862c",
@@ -507,8 +509,8 @@
       "crates/noble-contracts/Cargo.toml": "4d3fb9854611e8e3329562d3cd9235d9f53e5a0e4f5818fca998916240f769ec",
       "crates/noble-kernel/Cargo.toml": "19e6c70441ef5d51b9caf828ecb4a7432c8bd7efc40bfdafa158d4d95efc949b",
       "crates/noble-wasm/Cargo.toml": "7f369eb31795dc375df3d752cf1f63f64efcdde89d6614832d0d4aeece41a666",
-      "verification/lslot-cases/gate.mjs": "a9305809b02fbe56d84d03a94c04ae49323f27d89d6697dfec1853a8fe79183a",
-      "verification/lslot-cases/projection.mjs": "28e6ea134680fe14f977a3e598e5a553f180b37f45baf9c57ded333266a54eb3",
+      "verification/lslot-cases/gate.mjs": "14bdb54a61d7d33ea823b3617bf78dcf9fd4751a3b9d0fdf6f6bc90b97429897",
+      "verification/lslot-cases/projection.mjs": "0eeea691f1ef9eb60ed45a8e991b50c6f73af1174d3b9cb288322bee217340ba",
       "verification/dx06-current-source/source.mjs": "4a5de718c0521f312f5059d8b695841e49e452568c3b7cc3af73a9b843240fde",
       "crates/noble-wasm/tests/live_slot_admission.rs": "7c85bd032dd947bc23bc7d16a0c69907cfa504ef13334cd409d1612004577337",
       "crates/noble-contracts/tests/source_proof.rs": "5ef30f24a8669b16699cc023776ffd4df2ffa249b201f1e66453bdd34104a92a",
@@ -519,12 +521,82 @@
       "crates/noble-cli/tests/live_slot_late_control.mjs": "dd4da66a0745a6c70417b89e4d8a94848d058e7f31405669252d3d03572a188a",
       "crates/noble-cli/tests/live_slot_selected_origin.mjs": "1a3ae8a348c93e63792d200fc1e4ee9a13868c88cb8bb1709267fce68dba90d4",
       "crates/noble-cli/tests/live_slot_nested_roots.mjs": "665b893eeeeb9de798cb0568852d96b1c1ac11f02f195918d22f1f072e80dd77",
-      "crates/noble-cli/tests/live_slot_resource_ref_admission.mjs": "79fffdd8aa1f542a4ba496654853de7716135e578a7e752334a3a8a2e4642cd7",
-      "crates/noble-cli/tests/live_slot_resource_ref_static.mjs": "6d76c1afe9c70db1ab23f6a9de6f98f521fb7225f9a384792b8152c35255b154",
+      "crates/noble-cli/tests/live_slot_resource_ref_admission.mjs": "5cb651f10d6c2bac936881881346ca0b014a2016a17f56d443cb2a182ffff0a6",
+      "crates/noble-cli/tests/live_slot_resource_ref_static.mjs": "49b34517f3587bb24650ed738646f5d14cf33f3099fa3f2fe2c96c1d6360fbb6",
       "crates/noble-cli/tests/live_slot_cas_policy.mjs": "1fff6ec2159238933619a2e63ed40b5853980afbd649eb6881b093bf26f8fe6a",
       "crates/noble-cli/tests/live_slot_cas_policy_authority.json": "81609c3ffc6700ee2bf9d2d07668a65284157456b4b08c48aa4a4f8ce9080665",
       "crates/noble-cli/tests/live_slot_legacy_refusal.mjs": "eff776f290e89986298292bb53a08e3bd880a7eabd041eda564c990bc597645b",
-      "crates/noble-cli/tests/live_repl_slot_exclusion.mjs": "97f98f84855215eb9aac86e9a673c4cab2fba2bd7f3a4e4500b6960e927c439e"
+      "crates/noble-cli/tests/live_repl_slot_exclusion.mjs": "97f98f84855215eb9aac86e9a673c4cab2fba2bd7f3a4e4500b6960e927c439e",
+      "proofs/mc1/IntrinsicTypeWitness.lean": "127a3910e2acdffa1d97b175054ad83b59aeb84c03b748e58aa2cbafbd1156e1",
+      "proofs/mc1/NobleContracts/Composition.lean": "baae47050f6d445dc7b85ebff72a6bfe40a1f96de92c310ad6ae507bcb0b1d89",
+      "proofs/mc1/NobleContracts/Examples.lean": "280088bedaac3432addc18cb03ec97659c71dca7507fd112623844a09f4ae549",
+      "proofs/mc1/NobleContracts/Expression.lean": "4638c9b146da69b5d0a545734fd5bdc690288f86d1c3a2a40a235007a70561db",
+      "proofs/mc1/NobleContracts/Model.lean": "368cad7d6d86db4b182bd6b9e2bd0d3a354559c04579e3e27b789bb69313a7c3",
+      "proofs/mc1/NobleContracts/NamedSubject.lean": "ab1a1a3e46c60fb8179f714806a2c5f3e6005d201f9e0943d340bcf571aa3d26",
+      "proofs/mc1/NobleContracts/NamedV2.lean": "7bf6a15f6f5da56861a284ad41eae4a2957926f35e2f96437293e65cce8adaf9",
+      "proofs/mc1/NobleContracts/Obligation.lean": "13dddb8d47346ba648eb2dd372031ccd2f2e090f3312f1797a1ca567ab9cd616",
+      "proofs/mc1/NobleContracts/Rules.lean": "1d5802ddec13fcfcbba70e6c75f46ab051ea569e6f30fe92d61e3b5dec8d877b",
+      "proofs/mc1/NobleContracts.lean": "f975ac8220689ea0e9937480d60ad2c252d1cce2b151874c18ee618930981fc2",
+      "crates/noble-cli/tests/fixtures/worker-data.noble": "5ed5e7eadf5682862a3bd379d909585d0b1ad44d65268fb6c285b53a2285fec2",
+      "crates/noble-cli/tests/fixtures/worker-state.json": "19c50ff459532d55d84b81a5fd3b34e6efdf00480ba742f89d40b9c41abb6907",
+      "crates/noble-cli/tests/fixtures/worker-submit.json": "cb3bfb3768977a699112ccf705d78f1e30bdf5ae57a3bace5a84436aff886cf3",
+      "crates/noble-cli/tests/fixtures/worker-transition.noble": "1fc74eae8be587ff5f380438f53abc4201e98f3fb149de6b127afd6c1926e9b1",
+      "crates/noble-ngraph/src/batch.rs": "245f18603e260161a79d212c412840ab420e72f7c4efb486275ce577d1a2ea06",
+      "crates/noble-ngraph/src/belt/codec/hashing.rs": "4c85e17b633cbc034cb97058d1f258333abc9237a31380c3f381e04cdbdc278d",
+      "crates/noble-ngraph/src/belt/codec/instructions.rs": "be49cd132c4d15d0770ff0e5d099c81ae29613c25271e5ddd157d02a73345ee0",
+      "crates/noble-ngraph/src/belt/codec.rs": "f09a45622ff0f2cacee5d81c0ba7b8f339c5569c7f515d592bf80d3997605e7d",
+      "crates/noble-ngraph/src/belt/execution.rs": "ae12152c6de2906d2211e1e6561e6270e08ee04ebb00e40f2819c5c85e2ed741",
+      "crates/noble-ngraph/src/belt/lower.rs": "9641cdd1488d1aba97701a4c76899c3dab577e2b94f3b74ef803e4e23ebc5b62",
+      "crates/noble-ngraph/src/belt/support.rs": "de3c96198958f77341e3b7a270081cc129f090890c4e0750d6a7b1f103083280",
+      "crates/noble-ngraph/src/belt/target/codec.rs": "5b4cbaa33cf7cf5ef5db39309022dfd4841c6857f723c807d9b5c03930a61d8d",
+      "crates/noble-ngraph/src/belt/target/execution.rs": "cb19b3567c8d429ff3cd86f426d91ced30f5e9a9d14fa830f22340e4b6204b65",
+      "crates/noble-ngraph/src/belt/target/lower.rs": "d6fac1a3c79d0ffd2462858b9e57181728524a2aa3fc7627e5fe2eca63796690",
+      "crates/noble-ngraph/src/belt/target/machine.rs": "9e71ce561f7fba3195d4e211cd5d4f1bcb048239129172693b68454684bb4736",
+      "crates/noble-ngraph/src/belt/target/types.rs": "7e4a37f034e130cbb5c46b36884cf0b5b8f4ee2bcc6f445a22e1bcc4c2910087",
+      "crates/noble-ngraph/src/belt/target/validate.rs": "b4114d98f2286ec3a6249c23526ecd700354e39a15ea8108127b2795ae137ff5",
+      "crates/noble-ngraph/src/belt/target.rs": "19c2539b5dab0f31cd401ce4f06c1f56c62b646fb4b4980bc9fb998352cd4042",
+      "crates/noble-ngraph/src/belt/types.rs": "601dc595b8f50995abed0c12a9ce3eb3191cc7af284e9744fac5ebf411201ee2",
+      "crates/noble-ngraph/src/belt/validate/machine.rs": "1fcb894fbfa1b2a3b8abb89347143294edde2b11e9fa27ded32baba47a0ccc42",
+      "crates/noble-ngraph/src/belt/validate.rs": "77f82b832072792a4a36d49ae26f8b622a9ba911089cedf11bdd711fdc51a65f",
+      "crates/noble-ngraph/src/belt.rs": "56fdd38193a6bbc4539d14020b455776f293377a30619896c1ce184f4261c794",
+      "crates/noble-ngraph/src/cert/scoped.rs": "d5993616fc8de0b12360b724573b3fa7365fb0fba68c97bd6b278ec0ac9648e1",
+      "crates/noble-ngraph/src/cert.rs": "a7fbbabb25a84b2349b7a1f9d693d3a78c0f747134f1a5139214a205a103c271",
+      "crates/noble-ngraph/src/check.rs": "47f5219285d739153455d2f503338d192126e3074df735af5b2b3904da7cdd4a",
+      "crates/noble-ngraph/src/compiled.rs": "20d0840b972e235772ad0ba255a749b3d01d93ff2b3bd454e99c5216cd3ffe9b",
+      "crates/noble-ngraph/src/diag.rs": "f56d14d46b8e23394f16d6dcaa3e8b56235ee3b38cd8e631d23ec3a28a434438",
+      "crates/noble-ngraph/src/eval.rs": "4641b787d61a61e49d5c703a50f6f295713d2d428776f4f8c9559feb2b2865f4",
+      "crates/noble-ngraph/src/extract/admission.rs": "6a305527d8150d9b6e4027c2d28fa41a10d09687729098f3bae80b067d0ab69f",
+      "crates/noble-ngraph/src/extract/mod.rs": "a12dc6543f097693ec9d2864a31fd2c60074a57a9bb7c3ec2fb2d40e61061aab",
+      "crates/noble-ngraph/src/extract/source.rs": "8666d4f90fc5519461e747642bd15a1f9f39acce1601041af5abca79aae23c40",
+      "crates/noble-ngraph/src/extract/symbolic.rs": "77f7816cd98ffcd1fc41c2e60ac32b9464e025faf6838b14a9bbd5ddc9941f9c",
+      "crates/noble-ngraph/src/facts.rs": "f9900ffe518c6b7d0f466f3935825da6da9e0c0465d8658a5fc4fc1ce177364c",
+      "crates/noble-ngraph/src/format/data.rs": "54415fcfde7af679d2f1fe049abbb873fd815501712734ea9c7bb0afe8d0e9ff",
+      "crates/noble-ngraph/src/format/graph.rs": "10151bade82c90baf0280885a51fdf9787816d14e557c5dfff957298a9e19223",
+      "crates/noble-ngraph/src/format/mod.rs": "f082156afb8e1cfdde1485cccb17c2e5647f511112a9d9196590244c087f03d1",
+      "crates/noble-ngraph/src/format/snapshot.rs": "b7da4e571124801df5129b5fbe47bf3fb64cbe095825a91b2d9ccc40a9dbdc03",
+      "crates/noble-ngraph/src/format/value.rs": "787a7b4b9c73a30e96d2f7f321ec7390588f1f9f20f0570a85601b72afa924c5",
+      "crates/noble-ngraph/src/format/vectors.rs": "76d212670d6bd36787d8ffccecdf94a2408dd0744439a24995cea35d8f157980",
+      "crates/noble-ngraph/src/grad.rs": "ead442676020992e87acd5344b934e0501b7f01b0bbe93496b4bd8000d63dcbf",
+      "crates/noble-ngraph/src/identity.rs": "364a30534dcd00a27e550332ae642c564cb0456d56716ade0d420d87d8cad6fb",
+      "crates/noble-ngraph/src/ir.rs": "d3f03e3991252252a46e48eddda3f9fda00071fac27caa9aeaec20ebfa5029d3",
+      "crates/noble-ngraph/src/layout.rs": "62058025d4bc266e0c0b82e9c59e4111c4e8421299d63cdc8d2177974ebc383d",
+      "crates/noble-ngraph/src/lib.rs": "628d4ae72e034e9a8dcc952b73b8ffff295ae7da2fc08ec152bf623141b9f96a",
+      "crates/noble-ngraph/src/llvm.rs": "47853fc86eebef0b88021849ed50c112581ab91535521f9886a889dc6199c0e2",
+      "crates/noble-ngraph/src/net/rewrite.rs": "92d2896158d72d22c954edb17760dd96fc1452dee7806d038b13db79f159ffe8",
+      "crates/noble-ngraph/src/net.rs": "c59e6e9124275d3c93f8b24f4f47b4f2d061a46c4ea49c6fda46c330d3379828",
+      "crates/noble-ngraph/src/permutation.rs": "2a38b9f453579809574bf0fa10dba63fd160676dd024c8899ec7f6e928651ce5",
+      "crates/noble-ngraph/src/prng.rs": "e60a58dc0320d747437fb5cb8069d333591ac7d30d35f1ec111daa2045911e85",
+      "crates/noble-ngraph/src/resource.rs": "522e3c5357240821927f00a50143d7644c0b027264d7469b7ad07482134aab60",
+      "crates/noble-ngraph/src/schedule.rs": "b9c370c2ca41322a486d2229c9d37088214bec892185bd0460b3092dc95f098e",
+      "crates/noble-ngraph/src/sem.rs": "9b257b3a00caa1198b97235a9b18e44b8bd94e99ddc9a6dfeee5be09d0a5fea4",
+      "crates/noble-ngraph/src/snapshot.rs": "c2b91ccd45b6fa8168ef19fdd7b1ab77e6177c3ebd2b8bbbd1cc834896819924",
+      "crates/noble-ngraph/src/specialize/cache.rs": "aef9b28056bff4f7e4cf86a35453e1cffce64bd2e87a7ccf8f6cc6d92649b814",
+      "crates/noble-ngraph/src/specialize/offset.rs": "05c292e045c431efb06c0dc32ba21540cc3a28b3076ccdf974a1f2b49831d8f0",
+      "crates/noble-ngraph/src/specialize/program.rs": "8cd57f9d957e7a7f235dde7fe38ea3b0929766b2c5af2776be96ac625a394288",
+      "crates/noble-ngraph/src/specialize.rs": "7c68a1dc79a55c6d72b2c5be6663266e8c0d0438d2c36d47f54d129ac36f538a",
+      "crates/noble-ngraph/src/tick/admission.rs": "850de694e6f615b3328905483296773360e5323e405bf1a8595f767fb8904390",
+      "crates/noble-ngraph/src/tick.rs": "ba156de3c2f0e393429dfc9195006b5d7c7edb448b6bd0a7c9cf700ad7e161c5",
+      "crates/noble-ngraph/src/train.rs": "6337ec18e08879dfac685bb4cd9db2e79b23234c29846d70bed8f14c94b42ba5"
     },
     "selected_trees": [
       "crates/noble-kernel/src",
@@ -533,17 +605,85 @@
       "crates/noble-wasm/runtime",
       "crates/noble-wasm/wit",
       "crates/noble-cli/src"
-    ]
+    ],
+    "dep_info_paths": 563,
+    "dep_info_closure_complete": true,
+    "ingredients": 551
   },
   "fixture": {
     "path": "specs/conformance/live-reference-cases.json",
-    "sha256": "83b9a68e5aa0f6d0da202ba6ed29721ea4248ddb8a0c8abaa86a99f82c868a63",
+    "sha256": "bbf8f1cc0ccf1c248196b002a7f2ca7d1b005bc95de4a9c033e882a3166e6ba4",
     "revision": "0.1.0-draft.5",
-    "live_wasm": {
-      "path": "specs/conformance/live-wasm-cases.json",
-      "sha256": "47b25497314216a05efda7cdf4352adb1f422a280af80dcea36b6af4e70abeca",
-      "unchanged_from_head": true
-    }
+    "amendments": [
+      {
+        "date": "2026-11-20",
+        "authority": "OWNER DECISION 2026-11-20 (decision 19): \"LSLOT-03 and LSLOT-06 case designs are amended: drop or replace each impossible variant with the reviewer's recorded reason (LSLOT-03: unselectable `fs.write`; the input-only variant no checked candidate can have; the impossible under-declare variant. LSLOT-06: case-level `guest_requests: 0` contradicting its accepted valid-borrow variant; serialize/forge variants with no operations by design), record them as owner-approved amendments, and run both through the reviewed gate.\"",
+        "review": "lslot-cases-review-2026-11-20 (independent reviewer, 2026-11-20)",
+        "cases": [
+          {
+            "case": "LSLOT-03",
+            "dropped": [
+              {
+                "variant": "same-layout-different-resource-schema",
+                "reason": "the protocol's input-only override yields [Account@2, I64] -> [Account@1, I64]; no checked candidate inhabits that for a linear nominal resource within a [test.emit] ceiling without a conversion primitive, so this is a case-design defect"
+              },
+              {
+                "variant": "effect-ceiling-widened",
+                "reason": "the case names fs.write, which the pinned live-slot host cannot select; the runtime already refuses a widened ceiling, but no canonical source candidate can express it without an expressible effect"
+              },
+              {
+                "variant": "unknown-host-contract",
+                "reason": "the candidate is refused at source resolution, before admission, which is the desired safety outcome; it cannot be constructed at admission in a source-only candidate profile"
+              },
+              {
+                "variant": "generic-caller-underdeclares-dispatch",
+                "reason": "the language delta has the checker assign E union {live.dispatch}, so no caller can claim fewer effects and a program value containing slot.invoke cannot be formed"
+              }
+            ],
+            "expected_dropped": [
+              "generic_dispatch_effect"
+            ],
+            "note": "the remaining same-exact-interface and reversed-input variants observe ordered exact admission and the epoch-5 success"
+          },
+          {
+            "case": "LSLOT-06",
+            "dropped": [
+              {
+                "variant": "aggregate-capture",
+                "reason": "a Pair<...LiveRef> root type is refused inside the case's own static boundary, the earliest possible refusal"
+              },
+              {
+                "variant": "export-or-return",
+                "reason": "a LiveRef-typed output is refused at the static type boundary; no source form returns the original root borrow"
+              },
+              {
+                "variant": "serialize",
+                "reason": "the delta forbids encoding a LiveRef as portable data and the profile has no such word, so the property holds by absence"
+              },
+              {
+                "variant": "forge",
+                "reason": "the delta forbids decoding slot bytes as a LiveRef and the profile has no such primitive, so the property holds by absence"
+              },
+              {
+                "variant": "retain",
+                "reason": "refs are out-of-band ordered operands, never stack values or credentials, so no ref can be retained past its root"
+              }
+            ],
+            "expected_dropped": [
+              "ref_data",
+              "ref_authority"
+            ],
+            "expected_added": {
+              "accepted_variant_guest_requests": 1
+            },
+            "expected_reworded": {
+              "guest_requests": "counts the rejected boundary attempts only; the accepted valid-borrow variant performs one real guest request, recorded as accepted_variant_guest_requests"
+            },
+            "note": "direct-quotation-capture and aggregate-storage observe the ref-capture and aggregation refusals; valid-borrow observes the accepted ephemeral borrow"
+          }
+        ]
+      }
+    ]
   },
   "tool_selection": {
     "configuration_sha256": "8ed766cdfa42f8228bfba41c28c6aee91afd97652418ae7f16952cdc51875e9b",
@@ -591,6 +731,62 @@
     "build_status": 0,
     "build_claim": "offline Cargo reported the selected `noble` bin artifact for this target; the recorded sha256 is the exact selected binary this gate executed"
   },
+  "projection_rule": {
+    "completeness": "every canonical leaf path of `input` and `expected` (arrays are one leaf, objects recurse) and every variant has exactly one entry; uncovered, extra or duplicated keys fail the gate",
+    "declared_allowlist": {
+      "LSLOT-01": [
+        "input.harness",
+        "input.generic_caller",
+        "expected.stage",
+        "input.publication.candidate",
+        "input.slot.target"
+      ],
+      "LSLOT-02": [
+        "input.harness",
+        "input.base.registry_epoch_1.A.body",
+        "input.base.root_A_entry.ordered_host_issued_inputs",
+        "input.transitive_variant.independent_fixture",
+        "input.base.root_A_entry.pin_operation",
+        "input.base.root_A_entry.caller",
+        "input.transitive_variant.registry_epoch_1.A.body",
+        "input.transitive_variant.registry_epoch_1.B.body",
+        "expected.stage",
+        "input.base.interleaving",
+        "input.transitive_variant.interleaving",
+        "input.transitive_variant.root_A_entry.ordered_host_issued_inputs",
+        "input.transitive_variant.root_A_entry.borrow_pass_through"
+      ],
+      "LSLOT-03": [
+        "input.harness",
+        "input.variant_protocol",
+        "expected.stage"
+      ],
+      "LSLOT-04": [
+        "input.harness",
+        "expected.stage"
+      ],
+      "LSLOT-06": [
+        "input.harness",
+        "input.issued_ref",
+        "expected.stage"
+      ],
+      "LSLOT-07": [
+        "input.harness",
+        "input.old_target",
+        "expected.stage"
+      ],
+      "LSLOT-09": [
+        "input.harness",
+        "input.attempt",
+        "input.profiles",
+        "input.controls",
+        "expected.stage"
+      ]
+    },
+    "declared": "prose/design values only on the per-case allowlist; the entry records the runtime facts that stand behind the prose and is never counted as observed",
+    "observed": "a runtime value measured from the lane evidence; it must equal the canonical value",
+    "unobserved": "a machine-expressible premise whose canonical attempt did not run; it refuses the case and names the field"
+  },
   "projectors": [
     "LSLOT-01",
     "LSLOT-02",
@@ -600,24 +796,144 @@
     "LSLOT-07",
     "LSLOT-09"
   ],
+  "coverage": {
+    "complete": true,
+    "issues": []
+  },
+  "stage_projection": [
+    {
+      "id": "LSLOT-01",
+      "canonical": "live-slot-root",
+      "status": "declared",
+      "raw_stages": [
+        "slot",
+        "source"
+      ],
+      "mapping": {
+        "slot": "live-slot-root",
+        "command": "live-slot-root",
+        "source": "live-slot-root"
+      }
+    },
+    {
+      "id": "LSLOT-02",
+      "canonical": "live-slot-root",
+      "status": "declared",
+      "raw_stages": [
+        "command",
+        "operator-control",
+        "slot"
+      ],
+      "mapping": {
+        "slot": "live-slot-root",
+        "command": "live-slot-root",
+        "source": "live-slot-root",
+        "operator-control": "live-slot-root"
+      }
+    },
+    {
+      "id": "LSLOT-03",
+      "canonical": "slot-candidate-admission",
+      "status": "declared",
+      "raw_stages": [
+        "command",
+        "slot"
+      ],
+      "mapping": {
+        "slot": "slot-candidate-admission",
+        "command": "slot-candidate-admission",
+        "operator-control": "slot-candidate-admission"
+      }
+    },
+    {
+      "id": "LSLOT-04",
+      "canonical": "slot-publication",
+      "status": "declared",
+      "raw_stages": [
+        "command",
+        "operator-control",
+        "slot"
+      ],
+      "mapping": {
+        "slot": "slot-publication",
+        "command": "slot-publication",
+        "operator-control": "slot-publication"
+      }
+    },
+    {
+      "id": "LSLOT-06",
+      "canonical": "static-and-invocation-boundary",
+      "status": "declared",
+      "raw_stages": [
+        "command",
+        "slot"
+      ],
+      "mapping": {
+        "slot": "static-and-invocation-boundary",
+        "command": "static-and-invocation-boundary",
+        "operator-control": "static-and-invocation-boundary"
+      }
+    },
+    {
+      "id": "LSLOT-07",
+      "canonical": "live-slot-policy",
+      "status": "declared",
+      "raw_stages": [
+        "command",
+        "operator-control",
+        "slot"
+      ],
+      "mapping": {
+        "slot": "live-slot-policy",
+        "command": "live-slot-policy",
+        "operator-control": "live-slot-policy"
+      }
+    },
+    {
+      "id": "LSLOT-09",
+      "canonical": "profile-admission",
+      "status": "declared",
+      "raw_stages": [
+        "admission",
+        "resolve"
+      ],
+      "mapping": {
+        "resolve": "profile-admission",
+        "admission": "profile-admission",
+        "slot": "profile-admission"
+      }
+    }
+  ],
   "cases": [
     {
       "id": "LSLOT-01",
       "promotable": true,
       "counts": {
-        "observed": 16,
-        "declared": 0,
+        "observed": 19,
+        "declared": 5,
         "unobserved": 0,
         "mismatch": 0
       },
       "entries": [
         {
           "scope": "input",
+          "key": "harness",
+          "canonical": "saved-capture-versus-opt-in-generic-root",
+          "observed": null,
+          "status": "declared",
+          "note": "the gate runs this case's capture lane against the selected CLI",
+          "evidence": {
+            "lane": "crates/noble-cli/tests/live_slot_capture_legacy.mjs"
+          }
+        },
+        {
+          "scope": "input",
           "key": "definition",
           "canonical": "def n [ 1 + ]",
           "observed": "def n [ 1 + ]",
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "input",
@@ -625,65 +941,125 @@
           "canonical": "[ n ]",
           "observed": "[ n ]",
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "input",
           "key": "generic_caller",
-          "canonical": {
-            "instruction": "slot.invoke",
-            "borrowed_input": "LiveRef<I64,I64,pure>",
-            "effects": [
-              "live.dispatch"
-            ]
-          },
-          "observed": {
-            "instruction": "slot.invoke",
-            "borrowed_input": "LiveRef<I64,I64,pure>",
-            "effects": [
-              "live.dispatch"
-            ]
-          },
-          "status": "observed",
-          "note": "structured projection of the canonical generic-caller prose: instruction, borrowed input type and checked effects"
+          "canonical": "checked Program<[I64, borrowed LiveRef<I64,I64,{}>] -> [I64] ! {live.dispatch}> containing generic slot.invoke",
+          "observed": null,
+          "status": "declared",
+          "note": "prose design value; the checked caller interface and effects it names are recorded here",
+          "evidence": {
+            "install_inputs": [
+              "I64",
+              "LiveRef<I64,I64,pure>"
+            ],
+            "reflected": {
+              "instruction": "slot.invoke",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "effects": [
+                "live.dispatch"
+              ]
+            }
+          }
         },
         {
-          "scope": "input",
-          "key": "slot",
-          "canonical": {
-            "id": "increment",
-            "incarnation": 1,
-            "generation": 1,
-            "target": "n-v1:[ 1 + ]"
-          },
-          "observed": {
-            "id": "increment",
-            "incarnation": 1,
-            "generation": 1,
-            "target": "n-v1:[ 1 + ]"
-          },
+          "scope": "input.slot",
+          "key": "id",
+          "canonical": "increment",
+          "observed": "increment",
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
-          "scope": "input",
-          "key": "publication",
-          "canonical": {
-            "expected_epoch": 1,
-            "expected_incarnation": 1,
-            "expected_generation": 1,
-            "candidate": "n-v2:[ 2 + ]",
-            "host_authorized": true
-          },
-          "observed": {
-            "expected_epoch": 1,
-            "expected_incarnation": 1,
-            "expected_generation": 1,
-            "candidate": "n-v2:[ 2 + ]",
-            "host_authorized": true
-          },
+          "scope": "input.slot",
+          "key": "incarnation",
+          "canonical": 1,
+          "observed": 1,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.slot",
+          "key": "generation",
+          "canonical": 1,
+          "observed": 1,
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.slot",
+          "key": "target",
+          "canonical": "n-v1:[ 1 + ]",
+          "observed": null,
+          "status": "declared",
+          "note": "the registered version name and the definition body the first publication selected",
+          "evidence": {
+            "version": "n-v1",
+            "definition_source": "def n [ 1 + ]",
+            "body": "1 +",
+            "artifact_sha256": "422e5b28543f30cfbb42925b3c0981c284fc9ddf143084c24ec631de87ce2a99"
+          }
+        },
+        {
+          "scope": "input.publication",
+          "key": "expected_epoch",
+          "canonical": 1,
+          "observed": 1,
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.publication",
+          "key": "expected_incarnation",
+          "canonical": 1,
+          "observed": 1,
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.publication",
+          "key": "expected_generation",
+          "canonical": 1,
+          "observed": 1,
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.publication",
+          "key": "candidate",
+          "canonical": "n-v2:[ 2 + ]",
+          "observed": null,
+          "status": "declared",
+          "note": "the replacement quotation the lane installed and published as the next version",
+          "evidence": {
+            "install_source": "[ 2 + ]",
+            "body": "2 +",
+            "artifact_sha256": "2a9518dec1349696a7f29a7d010ceac7ce4dfba8dfa88014a15cd0ffe843f562",
+            "generation": 2
+          }
+        },
+        {
+          "scope": "input.publication",
+          "key": "host_authorized",
+          "canonical": true,
+          "observed": true,
+          "status": "observed",
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "input",
@@ -711,15 +1087,27 @@
             }
           ],
           "status": "observed",
-          "note": null
+          "note": "observed step order: publication 11, saved 12, generic 13",
+          "evidence": null
         },
         {
           "scope": "expected",
           "key": "stage",
           "canonical": "live-slot-root",
-          "observed": "live-slot-root",
-          "status": "observed",
-          "note": "runtime report stages of this profile projected onto the canonical case phase"
+          "observed": null,
+          "status": "declared",
+          "note": "the runtime reports its own phase names; this mapping is the declared case phase",
+          "evidence": {
+            "raw_stages": [
+              "slot",
+              "source"
+            ],
+            "mapping": {
+              "slot": "live-slot-root",
+              "command": "live-slot-root",
+              "source": "live-slot-root"
+            }
+          }
         },
         {
           "scope": "expected",
@@ -727,7 +1115,8 @@
           "canonical": "immutable-capture-and-explicit-fresh-target",
           "observed": "immutable-capture-and-explicit-fresh-target",
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -735,7 +1124,8 @@
           "canonical": 21,
           "observed": 21,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -743,7 +1133,8 @@
           "canonical": 22,
           "observed": 22,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -751,7 +1142,8 @@
           "canonical": "n-v1",
           "observed": "n-v1",
           "status": "observed",
-          "note": "the saved owner runs the pre-publication target and records no dispatch trace"
+          "note": "the saved owner runs the pre-publication target and records no dispatch trace",
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -759,7 +1151,8 @@
           "canonical": "n-v2",
           "observed": "n-v2",
           "status": "observed",
-          "note": "the post-publication generic call selects the replacement artifact at generation 2"
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -767,7 +1160,8 @@
           "canonical": true,
           "observed": true,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -775,7 +1169,8 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -783,7 +1178,8 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -791,8 +1187,16 @@
           "canonical": 2,
           "observed": 2,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         }
+      ],
+      "declared_keys": [
+        "input.harness",
+        "input.generic_caller",
+        "expected.stage",
+        "input.publication.candidate",
+        "input.slot.target"
       ],
       "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
       "prepromotion_case_sha256": "5c017bb9f6a4683f994823d2b9cd85ced2284bee3fdeeb38acd604f9084e5a4f"
@@ -801,155 +1205,556 @@
       "id": "LSLOT-02",
       "promotable": true,
       "counts": {
-        "observed": 21,
-        "declared": 4,
+        "observed": 40,
+        "declared": 11,
         "unobserved": 0,
         "mismatch": 0
       },
       "entries": [
         {
           "scope": "input",
-          "key": "base.registry_epoch_1.B.version",
+          "key": "harness",
+          "canonical": "parent-child-transitive-snapshot-and-new-root",
+          "observed": null,
+          "status": "declared",
+          "note": "the gate runs the frozen nested-root lane against the selected CLI",
+          "evidence": null
+        },
+        {
+          "scope": "input.base.registry_epoch_1.A",
+          "key": "version",
+          "canonical": "A-v1",
+          "observed": "A-v1",
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.base.registry_epoch_1.A.interface",
+          "key": "input",
+          "canonical": [
+            "I64",
+            "borrow LiveRef<I64,I64,{}>"
+          ],
+          "observed": [
+            "I64",
+            "borrow LiveRef<I64,I64,{}>"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.base.registry_epoch_1.A.interface",
+          "key": "output",
+          "canonical": [
+            "I64"
+          ],
+          "observed": [
+            "I64"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.base.registry_epoch_1.A.interface",
+          "key": "effects",
+          "canonical": [
+            "live.dispatch"
+          ],
+          "observed": [
+            "live.dispatch"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.base.registry_epoch_1.B",
+          "key": "version",
           "canonical": "B-v1:[ 1 + ]",
           "observed": "B-v1:[ 1 + ]",
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
-          "scope": "input",
-          "key": "base.registry_epoch_1.A.interface",
-          "canonical": {
-            "input": [
-              "I64",
-              "borrow LiveRef<I64,I64,{}>"
-            ],
-            "output": [
-              "I64"
-            ],
-            "effects": [
-              "live.dispatch"
-            ]
-          },
-          "observed": {
-            "input": [
-              "I64",
-              "borrow LiveRef<I64,I64,{}>"
-            ],
-            "output": [
-              "I64"
-            ],
-            "effects": [
-              "live.dispatch"
-            ]
-          },
+          "scope": "input.base.registry_epoch_1.B.interface",
+          "key": "input",
+          "canonical": [
+            "I64"
+          ],
+          "observed": [
+            "I64"
+          ],
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
-          "scope": "input",
-          "key": "base.registry_epoch_1.A.body",
+          "scope": "input.base.registry_epoch_1.B.interface",
+          "key": "output",
+          "canonical": [
+            "I64"
+          ],
+          "observed": [
+            "I64"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.base.registry_epoch_1.B.interface",
+          "key": "effects",
+          "canonical": [],
+          "observed": [],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.base.registry_epoch_1.A",
+          "key": "body",
           "canonical": "borrow the second explicit input ref for two typed slot.invoke calls; no embedded B ID/name",
           "observed": null,
           "status": "declared",
-          "note": "the selected A1 body is `slot.invoke slot.invoke` and embeds no slot name"
+          "note": "prose body; the installed caller source and its reflected site carry the behavior",
+          "evidence": {
+            "source": "slot.invoke",
+            "site": {
+              "effects": [
+                "live.dispatch"
+              ],
+              "input": [
+                "I64",
+                "LiveRef([I64]->[I64]!{})"
+              ],
+              "instruction": "slot.invoke",
+              "output": [
+                "I64"
+              ],
+              "siteId": 0
+            }
+          }
         },
         {
-          "scope": "input",
-          "key": "base.root_A_entry.ordered_host_issued_inputs",
-          "canonical": 3,
-          "observed": 3,
-          "status": "observed",
-          "note": "one I64 and two host-issued refs in the invocation request, for slots B/A"
-        },
-        {
-          "scope": "input",
-          "key": "base.root_A_entry.pin_epoch",
-          "canonical": 1,
-          "observed": 1,
-          "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "input",
-          "key": "base.new_root_B_interface",
-          "canonical": {
-            "input": [
-              "I64"
-            ],
-            "output": [
-              "I64"
-            ],
-            "effects": []
-          },
-          "observed": {
-            "input": [
-              "I64"
-            ],
-            "output": [
-              "I64"
-            ],
-            "effects": []
-          },
-          "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "input",
-          "key": "transitive_variant.registry_epoch_1.C.version",
-          "canonical": "C-v1:[ 1 + ]",
-          "observed": "C-v1:[ 1 + ]",
-          "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "input",
-          "key": "transitive_variant.root_A_entry.pin_epoch",
-          "canonical": 1,
-          "observed": 1,
-          "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "input",
-          "key": "transitive_variant.registry_epoch_1.B.body",
-          "canonical": "borrow explicit C input ref and slot.invoke once",
+          "scope": "input.base.root_A_entry",
+          "key": "ordered_host_issued_inputs",
+          "canonical": [
+            "I64:20",
+            "borrow LiveRef<I64,I64,{}> issued for B",
+            "borrow LiveRef<[I64,borrow LiveRef<I64,I64,{}>],[I64],{live.dispatch}> issued for A"
+          ],
           "observed": null,
           "status": "declared",
-          "note": "the selected B1 body is `slot.invoke` and dispatches only through its host-issued C ref"
+          "note": "prose list; the invocation request's scalar and ordered refs are recorded here",
+          "evidence": {
+            "observed": [
+              "I64:20",
+              "borrow borrow LiveRef<I64,I64,{}> ref issued for B",
+              "borrow borrow LiveRef<[I64,borrow LiveRef<I64,I64,{}>],I64,{live.dispatch}> ref issued for A"
+            ],
+            "ref_slots": [
+              "B",
+              "A"
+            ],
+            "matches_positions": true
+          }
         },
         {
-          "scope": "input",
-          "key": "base.interleaving",
+          "scope": "input.base.root_A_entry",
+          "key": "pin_epoch",
+          "canonical": 1,
+          "observed": 1,
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.base.root_A_entry",
+          "key": "pin_operation",
+          "canonical": "O(1)-persistent-map-reference",
+          "observed": null,
+          "status": "declared",
+          "note": "the root keeps one epoch for both dispatches; the next root observes the next epoch",
+          "evidence": {
+            "old_epoch": 1,
+            "new_epoch": 2
+          }
+        },
+        {
+          "scope": "input.base.root_A_entry",
+          "key": "caller",
+          "canonical": "checked generic slot.invoke A with second input ref forwarded to A-v1",
+          "observed": null,
+          "status": "declared",
+          "note": "prose caller description; the reflected generic site and result are recorded here",
+          "evidence": {
+            "site": {
+              "effects": [
+                "live.dispatch"
+              ],
+              "input": [
+                "I64",
+                "LiveRef([I64]->[I64]!{})"
+              ],
+              "instruction": "slot.invoke",
+              "output": [
+                "I64"
+              ],
+              "siteId": 0
+            },
+            "result": 22
+          }
+        },
+        {
+          "scope": "input.base",
+          "key": "interleaving",
           "canonical": [
             "A-v1 borrows its explicit B ref and invokes B-v1 once",
             "authorized B-v2:[ 2 + ] publishes registry epoch 2",
             "A-v1 borrows same root-scoped B ref and invokes B again",
             "new root supplies a newly host-issued B ref and I64:20 to generic caller"
           ],
-          "observed": null,
-          "status": "declared",
-          "note": "prose steps bound by the observed B-v1/B-v1/A result, the epoch-2 publication and the next-root B-v2 selection above"
+          "observed": [
+            "A-v1 borrows its explicit B ref and invokes B-v1 once",
+            "authorized B-v2:[ 2 + ] publishes registry epoch 2",
+            "A-v1 borrows same root-scoped B ref and invokes B again",
+            "new root supplies a newly host-issued B ref and I64:20 to generic caller"
+          ],
+          "status": "observed",
+          "note": "1:true 2:true 3:true 4:true",
+          "evidence": null
         },
         {
-          "scope": "input",
-          "key": "transitive_variant.interleaving",
+          "scope": "input.base.new_root_B_interface",
+          "key": "input",
+          "canonical": [
+            "I64"
+          ],
+          "observed": [
+            "I64"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.base.new_root_B_interface",
+          "key": "output",
+          "canonical": [
+            "I64"
+          ],
+          "observed": [
+            "I64"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.base.new_root_B_interface",
+          "key": "effects",
+          "canonical": [],
+          "observed": [],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.transitive_variant",
+          "key": "independent_fixture",
+          "canonical": "reset to distinct registry epoch 1 before variant",
+          "observed": null,
+          "status": "declared",
+          "note": "the variant re-runs in its own session: configured epoch 0, then bootstrap epoch 1",
+          "evidence": {
+            "separate_session": true,
+            "configured_epoch": "0",
+            "base_bootstrap_epoch": "1",
+            "transitive_configured_epoch": "0",
+            "transitive_bootstrap_epoch": "1"
+          }
+        },
+        {
+          "scope": "input.transitive_variant.registry_epoch_1.A",
+          "key": "version",
+          "canonical": "A-v1",
+          "observed": "A-v1",
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.transitive_variant.registry_epoch_1.A.interface",
+          "key": "input",
+          "canonical": [
+            "I64",
+            "borrow LiveRef<I64,I64,{}>",
+            "borrow LiveRef<[I64,borrow LiveRef<I64,I64,{}>],I64,{live.dispatch}>"
+          ],
+          "observed": [
+            "I64",
+            "borrow LiveRef<I64,I64,{}>",
+            "borrow LiveRef<[I64,borrow LiveRef<I64,I64,{}>],I64,{live.dispatch}>"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.transitive_variant.registry_epoch_1.A.interface",
+          "key": "output",
+          "canonical": [
+            "I64"
+          ],
+          "observed": [
+            "I64"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.transitive_variant.registry_epoch_1.A.interface",
+          "key": "effects",
+          "canonical": [
+            "live.dispatch"
+          ],
+          "observed": [
+            "live.dispatch"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.transitive_variant.registry_epoch_1.A",
+          "key": "body",
+          "canonical": "pass explicit C ref and borrow explicit B ref for nested invoke, no slot ID/name in recipe",
+          "observed": null,
+          "status": "declared",
+          "note": "prose body; the installed caller source and its reflected site carry the behavior",
+          "evidence": {
+            "source": "slot.invoke",
+            "site": {
+              "effects": [
+                "live.dispatch"
+              ],
+              "input": [
+                "I64",
+                "LiveRef([I64]->[I64]!{})",
+                "LiveRef([I64,LiveRef([I64]->[I64]!{})]->[I64]!{live.dispatch})"
+              ],
+              "instruction": "slot.invoke",
+              "output": [
+                "I64"
+              ],
+              "siteId": 0
+            }
+          }
+        },
+        {
+          "scope": "input.transitive_variant.registry_epoch_1.B",
+          "key": "version",
+          "canonical": "B-v1",
+          "observed": "B-v1",
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.transitive_variant.registry_epoch_1.B.interface",
+          "key": "input",
+          "canonical": [
+            "I64",
+            "borrow LiveRef<I64,I64,{}>"
+          ],
+          "observed": [
+            "I64",
+            "borrow LiveRef<I64,I64,{}>"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.transitive_variant.registry_epoch_1.B.interface",
+          "key": "output",
+          "canonical": [
+            "I64"
+          ],
+          "observed": [
+            "I64"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.transitive_variant.registry_epoch_1.B.interface",
+          "key": "effects",
+          "canonical": [
+            "live.dispatch"
+          ],
+          "observed": [
+            "live.dispatch"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.transitive_variant.registry_epoch_1.B",
+          "key": "body",
+          "canonical": "borrow explicit C input ref and slot.invoke once",
+          "observed": null,
+          "status": "declared",
+          "note": "prose body; the B caller source is recorded here",
+          "evidence": {
+            "source": "slot.invoke"
+          }
+        },
+        {
+          "scope": "input.transitive_variant.registry_epoch_1.C",
+          "key": "version",
+          "canonical": "C-v1:[ 1 + ]",
+          "observed": "C-v1:[ 1 + ]",
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.transitive_variant.registry_epoch_1.C.interface",
+          "key": "input",
+          "canonical": [
+            "I64"
+          ],
+          "observed": [
+            "I64"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.transitive_variant.registry_epoch_1.C.interface",
+          "key": "output",
+          "canonical": [
+            "I64"
+          ],
+          "observed": [
+            "I64"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.transitive_variant.registry_epoch_1.C.interface",
+          "key": "effects",
+          "canonical": [],
+          "observed": [],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.transitive_variant.root_A_entry",
+          "key": "ordered_host_issued_inputs",
+          "canonical": [
+            "I64:20",
+            "borrow C ref",
+            "borrow B ref typed for I64+C-ref to I64",
+            "borrow A ref typed for I64+C-ref+B-ref to I64"
+          ],
+          "observed": null,
+          "status": "declared",
+          "note": "prose list; the invocation request's scalar and typed ordered refs are recorded here",
+          "evidence": {
+            "observed": [
+              "I64:20",
+              "borrow borrow LiveRef<I64,I64,{}> ref issued for C",
+              "borrow borrow LiveRef<[I64,borrow LiveRef<I64,I64,{}>],I64,{live.dispatch}> ref issued for B",
+              "borrow borrow LiveRef<[I64,borrow LiveRef<I64,I64,{}>,borrow LiveRef<[I64,borrow LiveRef<I64,I64,{}>],I64,{live.dispatch}>],I64,{live.dispatch}> ref issued for A"
+            ],
+            "ref_slots": [
+              "C",
+              "B",
+              "A"
+            ],
+            "matches_positions": true
+          }
+        },
+        {
+          "scope": "input.transitive_variant.root_A_entry",
+          "key": "pin_epoch",
+          "canonical": 1,
+          "observed": 1,
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.transitive_variant.root_A_entry",
+          "key": "borrow_pass_through",
+          "canonical": [
+            "root passes C and B refs to A in that order",
+            "A passes C ref to B",
+            "B borrows C ref for slot.invoke"
+          ],
+          "observed": null,
+          "status": "declared",
+          "note": "prose steps; the old-root A/B/C dispatch order is recorded here",
+          "evidence": {
+            "dispatch_order": [
+              "A",
+              "B",
+              "C"
+            ]
+          }
+        },
+        {
+          "scope": "input.transitive_variant",
+          "key": "interleaving",
           "canonical": [
             "A root pins epoch 1",
             "authorized C-v2:[ 2 + ] publishes epoch 2",
             "A invokes B which invokes C",
             "new root receives freshly host-issued C ref and I64:20"
           ],
-          "observed": null,
-          "status": "declared",
-          "note": "prose steps bound by the observed epoch-1 pin, the epoch-2 C publication and the old/new C selections above"
+          "observed": [
+            "A root pins epoch 1",
+            "authorized C-v2:[ 2 + ] publishes epoch 2",
+            "A invokes B which invokes C",
+            "new root receives freshly host-issued C ref and I64:20"
+          ],
+          "status": "observed",
+          "note": "1:true 2:true 3:true 4:true",
+          "evidence": null
         },
         {
           "scope": "expected",
           "key": "stage",
           "canonical": "live-slot-root",
-          "observed": "live-slot-root",
-          "status": "observed",
-          "note": "runtime report stages of this profile projected onto the canonical case phase"
+          "observed": null,
+          "status": "declared",
+          "note": "the runtime reports its own phase names; this mapping is the declared case phase",
+          "evidence": {
+            "raw_stages": [
+              "command",
+              "operator-control",
+              "slot"
+            ],
+            "mapping": {
+              "slot": "live-slot-root",
+              "command": "live-slot-root",
+              "source": "live-slot-root",
+              "operator-control": "live-slot-root"
+            }
+          }
         },
         {
           "scope": "expected",
@@ -957,7 +1762,8 @@
           "canonical": "one-map-per-root-with-explicit-typed-ref-pass-through",
           "observed": "one-map-per-root-with-explicit-typed-ref-pass-through",
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -971,7 +1777,8 @@
             "B-v1"
           ],
           "status": "observed",
-          "note": null
+          "note": "both same-root B dispatches, in order",
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -979,7 +1786,8 @@
           "canonical": 22,
           "observed": 22,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -987,7 +1795,8 @@
           "canonical": "B-v2",
           "observed": "B-v2",
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -995,7 +1804,8 @@
           "canonical": 22,
           "observed": 22,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1011,7 +1821,8 @@
             "C-v1"
           ],
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1019,7 +1830,8 @@
           "canonical": 21,
           "observed": 21,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1027,7 +1839,8 @@
           "canonical": "C-v2",
           "observed": "C-v2",
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1035,7 +1848,8 @@
           "canonical": 22,
           "observed": 22,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1043,7 +1857,8 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1051,7 +1866,11 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": "no selected recipe, semantic context or program identity embeds a slot name; the slot is the host-issued ordered ref operand of the invocation"
+          "note": "the dispatched slot equals the host ref bound at that position, and no caller or target source nor reflected site carries a slot identity",
+          "evidence": {
+            "base_positioned": true,
+            "transitive_positioned": true
+          }
         },
         {
           "scope": "expected",
@@ -1059,7 +1878,8 @@
           "canonical": true,
           "observed": true,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1067,19 +1887,50 @@
           "canonical": true,
           "observed": true,
           "status": "observed",
-          "note": "slot registry epochs 0/1/2/3/4/5/6/7/8/9/10/11/12/13/14/15/16/17/18/19/20 advance only on publication and are reported only by the slot profile; the guarded Live-Wasm-Draft lane reports its own source generations 1/2/2/3 and refuses this caller"
+          "note": "slot registry epochs 1/2 advance only on publication; the guarded Live-Wasm-Draft lane of the same run reports its own source generations 1/2/2/3 and carries no registry epoch",
+          "evidence": {
+            "slot_epochs": [
+              1,
+              2,
+              1,
+              2
+            ],
+            "live_generations": [
+              1,
+              2,
+              2,
+              3
+            ],
+            "live_reports_have_epoch": false,
+            "refused_generation": 0
+          }
         }
+      ],
+      "declared_keys": [
+        "input.harness",
+        "input.base.registry_epoch_1.A.body",
+        "input.base.root_A_entry.ordered_host_issued_inputs",
+        "input.transitive_variant.independent_fixture",
+        "input.base.root_A_entry.pin_operation",
+        "input.base.root_A_entry.caller",
+        "input.transitive_variant.registry_epoch_1.A.body",
+        "input.transitive_variant.registry_epoch_1.B.body",
+        "expected.stage",
+        "input.base.interleaving",
+        "input.transitive_variant.interleaving",
+        "input.transitive_variant.root_A_entry.ordered_host_issued_inputs",
+        "input.transitive_variant.root_A_entry.borrow_pass_through"
       ],
       "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
       "prepromotion_case_sha256": "5faeb05d62c71e410a16b337e83a9dd68465e97d240cc8e82a510bb3fc84b17f"
     },
     {
       "id": "LSLOT-03",
-      "promotable": false,
+      "promotable": true,
       "counts": {
-        "observed": 19,
-        "declared": 1,
-        "unobserved": 4,
+        "observed": 15,
+        "declared": 3,
+        "unobserved": 0,
         "mismatch": 0
       },
       "entries": [
@@ -1089,23 +1940,8 @@
           "canonical": "publish",
           "observed": "publish",
           "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "variant",
-          "key": "same-exact-interface.guest_requests",
-          "canonical": 0,
-          "observed": 0,
-          "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "variant",
-          "key": "same-exact-interface.protected_operations",
-          "canonical": 0,
-          "observed": 0,
-          "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "variant",
@@ -1113,87 +1949,60 @@
           "canonical": "reject",
           "observed": "reject",
           "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "variant",
-          "key": "reversed-input.guest_requests",
-          "canonical": 0,
-          "observed": 0,
-          "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "variant",
-          "key": "reversed-input.protected_operations",
-          "canonical": 0,
-          "observed": 0,
-          "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "variant",
-          "key": "same-layout-different-resource-schema",
-          "canonical": "reject",
-          "observed": null,
-          "status": "unobserved",
-          "note": "the canonical attempt did not run: Account@2 cannot be converted to the canonical Account@1 output by checked source; input AND output differ"
-        },
-        {
-          "scope": "variant",
-          "key": "effect-ceiling-widened",
-          "canonical": "reject",
-          "observed": null,
-          "status": "unobserved",
-          "note": "the canonical attempt did not run: fs.write/unknown.effect cannot be registered in the pinned live-slot CLI profile; source rejected before publication"
-        },
-        {
-          "scope": "variant",
-          "key": "unknown-host-contract",
-          "canonical": "reject",
-          "observed": null,
-          "status": "unobserved",
-          "note": "the canonical attempt did not run: fs.write/unknown.effect cannot be registered in the pinned live-slot CLI profile; source rejected before publication"
-        },
-        {
-          "scope": "variant",
-          "key": "generic-caller-underdeclares-dispatch",
-          "canonical": "reject",
-          "observed": null,
-          "status": "unobserved",
-          "note": "the canonical attempt did not run: compiled caller reflects live.dispatch, but source has no caller-claimed-effect override and adds a LiveRef input"
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "input",
-          "key": "slot_contract",
-          "canonical": {
-            "input": [
-              "Account@1",
-              "I64"
-            ],
-            "output": [
-              "Account@1",
-              "I64"
-            ],
-            "effect_ceiling": [
-              "test.emit"
-            ]
-          },
-          "observed": {
-            "input": [
-              "Account@1",
-              "I64"
-            ],
-            "output": [
-              "Account@1",
-              "I64"
-            ],
-            "effect_ceiling": [
-              "test.emit"
-            ]
-          },
+          "key": "harness",
+          "canonical": "independent-exact-ordered-candidate-admission",
+          "observed": null,
+          "status": "declared",
+          "note": "the gate runs the exact-admission lane against the selected CLI",
+          "evidence": null
+        },
+        {
+          "scope": "input.slot_contract",
+          "key": "input",
+          "canonical": [
+            "Account@1",
+            "I64"
+          ],
+          "observed": [
+            "Account@1",
+            "I64"
+          ],
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.slot_contract",
+          "key": "output",
+          "canonical": [
+            "Account@1",
+            "I64"
+          ],
+          "observed": [
+            "Account@1",
+            "I64"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.slot_contract",
+          "key": "effect_ceiling",
+          "canonical": [
+            "test.emit"
+          ],
+          "observed": [
+            "test.emit"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "input",
@@ -1201,7 +2010,8 @@
           "canonical": 4,
           "observed": 4,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "input",
@@ -1209,37 +2019,42 @@
           "canonical": "each variant starts with same-exact-interface fields and overrides its named fields; run separately at epoch 4",
           "observed": null,
           "status": "declared",
-          "note": "each variant re-runs from an exact epoch-4 registry with only its named field changed"
+          "note": "each variant re-runs from an exact epoch-4 registry with only its named field changed",
+          "evidence": null
         },
         {
           "scope": "input",
           "key": "variants",
           "canonical": [
             "same-exact-interface",
-            "reversed-input",
-            "same-layout-different-resource-schema",
-            "effect-ceiling-widened",
-            "unknown-host-contract",
-            "generic-caller-underdeclares-dispatch"
+            "reversed-input"
           ],
           "observed": [
             "same-exact-interface",
-            "reversed-input",
-            "same-layout-different-resource-schema",
-            "effect-ceiling-widened",
-            "unknown-host-contract",
-            "generic-caller-underdeclares-dispatch"
+            "reversed-input"
           ],
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
           "key": "stage",
           "canonical": "slot-candidate-admission",
-          "observed": "slot-candidate-admission",
-          "status": "observed",
-          "note": "runtime report stages of this profile projected onto the canonical case phase"
+          "observed": null,
+          "status": "declared",
+          "note": "the runtime reports its own phase names; this mapping is the declared case phase",
+          "evidence": {
+            "raw_stages": [
+              "command",
+              "slot"
+            ],
+            "mapping": {
+              "slot": "slot-candidate-admission",
+              "command": "slot-candidate-admission",
+              "operator-control": "slot-candidate-admission"
+            }
+          }
         },
         {
           "scope": "expected",
@@ -1247,7 +2062,8 @@
           "canonical": "only-exact-compatible-candidate-publishes",
           "observed": "only-exact-compatible-candidate-publishes",
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1255,7 +2071,8 @@
           "canonical": 5,
           "observed": 5,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1263,7 +2080,8 @@
           "canonical": true,
           "observed": true,
           "status": "observed",
-          "note": "each refusal was followed by an independent exact publication at expected epoch 4"
+          "note": "each refusal was followed by an independent exact publication at expected epoch 4",
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1271,7 +2089,8 @@
           "canonical": 0,
           "observed": 0,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1279,21 +2098,8 @@
           "canonical": 0,
           "observed": 0,
           "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "expected",
-          "key": "generic_dispatch_effect",
-          "canonical": [
-            "test.emit",
-            "live.dispatch"
-          ],
-          "observed": [
-            "test.emit",
-            "live.dispatch"
-          ],
-          "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1301,7 +2107,8 @@
           "canonical": true,
           "observed": true,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1309,7 +2116,8 @@
           "canonical": 0,
           "observed": 0,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1317,119 +2125,263 @@
           "canonical": 0,
           "observed": 0,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         }
       ],
-      "unobserved": [
-        "variant.same-layout-different-resource-schema",
-        "variant.effect-ceiling-widened",
-        "variant.unknown-host-contract",
-        "variant.generic-caller-underdeclares-dispatch"
+      "declared_keys": [
+        "input.harness",
+        "input.variant_protocol",
+        "expected.stage"
       ],
       "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
-      "prepromotion_case_sha256": "5746d446135c6153d707b7cba2b1bd18d47b83740e6cb0bdcc872fdacfaa401c"
+      "prepromotion_case_sha256": "1705ab9ed55f120b8e95f5b6c0dcb44b8c7bff96150dd019f8b526a02551c9cf"
     },
     {
       "id": "LSLOT-04",
       "promotable": false,
       "counts": {
-        "observed": 15,
-        "declared": 0,
+        "observed": 21,
+        "declared": 2,
         "unobserved": 1,
         "mismatch": 0
       },
       "entries": [
         {
           "scope": "input",
-          "key": "initial",
-          "canonical": {
-            "global_epoch": 18,
-            "slot_A": {
-              "incarnation": 7,
-              "generation": 3,
-              "target": "A-v1"
-            },
-            "slot_B": {
-              "incarnation": 2,
-              "generation": 1,
-              "target": "B-v1"
-            }
-          },
-          "observed": {
-            "global_epoch": 18,
-            "slot_A": {
-              "incarnation": 7,
-              "generation": 3,
-              "target": "A-v1"
-            },
-            "slot_B": {
-              "incarnation": 2,
-              "generation": 1,
-              "target": "B-v1"
-            }
-          },
+          "key": "harness",
+          "canonical": "global-epoch-slot-incarnation-CAS",
+          "observed": null,
+          "status": "declared",
+          "note": "the gate runs the CAS/rollback lane against the selected CLI",
+          "evidence": null
+        },
+        {
+          "scope": "input.initial",
+          "key": "global_epoch",
+          "canonical": 18,
+          "observed": 18,
           "status": "observed",
-          "note": "the lane builds an exact epoch-18 registry by distinct incarnation/generation steps"
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.initial.slot_A",
+          "key": "incarnation",
+          "canonical": 7,
+          "observed": 7,
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.initial.slot_A",
+          "key": "generation",
+          "canonical": 3,
+          "observed": 3,
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.initial.slot_A",
+          "key": "target",
+          "canonical": "A-v1",
+          "observed": "A-v1",
+          "status": "observed",
+          "note": "both baseline selections dispatched generation 3 of a freshly installed `1 +` target",
+          "evidence": null
+        },
+        {
+          "scope": "input.initial.slot_B",
+          "key": "incarnation",
+          "canonical": 2,
+          "observed": 2,
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.initial.slot_B",
+          "key": "generation",
+          "canonical": 1,
+          "observed": 1,
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input.initial.slot_B",
+          "key": "target",
+          "canonical": "B-v1",
+          "observed": "B-v1",
+          "status": "observed",
+          "note": "the baseline B selection dispatched a freshly installed `1 +` target",
+          "evidence": null
+        },
+        {
+          "scope": "input",
+          "key": "variants",
+          "canonical": [
+            "same-slot-writers",
+            "unrelated-slot-race",
+            "delete-recreate-ABA",
+            "authorized-rollback",
+            "rollback-denied"
+          ],
+          "observed": [
+            "same-slot-writers",
+            "unrelated-slot-race",
+            "delete-recreate-ABA",
+            "authorized-rollback",
+            "rollback-denied"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "variant",
           "key": "same-slot-writers",
-          "canonical": [
-            "A-v2 at epoch 19",
-            "stale-reject"
-          ],
-          "observed": [
-            "A-v2 at epoch 19",
-            "stale-reject"
-          ],
+          "canonical": {
+            "name": "same-slot-writers",
+            "writers": [
+              "A-v2 expecting epoch 18 A:7/3",
+              "A-v3 expecting epoch 18 A:7/3"
+            ],
+            "first_commit": "A-v2 at epoch 19",
+            "second_result": "stale-reject"
+          },
+          "observed": {
+            "name": "same-slot-writers",
+            "writers": [
+              "A-v2 expecting epoch 18 A:7/3",
+              "A-v3 expecting epoch 18 A:7/3"
+            ],
+            "first_commit": "A-v2 at epoch 19",
+            "second_result": "stale-reject"
+          },
           "status": "observed",
-          "note": null
+          "note": "every recorded runtime predicate for this variant holds",
+          "evidence": null
         },
         {
           "scope": "variant",
           "key": "unrelated-slot-race",
-          "canonical": [
-            "B-v2 at epoch 19",
-            "stale-reject"
-          ],
-          "observed": [
-            "B-v2 at epoch 19",
-            "stale-reject"
-          ],
+          "canonical": {
+            "name": "unrelated-slot-race",
+            "writers": [
+              "B-v2 expecting epoch 18 B:2/1",
+              "A-v2 expecting epoch 18 A:7/3"
+            ],
+            "first_commit": "B-v2 at epoch 19",
+            "second_result": "stale-reject"
+          },
+          "observed": {
+            "name": "unrelated-slot-race",
+            "writers": [
+              "B-v2 expecting epoch 18 B:2/1",
+              "A-v2 expecting epoch 18 A:7/3"
+            ],
+            "first_commit": "B-v2 at epoch 19",
+            "second_result": "stale-reject"
+          },
           "status": "observed",
-          "note": null
+          "note": "every recorded runtime predicate for this variant holds",
+          "evidence": null
         },
         {
           "scope": "variant",
           "key": "delete-recreate-ABA",
-          "canonical": "stale-reject",
-          "observed": "stale-reject",
+          "canonical": {
+            "name": "delete-recreate-ABA",
+            "steps": [
+              "delete A:7/3 epoch 19",
+              "recreate same visible ID A with new incarnation 8/1 and same target A-v1 epoch 20",
+              "old A:7/3 epoch-18 writer submits"
+            ],
+            "last_result": "stale-reject"
+          },
+          "observed": {
+            "name": "delete-recreate-ABA",
+            "steps": [
+              "delete A:7/3 epoch 19",
+              "recreate same visible ID A with new incarnation 8/1 and same target A-v1 epoch 20",
+              "old A:7/3 epoch-18 writer submits"
+            ],
+            "last_result": "stale-reject"
+          },
           "status": "observed",
-          "note": "delete A:7/3 at epoch 19, recreate A as 8/1 at epoch 20, then both old writers reject"
+          "note": "every recorded runtime predicate for this variant holds",
+          "evidence": null
         },
         {
           "scope": "variant",
           "key": "authorized-rollback",
-          "canonical": "A-v1 new generation 5 and epoch 20",
-          "observed": "A-v1 new generation 5 and epoch 20",
+          "canonical": {
+            "name": "authorized-rollback",
+            "steps": [
+              "A-v2 committed at epoch 19",
+              "independently readmit A-v1 and exact applicable evidence",
+              "authorize new CAS expected epoch 19 A:7/4"
+            ],
+            "result": "A-v1 new generation 5 and epoch 20"
+          },
+          "observed": {
+            "name": "authorized-rollback",
+            "steps": [
+              "A-v2 committed at epoch 19",
+              "independently readmit A-v1 and exact applicable evidence",
+              "authorize new CAS expected epoch 19 A:7/4"
+            ],
+            "result": "A-v1 new generation 5 and epoch 20"
+          },
           "status": "observed",
-          "note": null
+          "note": "every recorded runtime predicate for this variant holds",
+          "evidence": null
         },
         {
           "scope": "variant",
           "key": "rollback-denied",
-          "canonical": "reject-before-publication",
-          "observed": "reject-before-publication",
+          "canonical": {
+            "name": "rollback-denied",
+            "steps": [
+              "A-v2 committed",
+              "A-v1 lacks current authorization or applicable evidence"
+            ],
+            "result": "reject-before-publication"
+          },
+          "observed": {
+            "name": "rollback-denied",
+            "steps": [
+              "A-v2 committed",
+              "A-v1 lacks current authorization or applicable evidence"
+            ],
+            "result": "reject-before-publication"
+          },
           "status": "observed",
-          "note": null
+          "note": "every recorded runtime predicate for this variant holds",
+          "evidence": null
         },
         {
           "scope": "expected",
           "key": "stage",
           "canonical": "slot-publication",
-          "observed": "slot-publication",
-          "status": "observed",
-          "note": "runtime report stages of this profile projected onto the canonical case phase"
+          "observed": null,
+          "status": "declared",
+          "note": "the runtime reports its own phase names; this mapping is the declared case phase",
+          "evidence": {
+            "raw_stages": [
+              "command",
+              "operator-control",
+              "slot"
+            ],
+            "mapping": {
+              "slot": "slot-publication",
+              "command": "slot-publication",
+              "operator-control": "slot-publication"
+            }
+          }
         },
         {
           "scope": "expected",
@@ -1437,7 +2389,8 @@
           "canonical": "global-CAS-no-ABA",
           "observed": "global-CAS-no-ABA",
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1445,7 +2398,8 @@
           "canonical": true,
           "observed": true,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1453,7 +2407,8 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1461,7 +2416,8 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1469,7 +2425,8 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": "the rollback publishes a strictly newer epoch and generation; no prior root or effect is replayed"
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1477,7 +2434,7 @@
           "canonical": true,
           "observed": null,
           "status": "unobserved",
-          "note": "the selected runtime re-admits the candidate and refuses without the rollback grant, but no publication or rollback request carries supporting evidence: the `evidence` conjunct has no representation to observe (publish and rollback take no evidence operand, and a proof-required slot refuses every publication)."
+          "note": "the selected runtime re-admits the candidate and refuses without the rollback grant, but no publication or rollback request carries evidence: the `evidence` conjunct needs evidence-carrying publication, the same capability LSLOT-05 waits for (template identity)."
         },
         {
           "scope": "expected",
@@ -1485,7 +2442,8 @@
           "canonical": 0,
           "observed": 0,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1493,7 +2451,8 @@
           "canonical": 0,
           "observed": 0,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1501,8 +2460,13 @@
           "canonical": 0,
           "observed": 0,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         }
+      ],
+      "declared_keys": [
+        "input.harness",
+        "expected.stage"
       ],
       "unobserved": [
         "expected.successful_rollback_requires_fresh_admission_authorization_and_evidence"
@@ -1520,11 +2484,11 @@
     },
     {
       "id": "LSLOT-06",
-      "promotable": false,
+      "promotable": true,
       "counts": {
-        "observed": 12,
-        "declared": 1,
-        "unobserved": 8,
+        "observed": 11,
+        "declared": 3,
+        "unobserved": 0,
         "mismatch": 0
       },
       "entries": [
@@ -1534,23 +2498,8 @@
           "canonical": "reject",
           "observed": "reject",
           "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "variant",
-          "key": "direct-quotation-capture.guest_requests",
-          "canonical": 0,
-          "observed": 0,
-          "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "variant",
-          "key": "aggregate-capture",
-          "canonical": "reject",
-          "observed": null,
-          "status": "unobserved",
-          "note": "the canonical attempt did not run: nested Pair<LiveRef> root type is refused before quotation-capture can be checked"
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "variant",
@@ -1558,47 +2507,8 @@
           "canonical": "reject",
           "observed": "reject",
           "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "variant",
-          "key": "aggregate-storage.guest_requests",
-          "canonical": 0,
-          "observed": 0,
-          "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "variant",
-          "key": "export-or-return",
-          "canonical": "reject",
-          "observed": null,
-          "status": "unobserved",
-          "note": "the canonical attempt did not run: target output of LiveRef is refused at static type boundary; no source form returns the original root borrow"
-        },
-        {
-          "scope": "variant",
-          "key": "serialize",
-          "canonical": "reject",
-          "observed": null,
-          "status": "unobserved",
-          "note": "the canonical attempt did not run: no selected CLI source word encodes LiveRef as portable data; an unrelated dup would duplicate I64 instead"
-        },
-        {
-          "scope": "variant",
-          "key": "forge",
-          "canonical": "reject",
-          "observed": null,
-          "status": "unobserved",
-          "note": "the canonical attempt did not run: source has no input ref and forged slot binding is refused, but no decode-bytes-to-ref primitive exists"
-        },
-        {
-          "scope": "variant",
-          "key": "retain",
-          "canonical": "reject",
-          "observed": null,
-          "status": "unobserved",
-          "note": "the canonical attempt did not run: prior-root owner claim refused; CLI never exposes a ref credential to actually retain/reuse"
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "variant",
@@ -1606,7 +2516,17 @@
           "canonical": "accept",
           "observed": "accept",
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input",
+          "key": "harness",
+          "canonical": "host-issued-input-ref-noncapture-and-lifetime",
+          "observed": null,
+          "status": "declared",
+          "note": "the gate runs the static/lifetime lane against the selected CLI",
+          "evidence": null
         },
         {
           "scope": "input",
@@ -1614,41 +2534,61 @@
           "canonical": "LiveRef<I64,I64,{}> for slot increment in root R",
           "observed": null,
           "status": "declared",
-          "note": "the lane installs callers that forward a `LiveRef<I64,I64,pure>` (empty effect set) input for slot `increment` in the root, and the reflected site carries no slot name"
+          "note": "prose reference type; the installed callers and their reflected sites record it",
+          "evidence": {
+            "install_inputs": [
+              "LiveRef<I64,I64,pure>"
+            ],
+            "site": {
+              "effects": [
+                "live.dispatch"
+              ],
+              "input": [
+                "I64"
+              ],
+              "instruction": "slot.invoke",
+              "output": [
+                "I64"
+              ],
+              "siteId": 0
+            }
+          }
         },
         {
           "scope": "input",
           "key": "variants",
           "canonical": [
             "direct-quotation-capture",
-            "aggregate-capture",
             "aggregate-storage",
-            "export-or-return",
-            "serialize",
-            "forge",
-            "retain",
             "valid-borrow"
           ],
           "observed": [
             "direct-quotation-capture",
-            "aggregate-capture",
             "aggregate-storage",
-            "export-or-return",
-            "serialize",
-            "forge",
-            "retain",
             "valid-borrow"
           ],
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
           "key": "stage",
           "canonical": "static-and-invocation-boundary",
-          "observed": "static-and-invocation-boundary",
-          "status": "observed",
-          "note": "runtime report stages of this profile projected onto the canonical case phase"
+          "observed": null,
+          "status": "declared",
+          "note": "the runtime reports its own phase names; this mapping is the declared case phase",
+          "evidence": {
+            "raw_stages": [
+              "command",
+              "slot"
+            ],
+            "mapping": {
+              "slot": "static-and-invocation-boundary",
+              "command": "static-and-invocation-boundary",
+              "operator-control": "static-and-invocation-boundary"
+            }
+          }
         },
         {
           "scope": "expected",
@@ -1656,15 +2596,8 @@
           "canonical": "only-ephemeral-input-borrow-permitted",
           "observed": "only-ephemeral-input-borrow-permitted",
           "status": "observed",
-          "note": "summarizes the decisions that were reached; the variant entries above name every attempt this runtime could not construct"
-        },
-        {
-          "scope": "expected",
-          "key": "ref_data",
-          "canonical": false,
-          "observed": null,
-          "status": "unobserved",
-          "note": "the canonical serialize variant has no selected source word: no expression can encode a `LiveRef` as portable data, so the refusal of ref-as-data cannot be observed here."
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1672,15 +2605,8 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "expected",
-          "key": "ref_authority",
-          "canonical": false,
-          "observed": null,
-          "status": "unobserved",
-          "note": "the canonical forge attempt decodes slot bytes as a `LiveRef`; no such primitive exists in the selected profile, so only an unrelated forged binding can be refused."
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1688,7 +2614,8 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1696,15 +2623,26 @@
           "canonical": 0,
           "observed": 0,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "expected",
+          "key": "accepted_variant_guest_requests",
+          "canonical": 1,
+          "observed": 1,
+          "status": "observed",
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
           "key": "guest_requests",
           "canonical": 0,
-          "observed": null,
-          "status": "unobserved",
-          "note": "the accepted `valid-borrow` variant performs one real guest request, so the case-level `guest_requests: 0` cannot be reconciled with the case it also accepts."
+          "observed": 0,
+          "status": "observed",
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1712,39 +2650,57 @@
           "canonical": 0,
           "observed": 0,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         }
       ],
-      "unobserved": [
-        "variant.aggregate-capture",
-        "variant.export-or-return",
-        "variant.serialize",
-        "variant.forge",
-        "variant.retain",
-        "expected.ref_data",
-        "expected.ref_authority",
-        "expected.guest_requests"
+      "declared_keys": [
+        "input.harness",
+        "input.issued_ref",
+        "expected.stage"
       ],
       "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
-      "prepromotion_case_sha256": "dae3b2f488af9e09a09aa2a76eb69da28edd29a2bab36dd7e0ba5186715f181b"
+      "prepromotion_case_sha256": "9bcdf9ae174ba66f94567e3a857ca6611b462c0610adcfbbeaf99ca58cdd38d3"
     },
     {
       "id": "LSLOT-07",
       "promotable": false,
       "counts": {
-        "observed": 11,
-        "declared": 1,
-        "unobserved": 2,
+        "observed": 12,
+        "declared": 3,
+        "unobserved": 1,
         "mismatch": 0
       },
       "entries": [
+        {
+          "scope": "input",
+          "key": "harness",
+          "canonical": "current-host-policy-at-publication-dispatch-and-effect",
+          "observed": null,
+          "status": "declared",
+          "note": "the gate runs the current-policy lane against the selected CLI",
+          "evidence": null
+        },
         {
           "scope": "input",
           "key": "slot",
           "canonical": "emit",
           "observed": "emit",
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "input",
+          "key": "old_target",
+          "canonical": "emit-v1 uses test.emit",
+          "observed": null,
+          "status": "declared",
+          "note": "prose target; the published v1 source and its one protected operation are recorded here",
+          "evidence": {
+            "source": "\"touched\" test.emit drop 1 +",
+            "owner": "emit-v1"
+          }
         },
         {
           "scope": "input",
@@ -1752,82 +2708,127 @@
           "canonical": 1,
           "observed": 1,
           "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "variant",
-          "key": "dispatch-without-grant",
-          "canonical": "deny",
-          "observed": "deny",
-          "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "variant",
-          "key": "revoked-after-root-pin",
-          "canonical": "deny",
-          "observed": "deny",
-          "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "variant",
-          "key": "old-version-effect-revoked-after-pin",
-          "canonical": "deny-actual-effect",
-          "observed": "deny-actual-effect",
-          "status": "observed",
-          "note": null
-        },
-        {
-          "scope": "variant",
-          "key": "publication-without-grant",
-          "canonical": "deny",
-          "observed": null,
-          "status": "unobserved",
-          "note": "the denial is observed, but the canonical premise also requires an admitted proof to be present with the slot id; this runtime represents no evidence operand, so the `slot_id_and_proof_present` attempt cannot be constructed."
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "input",
           "key": "variants",
           "canonical": [
-            {
-              "name": "publication-without-grant",
-              "candidate": "emit-v2",
-              "slot_id_and_proof_present": true,
-              "host_publication_grant": false,
-              "result": "deny"
-            },
-            {
-              "name": "dispatch-without-grant",
-              "live_ref_and_effect_declaration_present": true,
-              "host_dispatch_grant": false,
-              "result": "deny"
-            },
-            {
-              "name": "revoked-after-root-pin",
-              "host_dispatch_grant_at_pin": true,
-              "revoke_dispatch_before_nested_call": true,
-              "result": "deny"
-            },
-            {
-              "name": "old-version-effect-revoked-after-pin",
-              "host_dispatch_grant": true,
-              "effect_grant_at_pin": true,
-              "revoke_test_emit_before_effect_request": true,
-              "result": "deny-actual-effect"
-            }
+            "publication-without-grant",
+            "dispatch-without-grant",
+            "revoked-after-root-pin",
+            "old-version-effect-revoked-after-pin"
           ],
-          "observed": null,
-          "status": "declared",
-          "note": "each variant re-runs from the pinned epoch-1 `emit` slot and changes only its named grants"
+          "observed": [
+            "publication-without-grant",
+            "dispatch-without-grant",
+            "revoked-after-root-pin",
+            "old-version-effect-revoked-after-pin"
+          ],
+          "status": "observed",
+          "note": null,
+          "evidence": null
+        },
+        {
+          "scope": "variant",
+          "key": "publication-without-grant",
+          "canonical": {
+            "name": "publication-without-grant",
+            "candidate": "emit-v2",
+            "slot_id_and_proof_present": true,
+            "host_publication_grant": false,
+            "result": "deny"
+          },
+          "observed": {
+            "name": "publication-without-grant",
+            "candidate": "emit-v2",
+            "slot_id_and_proof_present": true,
+            "host_publication_grant": false,
+            "result": "deny"
+          },
+          "status": "observed",
+          "note": "every recorded runtime predicate for this variant holds",
+          "evidence": null
+        },
+        {
+          "scope": "variant",
+          "key": "dispatch-without-grant",
+          "canonical": {
+            "name": "dispatch-without-grant",
+            "live_ref_and_effect_declaration_present": true,
+            "host_dispatch_grant": false,
+            "result": "deny"
+          },
+          "observed": {
+            "name": "dispatch-without-grant",
+            "live_ref_and_effect_declaration_present": true,
+            "host_dispatch_grant": false,
+            "result": "deny"
+          },
+          "status": "observed",
+          "note": "every recorded runtime predicate for this variant holds",
+          "evidence": null
+        },
+        {
+          "scope": "variant",
+          "key": "revoked-after-root-pin",
+          "canonical": {
+            "name": "revoked-after-root-pin",
+            "host_dispatch_grant_at_pin": true,
+            "revoke_dispatch_before_nested_call": true,
+            "result": "deny"
+          },
+          "observed": {
+            "name": "revoked-after-root-pin",
+            "host_dispatch_grant_at_pin": true,
+            "revoke_dispatch_before_nested_call": true,
+            "result": "deny"
+          },
+          "status": "observed",
+          "note": "every recorded runtime predicate for this variant holds",
+          "evidence": null
+        },
+        {
+          "scope": "variant",
+          "key": "old-version-effect-revoked-after-pin",
+          "canonical": {
+            "name": "old-version-effect-revoked-after-pin",
+            "host_dispatch_grant": true,
+            "effect_grant_at_pin": true,
+            "revoke_test_emit_before_effect_request": true,
+            "result": "deny-actual-effect"
+          },
+          "observed": {
+            "name": "old-version-effect-revoked-after-pin",
+            "host_dispatch_grant": true,
+            "effect_grant_at_pin": true,
+            "revoke_test_emit_before_effect_request": true,
+            "result": "deny-actual-effect"
+          },
+          "status": "observed",
+          "note": "every recorded runtime predicate for this variant holds",
+          "evidence": null
         },
         {
           "scope": "expected",
           "key": "stage",
           "canonical": "live-slot-policy",
-          "observed": "live-slot-policy",
-          "status": "observed",
-          "note": "runtime report stages of this profile projected onto the canonical case phase"
+          "observed": null,
+          "status": "declared",
+          "note": "the runtime reports its own phase names; this mapping is the declared case phase",
+          "evidence": {
+            "raw_stages": [
+              "command",
+              "operator-control",
+              "slot"
+            ],
+            "mapping": {
+              "slot": "live-slot-policy",
+              "command": "live-slot-policy",
+              "operator-control": "live-slot-policy"
+            }
+          }
         },
         {
           "scope": "expected",
@@ -1835,7 +2836,8 @@
           "canonical": "current-grant-is-independent",
           "observed": "current-grant-is-independent",
           "status": "observed",
-          "note": "the publication half is excluded: its canonical id-and-proof-present premise is unobserved"
+          "note": "the publication half is excluded: its canonical id-and-proof-present premise needs evidence-carrying publication (template identity)",
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1843,7 +2845,7 @@
           "canonical": false,
           "observed": null,
           "status": "unobserved",
-          "note": "dispatch with an id, a host-issued ref and a declared effect is denied, but the `or evidence` half has no runtime representation, so the full field is not observed."
+          "note": "dispatch with an id, a host-issued ref and a declared effect is denied, but the `or evidence` half needs an admitted proof present with the id, which requires evidence-carrying publication (template identity)."
         },
         {
           "scope": "expected",
@@ -1851,7 +2853,8 @@
           "canonical": 0,
           "observed": 0,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1859,7 +2862,8 @@
           "canonical": true,
           "observed": true,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1867,7 +2871,8 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1875,11 +2880,16 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": "the root that completed one protected operation before the denied publication still selects the same target afterwards; no reply records a rollback"
+          "note": null,
+          "evidence": null
         }
       ],
+      "declared_keys": [
+        "input.harness",
+        "input.old_target",
+        "expected.stage"
+      ],
       "unobserved": [
-        "variant.publication-without-grant",
         "expected.publication_or_dispatch_authorized_by_id_ref_effect_or_evidence"
       ],
       "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
@@ -1897,8 +2907,8 @@
       "id": "LSLOT-09",
       "promotable": true,
       "counts": {
-        "observed": 11,
-        "declared": 2,
+        "observed": 8,
+        "declared": 5,
         "unobserved": 0,
         "mismatch": 0
       },
@@ -1907,9 +2917,10 @@
           "scope": "input",
           "key": "harness",
           "canonical": "legacy-profile-exclusion",
-          "observed": "legacy-profile-exclusion",
-          "status": "observed",
-          "note": null
+          "observed": null,
+          "status": "declared",
+          "note": "the gate runs the two legacy-profile lanes against the selected CLI",
+          "evidence": null
         },
         {
           "scope": "input",
@@ -1917,7 +2928,23 @@
           "canonical": "checked caller with slot.invoke and input LiveRef<I64,I64,{}>",
           "observed": null,
           "status": "declared",
-          "note": "the lane installs the same `slot.invoke` bytes with a borrowed LiveRef input in the opt-in profile, then submits those bytes to each legacy profile"
+          "note": "the opt-in profile installs the same `slot.invoke` bytes with a borrowed LiveRef input; the legacy profiles then receive those bytes as caller sources",
+          "evidence": {
+            "caller_source_sha256": "dc092831152f157ba46eaa686eb5462fa9efd436a4901c47c1264d11adaca870",
+            "site": {
+              "effects": [
+                "live.dispatch"
+              ],
+              "input": [
+                "I64"
+              ],
+              "instruction": "slot.invoke",
+              "output": [
+                "I64"
+              ],
+              "siteId": 0
+            }
+          }
         },
         {
           "scope": "input",
@@ -1927,13 +2954,22 @@
             "ordinary Core session",
             "guarded Live-Wasm-Draft"
           ],
-          "observed": [
-            "Core-Bootstrap",
-            "ordinary Core session",
-            "guarded Live-Wasm-Draft"
-          ],
-          "status": "observed",
-          "note": null
+          "observed": null,
+          "status": "declared",
+          "note": "the first two profiles are invoked through Core-Bootstrap compile and session; the third through a live repl --engine v8 session, whose report carries no profile field",
+          "evidence": {
+            "raw_profiles": [
+              "Core-Bootstrap",
+              "Core-Bootstrap",
+              "guarded Live-Wasm-Draft"
+            ],
+            "invocation": [
+              "compile",
+              "session",
+              "live repl --engine v8"
+            ],
+            "core_profiles_equal": true
+          }
         },
         {
           "scope": "input",
@@ -1950,31 +2986,131 @@
               "expected": "old-capture-not-slot"
             }
           ],
-          "observed": [
-            {
+          "observed": null,
+          "status": "declared",
+          "note": "prose control descriptors; each control record below is the exact source text the lane submitted and the value it observed",
+          "evidence": {
+            "core": {
               "profile": "Core-Bootstrap",
-              "source": "[ n ]",
-              "expected": "ordinary-immutable-capture"
+              "saved": {
+                "handle": 6,
+                "type": "Program",
+                "interface": {
+                  "stack_in": "[I64]",
+                  "stack_out": "[I64]",
+                  "effects": []
+                },
+                "recipe": [
+                  {
+                    "invoke": "definition:1"
+                  }
+                ],
+                "witnesses": [
+                  {
+                    "node": 0,
+                    "stack_in": "[I64]",
+                    "stack_out": "[I64]",
+                    "effects": []
+                  }
+                ]
+              },
+              "stack": [
+                {
+                  "handle": null,
+                  "type": "I64",
+                  "value": "21"
+                }
+              ],
+              "guest_requests": 0,
+              "protected_operations": 0
             },
-            {
-              "profile": "guarded Live-Wasm-Draft",
-              "source": "reload n then invoke saved [ n ]",
-              "expected": "old-capture-not-slot"
+            "live": {
+              "initial_generation": 1,
+              "saved_generation": 2,
+              "reload": {
+                "generation": 2,
+                "installed_generation": 3,
+                "stack": [
+                  {
+                    "handle": 7,
+                    "interface": {
+                      "effects": [],
+                      "stack_in": "[I64]",
+                      "stack_out": "[I64]"
+                    },
+                    "recipe": [
+                      {
+                        "invoke": "definition:1"
+                      }
+                    ],
+                    "type": "Program",
+                    "witnesses": [
+                      {
+                        "effects": [],
+                        "node": 0,
+                        "stack_in": "[I64]",
+                        "stack_out": "[I64]"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "saved_program": {
+                "handle": 7,
+                "interface": {
+                  "effects": [],
+                  "stack_in": "[I64]",
+                  "stack_out": "[I64]"
+                },
+                "recipe": [
+                  {
+                    "invoke": "definition:1"
+                  }
+                ],
+                "type": "Program",
+                "witnesses": [
+                  {
+                    "effects": [],
+                    "node": 0,
+                    "stack_in": "[I64]",
+                    "stack_out": "[I64]"
+                  }
+                ]
+              },
+              "stack": [
+                {
+                  "handle": null,
+                  "type": "I64",
+                  "value": "21"
+                }
+              ],
+              "source_generations": [
+                1,
+                2,
+                2,
+                4
+              ]
             }
-          ],
-          "status": "observed",
-          "note": "control outcomes are the two `old_capture_semantics_changed` observations below"
+          }
         },
         {
           "scope": "expected",
           "key": "stage",
           "canonical": "profile-admission",
-          "observed": [
-            "resolve",
-            "admission"
-          ],
+          "observed": null,
           "status": "declared",
-          "note": "each selected report names its own phase (`resolve` for Core, `admission` for the guarded REPL, `slot` for the opt-in caller install); the canonical single stage label `profile-admission` is a design name, not a runtime field"
+          "note": "the runtime reports its own phase names; this mapping is the declared case phase",
+          "evidence": {
+            "raw_stages": [
+              "admission",
+              "resolve"
+            ],
+            "mapping": {
+              "resolve": "profile-admission",
+              "admission": "profile-admission",
+              "slot": "profile-admission"
+            }
+          }
         },
         {
           "scope": "expected",
@@ -1982,7 +3118,8 @@
           "canonical": "explicit-unsupported-in-all-legacy-profiles",
           "observed": "explicit-unsupported-in-all-legacy-profiles",
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1990,7 +3127,8 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -1998,7 +3136,8 @@
           "canonical": 0,
           "observed": 0,
           "status": "observed",
-          "note": "every refusal reports zero guest requests, so no candidate body ran"
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -2006,7 +3145,14 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": "the live-wasm case packet is byte-identical to HEAD and no LIVE state changed"
+          "note": "the canonical LIVE-01..10 contract fields are compared with the pinned baseline commit; state and evidence transitions by other changes are recorded separately",
+          "evidence": {
+            "commit": "8075d3c0",
+            "baseline_sha256": "47b25497314216a05efda7cdf4352adb1f422a280af80dcea36b6af4e70abeca",
+            "current_sha256": "47b25497314216a05efda7cdf4352adb1f422a280af80dcea36b6af4e70abeca",
+            "design_changed": false,
+            "state_changes": []
+          }
         },
         {
           "scope": "expected",
@@ -2014,7 +3160,8 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -2022,7 +3169,8 @@
           "canonical": false,
           "observed": false,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -2030,7 +3178,8 @@
           "canonical": 0,
           "observed": 0,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         },
         {
           "scope": "expected",
@@ -2038,8 +3187,16 @@
           "canonical": 0,
           "observed": 0,
           "status": "observed",
-          "note": null
+          "note": null,
+          "evidence": null
         }
+      ],
+      "declared_keys": [
+        "input.harness",
+        "input.attempt",
+        "input.profiles",
+        "input.controls",
+        "expected.stage"
       ],
       "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
       "prepromotion_case_sha256": "60e9366e629c69cfcd024752c2fe04b2901330052c482b03b49441b629a3d340"
@@ -2049,19 +3206,19 @@
     "promoted": [
       "LSLOT-01",
       "LSLOT-02",
+      "LSLOT-03",
+      "LSLOT-06",
       "LSLOT-09"
     ],
     "refused": [
-      "LSLOT-03",
       "LSLOT-04",
-      "LSLOT-06",
       "LSLOT-07"
     ],
     "not_executed": [
       "LSLOT-05",
       "LSLOT-08"
     ],
-    "rule": "a case is promotable when every machine-expressible input/expected/variant field is observed and equals the canonical value; `declared` entries are prose design text and are never counted as observations; one mismatch fails the gate"
+    "rule": "a case is promotable when every machine-expressible input/expected/variant field is observed and equals the canonical value; one unobserved field refuses the case and one mismatch fails the gate"
   },
   "controls": [
     {
@@ -2128,27 +3285,8 @@
   ],
   "cross_profile": {
     "registryEpochs": [
-      0,
       1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      17,
-      18,
-      19,
-      20
+      2
     ],
     "liveGenerations": [
       1,
@@ -2157,7 +3295,14 @@
       3
     ],
     "liveReportsHaveEpoch": false,
-    "refusedSlotCaller": true
+    "refusedSlotGeneration": 0
+  },
+  "live_cases": {
+    "commit": "8075d3c0",
+    "baseline_sha256": "47b25497314216a05efda7cdf4352adb1f422a280af80dcea36b6af4e70abeca",
+    "current_sha256": "47b25497314216a05efda7cdf4352adb1f422a280af80dcea36b6af4e70abeca",
+    "design_changed": false,
+    "state_changes": []
   },
   "commands": [
     {
@@ -2292,9 +3437,9 @@
       "stdin": null,
       "stdin_sha256": null,
       "stdout": "03-source-build.stdout",
-      "stdout_sha256": "db9aa6115830b8e0ee8f3e5078bf48d693b947410e7a89a3ee91b2796a1cbe8e",
+      "stdout_sha256": "83b19373b020125d19ec20c1c6f6f606a0656bfbda6dc5400a44d731843af155",
       "stderr": "03-source-build.stderr",
-      "stderr_sha256": "a41051563a4cb5fc1b1bcdd9aa0ba28ca80f7736d629d90cc138218756e8e3a9"
+      "stderr_sha256": "c92508a29848820f033cd2ea015c85dde0953c88b07cc967ce34b7c08f610549"
     },
     {
       "label": "lane-01",
@@ -2318,7 +3463,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-2NeAw9"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-6Amzxc",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-01-94B0T3"
       },
       "status": 0,
       "signal": null,
@@ -2352,7 +3498,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-ASq9uX"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-hqGhmh",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-01-late-mkYfCs"
       },
       "status": 0,
       "signal": null,
@@ -2386,7 +3533,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-P9o5Vt"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-2lrF0L",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-01-origin-vMtIgf"
       },
       "status": 0,
       "signal": null,
@@ -2420,7 +3568,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-5D0Ac2"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-LfY7Ud",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-02-KifvJ8"
       },
       "status": 0,
       "signal": null,
@@ -2428,7 +3577,7 @@
       "stdin": null,
       "stdin_sha256": null,
       "stdout": "07-lane-02.stdout",
-      "stdout_sha256": "270cffcc736728db3c85c2071fa5dd0f0d7d414bfdedfe72506f9a95aeb6c222",
+      "stdout_sha256": "728a27ea760f806372a3980d412b6299768e3ee85a8aa9e546b18398c04354ad",
       "stderr": "07-lane-02.stderr",
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -2454,7 +3603,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-03-nqPr7G"
       },
       "status": 0,
       "signal": null,
@@ -2462,7 +3612,7 @@
       "stdin": null,
       "stdin_sha256": null,
       "stdout": "08-lane-03.stdout",
-      "stdout_sha256": "0fbaf4589d3ec317e8e5293e2303654fee74513c465ca84a38b97b75f435ee54",
+      "stdout_sha256": "c708653d9b89349528ebe9a7fdaa00dcd00689908968f2edec5ddb2452b0e79f",
       "stderr": "08-lane-03.stderr",
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -2488,7 +3638,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-iJkUmY",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-06-csNFU6"
       },
       "status": 0,
       "signal": null,
@@ -2496,7 +3647,7 @@
       "stdin": null,
       "stdin_sha256": null,
       "stdout": "09-lane-06.stdout",
-      "stdout_sha256": "027eec160da270acf82b0d2678d5e98c5fcedad524dc2505cb8b28108ed7bb73",
+      "stdout_sha256": "4208dc9ac829b98da85adb88ef27bae33b3c846de3da3730ff1246b2ff4371b3",
       "stderr": "09-lane-06.stderr",
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -2522,7 +3673,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-0407-cuGcVP"
       },
       "status": 0,
       "signal": null,
@@ -2530,7 +3682,7 @@
       "stdin": null,
       "stdin_sha256": null,
       "stdout": "10-lane-0407.stdout",
-      "stdout_sha256": "7e01a71cc699f9a374f726022feaa0e1de19d17bb433b484566b666729ba2e00",
+      "stdout_sha256": "c82b5a9add9690bd9abb0fcd38ffdbd67333515b688e111db9728e95d447a30d",
       "stderr": "10-lane-0407.stderr",
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -2556,7 +3708,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-legacy-gdfBFl"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-legacy-Fiu5SQ",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-09-legacy-jTNzAO"
       },
       "status": 0,
       "signal": null,
@@ -2590,7 +3743,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-repl-Cmh5o7"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-repl-nhCKn4",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-09-repl-LFXYQX"
       },
       "status": 0,
       "signal": null,
@@ -2607,12 +3761,12 @@
     "promotable": [
       "LSLOT-01",
       "LSLOT-02",
+      "LSLOT-03",
+      "LSLOT-06",
       "LSLOT-09"
     ],
     "refused": [
-      "LSLOT-03",
       "LSLOT-04",
-      "LSLOT-06",
       "LSLOT-07"
     ],
     "not_executed": [
@@ -2622,6 +3776,8 @@
     "promoted": [
       "LSLOT-01",
       "LSLOT-02",
+      "LSLOT-03",
+      "LSLOT-06",
       "LSLOT-09"
     ],
     "mismatches": 0
@@ -2630,161 +3786,129 @@
   "limitations": [
     "This receipt executes behavior; it is not a proof. Every promoted case keeps `proof: open`.",
     "LSLOT-05 and LSLOT-08 are not executed here: their positive selected-target and exact replay outcomes wait on runtime template identity (P-ID-03/P-ID-04).",
-    "LSLOT-03, LSLOT-04, LSLOT-06 and LSLOT-07 are refused with the exact unobserved fields recorded under `cases[*].unobserved`; they are not promoted.",
-    "`verification/live-slot-current-source/gate.mjs` and `verification/live-update-corpus` are historical receipts for the pre-promotion states and are not re-run or regenerated."
+    "LSLOT-04 and LSLOT-07 remain refused on evidence-carrying publication, the same capability LSLOT-05 waits for; their other fields are recorded.",
+    "`verification/live-slot-current-source/gate.mjs` and `verification/live-update-corpus` are historical: they replay only at their recorded source states and are not re-run here."
   ],
   "external_evidence_sha256": {
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-2NeAw9/LSLOT01.jsonl": "52ad33ed3f242db0438df87498401006a5ca4eaf50efdbbbe02622d52ab1da0c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-ASq9uX/LSLOT01-late-control.jsonl": "c13c1dbacbfdef6b3e4387ec460a040cc082bfb739e17c87873acd67016467aa",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-ASq9uX/LSLOT01-late-control.requests.jsonl": "815f5f269e3e5a5ea48f5ed31ab40160f21914dfa052dfe1e39c05560165ddaf",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-ASq9uX/LSLOT01-late-control.responses.jsonl": "5de7c3414ea13d1b25878ca0be5d58e7edc2912607773ea9a7b815b0b47c3b55",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-ASq9uX/LSLOT01-late-control.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-ASq9uX/LSLOT01-late-control.summary.json": "e4dcc65e08c97b60a00a8d4ebd95b737f66cd4c5c781db1cd9266a1bd96756e9",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-P9o5Vt/LSLOT01-selected-distinct-source-reload.jsonl": "7c998fcc81e05a9160b1c383bc2ec00e22e7aceb37fea3321cf918faf009f159",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-P9o5Vt/LSLOT01-selected-distinct-source-reload.requests.jsonl": "40848f3eaa8f82d7ab9380f6f27cdef3b4fc4e9be959afb87294c15071c28ff3",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-P9o5Vt/LSLOT01-selected-distinct-source-reload.responses.jsonl": "eaf33bacadd92e5e8be6fb363ecea79bc6782600793ce5736581616465650c85",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-P9o5Vt/LSLOT01-selected-distinct-source-reload.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-P9o5Vt/LSLOT01-selected-origin-control.jsonl": "b06ad6d22366ddf4f33b44297424d5308d6beffa35eec41ff501193668a65e67",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-P9o5Vt/LSLOT01-selected-origin-control.requests.jsonl": "5c112f343e0c79fa346b2563f4926719b4380eade236eb62aebedb1cfa20a2c0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-P9o5Vt/LSLOT01-selected-origin-control.responses.jsonl": "b018bb1908a67cc3044c58455a061ccbc26aaa0f6afd78ddb33406b4adda2d1a",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-P9o5Vt/LSLOT01-selected-origin-control.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-P9o5Vt/LSLOT01-selected-origin-control.summary.json": "1837b51245d11e194d80d902656c21b44c5a1828a05cd0c0c4b40d8bfcb21158",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-P9o5Vt/LSLOT01-selected-origin-missing-core.jsonl": "45a3907ebe0219e224c268b2e1a46613955e558998585df9ce2558e14ba3a917",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-P9o5Vt/LSLOT01-selected-origin-missing-core.requests.jsonl": "900f5fe99b214debab4b5fa967bb6a9b9a06d81265e86c89ab544a838ba24894",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-P9o5Vt/LSLOT01-selected-origin-missing-core.responses.jsonl": "d636817687bebdd93ffddc446dfeea1d2c3c94d66b4f6d335a3d08df598adba0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-P9o5Vt/LSLOT01-selected-origin-missing-core.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-5D0Ac2/LSLOT02-base-parent-child.jsonl": "3f9bbdd134274bb5341d8c8581f606683ff61437ec4ef527f53f518a6e6efbb1",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-5D0Ac2/LSLOT02-base-parent-child.requests.jsonl": "e1042f322a0009367357a99fe2b4cd286fd53c4626725d4e07ef6af232220a32",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-5D0Ac2/LSLOT02-base-parent-child.responses.jsonl": "ef9a93ac3a2b687dfb0bc1f420c806b0b520b756c9c21d7c1eeb3d7c1850ce33",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-5D0Ac2/LSLOT02-base-parent-child.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-5D0Ac2/LSLOT02-later-member-budget-refusal.jsonl": "820cd3069b2f5e8375f8e4834a38b6f04a8e3b07aa78398000cffcbb8252e4c7",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-5D0Ac2/LSLOT02-later-member-budget-refusal.requests.jsonl": "8f9d028388ff3abb60df95805e021f637b6c3f099df40d92bb53a7e2353c5e35",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-5D0Ac2/LSLOT02-later-member-budget-refusal.responses.jsonl": "6555aea3163c45a70830ffd829e30050d7970bd7546a74af0213ede083b68a76",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-5D0Ac2/LSLOT02-later-member-budget-refusal.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-5D0Ac2/LSLOT02-summary.json": "8be5ef74e62598b76184f0945354780efa0d74d238a7d6aae85ce1bdcd4e0fbd",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-5D0Ac2/LSLOT02-transitive-A-B-C.jsonl": "91460af80657ee7b7acc828034db528d6549f30117df695e8a6ed903b723a40b",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-5D0Ac2/LSLOT02-transitive-A-B-C.requests.jsonl": "2165138b02da444b64feea7cf21e53a677cee83cf845fbd92388c0ef3f717004",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-5D0Ac2/LSLOT02-transitive-A-B-C.responses.jsonl": "27372ea340735f512cc28f0f926c4fc6fa39310a4178101482c1867e5dc4d68c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-5D0Ac2/LSLOT02-transitive-A-B-C.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-ceiling-control-empty-ceiling.jsonl": "d880336b8ba6f2697b78e3be1e1bb86c45cd62056c92bc0c72d1c08c5513f0dc",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-ceiling-control-empty-ceiling.requests.jsonl": "c9fe313d90b82ddb95cf23e146b0634b411c64aa923cd09d0184902e6e6607f6",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-ceiling-control-empty-ceiling.responses.jsonl": "abcb80456743cd12aeb12ab21583d27b61cb63b4fbddd9d7b3926f69115e6dd4",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-ceiling-control-empty-ceiling.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-ceiling-control-matching-ceiling.jsonl": "7942dd48628febb53055fe42862846c15f9f486cbc46018293f2c0d19f9bb4a1",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-ceiling-control-matching-ceiling.requests.jsonl": "8bc73170992ac9d063cea0c5c2d4327ce9d8b04d6b6e91f8b7234a1c11d9e358",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-ceiling-control-matching-ceiling.responses.jsonl": "4bd096791e699827ed10c46635c2634fe2ea119c5f41fe465b8befa06f856fc1",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-ceiling-control-matching-ceiling.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-effect-ceiling-widened.jsonl": "67e0e374a21b747de9690cb4870f96dd8152db57e39e7aea2ecfd7168d00d81a",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-effect-ceiling-widened.requests.jsonl": "9631a8d2981d1716d5dc9d848838f441e414c1eaed885dc248bc0871de3a798b",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-effect-ceiling-widened.responses.jsonl": "30b6970d3ea348b74a728a7c19ab18bac0a14a8d6b7cf770edf344ec420ab3c4",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-effect-ceiling-widened.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-generic-caller-underdeclares-dispatch.jsonl": "a423ce9da671ec3d7e2ce0b5fea7260df1f7597490ca8f6955747ebe00e2e637",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-generic-caller-underdeclares-dispatch.requests.jsonl": "2a228a3bb56aa7cbcff10b453a97da20cfeaebcd2797410c13cf76f34eeaad13",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-generic-caller-underdeclares-dispatch.responses.jsonl": "2a728d49d4e7347d331bbd7998cd18022bfe5e96d976b48bf908bacf34e9e574",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-generic-caller-underdeclares-dispatch.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-reversed-input.jsonl": "100e0fd95e6f1e9f744af45f05ee07dbc23668bbc0f9f6cfe51e1298a3b09d12",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-reversed-input.requests.jsonl": "3e157c724ecd4193f58c31644955c5c30e01bab997b13e431cfbc4c8e78f3574",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-reversed-input.responses.jsonl": "03d82ae9d5b52539f687df5e46446b35d5956ca6fb53147ed215b2cf1594c506",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-reversed-input.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-same-exact-interface.jsonl": "8f526b152341b7a9893c6b4fd267b1ccbcd73f84d724b08ff57b71a785ae38dc",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-same-exact-interface.requests.jsonl": "c0f9ef924b8ed4457645ed3369f7d5f188b92cc2ab1c11d35456ab09eba617f6",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-same-exact-interface.responses.jsonl": "102badbf8d42d9e8908e8e7db5d556c99f7d5ec0fb254d5ab90ded55ace90c5d",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-same-exact-interface.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-same-layout-different-resource-schema.jsonl": "2b06d22fcfaa9a040d073cc2273a4358bbe3daa8f543c561a6713ed5921ac41a",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-same-layout-different-resource-schema.requests.jsonl": "7b48a8b7d7711b4a58377d515cb815008dd5f6eeb3b5fc3d6c255a049ad6ed6b",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-same-layout-different-resource-schema.responses.jsonl": "dd438610d36af93230ec699b87771c7fbcca555d6e1328b918161febbc66d7a0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-same-layout-different-resource-schema.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-summary.json": "b0320c882f0338843691e0d50f73b2dce9ea924f516543caac94dd0f120e302f",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-unknown-host-contract.jsonl": "19941ed012f265599bf1aacd1a29db3c8cfb1dea073863bde4c9e36f50181a80",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-unknown-host-contract.requests.jsonl": "fe3dfa46539dc0d069732b217ab7e4816932eed3d0a45caeda49624d148795f7",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-unknown-host-contract.responses.jsonl": "30b6970d3ea348b74a728a7c19ab18bac0a14a8d6b7cf770edf344ec420ab3c4",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-yKVgHW/LSLOT03-unknown-host-contract.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-aggregate-capture.jsonl": "51620cb6fde9fac79e1268fad54d66ee39ce513a61098835da603715ffbb2c6a",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-aggregate-capture.requests.jsonl": "f32d2d4d2b3ef12d066411983a6f194be81fd7c320ef0e30741bd98665738ea3",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-aggregate-capture.responses.jsonl": "8035ba7adf4d9932cedb4f19ac2d7d6d025f744ebe9f750511eb9d3cc8d2b1c7",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-aggregate-capture.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-aggregate-storage.jsonl": "9b09629f28ebe098d06542e20587cd1635a75715225d57030ff88fec35b33313",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-aggregate-storage.requests.jsonl": "e0ae036f73fd7973ff7c91074e5b191e38e066f52058e04ce1b99dbd80513834",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-aggregate-storage.responses.jsonl": "a1d6748320fe07650ee216b9e00ef2ea279296fe0b5a71654bf467019789a0b0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-aggregate-storage.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-direct-quotation-capture.jsonl": "c0460239649be8d035a6793a810c16cd89512100429e5e05c34f623edb0f8db5",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-direct-quotation-capture.requests.jsonl": "0927ee79530c04559e271fce6632ca476f58422047fb2ca12c24dd3e0251c981",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-direct-quotation-capture.responses.jsonl": "27de4298a35090fb4051e2f02027eaaf30ca8b49bc28168b6878c27e26c08881",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-direct-quotation-capture.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-export-or-return.jsonl": "43e6a69014dd7a0d9497ab3d62d057b9f1a56b68a69fdb8e34979bf43543ab48",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-export-or-return.requests.jsonl": "1f79dccba3451715a127feb84e8c6aa45ef2cdf4d9e04031bc5ecc4a13c3d21a",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-export-or-return.responses.jsonl": "8035ba7adf4d9932cedb4f19ac2d7d6d025f744ebe9f750511eb9d3cc8d2b1c7",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-export-or-return.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-forge.jsonl": "def6e8f2f3fd49065c323f0465f5db31ca51ccf4f9cbe35a07f27e1a18b0a3f6",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-forge.requests.jsonl": "2e507aaa83fc99137d7f7a366ed39ecad069728d8d7144bd9e9a58f1516ae910",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-forge.responses.jsonl": "8732ed42cb96601bb879eaaa9fff5c7f25e6f0783acab682b223ceec98cd1558",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-forge.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-retain.jsonl": "1302fc0514070128084ade1f7124de3b2b99c6af7656ac460ca21e52e70a70fc",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-retain.requests.jsonl": "6582b0f3be7586ee3c1adc6909aa836cd2968640bd21c91841074d37bfd88e9c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-retain.responses.jsonl": "434aafacfbb4cdf21bd14f21f9d4c4a7f2b14f1f8e2296b8653d157a4d8d175f",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-retain.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-serialize.jsonl": "96e300e5b68b04d3c5c2aa15c3d09fa5a89ab46acd7a15f0cd0c805422590032",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-serialize.requests.jsonl": "6f8a25c8a5a75c9270be5b82b8c924b56a51818d047a0511c8f6e982bba99590",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-serialize.responses.jsonl": "6e7a6029724f68def69f16e2975c98d8f6a315fe34562b83d629ced9281042f0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-serialize.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-summary.json": "c282826d02257035df09c9866826395dea684e4b46e4559e38395b2af4405e04",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-valid-borrow.jsonl": "49bbc4e6c9c8b3a3b83dff0f4dfc0ed6409b0451669485eb9c68979703e0ab5d",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-valid-borrow.requests.jsonl": "6f8a25c8a5a75c9270be5b82b8c924b56a51818d047a0511c8f6e982bba99590",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-valid-borrow.responses.jsonl": "6e7a6029724f68def69f16e2975c98d8f6a315fe34562b83d629ced9281042f0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-0k0b5Z/LSLOT06-valid-borrow.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-authorized-rollback.counters.json": "6921b1f952b1346d012ee1fbd564a55c4851b8a40004c79cb4ce92b3dd63a62c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-authorized-rollback.jsonl": "db22054a624ff165ea65ef54e3fa835f3de556ba975004cc0689b31e6d611496",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-authorized-rollback.requests.jsonl": "9da64f693b0393d758dff5279b1d18681caad778200185e5ebe99a7635a0c797",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-authorized-rollback.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-delete-recreate-ABA.counters.json": "bdb2813645036965f08e0f6787d1fffd75e1f67f4b1f49f446dda810b1463a88",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-delete-recreate-ABA.jsonl": "7c31613828be6f97124817d52b8078a3588e61d9215577bc0fc2255ecb02f214",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-delete-recreate-ABA.requests.jsonl": "e7ad9490b2597d82bb98389d4f0fe1865eb7bdbbd098bbba9fd4017872d8150e",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-delete-recreate-ABA.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-rollback-denied.counters.json": "3315ce2317f926618dd88ec36af4609e6bec5997280088e0173e1507289fc5e2",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-rollback-denied.jsonl": "f021043a90d5b81563724bdef779d94005a15c2d4b3574a2c3c87967cecc46f0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-rollback-denied.requests.jsonl": "bf8304e6c96f86a424719af161ed9a7ba93d7d2ca498fc68d4ebd9efddeb7cd1",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-rollback-denied.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-same-slot-writers.counters.json": "e9a37e0749dfc52d3ac4c182e3927242ab266734626219b1cabd0b74a32aae29",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-same-slot-writers.jsonl": "f57e0a6d075a618d946ffd7c2e6d7efe29449156d4f83f749b47c7f259c7f724",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-same-slot-writers.requests.jsonl": "66ed778767bf658001635a258235479299aca034479defdc73713a2b917d9a72",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-same-slot-writers.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-unrelated-slot-race.counters.json": "2c04a796f12d4f0ab10cb85f2a211fd8ed33acc0213516bbf6037bdfdd337318",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-unrelated-slot-race.jsonl": "cd03012c7c1e1519c2be48df1d1d493dae9ae4f195c4bd7e25e36d30f7eb63bb",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-unrelated-slot-race.requests.jsonl": "c55a8454b1942236142d91b96ec622b2c678b7463f8a44603daf7c9253dc287c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT04-unrelated-slot-race.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-dispatch-without-grant.counters.json": "508263318c10d964972fded5d937963a846657949afe883954093f6db0768243",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-dispatch-without-grant.jsonl": "70e8955ef261c3d73bcad301a147cd73b54058dfedb6dbd1c623c4248cca49d5",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-dispatch-without-grant.requests.jsonl": "8c151cf797e7b60c53f11ac3b874a7208997263d706afc66bc41bf7fc498ff07",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-dispatch-without-grant.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-old-version-effect-revoked-after-pin.counters.json": "0e8c7b224bdef7507084ed067faabb1b0a5411f9d020d139dd129f576ab85ac7",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-old-version-effect-revoked-after-pin.jsonl": "344a8de3c7d37463b080e679a59eaec7410d86ef0c9e93431f71de53e2838f36",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-old-version-effect-revoked-after-pin.requests.jsonl": "f723fc998c8e62e4729b64fb0740f40955ccd48f185fad8b9e25901df077f341",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-old-version-effect-revoked-after-pin.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-publication-without-grant.counters.json": "af84bfcb833db0e6a1ae9aedcf1389800c49664c5604cb4395be1571fb92248e",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-publication-without-grant.jsonl": "cfdaa8711a5f77791bab1ef86533c4d4dd3ab54686b49efd5568473443391da5",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-publication-without-grant.requests.jsonl": "bbc9bab9770aa20e157d76fd612595a1a48b368bcd02dfc67be36940ea2b5d09",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-publication-without-grant.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-revoked-after-root-pin.counters.json": "a9de414a8f6bd20c1c801718b90dd25ecec486456000dda49a8a8da8601589e0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-revoked-after-root-pin.jsonl": "05d6c92ce1915c5cb174a4623bb15406e6bec3e6272d8fab950890885e4c9856",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-revoked-after-root-pin.requests.jsonl": "de4be87389374f447baa33a1b7812407fbfe2b4e7140e851a7b494f09b06849c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-revoked-after-root-pin.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-static-dispatch-without-grant.counters.json": "4cf8a51b40b0995e6b7b01714e8307f8851b1f8cda86eb939b2ac42e4f4b675c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-static-dispatch-without-grant.jsonl": "1593229560b5de19f8ac4aa4da80e9a682ea2efedf1d5034e877b7308981adca",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-static-dispatch-without-grant.requests.jsonl": "2e5bb77e03f77a740c3fb1dd909caa01fb08dcaca33365a008b2b19982f36a89",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-qwLksc/LSLOT07-static-dispatch-without-grant.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-legacy-gdfBFl/LSLOT09-legacy-summary.json": "867bc64d7a212097363f521b407dedbf2644f6279142efd05e86b1e937324319",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-legacy-gdfBFl/LSLOT09-legacy.jsonl": "3a64032029be1b326898a808c4dcdb244f24f417007620c73497dc9b39966abe",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-repl-Cmh5o7/LSLOT09-repl-summary.json": "f2153771ef1da2566a15940619a3c27dd7d0196f04024e963dca89f1c715e403",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-repl-Cmh5o7/LSLOT09-repl.jsonl": "f0d467211efc0c484127d84f87feb9df97816489cfd82449f10d608c1ef147e5"
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-6Amzxc/LSLOT01.jsonl": "52ad33ed3f242db0438df87498401006a5ca4eaf50efdbbbe02622d52ab1da0c",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-hqGhmh/LSLOT01-late-control.jsonl": "2048834a839cb16b76ba8de5d1e8d742ef8ff191e72dcc0c3f6c1b1b806da7d5",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-hqGhmh/LSLOT01-late-control.requests.jsonl": "815f5f269e3e5a5ea48f5ed31ab40160f21914dfa052dfe1e39c05560165ddaf",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-hqGhmh/LSLOT01-late-control.responses.jsonl": "5de7c3414ea13d1b25878ca0be5d58e7edc2912607773ea9a7b815b0b47c3b55",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-hqGhmh/LSLOT01-late-control.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-hqGhmh/LSLOT01-late-control.summary.json": "e4dcc65e08c97b60a00a8d4ebd95b737f66cd4c5c781db1cd9266a1bd96756e9",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-2lrF0L/LSLOT01-selected-distinct-source-reload.jsonl": "1dffb1ebcab285ab9b85458bf88e1dbbb1db12a9eaef65ca7bec870052590555",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-2lrF0L/LSLOT01-selected-distinct-source-reload.requests.jsonl": "40848f3eaa8f82d7ab9380f6f27cdef3b4fc4e9be959afb87294c15071c28ff3",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-2lrF0L/LSLOT01-selected-distinct-source-reload.responses.jsonl": "eaf33bacadd92e5e8be6fb363ecea79bc6782600793ce5736581616465650c85",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-2lrF0L/LSLOT01-selected-distinct-source-reload.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-2lrF0L/LSLOT01-selected-origin-control.jsonl": "6e2a6d628902393a0a3f0e3f7e4c2a5edf92d2a6a8f14e61d22a876e02a6feb1",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-2lrF0L/LSLOT01-selected-origin-control.requests.jsonl": "5c112f343e0c79fa346b2563f4926719b4380eade236eb62aebedb1cfa20a2c0",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-2lrF0L/LSLOT01-selected-origin-control.responses.jsonl": "b018bb1908a67cc3044c58455a061ccbc26aaa0f6afd78ddb33406b4adda2d1a",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-2lrF0L/LSLOT01-selected-origin-control.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-2lrF0L/LSLOT01-selected-origin-control.summary.json": "1837b51245d11e194d80d902656c21b44c5a1828a05cd0c0c4b40d8bfcb21158",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-2lrF0L/LSLOT01-selected-origin-missing-core.jsonl": "3e684626d3a29763afb5025a098ffb81101a1861c71ea4a3bb701b84cc7d1bda",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-2lrF0L/LSLOT01-selected-origin-missing-core.requests.jsonl": "900f5fe99b214debab4b5fa967bb6a9b9a06d81265e86c89ab544a838ba24894",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-2lrF0L/LSLOT01-selected-origin-missing-core.responses.jsonl": "d636817687bebdd93ffddc446dfeea1d2c3c94d66b4f6d335a3d08df598adba0",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-2lrF0L/LSLOT01-selected-origin-missing-core.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-LfY7Ud/LSLOT02-base-parent-child.jsonl": "9a54a442a65130263dace0be9ed9731d302cb8fd8e483c21124185fc12a16ad2",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-LfY7Ud/LSLOT02-base-parent-child.requests.jsonl": "e1042f322a0009367357a99fe2b4cd286fd53c4626725d4e07ef6af232220a32",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-LfY7Ud/LSLOT02-base-parent-child.responses.jsonl": "ef9a93ac3a2b687dfb0bc1f420c806b0b520b756c9c21d7c1eeb3d7c1850ce33",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-LfY7Ud/LSLOT02-base-parent-child.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-LfY7Ud/LSLOT02-later-member-budget-refusal.jsonl": "f4076a150994b91f453f352316331457058fce0af071bbe62dbd1927b224fd84",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-LfY7Ud/LSLOT02-later-member-budget-refusal.requests.jsonl": "8f9d028388ff3abb60df95805e021f637b6c3f099df40d92bb53a7e2353c5e35",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-LfY7Ud/LSLOT02-later-member-budget-refusal.responses.jsonl": "6555aea3163c45a70830ffd829e30050d7970bd7546a74af0213ede083b68a76",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-LfY7Ud/LSLOT02-later-member-budget-refusal.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-LfY7Ud/LSLOT02-summary.json": "7069bc05eea265857625533e93d3f3341ccf2c1c1c752e4505ac76e734abfa82",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-LfY7Ud/LSLOT02-transitive-A-B-C.jsonl": "633cb59df56cce3a892c30d9ba4f9afd72c04e7dda0d22d24693eaf5fa6b309f",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-LfY7Ud/LSLOT02-transitive-A-B-C.requests.jsonl": "2165138b02da444b64feea7cf21e53a677cee83cf845fbd92388c0ef3f717004",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-LfY7Ud/LSLOT02-transitive-A-B-C.responses.jsonl": "27372ea340735f512cc28f0f926c4fc6fa39310a4178101482c1867e5dc4d68c",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-LfY7Ud/LSLOT02-transitive-A-B-C.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-ceiling-control-empty-ceiling.jsonl": "aae0ce7cd347dc4eaad7c28675002b9db09eb837fce21a5ec4d61bea629da84e",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-ceiling-control-empty-ceiling.requests.jsonl": "c9fe313d90b82ddb95cf23e146b0634b411c64aa923cd09d0184902e6e6607f6",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-ceiling-control-empty-ceiling.responses.jsonl": "abcb80456743cd12aeb12ab21583d27b61cb63b4fbddd9d7b3926f69115e6dd4",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-ceiling-control-empty-ceiling.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-ceiling-control-matching-ceiling.jsonl": "5020029286a04f002e756416da1bdb53be6230eb7f89427b0706b31cc402a472",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-ceiling-control-matching-ceiling.requests.jsonl": "8bc73170992ac9d063cea0c5c2d4327ce9d8b04d6b6e91f8b7234a1c11d9e358",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-ceiling-control-matching-ceiling.responses.jsonl": "4bd096791e699827ed10c46635c2634fe2ea119c5f41fe465b8befa06f856fc1",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-ceiling-control-matching-ceiling.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-reversed-input.jsonl": "30f98f99f31e172b6bcd95f6912b5228337970d735560174dceccc5a1a047b6f",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-reversed-input.requests.jsonl": "3e157c724ecd4193f58c31644955c5c30e01bab997b13e431cfbc4c8e78f3574",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-reversed-input.responses.jsonl": "03d82ae9d5b52539f687df5e46446b35d5956ca6fb53147ed215b2cf1594c506",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-reversed-input.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-same-exact-interface.jsonl": "fd7e2502cdd7abb783f01eeb1738cabbe99f31517e04a55f6063ecd985384fba",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-same-exact-interface.requests.jsonl": "c0f9ef924b8ed4457645ed3369f7d5f188b92cc2ab1c11d35456ab09eba617f6",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-same-exact-interface.responses.jsonl": "102badbf8d42d9e8908e8e7db5d556c99f7d5ec0fb254d5ab90ded55ace90c5d",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-same-exact-interface.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7VKxOh/LSLOT03-summary.json": "c1264c80ac66a704c8aa9cf75d42221746418b8307a07104a75925c58f6082d0",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-iJkUmY/LSLOT06-aggregate-storage.jsonl": "907201338fc3ed32a5a70608ff04f20dc4ce4e1fce26b3f6d9cabf1e11f22961",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-iJkUmY/LSLOT06-aggregate-storage.requests.jsonl": "e0ae036f73fd7973ff7c91074e5b191e38e066f52058e04ce1b99dbd80513834",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-iJkUmY/LSLOT06-aggregate-storage.responses.jsonl": "a1d6748320fe07650ee216b9e00ef2ea279296fe0b5a71654bf467019789a0b0",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-iJkUmY/LSLOT06-aggregate-storage.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-iJkUmY/LSLOT06-direct-quotation-capture.jsonl": "f3fcd94567415058b547d3b6f7dbf89bae78d2dda11c66512f1f745379ecdb67",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-iJkUmY/LSLOT06-direct-quotation-capture.requests.jsonl": "0927ee79530c04559e271fce6632ca476f58422047fb2ca12c24dd3e0251c981",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-iJkUmY/LSLOT06-direct-quotation-capture.responses.jsonl": "27de4298a35090fb4051e2f02027eaaf30ca8b49bc28168b6878c27e26c08881",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-iJkUmY/LSLOT06-direct-quotation-capture.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-iJkUmY/LSLOT06-summary.json": "f9ca03ec478232e4b8106380d6fbe634b2893c4d0fa33f64e0b961413daecfe2",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-iJkUmY/LSLOT06-valid-borrow.jsonl": "e74b8b00043e55db8cb93f60d4d2635768b27eddf69ada605b7df4f01cd4e2fd",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-iJkUmY/LSLOT06-valid-borrow.requests.jsonl": "6f8a25c8a5a75c9270be5b82b8c924b56a51818d047a0511c8f6e982bba99590",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-iJkUmY/LSLOT06-valid-borrow.responses.jsonl": "6e7a6029724f68def69f16e2975c98d8f6a315fe34562b83d629ced9281042f0",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-iJkUmY/LSLOT06-valid-borrow.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-authorized-rollback.counters.json": "53441e300b764c3c05e4313fff3af2fd03ecf75c618adefcbdbd3d11dd6fc5ba",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-authorized-rollback.jsonl": "db22054a624ff165ea65ef54e3fa835f3de556ba975004cc0689b31e6d611496",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-authorized-rollback.requests.jsonl": "9da64f693b0393d758dff5279b1d18681caad778200185e5ebe99a7635a0c797",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-authorized-rollback.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-delete-recreate-ABA.counters.json": "da7481f54b04bac7e43be7f8bf96f22f08d78ddd459f259a41f5e233ace353ed",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-delete-recreate-ABA.jsonl": "7c31613828be6f97124817d52b8078a3588e61d9215577bc0fc2255ecb02f214",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-delete-recreate-ABA.requests.jsonl": "e7ad9490b2597d82bb98389d4f0fe1865eb7bdbbd098bbba9fd4017872d8150e",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-delete-recreate-ABA.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-rollback-denied.counters.json": "d57eb90615401c16a70a61ae7e52bc24bbac184a6b85146467ca681c8f03b7c3",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-rollback-denied.jsonl": "f021043a90d5b81563724bdef779d94005a15c2d4b3574a2c3c87967cecc46f0",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-rollback-denied.requests.jsonl": "bf8304e6c96f86a424719af161ed9a7ba93d7d2ca498fc68d4ebd9efddeb7cd1",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-rollback-denied.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-same-slot-writers.counters.json": "f476698b87f0fa3640ee10166cd9a5394c35ab736f54a242fa8f4e507e528848",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-same-slot-writers.jsonl": "f57e0a6d075a618d946ffd7c2e6d7efe29449156d4f83f749b47c7f259c7f724",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-same-slot-writers.requests.jsonl": "66ed778767bf658001635a258235479299aca034479defdc73713a2b917d9a72",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-same-slot-writers.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-unrelated-slot-race.counters.json": "d0c8de73059b6a3be3c20510e5aaa8c3432f68f05b76268a2ff50ac62af6a07d",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-unrelated-slot-race.jsonl": "cd03012c7c1e1519c2be48df1d1d493dae9ae4f195c4bd7e25e36d30f7eb63bb",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-unrelated-slot-race.requests.jsonl": "c55a8454b1942236142d91b96ec622b2c678b7463f8a44603daf7c9253dc287c",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT04-unrelated-slot-race.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-dispatch-without-grant.counters.json": "e8259007cfd8e6daed79820b6ee1228904a994198ce327bc72a75fc6632f4b96",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-dispatch-without-grant.jsonl": "70e8955ef261c3d73bcad301a147cd73b54058dfedb6dbd1c623c4248cca49d5",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-dispatch-without-grant.requests.jsonl": "8c151cf797e7b60c53f11ac3b874a7208997263d706afc66bc41bf7fc498ff07",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-dispatch-without-grant.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-old-version-effect-revoked-after-pin.counters.json": "c4eec509288d5ee8c3b0b84b7fad29938cc6423f1b3385399aa39a9a42dd985c",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-old-version-effect-revoked-after-pin.jsonl": "344a8de3c7d37463b080e679a59eaec7410d86ef0c9e93431f71de53e2838f36",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-old-version-effect-revoked-after-pin.requests.jsonl": "f723fc998c8e62e4729b64fb0740f40955ccd48f185fad8b9e25901df077f341",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-old-version-effect-revoked-after-pin.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-publication-without-grant.counters.json": "53543c4d953f9835a8b6fe01595cf7e2773660d2fb3cb376bea9423deb31edf5",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-publication-without-grant.jsonl": "cfdaa8711a5f77791bab1ef86533c4d4dd3ab54686b49efd5568473443391da5",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-publication-without-grant.requests.jsonl": "bbc9bab9770aa20e157d76fd612595a1a48b368bcd02dfc67be36940ea2b5d09",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-publication-without-grant.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-revoked-after-root-pin.counters.json": "7a09cd73ebaa563138845728295a621a39165d6adb57500389080d833d8ecce1",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-revoked-after-root-pin.jsonl": "05d6c92ce1915c5cb174a4623bb15406e6bec3e6272d8fab950890885e4c9856",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-revoked-after-root-pin.requests.jsonl": "de4be87389374f447baa33a1b7812407fbfe2b4e7140e851a7b494f09b06849c",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-revoked-after-root-pin.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-static-dispatch-without-grant.counters.json": "f1a5edd73431bcf9b3da37bea39889b28e0f9535f1f6f6009da3c5b6364d387c",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-static-dispatch-without-grant.jsonl": "1593229560b5de19f8ac4aa4da80e9a682ea2efedf1d5034e877b7308981adca",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-static-dispatch-without-grant.requests.jsonl": "2e5bb77e03f77a740c3fb1dd909caa01fb08dcaca33365a008b2b19982f36a89",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-static-dispatch-without-grant.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-legacy-Fiu5SQ/LSLOT09-legacy-summary.json": "867bc64d7a212097363f521b407dedbf2644f6279142efd05e86b1e937324319",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-legacy-Fiu5SQ/LSLOT09-legacy.jsonl": "aacc9152cd36e0d6f5951ebe086ef31460e88d2ffdc09946b8bb72518b983fa5",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-repl-nhCKn4/LSLOT09-repl-summary.json": "f2153771ef1da2566a15940619a3c27dd7d0196f04024e963dca89f1c715e403",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-repl-nhCKn4/LSLOT09-repl.jsonl": "c96394b02d826da8bb7bafe9e36e3508347d7b8b051cfa5447ecf0a949b2e229"
+  },
+  "raw_mirror": {
+    "directory": "raw",
+    "files": 106
   },
   "version_control": {
     "before": {
-      "head": "03d88a320100c16c2d5334c495baab8d771e41db",
+      "head": "326b1b359798f368c37f60a3bb930f0a15e40a6c",
       "status": "",
       "clean": true
     },
     "after": {
-      "head": "03d88a320100c16c2d5334c495baab8d771e41db",
+      "head": "326b1b359798f368c37f60a3bb930f0a15e40a6c",
       "status": "",
       "clean": true
     }
