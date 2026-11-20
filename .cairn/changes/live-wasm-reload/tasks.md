@@ -278,6 +278,35 @@ LIVE-08, LIVE-09 and LIVE-10 are untouched. No proof, Octet or Lean claim is
 made; every promoted case keeps `proof: open`, and task 3 below stays unchecked
 because not every LIVE case is exercised.
 
+### Amendment proposal: LIVE-02 `input.after_reload_ack`
+
+The canonical case cannot type-check its own `expected` fields. In the
+`Live-Wasm-Draft` profile, `run : S Program<S,T,e> -- T` (language spec, line
+848) requires the stack below the Program to be exactly its declared input
+`S`. After the retained `[ addone ]` Program, the canonical script
+`20 twice swap 20 swap run` goes `[Program]` → `[Program, 24]` → `[24,
+Program]` → `[24, Program, 20]` → `[24, 20, Program]`; the Program's declared
+input is `[I64]`, so `run` is asked for `[I64]` under a stack holding two I64s
+and the checker refuses with `expected [] I64 Program<…>; actual [] I64 I64
+Program`. `expected.stack_bottom_to_top [24, 21]` is therefore unreachable, and
+the in-flight and immutable-capture fields cannot be observed through this
+script as written.
+
+Proposed exact replacement for `input.after_reload_ack` (nothing else in the
+case changes):
+
+```json
+"after_reload_ack": ["20 twice swap run"]
+```
+
+Derivation: `[Program]` (retained old Program) → `20` `[Program, 20]` →
+`twice` (the rebuilt dependent, new `addone`) `[Program, 24]` → `swap`
+`[24, Program]` → `run` (consumes the Program's exact input `[I64]`) `[24,
+21]`, which is the case's declared `stack_bottom_to_top`. This keeps the
+case's purpose (a new dependent's result beside the old Program's captured
+result) and its in-flight condition unchanged. The case text is not edited
+here; the amendment is for the owner.
+
 - [ ] [serial] Implement and test in-process Wasm encoder/verifier with independently accepted source, exact selected ABI and isolated staging. r[BE-LIVE-01] r[S-LIVE-01]
 - [ ] [serial] Implement resident live CLI/reload/watch, complete dependent rebuild, atomic safepoint publication, stable typed stack and bounded code retirement. r[K-LIVE-01] r[H-LIVE-01] r[H-LIVE-02] r[H-LIVE-03] r[DX-LIVE-01]
 - [ ] [serial] Exercise every LIVE case against actual source, selected VM and hostile controls with source-bound receipts and separately classify proof/assumptions before acceptance. r[V-LIVE-01] r[EV-LIVE-01]
