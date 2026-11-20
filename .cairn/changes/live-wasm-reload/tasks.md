@@ -253,15 +253,27 @@ LIVE-03's declared variants run on a live definition namespace and module root
 submission): the incompatible-schema replacement is refused before an
 opaque-schema comparison by the same-version declaration rule, and the
 dependency-cycle replacement is refused as `cyclic local module definitions`,
-each with the old definition still callable. MEASURED remaining gaps: LIVE-02's
-canonical after-reload script `20 twice swap 20 swap run` is refused at check
-because `run : S Program<S,T,e> -- T` requires exactly `[I64]` below the
-Program, so its declared expected stack `[24, 21]` is unreachable (a case input
-defect; the case text was not edited); LIVE-03's `host-binding-mismatch` needs a
-reload that can carry a binding change, which the single startup manifest
-cannot; LIVE-05's `"A" test.emit test.abort` submission is refused at resolve
-because top-level effects are unbound and `test.abort` has no declared binding
-path (bindings admit only test.emit/test.clock module operations). LIVE-04,
+each with the old definition still callable. MEASURED remaining gaps. LIVE-02's
+canonical after-reload script `20 twice swap 20 swap run` is a **case input
+defect**, established from the canonical spec and the case's own `expected`
+fields and not repaired here: `run : S Program<S,T,e> -- T` (language spec,
+line 848) requires exactly `[I64]` below the Program, and the script leaves
+`[I64, I64, Program]` (`20 twice` pushes 24, `swap` moves the Program up, the
+second `20 swap` adds another I64 without changing the Program's depth), so the
+CLI refuses it at check (`expected [] I64 Program<…>; actual [] I64 I64
+Program`) and `expected.stack_bottom_to_top [24, 21]` is unreachable; the
+variant that executes the retained Program with its typed input still returns
+the old body. The case text was not edited. LIVE-03's `host-binding-mismatch`
+needs a reload that can carry a binding change, which the single startup
+manifest cannot; its `initial_module` is not defective as a session state (the
+module-only selected file plus the case definition as the first declared
+submission reproduces it), but the single-source harness cannot deliver both at
+startup, so the mapping is recorded rather than the input changed. LIVE-05's
+`"A" test.emit test.abort` submission is refused at resolve because top-level
+effects are unbound and `test.abort` has no Core environment row in this
+profile; bindings admit only test.emit/test.clock module operations, and the
+refusal is the same class as the missing adapt-environment abort row the
+OwnCases slice reports for live-slot sessions. LIVE-04,
 LIVE-08, LIVE-09 and LIVE-10 are untouched. No proof, Octet or Lean claim is
 made; every promoted case keeps `proof: open`, and task 3 below stays unchecked
 because not every LIVE case is exercised.
