@@ -661,7 +661,8 @@ function main() {
       quality_rust: rustOutput,
       linker_bin: ccDirectory,
       vendor,
-      node: { path: process.execPath, sha256: fileSha256(process.execPath), version: process.version },
+      node: { path: process.execPath, sha256: fileSha256(process.execPath), version: process.version,
+        exec_argv: process.execArgv },
       runner: { path: 'verification/ngraph-library-boundary/gate.mjs', sha256: runner },
     },
     inputs: {
