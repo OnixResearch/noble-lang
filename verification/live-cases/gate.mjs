@@ -1016,6 +1016,12 @@ async function observeLive09() {
   observe('LIVE-09', 'input.selected_file',
     first.initial.source_sha256 === sha256(LIVE09_SOURCE) && unchangedFile && unchangedFileB,
     { path: 'evolve.noble', sha256: sha256(LIVE09_SOURCE), bytes: LIVE09_SOURCE });
+  observe('LIVE-09', 'input.harness',
+    first.initial.stage === 'wasm-live' && first.executed.stage === 'wasm'
+      && first.live.argv.includes('--self-edit'),
+    { argv: first.live.argv,
+      binary: { path: binary, sha256: binarySha256 },
+      observation: 'two real `noble live repl` children ran the actual Wasm guest self-edit transaction' });
   observe('LIVE-09', 'input.host_grant',
     JSON.stringify(first.live.argv.slice(-4)) === JSON.stringify(['--self-edit', 'evolve', '--expect-generation', '1'])
       && first.grant.outcome === 'grant-selected' && first.grant.name === 'evolve'
@@ -1349,6 +1355,9 @@ async function observeLive10(feature) {
   observe('LIVE-10', 'input.initial_file',
     oldAck.source_sha256 === sha256(LIVE10_SOURCE),
     { sha256: sha256(LIVE10_SOURCE), bytes: LIVE10_SOURCE });
+  observe('LIVE-10', 'input.harness',
+    positiveAck.stage === 'wasm-live' && positiveExecuted.stage === 'wasm',
+    { argv: positive.live.argv, binary: { path: binary, sha256: binarySha256 } });
   observe('LIVE-10', 'input.initial_grant',
     old.live.argv.includes('--self-edit') && oldGrant.outcome === 'grant-selected'
       && oldGrant.name === 'evolve' && oldGrant.source_generation === 1,
