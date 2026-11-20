@@ -13,25 +13,6 @@ use alloc::{boxed::Box, string::String, vec::Vec};
 mod named_v2;
 pub use named_v2::prepare_named_contract;
 
-/// Exact reviewed rule identities of the `Named-Contract-Calls-v3` profile: the
-/// proof-term rule id and the exact Lean declaration the strict consumer
-/// instantiates. Each declaration is a Lean core/Std theorem pinned by
-/// `proofs/mc1/ContractGate.lean` under the strict axiom list (`propext`,
-/// `Classical.choice`, `Quot.sound`); none is an axiom and none extends the
-/// intrinsic `MODEL` closure, so adding an identity leaves `model_revision()`
-/// unchanged. Editing this table is a reviewed rule-set change under
-/// `V-INTRINSIC-01`, and because this file is part of `checker_revision()` it
-/// stales every dependency accepted under the previous checker revision; the
-/// edit must therefore be reviewed together with the spec delta.
-pub const REVIEWED_RULES_V3: &[(&str, &str)] = &[
-    ("bv-add-assoc", "BitVec.add_assoc"),
-    ("bv-add-comm", "BitVec.add_comm"),
-    ("bv-mul-add", "BitVec.mul_add"),
-    ("list-append-assoc", "List.append_assoc"),
-    ("list-append-nil", "List.append_nil"),
-    ("list-nil-append", "List.nil_append"),
-];
-
 #[derive(Debug, Eq)]
 pub struct Form {
     pub kind: FormKind,

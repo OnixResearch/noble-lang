@@ -492,12 +492,21 @@ These are defined before any inheritance.
 - **#14 (numeric graph):** unaffected.
 - **#15 (math foundation):** the BitVec lemmas (`bv-add-assoc` etc.) and T1-T6 are natural first targets.
 
+
+### Amendment 2026-11-20: what T2–T5 actually state
+
+Reviewed by a fresh-context reviewer (record `/home/brittonr/.cache/noble-cairn/reviews/namedv3-review-2026-11-20.md`, verdict REVISE, kernel-checked content sound). This amendment records the landed shapes rather than claiming the fuller Decision 3 obligations, and the follow-up work each gap needs. The vocabulary review questions in "Decision: the exact vocabulary T2–T5 need" (above) are answered by that record: `Extends` is over rows and every row; `callFrame` takes the callee's own `exportedNamedClaim` with callee-env typing and the caller's frame as the claim's `tail`; `ChainStep.bridge`/`join` are pure propositions; there is no chain-level join.
+
+- **T3 `embed`.** Proved for *identity placement*: `Extends` requires every callee row to sit at the same slot in the caller with the identical record (the frozen-snapshot reading of Decision 2). `Embedding.rename`/`injective`/`fresh` are binding records of an occurrence→specialization-slot placement with no semantic role in `embed`; injectivity is only per embedding (`Embedding.occurrences_distinct`), so a chain of steps may still reuse one slot across distinct occurrences, and two callee tables that use one slot for different rows cannot both be embedded in one caller. Both are caller/envelope obligations of the revision-3 checker (task 2): global slot uniqueness across the closure and the slot-reuse refusal of S05(c) are *not* Lean-modelled here. `evaluate₂_env_free`/`holds₂_env_free` are the full required half: `maps` is the only environment-sensitive constructor, and value equality, not only truth, is proved.
+- **T4 `liftMc1Claim`.** Proved for the bounded profile (`ProfileCode`: scalar literals and words 0, 1, 2, 4–7) and quantified only over lifted MC1 tails, inputs and params. It is therefore *not* the `exportedNamedClaim` that `callFrame`/`ChainStep` need at arbitrary named tails, and no bridge lemma from it exists today. Decision 7's "revision-1 callees enter through T4" and Decision 10's "callable through T4 without re-proof" are not established by this theorem; a usable form needs either a named-tail claim (with a tail-liftability premise, which `exportedNamedClaim` cannot state today) or a caller-side bridge theorem. The reflection half (`run_reflect`/`exec_reflect`) and the typing lifts are sound and reusable for that work.
+- **T5 `chainClaim`.** Landed for call-only roots, whole-stack steps (each step consumes everything above the chain's single fixed `tail`) and output-only posts. Three gaps against Decision 3: literal/builtin segments (S04 `[ swap d.sub2 ]`), frame-carrying steps (caller values below a callee's arguments), and relational posts over inputs (`twoStepClaim`'s `out0 = in0 + 2`, Decision 7's `y = x + 12`). Until they are closed, C3 must be read as binding the Rust checker to this narrower premise set, and "n-ary generalization of `twoStepClaim`" is a shape comparison, not a derivation.
+
 ## Risks / Trade-offs
 
 - Mandatory dependency replay costs time proportional to the closure. The budgets bound it, but deep libraries may need the later identity cache, which carries obligation C4.
 - The first profile proves inequality bridges only by exact match or projection. Many realistic callers will get `bridge-unproved` until reviewed inequality rules exist. This is deliberate: the alternative would be producer search or a trusted solver.
 - The `Eq`-over-terms extension enlarges the trusted checker surface and needs its own hostile cases (O7-3 shows it is absent today).
-- No theorem in this design has been checked. T1-T6, C1-C8 and the bundle whitelist additions remain open.
+- No theorem in this design had been checked at design time. T1-T6 have since landed in `proofs/mc1/NobleContracts/NamedV3.lean` and are pinned by `ContractGate.lean` (see the amendment of 2026-11-20 below); C1-C8 and the bundle whitelist additions remain open.
 
 ## Acceptance mapping
 
@@ -564,4 +573,4 @@ Review questions that must be answered before implementation, in this order:
 4. `Chain.join` is a premise the *caller* supplies, matching `pc_sequence`; confirm no step may
    supply its own join.
 
-Nothing is ticked by this section: tasks 15–19 stay open, and T1/T6 remain the only landed theorems.
+Nothing is ticked by this section by design. T1-T6 have since landed with an amendment recording exactly what the landed T2–T5 state (2026-11-20, below); tasks 15–19 stay open.

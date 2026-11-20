@@ -88,11 +88,14 @@ def Extends (callee caller : NamedV1.Environment) : Prop :=
   ∀ entry ∈ callee.entries, caller.lookup entry.slot = some entry
 
 /-- An entry embedding: the callee's rows form the frozen snapshot under the
-caller's table, and the accepted subject is placed at the occurrence's own
-specialization slot. `rename` is injective and maps each call occurrence to
-that slot; `fresh` keeps the specialization slot out of the callee's own
-table, so two distinct occurrences can never alias one row and a caller cannot
-reuse a callee slot as its own occurrence. -/
+caller's table (identity placement), and the accepted subject is placed at the
+occurrence's own specialization slot. `rename` is injective *within this
+embedding* and `fresh` keeps that slot out of the callee's own table, so the
+occurrence's row can neither shadow nor rewrite a snapshot row and no two
+occurrences of this embedding alias one slot. Cross-step slot uniqueness is
+*not* implied: a chain carries one embedding per step, and distinct steps could
+still name one slot. That is a caller/envelope obligation of the revision-3
+checker (task 2), recorded in the design amendment of 2026-11-20. -/
 structure Embedding (callee caller : NamedV1.Environment) where
   /-- the frozen import snapshot: every callee row resolves identically -/
   snapshot : Extends callee caller
@@ -125,12 +128,22 @@ theorem Embedding.slot_fresh {callee caller : NamedV1.Environment} (e : Embeddin
 
 /-- A call occurrence's specialization slot is not a callee row, so installing
 the caller's occurrence row at it can neither shadow nor rewrite a snapshot row.
-Distinct occurrences also get distinct slots (`Embedding.injective`). -/
+Distinct occurrences of this embedding get distinct slots
+(`Embedding.occurrences_distinct`). -/
 theorem EntryEmbedding.slot_not_snapshot {caller : NamedV1.Environment}
     {subject : NamedV1.Subject} {entry : NamedV1.Entry} {use : NamedV1.Use}
     (e : EntryEmbedding caller subject entry use) : subject.env.lookup use.slot = none := by
   rw [e.placement]
   exact e.embedding.fresh use.occurrence
+
+/-- Distinct call occurrences of one embedding get distinct specialization
+slots. (Across a chain, each step has its own embedding, so a caller that needs
+global slot uniqueness must also satisfy the design amendment's envelope
+obligation.) -/
+theorem Embedding.occurrences_distinct {callee caller : NamedV1.Environment}
+    (e : Embedding callee caller) {left right : Nat} (distinct : left ≠ right) :
+    e.rename left ≠ e.rename right :=
+  fun same => distinct (e.injective same)
 
 theorem lookup_entries {env : NamedV1.Environment} {slot : Nat} {entry : NamedV1.Entry}
     (h : env.lookup slot = some entry) : entry ∈ env.entries :=
@@ -513,7 +526,7 @@ theorem callFrame {caller : NamedV1.Environment} (subject : NamedV1.Subject)
     (pre post : NamedV1.Stack → NamedV1.Stack → NamedV1.Stack → Prop)
     (claim : NamedV2.exportedNamedClaim subject [] pre post)
     (bodies : ∀ row ∈ subject.env.entries, Sequential row.body)
-    (profile : Sequential subject.root) (resolved : CallsResolve subject.env subject.root) :
+    (profile : Sequential subject.root) :
     ∀ frame args final,
       NamedV2.StackTyped subject.env args entry.input →
       pre args [] [] →
@@ -533,7 +546,8 @@ theorem callFrame {caller : NamedV1.Environment} (subject : NamedV1.Subject)
               rw [← sameEntry, e.body] at inner
               have innerCallee : NamedV1.Run subject.env subject.root
                   (frame ++ args).reverse final.reverse :=
-                (embed e.embedding (Subject.resolves subject) bodies profile resolved).mpr inner
+                (embed e.embedding (Subject.resolves subject) bodies profile
+                  (callsResolve_of_resolves profile (Subject.root_resolves subject))).mpr inner
               rw [e.input] at hargs
               obtain ⟨res, hfinal, htyped, hpost⟩ :=
                 claim frame args [] hargs .nil hpre final innerCallee
@@ -553,7 +567,6 @@ structure ChainStep (caller : NamedV1.Environment) (P Q : NamedV1.Stack → Prop
   embedding : EntryEmbedding caller subject entry use
   bodies : ∀ row ∈ subject.env.entries, Sequential row.body
   profile : Sequential subject.root
-  resolved : CallsResolve subject.env subject.root
   pre : NamedV1.Stack → NamedV1.Stack → NamedV1.Stack → Prop
   post : NamedV1.Stack → NamedV1.Stack → NamedV1.Stack → Prop
   claim : NamedV2.exportedNamedClaim subject [] pre post
@@ -613,17 +626,22 @@ theorem chainExec {caller : NamedV1.Environment} :
           (by simpa [Chain.code] using execution)
       obtain ⟨res, hmid, htyped, hpost⟩ :=
         callFrame step.subject step.entry step.use step.embedding step.pre step.post
-          step.claim step.bodies step.profile step.resolved
+          step.claim step.bodies step.profile
           tail args mid (step.bridge args hP).2 (step.bridge args hP).1 hcall
       obtain ⟨res', hfinal, hQ⟩ :=
         ih tail res final (step.join args res hP hpost htyped)
           (by rw [← hmid]; exact hrest)
       exact ⟨res', hfinal, hQ⟩
 
-/-- T5 (`chainClaim`): a chain of independently justified call steps implies
-the caller's exported named claim. This is the n-ary generalization of
-`NamedV2.twoStepClaim`: the two-step rule re-derived both callee bodies, while
-here each step is one resolved entry plus the callee's own claim. -/
+/-- T5 (`chainClaim`): a chain of independently justified call steps implies the
+caller's exported named claim. The two-step rule re-derived both callee bodies;
+here each step is one resolved entry plus the callee's own claim. The landed
+shape is narrower than "n-ary generalization of `twoStepClaim`" and the design
+amendment of 2026-11-20 records it: `Chain.code` emits only calls (no literal or
+builtin segments, so S04's `[ swap d.sub2 ]` is not expressible yet), each step
+consumes the whole stack above the chain's single fixed `tail`, and the post is
+output-only (`post := fun _ after _ => Q after`), so a relational claim such as
+`out0 = in0 + 2` needs per-instance glue. -/
 theorem chainClaim (subject : NamedV1.Subject) {P Q : NamedV1.Stack → Prop}
     (chain : Chain subject.env P Q) (root : subject.root = Chain.code chain)
     (typed : ∀ res, Q res → NamedV2.StackTyped subject.env res subject.output) :
@@ -804,30 +822,10 @@ theorem step_equals {env : NamedV1.Environment} {before : NobleContracts.Stack}
                 simp only [NamedV1.liftStack, List.map_cons, NamedV1.liftValue]
                 rw [← hs], .equals⟩
 
-/-- Every profile operation's lifted step is the lift of the MC1 step. -/
-theorem step_lift {env : NamedV1.Environment} {before : NobleContracts.Stack}
-    {op : NobleContracts.Op} {m : NamedV1.Stack} (profile : ProfileCode [op])
-    (h : NamedV1.Step env (NamedV1.liftOp op) (NamedV1.liftStack before) m) :
-    ∃ μ, m = NamedV1.liftStack μ ∧ NobleContracts.Step op before μ := by
-  cases op with
-  | lit value =>
-      simp only [NamedV1.liftOp] at h
-      exact step_lit h
-  | block body => exact profile.elim
-  | word id =>
-      simp only [NamedV1.liftOp] at h
-      rcases profile.1 with rfl | rfl | rfl | rfl | rfl | rfl | rfl
-      · exact step_dup h
-      · exact step_drop h
-      · exact step_swap h
-      · exact step_add h
-      · exact step_sub h
-      · exact step_mul h
-      · exact step_equals h
-
-/-- T4's reflection half: a named normal return of a lifted profile program from
-a lifted stack is the lift of an MC1 normal return. The named model is
-conservative over the MC1 fragment: no extra behavior appears. -/
+/-- T4's reflection half: a named normal return of a lifted *profile* program
+from a lifted stack is the lift of an MC1 normal return, so the named model adds
+no behavior inside that fragment. This is not a claim about arbitrary named code
+(quotations, program values and the higher-order words are excluded). -/
 theorem run_reflect {env : NamedV1.Environment} :
     ∀ {code : List NobleContracts.Op} {before : NobleContracts.Stack}
       {final : NamedV1.Stack}, ProfileCode code →

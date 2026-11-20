@@ -77,11 +77,13 @@ fn quoted_named_call_cannot_use_two_direct_call_rule() -> Result<(), String> {
 
 #[test]
 fn reviewed_v3_rule_identities_are_exact() {
-    // The revision-3 reviewed rule set is a fixed list of exact Lean
-    // declarations, pinned here and by `proofs/mc1/ContractGate.lean` under the
-    // strict axiom list; any change is a reviewed `V-INTRINSIC-01` rule-set edit.
+    // Each reviewed rule identity names an exact Lean declaration, and that
+    // declaration is pinned (``name``) in the strict contract gate. The table
+    // lives in `reviewed_rules_v3`, outside every revision-hashed source, so a
+    // v3 rule edit cannot re-stale an accepted v1 or v2 dependency.
+    const GATE: &str = include_str!("../../../../proofs/mc1/ContractGate.lean");
     assert_eq!(
-        noble_contracts::intrinsic::REVIEWED_RULES_V3,
+        noble_contracts::reviewed_rules_v3::REVIEWED_RULES_V3,
         &[
             ("bv-add-assoc", "BitVec.add_assoc"),
             ("bv-add-comm", "BitVec.add_comm"),
@@ -92,18 +94,8 @@ fn reviewed_v3_rule_identities_are_exact() {
         ],
         "reviewed rule identities changed"
     );
-    for (identifier, declaration) in noble_contracts::intrinsic::REVIEWED_RULES_V3 {
-        assert!(
-            declaration.contains('.'),
-            "rule {identifier} is not qualified"
-        );
-        assert!(
-            !declaration.contains("axiom"),
-            "rule {identifier} names an axiom"
-        );
-        assert!(
-            !declaration.contains("sorry"),
-            "rule {identifier} contains a hole"
-        );
+    for (identifier, declaration) in noble_contracts::reviewed_rules_v3::REVIEWED_RULES_V3 {
+        let pinned = format!("``{declaration}");
+        assert!(GATE.contains(&pinned), "rule {identifier} is not pinned");
     }
 }

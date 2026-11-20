@@ -171,11 +171,11 @@ try {
   // (#65), the submission-refusal witnesses for #65 and the recheck-during-shrinking lane
   // for #65's residual, then with the 23 `wire@1` law theorems of the Wire module, and
   // then with NamedV3 T2-T5 (entry embedding, call frame, MC1 claim lift, call chains)
-  // together with the five reviewed rule identities (`List.nil_append`,
+  // together with the six reviewed rule identities (`List.nil_append`,
   // `List.append_nil`, `BitVec.add_assoc`, `BitVec.add_comm`, `BitVec.mul_add`), so the
-  // strict verdict now pins 113 required theorems; the exact string keeps the verdict
+  // strict verdict now pins 114 required theorems; the exact string keeps the verdict
   // non-substitutable.
-  if (!library.includes('MC1-CONTRACT-LIBRARY: 113 required theorems; strict axioms accepted')) {
+  if (!library.includes('MC1-CONTRACT-LIBRARY: 114 required theorems; strict axioms accepted')) {
     throw Error('missing strict contract-library verdict');
   }
   const audit = run('implementation-audit', tool('lean', 'lake'), ['env', 'lean', 'ImplementationGate.lean'], proofRoot);

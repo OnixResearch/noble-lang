@@ -2,20 +2,7 @@ import NobleContracts.Model
 
 namespace NobleContracts
 
-/-! The exact reviewed rule identities of `V-INTRINSIC-01`, as local simp
-attributes only. `List.append_assoc` is the historical symbolic
-append-associativity rule; the list identities `List.nil_append` and
-`List.append_nil` serve the `wire@1` left/right identity laws and the revision-3
-bundle rules, and the `BitVec` identities `BitVec.add_assoc`,
-`BitVec.add_comm` and `BitVec.mul_add` are the bounded wrapping-arithmetic
-lemma rules of the `Named-Contract-Calls-v3` profile. They are Lean core
-theorems, not axioms, and the attribute is `local` so no unrelated proof
-silently depends on them; `ContractGate.lean` pins each declaration under the
-strict axiom list. Adding a rule identity here or to the canonical list changes
-the reviewed rule set and needs a reviewed spec delta. -/
 attribute [local simp] List.append_assoc
-attribute [local simp] List.nil_append List.append_nil
-attribute [local simp] BitVec.add_assoc BitVec.add_comm BitVec.mul_add
 
 /-! Structural inversion lemmas are the symbolic executor.  They use only
 kernel-checked constructor inversion; no evaluator, fuel, reflection oracle,
