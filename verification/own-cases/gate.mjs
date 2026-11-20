@@ -143,25 +143,31 @@ const failures = [];
   }
   const trees = packet.cases['OWN-CASE-03'];
   const balanced = trees.balanced;
-  const refusals = ['left_deep', 'right_deep'].map(side => trees[side]);
+  const chains = ['left_deep', 'right_deep'].map(side => trees[side]);
+  const chainResult = row => row && row.composed === 7 && row.exit === 0
+    && JSON.stringify(row.before) === JSON.stringify([{ kind: 1, value: '8' }])
+    && JSON.stringify(row.after) === JSON.stringify(row.before)
+    && row.released_before_root === 7;
+  const control = trees.bounded_control;
   const bounded = (balanced.exit === 0
     && JSON.stringify(balanced.before) === JSON.stringify([{ kind: 1, value: '8' }])
     && JSON.stringify(balanced.after) === JSON.stringify(balanced.before)
     && balanced.released_before_root === 14
-    && refusals.every(row => row.refused_at_compose === 5 && row.exit === 2
-      && /exceed bounded exact trace representation/.test(row.diagnostic)
-      && row.session_state === 'terminated-after-guest-failure'));
+    && chains.every(chainResult)
+    // The representation bound is still charged: a 40-leaf chain is refused past the 8-leaf
+    // trees' depth with the declared 32-node/4096-byte exact-summary bound, and the failed root
+    // terminates the session.
+    && control && control.refused_at_compose > 8 && control.exit === 2
+    && /host observation bound|exceed bounded exact trace representation/.test(control.diagnostic)
+    && control.session_state === 'terminated-after-guest-failure');
   observations['OWN-CASE-03'] = {
     balanced: balanced ? { before: balanced.before, after: balanced.after,
       released_before_root: balanced.released_before_root, exit: balanced.exit } : null,
-    left_deep: refusals[0], right_deep: refusals[1],
-    // The registered design expects all three trees to deliver equal results. The left- and
-    // right-deep trees are instead refused by the host's declared 1000-byte/64-node observation
-    // bound, so the case's expected variant matrix is NOT met.
-    case: bounded ? 'failed' : 'unmet',
-    declared_bound: 'captureValue: 1000 bytes, 64 nodes',
+    left_deep: chains[0], right_deep: chains[1], bounded_control: control,
+    case: bounded ? 'passed' : 'unmet',
+    declared_bound: 'captureValue: 32 nodes / 4096 bytes exact summary (representation); retention walks up to 4096 nodes',
   };
-  if (!bounded) failures.push('OWN-CASE-03: tree observations differ from the measured bound');
+  if (!bounded) failures.push('OWN-CASE-03: tree observations differ from the declared summary bound');
 }
 
 // OWN-CASE-04: the six non-borrow variants are rejected at the check stage, before emission.
@@ -250,7 +256,7 @@ const failures = [];
 const receipts = {
   'OWN-CASE-01': { lane: 'crates/noble-cli/tests/live_slot_direct_quote.mjs', case: 'passed' },
   'OWN-CASE-02': { lane: 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', case: 'passed' },
-  'OWN-CASE-03': { lane: 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', case: 'failed' },
+  'OWN-CASE-03': { lane: 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', case: 'passed' },
   'OWN-CASE-04': { lane: 'crates/noble-cli/tests/core/ownership_cases.rs', case: 'passed' },
   'OWN-CASE-05': { lane: 'crates/noble-cli/tests/live_slot_own_trap.mjs', case: 'withheld' },
   'OWN-CASE-06': { lane: 'crates/noble-cli/tests/live_slot_module_root_retention.mjs', case: 'passed' },
@@ -273,11 +279,11 @@ const acceptance = {
   runs: runs.map(row => ({ command: row.command, args: row.args, status: row.status })),
   observations,
   receipts,
-  promotable: ['OWN-CASE-01', 'OWN-CASE-02', 'OWN-CASE-04', 'OWN-CASE-06', 'OWN-CASE-07'],
-  failed_cases: ['OWN-CASE-03'],
+  promotable: ['OWN-CASE-01', 'OWN-CASE-02', 'OWN-CASE-03', 'OWN-CASE-04', 'OWN-CASE-06', 'OWN-CASE-07'],
+  failed_cases: [],
   withheld: ['OWN-CASE-05'],
   non_claims: [
-    'OWN-CASE-03 records the registered design expectation (equal results for balanced, left- and right-deep 8-leaf trees). The balanced tree passes; both deep chains are refused at their fifth compose by the host\'s declared observation bound (captureValue: 1000 bytes, 64 nodes), so the case is executed and failed, not silently narrowed.',
+    'OWN-CASE-03 now runs all three 8-leaf trees: the capture summary was using a smaller anonymous-only budget (1000 bytes, 64 nodes) than the selected-origin and retained-graph paths (4096 bytes, 32 nodes); it now uses the same exact bound. Accounting is unchanged: retention already walks up to 4096 nodes, and a 40-leaf chain is still refused past the 8-leaf depth with the declared 32-node exact-summary bound.',
     'OWN-CASE-05 was not executed as designed: the live-slot source profile refuses any source containing test.abort with the internal diagnostic "inconsistent frontend arena" (the kernel bootstrap environment has no test.abort row for declared-module profiles). The host registry abortRoot releases the captured map pin exactly once, but backend per-root frame-pin counters are not exposed, so "frame pins released exactly once" is not observed.',
     'OWN-CASE-02 observes shared-owner order independence through the surviving owner running and released owners being refused; the runtime exposes no live-cell count, so reclamation timing is not directly observed.',
     'OWN-CASE-04\'s borrow variants are inapplicable (owner decision 2026-11-20: no borrow profile); only the six non-borrow variants are exercised, and they are rejected by the kernel acceptance boundary before any emission.',

@@ -7,10 +7,11 @@ import { cli, expectOutcome, selectedAuthority } from './live_slot_resource_ref_
 //   02: `[ 1 + ] dup` saves two owners of one Program; releasing them in either order leaves the
 //       other runnable after the first release, and refuses both after the second.
 //   03: an 8-leaf compose tree, each leaf and intermediate saved; after every owner except the
-//       root's is released, the root still runs and gives the same result. The host's observation
-//       of an anonymous saved Program is bounded (1000 bytes, 64 nodes), so a left- or right-deep
-//       chain is refused at its fifth compose: the refusal is `execution-failed` with that
-//       diagnostic, and the session terminates, as every failed root does in this profile.
+//       root's is released, the root still runs and gives the same result. The capture summary of
+//       an anonymous saved Program is bounded exactly like the selected-origin/retained graph
+//       (32 nodes, 4096 bytes), so balanced, left-deep and right-deep 8-leaf trees all run. A
+//       40-leaf chain still exceeds that representation bound: the refusal is `execution-failed`,
+//       and the session terminates, as every failed root does in this profile.
 //   cross-module: a Program saved by one installed module is duplicated by a second one; both
 //       owners must run the original Program and release independently (issue #106).
 const binary = process.argv[2];
@@ -95,7 +96,7 @@ async function balancedTree() {
 }
 
 async function deepChain(side) {
-  return session(`OWN-CASE-03-${side}-deep`, async ({ live, issue, run }) => {
+  return session(`OWN-CASE-03-${side}-deep`, async ({ issue, run }) => {
     const leaves = [];
     for (let k = 0; k < 8; k += 1) {
       leaves.push((await issue({ operation: 'invoke', id: 'leaf', inputs: [i64(k)], refs: [] }, 'executed')).stack[0].owner);
@@ -103,23 +104,54 @@ async function deepChain(side) {
     // Left-deep folds leaf 0 then appends each later leaf on the right; right-deep folds the last
     // leaf then prepends each earlier leaf on the left.
     let chain = side === 'left' ? leaves[0] : leaves[7];
+    const owners = [chain];
     let composed = 0;
     for (const leaf of side === 'left' ? leaves.slice(1) : leaves.slice(0, 7).reverse()) {
       const inputs = side === 'left'
         ? [program(chain), program(leaf)] : [program(leaf), program(chain)];
-      const row = await live.issue({ operation: 'invoke', id: 'composer', inputs, refs: [] });
+      const row = await issue({ operation: 'invoke', id: 'composer', inputs, refs: [] }, 'executed');
+      composed += 1;
+      chain = row.stack[0].owner;
+      owners.push(chain);
+      assert.deepEqual(expectOutcome(await run(chain), 'executed').stack, [{ kind: 1, value: String(composed + 1) }]);
+    }
+    const root = chain;
+    const before = expectOutcome(await run(root), 'executed');
+    assert.deepEqual(before.stack, [{ kind: 1, value: '8' }]);
+    const others = owners.filter(owner => owner !== root);
+    for (const owner of others) await issue({ operation: 'release-program', owner }, 'program-released');
+    const after = expectOutcome(await run(root), 'executed');
+    assert.deepEqual(after.stack, before.stack, `the ${side}-deep root runs alike after release`);
+    for (const owner of others) assert.ok(refused(await run(owner)), `released ${owner} is refused`);
+    await issue({ operation: 'release-program', owner: root }, 'program-released');
+    assert.ok(refused(await run(root)), 'the root is refused after its release');
+    return { composed, before: before.stack, after: after.stack, released_before_root: others.length };
+  });
+}
+
+async function boundedChain() {
+  return session('OWN-CASE-03-bounded-control', async ({ live, issue }) => {
+    const leaves = [];
+    for (let k = 0; k < 40; k += 1) {
+      leaves.push((await issue({ operation: 'invoke', id: 'leaf', inputs: [i64(k)], refs: [] }, 'executed')).stack[0].owner);
+    }
+    let chain = leaves[0];
+    let composed = 0;
+    for (const leaf of leaves.slice(1)) {
+      const row = await live.issue({ operation: 'invoke', id: 'composer',
+        inputs: [program(chain), program(leaf)], refs: [] });
       if (row.outcome !== 'executed') {
         assert.equal(row.outcome, 'execution-failed');
-        assert.match(row.diagnostic, /exceed bounded exact trace representation/);
+        assert.match(row.diagnostic, /host observation bound|exceed bounded exact trace representation/);
         assert.equal(row.session_state, 'terminated-after-guest-failure');
         assert.equal(row.guest_requests, 0);
-        return { refused_at_compose: composed + 1, diagnostic: row.diagnostic, session_state: row.session_state };
+        return { refused_at_compose: composed + 1, diagnostic: row.diagnostic,
+          session_state: row.session_state };
       }
       composed += 1;
       chain = row.stack[0].owner;
-      assert.deepEqual(expectOutcome(await run(chain), 'executed').stack, [{ kind: 1, value: String(composed + 1) }]);
     }
-    assert.fail(`the ${side}-deep chain stayed within the observation bound`);
+    assert.fail('the 40-leaf chain stayed within the representation bound');
     return null;
   });
 }
@@ -149,13 +181,13 @@ const cases = {
   'OWN-CASE-02': [await sharedDuplicates('A-then-B'), await sharedDuplicates('B-then-A')],
   'cross-module-alias': await crossModuleAlias(),
   'OWN-CASE-03': { balanced: await balancedTree(), left_deep: await deepChain('left'),
-    right_deep: await deepChain('right') },
+    right_deep: await deepChain('right'), bounded_control: await boundedChain() },
 };
 for (const row of cases['OWN-CASE-02']) assert.equal(row.exit, 0);
 assert.equal(cases['cross-module-alias'].exit, 0);
 assert.equal(cases['OWN-CASE-03'].balanced.exit, 0);
-for (const side of ['left_deep', 'right_deep']) {
-  assert.equal(cases['OWN-CASE-03'][side].refused_at_compose, 5);
-  assert.equal(cases['OWN-CASE-03'][side].exit, 2, 'a failed root terminates the session');
-}
+for (const side of ['left_deep', 'right_deep']) assert.equal(cases['OWN-CASE-03'][side].exit, 0);
+assert.ok(cases['OWN-CASE-03'].bounded_control.refused_at_compose > 8,
+  'the 40-leaf control must exceed the representation bound that the 8-leaf trees fit inside');
+assert.equal(cases['OWN-CASE-03'].bounded_control.exit, 2, 'a failed root terminates the session');
 console.log(JSON.stringify({ cases }));
