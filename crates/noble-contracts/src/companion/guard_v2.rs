@@ -200,6 +200,12 @@ fn is_nil_input_zero(prepared: &crate::Prepared, index: u32) -> bool {
 /// An `[I64]` interface keeps exactly the v1 recognition, lifted into the v2
 /// set. A one-element `[List A]` interface with a pure `Type0` `A` selects the
 /// list template only for the whole root `(not (is-nil (in x0)))`.
+///
+/// The interface comparison stays inline and the element is read through a
+/// length check and an index. A slice borrow bound to a local that outlives a
+/// loop reaches an unimplemented ended-shared-loan shape in the pinned
+/// extractor's loop-context join, and a slice pattern needs a metadata
+/// projection it cannot resolve.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; every recognizer step returns an empty or partial bounded set for an unmatched shape; no predicate is asserted to belong to the template algebra."
@@ -208,8 +214,7 @@ pub(crate) fn templates_of(
     prepared: &crate::Prepared,
 ) -> alloc::vec::Vec<crate::companion::GuardTemplateV2> {
     let mut found = alloc::vec::Vec::with_capacity(1);
-    let stack_in = prepared.checked().interface.stack_in.as_slice();
-    if stack_in == [noble_kernel::types::Ty::I64] {
+    if prepared.checked().interface.stack_in.as_slice() == [noble_kernel::types::Ty::I64] {
         let lifted = crate::companion::guard::templates_of(prepared);
         let mut index = 0usize;
         while index < lifted.len() {
@@ -218,8 +223,12 @@ pub(crate) fn templates_of(
         }
         return found;
     }
-    let element: &noble_kernel::types::Ty = match stack_in {
-        [noble_kernel::types::Ty::List(item)] => item,
+    let stack_in = prepared.checked().interface.stack_in.as_slice();
+    if stack_in.len() != 1 {
+        return found;
+    }
+    let element: &noble_kernel::types::Ty = match &stack_in[0] {
+        noble_kernel::types::Ty::List(item) => item,
         _ => return found,
     };
     if !is_type0(element) {
@@ -288,10 +297,10 @@ pub(crate) fn list_interface(
     if !entry.guards_v2.contains(&GuardTemplateV2::NonEmptyList) {
         return Err(crate::companion::Refusal::UnsupportedGuardTemplate);
     }
-    match entry.input.as_slice() {
-        [only] => Ok(only.clone()),
-        _ => Err(crate::companion::Refusal::UnsupportedGuardTemplate),
+    if entry.input.as_slice().len() != 1 {
+        return Err(crate::companion::Refusal::UnsupportedGuardTemplate);
     }
+    Ok(entry.input[0].clone())
 }
 
 /// Produce one source wrapper quotation. The three v1 templates keep the exact
