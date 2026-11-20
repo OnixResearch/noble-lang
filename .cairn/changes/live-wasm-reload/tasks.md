@@ -196,20 +196,20 @@ cases remain absent/not-run/open, with no Octet/Lean proof claim.
 
 A later isolated acceptance slice added `verification/live-cases/gate.mjs`
 and its retained receipt `verification/live-cases/acceptance.json` (SHA-256
-`d660f82575856bda946d4ad34d4ca2cfa6e61beeaa6a7f7befd3dd6a36ba9a9f`). The gate
+`54181eb144b5ef8a99bb79e9a9817648d0c77077d49c626482893a2dbcbcd4c4`). The gate
 refuses a dirty source scope, pins each LIVE case's exact
 id/profile/kind/requirements/input/expected projection, builds the pinned CLI
 and the `live_repl` integration binary from the committed tree, runs the
 selected `live_repl` tests, drives real `noble live repl` and
 `noble live watch` children for every observed field, and writes one
 immutable `acceptance.json` outside the repository before it is copied in.
-It was measured on commit `ac878aa6` with source revision
-`sha256:99ac83c628a6eac7a6d9f3a8ae67ec69be8473323d16866f7ce0c40e6369cc47`,
+It was measured on commit `004d24c4` with source revision
+`sha256:f4abcb1e43efba0405040ec85d11468516585fbad174aaeace08930a564a7d1a`,
 CLI SHA-256
-`3b48316d096f755ff43fd990fa0088376d433b78ac2a8b695ff4ed2b7214146b` and
+`ca4b197c4b9e36d90b34456e71d5e21c122d496264acd9c8a221595fc9b76fb7` and
 `live_repl` test-binary SHA-256
-`0ab763c31288abc836778cbda908f75d29a12a3769a8c478102a418facdf9c5f`, over 27
-recorded commands and 69 retained JSON reports. LIVE-01 is promoted
+`f6f4867d7d5e659e8eb0a94d2aa74677069fea5cb3ebee518524e44581757be3`, over 34
+recorded commands and 75 retained JSON reports. LIVE-01 is promoted
 (`implemented`/`passed`/`open`/`explicit`): `20 addone` returned 21 on the old
 bytes, a fsynced paired rename to the case's after bytes was followed by a
 `reload-committed` ACK at the next generation with zero guest requests and zero
@@ -233,18 +233,50 @@ outcome `interpreter-unavailable`, exit 2 and no second report within 300 ms,
 while `--engine v8` still reported engine `v8`. The selected real-child tests
 `live_01_reload_ack_precedes_fresh_next_top_level_call`, three LIVE-06 tests and
 `interpreter_choice_refuses_at_startup_without_v8_fallback` passed in the same
-build. LIVE-02, LIVE-03 and LIVE-05 remain absent/not-run: the LIVE-02 canonical
-after-reload script `20 twice swap 20 swap run` is refused at check and its
-in-flight frame needs the feature-gated safepoint seam; LIVE-03's
-`initial_module` cannot coexist with the initial definition in one selected
-file, `changed-file-during-read` needs a read-race seam, `host-binding-mismatch`
-produced no startup report, and the two declared-module variants ran only in a
-module-only session; LIVE-05's `"A" test.emit test.abort` submission is refused
-as an unbound word and its racing and superseded variants need the
-feature-gated `live-test-barrier` seam. LIVE-04, LIVE-08, LIVE-09 and LIVE-10
-are untouched. No proof, Octet or Lean claim is made; every promoted case keeps
-`proof: open`, and task 3 below stays unchecked because not every LIVE case is
-exercised.
+build. LIVE-02, LIVE-03 and LIVE-05 remain absent/not-run. A follow-up slice on
+this branch corrected the reported startup stalls and widened the gate.
+MEASURED, a default-profile file holding a definition plus
+`module count@1 [...]` and a declared binding whose signature differs from its
+module (`bind ledger@1 test.emit emit-a Bool -- ! test.emit allow`) already
+refuse before EOF with one admission/`reload-refused` report, exit 2 and zero
+counters, so the earlier "no report and no exit" observation was a probe
+artifact rather than a runtime defect; the tests
+`mixed_definition_and_module_source_refuses_at_startup_with_one_report` and
+`mismatched_declared_binding_refuses_at_startup_with_one_report` pin both
+refusals. The gate now builds the feature-only `live-test-barrier` CLI and test
+binary after the default-profile observations, shows the default binary ignores
+the barrier environment, and cites the seam-gated real-child tests for LIVE-02's
+in-flight old frame, publication safepoint and old generation, LIVE-05's racing
+and superseded watch variants, and LIVE-03's changed-file-during-read drift.
+LIVE-03's declared variants run on a live definition namespace and module root
+(module-only selected file plus the case definition as the first declared
+submission): the incompatible-schema replacement is refused before an
+opaque-schema comparison by the same-version declaration rule, and the
+dependency-cycle replacement is refused as `cyclic local module definitions`,
+each with the old definition still callable. MEASURED remaining gaps. LIVE-02's
+canonical after-reload script `20 twice swap 20 swap run` is a **case input
+defect**, established from the canonical spec and the case's own `expected`
+fields and not repaired here: `run : S Program<S,T,e> -- T` (language spec,
+line 848) requires exactly `[I64]` below the Program, and the script leaves
+`[I64, I64, Program]` (`20 twice` pushes 24, `swap` moves the Program up, the
+second `20 swap` adds another I64 without changing the Program's depth), so the
+CLI refuses it at check (`expected [] I64 Program<…>; actual [] I64 I64
+Program`) and `expected.stack_bottom_to_top [24, 21]` is unreachable; the
+variant that executes the retained Program with its typed input still returns
+the old body. The case text was not edited. LIVE-03's `host-binding-mismatch`
+needs a reload that can carry a binding change, which the single startup
+manifest cannot; its `initial_module` is not defective as a session state (the
+module-only selected file plus the case definition as the first declared
+submission reproduces it), but the single-source harness cannot deliver both at
+startup, so the mapping is recorded rather than the input changed. LIVE-05's
+`"A" test.emit test.abort` submission is refused at resolve because top-level
+effects are unbound and `test.abort` has no Core environment row in this
+profile; bindings admit only test.emit/test.clock module operations, and the
+refusal is the same class as the missing adapt-environment abort row the
+OwnCases slice reports for live-slot sessions. LIVE-04,
+LIVE-08, LIVE-09 and LIVE-10 are untouched. No proof, Octet or Lean claim is
+made; every promoted case keeps `proof: open`, and task 3 below stays unchecked
+because not every LIVE case is exercised.
 
 - [ ] [serial] Implement and test in-process Wasm encoder/verifier with independently accepted source, exact selected ABI and isolated staging. r[BE-LIVE-01] r[S-LIVE-01]
 - [ ] [serial] Implement resident live CLI/reload/watch, complete dependent rebuild, atomic safepoint publication, stable typed stack and bounded code retirement. r[K-LIVE-01] r[H-LIVE-01] r[H-LIVE-02] r[H-LIVE-03] r[DX-LIVE-01]
