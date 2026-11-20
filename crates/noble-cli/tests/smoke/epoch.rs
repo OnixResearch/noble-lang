@@ -7,8 +7,7 @@
 //! denials with no in-repository receipt. These tests pin the behaviour the
 //! binary actually exhibits; every number below is measured, not copied.
 
-use std::io::{BufRead, BufReader, Write};
-use std::process::{Child, ChildStdout, Command, ExitStatus, Stdio};
+use std::io::{BufRead, Write};
 
 const RESULT: &[u8] = include_bytes!("../../../noble-contracts/src/fixtures/result.noble");
 const DIGIT: &[u8] =
@@ -23,13 +22,13 @@ const FOLD_CELLS: u64 = 306;
 const FOLD_LINE: &[u8] = b"\"123\" 0 0 decimal_fold@1.fold drop";
 
 struct SignedSession {
-    child: Child,
-    reports: BufReader<ChildStdout>,
+    child: std::process::Child,
+    reports: std::io::BufReader<std::process::ChildStdout>,
 }
 
 impl SignedSession {
     fn start(opt: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let mut child = Command::new(env!("CARGO_BIN_EXE_noble"))
+        let mut child = std::process::Command::new(env!("CARGO_BIN_EXE_noble"))
             .args([
                 "session",
                 "--framed",
@@ -37,13 +36,13 @@ impl SignedSession {
                 "--text-byte-cursor",
             ])
             .args(flags(opt))
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
             .spawn()?;
         let stdout = child.stdout.take().ok_or("missing session stdout")?;
         Ok(Self {
             child,
-            reports: BufReader::new(stdout),
+            reports: std::io::BufReader::new(stdout),
         })
     }
 
@@ -70,7 +69,7 @@ impl SignedSession {
         self.report()
     }
 
-    fn finish(mut self) -> Result<ExitStatus, Box<dyn std::error::Error>> {
+    fn finish(mut self) -> Result<std::process::ExitStatus, Box<dyn std::error::Error>> {
         drop(self.child.stdin.take());
         Ok(self.child.wait()?)
     }
@@ -102,30 +101,12 @@ fn release_header(store: &str, id: u64) -> String {
     format!(":release-observed-roots {store} {id}\n")
 }
 
-fn assert_retirement(report: &serde_json::Value, epoch: u64) {
-    let retirement = &report["source_epoch_retirement"];
-    assert_eq!(retirement["schema"], "noble-source-epoch-retirement/v1");
-    assert_eq!(retirement["outcome"], "source-epoch-retired");
-    assert_eq!(retirement["released_cells"], FOLD_CELLS);
-    assert_eq!(retirement["released_bytes_before"], 0);
-    assert_eq!(retirement["released_bytes_after"], FOLD_CELLS * 48);
-    assert_eq!(retirement["heap_cells_before"], FOLD_CELLS);
-    assert_eq!(retirement["heap_cells_after"], 0);
-    assert_eq!(retirement["retained_core_entries"], 4);
-    assert_eq!(retirement["cleared_code_entries"], 144);
-    assert_eq!(retirement["code_end"], 148);
-    // The compiler generation advances once per prepared fold.
-    assert_eq!(retirement["generation"], epoch + 1);
-    assert_eq!(retirement["source_epoch_before"], epoch);
-    assert_eq!(retirement["source_epoch_after"], epoch + 1);
-}
-
 // r[verify K-DEF-03]
 /// One licensed epoch per reported fold: 65 folds in a single session retire
 /// their checked code and every Program/cell they allocated, keep Core 0..3,
 /// and never advance the 4,096-cell session maximum.
 #[test]
-fn signed_source_epoch_retires_sixty_five_same_session_folds()
+fn signed_folds_retire_checked_code_across_sixty_five_reports()
 -> Result<(), Box<dyn std::error::Error>> {
     for opt in ["off", "on"] {
         let mut sources: Vec<&[u8]> = vec![RESULT, DIGIT, FOLD];
@@ -137,6 +118,23 @@ fn signed_source_epoch_retires_sixty_five_same_session_folds()
             .as_str()
             .ok_or("missing epoch store")?
             .to_owned();
+        let confirm = |report: &serde_json::Value, tick: u64| {
+            let retirement = &report["source_epoch_retirement"];
+            assert_eq!(retirement["schema"], "noble-source-epoch-retirement/v1");
+            assert_eq!(retirement["outcome"], "source-epoch-retired");
+            assert_eq!(retirement["released_cells"], FOLD_CELLS);
+            assert_eq!(retirement["released_bytes_before"], 0);
+            assert_eq!(retirement["released_bytes_after"], FOLD_CELLS * 48);
+            assert_eq!(retirement["heap_cells_before"], FOLD_CELLS);
+            assert_eq!(retirement["heap_cells_after"], 0);
+            assert_eq!(retirement["retained_core_entries"], 4);
+            assert_eq!(retirement["cleared_code_entries"], 144);
+            assert_eq!(retirement["code_end"], 148);
+            // The compiler generation advances once per prepared fold.
+            assert_eq!(retirement["generation"], tick + 1);
+            assert_eq!(retirement["source_epoch_before"], tick);
+            assert_eq!(retirement["source_epoch_after"], tick + 1);
+        };
         for (index, report) in reports[3..].iter().enumerate() {
             assert_eq!(report["outcome"], "normal", "{opt}/{index}");
             assert_eq!(report["stack"], serde_json::json!([]));
@@ -145,7 +143,7 @@ fn signed_source_epoch_retires_sixty_five_same_session_folds()
                 serde_json::Value::String(store.clone())
             );
             assert_eq!(report["source_epoch_retirement"]["released_programs"], 33);
-            assert_retirement(report, u64::try_from(index)?);
+            confirm(report, u64::try_from(index)?);
         }
     }
     Ok(())
