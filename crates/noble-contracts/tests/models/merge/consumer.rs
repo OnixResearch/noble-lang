@@ -168,6 +168,10 @@ pub(super) fn search(selection: &Selection, seed: u64, vectors: usize) -> Search
 
 /// One vector's verdict: a mismatch is replayed before it is retained, a
 /// conflict stops the search, and an out-of-fragment subject is unsupported.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; verdict re-executes four whole programs and allocates the witness, which cannot be const; the helper is private to the test lane"
+)]
 fn verdict(selection: &Selection, input: &[u64], seed: u64, examined: usize) -> Option<Search> {
     let stop = |outcome: Outcome, counterexample: Option<Counterexample>| {
         Some(Search {
