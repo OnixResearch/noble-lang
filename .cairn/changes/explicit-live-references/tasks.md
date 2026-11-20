@@ -22,9 +22,9 @@
   `input`/`expected`/variant field onto the existing lanes. It promoted **LSLOT-01**, **LSLOT-02**
   and **LSLOT-09** (one evidence record each, `proof: open`) from
   `verification/lslot-cases/acceptance.json` (sha256
-  `f521635991d3d86915347911aca8625aab1273d2236c4edfcec90e8020fc50a1`, binary sha256
+  `7e9f2f457f031763fe75986f129411711c9cd36c83756ab86dcb805eaecee751`, binary sha256
   `96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4`, source revision
-  `sha256:d1987003bbba63d554e321acc6b712a4c620b6e000bb7cdd838e5a1268d8bc20`).
+  `sha256:14f1fe00ab86a9c39dd9c1683de683ecf4c50e44c9c136d6b2a17cabd0037c66`).
   - **Admission, pinning and nested dispatch (LSLOT-02).** Both independent epoch-1 registry boots
     are primitive atomic genesis. The A→B→B root performs both B dispatches against B-v1 while
     B-v2 publishes as epoch 2 (result 22), the A→B→C root keeps A-v1/B-v1/C-v1 with host-issued
