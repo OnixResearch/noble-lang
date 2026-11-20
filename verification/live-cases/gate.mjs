@@ -724,13 +724,13 @@ async function observeLive05() {
   replace(missing.source, 'import missing@1 as m');
   const missingRefused = await missingWatch.report();
   replace(missing.source, 'def addone [ 1 + ]');
-  const missingOld = await missingWatch.submit('addone');
+  const missingOld = await missingWatch.submit('20 addone');
   await missingWatch.close(0);
   keep('LIVE-05-missing', 'initial', missingInitial);
   keep('LIVE-05-missing', 'refused', missingRefused);
   keep('LIVE-05-missing', 'old-call', missingOld);
   observe('LIVE-05', 'input.variants.missing-import.registry', missingRefused.outcome === 'reload-refused'
-    && missingRefused.generation === missingInitial.generation && missingOld.outcome === 'normal' && isStack(missingOld, ['I64:8']),
+    && missingRefused.generation === missingInitial.generation && missingOld.outcome === 'normal' && isStack(missingOld, ['I64:21']),
     { outcome: missingRefused.outcome, generation: missingRefused.generation, diagnostic: missingRefused.diagnostic,
       old_call_stack: stackOf(missingOld) });
 
