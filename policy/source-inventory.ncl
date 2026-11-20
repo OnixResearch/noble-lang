@@ -567,6 +567,11 @@
 #   cargo graph 026d74e820ef4ce6949d8a53a2f7a5e829b2f984ba2fc6cf8f36f0f946b7ac5e; collector policy 49fb49992c5790e26ab6572f4a2380078416c2bdefd2c55f571b7bb759c73395.
 #   23750 production paths = 11808 body/open + 7522 generated + 4420 structural;
 #   16005 test-only paths; 92 macro origins. Earlier header counts are historical.
+# Renewed renew after adding workspace homepage, repository and documentation metadata (#137) from a complete 110-unit selected collection:
+#   IR 5e20676c15fb37e816282b26e28e90df634cf425004ec5d666d300ceb6f9e53c; coverage 527553f5bda249dabe2eb3de1feec884095082686388db61ebec86a454c3788f;
+#   cargo graph 026d74e820ef4ce6949d8a53a2f7a5e829b2f984ba2fc6cf8f36f0f946b7ac5e; collector policy 49fb49992c5790e26ab6572f4a2380078416c2bdefd2c55f571b7bb759c73395.
+#   23750 production paths = 11808 body/open + 7522 generated + 4420 structural;
+#   16005 test-only paths; 92 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
