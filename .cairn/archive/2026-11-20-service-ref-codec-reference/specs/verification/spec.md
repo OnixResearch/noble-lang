@@ -24,7 +24,7 @@ Where the model and the implementation decide differently, the difference MUST b
 
 - GIVEN the generated case file written from the Lean model
 - WHEN the Rust decoder is run against every case
-- THEN each decision matches its independent expectation, except the documented bracket-scan divergence, which the lane asserts as a divergence
+- THEN each decision matches its independent expectation, and any decision that differs is asserted as a divergence rather than pinned as agreement
 
 ### Requirement: VC-REF-03
 r[VC-REF-03]
@@ -37,4 +37,4 @@ The reference MUST NOT claim an extraction or refinement proof it does not have,
 
 - GIVEN the retained receipts
 - WHEN their scope statements are read
-- THEN they name the clean commit, the Lean, Mathlib and Rust pins, the host and target, the case-file digest and the open Rust-to-model edge
+- THEN they name the clean commit, the Lean, Mathlib and Rust pins, the host and target, the case-file digest, the Rust-to-model correspondence route and every edge that remains open

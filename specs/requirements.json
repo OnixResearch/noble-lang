@@ -1939,6 +1939,78 @@
       "test_design": "test-design-open"
     },
     {
+      "id": "FSUB-CAND-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "FSUB-EVAL-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "FSUB-FRAG-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "FSUB-ID-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "FSUB-PROOF-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "FSUB-REL-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
       "id": "FXORACLE-CORPUS-01",
       "document": "../.cairn/specs/verification/spec.md",
       "document_id": "SPEC-V001",
@@ -3415,6 +3487,54 @@
         "bounded-execution",
         "model-proof-or-explicit-refinement-no-go",
         "policy-refusal",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-BELT-01",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-BELT-02",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-BELT-03",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "NGRAPH-BELT-04",
+      "document": "../.cairn/specs/backend-experiments/spec.md",
+      "document_id": "SPEC-BE001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
         "review"
       ],
       "scenarios": [],
@@ -6441,6 +6561,42 @@
         "DX-13"
       ],
       "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "VC-REF-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VC-REF-02",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "VC-REF-03",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
     },
     {
       "id": "VC-REWRITE-01",

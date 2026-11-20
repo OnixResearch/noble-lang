@@ -366,6 +366,21 @@ corpora; stale comparison-cache controls; peak-storage and work accounting;
 and a direct differential against the production checker remain future work.
 No paper-derived performance guarantee is claimed.
 
+### Closeout decision (2026-11-20)
+
+The repository owner did not select this future evaluation. The change is
+archived with the no-go as its result. The items above stay unbuilt, and
+FSUB-EVAL-01 still binds any later integration proposal. Reopen only with one
+of:
+
+- a new base relation whose incomparable supertypes break the principal-type
+  argument (then O1–O9 need new proofs, not only this corpus);
+- a concrete Noble program that today's checker plus K-EFFECT-05 rejects and
+  a finite family would accept;
+- a separately reviewed integration plan, which must first add the metering,
+  corpora, stale-cache controls and production differential that FSUB-EVAL-01
+  requires.
+
 ## Proof obligations (proved, tested, assumed and open)
 
 | Id | Obligation | Status in this change |

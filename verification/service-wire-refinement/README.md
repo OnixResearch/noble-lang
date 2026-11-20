@@ -275,5 +275,8 @@ before the pins were read.
 - A packet is related by its first `len` bytes; the rest of its 64-byte buffer is not stated.
 - Callers of the codec are out of scope.
 - No Rust compiler, Charon or Aeneas correctness claim.
-- The phase 3 task of `service-ref-codec-reference` ("Relate `wire.rs` to the model through an
-  extraction or refinement route") stays unticked: promotion is not selected.
+- The owner selected phase 3 of `service-ref-codec-reference` ("Relate `wire.rs` to the model
+  through an extraction or refinement route") on 2026-11-20. This lane is its evidence. The
+  change is archived at `.cairn/archive/2026-11-20-service-ref-codec-reference/`, and
+  VC-REF-01..03 are canonical in the verification specification. The correspondence holds for
+  the two codec entry points only, under the trust boundary listed above.

@@ -126,6 +126,7 @@ const ROUTES = {
   LPL: ['bounded-execution', 'model-proof-or-explicit-refinement-no-go', 'policy-refusal', 'review'],
   FXORACLE: ['experiment-test', 'correspondence', 'review'],
   EPROTO: ['boundary-test', 'model-proof', 'review'],
+  FSUB: ['experiment-test', 'model-proof', 'review'],
 };
 
 // Document scope only. This discovery is not the compiler/source inventory.
