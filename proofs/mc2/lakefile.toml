@@ -16,6 +16,9 @@ name = "CertifiedInvariant"
 name = "MC2Gate"
 
 [[lean_lib]]
+name = "MC2V2Gate"
+
+[[lean_lib]]
 name = "MC2ExtractionGate"
 
 [[lean_lib]]
