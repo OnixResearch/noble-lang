@@ -75,27 +75,34 @@ fn quoted_named_call_cannot_use_two_direct_call_rule() -> Result<(), String> {
     Ok(())
 }
 
+/// The reviewed rule identities of the `Named-Contract-Calls-v3` profile: the
+/// proof-term rule id and the exact Lean declaration the strict consumer
+/// instantiates. The table is local to this test until the revision-3 symbolic
+/// checker (task 2) consumes it: it must stay out of the extracted
+/// `noble-contracts` library so the MC1 implementation verifier still matches
+/// the committed extraction byte-for-byte, and out of every revision-hashed
+/// source so a v3 rule edit cannot re-stale an accepted v1 or v2 dependency.
+const REVIEWED_RULE_IDENTITIES: &[(&str, &str)] = &[
+    ("bv-add-assoc", "BitVec.add_assoc"),
+    ("bv-add-comm", "BitVec.add_comm"),
+    ("bv-mul-add", "BitVec.mul_add"),
+    ("list-append-assoc", "List.append_assoc"),
+    ("list-append-nil", "List.append_nil"),
+    ("list-nil-append", "List.nil_append"),
+];
+
 #[test]
 fn reviewed_v3_rule_identities_are_exact() {
-    // Each reviewed rule identity names an exact Lean declaration, and that
-    // declaration is pinned (``name``) in the strict contract gate. The table
-    // lives in `reviewed_rules_v3`, outside every revision-hashed source, so a
-    // v3 rule edit cannot re-stale an accepted v1 or v2 dependency.
+    // Every identity names an exact Lean declaration and that declaration is
+    // pinned (``` ``name ```) in the strict contract gate.
     const GATE: &str = include_str!("../../../../proofs/mc1/ContractGate.lean");
-    assert_eq!(
-        noble_contracts::reviewed_rules_v3::REVIEWED_RULES_V3,
-        &[
-            ("bv-add-assoc", "BitVec.add_assoc"),
-            ("bv-add-comm", "BitVec.add_comm"),
-            ("bv-mul-add", "BitVec.mul_add"),
-            ("list-append-assoc", "List.append_assoc"),
-            ("list-append-nil", "List.append_nil"),
-            ("list-nil-append", "List.nil_append"),
-        ],
-        "reviewed rule identities changed"
-    );
-    for (identifier, declaration) in noble_contracts::reviewed_rules_v3::REVIEWED_RULES_V3 {
+    for (identifier, declaration) in REVIEWED_RULE_IDENTITIES {
         let pinned = format!("``{declaration}");
         assert!(GATE.contains(&pinned), "rule {identifier} is not pinned");
     }
+    assert_eq!(
+        REVIEWED_RULE_IDENTITIES.len(),
+        6,
+        "reviewed rule count changed"
+    );
 }

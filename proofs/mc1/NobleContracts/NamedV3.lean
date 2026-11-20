@@ -953,13 +953,8 @@ theorem stackTyped_lift {env : NamedV1.Environment} {stack : NobleContracts.Stac
       simp only [NamedV1.liftStack, List.map_cons]
       exact .cons (hasType_lift hv) ih
 
-/-- T4 (`liftMc1Claim`): an MC1 exported claim for profile code lifts to the
-named semantics along `liftCode`. The named model supplies the MC1 preimages of
-its stacks and receives the lifted MC1 result, with the named `StackTyped`
-boundary and the MC1 postcondition. The execution is at a *lifted* tail: the
-tail of `exportedNamedClaim` is an arbitrary named stack, and a named stack
-holding call-bearing programs has no MC1 preimage, so the MC1 claim can only be
-instantiated at the tails it quantifies. -/
+/-- T4, `Exec` form of `run_reflect`: a named normal return of a lifted profile
+program from a lifted stack is the lift of an MC1 normal return. -/
 theorem exec_reflect {env : NamedV1.Environment} {code : List NobleContracts.Op}
     {before : NobleContracts.Stack} {final : NamedV1.Stack} (profile : ProfileCode code)
     (h : NamedV1.Exec env (NamedV1.liftCode code) (NamedV1.liftStack before) final) :
@@ -978,6 +973,16 @@ theorem exec_reflect {env : NamedV1.Environment} {code : List NobleContracts.Op}
     rw [List.reverse_reverse]
     exact hrun
 
+/-- T4 (`liftMc1Claim`): an MC1 exported claim for `ProfileCode` lifts to the
+named semantics along `liftCode`. The named model supplies the MC1 preimages of
+its stacks and receives the lifted MC1 result, with the named `StackTyped`
+boundary and the MC1 postcondition. The execution is at a *lifted* tail: the
+tail of `exportedNamedClaim` is an arbitrary named stack, and a named stack
+holding call-bearing programs has no MC1 preimage, so this statement quantifies
+only over the tails the MC1 claim itself quantifies. It is therefore **not** the
+`exportedNamedClaim` that `callFrame`/`ChainStep` instantiate at a caller's
+arbitrary frame; the design amendment of 2026-11-20 records what closing that
+gap requires. -/
 theorem liftMc1Claim {code : List NobleContracts.Op} {inputTypes outputTypes paramTypes : List Ty}
     {pre post : NobleContracts.Stack → NobleContracts.Stack → NobleContracts.Stack → Prop}
     (claim : NobleContracts.exportedClaim code inputTypes outputTypes paramTypes pre post)

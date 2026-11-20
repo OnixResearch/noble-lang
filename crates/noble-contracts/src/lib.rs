@@ -233,9 +233,6 @@ mod metering;
 mod predicate;
 mod program;
 mod rendering;
-// Outside both the intrinsic `MODEL` closure and every revision-hashed source:
-// v3 rule-table edits must never re-stale accepted v1 or v2 dependencies.
-pub mod reviewed_rules_v3;
 pub mod source;
 mod syntax;
 pub mod wire;
