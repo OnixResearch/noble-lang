@@ -139,9 +139,9 @@ try {
   assert.equal(composedCapture(varying2), '2');
   assert.ok(varying2.target_identity?.definition_id, 'checked anonymous target D is absent');
   assert.match(varying2.target_identity.definition_id,
-    /^anonymous-template-experimental-v3-sha256:[a-f0-9]{64}$/);
+    /^anonymous-template-experimental-v4-sha256:[a-f0-9]{64}$/);
   assert.match(varying2.target_identity.program_value_id,
-    /^anonymous-program-experimental-v3-sha256:[a-f0-9]{64}$/);
+    /^anonymous-program-experimental-v4-sha256:[a-f0-9]{64}$/);
   assert.deepEqual((await run(varying2.owner, 1)).stack, [{ kind: 1, value: '3' }]);
   const varying3 = saved(await invoke('variable', [input(3)]), 0, 'variable', installations.variable);
   assert.equal(composedCapture(varying3), '3');
@@ -151,6 +151,14 @@ try {
   assert.notEqual(varying2.target_identity.program_value_id, varying2.verified_origin.definition_identity);
   assert.deepEqual(varying2.target_identity.captures, [{ type: 'I64', value: '2' }]);
   assert.deepEqual(varying3.target_identity.captures, [{ type: 'I64', value: '3' }]);
+  assert.deepEqual(varying2.target_identity.lexical_recursive_owner, { kind: 'absent' },
+    'a supported returned target binds a verified absent lexical recursive owner');
+  const classOccurrences = (identity, binding) =>
+    identity.template_classes.find(entry => entry.binding === binding)?.occurrences;
+  assert.equal(classOccurrences(varying2.target_identity, 'q(r0)'), 1,
+    'a varying root input is one logical source-binding class');
+  assert.equal(varying2.target_identity.template_classes
+    .filter(entry => entry.binding.startsWith('q(')).length, 1);
   assert.deepEqual(varying2.target_identity.interface, {
     input: ['I64'], output: ['I64'], effects: [],
   });
@@ -164,6 +172,11 @@ try {
     installations.variable.artifact_sha256);
   assert.equal(unaryManifest.donors.static.artifact_sha256,
     installations.variable.artifact_sha256);
+  assert.deepEqual(unaryManifest.identity.lexical_recursive_owner, { kind: 'absent' });
+  assert.deepEqual(unaryManifest.source.template_captures, [0]);
+  assert.deepEqual(unaryManifest.source.template_classes,
+    varying2.target_identity.template_classes);
+  assert.match(unaryManifest.template_sha256, /^[0-9a-f]{64}$/);
   assert.equal(varying2.target_identity.artifact_sha256, manifestDigest(unaryManifest));
   const renamed = saved(await invoke('renamed', [input(2)]), 0, 'renamed', installations.renamed);
   assert.notEqual(renamed.verified_origin.source_generation,
@@ -199,6 +212,12 @@ try {
     assert.equal(composedCapture(program), String(literal));
     assert.deepEqual(program.target_identity.captures, [],
       'fixed constant is bound inside the semantic definition, not a root capture');
+    assert.equal(classOccurrences(program.target_identity, id.startsWith('computed')
+      ? (literal === 3 ? 'q(add(#1,#2))' : 'q(add(#1,#1))') : `q(#${literal})`), 1,
+    'a fixed literal or checked computed constant keeps its exact binding class');
+    assert.equal(program.target_identity.template_classes
+      .filter(entry => entry.binding.startsWith('q(r')).length, 0,
+    'a fixed constant is never a varying root-binding class');
     assert.deepEqual((await run(program.owner, 1)).stack, [{ kind: 1, value: String(literal + 1) }]);
     fixed[id] = program.target_identity;
     fixedOwners[id] = program.owner;
@@ -257,6 +276,15 @@ try {
   assert.deepEqual(sharedProgram.target_identity.captures, [{ type: 'I64', value: '2' }]);
   assert.deepEqual(repeatedRoot.target_identity.captures,
     [{ type: 'I64', value: '2' }]);
+  const innerOccurrences = identity => identity.template_classes
+    .filter(entry => entry.binding.startsWith('c(q(r0)'))
+    .reduce((total, entry) => total + entry.occurrences, 0);
+  assert.equal(innerOccurrences(sharedProgram.target_identity), 1,
+    'a reused immutable Program cell is one occurrence of its logical binding');
+  assert.equal(innerOccurrences(repeatedRoot.target_identity), 2,
+    'two quote executions of one binding are two VM occurrences of one class');
+  assert.deepEqual(sharedProgram.target_identity.lexical_recursive_owner,
+    { kind: 'absent' });
   assert.deepEqual(sharedProgram.target_identity.artifact_manifest.donors.native.entries,
     [1, 2, 3], 'checked lexical dip requires pinned native entry 3');
   const nestedProgram = saved(await invoke('nested-program', [input(2)]), 0,
@@ -280,8 +308,8 @@ try {
     assert.deepEqual(composedQuoteCaptures(program), ['2', '2']);
   const sameIdentity = same.target_identity;
   const distinctIdentity = distinct.target_identity;
-  assert.match(sameIdentity.definition_id, /^anonymous-template-experimental-v3-sha256:[a-f0-9]{64}$/);
-  assert.match(sameIdentity.program_value_id, /^anonymous-program-experimental-v3-sha256:[a-f0-9]{64}$/);
+  assert.match(sameIdentity.definition_id, /^anonymous-template-experimental-v4-sha256:[a-f0-9]{64}$/);
+  assert.match(sameIdentity.program_value_id, /^anonymous-program-experimental-v4-sha256:[a-f0-9]{64}$/);
   assert.notEqual(same.verified_origin.definition_identity,
     renamedAlias.verified_origin.definition_identity,
     'renamed alias fixtures must really use distinct checked builder owners');
@@ -297,6 +325,22 @@ try {
   assert.deepEqual(sameIdentity.captures, [{ type: 'I64', value: '2' }]);
   assert.deepEqual(distinctIdentity.captures,
     [{ type: 'I64', value: '2' }, { type: 'I64', value: '2' }]);
+  assert.deepEqual(sameIdentity.lexical_recursive_owner, { kind: 'absent' });
+  assert.equal(classOccurrences(sameIdentity, 'q(r0)'), 2,
+    'two quote executions of one root binding share one logical alias class');
+  assert.equal(sameIdentity.template_classes
+    .filter(entry => entry.binding === 'q(r0)').length, 1,
+    'same-binding duplication is one class, not two equal classes');
+  assert.equal(classOccurrences(distinctIdentity, 'q(r1)'), 1);
+  assert.equal(classOccurrences(distinctIdentity, 'q(r0)'), 1,
+    'independent equal-valued root bindings stay separate classes');
+  assert.equal(distinctIdentity.template_classes
+    .filter(entry => entry.binding.startsWith('q(')).length, 2);
+  assert.deepEqual(sameIdentity.artifact_manifest.identity.lexical_recursive_owner,
+    { kind: 'absent' });
+  assert.deepEqual(sameIdentity.artifact_manifest.source.template_captures, [0]);
+  assert.deepEqual(sameIdentity.artifact_manifest.source.template_classes,
+    sameIdentity.template_classes);
   assert.deepEqual(sameIdentity.interface,
     { input: ['I64', 'I64'], output: ['I64'], effects: [] });
   assert.match(sameIdentity.artifact_sha256, /^[0-9a-f]{64}$/);
@@ -513,7 +557,7 @@ try {
   const returned = expectOutcome(await missingCore.issue({ operation: 'invoke', id: 'aliased',
     inputs: [input(2), input(2)], refs: [] }), 'executed').stack[0];
   assert.match(returned.target_identity.definition_id,
-    /^anonymous-template-experimental-v3-sha256:[a-f0-9]{64}$/);
+    /^anonymous-template-experimental-v4-sha256:[a-f0-9]{64}$/);
   const noCoreAttestation = expectOutcome(await missingCore.issue({ operation: 'publish',
     slot: 'alias-target', owner: returned.owner, expected_epoch: '0' }), 'refused');
   assert.match(noCoreAttestation.diagnostic,
