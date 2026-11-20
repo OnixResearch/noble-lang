@@ -153,7 +153,7 @@ fn pinned_named_library(library: &super::rules::Library) -> Result<(), output::F
     }
     Ok(())
 }
-fn model_revision() -> std::string::String {
+pub(crate) fn model_revision() -> std::string::String {
     let mut digest = Sha256::new();
     digest.update(b"noble-intrinsic-import-closure/v2");
     for (name, source) in MODEL {
@@ -166,7 +166,7 @@ fn model_revision() -> std::string::String {
     digest.update(TYPE_WITNESS.as_bytes());
     digest.finish()
 }
-fn named_model_revision() -> std::string::String {
+pub(crate) fn named_model_revision() -> std::string::String {
     let mut digest = Sha256::new();
     digest.update(b"noble-named-v2-import-closure/v1");
     for (name, source) in MODEL.iter().chain(NAMED_MODEL) {
@@ -177,7 +177,7 @@ fn named_model_revision() -> std::string::String {
     }
     digest.finish()
 }
-fn checker_revision() -> std::string::String {
+pub(crate) fn checker_revision() -> std::string::String {
     // The revision binds preparation and atomic publication, not just the
     // proof AST checker: a changed lexer, resolver, or source validity gate
     // must invalidate every previously accepted imported proof.
@@ -242,7 +242,7 @@ fn checker_revision() -> std::string::String {
     }
     digest.finish()
 }
-fn named_checker_revision(base: &str) -> std::string::String {
+pub(crate) fn named_checker_revision(base: &str) -> std::string::String {
     // A v2 accepted dependency must become stale if either the independent
     // original-source binder, the named graph/lowering checker, or the fresh
     // kernel consumer changes. Keep these additive files out of v1's source
@@ -486,7 +486,9 @@ pub(crate) struct IntrinsicEvidence {
     acceptance: verification::Acceptance,
     subject: encoding::Json,
 }
-fn dependency_evidence(dependency: &noble_contracts::intrinsic::ProofDependency) -> encoding::Json {
+pub(crate) fn dependency_evidence(
+    dependency: &noble_contracts::intrinsic::ProofDependency,
+) -> encoding::Json {
     encoding::object([
         ("name", encoding::string(&dependency.name)),
         ("module", encoding::string(&dependency.module)),
@@ -782,7 +784,7 @@ pub(crate) fn verify_with_evidence(
     Ok((checked, evidence, work))
 }
 
-fn source_error(error: &noble_contracts::source::Error) -> output::Failure {
+pub(crate) fn source_error(error: &noble_contracts::source::Error) -> output::Failure {
     let code = match error.diagnostic().kind {
         noble_contracts::DiagnosticKind::Exhausted => "intrinsic-source-exhausted",
         noble_contracts::DiagnosticKind::Unsupported => "intrinsic-source-unsupported",
@@ -809,19 +811,13 @@ fn accepted_report(
     work: noble_contracts::intrinsic::ProofWork,
     source_path: &str,
     submitted: &str,
+    schema: super::diagnostics::Schema,
 ) -> encoding::Json {
     let named = proofs
         .iter()
         .any(|proof| proof.kind == ProofKind::NamedContract);
-    encoding::object([
-        (
-            "schema",
-            encoding::string(if named {
-                "noble-intrinsic-module-report/v2"
-            } else {
-                "noble-intrinsic-module-report/v1"
-            }),
-        ),
+    let mut fields = std::vec::Vec::from([
+        ("schema", encoding::string(schema.module_schema(named))),
         (
             "profile",
             encoding::string(if named {
@@ -915,87 +911,65 @@ fn accepted_report(
                     .collect(),
             ),
         ),
-    ])
+    ]);
+    fields.extend(super::diagnostics::classification_fields(
+        schema,
+        super::diagnostics::CHECKED,
+    ));
+    encoding::Json::Object(fields)
 }
 
 /// Standalone, opt-in module source proof check, never a release decision.
 pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
+    const PROFILE: &str = "Intrinsic-Proofs-Draft";
     let source_path = arguments
         .get(1)
         .map_or_else(std::string::String::new, |path| {
             path.to_string_lossy().into_owned()
         });
+    let schema = match super::diagnostics::from_arguments(arguments) {
+        Ok(schema) => schema,
+        Err(error) => {
+            let report = super::diagnostics::failure_report(
+                super::diagnostics::DEFAULT_SCHEMA,
+                PROFILE,
+                &source_path,
+                None,
+                &error,
+            );
+            std::println!("{}", report.encode());
+            return std::process::ExitCode::from(error.outcome.exit());
+        }
+    };
     let mut submitted_sha256 = None;
-    let result = execute(arguments, &mut submitted_sha256);
-    let exit = match &result {
-        Ok(_) => std::process::ExitCode::SUCCESS,
-        Err(error) => std::process::ExitCode::from(error.outcome.exit()),
+    let result = execute(arguments, schema, &mut submitted_sha256);
+    let exit = match (&result, schema) {
+        // The published v1 report never changes meaning: a module without a
+        // proof obligation has always reported `unproved` with a success exit.
+        (Ok(None), super::diagnostics::Schema::V1) => std::process::ExitCode::SUCCESS,
+        // Revision v2 reports the VC-TOOL-02 outcome `unknown`, whose published
+        // exit code is 3; no evidence is never a successful proof check.
+        (Ok(None), super::diagnostics::Schema::V2) => {
+            std::process::ExitCode::from(output::Outcome::Unknown.exit())
+        }
+        (Ok(Some(_)), _) => std::process::ExitCode::SUCCESS,
+        (Err(error), _) => std::process::ExitCode::from(error.outcome.exit()),
     };
     let report = match result {
         Ok(Some(report)) => report,
-        Ok(None) => encoding::object([
-            (
-                "schema",
-                encoding::string("noble-intrinsic-module-report/v1"),
-            ),
-            ("profile", encoding::string("Intrinsic-Proofs-Draft")),
-            ("command", encoding::string("verify-module")),
-            ("outcome", encoding::string("unproved")),
-            ("stage", encoding::string("source-contract")),
-            ("source_path", encoding::string(&source_path)),
-            (
-                "source_sha256",
-                submitted_sha256
-                    .as_deref()
-                    .map_or(encoding::Json::Null, encoding::string),
-            ),
-            ("guest_requests", encoding::Json::Number(0)),
-            ("host_requests", encoding::Json::Number(0)),
-            ("protected_operations", encoding::Json::Number(0)),
-            ("candidate_executions", encoding::Json::Number(0)),
-            ("runtime_prover_calls", encoding::Json::Number(0)),
-            ("proof_grants_host_authority", encoding::Json::Bool(false)),
-            ("independent_recheck", encoding::Json::Bool(false)),
-        ]),
-        Err(error) => encoding::object([
-            (
-                "schema",
-                encoding::string("noble-intrinsic-module-report/v1"),
-            ),
-            ("profile", encoding::string("Intrinsic-Proofs-Draft")),
-            ("command", encoding::string("verify-module")),
-            ("outcome", encoding::string(error.outcome.name())),
-            (
-                "stage",
-                encoding::string(match error.code {
-                    "intrinsic-parse-invalid" => "parse",
-                    "intrinsic-resolve-invalid" => "resolve",
-                    "intrinsic-link-invalid" => "link",
-                    "intrinsic-contract-invalid" => "check",
-                    "intrinsic-source-exhausted" => "source-exhausted",
-                    "intrinsic-proof-refused" => "acceptance",
-                    "intrinsic-source-invalid"
-                    | "normalization-work-exhausted"
-                    | "substitution-work-exhausted" => "proof-check",
-                    _ => "independent-recheck",
-                }),
-            ),
-            ("source_path", encoding::string(&source_path)),
-            (
-                "source_sha256",
-                submitted_sha256
-                    .as_deref()
-                    .map_or(encoding::Json::Null, encoding::string),
-            ),
-            ("guest_requests", encoding::Json::Number(0)),
-            ("host_requests", encoding::Json::Number(0)),
-            ("protected_operations", encoding::Json::Number(0)),
-            ("candidate_executions", encoding::Json::Number(0)),
-            ("runtime_prover_calls", encoding::Json::Number(0)),
-            ("proof_grants_host_authority", encoding::Json::Bool(false)),
-            ("independent_recheck", encoding::Json::Bool(false)),
-            ("diagnostic", error.json()),
-        ]),
+        Ok(None) => super::diagnostics::no_evidence_report(
+            schema,
+            PROFILE,
+            &source_path,
+            submitted_sha256.as_deref(),
+        ),
+        Err(error) => super::diagnostics::failure_report(
+            schema,
+            PROFILE,
+            &source_path,
+            submitted_sha256.as_deref(),
+            &error,
+        ),
     };
     std::println!("{}", report.encode());
     exit
@@ -1490,6 +1464,7 @@ fn specialization_evidence(
 }
 fn execute(
     arguments: &[std::ffi::OsString],
+    schema: super::diagnostics::Schema,
     submitted_sha256: &mut Option<std::string::String>,
 ) -> Result<Option<encoding::Json>, output::Failure> {
     let path = arguments.get(1).ok_or_else(|| {
@@ -1539,6 +1514,9 @@ fn execute(
                         output::Failure::error("usage", "invalid proof deadline".into())
                     })?
             }
+            // The revision selector was parsed and validated once, before
+            // this loop; a repeated or unknown selector is already refused.
+            "--report-schema" => {}
             "--normalization-work" | "--substitution-work" => {
                 let limit = value
                     .to_str()
@@ -1619,6 +1597,7 @@ fn execute(
                         work,
                         &module.to_string_lossy(),
                         digest,
+                        schema,
                     ));
                 }
                 Ok(verified)

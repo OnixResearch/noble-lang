@@ -63,7 +63,7 @@ fn predicate(
     ])
 }
 
-fn bindings(values: &[noble_contracts::NamedType]) -> super::encoding::Json {
+pub(crate) fn bindings(values: &[noble_contracts::NamedType]) -> super::encoding::Json {
     super::encoding::Json::Array(
         values
             .iter()

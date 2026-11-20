@@ -63,6 +63,8 @@ Non-goals, as stated in the issue:
 
 **Rationale:** VC-INPUT-01 already requires a typed contract IR with exact references. DX-PROOF-01 already requires spans across every stage. What is missing is a *stable, addressable* projection that tools can share. Keys are structural, not positional in the source bytes, so editing an unrelated declaration does not invalidate them. Digests, by contrast, change whenever the statement changes. r[PAUTO-MAP-01]
 
+**Status 2026-11-20 (implementation).** `noble obligations` and `noble goal-view` print these two reports from prepared source data, and neither runs the consumer. Contract entries digest the trusted generator's own text (`export_lean`, or `prepare_named_contract` for the named v2 family). A pure proof's proposition has no host-generated Lean text outside the checker (`lean_proposition`), so its entry digests the declared proposition's exact source span and labels `statement_source: source-span`; it never claims a generated claim digest it did not compute. The reviewed unary-`I64` slice stacks are derived only from a declaration that names them (`export-unary-I64`, the `Stack` tail binder and `exec-literal N`) and are labelled `source: declared-proof-skeleton`; where no declaration exists the field is null. The model closure pins `Rules.lean`, so an entry's `rule_revision` is exactly its model revision.
+
 ### Decision: Workflow and API sketch (source span → obligation → producer → independent check → diagnostic)
 
 **Choice:** The workflow uses the following stages. The command names are proposals and none is selected.
@@ -274,6 +276,8 @@ Both terms go through `check_batch_with_budgets` and then `verify_intrinsic_pure
 An unmet obligation is explained by naming the site key, the failing constructor or slot, the expected and actual propositions or stacks, and the assumptions in scope. For example, "join expects `t = tail ++ [wrap64(x+1)]`; supplied `by-exact-result` returns the right slice's `Q`, which states `t = tail ++ [wrap64(x+2)]`". Failure to prove is never worded as falsity.
 
 **Rationale:** The VC-TOOL-02 and DX-PROOF-01 distinctions already exist. Categories make them actionable without a new trust state.
+
+**Status 2026-11-20 (owner decision 14).** OWNER DECISION 2026-11-20: `verify-module` "unproved": report `unknown` with exit 3 under a bumped report schema (v2). Implemented as `.cairn/changes/proof-automation-diagnostics/tasks.md` task 1: revision `v2`, the default, reports the VC-TOOL-02 outcome with `category` and `remediation` and exit 3 for missing evidence; `--report-schema v1` keeps the published revision's field set, field order, `unproved` outcome and exit 0, so no v1 consumer's field meaning changed. `not-run` remains the explanation-only outcome and no exit code changed for an existing outcome.
 
 ### Decision: Counterexamples are candidates until replayed and checked
 
