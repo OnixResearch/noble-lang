@@ -88,17 +88,22 @@
     `verification/own-cases/runs/20261120-r2/acceptance.json` (sha256 `ae533fdd…`, tested commit
     `81139111`, source revision `sha256:f09c0d…`); OWN-CASE-01, 02, 04, 06 and 07 are promoted from
     it (OWN-CASE-05 was promoted there and is withheld again after review round 2). The round-3
-    receipt `verification/own-cases/runs/20261120-r3/acceptance.json` supersedes it for the
-    promotion state; OWN-CASE-03 is recorded implemented/failed with the observed compose-5 refusal
-    in both. The first receipt (`acceptance.json`, `e873df58…`) and the intermediate runs
-    (`runs/20261120c`, `runs/20261120-failed`) stay immutable.
+    receipt is `verification/own-cases/runs/20261120-r3/acceptance.json` (sha256 `3d7666bf…`,
+    tested commit `33318b7c`, source revision `sha256:fdf333df…`, binary `5a62b529…` before and
+    after, 17 hashed raw outputs; `result: completed`, `verdict: unmet-cases`, `promotable`
+    OWN-CASE-01/02/04/06/07, `withheld` OWN-CASE-05, `failed_cases` OWN-CASE-03). Its projection
+    digest `26bb4a11…` reflects the round-3 registration edits. OWN-CASE-03 stays
+    implemented/failed with the observed compose-5 refusal. The first receipt (`acceptance.json`,
+    `e873df58…`) and the intermediate runs (`runs/20261120c`, `runs/20261120-failed`) stay
+    immutable.
   - **Consumer tests.** Every noble-cli live-slot target plus `live_repl` was run after the runtime
     change: `live_slot`, `live_slot_capture_legacy`, `live_slot_cas_policy`,
     `live_slot_coherent_maps`, `live_slot_direct_quote`, `live_slot_late_control`,
     `live_slot_quota_replay`, `live_slot_relocation_witness`, `live_slot_resource_ref`,
     `live_slot_selected_origin`, `live_slot_selected_retention`, `live_slot_typed_cases` and
     `live_repl` all pass. The run also covers the new OWN-CASE-04 lane through
-    `live_slot_resource_ref`; their result lines are in the round-3 receipt's raw outputs.
+    `live_slot_resource_ref` and `core`; all 14 targets pass after the abort-ledger change, and
+    the gate run's own `cargo test` steps are among the round-3 receipt's hashed raw outputs.
   - Review status: round 1 returned REVISE, round 2 accepted the registration with notes, accepted
     01/02/06/07, accepted 03 as an executed failure, accepted 04 with notes and rejected the
     OWN-CASE-05 promotion. The round-3 revision (OWN-CASE-05 withheld, honesty fixes and a new
