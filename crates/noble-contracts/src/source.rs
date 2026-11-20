@@ -2921,8 +2921,7 @@ mod tests {
         let ordinary = Session::new_live("");
         let refused = ordinary
             .prepare(b"\"A\" test.emit test.abort", &[], limits)
-            .err()
-            .expect("an ungranted live session cannot resolve the Core test hosts");
+            .expect_err("an ungranted live session cannot resolve the Core test hosts");
         assert!(refused.diagnostic().message.contains("unbound word"));
         let granted = Session::new_live_with_test_hosts("");
         let prepared = granted

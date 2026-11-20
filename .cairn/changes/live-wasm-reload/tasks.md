@@ -318,8 +318,12 @@ decision's reference to a "[21, 22]" final stack also disagrees with the
 unchanged case). MEASURED on the production binary from this tree. A script
 that derives the declared stack while keeping the old Program is
 `20 swap run 20 twice swap` (`[Program]` → `[21]` → `[21, 20]` → `[21, 24]` →
-`[24, 21]`); it needs a corrected owner decision. LIVE-02 remains
-absent/not-run and unpromoted until then.
+`[24, 21]`). OWNER DECISION 2026-11-20 (Decision 21a), delegated to the
+integrator, now replaces decision 21's script with exactly that reordering,
+`["20 swap run 20 twice swap"]`, and keeps everything else in the case
+unchanged. The case carries 21a as its `input.owner_decision`; LIVE-02 is
+executed and promoted only from a fresh receipt that observes [24, 21] and every
+other expected field.
 
 - [ ] [serial] Implement and test in-process Wasm encoder/verifier with independently accepted source, exact selected ABI and isolated staging. r[BE-LIVE-01] r[S-LIVE-01]
 - [ ] [serial] Implement resident live CLI/reload/watch, complete dependent rebuild, atomic safepoint publication, stable typed stack and bounded code retirement. r[K-LIVE-01] r[H-LIVE-01] r[H-LIVE-02] r[H-LIVE-03] r[DX-LIVE-01]

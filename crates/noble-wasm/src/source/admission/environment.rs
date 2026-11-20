@@ -310,7 +310,7 @@ fn has_non_live_effect(submission: &noble_kernel::execution::Submission, test_ho
 /// Whether `effects` contains an effect outside the selected live set.
 fn has_non_live(effects: &[noble_kernel::types::EffId], test_hosts: bool) -> bool {
     crate::scan::find_first(effects, |effect| {
-        !matches!(effect.0, 3 | 4) && !(test_hosts && matches!(effect.0, 0 | 1))
+        !(matches!(effect.0, 3 | 4) || test_hosts && matches!(effect.0, 0 | 1))
     })
     .is_some()
 }

@@ -49,7 +49,7 @@ for (const id of ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-0
 // gate refuses instead of silently reinterpreting the case.
 const projections = {
   'LIVE-01': 'be2ad88418db0f93dda24e6536114f4a8c6657f12014bfd1a0542b46785effa2',
-  'LIVE-02': 'e990fd692fcd600149e90a6d3fa0cc73222cd95bd849a7c4f03893fa1bf3a636',
+  'LIVE-02': 'f5c9c947b0fed8b82d4414de4e2b20e38005871963e3b5770f7da356a6041baf',
   'LIVE-03': 'bec86d121b5d6cee4c6de5f76d5235c5b442736d369f98e4581b5eb18d8ec2b5',
   'LIVE-04': '99aa94afa26f4e53eb2b63f91c68b621cf77bf984329950665df9d7f3fdbb570',
   'LIVE-05': 'a1d4c1df39a1f7a23f039233a92d333fa5abcff48c1cc0f8e8687e8331137785',
@@ -69,7 +69,7 @@ for (const [id, digest] of Object.entries(projections))
 
 // Promoted by this slice. Every `expected` field of these cases must be
 // observed below; see `promotionGate`.
-const promoted = ['LIVE-01', 'LIVE-05', 'LIVE-06', 'LIVE-07'];
+const promoted = ['LIVE-01', 'LIVE-02', 'LIVE-05', 'LIVE-06', 'LIVE-07'];
 
 // ---------------------------------------------------------------------------
 // Source scope, clean tree and manifest.
@@ -579,10 +579,10 @@ async function observeLive07() {
     { protected_operations: refusal.protected_operations });
 }
 
-// LIVE-02: transitive dependent rebuild and immutable capture. The post-reload
-// script runs `run` on the retained old Program before the rebuilt dependent's
-// 24, so it derives the case's declared [24, 21]. The in-flight variant is
-// observed through the feature-gated safepoint seam below.
+// LIVE-02: transitive dependent rebuild and immutable capture. Decision 21a's
+// post-reload script runs the retained old Program on 20 first (21), then the
+// rebuilt dependent (24), and swaps to the declared [24, 21]. The in-flight
+// variant is observed through the feature-gated safepoint seam below.
 async function observeLive02() {
   const files = fixture('LIVE-02', 'math.noble', 'def addone [ 1 + ]');
   const live = start('LIVE-02', ['live', 'repl', '--source', files.source, '--engine', 'v8']);
@@ -591,7 +591,7 @@ async function observeLive02() {
   const quote = await live.submit('[ addone ]');
   replace(files.source, 'def addone [ 2 + ]');
   const ack = await live.submit(`:reload ${files.source}`);
-  const script = await live.submit('20 twice swap run');
+  const script = await live.submit('20 swap run 20 twice swap');
   await live.close(0);
   for (const [label, report] of Object.entries({ initial, twice, quote, ack, script }))
     keep('LIVE-02', label, report);
@@ -602,25 +602,28 @@ async function observeLive02() {
     { stack: stackOf(quote) });
   observe('LIVE-02', 'input.reload_requested_while_old_submission_running', ack.outcome === 'reload-committed',
     { note: 'the reload was issued while no invocation was in flight; the barrier seam was not used', outcome: ack.outcome });
-  observe('LIVE-02', 'input.after_reload_ack', script.outcome === 'normal',
-    { script: '20 twice swap run', outcome: script.outcome, diagnostic: script.diagnostic, stack: stackOf(script) });
+  observe('LIVE-02', 'input.after_reload_ack',
+    script.outcome === 'normal' && isStack(script, ['I64:24', 'I64:21']),
+    { script: '20 swap run 20 twice swap', outcome: script.outcome, diagnostic: script.diagnostic, stack: stackOf(script) });
   observe('LIVE-02', 'input.owner_decision',
-    /OWNER DECISION 2026-11-20 \(Decision 21\)/.test(cases.get('LIVE-02').input.owner_decision ?? ''),
+    /OWNER DECISION 2026-11-20 \(Decision 21a\)/.test(cases.get('LIVE-02').input.owner_decision ?? ''),
     { decision: cases.get('LIVE-02').input.owner_decision });
-  observe('LIVE-02', 'expected.stage', initial.stage === 'wasm-live' && ack.stage === 'wasm-live',
+  observe('LIVE-02', 'expected.stage',
+    initial.stage === 'wasm-live' && ack.stage === 'wasm-live' && script.stage === 'wasm',
     { initial_stage: initial.stage, ack_stage: ack.stage, submission_stage: script.stage });
-  record('LIVE-02', 'expected.outcome', {
-    reason: 'the Decision 21 script runs but consumes the rebuilt twice value 24 as the old Program input, leaving [25]; the declared [24, 21] is not produced',
-    ack_outcome: ack.outcome, script_outcome: script.outcome, stack: stackOf(script) });
-  record('LIVE-02', 'expected.previous_program_identity_mutated', {
-    reason: 'the retained Program ran on 24 (not 20), so this field is not isolated by the amended script',
-    stack: stackOf(script) });
-  record('LIVE-02', 'expected.implicit_live_name_lookup_in_program', {
-    reason: 'requires running the retained Program on 20 while the rebuilt dependent result stays on the stack; the amended script cannot do both',
-    stack: stackOf(script) });
-  record('LIVE-02', 'expected.stack_bottom_to_top', {
-    reason: 'the Decision 21 script derives [25], not the unchanged declared [24, 21]: after `20 twice swap`, `run` consumes the 24 as the Program input',
-    script: '20 twice swap run', stack: stackOf(script) });
+  observe('LIVE-02', 'expected.outcome',
+    ack.outcome === 'reload-committed' && script.outcome === 'normal' && isStack(script, ['I64:24', 'I64:21']),
+    { mapping: 'the retained old Program yields 21 while the rebuilt dependent (twice) yields 24 in the same stack',
+      ack_outcome: ack.outcome, script_outcome: script.outcome, stack: stackOf(script) });
+  observe('LIVE-02', 'expected.previous_program_identity_mutated',
+    script.outcome === 'normal' && isStack(script, ['I64:24', 'I64:21']),
+    { observation: 'the retained [ addone ] Program still returns 21 (the old body) after the reload; the rebuilt twice returns 24',
+      stack: stackOf(script) });
+  observe('LIVE-02', 'expected.implicit_live_name_lookup_in_program', isStack(script, ['I64:24', 'I64:21']),
+    { observation: 'the Program did not resolve the new addone body implicitly (it returned 21, not 22)',
+      stack: stackOf(script) });
+  observe('LIVE-02', 'expected.stack_bottom_to_top', isStack(script, ['I64:24', 'I64:21']),
+    { script: '20 swap run 20 twice swap', stack: stackOf(script) });
 }
 
 // LIVE-03: every reload variant must be refused while the session survives.
@@ -896,6 +899,17 @@ async function observeLive05() {
       && trapLive.exit === 2,
     { request_trace: trapTrace, protected_operations: trapSubmission.protected_operations,
       session_state: trapSubmission.session_state, exit: trapLive.exit });
+  observe('LIVE-05', 'expected.stage',
+    initial.stage === 'wasm-live' && ack.stage === 'wasm-live' && next.stage === 'wasm'
+      && trapSubmission.stage === 'wasm',
+    { initial_stage: initial.stage, ack_stage: ack.stage, next_stage: next.stage,
+      trap_stage: trapSubmission.stage });
+  observe('LIVE-05', 'expected.outcome',
+    ack.outcome === 'reload-committed' && next.outcome === 'normal' && isStack(next, ['I64:22'])
+      && trapSubmission.outcome === 'trap',
+    { mapping: 'only the complete saved rename ACKs a new generation; the next call uses it, and the effectful runtime trap terminates',
+      ack_outcome: ack.outcome, next_outcome: next.outcome, next_stack: stackOf(next),
+      trap_outcome: trapSubmission.outcome });
 }
 
 // ---------------------------------------------------------------------------
@@ -1051,7 +1065,7 @@ const receipt = {
   schema: 'noble-live-cases-acceptance/v1',
   kind: 'test',
   result: 'passed',
-  claim: `The promoted LIVE cases (${promoted.join(', ')}) are exercised against the production ${'`'}noble live repl${'`'} child built from this committed tree: LIVE-01 by a resident V8 reload whose ACK precedes a fresh next top-level stack, LIVE-06 by a retained old Program whose request is denied under the revoked current host policy, and LIVE-07 by an explicit interpreter choice refused at startup without a V8 fallback. No proof, no case outside the promoted set and no feature-gated seam result is claimed.`,
+  claim: `The promoted LIVE cases (${promoted.join(', ')}) are exercised against the production ${'`'}noble live repl${'`'} child built from this committed tree: LIVE-01 by a resident V8 reload whose ACK precedes a fresh next top-level stack, LIVE-05 by watched atomic-save publication and the host-granted ${'`'}"A" test.emit test.abort${'`'} terminal trap (retained prefix, no protected operation, poisoned session), LIVE-06 by a retained old Program whose request is denied under the revoked current host policy, and LIVE-07 by an explicit interpreter choice refused at startup without a V8 fallback. LIVE-02 by Decision 21a's post-reload script, which runs the retained old Program on 20 (21) and the rebuilt dependent (24) before swapping to the declared [24, 21]. No proof, no case outside the promoted set and no feature-gated seam result is claimed.`,
   tested_commit: studiedCommit,
   source_revision: sourceRevision,
   scope: { paths: scope, excluded },
