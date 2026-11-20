@@ -67,8 +67,10 @@
     denied]`, and the session ends `terminated-after-guest-failure`. The design's "frame pins are
     released exactly once" is **not observed**: on the abnormal path the host forgets the failed
     root's frame records and neither releases nor counts the backend frame pins (the instance is
-    discarded). The per-root ledger therefore reports the pins the root still held — observed
-    `entered 2 / released 0 / active 2`, `released_by_host: false` — and never a release. The normal
+    discarded). Neither ledger is a release measurement: the in-process abort probe of
+    `abortRoot` reports `entered 2 / released 0 / active 2` (the pins the root still held), while
+    the CLI root in the r3 receipt reports `entered 2 / released 2 / active 0` from host entry/exit
+    calls, which do not prove backend pin release; no `released_by_host` field is emitted. The normal
     path keeps its real counts and the `finishRoot` unbalanced-pin refusal. The registration marks
     `frame_pins_released` and `retained_owner_reaches_failed_root_cell` as not-directly-observable,
     the case returns to `absent/not-run/open/unassessed`, and it is not promoted. Real per-frame

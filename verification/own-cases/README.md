@@ -45,8 +45,11 @@ the r2 receipt (`sha256 ae533fdd…`, tested commit `81139111`) remains beside i
   the request trace (`dispatch allowed`, `effect denied`) and the poisoned session. The design's
   "frame pins are released exactly once" is **not observable**: on the abnormal path the host
   forgets the failed root's frame records and neither releases nor counts the backend frame pins
-  (the instance is discarded). The per-root ledger reports the pins the root still held
-  (`entered 2 / released 0 / active 2`, `released_by_host: false`), never a release. Real
+  (the instance is discarded). Neither ledger is a release measurement: the in-process abort
+  probe of `abortRoot` reports the pins the root still held (`entered 2 / released 0 / active 2`),
+  while the CLI root in the r3 receipt reports `entered 2 / released 2 / active 0` from host
+  entry/exit calls, which do not prove backend pin release; no `released_by_host` field is
+  emitted. Real
   per-frame release accounting belongs to `live-reference-lifetimes` (decision 6,
   r[LREF-EXIT-01]). `test.abort` is still not installable in this profile; its internal
   `inconsistent frontend arena` refusal is a frontend-defect witness tracked by the integrator,
