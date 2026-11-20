@@ -7,7 +7,38 @@
       "id": "LIVE-01", "profile": "Live-Wasm-Draft", "kind": "runtime", "requirements": ["K-LIVE-01", "H-LIVE-01", "H-LIVE-02", "DX-LIVE-01", "B-LIVE-01"],
       "input": {"harness": "real-live-repl-with-resident-v8", "source_files": [{"path": "math.noble", "before": "def addone [ 1 + ]", "after": "def addone [ 2 + ]"}], "event_order": ["submit 20 addone", "atomically replace math.noble with after bytes", "issue :reload math.noble and await success ACK", "submit 20 addone"], "external_assembler_optimizer_on_reload": false},
       "expected": {"stage": "wasm-live", "outcome": "atomic-reload-and-next-top-level-freshness", "first_stack": [{"type": "I64", "value": "21"}], "final_stack_bottom_to_top": [{"type": "I64", "value": "21"}, {"type": "I64", "value": "22"}], "process_restarts": 0, "external_compiler_invocations_on_reload": 0, "stale_next_top_level_calls_after_reload_ack": 0, "new_generation": true, "existing_run_session_semantics_unchanged": true},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "A resident V8 `noble live repl` child commits an explicit selected-file reload before the next top-level call: `20 addone` returned [I64 21] on the old bytes, an fsynced paired rename to `def addone [ 2 + ]` was followed by a `reload-committed` ACK at generation 2 with zero guest requests and zero protected operations, and the first post-ACK submission appended 22, while the reload committed with PATH holding only failing wasm-tools/wasm-opt/binaryen traps and left no trap marker (zero external assembler or optimizer invocations). The same build's default `noble run`/`noble session` entry points keep their Core-Bootstrap semantics and refuse the live-only `self.propose`. No proof is claimed and no other LIVE case is promoted by this record.",
+          "subject": "LIVE-01",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:bafea2bb0abb1001301390d53c7d32d2107ccb2a99d964be85ca7a4fc7946bea",
+          "configuration": {
+            "profile": "Live-Wasm-Draft",
+            "harness": "real-live-repl-with-resident-v8",
+            "case": "LIVE-01",
+            "receipt": "../../verification/live-cases/acceptance.json",
+            "receipt_sha256": "47353005b8e670149f0f3febd74f1c89a26a97d15fd0795f564bdcfa00eb76fb",
+            "gate": "verification/live-cases/gate.mjs",
+            "tested_commit": "46af07b786e310bdcf6b096125d8766ed073431b",
+            "binary_sha256": "90735a68c259712050a9448a0b787a6cdf6fb7c13b840db9d1bb6e757b86a942",
+            "live_repl_tests_sha256": "89a32920261e3ce497314991ae11d464d6289643bd88644da3157d7873e1c591",
+            "command": "noble live repl --source math.noble --engine v8",
+            "tests": ["live_01_reload_ack_precedes_fresh_next_top_level_call"],
+            "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 be2ad88418db0f93dda24e6536114f4a8c6657f12014bfd1a0542b46785effa2); the receipt holds every observed field, its raw stdout/stderr hash and the source manifest."
+          },
+          "assumptions": [
+            "The host selects the absolute `math.noble` path and writes exactly the case's before and after bytes; the reload command names that selected path.",
+            "The ACK is the observation: a committed generation plus the retained typed stack; the first submission after it is the next top-level call, so `stale_next_top_level_calls_after_reload_ack` is observed on that call's appended value.",
+            "`external_compiler_invocations_on_reload` is observed by a PATH containing only failing wasm-tools/wasm-opt/binaryen traps and the absence of any trap marker, not by inspecting the binary's code.",
+            "`existing_run_session_semantics_unchanged` compares the same build's `noble run`/`noble session` reports with the live profile (Core-Bootstrap reports, `20 addone` = 21, `self.propose` unbound); it is not a temporal diff against a pre-change binary.",
+            "The case `stage` and `outcome` names are mapped to the CLI's `wasm-live` stage and `reload-committed` ACK; the receipt records that mapping."
+          ]
+        }
+      ]
     },
     {
       "id": "LIVE-02", "profile": "Live-Wasm-Draft", "kind": "runtime", "requirements": ["K-LIVE-01", "H-LIVE-02", "H-LIVE-03", "BE-LIVE-01"],
@@ -37,13 +68,74 @@
       "id": "LIVE-06", "profile": "Live-Wasm-Draft", "kind": "runtime", "requirements": ["H-LIVE-03", "S-LIVE-01", "EV-LIVE-01"],
       "input": {"harness": "retained-old-code-and-current-host-policy", "module_a_source": "module ledger@1 [ require emit Text -- ! test.emit export send def send [ \"A\" emit ] ]", "module_b_source": "module ledger@2 [ require emit Text -- ! test.emit export send def send [ \"B\" emit ] ]", "binding_a": "bind ledger@1 test.emit emit-a Text -- ! test.emit allow", "binding_b": "bind ledger@2 test.emit emit-b Text -- ! test.emit allow", "initial_import": "import ledger@1 as l", "saved_program_submission": "[ l.send ]", "after_reload_import": "import ledger@2 as l", "revocation": "host-revoke-test.emit-before-next-invocation", "subsequent_submission": "run", "checked_effect_ceiling": ["test.emit"]},
       "expected": {"stage": "wasm-live", "outcome": "old-program-retains-A-and-request-denied", "normal_result_stack_exposed": false, "session_poisoned_after_denial": true, "old_program_targets_B": false, "effect_declared": "test.emit", "guest_requests": 1, "request_identity": "ledger@1:test.emit", "protected_operations": 0, "old_authorization_retained": false, "staging_guest_requests": 0, "binding_to_current_host_policy_at_invocation": true},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "A retained old Program keeps its `ledger@1` A binding and is denied under the current host policy: after `import ledger@1 as l`, `[ l.send ]`, a committed reload to the case's `ledger@2` bytes and `import ledger@2 as n`, the host-only `:revoke-effect ledger@1 emit-a test.emit` changed that exact slot from allowed/active to denied/inactive with zero guest requests; a later `n.send` ran through `emit-b` with one guest request and one protected operation, and `run` on the saved A Program trapped with exactly one guest request, zero protected operations, request identity `ledger@1:test.emit`, adapter `emit-a`, decision deny/policy-denied and a terminal session. No proof is claimed.",
+          "subject": "LIVE-06",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:bafea2bb0abb1001301390d53c7d32d2107ccb2a99d964be85ca7a4fc7946bea",
+          "configuration": {
+            "profile": "Live-Wasm-Draft",
+            "harness": "retained-old-code-and-current-host-policy",
+            "case": "LIVE-06",
+            "receipt": "../../verification/live-cases/acceptance.json",
+            "receipt_sha256": "47353005b8e670149f0f3febd74f1c89a26a97d15fd0795f564bdcfa00eb76fb",
+            "gate": "verification/live-cases/gate.mjs",
+            "tested_commit": "46af07b786e310bdcf6b096125d8766ed073431b",
+            "binary_sha256": "90735a68c259712050a9448a0b787a6cdf6fb7c13b840db9d1bb6e757b86a942",
+            "live_repl_tests_sha256": "89a32920261e3ce497314991ae11d464d6289643bd88644da3157d7873e1c591",
+            "command": "noble live repl --source math.noble --engine v8 --declared-modules --bindings bindings.txt --verify-source-before-execute",
+            "tests": ["live06_host_revokes_old_effect_before_actual_retained_wasm_request", "live06_a_active_controls_isolate_host_revocation_from_alias_rebind", "revoked_declared_adapter_cannot_reauthorize_on_later_import"],
+            "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 6ab3f70f7edd8db1734f005680d48cb0bcd4b4f2cae975bebece606302b171d5); the receipt holds every observed field, its raw stdout/stderr hash and the source manifest."
+          },
+          "assumptions": [
+            "The host supplies the case's two binding lines verbatim and the module-only selected file; effects are declared imports, so `test.emit` is a declared module operation rather than a top-level word.",
+            "The revocation is the host-only `:revoke-effect` command on an allowed manifest slot; the guest has no route to it and the revocation report shows zero guest requests.",
+            "The case stage `wasm-live` is mapped to the denied invocation report's stage `wasm`; the reload ACK and revocation rows report `wasm-live` and `host-policy`.",
+            "`staging_guest_requests` is observed as zero guest requests on the save, reload and revocation reports; the denial invocation itself is the case's one guest request.",
+            "The A/B module sources, the two bindings and the saved Program interface are the case's exact bytes; no other LIVE-06 variant is claimed by this record."
+          ]
+        }
+      ]
     },
     {
       "id": "LIVE-07", "profile": "Live-Wasm-Draft", "kind": "admission", "requirements": ["BE-LIVE-01", "DX-LIVE-01", "EV-LIVE-01"],
       "input": {"harness": "explicit-interpreter-choice-and-v8-distinction", "engines": ["v8", "interpreter"], "interpreter_pin_and_compatibility": "unavailable"},
       "expected": {"stage": "engine-selection", "outcome": "interpreter-choice-refused-until-real-pinned-engine", "v8_is_strict_interpreter": false, "fallback_to_v8": false, "custom_noble_bytecode_isa": false, "guest_requests": 0, "protected_operations": 0},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "An explicit `--engine interpreter` choice refuses at startup on the pinned build: exactly one `engine-selection` report with outcome `interpreter-unavailable`, zero guest requests and zero protected operations, exit 2, and no second report within 300 ms, so no V8 fallback ran; on the same fixture `--engine v8` reports engine `v8`. The refusal is observed, and no repository-wide custom-ISA absence proof is claimed.",
+          "subject": "LIVE-07",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:bafea2bb0abb1001301390d53c7d32d2107ccb2a99d964be85ca7a4fc7946bea",
+          "configuration": {
+            "profile": "Live-Wasm-Draft",
+            "harness": "explicit-interpreter-choice-and-v8-distinction",
+            "case": "LIVE-07",
+            "receipt": "../../verification/live-cases/acceptance.json",
+            "receipt_sha256": "47353005b8e670149f0f3febd74f1c89a26a97d15fd0795f564bdcfa00eb76fb",
+            "gate": "verification/live-cases/gate.mjs",
+            "tested_commit": "46af07b786e310bdcf6b096125d8766ed073431b",
+            "binary_sha256": "90735a68c259712050a9448a0b787a6cdf6fb7c13b840db9d1bb6e757b86a942",
+            "live_repl_tests_sha256": "89a32920261e3ce497314991ae11d464d6289643bd88644da3157d7873e1c591",
+            "command": "noble live repl --source math.noble --engine interpreter",
+            "tests": ["interpreter_choice_refuses_at_startup_without_v8_fallback"],
+            "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 aa80f1244e9039b8c7a2a3ebdfa19a05e97658cc8d03c4d78177b56d403d77b5); the receipt holds every observed field, its raw stdout/stderr hash and the source manifest."
+          },
+          "assumptions": [
+            "The selected interpreter compatibility is unavailable; the case's `interpreter_pin_and_compatibility` input is observed as that refusal diagnostic.",
+            "`fallback_to_v8` is observed as exactly one report, no second report within 300 ms and exit 2; the refusal child started no V8 engine.",
+            "`custom_noble_bytecode_isa` is observed as the absence of any executable interpreter path (a startup refusal only), not as a repository-wide ISA absence proof.",
+            "`v8_is_strict_interpreter` is observed as the two engine choices being distinct: `--engine v8` reports engine `v8` and `--engine interpreter` refuses instead of being served by V8."
+          ]
+        }
+      ]
     },
     {
       "id": "LIVE-08", "profile": "Live-Wasm-Draft", "kind": "admission", "requirements": ["B-LIVE-01", "H-LIVE-02", "V-LIVE-01", "EV-LIVE-01"],
