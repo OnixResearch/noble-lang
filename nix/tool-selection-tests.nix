@@ -219,6 +219,8 @@ let
       [ "live-test-barrier" ])
     (badObservation "missing private barrier feature" "feature-scope-mismatch" [ "features" ]
       [ "safety-observe" ])
+    (badObservation "missing PAA-1 barrier feature" "feature-scope-mismatch" [ "features" ]
+      [ "live-test-barrier" "safety-observe" ])
     (reject "coordinated unreviewed workspace feature" "feature-scope-mismatch"
       (set policy [ "configuration" "workspace_features" ]
         [ "live-test-barrier" "safety-observe" "extra" ])

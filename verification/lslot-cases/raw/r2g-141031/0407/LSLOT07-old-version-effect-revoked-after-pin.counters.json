@@ -1,0 +1,135 @@
+{
+  "name": "LSLOT07-old-version-effect-revoked-after-pin",
+  "expected_exit": 2,
+  "raw": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-old-version-effect-revoked-after-pin.jsonl",
+  "counters": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-yba2o8/LSLOT07-old-version-effect-revoked-after-pin.counters.json",
+  "refusal": {
+    "outcome": "execution-failed",
+    "guest_requests": 2,
+    "protected_operations": 0
+  },
+  "checkpoint": {
+    "checkpoint": 2,
+    "import": "test_emit",
+    "ordinal": null,
+    "outcome": "checkpoint-entered",
+    "root": "1",
+    "schema": "noble-live-slot-report/v1",
+    "site": null,
+    "stage": "operator-control"
+  },
+  "ack": {
+    "checkpoint": 2,
+    "control_id": "1",
+    "epoch": null,
+    "outcome": "policy-updated",
+    "root": "1",
+    "schema": "noble-live-slot-report/v1",
+    "stage": "operator-control"
+  },
+  "denied": {
+    "control_events": [
+      {
+        "control_id": "1",
+        "operation": "policy",
+        "outcome": "policy-updated",
+        "scope": "effect:emit"
+      }
+    ],
+    "diagnostic": "Error: checked guest execution returned status 5; control lane poisoned=false",
+    "guest_requests": 2,
+    "outcome": "execution-failed",
+    "protected_operations": 0,
+    "request_trace": [
+      {
+        "artifactSha256": "70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff",
+        "captures": [],
+        "definitionId": null,
+        "generation": "1",
+        "incarnation": "1",
+        "operation": "dispatch",
+        "outcome": "allowed",
+        "policyAllowed": true,
+        "policyInput": {
+          "operation": "dispatch",
+          "rootEpoch": "1",
+          "slotId": "emit",
+          "version": {
+            "artifactSha256": "70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff",
+            "assumptions": "unverified",
+            "captures": [],
+            "claim": "unverified",
+            "definitionId": null,
+            "effects": [
+              "test.emit"
+            ],
+            "handle": 4108,
+            "input": [
+              "I64"
+            ],
+            "output": [
+              "I64"
+            ],
+            "programValueId": "artifact:70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff:cell:4108",
+            "recipeSha256": "647e08e55c190108b09ae24f3af603f73b8df3525862f37112f5ba55d3914ad1",
+            "semanticContext": "definition-source:unavailable:selection-source:93f23ba96afe9ac0216dea74280f143bef9a54f2e7167e61415e22f7c01239d5:artifact:70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff:occurrence:0:recipe:647e08e55c190108b09ae24f3af603f73b8df3525862f37112f5ba55d3914ad1"
+          }
+        },
+        "programValueId": "artifact:70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff:cell:4108",
+        "recipeSha256": "647e08e55c190108b09ae24f3af603f73b8df3525862f37112f5ba55d3914ad1",
+        "rootEpoch": "1",
+        "semanticContext": "definition-source:unavailable:selection-source:93f23ba96afe9ac0216dea74280f143bef9a54f2e7167e61415e22f7c01239d5:artifact:70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff:occurrence:0:recipe:647e08e55c190108b09ae24f3af603f73b8df3525862f37112f5ba55d3914ad1",
+        "slotId": "emit"
+      },
+      {
+        "artifactSha256": "70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff",
+        "captures": [],
+        "definitionId": null,
+        "effect": "test.emit",
+        "operation": "effect",
+        "outcome": "denied",
+        "policyAllowed": false,
+        "policyInput": {
+          "effect": "test.emit",
+          "operation": "effect",
+          "request": "touched",
+          "rootEpoch": "1",
+          "slotId": "emit",
+          "version": {
+            "artifactSha256": "70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff",
+            "assumptions": "unverified",
+            "captures": [],
+            "claim": "unverified",
+            "definitionId": null,
+            "effects": [
+              "test.emit"
+            ],
+            "handle": 4108,
+            "input": [
+              "I64"
+            ],
+            "output": [
+              "I64"
+            ],
+            "programValueId": "artifact:70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff:cell:4108",
+            "recipeSha256": "647e08e55c190108b09ae24f3af603f73b8df3525862f37112f5ba55d3914ad1",
+            "semanticContext": "definition-source:unavailable:selection-source:93f23ba96afe9ac0216dea74280f143bef9a54f2e7167e61415e22f7c01239d5:artifact:70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff:occurrence:0:recipe:647e08e55c190108b09ae24f3af603f73b8df3525862f37112f5ba55d3914ad1"
+          }
+        },
+        "programValueId": "artifact:70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff:cell:4108",
+        "protectedOperations": 0,
+        "recipeSha256": "647e08e55c190108b09ae24f3af603f73b8df3525862f37112f5ba55d3914ad1",
+        "request": "touched",
+        "rootEpoch": "1",
+        "semanticContext": "definition-source:unavailable:selection-source:93f23ba96afe9ac0216dea74280f143bef9a54f2e7167e61415e22f7c01239d5:artifact:70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff:occurrence:0:recipe:647e08e55c190108b09ae24f3af603f73b8df3525862f37112f5ba55d3914ad1",
+        "slotId": "emit"
+      }
+    ],
+    "retire_code_spans": [],
+    "schema": "noble-live-slot-report/v1",
+    "session_state": "terminated-after-guest-failure",
+    "stage": "slot"
+  },
+  "result": "pass",
+  "exit": 2
+}

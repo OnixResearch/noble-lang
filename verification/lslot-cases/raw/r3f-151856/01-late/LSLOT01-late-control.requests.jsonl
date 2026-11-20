@@ -1,0 +1,11 @@
+{"operation":"define","id":"definition-builder","name":"builder","source":"def builder [ quote [ + ] compose ]","inputs":[]}
+{"operation":"install","id":"builder","source":"builder","inputs":["I64"],"selected_name":"builder"}
+{"operation":"install","id":"target","source":"1 +","inputs":["I64"]}
+{"operation":"install","id":"caller","source":"slot.invoke","inputs":["I64","LiveRef<I64,I64,pure>"]}
+{"operation":"candidate","id":"target"}
+{"operation":"invoke","id":"builder","inputs":[{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"policy","grant":{"operation":"publish","slotId":"ordinary-control","allowed":false}}
+{"operation":"publish","slot":"ordinary-control","id":"target","expected_epoch":"0"}
+{"operation":"invoke","id":"caller","inputs":[{"kind":"i64","value":"2"}],"refs":[{"position":1,"ordinal":0,"slot":"ordinary-control"}]}
+{"operation":"publish","slot":"ordinary-control","id":"target","expected_epoch":"1","expected_incarnation":"1","expected_generation":"1"}
+{"operation":"release-program","owner":"program-1"}

@@ -49,7 +49,8 @@ function run(args, input, expectedStatus) {
   const text = result.stdout.trim();
   if (text.startsWith('{')) reports = text.split('\n').map(line => JSON.parse(line));
   else if (text.startsWith('[')) reports = JSON.parse(text);
-  record({ kind: 'command', args, stdin_sha256: input === undefined ? null : sha256(input),
+  record({ kind: 'command', args, stdin: input ?? null,
+    stdin_sha256: input === undefined ? null : sha256(input),
     source_sha256: sourceSha256, status: result.status, stdout: result.stdout,
     stderr: result.stderr, reports });
   assert.equal(result.status, expectedStatus, `${args.join(' ')}: exit ${result.status}: ${result.stderr}`);

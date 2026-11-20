@@ -3,9 +3,6 @@
 //! source outside the MC2 pure quotation profile. Every refusal reports zero
 //! guest requests and protected operations.
 
-use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
-
 const LAW_V1: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../verification/owner-law/laws/owner-law-v1.json"
@@ -23,6 +20,9 @@ const PROOF: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../verification/mc2/contracts/increment.proof.lean"
 ));
+
+/// SHA-256 encodes the message length in bits.
+const BITS_PER_BYTE: u64 = 8;
 
 fn sha256(bytes: &[u8]) -> String {
     // A local SHA-256: the test target cannot import the binary crate's digest.
@@ -43,12 +43,12 @@ fn sha256(bytes: &[u8]) -> String {
         0x5be0cd19,
     ];
     let mut message = bytes.to_vec();
-    let bit_length = (bytes.len() as u64).wrapping_mul(8);
+    let message_bits = (bytes.len() as u64).wrapping_mul(BITS_PER_BYTE);
     message.push(0x80);
     while message.len() % 64 != 56 {
         message.push(0);
     }
-    message.extend_from_slice(&bit_length.to_be_bytes());
+    message.extend_from_slice(&message_bits.to_be_bytes());
     for block in message.chunks_exact(64) {
         let mut words = [0u32; 64];
         for (index, word) in block.chunks_exact(4).enumerate() {
@@ -99,19 +99,23 @@ fn sha256(bytes: &[u8]) -> String {
 }
 
 struct Fixture {
-    root: PathBuf,
+    root: std::path::PathBuf,
 }
 
 impl Fixture {
     fn new(name: &str) -> Result<Self, std::io::Error> {
-        let root = Path::new(env!("CARGO_TARGET_TMPDIR"))
+        let root = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"))
             .join(format!("noble-paa1-{}-{name}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&root);
+        match std::fs::remove_dir_all(&root) {
+            Ok(()) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error),
+        }
         std::fs::create_dir_all(&root)?;
         Ok(Self { root })
     }
 
-    fn file(&self, name: &str, bytes: &[u8]) -> Result<PathBuf, std::io::Error> {
+    fn file(&self, name: &str, bytes: &[u8]) -> Result<std::path::PathBuf, std::io::Error> {
         let path = self.root.join(name);
         std::fs::write(&path, bytes)?;
         Ok(path)
@@ -124,14 +128,14 @@ impl Drop for Fixture {
     }
 }
 
-fn admit(args: &[&std::ffi::OsStr]) -> Result<Output, std::io::Error> {
-    Command::new(env!("CARGO_BIN_EXE_noble"))
+fn admit(args: &[&std::ffi::OsStr]) -> Result<std::process::Output, std::io::Error> {
+    std::process::Command::new(env!("CARGO_BIN_EXE_noble"))
         .arg("admit-proof-artifact")
         .args(args)
         .output()
 }
 
-fn report(output: &Output) -> serde_json::Value {
+fn report(output: &std::process::Output) -> serde_json::Value {
     serde_json::from_slice(&output.stdout).expect("one JSON envelope per run")
 }
 
@@ -174,7 +178,7 @@ fn admission(
     args
 }
 
-fn refusal(output: &Output, code: &str, exit: i32) {
+fn refusal(output: &std::process::Output, code: &str, exit: i32) {
     assert_eq!(
         output.status.code(),
         Some(exit),

@@ -108,7 +108,10 @@ in
     features | Array String = [],
     # Reviewed workspace names, separate from explicitly listed features;
     # cargo_args --all-features still enables them in non-kernel extraction.
-    workspace_features | Array String = ["live-test-barrier", "safety-observe"],
+    # paa1-test-barrier (noble-cli) is the PAA-1 consumer's test-only hook
+    # between comparison and instantiation (ACORR-CASE-09); like
+    # live-test-barrier it is never part of the shipped CLI build.
+    workspace_features | Array String = ["live-test-barrier", "paa1-test-barrier", "safety-observe"],
     all_features | Bool = true,
     default_features | Bool = true,
     panic | String = "unwind",

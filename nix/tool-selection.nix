@@ -413,6 +413,7 @@ let
       get config "features" == [ ]
       && get config "workspace_features" == [
         "live-test-barrier"
+        "paa1-test-barrier"
         "safety-observe"
       ]
       && get observation "features" == get config "workspace_features"

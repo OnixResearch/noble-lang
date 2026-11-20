@@ -130,6 +130,7 @@
     "word_bits": 64,
     "workspace_features": [
       "live-test-barrier",
+      "paa1-test-barrier",
       "safety-observe"
     ]
   },
@@ -188,7 +189,7 @@
     "crates/noble-cli/src/core/runtime/slot-engine.mjs": "0a34f14f0653c9376a32ca51cdef00e19fadf51e88ec7c1c3010a53b7585b80f",
     "crates/noble-cli/src/core/runtime/values.mjs": "1b305dd458b50a8b7eb4390f39938e8087b699d16b295024b0d68aff835ca1c3",
     "crates/noble-cli/src/core/worker.rs": "cbbef9b242c4f86374604fa8e970a27cdf09f689ec87969bc124d1425484a9f8",
-    "crates/noble-cli/src/core/worker/assembly.rs": "af13ae27d6584eccd24d31b7eebeb7433883078acd4bf1d449a7b4387cf6aaec",
+    "crates/noble-cli/src/core/worker/assembly.rs": "ada590e9cd1da2a358a6f8165722b8a0a8b1a68b52364a6f7e3b3cc9edeb5987",
     "crates/noble-cli/src/core/worker/configuration.rs": "47f52b8a4a3380228802e9d1b831aebb6a152d7ed071de77ce14b02057437c60",
     "crates/noble-cli/src/core/worker/process.rs": "6fd43083f07a66330e91568d59a21f0c954d1e688d9b65787729b6b949356267",
     "crates/noble-cli/src/core/worker/protocol.rs": "2f411ae83f9e8d2fbab3e42534d9efd7a99d7c2ca8f26093c78dc80d711ddfa9",
@@ -348,8 +349,8 @@
     "nix/tool-selection-app.nix": "ecce946f78bc030d179ffb7f16d4ca15bcfb19c682af49d49b7611a734be2f05",
     "nix/tool-selection-files.nix": "109e721fc0510974140e5543c4353ab6faa53330367bbaa39c103b8c26f44185",
     "nix/tool-selection-observation.nix": "1913777df366e807602e9c6879d9a3dc1167584007e62ebacd601d07fac678b8",
-    "nix/tool-selection-tests.nix": "e054566d1a0e4dd1df1c612d57ea3a131e6ecd21d1f0816b5a6426217e58a92d",
-    "nix/tool-selection.nix": "b18a7d7d7dcd0e74eca21acea0123814f1008ad04595a059c773ad44da9d9e16",
+    "nix/tool-selection-tests.nix": "b8cafabfebc1ced9d3b37fa33a165311919e016fb34b9b56555d8e4dcce12648",
+    "nix/tool-selection.nix": "2ceb0c072d20f89185c1d0b4a4799b8ef059780c3ddd9f961d6a390b1b8bd44e",
     "nix/vendor-only.nix": "d7743c80ac4fc913be61aa54629c75fd7182eaa6b7d0a9b289c08a210dde1546",
     "policy/architecture-export-spec.ncl": "e32a2c75f975e768b292702500ca902bb944f07a5ce156bcbfa00bff576681bd",
     "policy/architecture.contracts.ncl": "9cbbe9437d789e2ed7cdf1cfda992616fd3de18af169e23e1e8e9652a8c1571e",
