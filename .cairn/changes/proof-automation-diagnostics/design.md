@@ -374,6 +374,72 @@ Approaches are compared on coverage (rows proved or refuted), median and p95 lat
 - **PAUTO-FO-6.** Profile A: reconstruct SMT/tactic output either into MC1 `--proof` modules or into explicit Noble terms. Measure it on the matrix before any selection.
 - **Proof obligations.** No new soundness obligation arises, because producers are outside the trusted boundary. The existing open obligations remain the gates: V-INTRINSIC-01 translation soundness, PO-19 export correctness, and Rust refinement of the checker under VT-ROLE-01. A goal-view rendering-correctness claim (that the displayed claim equals the generated claim) is a *tooling* obligation. It is tested by digest equality, not proved.
 
+### Refutation template accounting (PAUTO-FO-4)
+
+Status 2026-11-20: the tactic-free template and two reviewed instances are landed in `proofs/mc1/NobleContracts/Refutation.lean`; their statements are pinned by `proofs/mc1/ContractGate.lean`. Independent review, the compiled-replay harness (PAUTO-FO-5) and PAUTO-CASE-02 to 06 remain open. This subsection is the PO-15/PO-19 accounting the obligation requires; it is not a review record.
+
+**Shape and surface.** One template lemma,
+`exportedClaim_unaryI64_refutation`, takes a checked normal-return execution
+`Exec code [.i64 input] [.i64 output]`, the asserted precondition at that input,
+and the negation of the asserted postcondition at the same observations, and
+derives `¬ exportedClaim code [.i64] [.i64] [] (Holds pre) (Holds post)`. The
+claim's quantifier is instantiated at the empty prefix, the single typed input
+and no parameters; the existential suffix the claim demands is the concrete
+output stack, identified by the claim's own suffix equation. Instances are
+mechanical: the `monotonic` fixture (`[ 1 + ]`, `(lt (in x) (out y))`) at
+`x = 9223372036854775807`, and a wrapping program constant
+(`[ 9223372036854775807 + ]`, the same predicate) at `x = 1`. The second
+instance shows the template is not tied to `[ 1 + ]` and that program literals
+participate in the same BitVec-64 wrapping arithmetic as inputs. The closed
+`wrap.noble-contract` has no input, so no unary template applies to it
+(PAUTO-CASE-02 stays a hand-proof case).
+
+**Tactic-free.** The module contains no `by`, no `simp`, no `decide` tactic, no
+`native_decide`, no reflection oracle and no metaprogram. The template is a
+term: one application of the claim to the concrete execution, and one
+substitution of the returned suffix equation into the negated postcondition.
+Instances supply kernel-checked evaluation: the execution is composed from
+`exec_lit_iff` and `exec_add_iff` through `exec_append_iff`, and a violated
+predicate is a definitional `evaluate` result (`rfl`) plus the `Bool`
+constructor conflict. The three evaluation helpers are public only so the gate
+can pin them; they contain no search or decision procedure.
+
+**PO-15 accounting.** This is bounded evidence in PO-15's `lean-kernel` route:
+the refutation direction is derived from the already-reviewed normal-return
+rules and `Holds`/`evaluate` semantics, is stated with only `propext`,
+`Classical.choice` and `Quot.sound`, and is pinned with the ten theorems in
+`ContractGate.lean` (the gate now reports 100 required theorems). It does not
+discharge PO-15. The fragment remains partial correctness on normal returns
+only; it says nothing about traps, non-termination, `test.emit`, runtime
+execution, first-class companions or the other open boundaries PO-15 already
+names. PO-15 stays `open`.
+
+**PO-19 accounting.** The template generates no obligation and exports nothing;
+it consumes the existing `exportedClaim` boundary and the frontend-rendered
+`Term`s. Its soundness therefore transfers only when the host binds the
+concrete program, input, output and postcondition to the generated
+`MC1Obligation` definitions, and PO-19 (export and obligation generation
+preserve the intended subject and proposition) remains `open` and unaffected.
+A local check that a template instance is definitionally the consumer's
+`¬ MC1Obligation.claim` for one fixture is a tooling check on one generated
+module; it is not PO-19 evidence and must not be cited as such. When the replay
+harness lands, the reviewed template module needs its own digest in whatever
+library identity PAUTO-FO-5 binds; it is intentionally outside the historical
+`MODEL` closure and `model_revision()`.
+
+**Trust accounting (VC-ADMIT-03, no new trusted component).** The kernel, the
+independent consumer and the pinned Lean release remain the trusted base. A
+counterexample becomes `disproved` only when the consumer accepts an
+instantiated term against `¬ MC1Obligation.claim` with the strict axiom list; a
+compiled observation is separate `observed-execution` evidence and never a
+premise of the template. A disagreement between the semantic and compiled
+replays stays a correspondence discrepancy for #10 and resolves nothing.
+
+**Review.** Pending. Under the owner decision of 2026-11-20 (a fresh-context
+reviewer that did not implement the work performs any review the task demands),
+the review record must name the reviewed commit, findings and verdict, and is
+retained in the repository. No review is claimed here.
+
 ## Coordination
 
 - **#12 (`implicit-proof-arguments`).** The goal view's "inserted arguments" row and the `exact-use`/`apply-use` helpers consume #12's elaborated output. #12 never infers premises, and neither do the helpers.
