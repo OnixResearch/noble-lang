@@ -106,8 +106,8 @@ fn release_header(store: &str, id: u64) -> String {
 /// their checked code and every Program/cell they allocated, keep Core 0..3,
 /// and never advance the 4,096-cell session maximum.
 #[test]
-fn signed_folds_retire_checked_code_across_sixty_five_reports()
--> Result<(), Box<dyn std::error::Error>> {
+fn signed_folds_retire_checked_code_across_sixty_five_reports(
+) -> Result<(), Box<dyn std::error::Error>> {
     for opt in ["off", "on"] {
         let mut sources: Vec<&[u8]> = vec![RESULT, DIGIT, FOLD];
         sources.extend(std::iter::repeat_n(FOLD_LINE, 65));
@@ -160,8 +160,8 @@ fn flags(opt: &str) -> [&str; 5] {
 /// the same heap, and the 14th fold is refused as an allocation quota at the
 /// unchanged 4,096-cell cap instead of recycling the pinned arena.
 #[test]
-fn pinned_program_observation_denies_the_fourteenth_fold_at_the_cell_cap()
--> Result<(), Box<dyn std::error::Error>> {
+fn pinned_program_observation_denies_the_fourteenth_fold_at_the_cell_cap(
+) -> Result<(), Box<dyn std::error::Error>> {
     for opt in ["off", "on"] {
         let mut sources: Vec<&[u8]> = vec![RESULT, DIGIT, FOLD, b"[ 1 ]", b"drop"];
         sources.extend(std::iter::repeat_n(FOLD_LINE, 14));
@@ -211,8 +211,8 @@ fn assert_released(report: &serde_json::Value, id: u64, store: &str) {
 /// stale identity, and an unknown identity all refuse; the exact one releases and
 /// then licenses the epoch retirement.
 #[test]
-fn release_observed_roots_refuses_early_forged_foreign_repeated_and_stale_owners()
--> Result<(), Box<dyn std::error::Error>> {
+fn release_observed_roots_refuses_early_forged_foreign_repeated_and_stale_owners(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut session = SignedSession::start("off")?;
     link_modules(&mut session)?;
     let (store, report) = observe_first_program(&mut session)?;
@@ -264,8 +264,8 @@ fn release_observed_roots_refuses_early_forged_foreign_repeated_and_stale_owners
 /// refuses and the first session keeps working. Malformed control headers are
 /// parse-stage refusals, not source submissions or guest work.
 #[test]
-fn release_observed_roots_rejects_a_foreign_session_store_and_malformed_headers()
--> Result<(), Box<dyn std::error::Error>> {
+fn release_observed_roots_rejects_a_foreign_session_store_and_malformed_headers(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut first = SignedSession::start("on")?;
     link_modules(&mut first)?;
     let (store, report) = observe_first_program(&mut first)?;
