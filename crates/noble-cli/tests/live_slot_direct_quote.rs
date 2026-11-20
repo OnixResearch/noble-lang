@@ -11,7 +11,9 @@
 //! retires only after the owner is released (OWN-CASE-06). A Program saved from a slot dispatch
 //! keeps, and is charged for, its version's package across replacement (LREF-CASE-03).
 //! Shared and composed owners keep their Programs alive until their own release (OWN-CASE-02,
-//! OWN-CASE-03). Behavioral evidence, not a proof.
+//! OWN-CASE-03). A root whose invocation fails releases its host ledger root and map pin exactly
+//! once, and the designed `test.abort` escape trap is measured as refused by the live-slot source
+//! profile (OWN-CASE-05). Behavioral evidence, not a proof.
 
 #[test]
 fn direct_quote_owner_can_run_and_release_without_retaining_code() {
@@ -88,6 +90,26 @@ fn shared_and_composed_owners_outlive_each_other() {
     assert!(
         output.status.success(),
         "checked CLI ownership cases failed: stdout={} stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+}
+
+#[test]
+fn a_trapped_root_issues_no_saved_owner_and_releases_its_ledger_root() {
+    let output = std::process::Command::new(
+        "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    )
+    .arg(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/live_slot_own_trap.mjs"
+    ))
+    .arg(env!("CARGO_BIN_EXE_noble"))
+    .output()
+    .expect("launch selected Node/V8 ownership trap child");
+    assert!(
+        output.status.success(),
+        "checked CLI ownership trap witness failed: stdout={} stderr={}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );
