@@ -1,4 +1,41 @@
 {
+  "build_report": {
+    "cli": {
+      "basis": "the report binds the bytes of the executable it runs as; the selection carries the frozen CLI receipt's hash, so a rebuilt CLI cannot claim an earlier report",
+      "identity": "sha256-of-running-executable"
+    },
+    "helpers": {
+      "count": 27,
+      "root": "crates/noble-wasm/runtime",
+      "set_sha256": "211d016d58265968082e383f78790c26c20d8eaf135b0dd401253fa3c238639f"
+    },
+    "lean": {
+      "binary_output": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0",
+      "binary_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+      "library_tree": "selected-contract-library-root",
+      "rev": "eb6cafb7290e8bd5f2937522d8d804f58f02bafc",
+      "toolchain": "leanprover/lean4:v4.35.0"
+    },
+    "opt_mode": "off",
+    "schema": "noble-build-report-pins/v1",
+    "tools": {
+      "node": {
+        "binary_sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+        "output": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0",
+        "version": "24.13.0"
+      },
+      "wasm_opt": {
+        "binary_sha256": "e68e014ba43ece72b23e4e9955b822d65ec2c3dbab6f407ca3af6cc5639543a2",
+        "output": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125",
+        "version": "wasm-opt version 125"
+      },
+      "wasm_tools": {
+        "binary_sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+        "output": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1",
+        "version": "wasm-tools 1.245.1"
+      }
+    }
+  },
   "claims": [
     "selection-policy-only",
     "execution-required-for-compatibility",
@@ -116,7 +153,7 @@
     "Cargo.toml": "28f50596ae329c104c28d0c4ae10c35b2ef1f20e95662356e69affda47e13bf9",
     "crates/noble-cli/Cargo.toml": "ad45ae25a1ec15133f57cf8fe3bc52dd97e7d21e97f3fc2ec2c11392b9c88bb0",
     "crates/noble-cli/src/backend/vocabulary.noble": "f8d7a7e587cf85bcc36fe21c75506dd0c58a4c7e18baa8ddb1e11fde8aeb23e3",
-    "crates/noble-cli/src/build.rs": "1e6e3210cf9b3203618e00c62890155dbfac0341c40c45bd07f6ae1be15ad01b",
+    "crates/noble-cli/src/build.rs": "353e3359db8d9e04fffcce20a2d903adc84cbd6050a875784f83451b500889b2",
     "crates/noble-cli/src/c_backend.rs": "8b8023c91975723b39e1f092d7b70be88254f678164561a454a6c53be688eee2",
     "crates/noble-cli/src/component.rs": "1136e05fd6d5a7d230f59af75aa8705769d3072ae105d9c8ace0c479453760ff",
     "crates/noble-cli/src/component/artifacts.rs": "584dbd064218b304fa0d0e174e0b7b5fef129265c950a0793b14b93dd9c29610",
@@ -140,7 +177,7 @@
     "crates/noble-cli/src/core/output.rs": "95e6c5530ab86448db67adc5707e0886bd7948cf0dbea1fae083bbb3792f1a90",
     "crates/noble-cli/src/core/preview.rs": "51c772e74768ec895b4ae6eb78c6f33d4e1047ecb07d56be76027f910c9b0554",
     "crates/noble-cli/src/core/runtime/abi.json": "fea51903d9155f31cb27be173ca96644adb67c7ca08e9bd0898f206ff4faa589",
-    "crates/noble-cli/src/core/runtime/config.json": "be38ad3c8d647968ed44628efe5d945dcaf57d162764b3cec51bab661738dcfd",
+    "crates/noble-cli/src/core/runtime/config.json": "400365e6de281bbde84cbde772dde705fdf97e7e8ee534884fa029c627fb2be8",
     "crates/noble-cli/src/core/runtime/declared-abi.json": "6927b379477ee6318d292e7aa09b2103f488349931a89ed84e2e3bf7dac3eb0d",
     "crates/noble-cli/src/core/runtime/engine-host.mjs": "4d353abd1c076edfa2bc44a020b8ba1dba0ea3ad96f4ed5d23b64c4ba4e76981",
     "crates/noble-cli/src/core/runtime/engine.mjs": "ec72cd59255938ae952f1737caa1d5e308dccff6a090f1503d280583ffd821b3",
@@ -151,7 +188,7 @@
     "crates/noble-cli/src/core/runtime/slot-engine.mjs": "85481b0223891a9150127fa8b859d477af0117fd3794811164fe6ec993262a9c",
     "crates/noble-cli/src/core/runtime/values.mjs": "1b305dd458b50a8b7eb4390f39938e8087b699d16b295024b0d68aff835ca1c3",
     "crates/noble-cli/src/core/worker.rs": "2fd3e8ccc8b3ae8b3177a40acce9615e05a665104520727f198c2949101c11e2",
-    "crates/noble-cli/src/core/worker/assembly.rs": "88c860993ce391d6b197bae7ab1ce123852bfdd9610200acff75354477853cfb",
+    "crates/noble-cli/src/core/worker/assembly.rs": "91905f7c567c15ea2df27c509de9213e15d61b641f601ba2edacd4ed777fce7b",
     "crates/noble-cli/src/core/worker/configuration.rs": "47f52b8a4a3380228802e9d1b831aebb6a152d7ed071de77ce14b02057437c60",
     "crates/noble-cli/src/core/worker/process.rs": "6fd43083f07a66330e91568d59a21f0c954d1e688d9b65787729b6b949356267",
     "crates/noble-cli/src/core/worker/protocol.rs": "2f411ae83f9e8d2fbab3e42534d9efd7a99d7c2ca8f26093c78dc80d711ddfa9",
@@ -350,9 +387,9 @@
     "proofs/mc2/lakefile.toml": "bb890bca99fcca2653d933fe87aca3a0a988eb5d9fe252a24321f20843938198",
     "proofs/mc2/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
     "rust-toolchain.toml": "7bfd3ca943dcce5b34de4c5f57414eae7496a698034208cf026690ada5130271",
-    "tools/m3-wasm-policy.mjs": "31fcf264bffb4a9b60d4fd7b4297c3826d143893131253d1754dd1051be1acf5",
+    "tools/m3-wasm-policy.mjs": "28207a928261cd3a6dbc8ab75105380689aa79f34161f8d489e9714a17edb498",
     "tools/m3-wasm-worker.mjs": "8bdbde4fd444dc8a74ff8e020c2d10c613b7a517809d6927c8e5e5cf2dff7035",
-    "tools/m3-wasm.mjs": "4d1bbe5054e3a4ad5fccc5aee315709f33280a18dd3fa27df2343e1653df5596",
+    "tools/m3-wasm.mjs": "681957b2b136cc4cec1648d457b52c51d43b304c8ca2f54900803a7994b636ca",
     "verification/current-source-replay/diagnostic-check.rs": "c0a3e2c3ed4f1c791e1452969bcd33ea3c4e1cebccd4dfde4879726b81d086fa",
     "verification/declared-modules-v1/peer/Cargo.lock": "bf925f1c8c9d73f29571c5d63995ae0c93424cd9386ea334ab57882f4cb332b7",
     "verification/declared-modules-v1/peer/src/main.rs": "8d36f2807858a756115d52311747f04c2744feb5d2cf15e27ee956242831f206",
