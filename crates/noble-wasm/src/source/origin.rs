@@ -1255,7 +1255,7 @@ fn bounded_graph_cells(
 /// classes, ordered root captures and recursive-owner classification.
 struct TemplateWalk {
     /// Distinct retained cells in first-visit order, with their binding keys.
-    cells: Vec<(usize, alloc::string::String)>,
+    cells: Vec<(Rc<OriginProgramValue>, alloc::string::String)>,
     classes: Vec<OriginClass>,
     captures: Vec<u32>,
     owner: OriginOwner,
@@ -1320,13 +1320,12 @@ fn template_key(
     if depth >= MAX_ORIGIN_DEPTH {
         return None;
     }
-    let pointer = Rc::as_ptr(value) as usize;
-    let mut known = 0usize;
-    while known < walk.cells.len() {
-        if walk.cells[known].0 == pointer {
-            return Some(walk.cells[known].1.clone());
-        }
-        known += 1;
+    // Index walks without early exits: the pinned extraction refuses a
+    // `return` or `break` inside a loop. Cell identity is the allocation
+    // (`Rc::ptr_eq`), as in the retained-graph walk, never a pointer cast,
+    // which the extraction cannot model.
+    if let Some(known) = super::position_of(&walk.cells, |cell| Rc::ptr_eq(&cell.0, value)) {
+        return Some(walk.cells[known].1.clone());
     }
     let key = match value.as_ref() {
         OriginProgramValue::Static { program_index, .. } => {
@@ -1398,24 +1397,21 @@ fn template_key(
             key
         }
     };
-    let mut class = 0usize;
-    while class < walk.classes.len() {
-        if walk.classes[class].binding == key {
+    match super::position_of(&walk.classes, |class| class.binding == key) {
+        Some(class) => {
             walk.classes[class].occurrences = walk.classes[class].occurrences.checked_add(1)?;
-            break;
         }
-        class += 1;
-    }
-    if class == walk.classes.len() {
-        if walk.classes.len() >= MAX_ORIGIN_PROGRAMS {
-            return None;
+        None => {
+            if walk.classes.len() >= MAX_ORIGIN_PROGRAMS {
+                return None;
+            }
+            walk.classes.push(OriginClass {
+                binding: key.clone(),
+                occurrences: 1,
+            });
         }
-        walk.classes.push(OriginClass {
-            binding: key.clone(),
-            occurrences: 1,
-        });
     }
-    walk.cells.push((pointer, key.clone()));
+    walk.cells.push((Rc::clone(value), key.clone()));
     Some(key)
 }
 
@@ -1423,19 +1419,85 @@ fn template_key(
 /// by content after recipe normalization rather than by compiled program index.
 /// Two independently written but equal quotation bodies therefore share one
 /// logical binding class.
+///
+/// The bodies are spelled depth-first over an explicit frame stack in the
+/// order of a recursive spelling, so no loop sits inside a recursive call (the
+/// pinned extraction refuses one). A refusal leaves every open body marked as
+/// visiting and stores no key for it, as an early return from the recursion
+/// would.
 #[expect(
     tigerstyle::mutating_input_in_pure,
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-wasm-maintainers; it mutates only its own exclusively borrowed work state, and the recursion follows an already checked, acyclic size-bounded quotation graph."
+    reason = "Owner: noble-wasm-maintainers; it mutates only its own exclusively borrowed work state for this bounded walk; checked inputs stay immutable."
 )]
 fn static_program_key(
     index: usize,
     programs: &[OriginProgram],
     walk: &mut TemplateWalk,
 ) -> Option<alloc::string::String> {
-    if let Some(key) = walk.static_keys.get(index).and_then(|slot| slot.clone()) {
+    if let Some(key) = static_key_memo(index, walk) {
         return Some(key);
     }
+    let header = static_key_enter(index, programs, walk)?;
+    let mut frames = StaticKeyFrames {
+        frames: Vec::with_capacity(MAX_ORIGIN_PROGRAMS),
+    };
+    frames.frames.push((index, 0, header));
+    let mut spelled = None;
+    let mut is_walking = true;
+    let mut is_refused = false;
+    while is_walking {
+        match static_key_step(programs, walk, &mut frames) {
+            Some(StaticKeyStep::Open) => {}
+            Some(StaticKeyStep::Closed(key)) => {
+                spelled = Some(key);
+                is_walking = false;
+            }
+            None => {
+                is_refused = true;
+                is_walking = false;
+            }
+        }
+    }
+    if is_refused {
+        return None;
+    }
+    spelled
+}
+
+/// One event of the static key walk.
+enum StaticKeyStep {
+    /// A body is still open.
+    Open,
+    /// The first body closed with this key.
+    Closed(alloc::string::String),
+}
+
+/// The open static bodies of the key walk, innermost last: each program index
+/// with the position of its next operation and the key spelled so far.
+struct StaticKeyFrames {
+    frames: Vec<(usize, usize, alloc::string::String)>,
+}
+
+/// The stored key of static program `index`, if one was spelled.
+fn static_key_memo(index: usize, walk: &TemplateWalk) -> Option<alloc::string::String> {
+    match walk.static_keys.get(index) {
+        Some(Some(key)) => Some(key.clone()),
+        _ => None,
+    }
+}
+
+/// Open static program `index` for spelling: refuse a body already being
+/// spelled (a cycle), any non-definition body and an oversized one, otherwise
+/// mark it visiting and return its key prefix.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-wasm-maintainers; it mutates only its own exclusively borrowed work state for this bounded walk; checked inputs stay immutable."
+)]
+fn static_key_enter(
+    index: usize,
+    programs: &[OriginProgram],
+    walk: &mut TemplateWalk,
+) -> Option<alloc::string::String> {
     if *walk.static_visiting.get(index)? {
         return None;
     }
@@ -1447,35 +1509,73 @@ fn static_program_key(
         return None;
     }
     *walk.static_visiting.get_mut(index)? = true;
-    let mut key = alloc::format!("p{}:{}[", program.input_signature, program.output_signature);
-    for (at, operation) in program.operations.iter().enumerate() {
-        if at > 0 {
-            key.push(';');
-        }
-        match operation.action {
-            OriginAction::I64(value) => key.push_str(&alloc::format!("#{value}")),
-            OriginAction::Add => key.push_str("add"),
-            OriginAction::Sub => key.push_str("sub"),
-            OriginAction::Mul => key.push_str("mul"),
-            OriginAction::Dup => key.push_str("dup"),
-            OriginAction::Drop => key.push_str("drop"),
-            OriginAction::Swap => key.push_str("swap"),
-            OriginAction::Dip => key.push_str("dip"),
-            OriginAction::Run => key.push_str("run"),
-            OriginAction::Compose => key.push_str("compose"),
-            OriginAction::Quote { .. } => key.push_str("quote"),
-            OriginAction::StaticProgram(child) => {
-                key.push_str(&static_program_key(child, programs, walk)?);
+    Some(alloc::format!(
+        "p{}:{}[",
+        program.input_signature,
+        program.output_signature
+    ))
+}
+
+/// Advance the static key walk by one event: spell the innermost open body's
+/// next operation (opening the static body it installs when that body has no
+/// stored key yet), or close that body, store its key and append it to its
+/// parent. A selected call or a refused child refuses the walk.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-wasm-maintainers; it mutates only its own exclusively borrowed work state for this bounded walk; checked inputs stay immutable."
+)]
+fn static_key_step(
+    programs: &[OriginProgram],
+    walk: &mut TemplateWalk,
+    frames: &mut StaticKeyFrames,
+) -> Option<StaticKeyStep> {
+    let top = frames.frames.len().checked_sub(1)?;
+    let index = frames.frames[top].0;
+    let at = frames.frames[top].1;
+    let operations = &programs.get(index)?.operations;
+    if at >= operations.len() {
+        let (closed, _, mut key) = frames.frames.pop()?;
+        key.push(']');
+        *walk.static_visiting.get_mut(closed)? = false;
+        // Both tables have one slot per program, so the slot the visiting mark
+        // just cleared exists; the pinned extraction cannot join an `if let`
+        // on a mutable slot here.
+        *walk.static_keys.get_mut(closed)? = Some(key.clone());
+        let Some(parent) = top.checked_sub(1) else {
+            return Some(StaticKeyStep::Closed(key));
+        };
+        frames.frames[parent].2.push_str(&key);
+        frames.frames[parent].1 += 1;
+        return Some(StaticKeyStep::Open);
+    }
+    if at > 0 {
+        frames.frames[top].2.push(';');
+    }
+    let fragment = match operations[at].action {
+        OriginAction::I64(value) => alloc::format!("#{value}"),
+        OriginAction::Add => alloc::string::String::from("add"),
+        OriginAction::Sub => alloc::string::String::from("sub"),
+        OriginAction::Mul => alloc::string::String::from("mul"),
+        OriginAction::Dup => alloc::string::String::from("dup"),
+        OriginAction::Drop => alloc::string::String::from("drop"),
+        OriginAction::Swap => alloc::string::String::from("swap"),
+        OriginAction::Dip => alloc::string::String::from("dip"),
+        OriginAction::Run => alloc::string::String::from("run"),
+        OriginAction::Compose => alloc::string::String::from("compose"),
+        OriginAction::Quote { .. } => alloc::string::String::from("quote"),
+        OriginAction::StaticProgram(child) => match static_key_memo(child, walk) {
+            Some(stored) => stored,
+            None => {
+                let header = static_key_enter(child, programs, walk)?;
+                frames.frames.push((child, 0, header));
+                return Some(StaticKeyStep::Open);
             }
-            OriginAction::CallSelected(_) => return None,
-        }
-    }
-    key.push(']');
-    *walk.static_visiting.get_mut(index)? = false;
-    if let Some(slot) = walk.static_keys.get_mut(index) {
-        *slot = Some(key.clone());
-    }
-    Some(key)
+        },
+        OriginAction::CallSelected(_) => return None,
+    };
+    frames.frames[top].2.push_str(&fragment);
+    frames.frames[top].1 += 1;
+    Some(StaticKeyStep::Open)
 }
 
 /// Exact bounded template projection of one returned value.
@@ -1509,17 +1609,37 @@ pub(super) fn verified_templates(origin: &SelectedOriginMetadata) -> bool {
     if origin.outputs.is_empty() || origin.outputs.len() > MAX_ORIGIN_PROGRAMS {
         return false;
     }
-    origin.outputs.iter().all(|output| {
-        output.template.owner == OriginOwner::Absent
-            && output.template.captures.len() <= MAX_ORIGIN_OPERATIONS
-            && output.template.classes.len() <= MAX_ORIGIN_PROGRAMS
-            && template_projection(&output.result, &origin.programs, origin.named_program_index)
-                .is_some_and(|template| {
-                    template.owner == OriginOwner::Absent
-                        && template.captures == output.template.captures
-                        && template.classes == output.template.classes
-                })
-    })
+    // An explicit index walk: the pinned extraction's library model has no
+    // `Iterator::all`.
+    let mut index = 0usize;
+    let mut is_verified = true;
+    while is_verified && index < origin.outputs.len() {
+        is_verified = verified_template(&origin.outputs[index], origin);
+        index += 1;
+    }
+    is_verified
+}
+
+/// Whether one retained output re-derives to exactly its stored template
+/// projection and requires no lexical recursive owner.
+fn verified_template(output: &OriginOutput, origin: &SelectedOriginMetadata) -> bool {
+    if output.template.owner != OriginOwner::Absent {
+        return false;
+    }
+    if output.template.captures.len() > MAX_ORIGIN_OPERATIONS {
+        return false;
+    }
+    if output.template.classes.len() > MAX_ORIGIN_PROGRAMS {
+        return false;
+    }
+    match template_projection(&output.result, &origin.programs, origin.named_program_index) {
+        Some(template) => {
+            template.owner == OriginOwner::Absent
+                && template.captures == output.template.captures
+                && template.classes == output.template.classes
+        }
+        None => false,
+    }
 }
 
 #[expect(
@@ -1571,9 +1691,10 @@ pub(super) fn build(
     )?;
     // A reachable reference to the enclosing named definition requires a
     // semantic lexical recursive owner this bounded subset does not classify.
-    if outputs
-        .iter()
-        .any(|output| output.template.owner != OriginOwner::Absent)
+    if super::position_of(&outputs, |output| {
+        output.template.owner != OriginOwner::Absent
+    })
+    .is_some()
     {
         return None;
     }
@@ -1586,7 +1707,11 @@ pub(super) fn build(
         outputs,
     };
     // Fail closed on any projection that does not re-derive exactly.
-    verified_templates(&origin).then_some(origin)
+    if verified_templates(&origin) {
+        Some(origin)
+    } else {
+        None
+    }
 }
 
 // Test harness only: the recursive forms that the explicit-stack walks
