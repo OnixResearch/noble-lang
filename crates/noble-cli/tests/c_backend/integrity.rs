@@ -93,7 +93,7 @@ fn symlinked_and_hard_linked_inputs_refuse_before_emission(
             "is a symlink",
         ),
         ("leaf-symlink", leaf, "is a symlink"),
-        ("hard-link", hard, "hard-linked mutable input refused"),
+        ("hard-link", hard, "multiply-linked input refused"),
     ] {
         let out = scratch.0.join(format!("{name}-out"));
         let (code, stderr, existed) = refusal(&path, &contract, &policy, &out)?;
@@ -137,10 +137,9 @@ fn output_paths_are_bound_to_walked_directories() -> Result<(), Box<dyn std::err
 fn emitted_inputs_are_the_checked_bytes_under_one_new_directory(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let scratch = Scratch::new()?;
-    let source_bytes = b"1 true pair";
+    let source_bytes = b"1";
     let source = scratch.file("source.noble", source_bytes)?;
-    let contract_bytes =
-        br#"{"expected_interface":"-- Pair<I64,Bool>","resolved_host_contracts":{}}"#;
+    let contract_bytes = CONTRACT;
     let contract = scratch.file("contract.json", contract_bytes)?;
     let policy = scratch.file("policy.json", POLICY)?;
     let mut manifests = Vec::new();
@@ -167,5 +166,33 @@ fn emitted_inputs_are_the_checked_bytes_under_one_new_directory(
     }
     assert_eq!(manifests[0]["build_key"], manifests[1]["build_key"]);
     assert_eq!(manifests[0]["c_sha256"], manifests[1]["c_sha256"]);
+    Ok(())
+}
+
+#[test]
+fn non_regular_oversized_and_deep_inputs_refuse() -> Result<(), Box<dyn std::error::Error>> {
+    let scratch = Scratch::new()?;
+    let (_, contract, policy) = fixture(&scratch)?;
+    let directory = scratch.0.join("as-directory");
+    std::fs::create_dir(&directory)?;
+    let (code, stderr, existed) =
+        refusal(&directory, &contract, &policy, &scratch.0.join("dir-out"))?;
+    assert_eq!(code, 2);
+    assert!(stderr.contains("bounded regular file"), "{stderr}");
+    assert!(!existed);
+    let oversized = scratch.file("oversized.noble", &vec![b'1'; 4097])?;
+    let (code, stderr, existed) =
+        refusal(&oversized, &contract, &policy, &scratch.0.join("big-out"))?;
+    assert_eq!(code, 2);
+    assert!(stderr.contains("exceeds 4096 bytes"), "{stderr}");
+    assert!(!existed);
+    let mut deep = scratch.0.clone();
+    for _ in 0..129 {
+        deep.push("a");
+    }
+    let (code, stderr, existed) = refusal(&deep, &contract, &policy, &scratch.0.join("deep-out"))?;
+    assert_eq!(code, 2);
+    assert!(stderr.contains("depth exceeds 128 components"), "{stderr}");
+    assert!(!existed);
     Ok(())
 }

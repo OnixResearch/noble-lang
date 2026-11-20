@@ -59,16 +59,17 @@ complete CB-LIMIT-01 limits or CB-BUILD-01 native build contract; both remain
 open. This is not native compilation, execution, sandbox or artifact admission
 evidence.
 
-The preceding result-form sentence records the `e76d8469` state. The current
-nonselected source-only emitter additionally accepts exactly one checked
-`Pair`, `Sum` or `List` result whose complete element types are `I64`,
-`Bool`, `Unit`, `Text` or a nested `Pair`/`Sum`/`List` of those, and renders
-it as bounded JSON value text with the selected runtime's value encoding;
-`Syntax` and `Program` results, `reflect`, typed runtime inputs, named
-definitions and host effects still refuse. It emits that rendering into the
-inert C source only: the aggregate result has not been executed, compared to
-selected Wasm or admitted as native code, so no CB-GATE-01, quota or
-CB-ADMIT-01 evidence follows.
+The preceding result-form sentence records the source-only WIP text that the
+mid-change sync at `8c6ab3d0` applied to canonical. The current nonselected
+source-only emitter does not refuse `Pair`/`Sum`/`List` results: it accepts
+exactly one checked `Pair`, `Sum` or `List` result whose complete element
+types are `I64`, `Bool`, `Unit`, `Text` or a nested `Pair`/`Sum`/`List` of
+those, and renders it as bounded JSON value text in the selected runtime's
+value encoding. `Syntax` and `Program` results, `reflect`, typed runtime
+inputs, named definitions and host effects still refuse. It emits that
+rendering into the inert C source only: the aggregate result has not been
+executed, compared to selected Wasm or admitted as native code, so no
+CB-GATE-01, quota or CB-ADMIT-01 evidence follows.
 
 
 
@@ -202,6 +203,23 @@ inputs, and its output child paths are re-resolved after directory creation;
 it MUST NOT turn those file digests into a claim of native correspondence or
 permit native execution. This gap remains OPEN until a separately admitted
 native build/launch path implements the descriptor-bound contract above.
+
+The preceding paragraph records the source-only state the mid-change sync at
+`8c6ab3d0` applied. The current nonselected source-only build instead walks
+every host-selected input path from the filesystem root one component at a
+time without following any symlink and refuses relative, `.`, `..`, empty or
+non-UTF-8 components; it refuses a non-regular, multiply-linked or
+stage-oversized input, snapshots the bytes it read into a memfd sealed with
+`F_SEAL_WRITE`/`F_SEAL_SHRINK`/`F_SEAL_GROW`/`F_SEAL_SEAL` and uses the
+read-back snapshot for this build, and rechecks the leaf's device and inode
+afterwards. It creates the output directory with `mkdirat` under the walked
+parent and writes every artifact through that directory descriptor with
+`O_CREAT|O_EXCL|O_NOFOLLOW` instead of re-resolving the output path. The
+sealed descriptor is released when the snapshot is read and is not retained
+for a later launch; the recheck compares identity only, so an in-place
+rewrite of the same inode is not detected. The build still selects no trusted
+anchor, performs no independent native admission, and does not launch or
+compare native bytes; this paragraph does not close the OPEN gap above.
 
 
 

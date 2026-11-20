@@ -689,6 +689,14 @@ fn aggregate_results_bind_to_their_exact_checked_interface(
             c.contains("if (height != 1 || !shape_kind(stack[0].tag,"),
             "{name}: the checked result shape guard is missing"
         );
+        for literal in [
+            "{\\\"type\\\":\\\"Unit\\\",\\\"value\\\":null}",
+            "{\\\"type\\\":\\\"Pair\\\",\\\"value\\\":[",
+            "{\\\"type\\\":\\\"Sum\\\",\\\"variant\\\":",
+            "{\\\"type\\\":\\\"List\\\",\\\"value\\\":[",
+        ] {
+            assert!(c.contains(literal), "{name}: missing encoding {literal}");
+        }
     }
     // A checked aggregate interface whose element order differs from the
     // prepared body still refuses; the result form does not bypass matching.

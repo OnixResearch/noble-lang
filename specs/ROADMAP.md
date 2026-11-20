@@ -1538,8 +1538,12 @@ requires a pinned sandbox and separately checked source/C/ELF admission.
 Only restricted inert checked I64/Bool/Unit/Text-result C11 source emission
 is present in this isolated source-only integration, including internal
 Pair/Sum/List construction/elimination, exact checked value-shape preflights
-and bounded immutable aggregate/Program captures. Pair/Sum/List/Syntax/Program
-final results, reflect, runtime inputs and host mediation remain unsupported.
+and bounded immutable aggregate/Program captures, plus one checked
+Pair/Sum/List result rendered as bounded value text. Inputs are read through
+descriptor-anchored sealed snapshots and outputs are written through the
+created directory descriptor; trusted-anchor selection, in-place rewrite
+detection and native admission remain absent. Syntax/Program final results,
+reflect, runtime inputs and host mediation remain unsupported.
 An optional exact supplied `limits.list_length` from 0 to 255 (default 255)
 is accepted, retained in the manifest and emitted as the effective
 `LIST_LIMIT` with a pre-`cons` check that has not been executed, so the field

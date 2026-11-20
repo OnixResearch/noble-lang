@@ -2,7 +2,7 @@
 
 ## Context
 
-`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles checked, effect-free Core-Bootstrap expressions with one I64/Bool/Unit/Text/Pair/Sum/List result plus internal Pair/Sum/List operations; it does not compile or execute native ELF. The held canonical CB-BUILD-01 does not describe the source-only route, so the reconciled delta's disclosure needs independent owner review and legal delta sync. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
+`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles checked, effect-free Core-Bootstrap expressions with one I64/Bool/Unit/Text/Pair/Sum/List result plus internal Pair/Sum/List operations; it does not compile or execute native ELF. The canonical CB-BUILD-01 carries the source-only WIP paragraph applied at `8c6ab3d0`; the delta's later source-only disclosures need independent review before they are synced. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
 
 The isolated source-only emitter now lowers checked pure `dip` and `if`
 as well as literal/stack/arithmetic/Unit/quotation/`quote`/`compose`/`run`.
@@ -131,10 +131,15 @@ syntax-only check authorizes MCB acceptance. r[CB-ADMIT-01] r[CB-GATE-01]
 
 This is a review plan, **not** a selected runner, compiler, VM, executable
 recipe or authorization to launch a guest. The checked source-only emitter
-does not spawn `cc`, produce ELF or satisfy CB-ADMIT-01. Its ancestor/output
-path races remain open despite strict duplicate-key decoding. `--native` and
-`execute --target c` continue to refuse. Canonical C text and all case
-evidence remain HOLD until a separate owner decision.
+does not spawn `cc`, produce ELF or satisfy CB-ADMIT-01. Its source-only path
+binding walks each input from the filesystem root without following a
+symlink, refuses relative and `.`/`..` components and multiply-linked or
+non-regular files, snapshots the bytes into a sealed memfd and writes outputs
+through the created directory descriptor; trusted-anchor selection, in-place
+rewrite detection beyond the identity recheck, and every native admission
+step remain open. `--native` and `execute --target c` continue to refuse.
+Canonical C text and all case evidence remain HOLD until a separate owner
+decision.
 
 1. **Pin an inert build service first.** Derive the proposed C11 compiler,
    linker, headers/sysroot, libc/startup and static runtime from the already
@@ -154,6 +159,10 @@ evidence remain HOLD until a separate owner decision.
    descriptors, rejecting ancestor symlinks, magic links, mutable hard
    links and replacement. Snapshot checked bytes in sealed read-only
    descriptors; reject duplicate JSON members before interpreting limits.
+   The source-only build already walks its three inputs that way and writes
+   through the created output directory descriptor, but it releases each
+   sealed snapshot after reading it, compares identity only, selects no
+   trusted anchor and performs no native byte comparison below.
    Independently check the exact source/resolved contracts, re-emit C under
    the pinned emitter/runtime and compare *all* C bytes. Compile that
    trusted C in a hermetic fixed environment and compare *all* ELF bytes,

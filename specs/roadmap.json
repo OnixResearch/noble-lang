@@ -660,7 +660,7 @@
       ],
       "acceptance_status": "not-started",
       "non_claims": [
-        "Only restricted nonselected I64/Bool/Unit/Text-result checked C11 source emission with bounded internal Pair/Sum/List exists in this integrated source; recursive duplicate JSON members refuse, but ancestor-sealed input/output native admission remains absent. No native compiler selection, ELF execution/runtime admission, sandbox runner, executed C cases, native artifact assurance, backend proof or selection change exists. CB-CASE-01 includes limits.list_length and remains absent/not-run; the current source-only policy accepts that field as an exact 0..255 List bound rather than ignoring it."
+        "Only restricted nonselected I64/Bool/Unit/Text-result checked C11 source emission with bounded internal Pair/Sum/List and one bounded Pair/Sum/List result exists in this integrated source; recursive duplicate JSON members refuse, and inputs are read through descriptor-anchored sealed snapshots with outputs written through the created directory descriptor, but trusted-anchor selection, in-place rewrite detection and native admission remain absent. No native compiler selection, ELF execution/runtime admission, sandbox runner, executed C cases, native artifact assurance, backend proof or selection change exists. CB-CASE-01 includes limits.list_length and remains absent/not-run; the current source-only policy accepts that field as an exact 0..255 List bound rather than ignoring it."
       ]
     },
     {

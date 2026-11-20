@@ -59,19 +59,24 @@ fn components(path: &Path) -> Result<(Vec<String>, String), String> {
 }
 
 fn component_error(dir: &OwnedFd, path: &Path, name: &str, error: Errno) -> String {
-    let is_symlink = fs::statat(dir, name, AtFlags::SYMLINK_NOFOLLOW)
-        .map(|stat| FileType::from_raw_mode(stat.st_mode).is_symlink())
-        .unwrap_or(false);
-    if is_symlink || error == Errno::LOOP {
+    let observed = fs::statat(dir, name, AtFlags::SYMLINK_NOFOLLOW);
+    let file_type = observed
+        .as_ref()
+        .map(|stat| FileType::from_raw_mode(stat.st_mode));
+    if file_type.is_ok_and(|kind| kind.is_symlink()) || error == Errno::LOOP {
         format!(
             "{}: path component {name:?} is a symlink; C build inputs are opened without following symlinks",
             path.display()
         )
-    } else if error == Errno::NOTDIR {
+    } else if error == Errno::NOTDIR
+        || file_type.is_ok_and(|kind| kind.is_file() || kind.is_symlink())
+    {
         format!(
             "{}: path component {name:?} is not a directory",
             path.display()
         )
+    } else if error == Errno::NOENT {
+        format!("{}: path component {name:?} does not exist", path.display())
     } else {
         format!("{}: path component {name:?}: {error}", path.display())
     }
@@ -80,7 +85,7 @@ fn component_error(dir: &OwnedFd, path: &Path, name: &str, error: Errno) -> Stri
 fn root() -> Result<OwnedFd, String> {
     fs::open(
         "/",
-        OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC | OFlags::NOFOLLOW,
+        OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC | OFlags::NOFOLLOW,
         Mode::empty(),
     )
     .map_err(|error| format!("filesystem root: {error}"))
@@ -90,7 +95,7 @@ fn open_dir(parent: &OwnedFd, name: &str, path: &Path) -> Result<OwnedFd, String
     fs::openat(
         parent,
         name,
-        OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC | OFlags::NOFOLLOW,
+        OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC | OFlags::NOFOLLOW,
         Mode::empty(),
     )
     .map_err(|error| component_error(parent, path, name, error))
@@ -125,8 +130,10 @@ fn write_all(fd: &OwnedFd, mut bytes: &[u8]) -> Result<(), String> {
     Ok(())
 }
 
-/// Snapshot `bytes` into a sealed memfd and read the snapshot back, so later
-/// stages consume the sealed bytes rather than the mutable path.
+/// Snapshot `bytes` into a sealed memfd and read the snapshot back, so the
+/// build consumes an immutable copy rather than the mutable path. The sealed
+/// object is released after this read; it is not a descriptor retained for a
+/// later launch.
 fn seal(bytes: &[u8], path: &Path) -> Result<Vec<u8>, String> {
     let snapshot = fs::memfd_create(
         "noble-c-build-input",
@@ -181,7 +188,7 @@ pub(super) fn snapshot(path: &Path, max: usize) -> Result<Vec<u8>, String> {
     }
     if opened.st_nlink != 1 {
         return Err(format!(
-            "{}: hard-linked mutable input refused",
+            "{}: multiply-linked input refused by the source-only rule",
             path.display()
         ));
     }
@@ -189,6 +196,12 @@ pub(super) fn snapshot(path: &Path, max: usize) -> Result<Vec<u8>, String> {
         return Err(format!("{} exceeds {max} bytes", path.display()));
     }
     let bytes = read_bounded(&file, max, path)?;
+    if u64::try_from(opened.st_size).unwrap_or(u64::MAX) != bytes.len() as u64 {
+        return Err(format!(
+            "{}: input changed size while it was read",
+            path.display()
+        ));
+    }
     let sealed = seal(&bytes, path)?;
     let after = fs::statat(&dir, leaf.as_str(), AtFlags::SYMLINK_NOFOLLOW).map_err(|error| {
         format!(
@@ -196,7 +209,15 @@ pub(super) fn snapshot(path: &Path, max: usize) -> Result<Vec<u8>, String> {
             path.display()
         )
     })?;
-    if after.st_dev != opened.st_dev || after.st_ino != opened.st_ino {
+    if after.st_dev != opened.st_dev
+        || after.st_ino != opened.st_ino
+        || after.st_nlink != opened.st_nlink
+        || after.st_size != opened.st_size
+        || after.st_mtime != opened.st_mtime
+        || after.st_mtime_nsec != opened.st_mtime_nsec
+        || after.st_ctime != opened.st_ctime
+        || after.st_ctime_nsec != opened.st_ctime_nsec
+    {
         return Err(format!(
             "{}: input was replaced during the snapshot",
             path.display()

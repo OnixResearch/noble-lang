@@ -90,9 +90,11 @@ for source-only emission and retained in the manifest and emitted C. This is
 not native runtime quota evidence, source-to-ELF admission or a passed CB case.
 After the 2026-11-20 source-only slices, the restricted emitter also accepts
 one checked `Pair`/`Sum`/`List` result rendered as bounded value text and
-binds its inputs through descriptor-anchored sealed snapshots; the earlier
-"no final aggregate output" and ancestor-gap sentences in this proposal
-record the creation state. This is still inert source emission: no native
-compilation, execution, sandbox, differential or CB case evidence follows.
+binds its inputs through descriptor-anchored sealed snapshots without
+selecting a trusted anchor or detecting an in-place rewrite of the same
+inode; the earlier result-form, "no final aggregate output" and ancestor-gap
+sentences in this proposal record the creation state. This is still inert
+source emission: no native compilation, execution, sandbox, differential or
+CB case evidence follows.
 All CB cases remain absent/not-run/open/unassessed with empty evidence. No archive, owner
 acceptance or production selection occurs. r[CB-GATE-01]
