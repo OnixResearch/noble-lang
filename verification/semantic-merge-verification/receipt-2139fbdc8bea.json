@@ -1,0 +1,243 @@
+{
+  "schema": "noble-semantic-merge-verification-receipt/v2",
+  "relation": "noble-merge-claim/v1",
+  "semantic_revision": "SMERGE/1",
+  "source_revision": "2139fbdc8bea34ea4405acccdab604bd3feff953",
+  "dirty": false,
+  "runner": {
+    "entry": "bun verification/semantic-merge-verification/run.mjs receipt-2139fbdc8bea.json",
+    "commands": [
+      {
+        "argv": [
+          "lake",
+          "build",
+          "NobleContracts.Merge"
+        ],
+        "cwd": "proofs/mc1",
+        "env": {
+          "CARGO_TARGET_DIR": "/home/brittonr/.cache/noble-cairn/target/semantic-merge",
+          "NOBLE_BWRAP": "/nix/store/mvj6y8k3xs35cj7kq937xi44q4hl3r93-bubblewrap-0.12.0/bin/bwrap"
+        }
+      },
+      {
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "noble-contracts",
+          "--test",
+          "source",
+          "--",
+          "--nocapture",
+          "--test-threads=1",
+          "semantic_merge_model"
+        ],
+        "cwd": ".",
+        "env": {
+          "CARGO_TARGET_DIR": "/home/brittonr/.cache/noble-cairn/target/semantic-merge",
+          "NOBLE_BWRAP": "/nix/store/mvj6y8k3xs35cj7kq937xi44q4hl3r93-bubblewrap-0.12.0/bin/bwrap"
+        }
+      },
+      {
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "noble-contracts",
+          "--test",
+          "source",
+          "--",
+          "--nocapture",
+          "--ignored",
+          "--test-threads=1",
+          "semantic_merge_lean_check"
+        ],
+        "cwd": ".",
+        "env": {
+          "NOBLE_LEAN": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+          "NOBLE_CONTRACT_LIBRARY": "/var/tmp/noble-cairn/wt/semantic-merge/proofs/mc1",
+          "NOBLE_BWRAP": "/nix/store/mvj6y8k3xs35cj7kq937xi44q4hl3r93-bubblewrap-0.12.0/bin/bwrap",
+          "CARGO_TARGET_DIR": "/home/brittonr/.cache/noble-cairn/target/semantic-merge"
+        }
+      }
+    ],
+    "toolchain": {
+      "rust": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+      "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)",
+      "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)"
+    },
+    "elapsed_ms": 71086
+  },
+  "observations": {
+    "isolation": "bubblewrap",
+    "phase2": {
+      "relation": "SMERGE/1-model",
+      "fixtures": 10,
+      "verified": 4,
+      "conflicts": 1,
+      "counterexamples": 3,
+      "incompatible": 1,
+      "abnormal": 1,
+      "inputs": 25,
+      "decision": "no-go",
+      "lean_obligations_open": true,
+      "raw": "test semantic_merge_model::tests::model_fixtures_exercise_the_relation ... NOBLE_SEMANTIC_MERGE_RECEIPT {\"relation\":\"SMERGE/1-model\",\"fixtures\":10,\"verified\":4,\"conflicts\":1,\"counterexamples\":3,\"incompatible\":1,\"abnormal\":1,\"inputs\":25,\"decision\":\"no-go\",\"lean_obligations_open\":true}"
+    },
+    "claims": [
+      {
+        "case": "SMERGE-CASE-04",
+        "claim": "MergeRel [Ty.i64, Ty.i64] [Ty.i64, Ty.i64] [] [Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4] [Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4] [Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4]",
+        "claim_sha256": "a93e572c7c091286e6eb41e6146add9be80e2286f8635b345f8f60eff924208d",
+        "claim_text_sha256": "a93e572c7c091286e6eb41e6146add9be80e2286f8635b345f8f60eff924208d",
+        "claim_binding_sha256": "5d50c6cafbe72cfac8115084c2dd3129ff1c8b9bdcf8b81fa2aee3190c9bf644",
+        "proof": "NobleContracts.mergeRel_identical_increment",
+        "proof_sha256": "f6e1011394b03a8d2f5fd38ca05a8c364fe4b253f16ee75a3f5f3077159d2dfa",
+        "outcome": "verified"
+      },
+      {
+        "case": "SMERGE-CASE-01",
+        "claim": "MergeRel [Ty.i64, Ty.i64] [Ty.i64, Ty.i64] [] [Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4] [Op.word 2, Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4, Op.word 2] [Op.word 2, Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4, Op.word 2, Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4]",
+        "claim_sha256": "10c3967e4ffe97b29d11f1abb8a5c13756e6bf6ba1dee36b243395e4981814bb",
+        "claim_text_sha256": "10c3967e4ffe97b29d11f1abb8a5c13756e6bf6ba1dee36b243395e4981814bb",
+        "claim_binding_sha256": "b408d995df7cf895b3b1051c1d5980dd45ab7ea5ebd7339d81a151c860f38b05",
+        "proof": "NobleContracts.mergeRel_independent_changes",
+        "proof_sha256": "35c401e8b72d7dc102a50758d20b979765794214fba969c374c7c971e80698ae",
+        "outcome": "verified"
+      }
+    ],
+    "search": {
+      "outcome": "unknown",
+      "seed": 104372539625753,
+      "vectors": 25,
+      "subject_candidate": "87669653452fd1f3237a9abbe85885a3fa155aa053e10a4812f883a53e6dcbec"
+    },
+    "bounds": {
+      "timeout_ms_per_process": 60000,
+      "proof_bytes": 16384
+    },
+    "outcomes": [
+      "verified",
+      "conflict",
+      "validated-counterexample",
+      "unknown",
+      "unsupported",
+      "exhausted",
+      "internal-failure"
+    ],
+    "controls": {
+      "isolation": "bubblewrap",
+      "case03_marker_reader": {
+        "case": "SMERGE-CASE-03",
+        "submission": "by_elab reads the marker from the source view, prints it and aborts",
+        "submission_sha256": "626f1f1920ea6bcb303d537879257a85743a63b9b0d910abf5a872c17e47417c",
+        "outcome": "unknown",
+        "refusal": "/home/brittonr/.cache/noble-cairn/tmp/noble-merge-lean-2734591-3-34d150ded4ab0cdc/checker/MergeCheck.lean:93:0: error: producer module has no merge_claim\n",
+        "producer_diagnostic": "NOBLE-MERGE-ACCEPT:\nPANIC at List.get!Internal Init.GetElem:333:18: invalid index\nbacktrace:\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean/libleanshared.so(+0x9621e05) [0x73d4dc6f2e05]\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean/libleanshared.so(+0x9618987) [0x73d4dc6e9987]\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean/libleanshared.so(lean_panic_fn_borrowed+0x2b) [0x73d4dc6e9a6b]\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean/libleanshared.so(List.get!Internal [boxed, arity↓]+0xf) [0x73d4d667d9df]\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean/libleanshared.so(+0x9603a23) [0x73d4dc6d4a23]\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean/libleanshared.so(+0x9601f30) [0x73d4dc6d2f30]\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean/libleanshared.so(+0x9603bd6) [0x73d4dc6d4bd6]\n/nix/store/k"
+      },
+      "case03_unchecked_option": {
+        "case": "SMERGE-CASE-03",
+        "submission": "by_elab adds forgedFalse with debug.skipKernelTC and proves the claim",
+        "submission_sha256": "f622e8c009d09ce5f2fe5f7e58cbf2fe936157a80d2afe79ae377d6ef5665153",
+        "outcome": "unknown",
+        "refusal": "/home/brittonr/.cache/noble-cairn/tmp/noble-merge-lean-2734591-4-05f0cd261018099b/checker/MergeCheck.lean:93:0: error: (kernel) declaration type mismatch, 'forgedFalse' has type\n  True\nbut it is expected to have type\n  False\n"
+      },
+      "case03_unchecked_core": {
+        "case": "SMERGE-CASE-03",
+        "submission": "by_elab adds forgedFalse with Environment.addDeclCore doCheck=false",
+        "submission_sha256": "6521d81be936e4ed2996d94a20a688bb25eaf8fc21287d74dddba377cf58fc97",
+        "outcome": "unknown"
+      },
+      "case07_unchecked_option": {
+        "case": "SMERGE-CASE-07",
+        "submission": "by_elab adds forgedFalse with debug.skipKernelTC and proves the false claim",
+        "submission_sha256": "f622e8c009d09ce5f2fe5f7e58cbf2fe936157a80d2afe79ae377d6ef5665153",
+        "accepted": false
+      },
+      "case07_consumer_path": {
+        "case": "SMERGE-CASE-07",
+        "outcome": "conflict"
+      },
+      "file_write_submission": {
+        "case": "SMERGE-CASE-03",
+        "submission": "by_elab writes a file through a string-assembled identifier",
+        "submission_sha256": "2688c1302c6e9257d4fbfa2eacd94ab9c75815958ef8ff98fe24df4f1651f2a2",
+        "accepted": false,
+        "side_effect_outside_workspace": false,
+        "refusal": "/home/brittonr/.cache/noble-cairn/tmp/noble-merge-lean-2734591-10-68e949a486dcb0e9/checker/MergeCheck.lean:93:0: error: failed to open file '/home/brittonr/.cache/noble-cairn/tmp/noble-merge-lean-2734591-10-68e949a486dcb0e9/producer/MergeProducer.olean': No such file or directory\n"
+      },
+      "wrong_proof": {
+        "case": "SMERGE-CASE-04",
+        "proof": "NobleContracts.mergeRel_independent_changes",
+        "outcome": "unknown"
+      },
+      "exhausted": {
+        "control": "proof body above the declared byte bound",
+        "outcome": "exhausted"
+      },
+      "internal_failure": {
+        "control": "library root without a toolchain pin",
+        "outcome": "internal-failure"
+      }
+    },
+    "axiom_allowlist": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "axioms": [
+      "propext",
+      "Quot.sound"
+    ],
+    "library": {
+      "source_digest": "d065be7e670576e039e26cbdb4fe6c15f927b44412c0922a428dfe1dfd461468",
+      "object_digest": "31025c04d6437a39d69f264cef11025162123068bf5cf9f700ee37a76d0a95ff",
+      "root": "/var/tmp/noble-cairn/wt/semantic-merge/proofs/mc1",
+      "digest_status": "recorded, not compared with a pinned digest; the object digest binds the .olean bytes Lean loaded"
+    },
+    "transcripts": {
+      "model": {
+        "sha256": "5ec20fdfc8752c53e3f1aed61adaa2b658bbee690481cfde606ae021f99c74f6",
+        "bytes": 3078,
+        "text": "\nrunning 16 tests\ntest semantic_merge_model::tests::abnormal_and_vacuous_cases_do_not_verify ... ok\ntest semantic_merge_model::tests::evidence_refuses_wrong_claims_and_stale_revisions ... ok\ntest semantic_merge_model::tests::model_fixtures_exercise_the_relation ... NOBLE_SEMANTIC_MERGE_RECEIPT {\"relation\":\"SMERGE/1-model\",\"fixtures\":10,\"verified\":4,\"conflicts\":1,\"counterexamples\":3,\"incompatible\":1,\"abnormal\":1,\"inputs\":25,\"decision\":\"no-go\",\"lean_obligations_open\":true}\nok\ntest semantic_merge_model::tests::subject_identity_binds_captures_and_callees ... ok\ntest semantic_merge_model::tests::subject_identity_separates_ops_from_captures ... ok\ntest semantic_merge_model::tests::wrapping_equality_is_bit_exact ... ok\ntest semantic_merge_model::verification::acceptance_protocol_refuses_forged_transcripts ... ok\ntest semantic_merge_model::verification::bounded_search_validates_witnesses_and_never_certifies ... ok\ntest semantic_merge_model::verification::checker_bounds_and_tool_failures_are_visible ... ok\ntest semantic_merge_model::verification::claim_regeneration_is_exact_and_canonical ... ok\ntest semantic_merge_model::verification::consumer_refuses_every_differing_producer_field ... ok\ntest semantic_merge_model::verification::forged_proof_submissions_stay_nonverified ... ok\ntest semantic_merge_model::verification::interface_observable_and_precondition_refusals ... ok\ntest semantic_merge_model::verification::outcome_discipline_is_total_and_visible ... NOBLE_SEMANTIC_MERGE_VERIFICATION {\"relation\":\"noble-merge-claim/v1\",\"semantic_revision\":\"SMERGE/1\",\"case04_claim\":\"MergeRel [Ty.i64, Ty.i64] [Ty.i64, Ty.i64] [] [Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4] [Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4] [Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4]\",\"case04_text_sha256\":\"a93e572c7c091286e6eb41e6146add9be80e2286f8635b345f8f60eff924208d\",\"case04_binding_sha256\":\"5d50c6cafbe72cfac8115084c2dd3129ff1c8b9bdcf8b81fa2aee3190c9bf644\",\"case01_claim\":\"MergeRel [Ty.i64, Ty.i64] [Ty.i64, Ty.i64] [] [Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4] [Op.word 2, Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4, Op.word 2] [Op.word 2, Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4, Op.word 2, Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4]\",\"case01_text_sha256\":\"10c3967e4ffe97b29d11f1abb8a5c13756e6bf6ba1dee36b243395e4981814bb\",\"case01_binding_sha256\":\"b408d995df7cf895b3b1051c1d5980dd45ab7ea5ebd7339d81a151c860f38b05\",\"search_seed\":104372539625753,\"search_vectors\":25,\"search_outcome\":\"unknown\",\"subject_candidate\":\"87669653452fd1f3237a9abbe85885a3fa155aa053e10a4812f883a53e6dcbec\",\"outcomes\":[\"verified\",\"conflict\",\"validated-counterexample\",\"unknown\",\"unsupported\",\"exhausted\",\"internal-failure\"]}\nok\ntest semantic_merge_model::verification::search_receipts_retain_the_witness ... ok\ntest semantic_merge_model::verification::semantic_merge_lean_check ... ignored, requires NOBLE_LEAN (pinned Lean 4.35.0) and a built proofs/mc1 library\n\ntest result: ok. 15 passed; 0 failed; 1 ignored; 0 measured; 40 filtered out; finished in 1.38s\n\n"
+      },
+      "lean": {
+        "sha256": "5f831a574226994a86e217c2de14f336a93ae8c493f8c3dffe2bfcb436c84c72",
+        "bytes": 3487,
+        "text": "\nrunning 1 test\ntest semantic_merge_model::verification::semantic_merge_lean_check ... NOBLE_SEMANTIC_MERGE_LEAN {\"case04\":\"verified\",\"case01\":\"verified\",\"isolation\":\"bubblewrap\",\"case03_replay_abort\":\"unknown\",\"case03_replay_skip\":\"unknown\",\"case03_replay_core\":\"unknown\",\"case07_replay_skip_accepted\":false,\"case07_consumer\":\"conflict\",\"io_replay_accepted\":false,\"io_side_effect\":false,\"wrong_proof\":\"unknown\",\"exhausted\":\"exhausted\",\"internal_failure\":\"internal-failure\",\"axioms\":[\"propext\",\"Quot.sound\"],\"proof_case04\":\"NobleContracts.mergeRel_identical_increment\",\"proof_case04_sha256\":\"f6e1011394b03a8d2f5fd38ca05a8c364fe4b253f16ee75a3f5f3077159d2dfa\",\"proof_case01\":\"NobleContracts.mergeRel_independent_changes\",\"proof_case01_sha256\":\"35c401e8b72d7dc102a50758d20b979765794214fba969c374c7c971e80698ae\",\"replay_abort_sha256\":\"626f1f1920ea6bcb303d537879257a85743a63b9b0d910abf5a872c17e47417c\",\"replay_skip_sha256\":\"f622e8c009d09ce5f2fe5f7e58cbf2fe936157a80d2afe79ae377d6ef5665153\",\"replay_core_sha256\":\"6521d81be936e4ed2996d94a20a688bb25eaf8fc21287d74dddba377cf58fc97\",\"replay_io_sha256\":\"2688c1302c6e9257d4fbfa2eacd94ab9c75815958ef8ff98fe24df4f1651f2a2\",\"replay_abort_refusal\":\"/home/brittonr/.cache/noble-cairn/tmp/noble-merge-lean-2734591-3-34d150ded4ab0cdc/checker/MergeCheck.lean:93:0: error: producer module has no merge_claim\\n\",\"replay_skip_refusal\":\"/home/brittonr/.cache/noble-cairn/tmp/noble-merge-lean-2734591-4-05f0cd261018099b/checker/MergeCheck.lean:93:0: error: (kernel) declaration type mismatch, 'forgedFalse' has type\\n  True\\nbut it is expected to have type\\n  False\\n\",\"io_refusal\":\"/home/brittonr/.cache/noble-cairn/tmp/noble-merge-lean-2734591-10-68e949a486dcb0e9/checker/MergeCheck.lean:93:0: error: failed to open file '/home/brittonr/.cache/noble-cairn/tmp/noble-merge-lean-2734591-10-68e949a486dcb0e9/producer/MergeProducer.olean': No such file or directory\\n\",\"producer_abort_diagnostic\":\"NOBLE-MERGE-ACCEPT:\\nPANIC at List.get!Internal Init.GetElem:333:18: invalid index\\nbacktrace:\\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean/libleanshared.so(+0x9621e05) [0x73d4dc6f2e05]\\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean/libleanshared.so(+0x9618987) [0x73d4dc6e9987]\\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean/libleanshared.so(lean_panic_fn_borrowed+0x2b) [0x73d4dc6e9a6b]\\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean/libleanshared.so(List.get!Internal [boxed, arity↓]+0xf) [0x73d4d667d9df]\\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean/libleanshared.so(+0x9603a23) [0x73d4dc6d4a23]\\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean/libleanshared.so(+0x9601f30) [0x73d4dc6d2f30]\\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean/libleanshared.so(+0x9603bd6) [0x73d4dc6d4bd6]\\n/nix/store/k\",\"library_source_digest\":\"d065be7e670576e039e26cbdb4fe6c15f927b44412c0922a428dfe1dfd461468\",\"library_object_digest\":\"31025c04d6437a39d69f264cef11025162123068bf5cf9f700ee37a76d0a95ff\",\"library_root\":\"/var/tmp/noble-cairn/wt/semantic-merge/proofs/mc1\",\"lean\":\"Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)\",\"bounds\":{\"timeout_ms_per_process\":60000,\"proof_bytes\":16384}}\nok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 63.47s\n\n"
+      },
+      "lean_stderr": {
+        "sha256": "6ffb4a0c32cda42f5c8eb1a695ae795b46220df24ca057ccc4866ba20793fee2",
+        "bytes": 195,
+        "text": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s\n     Running tests/source.rs (/home/brittonr/.cache/noble-cairn/target/semantic-merge/debug/deps/source-b9d306d3778bebad)\n"
+      },
+      "model_stderr": {
+        "sha256": "59dc9aa5a9aea920be309759abcdad8c1a5dcacb5a8d2f6fe68eb006f1375c91",
+        "bytes": 295,
+        "text": "   Compiling noble-contracts v0.0.0 (/var/tmp/noble-cairn/wt/semantic-merge/crates/noble-contracts)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.00s\n     Running tests/source.rs (/home/brittonr/.cache/noble-cairn/target/semantic-merge/debug/deps/source-b9d306d3778bebad)\n"
+      }
+    }
+  },
+  "assessment": {
+    "decision": "no-go",
+    "reasons": [
+      "SM-1 is proved; SM-2 is proved for the narrowed fragment; SM-3, SM-4, SM-5 and SM-6 are narrowed or tested only, so the frozen criterion (SM-1 through SM-6 discharged or moved by an owner-accepted narrower statement) is not met.",
+      "SM-3 is tested only: there is no formalized preparation/lowering pipeline, and PO-19 remains open.",
+      "SM-5 and SM-6 are tested only: a corpus of producer-field refusals and a total outcome table do not discharge their universal obligations.",
+      "SM-4 is narrowed, not discharged: the lane compiles the submission in a producer process and replays its olean in a fresh kernel checker, but this remains a test-only process boundary (bubblewrap when selected), not the production consumer, and no PO-09/PO-16 refinement is proved here.",
+      "The integration plan is written but its steps 1-6 are unimplemented and step 7b (independent review of the implemented integration) has not run.",
+      "SM-8: this lane performs no merge, publication, live-slot admission, migration or release action."
+    ],
+    "obligations": {
+      "SM-1": "proved (NobleContracts.MergeRel, mergeVal_*, mergeStack_*)",
+      "SM-2": "proved for the narrowed fragment (NobleContracts.outer_exec, mergeRel_terminating)",
+      "SM-3": "narrowed and tested (consumer regeneration over lowered MC1 subjects); dangling captures are refused",
+      "SM-4": "narrowed (pinned process-level check with a closed-term consumer); production consumer not wired",
+      "SM-5": "tested (every differing producer field refused); not discharged",
+      "SM-6": "tested (total outcome lattice; only the consumer post-check through `checked` yields verified); not discharged",
+      "SM-7": "documented separate (#10/PO-18)",
+      "SM-8": "documented: no automatic action follows"
+    }
+  }
+}

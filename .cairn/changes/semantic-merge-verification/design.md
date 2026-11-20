@@ -722,10 +722,13 @@ receipt `verification/semantic-merge-verification/receipt-0b63bc0d3379.json`
 clean tree at `0b63bc0d3379`) and its Octet-clean successor
 `verification/semantic-merge-verification/receipt-f1ac840999f4.json`
 (sha256 `55193e408ac3f7c63b64ec4b9d719d0279483abfde15b8f0a05834b213aec855`,
-clean tree at `f1ac840999f4`), and the producer/replay successor
+clean tree at `f1ac840999f4`), the producer/replay receipt
 `verification/semantic-merge-verification/receipt-7df33acaa8a4.json`
 (sha256 `54336475e14e01731551f6609cc635e763d76d80b9284167fac5b24781364424`,
-clean tree at `7df33acaa8a4`, bubblewrap isolation). In the replay successor,
+clean tree at `7df33acaa8a4`) and its Octet-clean successor
+`verification/semantic-merge-verification/receipt-2139fbdc8bea.json`
+(sha256 `5936bdda2a89ae417d634f0291534d0e1b9f816bbcfad299c97d6247aa68a7d5`,
+clean tree at `2139fbdc8bea`, bubblewrap isolation). In the final successor,
 both regenerated claims (`SMERGE-CASE-04`, `SMERGE-CASE-01`) are verified
 through `evaluate` with axioms `propext`/`Quot.sound`, the Phase 2 lane is
 re-run unchanged, the round-2 A/B/C forgeries, the string-assembled IO write,
