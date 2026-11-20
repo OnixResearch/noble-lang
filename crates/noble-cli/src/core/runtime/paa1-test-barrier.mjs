@@ -6,14 +6,14 @@
 // files with the replacement bytes, and returns what it replaced so the
 // admission record retains it.
 //
-// The environment names one JSON plan:
+// The environment names one JSON plan file:
 //   { "replacement": PATH, "paths": [PATH, ...] }
 // A missing variable is a no-op. The barrier cannot alter the bytes the worker
 // instantiated: those are the in-memory buffers the comparison accepted.
 function paa1CompareBarrier(compared) {
-  const plan = process.env.NOBLE_PAA1_TEST_REPLACE_AFTER_COMPARE;
-  if (!plan) return null;
-  const parsed = JSON.parse(plan);
+  const planPath = process.env.NOBLE_PAA1_TEST_REPLACE_AFTER_COMPARE;
+  if (!planPath) return null;
+  const parsed = JSON.parse(fs.readFileSync(planPath, 'utf8'));
   if (typeof parsed.replacement !== 'string' || !Array.isArray(parsed.paths)
     || parsed.paths.length === 0 || parsed.paths.some(target => typeof target !== 'string')) {
     fail('invalid paa1 test barrier plan');
