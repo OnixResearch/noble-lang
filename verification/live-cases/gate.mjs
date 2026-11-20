@@ -840,15 +840,15 @@ const fieldCoverage = id => {
     for (const key of Object.keys(packetCase[section])) {
       if (key !== 'variants') {
         const matches = rows.filter(row => row.field === `${section}.${key}` || row.field.startsWith(`${section}.${key}.`));
-        assert.ok(matches.length > 0, `${id}: ${section}.${key} has no observation row`);
-        fields.push({ field: `${section}.${key}`, observed: matches.every(row => row.observed), detail: matches.map(row => row.detail) });
+        fields.push({ field: `${section}.${key}`, observed: matches.length > 0 && matches.every(row => row.observed),
+          detail: matches.length > 0 ? matches.map(row => row.detail) : [{ reason: 'no observation row' }] });
         continue;
       }
       for (const variant of packetCase[section].variants) {
         const name = variant.name ?? variant.case;
         const matches = rows.filter(row => row.field === `${section}.${key}.${name}` || row.field.startsWith(`${section}.${key}.${name}.`));
-        assert.ok(matches.length > 0, `${id}: variant ${name} has no observation row`);
-        fields.push({ field: `${section}.${key}.${name}`, observed: matches.every(row => row.observed), detail: matches.map(row => row.detail) });
+        fields.push({ field: `${section}.${key}.${name}`, observed: matches.length > 0 && matches.every(row => row.observed),
+          detail: matches.length > 0 ? matches.map(row => row.detail) : [{ reason: 'no observation row' }] });
       }
     }
   }
