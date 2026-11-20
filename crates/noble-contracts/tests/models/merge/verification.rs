@@ -1,7 +1,9 @@
 #![allow(
     tigerstyle::assertion_density,
-    tigerstyle::unused_self,
-    reason = "Owner: noble-contracts-maintainers; this test-only claim/consumer lane builds finite selections and asserts each outcome, so long setup legs and per-fixture assertions are the readable form."
+    tigerstyle::function_length,
+    tigerstyle::no_panic,
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts-maintainers; this test-only claim/consumer lane builds finite selections and asserts each outcome, so long setup legs and per-fixture assertions are the readable form. Test-only lane: matches over the observable/fragment enums are intentional regression tables, panics and ignored cleanup results are fixture assertions, and the bounded checker's digest casts index a 16-entry nibble table."
 )]
 #![expect(
     tigerstyle::non_trait_imports,
@@ -303,7 +305,7 @@ fn bounded_search_validates_witnesses_and_never_certifies() {
     assert_eq!(passing.outcome, Outcome::Unknown);
     assert!(!passing.truncated);
     assert_eq!(passing.examined, MAX_VECTORS);
-    let truncated = search(&case01(), SEED, MAX_VECTORS + 10);
+    let truncated = search(&case01(), SEED, MAX_VECTORS.saturating_add(10));
     assert!(truncated.truncated);
     assert_eq!(truncated.outcome, Outcome::Unknown);
 
@@ -419,7 +421,7 @@ fn outcome_discipline_is_total_and_visible() {
 /// Bounded JSON string rendering: the receipt line contains only ASCII claim
 /// text, so escaping quotes and backslashes is exact.
 fn json_string(text: &str) -> String {
-    let mut rendered = String::with_capacity(text.len() + 2);
+    let mut rendered = String::with_capacity(text.len().saturating_add(2));
     rendered.push('"');
     for character in text.chars() {
         match character {

@@ -2,7 +2,9 @@
     tigerstyle::assertion_density,
     tigerstyle::raw_arithmetic_overflow,
     tigerstyle::numeric_units,
-    reason = "Owner: noble-contracts-maintainers; this test-only claim harness builds finite subjects, hash blocks and refusal tables, so long setup legs and fixed-width hash arithmetic are the readable form."
+    tigerstyle::fragile_exhaustive_enum_match,
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-contracts-maintainers; this test-only claim harness builds finite subjects, hash blocks and refusal tables, so long setup legs and fixed-width hash arithmetic are the readable form. Test-only lane: matches over the observable/fragment enums are intentional regression tables, panics and ignored cleanup results are fixture assertions, and the bounded checker's digest casts index a 16-entry nibble table."
 )]
 #![expect(
     tigerstyle::non_trait_imports,
@@ -377,15 +379,15 @@ pub(super) fn admit(selection: &Selection, evidence: &Evidence) -> Result<Claim,
 /// exact regenerated claim for the bound proof bytes.
 pub(super) fn checked(claim: &Claim, accepted: bool, axioms: &[String]) -> Outcome {
     let allowed = ["propext", "Classical.choice", "Quot.sound"];
-    let mut all_allowed = true;
+    let mut is_allowed = true;
     let mut at = 0usize;
     while at < axioms.len() {
-        all_allowed = all_allowed && allowed.iter().any(|name| axioms[at] == *name);
+        is_allowed = is_allowed && allowed.iter().any(|name| axioms[at] == *name);
         at += 1;
     }
     // `admit` binds the proof bytes before the checker runs; a claim whose
     // proof digest is unset was never admitted and cannot be verified.
-    if accepted && all_allowed && claim.proof_digest.len() == 64 {
+    if accepted && is_allowed && claim.proof_digest.len() == 64 {
         Outcome::Verified
     } else {
         Outcome::Unknown
