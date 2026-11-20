@@ -28,6 +28,40 @@
     "CALC-06": {"input": "all operations, rendered with `spelling`, form one session (one process, one stdin)", "expect": "define-variable without expected_error: echo; define-function without expected_error: silent; expected_fraction: value in default display; expected_error: diagnostic category only"},
     "CALC-09": {"input": "vector.fraction (`n/d`) is one stdin line evaluated as an exact division", "flags": "modes[vector.mode]", "expect": "value: vector.display"}
   },
+  "CALC-09-later-features": {
+    "note": "CALC-09's `later_features` are outside the Calculator-v1 line grammar and must be refused explicitly (`exact-display-or-explicit-unsupported-feature`, `silent_approximation: false`, `truncated_decimal_labeled_exact: false`). Each probe's category follows from the grammar: an out-of-grammar construct reaches name resolution or trailing input, and a fractional power reaches the numeric domain. No probe's span is stated, so the runner compares the category only.",
+    "derived_from": "specs/conformance/calculator-cases.json CALC-09 `input.later_features` and `expected.outcome`; .cairn/specs/calculator/spec.md CALC-PARSE-02 ('Builtin scientific functions are not implicitly available names')",
+    "approximation": {
+      "probe": "2^0.5",
+      "expect": {"diagnostic": "NonIntegerExponent"},
+      "reason": "`^` refuses a non-integer exponent; it never approximates a root."
+    },
+    "symbolic-expressions": {
+      "probe": "x + 1",
+      "expect": {"diagnostic": "UnknownName"},
+      "reason": "An unbound identifier reaches name resolution; no symbolic form exists."
+    },
+    "trigonometry": {
+      "probe": "sin(1)",
+      "expect": {"diagnostic": "UnknownName"},
+      "reason": "A scientific function is not an implicitly available name."
+    },
+    "units": {
+      "probe": "1 m",
+      "expect": {"diagnostic": "TrailingInput"},
+      "reason": "The unit identifier after a complete expression is trailing input; the grammar has no unit suffix."
+    },
+    "real-arithmetic": {
+      "probe": "sqrt(2)",
+      "expect": {"diagnostic": "UnknownName"},
+      "reason": "An irrational root has no name; values stay exact rationals."
+    },
+    "complex-arithmetic": {
+      "probe": "1 + 2i",
+      "expect": {"diagnostic": "TrailingInput"},
+      "reason": "`2i` is a decimal followed by an identifier, so the imaginary suffix is trailing input."
+    }
+  },
   "CALC-07": {
     "unused-body-with-unknown-name": {
       "support": "cli",

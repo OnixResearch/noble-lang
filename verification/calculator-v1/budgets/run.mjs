@@ -45,7 +45,18 @@ fs.mkdirSync(out, { recursive: false });
 const planBytes = fs.readFileSync(options.plan);
 const plan = JSON.parse(planBytes);
 const only = options.only ? new Set(options.only.split(',')) : null;
-const sessions = plan.sessions.filter(session => !only || only.has(session.id));
+// A retired row records a reviewed revision: its design no longer has the
+// bound it asserted, so it must not carry an expectation and is not run.
+for (const session of plan.sessions) {
+  if (!session.retired) continue;
+  const leftovers = ['expect', 'expect_status', 'expect_signal', 'expect_timeout', 'lines']
+    .filter(key => session[key] !== undefined);
+  if (!session.retired_reason || leftovers.length > 0) {
+    console.error(`${session.id}: a retired row needs retired_reason and no ${leftovers.join('/')}`);
+    process.exit(2);
+  }
+}
+const sessions = plan.sessions.filter(session => !session.retired && (!only || only.has(session.id)));
 const timeoutMs = Number(options['timeout-s']) * 1000;
 const git = args => spawnSync('git', ['-C', repo, ...args], { encoding: 'utf8' }).stdout.trim();
 const time = fs.existsSync('/run/current-system/sw/bin/time') ? '/run/current-system/sw/bin/time' : null;
