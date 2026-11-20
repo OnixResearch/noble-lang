@@ -2193,7 +2193,7 @@
       "trust": "unassessed",
       "evidence": [],
       "acceptance": "not-started",
-      "implementation_scope": "Issue #1 Live-Slot-Design contract accepted in canonical Cairn specs while its implementation tasks remain active and open. Nine registered LSLOT-01..09 designs remain absent/not-run/open/unassessed with no evidence; no opt-in slot runtime, Core or guarded Live-Wasm-Draft slot support, runtime acceptance or behavioral proof."
+      "implementation_scope": "Issue #1 Live-Slot-Design contract accepted in canonical Cairn specs while its implementation tasks remain active and open. LSLOT-01, LSLOT-02 and LSLOT-09 now carry one source-bound execution receipt each from `verification/lslot-cases/acceptance.json` (implementation implemented, execution passed, proof open, trust explicit). LSLOT-03, LSLOT-04, LSLOT-06 and LSLOT-07 remain absent/not-run/open/unassessed because the canonical attempt did not run for the recorded fields, and LSLOT-05 and LSLOT-08 wait on runtime template identity; no behavioral proof is claimed."
     },
     {
       "id": "c-backend",

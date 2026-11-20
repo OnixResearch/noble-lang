@@ -4859,7 +4859,7 @@ const NODE: &str = "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/b
 /// explicit `:reload` still rebinds a current name and a saved quotation keeps
 /// its old capture. Ordinary capture does not become slot selection.
 #[test]
-fn guarded_live_draft_refuses_the_checked_slot_caller() {
+fn guarded_live_draft_refuses_the_checked_slot_caller() -> Result<(), Box<dyn std::error::Error>> {
     let output = Command::new(NODE)
         .arg(std::format!(
             "{}/tests/live_repl_slot_exclusion.mjs",
@@ -4867,12 +4867,12 @@ fn guarded_live_draft_refuses_the_checked_slot_caller() {
         ))
         .arg(env!("CARGO_BIN_EXE_noble"))
         .env_remove("NOBLE_LIVE_TEST_CURRENT_MAP")
-        .output()
-        .expect("launch selected Node/V8 lane child");
+        .output()?;
     assert!(
         output.status.success(),
         "checked live REPL lane failed: stdout={} stderr={}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );
+    Ok(())
 }

@@ -191,6 +191,10 @@ export function project02({ fixture, lane }) {
       && entry.policyInput.version.artifactSha256 === entry.artifactSha256);
   const separate = lane.crossProfile;
   const roots = [base.old_root, base.new_root, transitive.old_root, transitive.new_root];
+  const baseInvoke = lane.steps.find(step => step.request?.operation === 'invoke'
+    && step.request.id === 'callerA'
+    && step.request.refs?.length === 2);
+  assert.ok(baseInvoke, 'the base root invocation with two host-issued refs');
   return [
     measured('input', 'base.registry_epoch_1.B.version', 'B-v1:[ 1 + ]',
       `B-v1:[ ${bodies.B1} ]`),
@@ -203,9 +207,11 @@ export function project02({ fixture, lane }) {
     effects: lane.authority.slots.find(slot => slot.slotId === 'A').effectCeiling }),
     declared('input', 'base.registry_epoch_1.A.body', fixture.input.base.registry_epoch_1.A.body,
       'the selected A1 body is `slot.invoke slot.invoke` and embeds no slot name'),
-    measured('input', 'base.root_A_entry.ordered_host_issued_inputs', 3,
-      base.old_root.request_trace.length,
-      'I64:20 plus the host-issued B and A refs; the root performs one A and two B dispatches'),
+    measured('input', 'base.root_A_entry.ordered_host_issued_inputs',
+      fixture.input.base.root_A_entry.ordered_host_issued_inputs.length,
+      baseInvoke.request.inputs.length + baseInvoke.request.refs.length,
+      `one I64 and two host-issued refs in the invocation request, for slots`
+      + ` ${baseInvoke.request.refs.map(ref => ref.slot).join('/')}`),
     measured('input', 'base.root_A_entry.pin_epoch', 1, numberValue(base.old_root.epoch)),
     measured('input', 'base.new_root_B_interface', { input: ['I64'], output: ['I64'], effects: [] },
     { input: base.next_leaf.request_trace[0].policyInput.version.input.map(normalizeType),
@@ -437,9 +443,9 @@ export function project06({ fixture, lane }) {
   const negativeCounters = key => negatives.map(result => result[key] ?? 0)
     .reduce((total, value) => total + value, 0);
   return entries.concat([
-    measured('input', 'issued_ref', 'LiveRef<I64,I64,pure>',
-      lane.authority.sources.length > 0 ? 'LiveRef<I64,I64,pure>' : null,
-      'the lane installs callers that forward a `LiveRef<I64,I64,pure>` input for slot increment'),
+    declared('input', 'issued_ref', fixture.input.issued_ref,
+      'the lane installs callers that forward a `LiveRef<I64,I64,pure>` (empty effect set) input'
+      + ' for slot `increment` in the root, and the reflected site carries no slot name'),
     measured('input', 'variants', fixture.input.variants.map(variant => variant.name),
       lane.summary.results.map(result => result.name)),
     stageEntry(lane.steps, { slot: 'static-and-invocation-boundary',
