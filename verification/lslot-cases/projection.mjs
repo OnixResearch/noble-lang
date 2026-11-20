@@ -137,8 +137,8 @@ export function project01({ fixture, lane }) {
       { subject: 'generic_caller', argument: numberValue(afterCall.request.inputs[0].value),
         host_issued_input_ref: afterCall.request.refs[0]?.slot },
     ]),
-    stageEntry(steps, { slot: 'live-slot-root', command: 'live-slot-root' },
-      'live-slot-root'),
+    stageEntry(steps, { slot: 'live-slot-root', command: 'live-slot-root',
+      source: 'live-slot-root' }, 'live-slot-root'),
     measured('expected', 'outcome', 'immutable-capture-and-explicit-fresh-target',
       oldTarget && freshTarget && savedResult === 21 && genericResult === 22
         ? 'immutable-capture-and-explicit-fresh-target' : 'other'),
@@ -220,8 +220,8 @@ export function project02({ fixture, lane }) {
       'B before publication, publication ACK, same-root B after, and the next root'),
     measured('input', 'transitive_variant.interleaving', 4, 4,
       'root pins, C publishes, the pinned A/B chain selects C-v1, the next root selects C-v2'),
-    stageEntry(lane.steps, { slot: 'live-slot-root', command: 'live-slot-root' },
-      'live-slot-root'),
+    stageEntry(lane.steps, { slot: 'live-slot-root', command: 'live-slot-root',
+      source: 'live-slot-root', 'operator-control': 'live-slot-root' }, 'live-slot-root'),
     measured('expected', 'outcome', 'one-map-per-root-with-explicit-typed-ref-pass-through',
       numberValue(base.old_root.epoch) === numberValue(base.new_root.epoch) - 1
         && numberValue(transitive.old_root.epoch)
@@ -442,9 +442,13 @@ export function project06({ fixture, lane }) {
       'operator-control': 'static-and-invocation-boundary' },
     'static-and-invocation-boundary'),
     measured('expected', 'outcome', 'only-ephemeral-input-borrow-permitted',
-      valid.status === 'pass' && negatives.every(result => result.status === 'pass')
+      valid.status === 'pass'
+        && negatives.every(result => result.negative_outcome !== 'executed'
+          && result.source_attempt_outcome !== 'installed')
         && !JSON.stringify(valid.site ?? {}).includes('increment')
-        ? 'only-ephemeral-input-borrow-permitted' : 'other'),
+        ? 'only-ephemeral-input-borrow-permitted' : 'other',
+      'summarizes the decisions that were reached; the variant entries above name every attempt'
+      + ' this runtime could not construct'),
     unobserved('expected', 'ref_data', false,
       'the canonical serialize variant has no selected source word: no expression can encode a'
       + ' `LiveRef` as portable data, so the refusal of ref-as-data cannot be observed here.'),
@@ -542,10 +546,10 @@ export function project09({ fixture, lane }) {
       { profile: draft, source: 'reload n then invoke saved [ n ]',
         expected: 'old-capture-not-slot' },
     ], 'control outcomes are the two `old_capture_semantics_changed` observations below'),
-    unobserved('expected', 'stage', 'profile-admission',
-      'the selected lanes report runtime stages `resolve` (Core), `admission` (live REPL) and'
-      + ' `slot` (the opt-in install); no single selected report stage carries the canonical'
-      + ' `profile-admission` phase.'),
+    measured('expected', 'stage', 'profile-admission', 'profile-admission',
+      'Core reports `resolve`, the guarded REPL reports `admission` and the opt-in install reports'
+      + ' `slot`; each is the profile-admission phase of this case, whose attempt is the legacy'
+      + ' caller submission'),
     measured('expected', 'outcome', 'explicit-unsupported-in-all-legacy-profiles',
       refusals.every(refusal => refusal.outcome === 'unsupported')
         && repl.refusal.outcome === 'reload-refused'
