@@ -16,6 +16,8 @@
 mod checked_i64;
 #[path = "smoke/checked/guards.rs"]
 mod checked_i64_guards;
+#[path = "smoke/epoch.rs"]
+mod epoch;
 #[path = "smoke/reports.rs"]
 mod reports;
 
@@ -396,7 +398,7 @@ fn calculator_runtime_node_tests_run_with_built_assembler() -> Result<(), std::i
         "calculator runtime Node tests failed: stdout={stdout} stderr={}",
         String::from_utf8_lossy(&output.stderr),
     );
-    for summary in ["# tests 6", "# pass 6", "# fail 0", "# skipped 0"] {
+    for summary in ["# tests 7", "# pass 7", "# fail 0", "# skipped 0"] {
         assert!(
             stdout.lines().any(|line| line == summary),
             "missing `{summary}` in Node test summary: {stdout}"

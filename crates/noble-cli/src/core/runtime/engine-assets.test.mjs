@@ -11,11 +11,36 @@ import { CoreEngine } from './host.mjs';
 const runtime = path.dirname(fileURLToPath(import.meta.url));
 const selection = JSON.parse(fs.readFileSync(path.join(runtime, 'config.json'), 'utf8'));
 const abi = JSON.parse(fs.readFileSync(path.join(runtime, 'abi.json'), 'utf8'));
+const declaredAbi = fs.readFileSync(path.join(runtime, 'declared-abi.json'), 'utf8');
 const assembler = process.env.NOBLE_CALCULATOR_ASSEMBLER ?? process.env.CARGO_BIN_EXE_noble;
 
 const wat = Buffer.from('(module)');
 const source = Buffer.from('unit');
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+
+test('signed declared text cannot own the live Core bridge', () => {
+  // The signed source epoch and the in-process live bridge are disjoint
+  // profiles. The declared-ABI guard refuses each combination before any
+  // table entry, source epoch or observation store exists, so the later
+  // `signed source epoch cannot own the live Core bridge` guard is defense in
+  // depth: no constructor argument reaches it.
+  assert.throws(() => new CoreEngine(selection, abi, {
+    declared_modules: true, text_byte_cursor: true, signed_self_recursion: true,
+    declared_extension: declaredAbi, in_process_live: true,
+  }), /text byte cursor requires a session or compile/);
+  assert.throws(() => new CoreEngine(selection, abi, {
+    declared_modules: true, signed_self_recursion: true,
+    declared_extension: declaredAbi, in_process_live: true,
+  }), /signed recursion requires the declared module host boundary/);
+  const signed = new CoreEngine(selection, abi, { declared_modules: true,
+    text_byte_cursor: true, signed_self_recursion: true, declared_extension: declaredAbi });
+  try {
+    assert.equal(signed.profile, 'Signed-Declared-Text-v1');
+    assert.equal(signed.inProcessLive, false);
+  } finally {
+    signed.close();
+  }
+});
 
 test('calculator-owned compilation keeps provenance but not disposable WAT and Wasm',
   { skip: !assembler && 'requires a built noble calculator assembler' }, () => {
