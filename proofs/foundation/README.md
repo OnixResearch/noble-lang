@@ -5032,3 +5032,28 @@ and trace-retention quotas, artifact hash validation, cleanup, measured
 latency, backend correctness and host effects require separate implementation
 tests and retained evidence. No finite model trace proves a wall-clock deadline,
 universal implementation correspondence or independent compiler-lab agreement.
+
+### The typed source proof calculus of `Intrinsic-Proofs-Draft`
+
+`NobleFoundation/IntrinsicCalculus.lean` is a deep embedding of the calculus
+`crates/noble-contracts/src/intrinsic.rs` checks with `proof_walk`:
+`BinderSort` is the checker's `Sort` (`Type0`, `Value c`, `Premise P`),
+`Proposition` its `Proposition` (`Pi` over each of those and `Eq c lo hi`) and
+`Proof` its resolved proof terms (`use`, `apply`, `refl`, `intro`, `subst`).
+`Proposition.rebase` is `replace_prop`/`shifted_prop` at a level map, and
+`Proposition.toPropT_rebase` proves it is exactly
+`ImplicitPropositions.PropT.shift`, so that module's encoding, injectivity and
+rebasing laws apply unchanged. `Proposition.denote` interprets a proposition
+over an interpretation of its binder context: `Type0` ranges over the total
+pure `PureTyCode` and a total value of a code is an element of `El`, both
+exactly as `IntrinsicTypeWitness` defines them, and `Eq` says two total values
+of one code are equal. `Judges` is the checker's walk (`false` = inference,
+`true` = checking) with `apply`'s rebasing substitution and `subst`'s equality
+motive.
+
+| Claim | Model / theorem(s) | Implementation boundary | Status |
+|---|---|---|---|
+| The typed source calculus is sound | `NobleFoundation.IntrinsicCalculus.Judges.sound`, `NobleFoundation.IntrinsicCalculus.Proposition.denote_subst`, `NobleFoundation.IntrinsicCalculus.Proposition.fits_of_formed`, `NobleFoundation.IntrinsicCalculus.CtxHolds.at`, `NobleFoundation.IntrinsicCalculus.Proposition.enc_injective`, `NobleFoundation.IntrinsicCalculus.Proposition.rebase_comp` | Model only: every proposition the checker establishes is true at every interpretation of its context, the substitution law is the checker's `replace_prop` at a level, and structural identity is equality of the encoded trees. No Rust parser, resolver or lowerer, and no Lean text (`lean_text`) is claimed. Formation is the typed fragment's condition; the resolver alone does not check it, and a named `use` of a previously accepted declaration enters as an explicit premise. | proved |
+| Translation correctness and Rust refinement | — | Source-to-Lean translation correctness is V-INTRINSIC-01 and stays open; no Aeneas extraction of the Rust checker or lowerer exists. | open |
+
+| Erasure keeps the executable projection | `NobleFoundation.IntrinsicErasure.Module.definitions_erase`, `NobleFoundation.IntrinsicErasure.Module.definitionIds_erase`, `NobleFoundation.IntrinsicErasure.Module.recipeInputs_erase`, `NobleFoundation.IntrinsicErasure.Module.dependencies_erase`, `NobleFoundation.IntrinsicErasure.Module.expandedNodes_erase`, `NobleFoundation.IntrinsicErasure.Module.specializations_erase`, `NobleFoundation.IntrinsicErasure.Module.observed_erase`, `NobleFoundation.IntrinsicErasure.Module.erase_idempotent` | Model only: erasing `contract` and `proof` members leaves the definitions, DefinitionIds (`DefinitionRef.identity`), recipe inputs (`Recipe.nodes`/`entry`), dependency references, expanded node counts, specialization identities and ordinary entry observations unchanged (PO-20 erasure). The Rust `noble-wasm` emission and `chunks.rs` envelope hashing stay trusted; `Envelope` digests are opaque `Nat` fields. | proved |

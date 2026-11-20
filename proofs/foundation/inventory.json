@@ -15620,6 +15620,306 @@
       "phase": 1,
       "role": "representation",
       "claim": "lowering an encodable pair with generation headroom returns exactly the model-emitter candidate: its byte-roundtrip check never refuses"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.Proposition.ofPropT_toPropT",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "the inverse of the calculus encoding recovers every source proposition"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.Proposition.toPropT_injective",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "structural identity of source propositions is equality of their implicit-proposition encodings"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.Proposition.toPropT_rebase",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "rebasing commutes with the encoding: it is exactly the implicit-proposition rebasing"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.Proposition.rebase_comp",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "two rebasings compose"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.Proposition.rebase_id",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "rebasal by the identity changes no proposition"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.Proposition.levels_rebase",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "rebasing acts on exactly the level occurrences of a proposition"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.Proposition.enc_injective",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "the tree encoding of a proposition is injective, so tree equality is structural identity"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.insertAt_length",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "inserting a binding lengthens an interpretation by one"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.insertAt_getElem?_lt",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "levels below an inserted binding keep their meaning"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.insertAt_getElem?_self",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "an inserted binding names the eliminated level"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.insertAt_getElem?_gt",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "levels above an inserted binding move up one"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.insertAt_self",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "inserting at the end appends"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.insertAt_append",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "inserting before a suffix is inserting into the prefix and appending the suffix"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.insertAt_comm",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "two insertions at different levels commute, the outer one moving up one"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.CodeFormed.mono",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "code formation survives extending the context"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.CodeFormed.codes_of_mem",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "every variable of a formed code names a code binder"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.PropositionFormed.codes_of_mem",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "every bound code variable of a formed proposition names a code binder"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.PropositionFormed.value_of_mem",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "every bound equality index of a formed proposition names a total value binder"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.codeDenote_agree",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "the denotation of a formed code depends only on the levels it reads"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.Proposition.denote_agree",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "the denotation of a formed proposition depends only on the levels it reads"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.PremiseHolds.denote",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "a local premise holds at any interpretation that agrees with the one it was checked in"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.CtxHolds.length",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "an interpretation of a context has exactly the context length"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.LevelSort.mono",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "a level keeps its sort when context and interpretation grow together"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.CtxHolds.at",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "every level of an interpreted context names what its sort says"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.CodeFormed.denote",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "a formed code denotes a total pure type under every interpretation of its context"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.upMap_getElem?",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "removing a level from a level occurrence reads the inserted binding"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.valueMap_getElem?",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "a value argument names the value that takes the eliminated level place"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.Proposition.Fits.mono",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "the formation bound of a proposition only weakens"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.Proposition.fits_of_formed",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "a formed proposition fits the interpretation of its own context"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.Argument.Binds.append",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "an argument binding survives extending the interpretation"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.Argument.Binds.insert",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "an argument binding survives inserting a level above its own context"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.codeDenote_substCode",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "a code argument substitution denotes what the argument denotes"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.codeDenote_removeLevel",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "removing a level no code variable names denotes the same code"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.codeDenote_codeSubst",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "the code a substitution writes denotes the code it replaced"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.Proposition.denote_subst",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "the substitution law: replace_prop at a level denotes the proposition in the interpretation a Pi elimination extends"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicCalculus.Judges.sound",
+      "phase": 1,
+      "role": "intrinsic-calculus",
+      "claim": "typing soundness: every proposition the checker establishes is true at every interpretation of its context"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.definitions_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the definition list a module projects is the same before and after erasure"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.exportedNames_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the exported names are the same before and after erasure"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.erase_idempotent",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "erasing twice changes nothing more than erasing once"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.erase_name",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "erasure keeps the module name"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.erase_version",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "erasure keeps the module version"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.definitionIds_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the DefinitionIds a module binds are unchanged by erasure"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.recipeInputs_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the body recipe inputs (node arena and entry references) are unchanged by erasure"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.dependencies_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the dependency references are unchanged by erasure"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.expandedNodes_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the expanded node counts are unchanged by erasure, so erasure adds no emitted node"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.specializations_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the specialization identities of the definitions are unchanged by erasure"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.observed_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the ordinary runtime observations are unchanged by erasure"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.erase_cons_contract",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "dropping one contract member matches erasing the whole module"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.erase_cons_proof",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "dropping one proof member matches erasing the whole module"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.erase_cons_definition",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "a definition member is kept by erasure"
     }
   ],
   "private_theorems": [
