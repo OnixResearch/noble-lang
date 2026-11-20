@@ -34,6 +34,21 @@ elab "check_contract_library" : command => do
     ``NobleContracts.TypedPC.compose, ``NobleContracts.increment_missing_implication,
     ``NobleContracts.NamedV3.exec_append_iff, ``NobleContracts.NamedV3.holds_true₂,
     ``NobleContracts.NamedV3.holds_eq₂_iff,
+    ``NobleContracts.NamedV3.embed, ``NobleContracts.NamedV3.run_forward,
+    ``NobleContracts.NamedV3.run_backward, ``NobleContracts.NamedV3.callFrame,
+    ``NobleContracts.NamedV3.liftMc1Claim, ``NobleContracts.NamedV3.chainClaim,
+    ``NobleContracts.NamedV3.chainExec, ``NobleContracts.NamedV3.run_reflect,
+    ``NobleContracts.NamedV3.exec_reflect, ``NobleContracts.NamedV3.stackTyped_lift,
+    ``NobleContracts.NamedV3.holds₂_env_free, ``NobleContracts.NamedV3.evaluate₂_env_free,
+    ``NobleContracts.NamedV3.Subject.resolves, ``NobleContracts.NamedV3.Subject.root_resolves,
+    ``NobleContracts.NamedV3.callsResolve_of_resolves, ``NobleContracts.NamedV3.run_nil_iff,
+    ``NobleContracts.NamedV3.EntryEmbedding.slot_not_snapshot, ``NobleContracts.NamedV3.Embedding.slot_fresh,
+    -- The exact reviewed rule identities of `V-INTRINSIC-01` / the
+    -- `Named-Contract-Calls-v3` profile. They are Lean core/Std theorems, not
+    -- axioms, and are named here rather than in a `MODEL` module so no
+    -- historical revision digest moves; `Rules.lean` stays byte-identical.
+    ``List.append_assoc, ``List.nil_append, ``List.append_nil,
+    ``BitVec.add_assoc, ``BitVec.add_comm, ``BitVec.mul_add,
     ``NobleContracts.SpecQuality.increment_inhabited,
     ``NobleContracts.SpecQuality.increment_realizable,
     ``NobleContracts.SpecQuality.increment_deterministic,
