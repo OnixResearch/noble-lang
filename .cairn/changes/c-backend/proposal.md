@@ -69,13 +69,15 @@ sync MUST NOT erase. The open delta records, without syncing:
   r[CB-ADMIT-01]
 
 All eleven requirement blocks in the active delta are MODIFIED: seven
-normative bodies match the planned first-parent canonical, while CB-BUILD-01,
-CB-LIMIT-01, CB-SANDBOX-01 and CB-ADMIT-01 retain its obligations and add
-explicit source-only disclosures or narrower hostile controls.
-The delta retains all 25 canonical linked scenario designs, with paths
-relative to its own location. Independent owner review of the direct
-canonical edits, the expanded source-only scope and case designs remains
-REQUIRED **before integration**, without automatic owner acceptance.
+normative bodies are byte-identical to the first-parent canonical, while
+CB-BUILD-01, CB-LIMIT-01, CB-SANDBOX-01 and CB-ADMIT-01 retain every
+canonical obligation verbatim and add explicit source-only disclosures or
+clock controls. The canonical retains all 25 linked scenario designs; the
+delta omits the generated scenario-link regions, which regeneration restores,
+and the reconciliation is recorded in `reconciliation.md`. Independent owner
+review of the direct canonical edits, the expanded source-only scope, the
+reconciled delta and the case designs remains REQUIRED **before integration**,
+without automatic owner acceptance.
 The complete native implementation/evidence tasks remain undone. A
 structurally nonblocked sync preview is not permission to replace the
 held canonical requirements or to archive. Generated compatibility views
