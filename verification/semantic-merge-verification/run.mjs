@@ -75,14 +75,25 @@ const assertClean = async (phase) => {
 await assertClean("before the builds");
 const revision = (await $`git rev-parse HEAD`.cwd(root).text()).trim();
 
+// Variables that affect the build or the checker are recorded with every
+// command (the child still inherits the rest of the runner's environment).
+const inheritedEnv = () => ({
+  ...(process.env.CARGO_TARGET_DIR ? { CARGO_TARGET_DIR: process.env.CARGO_TARGET_DIR } : {}),
+  ...(process.env.NOBLE_BWRAP ? { NOBLE_BWRAP: process.env.NOBLE_BWRAP } : {}),
+});
+
 const commands = [
-  { argv: ["lake", "build", "NobleContracts.Merge"], cwd: "proofs/mc1", env: {} },
+  {
+    argv: ["lake", "build", "NobleContracts.Merge"],
+    cwd: "proofs/mc1",
+    env: inheritedEnv(),
+  },
   {
     argv: [
       "cargo", "test", "--locked", "-p", "noble-contracts", "--test", "source",
       "--", "--nocapture", "--test-threads=1", "semantic_merge_model",
     ],
-    cwd: ".", env: {},
+    cwd: ".", env: inheritedEnv(),
   },
   {
     argv: [
@@ -92,8 +103,9 @@ const commands = [
     cwd: ".",
     env: {
       NOBLE_LEAN: process.env.NOBLE_LEAN ?? "lean",
-      NOBLE_CONTRACT_LIBRARY: process.env.NOBLE_CONTRACT_LIBRARY ?? `${root}proofs/mc1`,
-      ...(process.env.CARGO_TARGET_DIR ? { CARGO_TARGET_DIR: process.env.CARGO_TARGET_DIR } : {}),
+      NOBLE_CONTRACT_LIBRARY: process.env.NOBLE_CONTRACT_LIBRARY ?? path.join(root, "proofs/mc1"),
+      ...(process.env.NOBLE_BWRAP ? { NOBLE_BWRAP: process.env.NOBLE_BWRAP } : {}),
+      ...inheritedEnv(),
     },
   },
 ];
@@ -159,42 +171,66 @@ for (const axiom of acceptance.axioms) {
   if (!allowance.includes(axiom)) fail(`non-allowlisted axiom reported: ${axiom}`);
 }
 
-// Forged submissions must stay nonverified: the old marker channel, the same
-// channel through the full consumer path, a wrong proof, a trace forgery and
-// the observed bound/tool states.
+// Forged submissions must stay nonverified: elaborator-time meta-programming
+// (the marker-reader, the two unchecked-theorem routes and an IO write), a
+// wrong proof and the observed bound/tool states.
 const controls = {
-  case07_direct_forgery: {
+  isolation: acceptance.isolation,
+  case03_marker_reader: {
+    case: "SMERGE-CASE-03",
+    submission: "by_elab reads the marker from the source view, prints it and aborts",
+    submission_sha256: acceptance.replay_abort_sha256,
+    outcome: acceptance.case03_replay_abort,
+    refusal: acceptance.replay_abort_refusal,
+    producer_diagnostic: acceptance.producer_abort_diagnostic,
+  },
+  case03_unchecked_option: {
+    case: "SMERGE-CASE-03",
+    submission: "by_elab adds forgedFalse with debug.skipKernelTC and proves the claim",
+    submission_sha256: acceptance.replay_skip_sha256,
+    outcome: acceptance.case03_replay_skip,
+    refusal: acceptance.replay_skip_refusal,
+  },
+  case03_unchecked_core: {
+    case: "SMERGE-CASE-03",
+    submission: "by_elab adds forgedFalse with Environment.addDeclCore doCheck=false",
+    submission_sha256: acceptance.replay_core_sha256,
+    outcome: acceptance.case03_replay_core,
+  },
+  case07_unchecked_option: {
     case: "SMERGE-CASE-07",
-    submission: "sorry + run_cmd marker + #exit",
-    submission_sha256: acceptance.forge_commands_sha256,
-    accepted: acceptance.case07_forgery_accepted,
-    refusal: acceptance.case07_forgery_refusal,
+    submission: "by_elab adds forgedFalse with debug.skipKernelTC and proves the false claim",
+    submission_sha256: acceptance.replay_skip_sha256,
+    accepted: acceptance.case07_replay_skip_accepted,
   },
   case07_consumer_path: {
     case: "SMERGE-CASE-07",
     outcome: acceptance.case07_consumer,
   },
-  case03_consumer_path: {
-    case: "SMERGE-CASE-03",
-    submission: "sorry + run_cmd marker + #exit",
-    outcome: acceptance.case03_consumer_forgery,
-    refusal: acceptance.case03_forgery_refusal,
-  },
   file_write_submission: {
-    submission: "sorry + run_cmd IO.FS.writeFile + #exit",
-    refusal: acceptance.file_write_refusal,
+    case: "SMERGE-CASE-03",
+    submission: "by_elab writes a file through a string-assembled identifier",
+    submission_sha256: acceptance.replay_io_sha256,
+    accepted: acceptance.io_replay_accepted,
+    side_effect_outside_workspace: acceptance.io_side_effect,
+    refusal: acceptance.io_refusal,
   },
   wrong_proof: { case: "SMERGE-CASE-04", proof: "NobleContracts.mergeRel_independent_changes", outcome: acceptance.wrong_proof },
   exhausted: { control: "proof body above the declared byte bound", outcome: acceptance.exhausted },
   internal_failure: { control: "library root without a toolchain pin", outcome: acceptance.internal_failure },
 };
-if (controls.case07_direct_forgery.accepted !== false) fail("the CASE-07 forgery was accepted");
+for (const key of ["case03_marker_reader", "case03_unchecked_option", "case03_unchecked_core"]) {
+  if (controls[key].outcome === "verified") fail(`${key} verified through the consumer path`);
+}
+if (controls.case07_unchecked_option.accepted !== false) fail("the CASE-07 replay forgery was accepted");
 if (controls.case07_consumer_path.outcome !== "conflict") fail("the CASE-07 consumer path did not report conflict");
-if (controls.case03_consumer_path.outcome === "verified") fail("the CASE-03 forgery verified through the consumer path");
+if (controls.file_write_submission.accepted !== false) fail("the IO submission was accepted");
+if (controls.isolation === "bubblewrap" && controls.file_write_submission.side_effect_outside_workspace) {
+  fail("a sandboxed producer wrote outside its workspace");
+}
 if (controls.wrong_proof.outcome === "verified") fail("a wrong proof verified");
 if (controls.exhausted.outcome !== "exhausted") fail("the bound control did not report exhausted");
 if (controls.internal_failure.outcome !== "internal-failure") fail("the tool control did not report internal failure");
-if (!acceptance.file_write_refusal.includes("closed term")) fail("the file-writing submission was not refused");
 
 const rust = run(["rustc", "--version"]);
 const cargo = run(["cargo", "--version"]);
@@ -204,9 +240,8 @@ const assessmentReasons = [
   "SM-1 is proved; SM-2 is proved for the narrowed fragment; SM-3, SM-4, SM-5 and SM-6 are narrowed or tested only, so the frozen criterion (SM-1 through SM-6 discharged or moved by an owner-accepted narrower statement) is not met.",
   "SM-3 is tested only: there is no formalized preparation/lowering pipeline, and PO-19 remains open.",
   "SM-5 and SM-6 are tested only: a corpus of producer-field refusals and a total outcome table do not discharge their universal obligations.",
-  "SM-4 is narrowed, not discharged: the isolated check is a fresh pinned Lean process with a cleared environment, not the production sandboxed consumer, and no PO-09/PO-16 refinement is proved here.",
+  "SM-4 is narrowed, not discharged: the lane compiles the submission in a producer process and replays its olean in a fresh kernel checker, but this remains a test-only process boundary (bubblewrap when selected), not the production consumer, and no PO-09/PO-16 refinement is proved here.",
   "The integration plan is written but its steps 1-6 are unimplemented and step 7b (independent review of the implemented integration) has not run.",
-  "SM-7 is a separate obligation (#10/PO-18); a source-model proof does not transfer to an installed artifact.",
   "SM-8: this lane performs no merge, publication, live-slot admission, migration or release action.",
 ];
 
@@ -231,6 +266,7 @@ const receipt = {
     elapsed_ms: Date.now() - started,
   },
   observations: {
+    isolation: acceptance.isolation,
     phase2,
     claims: checks,
     search: {

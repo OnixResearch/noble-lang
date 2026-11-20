@@ -38,6 +38,43 @@ const HONEST_CASE01: &str = "NobleContracts.mergeRel_independent_changes";
 /// and exits before the consumer's axiom walk.
 const FORGED_COMMANDS: &str = "sorry\nrun_cmd Lean.logInfo \"NOBLE-MERGE-ACCEPT\"\n#exit";
 
+/// Round-2 (A): reads the acceptance marker from the elaborator's source view,
+/// prints it and aborts the command.  Guard-passing; the producer cannot see
+/// the checker's marker in the two-process protocol.
+const REPLAY_ABORT: &str = r#"by_elab do
+  let src := (<- getFileMap).source
+  let key := "NOBLE-MERGE-" ++ "ACCEPT:"
+  let rest := (src.splitOn key)[1]!
+  let digest := String.join ((rest.toList.take 16).map toString)
+  logInfoAt (<- getRef) (key ++ digest)
+  throwAbortCommand"#;
+
+/// Round-2 (B): adds `forgedFalse : False` with the kernel check disabled by
+/// option, then uses it as the proof.  Guard-passing.
+const REPLAY_SKIP: &str = r#"by_elab do
+  let flag := Name.mkStr (Name.mkStr Name.anonymous ("de" ++ "bug")) "skipKernelTC"
+  withOptions (fun opts => opts.setBool flag true) do
+    addDecl (.thmDecl { name := `forgedFalse, levelParams := [], type := mkConst ``False, value := mkConst ``True.intro })
+  let motive <- Meta.mkFreshExprMVar (mkSort Level.zero)
+  return mkApp2 (mkConst ``False.elim [Level.zero]) motive (mkConst `forgedFalse)"#;
+
+/// Round-2 (C): the same unchecked theorem through the public
+/// `Environment.addDeclCore … (doCheck := false)` path.  Guard-passing.
+const REPLAY_CORE: &str = r#"by_elab do
+  match (<- getEnv).addDeclCore 0 0 (.thmDecl { name := `forgedFalse, levelParams := [], type := mkConst ``False, value := mkConst ``True.intro }) none false with
+  | .ok env => setEnv env
+  | .error _ => throwError "unchecked add refused"
+  let motive <- Meta.mkFreshExprMVar (mkSort Level.zero)
+  return mkApp2 (mkConst ``False.elim [Level.zero]) motive (mkConst `forgedFalse)"#;
+
+/// Round-2 IO: writes a file through a nested elaborator term, with the
+/// identifier assembled from strings so no deny-list token appears.
+fn replay_write(path: &str) -> String {
+    format!(
+        "by_elab do\n  let w := mkIdent (Name.mkStr (Name.mkStr (Name.mkStr Name.anonymous (\"I\" ++ \"O\")) \"FS\") \"writeFile\")\n  let stx <- `(by_elab do\n      let _ <- ($w:ident \"{path}\" \"written by a guard-passing proof\")\n      return mkConst ``True.intro)\n  let _ <- Term.elabTerm stx none\n  return mkConst ``True.intro"
+    )
+}
+
 fn identity() -> Program {
     program(Vec::new(), Vec::new(), 0)
 }
@@ -646,7 +683,8 @@ fn checker_bounds_and_tool_failures_are_visible() {
 fn semantic_merge_lean_check() {
     let bounds = Bounds::lane();
     // Honest claims are verified through `evaluate`: admit, search, the real
-    // isolated consumer and `checked` — never by calling the checker directly.
+    // producer/replay checker and `checked` — never by calling the checker
+    // directly.
     let verified04 = consumer(&case04(), HONEST_CASE04, bounds);
     assert_eq!(verified04, Outcome::Verified);
     let verified01 = consumer(&case01(), HONEST_CASE01, bounds);
@@ -657,45 +695,57 @@ fn semantic_merge_lean_check() {
         bounds,
     );
     assert!(honest.submission.accepted, "{}", honest.diagnostic);
+    let isolation = honest.isolation;
 
-    // SMERGE-CASE-07: the regenerated claim is false.  The F1 forgery must not
-    // verify it directly, and the search's conflict dominates the consumer path.
-    let incompatible = regenerate(&case07()).expect("claim");
-    let forged07 = lean::check(&incompatible.claim_text, FORGED_COMMANDS, bounds);
-    assert!(!forged07.submission.accepted);
-    let consumer07 = consumer(&case07(), FORGED_COMMANDS, bounds);
-    assert_eq!(consumer07, Outcome::Conflict);
-
-    // SMERGE-CASE-03: no library proof exists for the claim, so the forged
-    // proof must not certify it through the full consumer path.
+    // R2-F1 (A/B/C): guard-passing elaborator code on a true claim with no
+    // library proof (SMERGE-CASE-03) must not verify, directly or through the
+    // full consumer path.
+    let case03_claim = regenerate(&case03()).expect("claim").claim_text;
+    let abort = lean::check(&case03_claim, REPLAY_ABORT, bounds);
+    assert!(!abort.submission.accepted);
+    let skip = lean::check(&case03_claim, REPLAY_SKIP, bounds);
+    assert!(!skip.submission.accepted);
+    assert_eq!(skip.submission.failure, None);
+    let core = lean::check(&case03_claim, REPLAY_CORE, bounds);
+    assert!(!core.submission.accepted);
+    assert_eq!(core.submission.failure, None);
     let searched = search(&case03(), SEED, MAX_VECTORS);
     assert_eq!(searched.outcome, Outcome::Unknown);
-    let forged03 = consumer(&case03(), FORGED_COMMANDS, bounds);
-    assert_eq!(forged03, Outcome::Unknown);
-    let refused = lean::check(
-        &regenerate(&case03()).expect("claim").claim_text,
-        FORGED_COMMANDS,
-        bounds,
-    );
-    assert!(!refused.submission.accepted);
-    assert_eq!(refused.submission.failure, None);
+    let abort03 = consumer(&case03(), REPLAY_ABORT, bounds);
+    assert_eq!(abort03, Outcome::Unknown);
+    let skip03 = consumer(&case03(), REPLAY_SKIP, bounds);
+    assert_eq!(skip03, Outcome::Unknown);
+    let core03 = consumer(&case03(), REPLAY_CORE, bounds);
+    assert_eq!(core03, Outcome::Unknown);
+
+    // The same forgery on the false SMERGE-CASE-07 claim, and the consumer
+    // path where the search's conflict dominates.
+    let case07_claim = regenerate(&case07()).expect("claim").claim_text;
+    let skip07 = lean::check(&case07_claim, REPLAY_SKIP, bounds);
+    assert!(!skip07.submission.accepted);
+    let consumer07 = consumer(&case07(), REPLAY_SKIP, bounds);
+    assert_eq!(consumer07, Outcome::Conflict);
+
+    // Round-2 IO: the write must not escape the producer boundary.
+    let io_path = std::env::temp_dir().join(format!("noble-merge-io-{}", std::process::id()));
+    let _ = std::fs::remove_file(&io_path);
+    let io_proof = replay_write(&io_path.display().to_string());
+    let writing = lean::check(&case03_claim, &io_proof, bounds);
+    assert!(!writing.submission.accepted);
+    let io_side_effect = io_path.exists();
+    if io_side_effect {
+        let _ = std::fs::remove_file(&io_path);
+    }
+    if isolation == lean::Isolation::Bubblewrap {
+        assert!(
+            !io_side_effect,
+            "a sandboxed producer wrote outside its workspace"
+        );
+    }
 
     // A valid proof of a different claim does not verify this one.
     let wrong = consumer(&case04(), HONEST_CASE01, bounds);
     assert_eq!(wrong, Outcome::Unknown);
-
-    // The F1 IO channel is refused and leaves no file.
-    let write_path =
-        std::env::temp_dir().join(format!("noble-merge-lane-forge-{}", std::process::id()));
-    let _ = std::fs::remove_file(&write_path);
-    let writing = lean::check(
-        &regenerate(&case04()).expect("claim").claim_text,
-        &forged_write(&write_path.display().to_string()),
-        bounds,
-    );
-    assert!(!writing.submission.accepted);
-    assert_eq!(writing.submission.failure, None);
-    assert!(!write_path.exists(), "a refused proof wrote a file");
 
     // The bound and tool-failure states are observed with real controls.
     let oversized = "x".repeat(bounds.proof_bytes.saturating_add(1));
@@ -721,16 +771,21 @@ fn semantic_merge_lean_check() {
     let proof04 = HONEST_CASE04;
     let proof01 = HONEST_CASE01;
     let bounds_json = format!(
-        "{{\"timeout_ms\":{},\"proof_bytes\":{}}}",
+        "{{\"timeout_ms_per_process\":{},\"proof_bytes\":{}}}",
         bounds.timeout_ms, bounds.proof_bytes
     );
     std::println!(
-        "NOBLE_SEMANTIC_MERGE_LEAN {{\"case04\":\"{}\",\"case01\":\"{}\",\"case07_forgery_accepted\":{},\"case07_consumer\":\"{}\",\"case03_consumer_forgery\":\"{}\",\"wrong_proof\":\"{}\",\"exhausted\":\"{}\",\"internal_failure\":\"{}\",\"axioms\":{},\"proof_case04\":{},\"proof_case04_sha256\":\"{}\",\"proof_case01\":{},\"proof_case01_sha256\":\"{}\",\"forge_commands_sha256\":\"{}\",\"case07_forgery_refusal\":{},\"case03_forgery_refusal\":{},\"file_write_refusal\":{},\"library_source_digest\":\"{}\",\"library_object_digest\":\"{}\",\"library_root\":{},\"lean\":{},\"bounds\":{}}}",
+        "NOBLE_SEMANTIC_MERGE_LEAN {{\"case04\":\"{}\",\"case01\":\"{}\",\"isolation\":\"{}\",\"case03_replay_abort\":\"{}\",\"case03_replay_skip\":\"{}\",\"case03_replay_core\":\"{}\",\"case07_replay_skip_accepted\":{},\"case07_consumer\":\"{}\",\"io_replay_accepted\":{},\"io_side_effect\":{},\"wrong_proof\":\"{}\",\"exhausted\":\"{}\",\"internal_failure\":\"{}\",\"axioms\":{},\"proof_case04\":{},\"proof_case04_sha256\":\"{}\",\"proof_case01\":{},\"proof_case01_sha256\":\"{}\",\"replay_abort_sha256\":\"{}\",\"replay_skip_sha256\":\"{}\",\"replay_core_sha256\":\"{}\",\"replay_io_sha256\":\"{}\",\"replay_abort_refusal\":{},\"replay_skip_refusal\":{},\"io_refusal\":{},\"producer_abort_diagnostic\":{},\"library_source_digest\":\"{}\",\"library_object_digest\":\"{}\",\"library_root\":{},\"lean\":{},\"bounds\":{}}}",
         verified04.name(),
         verified01.name(),
-        forged07.submission.accepted,
+        isolation.name(),
+        abort03.name(),
+        skip03.name(),
+        core03.name(),
+        skip07.submission.accepted,
         consumer07.name(),
-        forged03.name(),
+        writing.submission.accepted,
+        io_side_effect,
         wrong.name(),
         exhausted.name(),
         failed.name(),
@@ -739,10 +794,14 @@ fn semantic_merge_lean_check() {
         sha256(proof04.as_bytes()),
         json_string(proof01),
         sha256(proof01.as_bytes()),
-        sha256(FORGED_COMMANDS.as_bytes()),
-        json_string(&forged07.diagnostic),
-        json_string(&refused.diagnostic),
+        sha256(REPLAY_ABORT.as_bytes()),
+        sha256(REPLAY_SKIP.as_bytes()),
+        sha256(REPLAY_CORE.as_bytes()),
+        sha256(io_proof.as_bytes()),
+        json_string(&abort.diagnostic),
+        json_string(&skip.diagnostic),
         json_string(&writing.diagnostic),
+        json_string(&abort.producer),
         honest.source_digest,
         honest.object_digest,
         json_string(&honest.library),

@@ -10,15 +10,24 @@ wired into production and no merge is authorized. The relation is not a textual
 merge, not a recipe comparison and not a claim that a candidate is the unique
 merge.
 
-**Phase 3 note (2026-11-20, after independent review).** A fresh-context
-review of commit `adf643d0` returned REVISE with one blocker: the isolated
-check accepted producer-printable output, so a producer proof could print the
-acceptance marker and exit before the axiom walk. The fix replaces the
-producer-as-source protocol with a producer-as-data consumer (closed-term
-submission, consumer parse and kernel check, strict nonced post-check), and the
-go/no-go, dispositions, plan and receipts below are restated accordingly. The
-review record is retained outside the repository by the integrator; its
-findings and their resolutions are summarized in tasks.md.
+**Phase 3 notes (2026-11-20, after two independent reviews).** Round 1 (commit
+`adf643d0`) found that the check accepted producer-printable output, so a proof
+could print the acceptance marker and exit before the axiom walk; that round's
+fix treated the submission as one closed term but still elaborated it in the
+same process that printed the marker. Round 2 (commit `f8478169`) showed the
+class was still open: Lean 4.35's `by_elab` term runs arbitrary elaborator code
+during elaboration, so guard-passing submissions could read the marker from
+the source view, disable the kernel check with `debug.skipKernelTC`, or use
+`Environment.addDeclCore … (doCheck := false)` and still be accepted; one
+wrote a file. The current design fixes the class structurally: the submission
+is elaborated in a **producer process** whose output is only an `.olean`, and a
+fresh **replay checker** that never elaborates producer text reads that
+`.olean` as data, replays the target's declaration closure through the kernel
+with checks on, compares the replayed type with its own regeneration of the
+claim and computes the axiom closure there. Acceptance comes only from the
+checker's result. The go/no-go, dispositions, plan and receipts below are
+restated accordingly. The review record is retained outside the repository by
+the integrator; its findings and resolutions are summarized in tasks.md.
 
 **Baseline.** All source references are at `de1044b` (the change's base). The
 issue cites `66eb7cd`; the cited contract and README lines have moved only by
@@ -389,10 +398,13 @@ source-control migration or release.
 imports only) encodes the relation over the existing `Exec` reference
 semantics:
 
-- `ObservableTy`/`FirstOrderValue` restrict observables to `Unit`, `Bool`,
-  wrapping `I64`, `Text`, `Pair`, `Sum` and `List`; `ObservableTy` admits no
-  `Program`/`Syntax` value, and `firstOrder_of_observable` proves an observable
-  stack holds no program value.
+- `ObservableTy`/`FirstOrderValue` define the first-order restriction that the
+  termination theorem uses: `Unit`, `Bool`, wrapping `I64`, `Text`, `Pair`,
+  `Sum` and `List`, with no `Program`/`Syntax` value;
+  `firstOrder_of_observable` proves an observable stack holds no program value.
+  `MergeRel` itself accepts any `List Ty`, so the restriction on a *claim* is
+  enforced by the consumer's claim generator (see "Where the observable
+  restriction lives").
 - `MergeVal o a b m` has exactly the four non-conflicting rows of the design's
   `merge`; `Conflict o a b` is "no value satisfies the merge";
   `MergeStack` is the pointwise lift over the complete ordered output stack.
@@ -503,36 +515,51 @@ and `merge/verification.rs`.
   at most 25 vectors from a retained seed; a mismatch is replayed before it
   becomes `validated-counterexample`, a conflict is `conflict`, and a passing
   or truncated corpus stays `unknown`.
-- **Isolated check: the submission is data, not Lean source.** Before any
-  process starts, `lean::check` refuses an over-bound claim/proof and every
-  submission that is not one closed ASCII term: `#` directives, the protocol
-  marker, `sorry`/`admit`, command/IO/trace tokens (`run_cmd`, `run_elab`,
-  `run_tac`, `elab`, `macro`, `syntax`, `open`, `import`, `IO`, `System`,
-  `dbg_trace`, `Lean`, ...), control characters and non-ASCII text. The
-  consumer then writes a module that imports only `Lean` and
-  `NobleContracts.Merge`; the claim and the submission appear in it only as
-  escaped string literals. The module's own elaborator parses the claim as a
-  type and the submission as exactly one `term` (the parser requires end of
-  input), elaborates it against that type, adds `merge_claim` with
-  `Elab.async false` so the kernel check completes before the next command,
-  walks the declaration's axioms against the mc1 allowlist, fails on any other
-  axiom, and only then prints `NOBLE-MERGE-ACCEPT:<digest>` and the axiom
-  lines. Acceptance requires the exit status, exactly one digest-derived
-  marker, axioms only after it, all allowlisted and distinct; any other
-  marker-like line fails closed. The child runs with a **cleared environment**
-  (only `LEAN_PATH`), the binary's banner is checked against the pinned
-  release, output goes to files (no pipe-buffer stall) and a wall-clock
-  deadline kills it. A bound is `exhausted`; a tool failure is
-  `internal-failure`. Both are observed by real controls (a proof over the byte
-  bound; a library root without a toolchain pin); the wall-clock arm of
-  `exhausted` is not exercised by the lane.
+- **Isolated check: a producer process, then a replay checker that never
+  elaborates producer text.** `lean::check` refuses an over-bound claim/proof
+  and submissions that fail the closed-term guard (`#` directives, the
+  protocol marker, `sorry`/`admit`, obvious command/IO tokens, control or
+  non-ASCII bytes) before starting anything. The guard is defence in depth,
+  not the decision boundary: a submission that passes it is compiled by a
+  **producer** module that imports `Lean` and `NobleContracts.Merge`, parses
+  the claim as a type and the submission as one `term`, elaborates it against
+  that type and adds `merge_claim` with `Elab.async false`. That process runs
+  in its own directory with a cleared environment, and under bubblewrap
+  (`NOBLE_BWRAP` or a standard path) when available, so elaborator code has no
+  write access outside its directory. Its stdout, stderr and exit status are
+  recorded only as diagnostics. A second, fresh **checker** module imports
+  only `Lean` and `NobleContracts.Merge`, reads the producer's `.olean` with
+  `readModuleData` (no `import`, no initializers), treats every declaration as
+  untrusted data, and replays the declaration closure reachable from
+  `merge_claim` — in dependency order, refusing axioms, unsupported kinds and
+  cycles — through `Environment.addDeclCore` with checks on into an
+  environment built only from the pinned library. It requires the replayed
+  theorem's type to be syntactically (or definitionally) equal to its own
+  elaboration of the regenerated claim, walks the axiom closure there against
+  the mc1 allowlist, and only then prints `NOBLE-MERGE-ACCEPT:<digest>` and the
+  axiom lines. Acceptance requires the checker's exit status, exactly one
+  digest-derived marker, axioms only after it, all allowlisted and distinct;
+  nothing the producer printed or wrote is read as acceptance. The checker
+  directory is recreated after the producer exits, and the marker is not
+  present in the producer source. Both processes run with a cleared
+  environment and a wall-clock deadline, output goes to files (no pipe-buffer
+  stall), and the Lean banner is checked against the pinned release. A bound is
+  `exhausted`; a tool failure is `internal-failure`. Both are observed by real
+  controls (a proof over the byte bound; a library root without a toolchain
+  pin); the wall-clock arm of `exhausted` is not exercised by the lane.
+  `readModuleData`'s olean decoder and the pinned library are trusted inputs;
+  a hostile olean can crash the checker, but cannot make it accept a theorem
+  the kernel rejects.
 - **What is recorded, not pinned.** Source and `.olean` digests are recorded,
   not compared with a pinned digest. The runner rebuilds first, so the object
   digest binds the bytes Lean loaded; the version banner is the only compared
-  tool identity, and the binary is selected by the environment. The
-  reviewer's forgeries (`sorry` + a printed marker + `#exit`; the same channel
-  on CASE-07 and through the CASE-03 consumer path; an IO write; a
-  trace-printed marker) are regression tests and stay nonverified.
+  tool identity, the binary is selected by the environment, and the receipt
+  records whether bubblewrap or process isolation ran. The round-1 forgeries
+  (`sorry` + a printed marker + `#exit`; an IO write) and the round-2
+  meta-programming forgeries (marker reader; `debug.skipKernelTC`; unchecked
+  `addDeclCore`; a string-assembled IO write) are regression tests: they may
+  run in the producer, but the replay checker refuses them, and the
+  bubblewrap receipt observes no side effect outside the producer directory.
 
 Phase 3 tests: `claim_regeneration_is_exact_and_canonical`,
 `consumer_refuses_every_differing_producer_field`,
@@ -552,9 +579,9 @@ Phase 3 tests: `claim_regeneration_is_exact_and_canonical`,
 | SM-1 | **Proved** | `MergeRel` and the `mergeVal_*`/`mergeStack_*` theorems in `proofs/mc1/NobleContracts/Merge.lean`; case-01/04 instances; wrapping-boundary theorem |
 | SM-2 | **Proved for the narrowed fragment** | `outer_exec`, `mergeRel_terminating`, `leaf_exec`; narrowing and reasons above |
 | SM-3 | **Narrowed and tested; not discharged** | Covered: exact-text regeneration from consumer-selected preparations, subject digests over code/captures/callee/interface/revision, the lane's lowering (captures are literals) and the refusal of an out-of-range capture by both regeneration and replay. Not covered: a formalized preparation→MC1 lowering, dependency closure, schema/builtin identities and the live `quote`/`run` form; there is no Lean formalization of the pipeline, so this is tested, not proved. Discharge route: PO-19 (contract export) plus a proved or extracted faithful lowering, or an owner-accepted narrower statement. |
-| SM-4 | **Narrowed; not discharged** | The isolated check is a fresh pinned Lean process with a cleared environment, a closed-term consumer and a strict post-check; kernel soundness is Lean's. A merge proof is **producer-supplied**, so the production path must be the production compile → bounded export → fresh-kernel-replay consumer (`workflow::verification::verify`), never the `verify_intrinsic_pure` stdout-marker template, whose safety rests on a consumer-generated term. PO-09/PO-16 refinement of the MC1 reference semantics against the design model is not re-proved here. Production is not wired. |
+| SM-4 | **Narrowed; not discharged** | The lane compiles the submission in a producer process (cleared environment; bubblewrap when selected) and decides acceptance only in a fresh replay checker that reads the `.olean` as data, replays the target's declaration closure through the kernel with checks on and compares the replayed type with its own regeneration of the claim. Kernel soundness and the `.olean` decoder are Lean's, not proved here; the producer process has no formal capability model when bubblewrap is unavailable. A merge proof is **producer-supplied**, so the production path must still be the production compile → bounded export → fresh-kernel-replay consumer (`workflow::verification::verify`), never the `verify_intrinsic_pure` stdout-marker template. PO-09/PO-16 refinement is not re-proved and production is not wired. |
 | SM-5 | **Tested only; not discharged** | Covered by the lane: `admit` refuses every differing producer field (schema, revision, assumptions, trust flag, subject digests, claim text, claim hash, premarked outcome), and `subject_digest` binds code, captures, callee, interface and semantic revision. Not covered: dependency closure, schema/builtin identities and prepared-subject linkage; those move to plan step 2. A digest is a recorded integrity index, not proof validity. No universal argument is claimed. |
-| SM-6 | **Tested only; not discharged** | Covered: totality of the Rust `Outcome` enum (seven states), refutation dominance, `checked` as the only `Verified` constructor, the checker's `exhausted`/`internal-failure` propagated through `evaluate`, and the forged-submission regressions. Not covered: a machine-checked totality argument; "only Lean acceptance" is a property of this lane's code (after the F1 redesign), not a proved universal statement. |
+| SM-6 | **Tested only; not discharged** | Covered: totality of the Rust `Outcome` enum (seven states), refutation dominance, `checked` as the only `Verified` constructor, the checker's `exhausted`/`internal-failure` propagated through `evaluate`, and the round-1/round-2 forgery regressions. "Only the replay checker's kernel result yields `verified`" is a property of this lane's code (producer output is never parsed), not a proved universal statement. Not covered: a machine-checked totality argument. |
 | SM-7 | **Documented separate** | The lane proves source-model facts only; no installed Wasm execution claim, compiler refinement or artifact correspondence is made (owned by #10/PO-18) |
 | SM-8 | **Documented** | The lane performs no merge, publication, live-slot admission, migration or release; the receipt records the no-go decision |
 
@@ -592,7 +619,11 @@ a precondition of 8.
    generates the term. Blocker: a pinned-model extension of
    `workflow::intrinsic` (the exact MC1 model source pins), PO-09/PO-16
    refinement for SM-4, and the review. Pass: the production consumer refuses
-   the F1 forgeries and an IO-writing proof, and accepts the honest claims.
+   the round-1 marker/IO forgeries **and** elaboration-time meta-programming
+   (a marker read from the source view, `debug.skipKernelTC`, unchecked
+   `addDeclCore … (doCheck := false)`, and an IO write through a
+   string-assembled identifier), leaves no side effect, accepts the honest
+   claims, and takes acceptance only from the replay process.
 4. **Evidence envelope.** Emit the full `noble-merge-evidence/v1` field list
    (toolchain/library/source-tree identities, checker limits, policy revision,
    precondition/non-vacuity evidence, termination-obligation status, exact
@@ -666,9 +697,11 @@ decision is **NO-GO for integration**, with reasons:
   production consumer is not wired; PO-09/PO-16 refinement is not proved.
 - The integration plan's 7a review has not run, and 7b cannot run before steps
   1-6 exist.
-- The review's F1 blocker (producer-printable acceptance) is fixed in this
-  revision and its forgeries refuse, but that is a lane fix, not a discharge
-  of the frozen criterion.
+- The two review rounds' forgery classes (round 1: producer-printable
+  acceptance; round 2: elaborator-time meta-programming) are closed by the
+  producer/replay split and their controls refuse, but that is a lane fix, not
+  a discharge of the frozen criterion; the `.olean` decoder remains trusted
+  input.
 
 The evidence is `verification/semantic-merge-verification/receipt.json`
 (sha256 `d059a8153800b8982d080830618ab49465980d36860d049e4d64584a6bdef21b`,
@@ -804,14 +837,18 @@ claim/evidence design.
   so CASE-05 is not Lean-exercised), and not a claim about the repository's
   production claim path. A capture index outside the retained list is refused,
   so the lowering never invents a value.
-- The Phase 3 check isolates a fresh pinned Lean process with a cleared
-  environment (only `LEAN_PATH`), recorded source and `.olean` digests and the
-  mc1 axiom allowlist; the submission is parsed as one closed term by the
-  consumer rather than written as source. The digests are recorded, not
-  compared with a pinned digest, the binary is selected by the environment
-  (its banner is checked) and the wall-clock deadline arm is not exercised. It
-  is not the production bubblewrap sandbox, and its acceptance is not a policy
-  decision, an admission or a release.
+- The Phase 3 check compiles the submission in a producer process (cleared
+  environment; bubblewrap when selected, otherwise process isolation with no
+  formal capability boundary) and decides acceptance only in a fresh replay
+  checker that never elaborates producer text. The checker reads the
+  producer's `.olean` through Lean's decoder and replays declarations with
+  kernel checks into an environment built from the pinned library; the decoder
+  and kernel soundness are trusted, so a hostile olean can crash the checker
+  but not make it accept a kernel-rejected theorem. Source and `.olean`
+  digests are recorded, not compared with a pinned digest, the binary is
+  selected by the environment (its banner is checked), and the wall-clock
+  deadline arm is not exercised. It is not the production sandboxed consumer,
+  and its acceptance is not a policy decision, an admission or a release.
 - The integration plan is a plan: steps 1-6 are unimplemented, 7a has not run,
   and 7b cannot run before they exist. No plan step discharges SM-3, SM-5 or
   SM-6 today.

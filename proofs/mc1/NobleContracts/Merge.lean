@@ -1065,7 +1065,7 @@ theorem no_candidate_for_incompatible_increments {x y : BitVec 64} (M : List Op)
     rfl rfl rfl rfl (conflict_incompatible_increments y)
 
 /-- SMERGE-CASE-08: at the wrapping boundary the merge reads `0`; a candidate
-that computes `MAX + 1` as a mathematical integer and wraps it to `1` is not
+that computes `MAX + 2` as a mathematical integer and wraps it to `1` is not
 the merge. -/
 theorem wrapping_boundary_is_not_merge :
     ¬ MergeVal (.i64 18446744073709551615) (.i64 0) (.i64 18446744073709551615)

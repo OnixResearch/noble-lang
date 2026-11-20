@@ -8,7 +8,7 @@
     tigerstyle::ignored_result,
     tigerstyle::path_segment_repetition,
     tigerstyle::unbounded_collection_growth,
-    reason = "Owner: noble-contracts-maintainers; this test-only lane discovers the pinned Lean and library paths once at its process boundary and enforces one wall-clock deadline against the child checker, so the ambient observation is the operation. Test-only lane: matches over the observable/fragment enums are intentional regression tables, panics and ignored cleanup results are fixture assertions, and the bounded checker's digest casts index a 16-entry nibble table."
+    reason = "Owner: noble-contracts-maintainers; this test-only lane discovers the pinned Lean, library and optional bubblewrap paths once at its process boundary and enforces one wall-clock deadline against each child, so the ambient observation is the operation. Test-only lane: matches over the observable/fragment enums are intentional regression tables, panics and ignored cleanup results are fixture assertions, and the bounded checker's digest casts index a 16-entry nibble table."
 )]
 #![expect(
     tigerstyle::non_trait_imports,
@@ -16,20 +16,25 @@
 )]
 //! Isolated pinned Lean check for the test-only `SMERGE/1` lane.
 //!
-//! The producer's submission is **data, never Lean source**.  The consumer
-//! regenerates the claim, escapes the submitted proof bytes into a string
-//! literal of a consumer-written module, and lets the module's own elaborator
-//! parse exactly one closed term (`Lean.Parser.runParserCategory` requires end
-//! of input) and elaborate it against the regenerated claim type.  It then
-//! adds `merge_claim` (synchronously kernel-checked), walks the declaration's
-//! axioms against the mc1 allowlist and fails the command on any other axiom.
-//! Only that consumer post-check, keyed by a digest-derived acceptance marker
-//! that appears exactly once in the transcript, yields acceptance.
+//! The submission is compiled **once** in a producer process that has the full
+//! meta-programming API in scope, so its elaborator code runs there — in a
+//! fresh producer directory, with a cleared environment, and under
+//! bubblewrap when a sandbox binary is available.  Nothing that process prints
+//! or writes is trusted.
 //!
-//! This is process-level isolation with a pinned binary, a cleared child
-//! environment and recorded source/object digests, not the repository's
-//! bubblewrap production consumer; the production integration stays unselected
-//! (recorded no-go) and this lane must not be read as one.
+//! A second, fresh **checker** process never elaborates producer text.  It
+//! reads the producer's `.olean` as data (`readModuleData`, no import and no
+//! initializers), replays the declarations `merge_claim` reaches through the
+//! kernel with every check enabled into an environment built only from the
+//! pinned library, requires the replayed theorem's type to be the consumer's
+//! own elaboration of the regenerated claim, and computes the axiom closure
+//! there against the mc1 allowlist.  Only that process's structured result is
+//! acceptance.
+//!
+//! This is process-level isolation with a pinned binary and recorded
+//! source/object digests, not the repository's production consumer; the
+//! production integration stays unselected (recorded no-go) and this lane must
+//! not be read as one.
 
 use super::claim::{CheckFailure, Submission, LEAN_PIN};
 use std::fs::File;
@@ -39,7 +44,7 @@ use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
-/// One check's bounds.
+/// One process's bounds.  The deadline applies to each of the two processes.
 #[derive(Clone, Copy, Debug)]
 pub(super) struct Bounds {
     pub(super) timeout_ms: u64,
@@ -51,6 +56,22 @@ impl Bounds {
         Self {
             timeout_ms: 60_000,
             proof_bytes: 16_384,
+        }
+    }
+}
+
+/// Which boundary produced the admitted `.olean`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Isolation {
+    Bubblewrap,
+    Process,
+}
+
+impl Isolation {
+    pub(super) fn name(self) -> &'static str {
+        match self {
+            Isolation::Bubblewrap => "bubblewrap",
+            Isolation::Process => "process",
         }
     }
 }
@@ -68,11 +89,16 @@ const MODULES: [&str; 3] = [
     "NobleContracts/Rules",
     "NobleContracts/Model",
 ];
+const BWRAP_CANDIDATES: [&str; 3] = [
+    "/run/current-system/sw/bin/bwrap",
+    "/usr/bin/bwrap",
+    "/bin/bwrap",
+];
 
-/// Command, directive, IO and protocol tokens no closed proof term needs.  The
-/// submission is parsed as one `term`, so these cannot smuggle commands; the
-/// guard is defence in depth against elaborator-time IO (`run_tac` writes
-/// files), trace output that mimics the protocol and kernel-proof cheats.
+/// Command, directive, IO and protocol tokens no closed proof term needs.  This
+/// is defence in depth only: the replay checker, not this list, decides
+/// acceptance, and a submission may use elaborator code (the producer process
+/// is where that code runs).
 const FORBIDDEN_TOKENS: [&str; 47] = [
     "sorry",
     "admit",
@@ -125,16 +151,18 @@ const FORBIDDEN_TOKENS: [&str; 47] = [
 
 static WORKSPACES: AtomicU64 = AtomicU64::new(0);
 
-/// What the isolated check observed.  Acceptance is the consumer's own
-/// post-check; every other state names its refusal, bound or tool failure.
+/// What the isolated check observed.  Acceptance is the replay checker's own
+/// result; every other state names its refusal, bound or tool failure.
 #[derive(Clone, Debug)]
 pub(super) struct Acceptance {
     pub(super) submission: Submission,
     pub(super) diagnostic: String,
+    pub(super) producer: String,
     pub(super) lean: String,
     pub(super) library: String,
     pub(super) source_digest: String,
     pub(super) object_digest: String,
+    pub(super) isolation: Isolation,
 }
 
 fn library_root() -> PathBuf {
@@ -149,6 +177,25 @@ fn lean_binary() -> PathBuf {
         Some(path) => PathBuf::from(path),
         None => PathBuf::from("lean"),
     }
+}
+
+/// The sandbox binary, if one is selected.  Without it the producer still runs
+/// in a fresh directory with a cleared environment, but the receipt records
+/// `process` isolation rather than claiming a filesystem boundary.
+fn sandbox() -> Option<PathBuf> {
+    if let Some(path) = std::env::var_os("NOBLE_BWRAP") {
+        let path = PathBuf::from(path);
+        if path.is_file() {
+            return Some(path);
+        }
+    }
+    for candidate in BWRAP_CANDIDATES {
+        let path = Path::new(candidate);
+        if path.is_file() {
+            return Some(path.to_path_buf());
+        }
+    }
+    None
 }
 
 fn read_pin(root: &Path) -> Option<String> {
@@ -175,8 +222,6 @@ fn version_matches(lean: &str, pin: &str) -> bool {
     !release.is_empty() && lean.contains(&format!("version {release}"))
 }
 
-/// A length-delimited digest over the named modules under `root`; a missing
-/// module is recorded as missing instead of being skipped.
 fn module_digest(root: &Path, modules: &[&str], suffix: &str) -> String {
     let mut bytes = Vec::new();
     for module in modules {
@@ -222,8 +267,8 @@ fn object_digest(root: &Path) -> String {
     super::claim::sha256(&bytes)
 }
 
-/// Render `text` as the body of one Lean string literal.  Only bytes the
-/// closed-term guard permits reach here: printable ASCII plus tab/newline.
+/// Render `text` as the body of one Lean string literal.  The closed-term guard
+/// permits only bytes the encoding handles: printable ASCII plus tab/newline.
 fn escape(text: &str) -> String {
     let mut rendered = String::with_capacity(text.len());
     for character in text.chars() {
@@ -238,9 +283,9 @@ fn escape(text: &str) -> String {
     rendered
 }
 
-/// The acceptance marker is derived from the exact claim and proof bytes, so a
-/// term cannot print it without the submission's own digest (and any duplicate
-/// marker is a protocol failure).
+/// The acceptance marker binds the exact claim and proof bytes.  The producer
+/// source does not contain it (only the checker source does), so the producer
+/// process cannot learn it from its own input.
 fn nonce(claim: &str, proof: &str) -> String {
     let mut material =
         String::with_capacity(claim.len().saturating_add(proof.len()).saturating_add(1));
@@ -253,8 +298,10 @@ fn nonce(claim: &str, proof: &str) -> String {
         .collect()
 }
 
-/// A submission is one closed Lean term: printable ASCII plus tab/newline,
-/// no `#` directives, no protocol marker and no command, IO or trace token.
+/// A submission is one closed Lean term: printable ASCII plus tab/newline, no
+/// `#` directives, no protocol marker and no obvious command/IO token.  This
+/// guard is not the decision boundary; it only keeps obviously malformed
+/// submissions out of the elaborator.
 fn proof_is_closed_term(proof: &str) -> Result<(), String> {
     for character in proof.chars() {
         if character == '\n' || character == '\t' {
@@ -287,31 +334,25 @@ fn proof_is_closed_term(proof: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// The consumer-written module.  The claim and the submission appear only as
-/// escaped string literals; the module's own elaborator parses the claim as a
-/// type and the submission as exactly one `term`, elaborates it against that
-/// type, adds the declaration with the kernel check enabled (`Elab.async
-/// false`) and emits the nonced acceptance marker only after the axiom walk.
-fn consumer_source(claim: &str, proof: &str, marker: &str) -> String {
-    format!(
-        r#"import Lean
+/// The producer module: it elaborates the claim and the submission and adds
+/// `merge_claim`.  Its only output that crosses to the checker is the `.olean`.
+const PRODUCER_HEAD: &str = r#"import Lean
 import NobleContracts.Merge
 open Lean Elab Command
 open NobleContracts
 set_option Elab.async false
 set_option autoImplicit false
 
-elab "check_merge_claim_axioms" : command => do
-  let claimText : String := "{claim}"
-  let proofText : String := "{proof}"
-  let marker : String := "{marker}"
-  let env ← getEnv
+elab "produce_merge_claim" : command => do
+"#;
+
+const PRODUCER_BODY: &str = r#"  let env ← getEnv
   let claimSyntax ← match Lean.Parser.runParserCategory env `term claimText with
     | .ok parsed => pure parsed
-    | .error error => throwError "cannot parse the regenerated claim: {{error}}"
+    | .error error => throwError "claim parse: {error}"
   let proofSyntax ← match Lean.Parser.runParserCategory env `term proofText with
     | .ok parsed => pure parsed
-    | .error error => throwError "the submitted proof is not one closed term: {{error}}"
+    | .error error => throwError "proof parse: {error}"
   let (type, value) ← liftTermElabM do
     let type ← Term.elabType claimSyntax
     let value ← Term.elabTermEnsuringType proofSyntax (some type)
@@ -319,27 +360,141 @@ elab "check_merge_claim_axioms" : command => do
     let type ← instantiateMVars type
     let value ← instantiateMVars value
     return (type, value)
-  liftCoreM <| addDecl (.thmDecl {{ name := `merge_claim, levelParams := [], type := type, value := value }})
+  liftCoreM <| addDecl (.thmDecl { name := `merge_claim, levelParams := [], type := type, value := value })
+
+produce_merge_claim
+"#;
+
+fn producer_source(claim: &str, proof: &str) -> String {
+    let mut source = String::from(PRODUCER_HEAD);
+    source.push_str(&format!(
+        "  let claimText : String := \"{}\"\n",
+        escape(claim)
+    ));
+    source.push_str(&format!(
+        "  let proofText : String := \"{}\"\n",
+        escape(proof)
+    ));
+    source.push_str(PRODUCER_BODY);
+    source
+}
+
+/// The checker module.  It never imports the producer module and never
+/// elaborates producer text: it reads the `.olean` as data, replays the target's
+/// declaration closure through the kernel with checks on, compares the replayed
+/// type with its own elaboration of the claim, and walks the axioms there.
+const CHECKER_HEAD: &str = r#"import Lean
+import NobleContracts.Merge
+open Lean Elab Command
+open NobleContracts
+set_option Elab.async false
+set_option autoImplicit false
+
+elab "check_merge_replay" : command => do
+"#;
+
+const CHECKER_BODY: &str = r#"  let (data, _region) ← liftIO (Lean.readModuleData producer)
+  let env0 ← getEnv
+  let mut infos : Std.HashMap Name ConstantInfo := {}
+  for info in data.constants do
+    match info with
+    | .axiomInfo ax => throwError "producer module declares an axiom: {ax.name}"
+    | _ => infos := infos.insert info.name info
+  let usedConstants (info : ConstantInfo) : Array Name :=
+    match info with
+    | .thmInfo thm => thm.type.getUsedConstants ++ thm.value.getUsedConstants
+    | .defnInfo defn => defn.type.getUsedConstants ++ defn.value.getUsedConstants
+    | _ => info.type.getUsedConstants
+  let some _ := infos[`merge_claim]?
+    | throwError "producer module has no merge_claim"
+  let mut closure : Array Name := #[]
+  let mut queue : Array Name := #[`merge_claim]
+  let mut queued : Std.HashSet Name := {`merge_claim}
+  while queue.size > 0 do
+    let name := queue.back!
+    queue := queue.pop
+    closure := closure.push name
+    match infos[name]? with
+    | some info =>
+      for dep in usedConstants info do
+        if infos.contains dep && !queued.contains dep then
+          queue := queue.push dep
+          queued := queued.insert dep
+    | none => pure ()
+  let mut order : Array Name := #[]
+  let mut done : Std.HashSet Name := {}
+  let mut remaining := closure
+  for _ in [:closure.size] do
+    let mut next : Array Name := #[]
+    for name in remaining do
+      let ready := match infos[name]? with
+        | some info => (usedConstants info).all fun dep => !infos.contains dep || done.contains dep
+        | none => true
+      if ready then
+        order := order.push name
+        done := done.insert name
+      else
+        next := next.push name
+    remaining := next
+  unless remaining.size == 0 do
+    throwError "producer declarations are cyclic or unresolved"
+  let mut env := env0
+  for name in order do
+    let some info := infos[name]?
+      | throwError "producer declaration vanished: {name}"
+    match info with
+    | .thmInfo thm =>
+      match env.addDeclCore 0 0 (.thmDecl thm) none with
+      | .ok next => env := next
+      | .error error => throwKernelException error
+    | .defnInfo defn =>
+      match env.addDeclCore 0 0 (.defnDecl defn) none with
+      | .ok next => env := next
+      | .error error => throwKernelException error
+    | _ => throwError "unsupported producer declaration: {name}"
+  setEnv env
+  let some info := (← getEnv).find? `merge_claim
+    | throwError "producer module has no merge_claim"
+  let actual := info.type
+  let claimSyntax ← match Lean.Parser.runParserCategory (← getEnv) `term claimText with
+    | .ok parsed => pure parsed
+    | .error error => throwError "claim parse: {error}"
+  let expected ← liftTermElabM do
+    let type ← Term.elabType claimSyntax
+    Term.synthesizeSyntheticMVarsNoPostponing
+    instantiateMVars type
+  unless actual == expected do
+    unless (← liftTermElabM (Lean.Meta.isDefEq actual expected)) do
+      throwError "replayed theorem type differs from the regenerated claim"
   let axioms ← liftCoreM (collectAxioms `merge_claim)
   for ax in axioms do
     unless [``propext, ``Classical.choice, ``Quot.sound].contains ax do
-      throwError "disallowed merge axiom {{ax}}"
+      throwError "disallowed merge axiom {ax}"
   logInfo marker
   for ax in axioms do
-    logInfo m!"NOBLE-MERGE-AXIOM:{{ax}}"
+    logInfo m!"NOBLE-MERGE-AXIOM:{ax}"
 
-check_merge_claim_axioms
-"#,
-        claim = escape(claim),
-        proof = escape(proof),
-        marker = marker,
-    )
+check_merge_replay
+"#;
+
+fn checker_source(claim: &str, producer: &Path, marker: &str) -> String {
+    let mut source = String::from(CHECKER_HEAD);
+    source.push_str(&format!(
+        "  let claimText : String := \"{}\"\n",
+        escape(claim)
+    ));
+    source.push_str(&format!(
+        "  let producer : String := \"{}\"\n",
+        escape(&producer.display().to_string())
+    ));
+    source.push_str(&format!("  let marker : String := \"{marker}\"\n"));
+    source.push_str(CHECKER_BODY);
+    source
 }
 
-/// Parse the consumer post-check strictly: exactly one nonced acceptance
-/// marker, axiom reports only after it, every axiom allowlisted and distinct.
-/// Any other appearance of the protocol marker is a failure, so a trace line
-/// that mimics the marker cannot be counted (and a duplicate cannot hide).
+/// Parse the replay checker's stdout strictly: exactly one digest-derived
+/// acceptance marker, axiom reports only after it, every axiom allowlisted and
+/// distinct.  Nothing the producer process printed is read here.
 pub(super) fn parse_transcript(stdout: &str, marker: &str) -> Result<Vec<String>, String> {
     let mut is_accepted = false;
     let mut axioms: Vec<String> = Vec::with_capacity(3);
@@ -373,9 +528,7 @@ pub(super) fn parse_transcript(stdout: &str, marker: &str) -> Result<Vec<String>
                 return Err("invalid transitive axiom report".into());
             }
             axioms.push(name.to_owned());
-            continue;
-        }
-        if trimmed.contains(AXIOM) {
+        } else if trimmed.contains(AXIOM) {
             return Err("unexpected axiom report in the checker transcript".into());
         }
     }
@@ -383,67 +536,6 @@ pub(super) fn parse_transcript(stdout: &str, marker: &str) -> Result<Vec<String>
         return Err("checker did not report kernel acceptance".into());
     }
     Ok(axioms)
-}
-
-#[expect(
-    tigerstyle::too_many_parameters,
-    reason = "Owner: noble-maintainers; the observation, its diagnostic and the tool/library/digest identities are one recorded value for this test-only checker, and the private helpers are called only by check_at with named fields"
-)]
-fn observed(
-    submission: Submission,
-    diagnostic: String,
-    lean: String,
-    library: String,
-    source: String,
-    object: String,
-) -> Acceptance {
-    Acceptance {
-        submission,
-        diagnostic,
-        lean,
-        library,
-        source_digest: source,
-        object_digest: object,
-    }
-}
-
-fn refused(
-    diagnostic: String,
-    lean: String,
-    library: String,
-    source: String,
-    object: String,
-) -> Acceptance {
-    observed(
-        Submission::refused(),
-        diagnostic,
-        lean,
-        library,
-        source,
-        object,
-    )
-}
-
-#[expect(
-    tigerstyle::too_many_parameters,
-    reason = "Owner: noble-maintainers; the failure kind, its diagnostic and the tool/library/digest identities are one recorded value for this test-only checker, and the private helper is called only by check_at with named fields"
-)]
-fn failed(
-    failure: CheckFailure,
-    diagnostic: String,
-    lean: String,
-    library: String,
-    source: String,
-    object: String,
-) -> Acceptance {
-    observed(
-        Submission::failed(failure),
-        diagnostic,
-        lean,
-        library,
-        source,
-        object,
-    )
 }
 
 fn transcript(path: &Path) -> String {
@@ -456,6 +548,188 @@ fn transcript(path: &Path) -> String {
     String::from_utf8_lossy(&bytes).into_owned()
 }
 
+/// One child process's observation.
+struct Step {
+    status: Option<std::process::ExitStatus>,
+    timed_out: bool,
+    start_error: Option<String>,
+    stdout: String,
+    stderr: String,
+}
+
+impl Step {
+    fn output(&self) -> String {
+        let mut text = self.stdout.clone();
+        text.push_str(&self.stderr);
+        text.chars().take(DIAGNOSTIC_CHARS).collect()
+    }
+}
+
+/// Run one pinned Lean process in `cwd`, writing its output files, under
+/// bubblewrap when selected.
+fn run_step(
+    binary: &Path,
+    source: &Path,
+    cwd: &Path,
+    output: Option<&Path>,
+    read_only: &[&Path],
+    sandbox: Option<&Path>,
+    timeout_ms: u64,
+) -> Step {
+    let stdout_path = cwd.join("stdout.txt");
+    let stderr_path = cwd.join("stderr.txt");
+    let (Ok(stdout_file), Ok(stderr_file)) =
+        (File::create(&stdout_path), File::create(&stderr_path))
+    else {
+        return Step {
+            status: None,
+            timed_out: false,
+            start_error: Some("cannot create the process transcript".into()),
+            stdout: String::new(),
+            stderr: String::new(),
+        };
+    };
+    let mut command = match sandbox {
+        Some(bwrap) => {
+            let library = read_only
+                .first()
+                .map(|path| path.display().to_string())
+                .unwrap_or_default();
+            let mut command = Command::new(bwrap);
+            command
+                .arg("--unshare-all")
+                .arg("--die-with-parent")
+                .arg("--new-session")
+                .arg("--cap-drop")
+                .arg("ALL")
+                .arg("--clearenv")
+                .arg("--proc")
+                .arg("/proc")
+                .arg("--dev")
+                .arg("/dev")
+                .arg("--tmpfs")
+                .arg("/tmp")
+                .arg("--ro-bind")
+                .arg("/nix/store")
+                .arg("/nix/store");
+            for path in read_only {
+                command.arg("--ro-bind").arg(path).arg(path);
+            }
+            command
+                .arg("--bind")
+                .arg(cwd)
+                .arg(cwd)
+                .arg("--chdir")
+                .arg(cwd)
+                .arg("--setenv")
+                .arg("HOME")
+                .arg("/tmp")
+                .arg("--setenv")
+                .arg("TMPDIR")
+                .arg("/tmp")
+                .arg("--setenv")
+                .arg("LEAN_PATH")
+                .arg(&library)
+                .arg(binary)
+                .arg("-j")
+                .arg("2");
+            command
+        }
+        None => {
+            let mut command = Command::new(binary);
+            command
+                .current_dir(cwd)
+                .env_clear()
+                .env(
+                    "LEAN_PATH",
+                    read_only.first().copied().unwrap_or(Path::new("")),
+                )
+                .env("HOME", cwd)
+                .env("TMPDIR", cwd)
+                .arg("-j")
+                .arg("2");
+            command
+        }
+    };
+    if let Some(output) = output {
+        command.arg("-o").arg(output);
+    }
+    command
+        .arg(source)
+        .stdin(Stdio::null())
+        .stdout(Stdio::from(stdout_file))
+        .stderr(Stdio::from(stderr_file));
+    let mut child = match command.spawn() {
+        Ok(child) => child,
+        Err(error) => {
+            return Step {
+                status: None,
+                timed_out: false,
+                start_error: Some(format!("cannot start the pinned process: {error}")),
+                stdout: String::new(),
+                stderr: String::new(),
+            };
+        }
+    };
+    let deadline = Instant::now() + Duration::from_millis(timeout_ms);
+    let mut timed_out = false;
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(status)) => break Some(status),
+            Ok(None) if Instant::now() >= deadline => {
+                timed_out = true;
+                let _ = child.kill();
+                let _ = child.wait();
+                break None;
+            }
+            Ok(None) => std::thread::sleep(POLL),
+            Err(_) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                break None;
+            }
+        }
+    };
+    Step {
+        status,
+        timed_out,
+        start_error: None,
+        stdout: transcript(&stdout_path),
+        stderr: transcript(&stderr_path),
+    }
+}
+
+/// Build the observation value; the identity fields travel together.
+struct Identity {
+    lean: String,
+    library: String,
+    source_digest: String,
+    object_digest: String,
+    producer: String,
+    isolation: Isolation,
+}
+
+fn observed(submission: Submission, diagnostic: String, identity: Identity) -> Acceptance {
+    Acceptance {
+        submission,
+        diagnostic,
+        producer: identity.producer,
+        lean: identity.lean,
+        library: identity.library,
+        source_digest: identity.source_digest,
+        object_digest: identity.object_digest,
+        isolation: identity.isolation,
+    }
+}
+
+fn refused(diagnostic: String, identity: Identity) -> Acceptance {
+    observed(Submission::refused(), diagnostic, identity)
+}
+
+fn failed(failure: CheckFailure, diagnostic: String, identity: Identity) -> Acceptance {
+    observed(Submission::failed(failure), diagnostic, identity)
+}
+
 /// Run the isolated check against the library the environment selects.
 pub(super) fn check(claim: &str, proof: &str, bounds: Bounds) -> Acceptance {
     check_at(&library_root(), claim, proof, bounds)
@@ -464,58 +738,55 @@ pub(super) fn check(claim: &str, proof: &str, bounds: Bounds) -> Acceptance {
 /// Run the isolated check against `root`; the lane and its controls use the
 /// environment-selected root, while the internal-failure control names one.
 pub(super) fn check_at(root: &Path, claim: &str, proof: &str, bounds: Bounds) -> Acceptance {
-    let library = root.display().to_string();
-    let source = source_digest(root);
-    let object = object_digest(root);
+    let isolation = match sandbox() {
+        Some(_) => Isolation::Bubblewrap,
+        None => Isolation::Process,
+    };
+    let mut identity = Identity {
+        lean: String::new(),
+        library: root.display().to_string(),
+        source_digest: source_digest(root),
+        object_digest: object_digest(root),
+        producer: String::new(),
+        isolation,
+    };
     if claim.len() > MAX_CLAIM_BYTES || proof.len() > bounds.proof_bytes {
         return failed(
             CheckFailure::Exhausted,
             "claim or proof exceeded its byte bound".into(),
-            String::new(),
-            library,
-            source,
-            object,
+            identity,
         );
     }
     if let Err(reason) = proof_is_closed_term(proof) {
         return refused(
             format!("proof submission is not one closed term: {reason}"),
-            String::new(),
-            library,
-            source,
-            object,
+            identity,
         );
     }
     let binary = lean_binary();
-    let lean = version(&binary);
+    identity.lean = version(&binary);
     let Some(pin) = read_pin(root) else {
         return failed(
             CheckFailure::InternalFailure,
             "library does not select a Lean release".into(),
-            lean,
-            library,
-            source,
-            object,
+            identity,
         );
     };
     if pin != LEAN_PIN {
         return failed(
             CheckFailure::InternalFailure,
             format!("library selects `{pin}`, not the pinned `{LEAN_PIN}`"),
-            lean,
-            library,
-            source,
-            object,
+            identity,
         );
     }
-    if !version_matches(&lean, &pin) {
+    if !version_matches(&identity.lean, &pin) {
         return failed(
             CheckFailure::InternalFailure,
-            format!("checker binary is not the pinned release: {lean}"),
-            lean,
-            library,
-            source,
-            object,
+            format!(
+                "checker binary is not the pinned release: {}",
+                identity.lean
+            ),
+            identity,
         );
     }
     let build = root.join(".lake/build/lib/lean");
@@ -524,10 +795,7 @@ pub(super) fn check_at(root: &Path, claim: &str, proof: &str, bounds: Bounds) ->
             return failed(
                 CheckFailure::InternalFailure,
                 format!("pinned module {module} is not built"),
-                lean,
-                library,
-                source,
-                object,
+                identity,
             );
         }
     }
@@ -539,137 +807,107 @@ pub(super) fn check_at(root: &Path, claim: &str, proof: &str, bounds: Bounds) ->
         std::process::id()
     ));
     let _ = std::fs::remove_dir_all(&workspace);
-    if std::fs::create_dir_all(&workspace).is_err() {
+    let producer_dir = workspace.join("producer");
+    let checker_dir = workspace.join("checker");
+    if std::fs::create_dir_all(&producer_dir).is_err() {
+        return failed(
+            CheckFailure::InternalFailure,
+            "cannot create the producer workspace".into(),
+            identity,
+        );
+    }
+    let producer_path = producer_dir.join("MergeProducer.lean");
+    let olean = producer_dir.join("MergeProducer.olean");
+    if std::fs::write(&producer_path, producer_source(claim, proof).as_bytes()).is_err() {
+        let _ = std::fs::remove_dir_all(&workspace);
+        return failed(
+            CheckFailure::InternalFailure,
+            "cannot write the producer module".into(),
+            identity,
+        );
+    }
+    let producer = run_step(
+        &binary,
+        &producer_path,
+        &producer_dir,
+        Some(&olean),
+        &[&build],
+        sandbox().as_deref(),
+        bounds.timeout_ms,
+    );
+    identity.producer = producer.output();
+    if producer.timed_out {
+        let _ = std::fs::remove_dir_all(&workspace);
+        return failed(
+            CheckFailure::Exhausted,
+            format!("producer deadline {}ms reached", bounds.timeout_ms),
+            identity,
+        );
+    }
+    if let Some(error) = producer.start_error {
+        let _ = std::fs::remove_dir_all(&workspace);
+        return failed(CheckFailure::InternalFailure, error, identity);
+    }
+    // A hostile producer may have created files in this path; the checker
+    // directory is recreated after the producer exits so only the Rust writer
+    // owns its contents.
+    let _ = std::fs::remove_dir_all(&checker_dir);
+    if std::fs::create_dir_all(&checker_dir).is_err() {
+        let _ = std::fs::remove_dir_all(&workspace);
         return failed(
             CheckFailure::InternalFailure,
             "cannot create the checker workspace".into(),
-            lean,
-            library,
-            source,
-            object,
+            identity,
         );
     }
-    let source_path = workspace.join("MergeConsumer.lean");
+    let checker_path = checker_dir.join("MergeCheck.lean");
     if std::fs::write(
-        &source_path,
-        consumer_source(claim, proof, &marker).as_bytes(),
+        &checker_path,
+        checker_source(claim, &olean, &marker).as_bytes(),
     )
     .is_err()
     {
         let _ = std::fs::remove_dir_all(&workspace);
         return failed(
             CheckFailure::InternalFailure,
-            "cannot write the consumer module".into(),
-            lean,
-            library,
-            source,
-            object,
+            "cannot write the checker module".into(),
+            identity,
         );
     }
-    let stdout_path = workspace.join("stdout.txt");
-    let stderr_path = workspace.join("stderr.txt");
-    let (Ok(stdout_file), Ok(stderr_file)) =
-        (File::create(&stdout_path), File::create(&stderr_path))
-    else {
-        let _ = std::fs::remove_dir_all(&workspace);
-        return failed(
-            CheckFailure::InternalFailure,
-            "cannot create the checker transcript".into(),
-            lean,
-            library,
-            source,
-            object,
-        );
-    };
-    let spawned = Command::new(&binary)
-        .arg("-j")
-        .arg("2")
-        .arg(&source_path)
-        .env_clear()
-        .env("LEAN_PATH", &build)
-        .current_dir(&workspace)
-        .stdin(Stdio::null())
-        .stdout(Stdio::from(stdout_file))
-        .stderr(Stdio::from(stderr_file))
-        .spawn();
-    let mut child = match spawned {
-        Ok(child) => child,
-        Err(error) => {
-            let _ = std::fs::remove_dir_all(&workspace);
-            return failed(
-                CheckFailure::InternalFailure,
-                format!("cannot start the pinned checker: {error}"),
-                lean,
-                library,
-                source,
-                object,
-            );
-        }
-    };
-    let deadline = Instant::now() + Duration::from_millis(bounds.timeout_ms);
-    let mut is_exhausted = false;
-    loop {
-        match child.try_wait() {
-            Ok(Some(_)) => break,
-            Ok(None) if Instant::now() >= deadline => {
-                is_exhausted = true;
-                let _ = child.kill();
-                let _ = child.wait();
-                break;
-            }
-            Ok(None) => std::thread::sleep(POLL),
-            Err(error) => {
-                let _ = std::fs::remove_dir_all(&workspace);
-                return failed(
-                    CheckFailure::InternalFailure,
-                    format!("checker wait failed: {error}"),
-                    lean,
-                    library,
-                    source,
-                    object,
-                );
-            }
-        }
-    }
-    let waited = child.wait();
-    let stdout = transcript(&stdout_path);
-    let stderr = transcript(&stderr_path);
+    let checker = run_step(
+        &binary,
+        &checker_path,
+        &checker_dir,
+        None,
+        &[&build, &producer_dir],
+        sandbox().as_deref(),
+        bounds.timeout_ms,
+    );
     let _ = std::fs::remove_dir_all(&workspace);
-    if is_exhausted {
+    if checker.timed_out {
         return failed(
             CheckFailure::Exhausted,
             format!("checker deadline {}ms reached", bounds.timeout_ms),
-            lean,
-            library,
-            source,
-            object,
+            identity,
         );
     }
-    let Ok(status) = waited else {
-        return failed(
-            CheckFailure::InternalFailure,
-            "checker status unavailable".into(),
-            lean,
-            library,
-            source,
-            object,
-        );
-    };
-    if !status.success() {
-        let mut text = stdout;
-        text.push_str(&stderr);
-        let bounded: String = text.chars().take(DIAGNOSTIC_CHARS).collect();
-        return refused(bounded, lean, library, source, object);
+    if let Some(error) = checker.start_error {
+        return failed(CheckFailure::InternalFailure, error, identity);
     }
-    match parse_transcript(&stdout, &marker) {
+    let success = matches!(checker.status, Some(status) if status.success());
+    if !success {
+        let mut text = checker.output();
+        if text.is_empty() {
+            text = "the replay checker failed".into();
+        }
+        return refused(text, identity);
+    }
+    match parse_transcript(&checker.stdout, &marker) {
         Ok(axioms) => observed(
             Submission::accepted(axioms),
-            "the isolated consumer kernel-checked the regenerated claim".into(),
-            lean,
-            library,
-            source,
-            object,
+            "the replay checker kernel-checked the regenerated claim".into(),
+            identity,
         ),
-        Err(reason) => refused(reason, lean, library, source, object),
+        Err(reason) => refused(reason, identity),
     }
 }

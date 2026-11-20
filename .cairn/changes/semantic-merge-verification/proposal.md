@@ -70,17 +70,22 @@ migration or release.
   changes. r[SMERGE-CHECK-01] r[SMERGE-GATE-01]
 - Phase 3 (OWNER DECISION 2026-11-20): add `proofs/mc1/NobleContracts/Merge.lean`
   (`MergeRel`, the wrapping-`I64` three-way merge and the narrowed terminating
-  fragment), the claim/consumer/checker lane and its receipt. A producer
-  submission is closed-term **data**: the consumer parses exactly one `term`,
-  elaborates it against the regenerated claim, kernel-checks it, walks the
-  axioms and only then emits a digest-derived acceptance marker; acceptance is
-  never taken from producer-printable output. r[SMERGE-CHECK-01]
+  fragment), the claim/consumer/checker lane and its receipt. A submission is
+  elaborated in a **producer process** whose only output is an `.olean`; a
+  fresh **replay checker** that never elaborates producer text reads that
+  `.olean` as data, replays the declaration closure through the kernel with
+  checks on, compares the replayed type with its own regeneration of the claim
+  and computes the axiom closure there. Acceptance is never taken from
+  producer-printable output. r[SMERGE-CHECK-01]
   r[SMERGE-EVIDENCE-01] r[SMERGE-GATE-01]
 
 ## Impact
 
 - **Files**: `.cairn/changes/semantic-merge-verification/`,
-  `proofs/mc1/NobleContracts/Merge.lean`, the test-only merge lane under
+  `proofs/mc1/NobleContracts/Merge.lean`, `verification/mc1/implementation.mjs`
+  (the MC1 gate builds Merge and pins 121 theorems), the canonical
+  `.cairn/specs/verification-toolchain/spec.md` and its
+  `specs/VERIFICATION-TOOLCHAIN.md` view, the test-only merge lane under
   `crates/noble-contracts/tests/models/merge/`, the
   `verification/semantic-merge-verification/` runner and receipts, and the
   test-only `semantic-merge-model` model and receipt lane. ADDED
