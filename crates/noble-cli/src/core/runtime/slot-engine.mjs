@@ -105,11 +105,12 @@ class SlotEngine {
     this.active = null;
     this.trace = [];
     this.traceBytes = 0;
-    // One exact frame-pin summary per root, retained as a bounded ring for the `trace` operation
-    // (every root enters its own frame, so this cannot be charged against trace rows). The ring
-    // keeps the most recent FRAME_PIN_ROWS roots and reports how many older rows it displaced; each
-    // root's own invoke reply always carries that root's exact counts. Older rows are displaced,
-    // never silently mixed with a newer root's numbers.
+    // One frame-pin row per root, retained as a bounded ring for the `trace` operation (every root
+    // enters its own frame, so this cannot be charged against trace rows). A row carries the root's
+    // entered/released/active counts, or an explicit error when the abort ledger itself failed. The
+    // ring keeps the most recent FRAME_PIN_ROWS roots and reports how many older rows it displaced;
+    // each root's own invoke reply always carries that root's row. Older rows are displaced, never
+    // silently mixed with a newer root's numbers.
     this.rootFramePins = [];
     this.rootFramePinsTotal = 0;
     this.traceFailure = null;
