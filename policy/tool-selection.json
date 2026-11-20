@@ -381,7 +381,7 @@
     "proofs/m7/lakefile.toml": "d4ca45d5d1f589d19e4fea345afc932efd455eba26918e07daeeee11977fe097",
     "proofs/m7/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
     "proofs/mc1/lake-manifest.json": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
-    "proofs/mc1/lakefile.toml": "7518fd24bc8f4204da8002aa87a18382eecbe29583382c068485f3b75988f514",
+    "proofs/mc1/lakefile.toml": "bfdaff457407ecdac364c998fd76a678e3c8cb2e05e0205b3cb995e7222dc164",
     "proofs/mc1/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
     "proofs/mc2/lake-manifest.json": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
     "proofs/mc2/lakefile.toml": "bb890bca99fcca2653d933fe87aca3a0a988eb5d9fe252a24321f20843938198",
