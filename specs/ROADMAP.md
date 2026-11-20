@@ -1564,9 +1564,12 @@ reload, LIVE-05 forced overlap, LIVE-06 explicit host revoke and general
 LIVE-10 cancellation/retirement assurance remain open in those historical
 receipts; source-only LIVE03 integration is not a new JS-instance receipt.
 Neither complete opt-in backend profile is accepted: all
-[LIVE](conformance/live-wasm-cases.json) and
-[CB](conformance/c-backend-cases.json) cases are absent/not-run and proofs
-open. A guarded partial live REPL implementation is not LIVE acceptance.
+[CB](conformance/c-backend-cases.json) cases and
+[LIVE](conformance/live-wasm-cases.json) cases LIVE-02 to LIVE-05 and LIVE-08
+to LIVE-10 are absent/not-run, LIVE-01, LIVE-06 and LIVE-07 passed from one
+source-bound receipt (`verification/live-cases/acceptance.json`, 2026-11-20),
+and every proof is open. A guarded partial live REPL implementation is not
+LIVE acceptance.
 Ordinary Core `run`/`session`, selected Wasm/Node-V8 and historical M4
 evidence remain unchanged; these designs inherit no M4 execution claim.
 
