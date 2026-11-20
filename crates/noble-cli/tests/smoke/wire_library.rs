@@ -102,7 +102,7 @@ impl DeclaredSession {
 }
 
 #[test]
-fn wire_library_runs_in_a_fresh_declared_session() -> Result<(), Box<dyn std::error::Error>> {
+fn runs_in_a_fresh_declared_session() -> Result<(), Box<dyn std::error::Error>> {
     let mut session = DeclaredSession::start()?;
     session.link()?;
     let split = session.submit(SPLIT)?;
@@ -128,7 +128,7 @@ fn wire_library_runs_in_a_fresh_declared_session() -> Result<(), Box<dyn std::er
 }
 
 #[test]
-fn wire_split_refusal_is_the_session_cumulative_budget() -> Result<(), Box<dyn std::error::Error>> {
+fn split_refusal_is_the_session_cumulative_budget() -> Result<(), Box<dyn std::error::Error>> {
     let mut session = DeclaredSession::start()?;
     session.link()?;
     // 254 of the 256 session identities are consumed before the probes.

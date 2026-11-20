@@ -5,11 +5,12 @@
     tigerstyle::compound_assertion,
     tigerstyle::excessive_file_length,
     tigerstyle::function_length,
+    tigerstyle::module_file_count,
     tigerstyle::no_unwrap,
     tigerstyle::non_trait_imports,
     tigerstyle::numeric_units,
     tigerstyle::raw_arithmetic_overflow,
-    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form. Its per-topic modules (wire@1 joins bindings, cases, named, origin, signatures, sizechange) are one test target by design: a new target would change the fixed architecture-unit capacity."
 )]
 #[path = "declared/bindings.rs"]
 mod bindings;
