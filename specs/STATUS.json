@@ -1138,6 +1138,7 @@
     "result_library_receipt": "../verification/result-library/acceptance.json",
     "managed_memory_layout_case": "ADAPT-17",
     "pure_fork_join_case": "ADAPT-18",
+    "pure_fork_join_disposition": "deferred-unexecuted-by-owner-decision-2026-11-20",
     "unexecuted_cases": [
       "CONTRACT-16",
       "ADAPT-18"

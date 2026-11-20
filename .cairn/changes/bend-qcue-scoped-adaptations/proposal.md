@@ -27,9 +27,13 @@ and owner release and remaining optional trials are still open.
   not a proof or a new Noble language profile. r[DX-PROPERTY-02]
 
 The native requirement deltas and their scenario designs are already applied.
-CONTRACT-16, ADAPT-17 and ADAPT-18 remain `absent`/`not-run`. DX-13's optional
+CONTRACT-16 remains `absent`/`not-run`. ADAPT-17 executed and passed with a
+frozen NO-GO layout result; ADAPT-18 is deferred and unexecuted by owner
+decision (2026-11-20). DX-13's optional
 methodology review passed with a separate pinned-source review receipt, but no
-Noble finite oracle executed and the owner law remains absent. DX-04 separately
+Noble finite oracle executed. The owner-law records for CONTRACT-16 were frozen
+on the owner's instruction on 2026-11-20 (`verification/owner-law/laws/`), before
+any consumer or candidate edit; no consumer has run yet. DX-04 separately
 passed its selected source-bound Result library gate. This active record
 preserves the remaining gates without making optional studies M3/M6/MC2
 dependencies or treating review as model agreement, proof or release.

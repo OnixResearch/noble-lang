@@ -68,6 +68,10 @@ against the then-current canonical text rather than reapply this snapshot.
   DX-04 Result-error prerequisites, independent pure admissibility, exact
   precharged bounds, and deterministic settlement are available. It cannot
   reuse M6 task ownership or count unsettled work as retired.
+  **Disposition (owner decision, 2026-11-20): deferred and unexecuted.**
+  DX-04 has since passed; no fork/join construct or branch-schema gate exists.
+  ADAPT-18 stays `absent`/`not-run` until an owner selects it after those
+  gates exist.
 
 None of these conditional experiments changes existing milestone dependency
 edges. A selected slice needs real tests, source-bound extraction/refinement
@@ -97,5 +101,7 @@ from the Declared-Modules-v1 source-bound case records
 (`sha256:e1098bfb81f9d05d4d648705235f31505218a4d789571ba342b9c5209a68ad65`,
 `verification/declared-modules-v1/acceptance.json`). That historical refresh
 promoted none. The separately recorded DX-13 methodology review is now passed;
-CONTRACT-16, ADAPT-17 and ADAPT-18 remain `absent`/`not-run`. The review has
-not executed a Noble oracle.
+at that refresh CONTRACT-16, ADAPT-17 and ADAPT-18 were `absent`/`not-run`.
+ADAPT-17 has since executed and passed with a frozen NO-GO result
+(`verification/adapt17/receipts/2026-11-13-full.json`); ADAPT-18 is deferred
+(above). The review has not executed a Noble oracle.
