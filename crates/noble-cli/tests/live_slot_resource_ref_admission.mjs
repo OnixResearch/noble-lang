@@ -12,8 +12,9 @@ assert.deepEqual(chosen.input.slot_contract, {
 assert.equal(chosen.input.current_epoch, 4);
 const variants = chosen.input.variants;
 assert.deepEqual(variants.map(row => row.name), [
-  'same-exact-interface', 'reversed-input',
-], 'decision-19 amendment: only the constructible variants remain');
+  'same-exact-interface', 'reversed-input', 'same-layout-different-resource-schema',
+  'unknown-host-contract', 'generic-caller-underdeclares-dispatch',
+], 'decision-19 amendment: only the unselectable fs.write variant is dropped');
 const base = { source: '"admit" test.emit drop', inputs: chosen.input.slot_contract.input };
 const candidates = {
   'same-exact-interface': base,
@@ -98,15 +99,13 @@ for (const variant of variants) {
       assert.ok(positive.handle > 0);
     }
     const status = name === 'same-exact-interface' ||
-      name === 'reversed-input'
+      ['reversed-input', 'same-layout-different-resource-schema'].includes(name)
         && installed.outcome === 'installed' && publication?.outcome === 'refused'
       ? 'pass' : 'partial';
     results.push({ name, status, installed: installed.outcome,
       publication: publication?.outcome ?? 'not-reached', epoch_before: '4',
       epoch_after: name === 'same-exact-interface' ? '5 (candidate)' : '5 (independent exact control)',
-      limitation: name === 'same-layout-different-resource-schema'
-        ? 'Account@2 cannot be converted to the canonical Account@1 output by checked source; input AND output differ'
-        : name === 'effect-ceiling-widened' || name === 'unknown-host-contract'
+      limitation: name === 'effect-ceiling-widened' || name === 'unknown-host-contract'
           ? 'fs.write/unknown.effect cannot be registered in the pinned live-slot CLI profile; source rejected before publication'
           : name === 'generic-caller-underdeclares-dispatch'
             ? 'compiled caller reflects live.dispatch, but source has no caller-claimed-effect override and adds a LiveRef input'

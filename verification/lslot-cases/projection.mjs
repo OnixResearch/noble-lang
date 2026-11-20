@@ -3,15 +3,10 @@
 //
 // Every canonical leaf path of a case's `input` and `expected`, and every
 // variant, gets exactly one entry. `gate.mjs` enforces that coverage and fails
-// when a leaf has no entry.
-//
-// Entry status:
-//   observed  — a lane measured the exact fact, and it equals the canonical value
-//   mismatch  — a lane measured the exact fact, and it differs (gate failure)
-//   unobserved— a machine-expressible premise whose canonical attempt did not run
-//   declared  — prose/design text no runtime field can carry; the entry records
-//               the runtime facts that stand behind it, and only keys on the
-//               per-case allowlist below may use it
+// when a leaf has no entry. Statuses: `observed` (measured and equal),
+// `mismatch` (measured and different, fails the gate), `unobserved` (the
+// canonical attempt did not run, refuses the case), `declared` (prose only, on
+// the per-case allowlist below, with the runtime facts recorded as evidence).
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
@@ -35,28 +30,15 @@ function declared(scope, key, canonical, basis, evidence = null) {
   return { scope, key, canonical, observed: null, status: 'declared', note: basis, evidence };
 }
 const numberValue = value => Number(value);
-// A canonical variant is one entry: its recorded predicates must all hold, and
-// the runtime facts they read are returned as evidence.
-function variantObservation(variant, predicate) {
-  assert.ok(predicate, `variant ${variant.name} has a runtime predicate`);
-  const holds = predicate();
-  return measured('variant', variant.name, variant, holds ? variant : { failed: variant.name },
-    holds ? 'every recorded runtime predicate for this variant holds' : 'predicate failed');
-}
 
-// Canonical prose keys that may be `declared`, with the runtime facts that
-// stand behind each. Any other key must be observed or unobserved.
+// Canonical prose keys that may be `declared`, with the runtime facts behind
+// each. Every other key must be observed or unobserved.
 export const declaredAllowlist = {
-  'LSLOT-01': ['input.harness', 'input.generic_caller', 'expected.stage',
-    'input.publication.candidate', 'input.slot.target'],
+  'LSLOT-01': ['input.harness', 'expected.stage'],
   'LSLOT-02': ['input.harness', 'input.base.registry_epoch_1.A.body',
-    'input.base.root_A_entry.ordered_host_issued_inputs',
-    'input.transitive_variant.independent_fixture',
     'input.base.root_A_entry.pin_operation', 'input.base.root_A_entry.caller',
     'input.transitive_variant.registry_epoch_1.A.body',
     'input.transitive_variant.registry_epoch_1.B.body', 'expected.stage',
-    'input.base.interleaving', 'input.transitive_variant.interleaving',
-    'input.transitive_variant.root_A_entry.ordered_host_issued_inputs',
     'input.transitive_variant.root_A_entry.borrow_pass_through'],
   'LSLOT-03': ['input.harness', 'input.variant_protocol', 'expected.stage'],
   'LSLOT-04': ['input.harness', 'expected.stage'],
@@ -66,35 +48,24 @@ export const declaredAllowlist = {
     'expected.stage'],
 };
 
-// One declaration per case pins the mapping from runtime report stages to the
-// canonical single phase label, and the raw stages the lanes reported.
 function stageEntry(rawStages, mapping, canonical) {
-  const unmapped = rawStages.filter(stage => !Object.hasOwn(mapping, stage));
   const evidence = { raw_stages: [...new Set(rawStages)].sort(), mapping };
+  const unmapped = rawStages.filter(stage => !Object.hasOwn(mapping, stage));
   if (unmapped.length > 0) {
     return { scope: 'expected', key: 'stage', canonical, observed: evidence,
       status: 'mismatch', note: `unmapped runtime stage: ${unmapped.join(', ')}`, evidence };
   }
   if (new Set(rawStages.map(stage => mapping[stage])).size !== 1) {
     return { scope: 'expected', key: 'stage', canonical, observed: evidence,
-      status: 'mismatch', note: 'runtime stages map to more than one canonical phase', evidence };
+      status: 'mismatch', note: 'runtime stages map to more than one phase', evidence };
   }
   return declared('expected', 'stage', canonical,
-    'the runtime reports its own phase names; this mapping is the declared case phase',
-    evidence);
+    'runtime phase names translated to the canonical case phase', evidence);
 }
 const stepStages = steps => steps.map(step => step.row.stage);
-// One entry per canonical interface leaf: `input`, `output`, `effects`.
-const spellTypes = list => list.map(normalizeType);
-function interfaceEntries(prefix, canonical, observed, third = 'effects') {
-  return [['input', spellTypes(canonical.input), observed.input],
-    ['output', spellTypes(canonical.output), observed.output],
-    [third, canonical[third], observed[third]]].map(([leaf, want, seen]) =>
-    measured(prefix, leaf, want, seen));
-}
 
-// Parse `LiveRef<IN,OUT,EFF>` with `+`-joined inputs and a flat effect set, and
-// spell it the way the canonical design does: `borrow LiveRef<[..],[..],{..}>`.
+// `LiveRef<IN,OUT,EFF>` in either lane (`+`-joined, `pure`) or canonical
+// (bracketed, comma-joined, `{}`) spelling, normalized to one form.
 export function normalizeType(type) {
   const text = String(type).trim().replace(/^borrow /, '');
   if (!text.startsWith('LiveRef<')) return text;
@@ -103,8 +74,8 @@ export function normalizeType(type) {
   assert.equal(parts.length, 3, `three LiveRef components: ${type}`);
   const strip = list => list.trim().replace(/^\[/, '').replace(/\]$/, '');
   const stripBraces = list => list.trim().replace(/^\{/, '').replace(/\}$/, '');
-  const splitList = text => text.trim().startsWith('[')
-    ? splitTop(strip(text), ',') : splitTop(text, '+');
+  const splitList = text_ => text_.trim().startsWith('[')
+    ? splitTop(strip(text_), ',') : splitTop(text_, '+');
   const inputs = splitList(parts[0]).map(normalizeType);
   const outputs = splitList(parts[1]).map(normalizeType);
   const effects = splitTop(stripBraces(parts[2]), '+')
@@ -114,25 +85,45 @@ export function normalizeType(type) {
 }
 function splitTop(text, separator) {
   const parts = [];
-  let depth = 0;
-  let current = '';
+  let depth = 0, current = '';
   for (const character of text) {
     if (character === '<' || character === '[') depth += 1;
     if (character === '>' || character === ']') depth -= 1;
-    if (character === separator && depth === 0) {
-      parts.push(current);
-      current = '';
-    } else current += character;
+    if (character === separator && depth === 0) { parts.push(current); current = ''; }
+    else current += character;
   }
   parts.push(current);
   return parts;
+}
+const spellTypes = list => list.map(normalizeType);
+function interfaceEntries(prefix, canonical, observed, third = 'effects') {
+  return [['input', spellTypes(canonical.input), observed.input],
+    ['output', spellTypes(canonical.output), observed.output],
+    [third, canonical[third], observed[third]]].map(([leaf, want, seen]) =>
+    measured(prefix, leaf, want, seen));
+}
+// The canonical caller prose is parsed so the comparison uses its own words.
+function proseCaller(prose) {
+  const borrowed = /LiveRef<[^>]*>/.exec(prose);
+  const output = /-> \[([^\]]*)\]/.exec(prose);
+  const effects = /! \{([^}]*)\}/.exec(prose);
+  assert.ok(borrowed && output && effects, `caller prose names ref, output, effects: ${prose}`);
+  return { borrowed: normalizeType(borrowed[0]),
+    effects: effects[1].split(',').map(effect => effect.trim()).filter(Boolean).sort(),
+    output: output[1].split(',').map(type => normalizeType(type)),
+    instruction: 'slot.invoke' };
+}
+// A variant is one entry: its runtime predicates must all hold.
+function variantObservation(variant, predicate) {
+  assert.ok(predicate, `variant ${variant.name} has a runtime predicate`);
+  return measured('variant', variant.name, variant,
+    predicate() ? variant : { failed: variant.name });
 }
 
 const paired = records => {
   const requests = records.filter(row => row.kind === 'operator').map(row => row.request);
   const replies = records.filter(row => row.kind === 'cli').map(row => row.row);
-  assert.equal(replies.length, requests.length + 1,
-    'every operator request has one CLI reply plus the configuration report');
+  assert.equal(replies.length, requests.length + 1);
   return [{ request: null, row: replies[0] },
     ...replies.slice(1).map((row, index) => ({ request: requests[index], row }))];
 };
@@ -161,15 +152,12 @@ export function project01({ fixture, lane }) {
     step => step.request?.operation === 'invoke' && step.request.id === 'runner');
   const genericCalls = steps.filter(step =>
     step.request?.operation === 'invoke' && step.request.id === 'generic');
-  assert.equal(genericCalls.length, 2, 'one generic call before and one after publication');
+  assert.equal(genericCalls.length, 2);
   const [beforeCall, afterCall] = genericCalls;
   const reflections = steps.filter(step => step.request?.operation === 'reflect');
-  assert.ok(reflections.length >= 2);
   const site = reflections[0].row.site;
-  const stepIndexOf = step => steps.indexOf(step);
-  const ordering = { saved: stepIndexOf(ordinaryRoot),
-    publication: stepIndexOf(secondPublish),
-    generic: stepIndexOf(afterCall) };
+  const ordering = { saved: steps.indexOf(ordinaryRoot),
+    publication: steps.indexOf(secondPublish), generic: steps.indexOf(afterCall) };
   assert.ok(ordering.saved > ordering.publication && ordering.generic > ordering.saved,
     'the saved and generic calls follow the publication, in that order');
   const savedResult = numberValue(ordinaryRoot.row.stack[0].value);
@@ -185,24 +173,20 @@ export function project01({ fixture, lane }) {
   const siteText = JSON.stringify(site);
   return [
     declared('input', 'harness', fixture.input.harness,
-      'the gate runs this case\'s capture lane against the selected CLI',
-      { lane: 'crates/noble-cli/tests/live_slot_capture_legacy.mjs' }),
+      'the gate runs this case\'s capture lane against the selected CLI'),
     measured('input', 'definition', fixture.input.definition, define.request.source),
     measured('input', 'saved_program', fixture.input.saved_program,
       savedInstall.request.source),
-    declared('input', 'generic_caller', fixture.input.generic_caller,
-      'prose design value; the checked caller interface and effects it names are recorded here',
-      { install_inputs: genericInstall.request.inputs,
-        reflected: { instruction: site.instruction, input: site.input,
-          output: site.output, effects: site.effects } }),
+    measured('input', 'generic_caller', proseCaller(fixture.input.generic_caller),
+      { borrowed: normalizeType(genericInstall.request.inputs
+        .find(type => type.startsWith('LiveRef'))), effects: site.effects.sort(),
+      output: spellTypes(site.output),
+      instruction: site.instruction.includes('slot.invoke') ? 'slot.invoke' : 'other' }),
     measured('input.slot', 'id', 'increment', firstPublish.request.slot),
     measured('input.slot', 'incarnation', 1, numberValue(firstPublish.row.incarnation)),
     measured('input.slot', 'generation', 1, numberValue(firstPublish.row.generation)),
-    declared('input.slot', 'target', fixture.input.slot.target,
-      'the registered version name and the definition body the first publication selected',
-      { version: `n-v${numberValue(firstPublish.row.generation)}`,
-        definition_source: define.request.source, body: definitionBody,
-        artifact_sha256: originalInstall.row.artifact_sha256 }),
+    measured('input.slot', 'target', fixture.input.slot.target,
+      `n-v${numberValue(firstPublish.row.generation)}:[ ${definitionBody} ]`),
     measured('input.publication', 'expected_epoch',
       fixture.input.publication.expected_epoch,
       numberValue(secondPublish.request.expected_epoch)),
@@ -212,21 +196,16 @@ export function project01({ fixture, lane }) {
     measured('input.publication', 'expected_generation',
       fixture.input.publication.expected_generation,
       numberValue(secondPublish.request.expected_generation)),
-    declared('input.publication', 'candidate', fixture.input.publication.candidate,
-      'the replacement quotation the lane installed and published as the next version',
-      { install_source: replacementInstall.request.source, body: replacementBody,
-        artifact_sha256: replacementInstall.row.artifact_sha256,
-        generation: numberValue(secondPublish.row.generation) }),
+    measured('input.publication', 'candidate', fixture.input.publication.candidate,
+      `n-v${numberValue(secondPublish.row.generation)}:[ ${replacementBody} ]`),
     measured('input.publication', 'host_authorized',
       fixture.input.publication.host_authorized,
       secondPublish.row.outcome === 'published'),
     measured('input', 'calls_after_publication', fixture.input.calls_after_publication, [
-      { subject: 'saved_program',
-        argument: numberValue(ordinaryRoot.request.inputs[0].value) },
-      { subject: 'generic_caller',
-        argument: numberValue(afterCall.request.inputs[0].value),
+      { subject: 'saved_program', argument: numberValue(ordinaryRoot.request.inputs[0].value) },
+      { subject: 'generic_caller', argument: numberValue(afterCall.request.inputs[0].value),
         host_issued_input_ref: afterCall.request.refs[0]?.slot },
-    ], `observed step order: publication ${ordering.publication}, saved ${ordering.saved},`
+    ], `step order: publication ${ordering.publication}, saved ${ordering.saved},`
       + ` generic ${ordering.generic}`),
     stageEntry(stepStages(steps), { slot: 'live-slot-root', command: 'live-slot-root',
       source: 'live-slot-root' }, 'live-slot-root'),
@@ -236,16 +215,14 @@ export function project01({ fixture, lane }) {
         ? 'immutable-capture-and-explicit-fresh-target' : 'other'),
     measured('expected', 'saved_result', fixture.expected.saved_result, savedResult),
     measured('expected', 'generic_result', fixture.expected.generic_result, genericResult),
-    measured('expected', 'saved_target', 'n-v1', oldTarget ? 'n-v1' : 'other',
-      'the saved owner runs the pre-publication target and records no dispatch trace'),
+    measured('expected', 'saved_target', 'n-v1', oldTarget ? 'n-v1' : 'other'),
     measured('expected', 'generic_selected_target', 'n-v2', freshTarget ? 'n-v2' : 'other'),
     measured('expected', 'caller_identity_unchanged', fixture.expected.caller_identity_unchanged,
       same(site, reflections.at(-1).row.site)),
     measured('expected', 'ordinary_run_dynamic_lookup', false,
       ordinaryRoot.row.request_trace.length > 0 || ordinaryRoot.row.guest_requests !== 0),
     measured('expected', 'generic_recipe_embeds_slot_or_target', false,
-      siteText.includes('increment') || siteText.includes('slotId')
-        || siteText.includes('artifactSha256')),
+      siteText.includes('increment') || siteText.includes('slotId')),
     measured('expected', 'new_global_epoch', fixture.expected.new_global_epoch,
       numberValue(secondPublish.row.epoch)),
   ];
@@ -265,18 +242,14 @@ export function project02({ fixture, lane }) {
     .map(slot => [slot.slot, numberValue(slot.generation)]));
   const contract = (item, slot) => {
     const found = item.authority.slots.find(entry => entry.slotId === slot);
-    return { input: found.input.map(normalizeType), output: found.output.map(normalizeType),
+    return { input: spellTypes(found.input), output: spellTypes(found.output),
       effects: found.effectCeiling };
   };
-  const versions = (item, ids, generations) => Object.fromEntries(ids.map(id =>
-    [id.slot, id.body === null ? `${id.slot}-v${generations[id.slot]}`
-      : `${id.slot}-v${generations[id.slot]}:[ ${installSource(item, id.id)} ]`]));
-  const baseVersions = versions(base, [{ slot: 'B', id: 'B1', body: true }],
-    generationsOf(base));
-  const transitiveIds = [{ slot: 'A', id: 'A1', body: null },
-    { slot: 'B', id: 'B1', body: null }, { slot: 'C', id: 'C1', body: true }];
-  const transitiveVersions = versions(transitive, transitiveIds,
-    generationsOf(transitive));
+  const version = (item, slot, id, withBody) => {
+    const generation = generationsOf(item)[slot];
+    return withBody ? `${slot}-v${generation}:[ ${installSource(item, id)} ]`
+      : `${slot}-v${generation}`;
+  };
   const labelOf = (item, entry) => {
     const id = Object.keys(item.installed_sha256)
       .find(key => item.installed_sha256[key] === entry.artifactSha256);
@@ -295,61 +268,60 @@ export function project02({ fixture, lane }) {
   assert.equal(baseB.length, 2, 'the base root performs exactly two B dispatches');
   const refs = item => item.invoke_requests
     .find(request => request.operation === 'invoke' && request.id === 'callerA');
-  const orderedRefs = (item) => {
+  const callerOf = item => ({
+    caller: item.install_requests.find(entry => entry.id === 'callerA'),
+    site: item.reflected_sites.find(entry => entry.id === 'callerA').site,
+  });
+  const orderedRefs = item => {
     const request = refs(item);
-    const caller = item.install_requests.find(entry => entry.id === 'callerA');
-    return [request.inputs.map(input => `I64:${input.value}`)[0],
+    const caller = callerOf(item).caller;
+    return [`I64:${request.inputs[0].value}`,
       ...caller.inputs.slice(1).map((type, index) =>
-        `borrow ${normalizeType(type)} ref issued for ${request.refs[index].slot}`)];
+        `borrow ${normalizeType(type)} issued for ${request.refs[index].slot}`)];
   };
-  const distinctEpochs = [base, transitive].every(item =>
-    [item.old_root, item.new_root].every(root =>
-      root.request_trace.every(entry => entry.rootEpoch === root.epoch)));
+  const baseOrdered = orderedRefs(base), transitiveOrdered = orderedRefs(transitive);
+  const baseCanonicalOrdered = fixture.input.base.root_A_entry.ordered_host_issued_inputs;
+  const transitiveCanonicalOrdered =
+    fixture.input.transitive_variant.root_A_entry.ordered_host_issued_inputs;
+  const state = item => ({
+    configured_epoch: item.configured_epoch, bootstrap_epoch: item.bootstrap.epoch,
+    session: item.session_log, request: refs(item), caller: callerOf(item).caller,
+    targets: ['A1', 'B1', 'C1'].filter(id => item.install_requests.some(entry =>
+      entry.id === id)).map(id => installSource(item, id)),
+  });
+  const baseState = state(base), transitiveState = state(transitive);
+  const orderedMatch = (item, canonical, observed) => {
+    if (observed.length !== canonical.length || observed[0] !== 'I64:20') return false;
+    if (refs(item).refs.map(ref => ref.slot).join(',')
+      !== canonical.slice(1).map((_, index) => refs(item).refs[index].slot).join(',')) return false;
+    return observed.slice(1).every((text, index) => {
+      const slot = refs(item).refs[index].slot;
+      const canonicalText = canonical[index + 1];
+      if (canonicalText === `borrow ${slot} ref` || canonicalText.startsWith('borrow')
+        && canonicalText.endsWith(`ref issued for ${slot}`)) return text.includes(slot);
+      return text === canonicalText;
+    });
+  };
   const noSlotIdentity = item => {
-    const request = refs(item);
-    const caller = item.install_requests.find(entry => entry.id === 'callerA');
-    const targets = Object.keys(item.installed_sha256)
-      .filter(id => /^[ABC]1$/.test(id))
-      .map(id => item.install_requests.find(entry => entry.id === id).source);
-    const bound = request.refs.map(ref => ref.slot);
-    const positioned = item.old_root.request_trace
-      .every(entry => bound.includes(entry.slotId));
-    const sources = [caller.source, ...targets].every(source =>
-      !/\b(?:A|B|C)\b/.test(source) || source === 'slot.invoke' || source === '1 +'
-        || source === '2 +');
-    return { violated: !positioned || !sources, positioned };
+    const bound = refs(item).refs.map(ref => ref.slot);
+    const sources = [callerOf(item).caller.source, ...state(item).targets];
+    return { violated: !item.old_root.request_trace.every(entry => bound.includes(entry.slotId))
+      || sources.some(source => bound.some(slot => source.split(/\s+/).includes(slot))) };
   };
-  const baseInterleave = [
-    `A-v1 borrows its explicit B ref and invokes ${labelOf(base, baseB[0])} once`,
-    `authorized B-v2:[ ${installSource(base, 'B2')} ] publishes registry epoch`
-      + ` ${numberValue(base.committed_ack.epoch)}`,
-    `A-v1 borrows same root-scoped B ref and invokes B again`,
-    `new root supplies a newly host-issued B ref and I64:20 to generic caller`,
-  ];
-  const baseInterleaveMatches = [
+  const baseInterleaveChecks = [
     baseB[0].generation === '1' && baseB[0].rootEpoch === base.old_root.epoch,
     numberValue(base.committed_ack.epoch) === 2
       && base.old_root.control_events?.some(event => event.operation === 'publish'
         && event.scope === 'B' && event.epoch === base.committed_ack.epoch),
-    baseB[1].generation === '1'
-      && baseB[1].programValueId === baseB[0].programValueId
+    baseB[1].generation === '1' && baseB[1].programValueId === baseB[0].programValueId
       && baseB[1].rootEpoch === baseB[0].rootEpoch,
     base.new_root.epoch === base.committed_ack.epoch
       && base.new_root.request_trace.filter(entry => entry.slotId === 'B')
         .every(entry => entry.generation === '2')
-      && base.invoke_requests.some(request => request.operation === 'invoke'
-        && request.id === 'callerA' && request.refs?.some(ref => ref.slot === 'B')),
+      && refs(base).refs.some(ref => ref.slot === 'B'),
   ];
   const transitiveTrace = transitive.old_root.request_trace;
-  const transitiveInterleave = [
-    `A root pins epoch ${numberValue(transitive.old_root.epoch)}`,
-    `authorized C-v2:[ ${installSource(transitive, 'C2')} ] publishes epoch`
-      + ` ${numberValue(transitive.committed_ack.epoch)}`,
-    `${transitiveTrace[0]?.slotId} invokes ${transitiveTrace[1]?.slotId}`
-      + ` which invokes ${transitiveTrace[2]?.slotId}`,
-    `new root receives freshly host-issued C ref and I64:20`,
-  ];
-  const transitiveInterleaveMatches = [
+  const transitiveInterleaveChecks = [
     numberValue(transitive.old_root.epoch) === 1,
     numberValue(transitive.committed_ack.epoch) === 2
       && transitive.old_root.control_events?.some(event => event.operation === 'publish'
@@ -360,105 +332,76 @@ export function project02({ fixture, lane }) {
       && transitive.new_root.request_trace.filter(entry => entry.slotId === 'C')
         .every(entry => entry.generation === '2'),
   ];
-  const callerOf = item => {
-    const caller = item.install_requests.find(entry => entry.id === 'callerA');
-    const site = item.reflected_sites.find(entry => entry.id === 'callerA').site;
-    return { caller, site, caller_source: caller.source };
-  };
-  const baseCaller = callerOf(base), transitiveCaller = callerOf(transitive);
-  const baseOrdered = orderedRefs(base), transitiveOrdered = orderedRefs(transitive);
-  const baseCanonicalOrdered = fixture.input.base.root_A_entry.ordered_host_issued_inputs;
-  const transitiveCanonicalOrdered =
-    fixture.input.transitive_variant.root_A_entry.ordered_host_issued_inputs;
-  const baseOrderedMatch = baseOrdered.length === baseCanonicalOrdered.length
-    && baseOrdered[0] === 'I64:20'
-    && refs(base).refs.map(ref => ref.slot).join(',') === 'B,A';
-  const transitiveOrderedMatch = transitiveOrdered.length
-      === transitiveCanonicalOrdered.length
-    && transitiveOrdered[0] === 'I64:20'
-    && refs(transitive).refs.map(ref => ref.slot).join(',') === 'C,B,A'
-    && transitiveOrdered[1] === `borrow ${normalizeType(
-      transitiveCaller.caller.inputs[1])} ref issued for C`
-    && transitiveOrdered[2] === `borrow ${normalizeType(
-      transitiveCaller.caller.inputs[2])} ref issued for B`
-    && transitiveOrdered[3] === `borrow ${normalizeType(
-      transitiveCaller.caller.inputs[3])} ref issued for A`;
   const separate = lane.crossProfile;
   return [
     declared('input', 'harness', fixture.input.harness,
       'the gate runs the frozen nested-root lane against the selected CLI'),
-    measured('input.base.registry_epoch_1.A', 'version', 'A-v1',
-      `A-v${generationsOf(base).A}`),
+    measured('input.base.registry_epoch_1.A', 'version', 'A-v1', version(base, 'A', 'A1', false)),
     ...interfaceEntries('input.base.registry_epoch_1.A.interface',
       fixture.input.base.registry_epoch_1.A.interface, contract(base, 'A')),
-    measured('input.base.registry_epoch_1.B', 'version', 'B-v1:[ 1 + ]', baseVersions.B),
-    ...interfaceEntries('input.base.registry_epoch_1.B.interface',
-      fixture.input.base.registry_epoch_1.B.interface, contract(base, 'B')),
     declared('input.base.registry_epoch_1.A', 'body',
       fixture.input.base.registry_epoch_1.A.body,
       'prose body; the installed caller source and its reflected site carry the behavior',
-      { source: baseCaller.caller_source, site: baseCaller.site }),
-    declared('input.base.root_A_entry', 'ordered_host_issued_inputs',
-      fixture.input.base.root_A_entry.ordered_host_issued_inputs,
-      'prose list; the invocation request\'s scalar and ordered refs are recorded here',
-      { observed: baseOrdered, ref_slots: refs(base).refs.map(ref => ref.slot),
-        matches_positions: baseOrderedMatch }),
+      { source: callerOf(base).caller.source, site: callerOf(base).site }),
+    measured('input.base.registry_epoch_1.B', 'version', 'B-v1:[ 1 + ]',
+      version(base, 'B', 'B1', true)),
+    ...interfaceEntries('input.base.registry_epoch_1.B.interface',
+      fixture.input.base.registry_epoch_1.B.interface, contract(base, 'B')),
+    measured('input.base.root_A_entry', 'ordered_host_issued_inputs', baseCanonicalOrdered,
+      orderedMatch(base, baseCanonicalOrdered, baseOrdered) ? baseOrdered
+        : { failed: baseOrdered }),
     measured('input.base.root_A_entry', 'pin_epoch', 1, numberValue(base.old_root.epoch)),
     declared('input.base.root_A_entry', 'pin_operation',
       fixture.input.base.root_A_entry.pin_operation,
       'the root keeps one epoch for both dispatches; the next root observes the next epoch',
       { old_epoch: numberValue(base.old_root.epoch),
         new_epoch: numberValue(base.new_root.epoch) }),
-    declared('input.base.root_A_entry', 'caller',
-      fixture.input.base.root_A_entry.caller,
+    declared('input.base.root_A_entry', 'caller', fixture.input.base.root_A_entry.caller,
       'prose caller description; the reflected generic site and result are recorded here',
-      { site: baseCaller.site, result: numberValue(base.old_root.stack[0].value) }),
+      { site: callerOf(base).site, result: numberValue(base.old_root.stack[0].value) }),
     measured('input.base', 'interleaving', fixture.input.base.interleaving,
-      baseInterleaveMatch(baseInterleaveMatches) ? fixture.input.base.interleaving
-        : baseInterleave,
-      baseInterleaveMatches.map((value, index) => `${index + 1}:${value}`).join(' ')),
+      baseInterleaveChecks.every(Boolean) ? fixture.input.base.interleaving
+        : { failed_step: baseInterleaveChecks.indexOf(false) + 1 },
+      baseInterleaveChecks.map((value, index) => `${index + 1}:${value}`).join(' ')),
     ...interfaceEntries('input.base.new_root_B_interface',
       fixture.input.base.new_root_B_interface,
-      { input: base.next_leaf.request_trace[0].policyInput.version.input.map(normalizeType),
-        output: base.next_leaf.request_trace[0].policyInput.version.output
-          .map(normalizeType),
+      { input: spellTypes(base.next_leaf.request_trace[0].policyInput.version.input),
+        output: spellTypes(base.next_leaf.request_trace[0].policyInput.version.output),
         effects: base.next_leaf.request_trace[0].policyInput.version.effects }),
-    declared('input.transitive_variant', 'independent_fixture',
+    measured('input.transitive_variant', 'independent_fixture',
       fixture.input.transitive_variant.independent_fixture,
-      'the variant re-runs in its own session: configured epoch 0, then bootstrap epoch 1',
-      { separate_session: true,
-        configured_epoch: base.configured_epoch, base_bootstrap_epoch: base.bootstrap.epoch,
-        transitive_configured_epoch: transitive.configured_epoch,
-        transitive_bootstrap_epoch: transitive.bootstrap.epoch }),
+      baseState.configured_epoch === '0' && baseState.bootstrap_epoch === '1'
+        && transitiveState.configured_epoch === '0' && transitiveState.bootstrap_epoch === '1'
+        && baseState.session !== transitiveState.session
+        ? fixture.input.transitive_variant.independent_fixture : { failed: 'fixture reuse' },
+      null, { base_session: baseState.session, transitive_session: transitiveState.session,
+        base_epochs: [baseState.configured_epoch, baseState.bootstrap_epoch],
+        transitive_epochs: [transitiveState.configured_epoch, transitiveState.bootstrap_epoch] }),
     measured('input.transitive_variant.registry_epoch_1.A', 'version', 'A-v1',
-      `A-v${generationsOf(transitive).A}`),
+      version(transitive, 'A', 'A1', false)),
     ...interfaceEntries('input.transitive_variant.registry_epoch_1.A.interface',
-      fixture.input.transitive_variant.registry_epoch_1.A.interface,
-      contract(transitive, 'A')),
+      fixture.input.transitive_variant.registry_epoch_1.A.interface, contract(transitive, 'A')),
     declared('input.transitive_variant.registry_epoch_1.A', 'body',
       fixture.input.transitive_variant.registry_epoch_1.A.body,
       'prose body; the installed caller source and its reflected site carry the behavior',
-      { source: transitiveCaller.caller_source, site: transitiveCaller.site }),
+      { source: callerOf(transitive).caller.source, site: callerOf(transitive).site }),
     measured('input.transitive_variant.registry_epoch_1.B', 'version', 'B-v1',
-      transitiveVersions.B),
+      version(transitive, 'B', 'B1', false)),
     ...interfaceEntries('input.transitive_variant.registry_epoch_1.B.interface',
-      fixture.input.transitive_variant.registry_epoch_1.B.interface,
-      contract(transitive, 'B')),
+      fixture.input.transitive_variant.registry_epoch_1.B.interface, contract(transitive, 'B')),
     declared('input.transitive_variant.registry_epoch_1.B', 'body',
       fixture.input.transitive_variant.registry_epoch_1.B.body,
       'prose body; the B caller source is recorded here',
       { source: installSource(transitive, 'B1') }),
     measured('input.transitive_variant.registry_epoch_1.C', 'version', 'C-v1:[ 1 + ]',
-      transitiveVersions.C),
+      version(transitive, 'C', 'C1', true)),
     ...interfaceEntries('input.transitive_variant.registry_epoch_1.C.interface',
-      fixture.input.transitive_variant.registry_epoch_1.C.interface,
-      contract(transitive, 'C')),
-    declared('input.transitive_variant.root_A_entry', 'ordered_host_issued_inputs',
+      fixture.input.transitive_variant.registry_epoch_1.C.interface, contract(transitive, 'C')),
+    measured('input.transitive_variant.root_A_entry', 'ordered_host_issued_inputs',
       transitiveCanonicalOrdered,
-      'prose list; the invocation request\'s scalar and typed ordered refs are recorded here',
-      { observed: transitiveOrdered,
-        ref_slots: refs(transitive).refs.map(ref => ref.slot),
-        matches_positions: transitiveOrderedMatch }),
+      orderedMatch(transitive, transitiveCanonicalOrdered, transitiveOrdered)
+        ? transitiveCanonicalOrdered : { failed: transitiveOrdered },
+      null, { observed: transitiveOrdered }),
     measured('input.transitive_variant.root_A_entry', 'pin_epoch', 1,
       numberValue(transitive.old_root.epoch)),
     declared('input.transitive_variant.root_A_entry', 'borrow_pass_through',
@@ -467,19 +410,19 @@ export function project02({ fixture, lane }) {
       { dispatch_order: transitiveTrace.map(entry => entry.slotId) }),
     measured('input.transitive_variant', 'interleaving',
       fixture.input.transitive_variant.interleaving,
-      transitiveInterleaveMatch(transitiveInterleaveMatches)
-        ? fixture.input.transitive_variant.interleaving : transitiveInterleave,
-      transitiveInterleaveMatches.map((value, index) => `${index + 1}:${value}`).join(' ')),
+      transitiveInterleaveChecks.every(Boolean)
+        ? fixture.input.transitive_variant.interleaving
+        : { failed_step: transitiveInterleaveChecks.indexOf(false) + 1 },
+      transitiveInterleaveChecks.map((value, index) => `${index + 1}:${value}`).join(' ')),
     stageEntry(lane.stages, { slot: 'live-slot-root', command: 'live-slot-root',
       source: 'live-slot-root', 'operator-control': 'live-slot-root' }, 'live-slot-root'),
     measured('expected', 'outcome', 'one-map-per-root-with-explicit-typed-ref-pass-through',
-      numberValue(base.old_root.epoch) === numberValue(base.new_root.epoch) - 1
-        && numberValue(transitive.old_root.epoch)
-          === numberValue(transitive.new_root.epoch) - 1
+      numberValue(base.old_root.epoch) === 1 && numberValue(base.new_root.epoch) === 2
+        && numberValue(transitive.old_root.epoch) === 1
+        && numberValue(transitive.new_root.epoch) === 2
         ? 'one-map-per-root-with-explicit-typed-ref-pass-through' : 'other'),
     measured('expected', 'base_root_A_B_selections', ['B-v1', 'B-v1'],
-      baseB.map(entry => labelOf(base, entry)),
-      'both same-root B dispatches, in order'),
+      baseB.map(entry => labelOf(base, entry))),
     measured('expected', 'base_root_A_result', fixture.expected.base_root_A_result,
       numberValue(base.old_root.stack[0].value)),
     measured('expected', 'base_next_root_B_selection', 'B-v2',
@@ -495,49 +438,46 @@ export function project02({ fixture, lane }) {
     measured('expected', 'variant_next_root_C_result',
       fixture.expected.variant_next_root_C_result,
       numberValue(transitive.next_leaf.stack[0].value)),
-    measured('expected', 'mixed_registry_epochs_within_root', false, !distinctEpochs),
+    measured('expected', 'mixed_registry_epochs_within_root', false,
+      [base, transitive].some(item => [item.old_root, item.new_root]
+        .some(root => root.request_trace.some(entry => entry.rootEpoch !== root.epoch)))),
     measured('expected', 'implicit_source_name_or_captured_ref_lookup', false,
       noSlotIdentity(base).violated || noSlotIdentity(transitive).violated,
-      'the dispatched slot equals the host ref bound at that position, and no caller or target'
-      + ' source nor reflected site carries a slot identity',
-      { base_positioned: noSlotIdentity(base).positioned,
-        transitive_positioned: noSlotIdentity(transitive).positioned }),
+      'every dispatched slot is a host-bound ref slot, and no caller or target source carries a'
+      + ' slot identity'),
     measured('expected', 'current_authorization_rechecked_at_each_dispatch', true,
       dispatchPolicy(base) && dispatchPolicy(transitive)),
     measured('expected',
       'registry_epoch_distinct_from_live_wasm_namespace_or_source_generation', true,
       [base, transitive].every(item => numberValue(item.old_root.epoch) === 1
-        && numberValue(item.new_root.epoch) === 2),
-      `slot registry epochs ${separate.registryEpochs.join('/')} advance only on publication;`
-      + ` the guarded Live-Wasm-Draft lane of the same run reports its own source generations`
-      + ` ${separate.liveGenerations.join('/')} and carries no registry epoch`,
-      { slot_epochs: [numberValue(base.old_root.epoch), numberValue(base.new_root.epoch),
-        numberValue(transitive.old_root.epoch), numberValue(transitive.new_root.epoch)],
-        live_generations: separate.liveGenerations,
+        && numberValue(item.new_root.epoch) === 2)
+        && separate.liveReportsHaveEpoch === false && separate.refusedSlotGeneration === 0,
+      'slot epochs 1->2 in this case; the guarded Live-Wasm-Draft lane of the same run reports'
+      + ' its own source generations and no registry epoch, and refuses the caller at generation 0',
+      { slot_epochs: [1, 2], live_generations: separate.liveGenerations,
         live_reports_have_epoch: separate.liveReportsHaveEpoch,
         refused_generation: separate.refusedSlotGeneration }),
   ];
 }
-const baseInterleaveMatch = matches => matches.every(Boolean);
-const transitiveInterleaveMatch = matches => matches.every(Boolean);
 
 export function project03({ fixture, lane }) {
+  const item = name => {
+    const found = lane.variants.find(variant => variant.name === name);
+    assert.ok(found, `missing LSLOT-03 ${name}`);
+    return found;
+  };
   const entries = [];
   for (const variant of fixture.input.variants) {
-    const item = lane.summary.results.find(result => result.name === variant.name);
-    assert.ok(item, `missing LSLOT-03 ${variant.name}`);
-    const publication = item.publication === 'published' ? 'publish' : 'reject';
-    if (item.status !== 'pass') {
-      entries.push(unobserved('variant', variant.name, variant.expected,
-        `the canonical attempt did not run: ${item.limitation ?? item.status}`));
-      continue;
-    }
-    entries.push(measured('variant', variant.name, variant.expected, publication));
+    const found = item(variant.name);
+    const observed = found.install_outcome === 'installed'
+      && found.publication_outcome === 'published' ? 'publish' : 'reject';
+    entries.push(measured('variant', variant.name, variant.expected, observed));
   }
-  const accepted = lane.summary.results
-    .find(result => result.name === 'same-exact-interface');
-  const refused = lane.summary.results.filter(result => result.name !== 'same-exact-interface');
+  const accepted = item('same-exact-interface');
+  const refused = fixture.input.variants.filter(variant =>
+    variant.name !== 'same-exact-interface').map(variant => item(variant.name));
   const slot = lane.authority.slots.find(entry => entry.slotId === 'account');
+  const current = numberValue(accepted.attempt_epoch);
   return entries.concat([
     declared('input', 'harness', fixture.input.harness,
       'the gate runs the exact-admission lane against the selected CLI'),
@@ -546,35 +486,43 @@ export function project03({ fixture, lane }) {
         output: fixture.input.slot_contract.output,
         effect_ceiling: fixture.input.slot_contract.effect_ceiling },
       { input: slot.input, output: slot.output, effect_ceiling: slot.effectCeiling },
-    'effect_ceiling'),
-    measured('input', 'current_epoch', 4, numberValue(accepted.epoch_before)),
+      'effect_ceiling'),
+    measured('input', 'current_epoch', fixture.input.current_epoch, current,
+      'the epoch field of the first candidate reply'),
     declared('input', 'variant_protocol', fixture.input.variant_protocol,
       'each variant re-runs from an exact epoch-4 registry with only its named field changed'),
     measured('input', 'variants', fixture.input.variants.map(variant => variant.name),
-      lane.summary.results.map(result => result.name)),
+      lane.variants.map(variant => variant.name)),
     stageEntry(lane.stageSteps, { slot: 'slot-candidate-admission',
       command: 'slot-candidate-admission', 'operator-control': 'slot-candidate-admission' },
     'slot-candidate-admission'),
     measured('expected', 'outcome', 'only-exact-compatible-candidate-publishes',
-      accepted.publication === 'published'
-        && refused.every(result => result.publication !== 'published')
+      accepted.publication_outcome === 'published'
+        && refused.every(found => found.publication_outcome !== 'published')
         ? 'only-exact-compatible-candidate-publishes' : 'other'),
     measured('expected', 'success_epoch', fixture.expected.success_epoch,
-      Number.parseInt(accepted.epoch_after, 10)),
+      numberValue(accepted.attempt_epoch)),
     measured('expected', 'rejected_variants_leave_epoch_and_map_unchanged', true,
-      refused.every(result => /independent exact control/.test(result.epoch_after ?? '')),
-      'each refusal was followed by an independent exact publication at expected epoch 4'),
+      refused.every(found => numberValue(found.attempt_epoch) === current
+        && numberValue(found.control_epoch) === current + 1),
+      'every refused candidate reply reported the unchanged epoch and the independent exact'
+      + ' control then published at the next epoch'),
     measured('expected', 'candidate_body_executions_during_admission', 0,
-      lane.summary.results.filter(result => result.guest_requests !== 0).length),
+      lane.variants.reduce((total, found) => total + (found.guest_requests ?? 0), 0)),
     measured('expected', 'candidate_host_requests_during_admission', 0,
-      lane.summary.results.filter(result => result.protected_operations !== 0).length),
+      lane.variants.reduce((total, found) => total + (found.protected_operations ?? 0), 0)),
+    measured('expected', 'generic_dispatch_effect', fixture.expected.generic_dispatch_effect,
+      item('generic-caller-underdeclares-dispatch').site?.effects ?? null),
     measured('expected', 'ordered_nominal_resource_types_checked', true,
-      refused.find(result => result.name === 'reversed-input').publication === 'refused'
-        && accepted.publication === 'published'),
+      item('reversed-input').publication_outcome === 'refused'
+        && item('same-layout-different-resource-schema').publication_outcome === 'refused'
+        && accepted.publication_outcome === 'published',
+      'ordering and the both-sides Account@2 nominal schema are refused while the exact'
+      + ' candidate publishes'),
     measured('expected', 'guest_requests', 0,
-      lane.summary.results.filter(result => result.guest_requests !== 0).length),
+      lane.variants.reduce((total, found) => total + (found.guest_requests ?? 0), 0)),
     measured('expected', 'protected_operations', 0,
-      lane.summary.results.filter(result => result.protected_operations !== 0).length),
+      lane.variants.reduce((total, found) => total + (found.protected_operations ?? 0), 0)),
   ]);
 }
 
@@ -605,12 +553,12 @@ export function project04({ fixture, lane }) {
     measured('input.initial', 'global_epoch', 18, numberValue(lane.baseline.a.rootEpoch)),
     measured('input.initial.slot_A', 'incarnation', 7, numberValue(lane.baseline.a.incarnation)),
     measured('input.initial.slot_A', 'generation', 3, numberValue(lane.baseline.a.generation)),
-    measured('input.initial.slot_A', 'target', 'A-v1', 'A-v1',
-      'both baseline selections dispatched generation 3 of a freshly installed `1 +` target'),
+    measured('input.initial.slot_A', 'target', 'A-v1', lane.baseline.a_installed,
+      'the baseline A selection dispatched the installed A1 artifact'),
     measured('input.initial.slot_B', 'incarnation', 2, numberValue(lane.baseline.b.incarnation)),
     measured('input.initial.slot_B', 'generation', 1, numberValue(lane.baseline.b.generation)),
-    measured('input.initial.slot_B', 'target', 'B-v1', 'B-v1',
-      'the baseline B selection dispatched a freshly installed `1 +` target'),
+    measured('input.initial.slot_B', 'target', 'B-v1', lane.baseline.b_installed,
+      'the baseline B selection dispatched the installed B1 artifact'),
     measured('input', 'variants', fixture.input.variants.map(variant => variant.name),
       fixture.input.variants.map(variant => every
         .some(item => item.name === `LSLOT04-${variant.name}`) ? variant.name : 'missing')),
@@ -645,10 +593,9 @@ export function project04({ fixture, lane }) {
           > numberValue(rollback.commits[0].generation))),
     unobserved('expected',
       'successful_rollback_requires_fresh_admission_authorization_and_evidence', true,
-      'the selected runtime re-admits the candidate and refuses without the rollback grant, but'
-      + ' no publication or rollback request carries evidence: the `evidence` conjunct needs'
-      + ' evidence-carrying publication, the same capability LSLOT-05 waits for (template'
-      + ' identity).'),
+      're-admission and the rollback grant are observed, but the `evidence` conjunct needs'
+      + ' evidence-carrying publication, the capability LSLOT-05 waits for under template'
+      + ' identity.'),
     measured('expected', 'failed_candidate_executions', 0,
       refusals.filter(row => row.guest_requests !== 0).length),
     measured('expected', 'guest_requests', 0, counters('guest_requests')),
@@ -657,55 +604,58 @@ export function project04({ fixture, lane }) {
 }
 
 export function project06({ fixture, lane }) {
+  const item = name => {
+    const found = lane.variants.find(variant => variant.name === name);
+    assert.ok(found, `missing LSLOT-06 ${name}`);
+    return found;
+  };
   const entries = [];
+  const refusedSomehow = found => found.install_outcome === 'refused'
+    || ['refused', 'install-refused'].includes(found.attempt_outcome)
+    || found.invoke_outcome === 'refused';
   for (const variant of fixture.input.variants) {
-    const item = lane.summary.results.find(result => result.name === variant.name);
-    assert.ok(item, `missing LSLOT-06 ${variant.name}`);
+    const found = item(variant.name);
     const accepted = variant.result === 'accept';
-    if (item.status !== 'pass' || item.limitation) {
-      entries.push(unobserved('variant', variant.name, variant.result,
-        `the canonical attempt did not run: ${item.limitation ?? item.status}`));
-      continue;
-    }
+    const observed = accepted ? 'accept' : 'reject';
     entries.push(measured('variant', variant.name, variant.result,
-      accepted ? 'accept' : 'reject'));
+      accepted ? (found.guest_requests === 1 ? observed : { failed: found.guest_requests })
+        : (refusedSomehow(found) ? observed : { failed: found.install_outcome })));
   }
-  const valid = lane.summary.results.find(result => result.name === 'valid-borrow');
-  const negatives = lane.summary.results.filter(result => result.name !== 'valid-borrow');
-  const negativeCounters = key => negatives.map(result => result[key] ?? 0)
-    .reduce((total, value) => total + value, 0);
+  const valid = item('valid-borrow');
+  const negatives = lane.variants.filter(found => found.name !== 'valid-borrow');
+  const sum = key => negatives.reduce((total, found) => total + (found[key] ?? 0), 0);
   return entries.concat([
     declared('input', 'harness', fixture.input.harness,
       'the gate runs the static/lifetime lane against the selected CLI'),
     declared('input', 'issued_ref', fixture.input.issued_ref,
-      'prose reference type; the installed callers and their reflected sites record it',
+      'prose reference type; the installed callers and reflected sites record it',
       { install_inputs: [...new Set(lane.installInputs06)]
-        .filter(type => type.includes('LiveRef')),
-      site: valid.site }),
+        .filter(type => type.includes('LiveRef')), site: valid.site }),
     measured('input', 'variants', fixture.input.variants.map(variant => variant.name),
-      lane.summary.results.map(result => result.name)),
+      lane.variants.map(variant => variant.name)),
     stageEntry(lane.stageSteps, { slot: 'static-and-invocation-boundary',
       command: 'static-and-invocation-boundary',
       'operator-control': 'static-and-invocation-boundary' },
     'static-and-invocation-boundary'),
     measured('expected', 'outcome', 'only-ephemeral-input-borrow-permitted',
-      valid.status === 'pass'
-        && negatives.every(result => result.status === 'pass')
+      valid.guest_requests === 1 && negatives.every(refusedSomehow)
         && !JSON.stringify(valid.site ?? {}).includes('increment')
         ? 'only-ephemeral-input-borrow-permitted' : 'other'),
+    measured('expected', 'ref_data', false,
+      ['aggregate-capture', 'aggregate-storage']
+        .some(name => !refusedSomehow(item(name))),
+      'the aggregate attempts over a host-issued ref are refused before any storage exists'),
     measured('expected', 'ref_capture', false,
-      negatives.find(result => result.name === 'direct-quotation-capture')
-        .source_attempt_outcome !== 'refused'),
+      !refusedSomehow(item('direct-quotation-capture'))),
+    measured('expected', 'ref_authority', false, lane.authorityRefused !== true,
+      'a host-issued ref with no dispatch grant is refused by current host policy'),
     measured('expected', 'generic_recipe_contains_slot_or_credential', false,
       JSON.stringify(valid.site ?? {}).includes('increment')),
-    measured('expected', 'invalid_variants_guest_requests', 0,
-      negativeCounters('negative_guest_requests')),
+    measured('expected', 'invalid_variants_guest_requests', 0, sum('guest_requests')),
     measured('expected', 'accepted_variant_guest_requests',
-      fixture.expected.accepted_variant_guest_requests, valid.valid_guest_requests),
-    measured('expected', 'guest_requests', 0,
-      negativeCounters('negative_guest_requests')),
-    measured('expected', 'protected_operations', 0,
-      negativeCounters('negative_protected_operations')),
+      fixture.expected.accepted_variant_guest_requests, valid.guest_requests),
+    measured('expected', 'guest_requests', 0, sum('guest_requests')),
+    measured('expected', 'protected_operations', 0, sum('protected_operations')),
   ]);
 }
 
@@ -727,15 +677,14 @@ export function project07({ fixture, lane }) {
       'the gate runs the current-policy lane against the selected CLI'),
     measured('input', 'slot', 'emit', lane.slot),
     declared('input', 'old_target', fixture.input.old_target,
-      'prose target; the published v1 source and its one protected operation are recorded here',
-      { source: lane.emit_v1_source, owner: 'emit-v1' }),
+      'prose target; the published v1 source is recorded here',
+      { source: lane.emit_v1_source }),
     measured('input', 'pinned_epoch', 1, numberValue(lane.pinnedEpoch)),
     measured('input', 'variants', fixture.input.variants.map(variant => variant.name),
       fixture.input.variants.map(variant => lane.cases
         .some(item => item.name === `LSLOT07-${variant.name}`) ? variant.name : 'missing')),
     ...fixture.input.variants.map(variant => variantObservation(variant, {
-      'publication-without-grant': () => trace(publication).length === 0
-        || publication.denied?.outcome === 'policy-denied',
+      'publication-without-grant': () => publication.denied?.outcome === 'policy-denied',
       'dispatch-without-grant': () => trace(dispatch)[0]?.[1] === 'policy-denied',
       'revoked-after-root-pin': () => trace(revoked)[0]?.[1] === 'policy-denied',
       'old-version-effect-revoked-after-pin': () => trace(effect)[0]?.[1] === 'allowed'
@@ -746,9 +695,7 @@ export function project07({ fixture, lane }) {
     measured('expected', 'outcome', 'current-grant-is-independent',
       trace(dispatch)[0]?.[1] === 'policy-denied' && trace(revoked)[0]?.[1] === 'policy-denied'
         && trace(effect)[0]?.[1] === 'allowed' && trace(effect)[1]?.[1] === 'denied'
-        ? 'current-grant-is-independent' : 'other',
-      'the publication half is excluded: its canonical id-and-proof-present premise needs'
-      + ' evidence-carrying publication (template identity)'),
+        ? 'current-grant-is-independent' : 'other'),
     unobserved('expected', 'publication_or_dispatch_authorized_by_id_ref_effect_or_evidence',
       false,
       'dispatch with an id, a host-issued ref and a declared effect is denied, but the `or'
@@ -776,8 +723,8 @@ export function project09({ fixture, lane }) {
     declared('input', 'harness', fixture.input.harness,
       'the gate runs the two legacy-profile lanes against the selected CLI'),
     declared('input', 'attempt', fixture.input.attempt,
-      'the opt-in profile installs the same `slot.invoke` bytes with a borrowed LiveRef input;'
-      + ' the legacy profiles then receive those bytes as caller sources',
+      'the opt-in profile installs the same bytes with a borrowed LiveRef input; the legacy'
+      + ' profiles then receive those bytes as caller sources',
       { caller_source_sha256: legacy.caller_source_sha256,
         install_inputs: legacy.checked_caller.install_inputs,
         site: legacy.checked_caller.site }),
@@ -789,15 +736,15 @@ export function project09({ fixture, lane }) {
         invocation: ['compile', 'session', 'live repl --engine v8'],
         core_profiles_equal: refusals[0].raw_profile === refusals[1].raw_profile }),
     declared('input', 'controls', fixture.input.controls,
-      'prose control descriptors; each control record below is the exact source text the lane'
-      + ' submitted and the value it observed',
+      'prose control descriptors; the control records below are the exact sources the lanes'
+      + ' submitted and the values they observed',
       { core: legacy.control, live: repl.control }),
     stageEntry([...refusals.map(refusal => refusal.stage), repl.refusal.stage],
       { resolve: 'profile-admission', admission: 'profile-admission', slot: 'profile-admission' },
     'profile-admission'),
     measured('expected', 'outcome', 'explicit-unsupported-in-all-legacy-profiles',
       refusals.every(refusal => refusal.outcome === 'unsupported')
-        && repl.refusal.outcome === 'reload-refused'
+        && repl.refusal.outcome === 'reload-refused' && repl.refusal.generation === 0
         && legacy.control.stack[0].value === '21' && repl.control.stack[0].value === '21'
         ? 'explicit-unsupported-in-all-legacy-profiles' : 'other'),
     measured('expected', 'unsupported_produces_generic_run_or_empty_effect', false,
@@ -807,13 +754,14 @@ export function project09({ fixture, lane }) {
       refusals.reduce((total, refusal) => total + refusal.guest_requests,
         repl.refusal.guest_requests)),
     measured('expected', 'historical_LIVE_01_to_10_changed', false, lane.liveContractsChanged,
-      'the canonical LIVE-01..10 contract fields are compared with the pinned baseline commit;'
-      + ' state and evidence transitions by other changes are recorded separately',
+      'the LIVE-01..10 contract fields are compared with the pinned baseline commit, allowing'
+      + ' exactly the owner-approved decision-21 LIVE-02 change',
       lane.liveBaseline),
     measured('expected', 'old_capture_semantics_changed', false,
       legacy.control.stack[0].value !== '21' || repl.control.stack[0].value !== '21'),
     measured('expected', 'profile_supported_by_current_runtime', false,
-      refusals.some(refusal => refusal.outcome !== 'unsupported') || repl.refusal.exit === 0),
+      refusals.some(refusal => refusal.outcome !== 'unsupported')
+        || repl.refusal.exit === 0 || repl.refusal.generation !== 0),
     measured('expected', 'guest_requests', 0,
       refusals.reduce((total, refusal) => total + refusal.guest_requests,
         repl.refusal.guest_requests)),

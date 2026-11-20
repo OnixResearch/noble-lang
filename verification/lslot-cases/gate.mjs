@@ -28,7 +28,10 @@ import {
 // change are compared with the records at this pinned revision, so a later
 // state/evidence transition by another change is recorded, not mistaken for a
 // design change.
-const LIVE_BASELINE_COMMIT = '8075d3c0';
+const LIVE_BASELINE_COMMIT = '8075d3c083474884f9a7c72b5b1a483f73eec314';
+// Owner decision 21 (2026-11-20) legitimately changes one LIVE-02 field.
+const APPROVED_LIVE_CHANGES = { 'LIVE-02': { path: ['input', 'after_reload_ack'],
+  from: ['20 twice swap 20 swap run'], to: ['20 twice swap run'] } };
 
 const unsafeStartup = Object.keys(process.env).filter(name =>
   /^(?:NODE_OPTIONS|NODE_PATH|BASH_ENV|ENV|LD_.*|DYLD_.*|NIX_LD(?:_.*)?|GLIBC_TUNABLES|GCONV_PATH|SHLIB_PATH)$/.test(name));
@@ -64,6 +67,7 @@ const designSha = id => {
 
 const explicitInputs = [fixtureFile, liveWasmFile, 'Cargo.toml', 'Cargo.lock',
   'rust-toolchain.toml', 'policy/tool-selection.json', 'crates/noble-cli/Cargo.toml',
+  'crates/noble-ngraph/Cargo.toml',
   'crates/noble-contracts/Cargo.toml', 'crates/noble-kernel/Cargo.toml',
   'crates/noble-wasm/Cargo.toml', 'crates/noble-cli/src/core/runtime/config.json',
   'verification/lslot-cases/gate.mjs', 'verification/lslot-cases/projection.mjs',
@@ -279,8 +283,11 @@ const fixture02 = name => {
     && step.row.control_id === '1').row, `${name} ACK equals the raw published reply`);
   const bootstrap = steps.find(step => step.row.outcome === 'bootstrapped').row;
   assert.deepEqual(item.bootstrap, bootstrap, `${name} bootstrap equals the raw reply`);
+  assert.deepEqual(item.new_root.request_trace, executed[1].request_trace, `${name} new root`);
+  assert.deepEqual(item.next_leaf.request_trace, executed[2].request_trace, `${name} leaf`);
   return {
     ...item,
+    session_log: raw,
     configured_epoch: steps[0].row.epoch,
     authority: authorityOf(raw),
     install_requests: steps.filter(step => step.request?.operation === 'install')
@@ -313,6 +320,44 @@ for (const [label, summary, directory] of [['LSLOT-03', summary03, lane03.direct
 }
 const installInputs06 = steps06.filter(step => step.request?.operation === 'install')
   .flatMap(step => step.request.inputs);
+// Raw CLI replies, not lane-written strings, carry each variant's outcome and epoch.
+const variantFacts = steps => {
+  const facts = new Map();
+  const touch = name => {
+    if (!facts.has(name)) facts.set(name, { name, guest_requests: 0,
+      protected_operations: 0 });
+    return facts.get(name);
+  };
+  let controlEpoch = null;
+  for (const step of steps) {
+    const request = step.request, reply = step.row;
+    if (!request) continue;
+    if (['install', 'invoke', 'publish'].includes(request.operation) && request.id
+      && !['seed', 'exact', 'target', 'caller'].includes(request.id)) {
+      const found = touch(request.id);
+      if (request.operation === 'install') {
+        found.install_outcome = reply.outcome;
+        found.attempt_outcome = reply.outcome;
+      }
+      if (request.operation === 'publish') {
+        found.publication_outcome = reply.outcome;
+        found.attempt_epoch = reply.epoch;
+      }
+      if (request.operation === 'invoke') found.invoke_outcome = reply.outcome;
+      found.guest_requests = Math.max(found.guest_requests, reply.guest_requests ?? 0);
+      found.protected_operations = Math.max(found.protected_operations,
+        reply.protected_operations ?? 0);
+    }
+    if (request.operation === 'reflect' && request.id) touch(request.id).site = reply.site;
+    if (request.operation === 'publish' && request.id === 'exact') controlEpoch = reply.epoch;
+  }
+  for (const found of facts.values()) {
+    if (found.publication_outcome !== 'published' && found.control_epoch == null) {
+      found.control_epoch = controlEpoch;
+    }
+  }
+  return [...facts.values()];
+};
 
 // LSLOT-04 and LSLOT-07: CAS, rollback and current host policy.
 const lane0407 = lane('0407', 'live_slot_cas_policy.mjs');
@@ -338,8 +383,19 @@ const earliest = (name, slot) => {
   assert.ok(match, `${name} ${slot} baseline select`);
   return match.row.request_trace[0];
 };
+const installedLabel = (name, slot, id) => {
+  const steps = pairedFiles(path.join(lane0407.directory, `${name}.requests.jsonl`),
+    path.join(lane0407.directory, `${name}.jsonl`));
+  const installed = steps.find(step => step.request?.operation === 'install'
+    && step.request.id === id).row.artifact_sha256;
+  const trace = steps.find(step => step.row.outcome === 'executed'
+    && step.row.request_trace?.[0]?.slotId === slot).row.request_trace[0];
+  return trace.artifactSha256 === installed ? `${slot}-v1` : 'mismatch';
+};
 const casBaseline = { a: earliest('LSLOT04-same-slot-writers', 'A'),
-  b: earliest('LSLOT04-unrelated-slot-race', 'B') };
+  b: earliest('LSLOT04-unrelated-slot-race', 'B'),
+  a_installed: installedLabel('LSLOT04-same-slot-writers', 'A', 'A1'),
+  b_installed: installedLabel('LSLOT04-unrelated-slot-race', 'B', 'B1') };
 const pinnedEpoch = pairedFiles(
   path.join(lane0407.directory, 'LSLOT07-publication-without-grant.requests.jsonl'),
   path.join(lane0407.directory, 'LSLOT07-publication-without-grant.jsonl'))
@@ -382,7 +438,30 @@ const liveDesign = bytes => JSON.parse(bytes).cases
 const liveBaselineDesign = liveDesign(liveBaselineBytes);
 const liveCurrentDesign = liveDesign(liveCurrentBytes);
 assert.equal(liveBaselineDesign.length, 10, 'ten baseline LIVE cases');
-const liveContractsChanged = JSON.stringify(liveBaselineDesign) !== JSON.stringify(liveCurrentDesign);
+const baselineByCase = Object.fromEntries(liveBaselineDesign.map(row => [row.id, row]));
+const currentByCase = Object.fromEntries(liveCurrentDesign.map(row => [row.id, row]));
+const liveDiffs = Object.keys(baselineByCase).filter(id => {
+  const before = baselineByCase[id], after = currentByCase[id];
+  const approved = APPROVED_LIVE_CHANGES[id];
+  const strip = record => {
+    const copy = JSON.parse(JSON.stringify(record));
+    if (!approved) return copy;
+    let node = copy;
+    for (const key of approved.path.slice(0, -1)) node = node[key];
+    delete node[approved.path.at(-1)];
+    return copy;
+  };
+  if (JSON.stringify(strip(before)) !== JSON.stringify(strip(after))) return true;
+  if (!approved) return false;
+  let beforeNode = before, afterNode = after;
+  for (const key of approved.path) {
+    beforeNode = beforeNode?.[key];
+    afterNode = afterNode?.[key];
+  }
+  return JSON.stringify(beforeNode) !== JSON.stringify(approved.from)
+    || JSON.stringify(afterNode) !== JSON.stringify(approved.to);
+});
+const liveContractsChanged = liveDiffs.length > 0;
 const liveStateChanges = liveDesign(liveCurrentBytes).map((row, index) => {
   const current = JSON.parse(liveCurrentBytes).cases.find(entry => entry.id === row.id);
   const baseline = JSON.parse(liveBaselineBytes).cases.find(entry => entry.id === row.id);
@@ -420,11 +499,17 @@ const lanes = {
     } },
   'LSLOT-03': { summary: summary03,
     authority: authorityOf(path.join(lane03.directory, 'LSLOT03-same-exact-interface.jsonl')),
+    variants: variantFacts(steps03),
     stageSteps: steps03.map(step => step.row.stage) },
   'LSLOT-04': { cases: cas, baseline: casBaseline,
     stageSteps: casSteps.map(step => step.row.stage) },
   'LSLOT-06': { summary: summary06,
     authority: authorityOf(path.join(lane06.directory, 'LSLOT06-valid-borrow.jsonl')),
+    variants: variantFacts(steps06),
+    authorityRefused: jsonLines(path.join(lane0407.directory,
+      'LSLOT07-dispatch-without-grant.jsonl'))
+      .some(reply => (reply.request_trace ?? [])
+        .some(entry => entry.outcome === 'policy-denied')),
     stageSteps: steps06.map(step => step.row.stage), installInputs06 },
   'LSLOT-07': { cases: cas, slot: 'emit', pinnedEpoch,
     emit_v1_source: pairedFiles(
@@ -438,7 +523,11 @@ const lanes = {
     liveContractsChanged,
     liveBaseline: { commit: LIVE_BASELINE_COMMIT,
       baseline_sha256: sha(liveBaselineBytes), current_sha256: sha(liveCurrentBytes),
-      design_changed: liveContractsChanged, state_changes: liveStateChanges } },
+      design_changed: liveContractsChanged, state_changes: liveStateChanges,
+      approved_changes: APPROVED_LIVE_CHANGES,
+      decision: 'OWNER DECISION 2026-11-20 (decision 21): LIVE-02 input.after_reload_ack'
+        + ' ["20 twice swap 20 swap run"] becomes ["20 twice swap run"]; nothing else changes',
+      changed_cases: liveDiffs } },
 };
 
 // Completeness: every canonical leaf and every variant has exactly one entry.
