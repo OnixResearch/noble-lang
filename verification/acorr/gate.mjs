@@ -477,17 +477,20 @@ case_('ACORR-CASE-05', 'weakened claim against the frozen increment law', entry 
 case_('ACORR-CASE-06', 'code and recipe divergence from the consumer rebuild', entry => {
   const subject = emit(increment.source, 'off', 'c6-subject');
   const call = emit(input('c6-call.noble', callSource(41n, Q_ONE, null)), 'off', 'c6-call');
-  const code = mutateWat(subject.wat, text =>
-    text.replace('(i64.add (local.get $left) (local.get $right))',
-      '(i64.sub (local.get $left) (local.get $right))'), 'c6-code-mutation');
+  const code = mutateWat(subject.wat, text => {
+    const at = text.indexOf('(i64.add');
+    requireThat(at >= 0, 'the emitted subject carries no i64.add');
+    return `${text.slice(0, at)}(i64.sub${text.slice(at + '(i64.add'.length)}`;
+  }, 'c6-code-mutation');
   refused(entry, 'targeted code mutation', admit('case06-code', {
     subject: code, call: call.module, law: increment, pins: join(out, 'pins-off.json'),
     argument: 41n, mode: 'off',
   }), 'correspondence-reject');
   const recipe = mutateWat(subject.wat, text => {
-    const marker = '[I64]';
+    // WAT data segments spell the interface as hex escapes: \5b I 6 4 \5d.
+    const marker = '\\5b\\49\\36\\34\\5d';
     requireThat(text.includes(marker), 'the emitted recipe data does not carry the subject interface');
-    return text.replace(marker, '[I65]');
+    return text.replace(marker, '\\5b\\49\\36\\35\\5d');
   }, 'c6-recipe-mutation');
   refused(entry, 'recipe-atom-only mutation', admit('case06-recipe', {
     subject: recipe, call: call.module, law: increment, pins: join(out, 'pins-off.json'),
