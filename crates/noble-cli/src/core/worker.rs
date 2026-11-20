@@ -1123,6 +1123,13 @@ await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString
     if let Some(temp) = temp {
         command.env("TMPDIR", temp);
     }
+    // The test-only PAA-1 comparison barrier lives in the child; forward its
+    // one plan variable only when this build enables it. The production host
+    // never sets it.
+    #[cfg(feature = "paa1-test-barrier")]
+    if let Ok(plan) = std::env::var("NOBLE_PAA1_TEST_REPLACE_AFTER_COMPARE") {
+        command.env("NOBLE_PAA1_TEST_REPLACE_AFTER_COMPARE", plan);
+    }
     command
         .args([
             "--no-liftoff",
