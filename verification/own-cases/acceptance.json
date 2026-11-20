@@ -1,10 +1,13 @@
 {
   "schema": "noble-own-cases-acceptance/v1",
-  "claim": "selected host executions of OWN-CASE-01, 02, 03, 04 (non-borrow variants), 05, 06 and 07 on one CLI built from the recorded clean commit; not a proof, not a registration and not a promotion",
+  "claim": "selected host executions of OWN-CASE-01..07 on one CLI built from the recorded clean commit; promotion verdicts are derived from the observations, not declared here",
   "result": "completed",
-  "failures": [],
-  "tested_commit": "5c9e38f499da9091636257a0ff1aff4afcecfc26",
-  "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+  "verdict": "unmet-cases",
+  "failures": [
+    "OWN-CASE-03: observed values differ from the registered expectation"
+  ],
+  "tested_commit": "81139111d0e851bdd4dc42fbbfbad30846c0412a",
+  "source_revision": "sha256:f09c0ded63f5cb099d9e1fc0392035f81e2581c841f5edea6f43dfa600a1cb50",
   "scope": [
     "crates",
     "Cargo.toml",
@@ -29,28 +32,46 @@
       "sha256": "f8d7a7e587cf85bcc36fe21c75506dd0c58a4c7e18baa8ddb1e11fde8aeb23e3"
     },
     "crates/noble-cli/src/build.rs": {
-      "sha256": "598903ddd41b0a4537fca51a8bc926d901a83dd56cc6ad2e5808231d25c6f8d8"
+      "sha256": "353e3359db8d9e04fffcce20a2d903adc84cbd6050a875784f83451b500889b2"
     },
     "crates/noble-cli/src/build/arguments.rs": {
-      "sha256": "668cc05d70b0b07df70ab14fd6d745bf1f78c31bcd5ad524d70d49239f959c71"
+      "sha256": "6ff0276f5c1319cbd338cf7681e545559d0b4cfb81ce7e0d5217ed4adbd24e2e"
     },
     "crates/noble-cli/src/build/artifacts.rs": {
       "sha256": "10fefea771a90c326585041a904e75b5f8e027340b4fd355c140b947b4abcad5"
     },
     "crates/noble-cli/src/build/compilation.rs": {
-      "sha256": "63cd4f7f5fa8bccd0008c00067e756c474a0dea49319c1d3157ab6fcf94f595a"
+      "sha256": "3ac7a680ab60449ba5c4292c46043a3f8776d989567b2d18ceee555606782b28"
+    },
+    "crates/noble-cli/src/build/owner_law.rs": {
+      "sha256": "065f8fceddf035c5e17aa4e0848cadaffac0e5e1dcbe8686f1255f6b3b954865"
+    },
+    "crates/noble-cli/src/build/owner_law/arguments.rs": {
+      "sha256": "0fa3be1fac21d6a0046d15387eda6195a5fee5bb1512b60b751dc9b3e341724f"
+    },
+    "crates/noble-cli/src/build/owner_law/compare.rs": {
+      "sha256": "111651cc80b922883c33335c9c923eba86cef4c579fff99eeead637fc36df0fd"
+    },
+    "crates/noble-cli/src/build/owner_law/law.rs": {
+      "sha256": "63c7138bda322002e217c49a36a3e3fff9b75b32fa84197de0fe427628401a3d"
+    },
+    "crates/noble-cli/src/build/owner_law/terms.rs": {
+      "sha256": "50d3a238b9a35b0ea0896be9921d96a42aca40d03ea60191f7dd50f0440b91fd"
     },
     "crates/noble-cli/src/build/release.rs": {
       "sha256": "0d388536da0cb5fe2a526c4000a9ca1f73f62003deac8e7b50f20d86dbd5cc68"
     },
     "crates/noble-cli/src/build/report.rs": {
-      "sha256": "804381ff10def58538bc2ff6b73d0d34463468368c3fcfed1af6f28c148d9b2c"
+      "sha256": "ed10ca90d36912cc0b2f76179324ccc87106ecf06b9fa537d9288ea94d018e6d"
+    },
+    "crates/noble-cli/src/build/report/pins.rs": {
+      "sha256": "e80033b91c9d92a33bafb1a8d18d414b54496c1bc9f9b4a9325e40ef16583fbd"
     },
     "crates/noble-cli/src/build/report/release.rs": {
       "sha256": "1bc68b2a37ee52bba04083ed5753a618d240d3e731d1d3e2af2336ac4172a015"
     },
     "crates/noble-cli/src/build/report/toolchain.rs": {
-      "sha256": "613edf4d8a770cd23ddfc4d82655ad32f264bc7cccbaa0e066a8d75c475af370"
+      "sha256": "9e86ae223b7b605e56fcad4fb0c386e690fa502edb69dddf9b65ab80ba7d5730"
     },
     "crates/noble-cli/src/c_backend.rs": {
       "sha256": "8b8023c91975723b39e1f092d7b70be88254f678164561a454a6c53be688eee2"
@@ -167,7 +188,7 @@
       "sha256": "88e602b7101ee127da9c1cce1e133a344d9f0c1d809e18a3db02dcba0cdc4d80"
     },
     "crates/noble-cli/src/core/companions/operations/invocation.rs": {
-      "sha256": "e6be372fd667e168169e62f59f88dbc62d0bfd6567e3c7f7aa344f80a802112e"
+      "sha256": "88fae4d8472868e61d0800c7059bbbbf09f7be7b7dfeb040f590699758629be9"
     },
     "crates/noble-cli/src/core/companions/reporting.rs": {
       "sha256": "3e33c130624f0cda68041391b9ba92a849aca9c75b9b689d782c09261edd8d99"
@@ -278,13 +299,13 @@
       "sha256": "fea51903d9155f31cb27be173ca96644adb67c7ca08e9bd0898f206ff4faa589"
     },
     "crates/noble-cli/src/core/runtime/config.json": {
-      "sha256": "be38ad3c8d647968ed44628efe5d945dcaf57d162764b3cec51bab661738dcfd"
+      "sha256": "400365e6de281bbde84cbde772dde705fdf97e7e8ee534884fa029c627fb2be8"
     },
     "crates/noble-cli/src/core/runtime/declared-abi.json": {
       "sha256": "6927b379477ee6318d292e7aa09b2103f488349931a89ed84e2e3bf7dac3eb0d"
     },
     "crates/noble-cli/src/core/runtime/engine-assets.test.mjs": {
-      "sha256": "6062faf506968e2c80b43e4b1df9cce0c3da76cfc470c193a63b0e7988c11f5f"
+      "sha256": "d0ca65c0c571003ef635429a0482196c9947e91b475ac6b7beb9971ca11da70f"
     },
     "crates/noble-cli/src/core/runtime/engine-calculator.test.mjs": {
       "sha256": "7ce262d5eb93b4e872b675cd90d70fc3872c1261a3b3ecab7d08106ef28e218c"
@@ -311,13 +332,13 @@
       "sha256": "dd2a78f22a175d80762557401c6083269e690ded61a31b0ee5a1b68c10b01b59"
     },
     "crates/noble-cli/src/core/runtime/slot-engine.mjs": {
-      "sha256": "d5375d3a2f2a42bd67f822f38e87e0fd1d72617901af86aab3a2caea24a4d11c"
+      "sha256": "489f374ed3802984a85d9ed91729006d4fd296066e508d4df0ff16c69c690053"
     },
     "crates/noble-cli/src/core/runtime/slot-policy.mjs": {
       "sha256": "d6d6976247001cbaa06c5a6278e2412a947dd209972c92dc67f630a579bd27c6"
     },
     "crates/noble-cli/src/core/runtime/slot-registry.mjs": {
-      "sha256": "67fe4007d69b0592fcf2ae70c0db17293d09275c77ea1cb09e476c1b7ee9a10a"
+      "sha256": "a245507c58edbf70315efa8c484feb95e64c193ccb463d8a45876ff7431cf730"
     },
     "crates/noble-cli/src/core/runtime/values.mjs": {
       "sha256": "1b305dd458b50a8b7eb4390f39938e8087b699d16b295024b0d68aff835ca1c3"
@@ -335,7 +356,7 @@
       "sha256": "2fd3e8ccc8b3ae8b3177a40acce9615e05a665104520727f198c2949101c11e2"
     },
     "crates/noble-cli/src/core/worker/assembly.rs": {
-      "sha256": "88c860993ce391d6b197bae7ab1ce123852bfdd9610200acff75354477853cfb"
+      "sha256": "91905f7c567c15ea2df27c509de9213e15d61b641f601ba2edacd4ed777fce7b"
     },
     "crates/noble-cli/src/core/worker/configuration.rs": {
       "sha256": "47f52b8a4a3380228802e9d1b831aebb6a152d7ed071de77ce14b02057437c60"
@@ -380,7 +401,7 @@
       "sha256": "129d960b389e1f122ea0224e43a7050111fcfaeddfe6d5c8f839faaa8b2c294f"
     },
     "crates/noble-cli/src/main.rs": {
-      "sha256": "86a9a42e1062c12e1bda39d17bce62f0286167b9672f87117706ca95e481b2c6"
+      "sha256": "b6149d75998f52c7cc8e7b8e8a4f65f15e273e69409c1d27ee14bd246d27fbba"
     },
     "crates/noble-cli/src/ngraph.rs": {
       "sha256": "78edb5838b637a271f8167772c82f77e6e0714c5893da97b2342615a4bc303a4"
@@ -461,7 +482,16 @@
       "sha256": "6df7cc19656e34ebe39bfe4324d5db4848645c45737791abe20a7881f8179224"
     },
     "crates/noble-cli/tests/build.rs": {
-      "sha256": "86fa81ed20934a7ae28aca3d5e6a71b663d35a405147879d2661775a1041f79c"
+      "sha256": "596ab9ec9bfc3267ffec72e437a54ef5007f1fc019acffcad01b9535ba89c309"
+    },
+    "crates/noble-cli/tests/build/owner_law.rs": {
+      "sha256": "c8a00643b86417748fb2769364f7267cd48d005bdf7731f4bbcd19c0f9b50da5"
+    },
+    "crates/noble-cli/tests/build/report_pins.rs": {
+      "sha256": "8eccf4e75da309b2163abd1cbd40a063df09eb800bd95817dc877fee88a6297d"
+    },
+    "crates/noble-cli/tests/build/runtime_assets.rs": {
+      "sha256": "c2919c8833013d23440272e5e783dd1456414ecf2323286370bcf4adfd438c45"
     },
     "crates/noble-cli/tests/c_backend.rs": {
       "sha256": "6ca34214831c63fff14de15805106f3b0734365541e3358c86c39f0fa97a1652"
@@ -470,16 +500,13 @@
       "sha256": "880f5afbacf1de7df28adc6894d5cd286574761c912106eae94b39ba65bd2d0c"
     },
     "crates/noble-cli/tests/core.rs": {
-      "sha256": "53bb2796f8063a6eb2e580ebc5e49bc21f442ecd0d7a957da8f417894222f8d8"
+      "sha256": "9ed51c7030f13a411297a49e429b825c6978b9ead1de0893fdad9c600407734e"
     },
     "crates/noble-cli/tests/core/eligibility.rs": {
       "sha256": "c3a144260889c87cbb8079c1d20881c852676a9e23403574ef7fd239e0223ba8"
     },
     "crates/noble-cli/tests/core/mutations.rs": {
       "sha256": "8eca8b1cc40c015b8d2c55bc3026409ddfe6fa2220153b218de577e4331e6d2b"
-    },
-    "crates/noble-cli/tests/core/ownership.rs": {
-      "sha256": "fbe3efc06d6e3b8eda69fa6143fd90e708ed79a65c8fa25de3f57edbf4a8f4e0"
     },
     "crates/noble-cli/tests/editor.rs": {
       "sha256": "cc010a5ee8c9ecd4bd38525c98b59bc3d39aad54bf3e6dcdebc6e54babd5ad08"
@@ -563,10 +590,13 @@
       "sha256": "1fc74eae8be587ff5f380438f53abc4201e98f3fb149de6b127afd6c1926e9b1"
     },
     "crates/noble-cli/tests/live_repl.rs": {
-      "sha256": "f63ca1d3537c6734a28983c1248fc0811b8e45fef50d26f0fd54dd53881b4f1c"
+      "sha256": "d330e0d5095aea9edf9010310f9c4bfa2cff0ca01f1f2b3e5dbacae8b9b13410"
+    },
+    "crates/noble-cli/tests/live_repl_slot_exclusion.mjs": {
+      "sha256": "97f98f84855215eb9aac86e9a673c4cab2fba2bd7f3a4e4500b6960e927c439e"
     },
     "crates/noble-cli/tests/live_slot.rs": {
-      "sha256": "c23c15752485c115c2243cd12b7ead38e00bb310750d0c66357651816f453b4c"
+      "sha256": "157eab1823f2174219822f965910bf74ef375dcc9aca3f29892653a05033953c"
     },
     "crates/noble-cli/tests/live_slot_caller_emits.mjs": {
       "sha256": "f65329ae24bc0c9164940cf544bf130eeca79a35d952c33ccdb8241d08e47a06"
@@ -578,7 +608,7 @@
       "sha256": "c664544b5f42b1ad7e7e06d9580f08af2566522358b15e003cf822f98b34411f"
     },
     "crates/noble-cli/tests/live_slot_cas_policy.mjs": {
-      "sha256": "0a16ea483645ab36890dfb84ab86f330dcb8e3af4ece9468feb6a186a3d8dac9"
+      "sha256": "1fff6ec2159238933619a2e63ed40b5853980afbd649eb6881b093bf26f8fe6a"
     },
     "crates/noble-cli/tests/live_slot_cas_policy.rs": {
       "sha256": "8dadf95ec1d84f990b68e7cbc96c5c1bf69da9e89174c0faa67bff39de78b859"
@@ -596,7 +626,7 @@
       "sha256": "f7e4127df2351be72a78a90f3c10d6d9ad6db16016fc017fd9ba502a720f8839"
     },
     "crates/noble-cli/tests/live_slot_direct_quote.rs": {
-      "sha256": "bb3644072fb7689bcbd5d58d79e25ba4d0751e27babde089ccd74d6069031ee4"
+      "sha256": "41b5aed77d744b750d9cbd3c960c4365f372e3c9c96db51fdd640244d0c3dc0f"
     },
     "crates/noble-cli/tests/live_slot_grant_scope.mjs": {
       "sha256": "51ad3d59534f60f5d33bff9e97dae7f902f16d8a6a81e279834fd76ac6472a7d"
@@ -607,17 +637,23 @@
     "crates/noble-cli/tests/live_slot_late_control.rs": {
       "sha256": "27250efeead8d1a855c86af56abc18897c1a4dc65eaf99e8bf4849b73f433ac5"
     },
+    "crates/noble-cli/tests/live_slot_legacy_refusal.mjs": {
+      "sha256": "eff776f290e89986298292bb53a08e3bd880a7eabd041eda564c990bc597645b"
+    },
     "crates/noble-cli/tests/live_slot_module_root_retention.mjs": {
       "sha256": "77518e47bec1c67a926863e5f859870b699d6bd27e0c4d7c641bb19b27024d4c"
     },
     "crates/noble-cli/tests/live_slot_nested_roots.mjs": {
       "sha256": "665b893eeeeb9de798cb0568852d96b1c1ac11f02f195918d22f1f072e80dd77"
     },
+    "crates/noble-cli/tests/live_slot_own_resource_rejection.mjs": {
+      "sha256": "397a24b41e7deda0b52b2b86bc19c104d1239600996f9a960785912bbd96191b"
+    },
     "crates/noble-cli/tests/live_slot_own_trap.mjs": {
-      "sha256": "5197540425971361c222a475b8573515f51ac901353dbd29de5cba6ff3887cb9"
+      "sha256": "129a10c5286d18b8d9311586a9fbcb8097c5c3314c9d5b0dc671ebcd5e0544fa"
     },
     "crates/noble-cli/tests/live_slot_ownership_cases.mjs": {
-      "sha256": "26f5936379e44c765b6814a33e27b730e2875f1c43bdeaad035945b8b4f04c1d"
+      "sha256": "9b8cbae6e8a991511f2bafca0b131270d4b7840cee7ec180596dd31c90767aea"
     },
     "crates/noble-cli/tests/live_slot_package_retention.mjs": {
       "sha256": "3636e510e3ab351b45f0177720af6f71dced868cbbf80e497319fd8d2f683978"
@@ -638,7 +674,7 @@
       "sha256": "0bc7cadcfa45083fbd396bb284b522aac211ba904ed58d6738a207216bca06cc"
     },
     "crates/noble-cli/tests/live_slot_registry.mjs": {
-      "sha256": "2e4dc4079278b765d59c62ad7d18371afabfe4bdf5c5e60efa2672f8733ea3d4"
+      "sha256": "3598bd54aca25a122fd7dcd88283a78f5d03a26cbdc853258b6b31b2023f9da8"
     },
     "crates/noble-cli/tests/live_slot_relocation_controls.mjs": {
       "sha256": "89b4a2ba9417642f5f83039a82fca7d0e06a83ec3fb1fcbc93342208bd8db1e5"
@@ -659,7 +695,7 @@
       "sha256": "bbae1091f47e6ff6a848e87fec02c554f96b81e774c0f672e70f2b7f13ffe7d8"
     },
     "crates/noble-cli/tests/live_slot_resource_ref.rs": {
-      "sha256": "4e3618ce55228e2693ef47f6f9e0a73abb0cbdf0dc71eb457d4ebe1a3cb4237d"
+      "sha256": "839f47f67a409cd45cb3004d456adffd2a18abc7065580f43a0b97459e5a7761"
     },
     "crates/noble-cli/tests/live_slot_resource_ref_admission.mjs": {
       "sha256": "79fffdd8aa1f542a4ba496654853de7716135e578a7e752334a3a8a2e4642cd7"
@@ -740,7 +776,7 @@
       "sha256": "313a0eb3ad5c641120088bfb491f4b4c2e21c38028484e548cc1135b35b808c0"
     },
     "crates/noble-cli/tests/smoke.rs": {
-      "sha256": "f00dab69704f89f81ffea98dc0702a1d1c5dff57b4dc79388b495c0f26de5de0"
+      "sha256": "b22f913d20ca81ba163cf7565fd582320d6dbe0fd72f94d7971f317aabf3c4ee"
     },
     "crates/noble-cli/tests/smoke/checked/expected.rs": {
       "sha256": "cb6247063599630438f546449ba16f210fc660257b693090ad6ab4b08b988822"
@@ -750,6 +786,12 @@
     },
     "crates/noble-cli/tests/smoke/checked/i64.rs": {
       "sha256": "ff95d9c66bed20678d74242e8ad9a35ebdde72b4f13c6f80e98a16434070bd03"
+    },
+    "crates/noble-cli/tests/smoke/epoch.rs": {
+      "sha256": "564193fdfa19bc195f29e9680d984dfa914c69ca6a9603634bce1b645c190b71"
+    },
+    "crates/noble-cli/tests/smoke/guardv2.rs": {
+      "sha256": "c8bdb930da05f8a106ff4c06e9120a7a006ac4d87d1df545c844c3550cf9b334"
     },
     "crates/noble-cli/tests/smoke/reports.rs": {
       "sha256": "bc867d9e9710534ecd9ccd9005b5498c0478205a85695a26bccdaa6ee16c461c"
@@ -773,7 +815,7 @@
       "sha256": "4d3fb9854611e8e3329562d3cd9235d9f53e5a0e4f5818fca998916240f769ec"
     },
     "crates/noble-contracts/src/companion/admit/accept.rs": {
-      "sha256": "7db7f141db27f81d01a3e569c5b562d2717cdd94ef19352ab0589014b95bd7b9"
+      "sha256": "68cbce40ed372652718641ada7ef8db2a057c33abaf65e8a31f1a177d8980729"
     },
     "crates/noble-contracts/src/companion/admit/mod.rs": {
       "sha256": "264818198e36f98e032fb955d0a0dd9b9bed05bfc609efc6f43262e3f974b767"
@@ -794,7 +836,7 @@
       "sha256": "eb9c4e2fbf549857c61d79cfc6d8fbbde3e9e8aa08c6f930ea99079fc34c1164"
     },
     "crates/noble-contracts/src/companion/core.rs": {
-      "sha256": "805194fdf1ada7eb5996cf89a0a6bef3b8d48464c4deb6928dd256dac30cb5a3"
+      "sha256": "d6a0488205d2b14a5d7f3ae72501726da5b5488c686fc58822c9dbd59b97ef97"
     },
     "crates/noble-contracts/src/companion/core/context.rs": {
       "sha256": "42bef7e1ffbea8e5c7861a780125dfcded0d531d28e085894562976d158abb5c"
@@ -808,8 +850,11 @@
     "crates/noble-contracts/src/companion/guard.rs": {
       "sha256": "6949b5aa42530b351f1ae4496fd5a056d8fe7bc7cca30d21c0eac7acfb750ac2"
     },
+    "crates/noble-contracts/src/companion/guard_v2.rs": {
+      "sha256": "323b8d2cbea753045adc0d2e2c9ee9c443bcee4eb7b1fb397351367372dbf20d"
+    },
     "crates/noble-contracts/src/companion/mod.rs": {
-      "sha256": "31ff835dd6f7ca0fb044b3f698e63c772f2554ef15b4bfacc21f7212e805f528"
+      "sha256": "ecdc0f43926334329e0dc4a515e3894ce23252ab7b402750cbc5cd3409ec6e2b"
     },
     "crates/noble-contracts/src/companion/registry/application.rs": {
       "sha256": "1eb48dcae96bec1db4ef53c2c42ee8ee50b1a29e9c4e7b18ac09299a655695c6"
@@ -818,13 +863,13 @@
       "sha256": "c30d7f1848d8919ee03851d3b9f8a3bb8046fdd7e9fd0971a79802a436aa4174"
     },
     "crates/noble-contracts/src/companion/registry/mod.rs": {
-      "sha256": "8755a01f7f1042999dc1b0a8f4b87b389421d5c1222a4072c92a1f69266936a1"
+      "sha256": "d39b7d3dceadef71296e9a8a3eccbf82410457b5509275fef4eb94f7e0580955"
     },
     "crates/noble-contracts/src/companion/release.rs": {
       "sha256": "d85bbf9befcf6285222d1fb2577d4a2eb7cc043719b121d0dc29a3afca7e5f0b"
     },
     "crates/noble-contracts/src/companion/rules/derive.rs": {
-      "sha256": "cacdcb104abf70bd2e6b376293e2d5fe50adebfeee906cd83b4b54a66c666dc7"
+      "sha256": "75bfc9465eec7d1687c96c7927460e6003794bc0470e05c390f8909d908f1d47"
     },
     "crates/noble-contracts/src/companion/rules/mod.rs": {
       "sha256": "deaadd1a3336593cc00260f18520eb368ebdb614887452a266848e09e0d61188"
@@ -1250,7 +1295,10 @@
       "sha256": "f55b69c075fffcc7babaa560092128edbeb296c53f69d391281fbaad16445410"
     },
     "crates/noble-contracts/tests/companion.rs": {
-      "sha256": "5624cbdd3a981bba092a256c7afaf926ab020ee4eb54d53565338f3650302986"
+      "sha256": "0377310527f450b9d1e46a6505afd25b2399d8bbaa1d8e530d1a9a901d07dd41"
+    },
+    "crates/noble-contracts/tests/companion/guardv2.rs": {
+      "sha256": "73b061b166c75aa328aef7861462682a571106c363a73538a916b582ee3bb3ca"
     },
     "crates/noble-contracts/tests/companion/transport.rs": {
       "sha256": "f81fc597e2f7b0718efd429dc7eec6e2d7fc6997a240bbbf0b0d1ec2094dc610"
@@ -1550,7 +1598,7 @@
       "sha256": "cbdfdbb01860e8e6aff2e0a5aa821d952b9a64b4476adade5582317bab2334aa"
     },
     "crates/noble-contracts/tests/named_v2/proofs.rs": {
-      "sha256": "623876ba04bc114e25667bf4690d64aa3c85b691d5d209d6818d673485fc5bdd"
+      "sha256": "76dcb418b45bd02ddc074b755859484b2f58fa999dfa62294ea2cc1a153b5dab"
     },
     "crates/noble-contracts/tests/publication.rs": {
       "sha256": "47e49b6cf822750d0fc509082378ad276b4a9770f0fe5648cd0bb78837f894ed"
@@ -3334,6 +3382,9 @@
     "crates/noble-wasm/src/admission.rs": {
       "sha256": "12ffbbb5f81d3166d8dc01e996df3e3c42ec90faa2bd25d8d78ac83a9f4792d9"
     },
+    "crates/noble-wasm/src/assets.rs": {
+      "sha256": "50f17541f74e3fd12a24918f95ba3611608b5cd78a6bf5b5a05d9e0034e2900b"
+    },
     "crates/noble-wasm/src/component/abi.rs": {
       "sha256": "46a44b62d7214859fefcf36d7fe5a1312bd8670c935c6204dcc9d1a25ffd9864"
     },
@@ -3383,7 +3434,7 @@
       "sha256": "c4f99d19e90ff84a47c2e3fc2e1be3c706904427f68867c7ae84821d8ec651bf"
     },
     "crates/noble-wasm/src/lib.rs": {
-      "sha256": "8cbfb086832d319fe2c9628e2580efd0179a4f6cfee186b1f2b630452f21ef16"
+      "sha256": "89b3796110cb7f332781d8abb665ad97c3654504edbe4ca56763e5bfc38002af"
     },
     "crates/noble-wasm/src/lowering.rs": {
       "sha256": "77dbd929c79aeacf40de9ef0129fc41a39d19e6b1e18323dfb94b3ca01042323"
@@ -3605,12 +3656,12 @@
       "sha256": "7bfd3ca943dcce5b34de4c5f57414eae7496a698034208cf026690ada5130271"
     },
     "verification/own-cases/gate.mjs": {
-      "sha256": "3b344a665dcd5fc3244a18c6a559eb1d40d848544c99d1d04562aaef2144a7bc"
+      "sha256": "e924780a817ff8d0795a949f3b86930928c5331db05e210f039e3dedc1b84e78"
     }
   },
   "case_file": "specs/conformance/ownership-cases.json",
   "projections": {
-    "sha256": "779454ee217b1a479d91dee3a18d5d386e0d37e44e1e05edc397d1079d086b7d",
+    "sha256": "aff156745bbd2e1b0f8553a12f014674164e82c313c75b9d9aac4244a1b87e87",
     "ids": [
       "OWN-CASE-01",
       "OWN-CASE-02",
@@ -3622,8 +3673,9 @@
     ]
   },
   "binary": {
-    "executable": "/home/brittonr/.cache/noble-cairn/target/own-cases/debug/noble",
-    "executable_sha256": "d1e084df7a484c828fe2c5594ddf240fa1102dc6d25d6a07b7626effba193c29"
+    "executable": "/home/brittonr/.cache/noble-cairn/target/own-cases-r2/debug/noble",
+    "executable_sha256": "8020eb8611adae0bc1fa21e22d89706b89c5ddc46586dfee14a364a0d0bb45c5",
+    "executable_sha256_after": "8020eb8611adae0bc1fa21e22d89706b89c5ddc46586dfee14a364a0d0bb45c5"
   },
   "build": "cargo build --locked -p noble-cli --bin noble",
   "runs": [
@@ -3631,7 +3683,7 @@
       "command": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
       "args": [
         "./crates/noble-cli/tests/live_slot_direct_quote.mjs",
-        "/home/brittonr/.cache/noble-cairn/target/own-cases/debug/noble"
+        "/home/brittonr/.cache/noble-cairn/target/own-cases-r2/debug/noble"
       ],
       "status": 0
     },
@@ -3639,23 +3691,23 @@
       "command": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
       "args": [
         "./crates/noble-cli/tests/live_slot_ownership_cases.mjs",
-        "/home/brittonr/.cache/noble-cairn/target/own-cases/debug/noble"
+        "/home/brittonr/.cache/noble-cairn/target/own-cases-r2/debug/noble"
       ],
       "status": 0
     },
     {
-      "command": "cargo",
+      "command": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
       "args": [
-        "test",
-        "--locked",
-        "-p",
-        "noble-cli",
-        "--test",
-        "core",
-        "own_case_04_non_borrow_variants_reject_before_emission",
-        "--",
-        "--nocapture",
-        "--test-threads=1"
+        "./crates/noble-cli/tests/live_slot_ownership_cases.mjs",
+        "/home/brittonr/.cache/noble-cairn/target/own-cases-r2/debug/noble"
+      ],
+      "status": 0
+    },
+    {
+      "command": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+      "args": [
+        "./crates/noble-cli/tests/live_slot_own_resource_rejection.mjs",
+        "/home/brittonr/.cache/noble-cairn/target/own-cases-r2/debug/noble"
       ],
       "status": 0
     },
@@ -3663,7 +3715,7 @@
       "command": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
       "args": [
         "./crates/noble-cli/tests/live_slot_own_trap.mjs",
-        "/home/brittonr/.cache/noble-cairn/target/own-cases/debug/noble"
+        "/home/brittonr/.cache/noble-cairn/target/own-cases-r2/debug/noble"
       ],
       "status": 0
     },
@@ -3671,7 +3723,7 @@
       "command": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
       "args": [
         "./crates/noble-cli/tests/live_slot_module_root_retention.mjs",
-        "/home/brittonr/.cache/noble-cairn/target/own-cases/debug/noble"
+        "/home/brittonr/.cache/noble-cairn/target/own-cases-r2/debug/noble"
       ],
       "status": 0
     },
@@ -3686,18 +3738,139 @@
         "live_repl",
         "retained_old_definition_yields_old_value_and_retires_after_release",
         "--",
+        "--nocapture",
         "--test-threads=1"
       ],
       "status": 0
     }
   ],
+  "raw_outputs": [
+    {
+      "name": "build.stdout",
+      "file": "build.stdout.txt",
+      "sha256": "74859c4f20c2874a29e9f8c824c4e6ca6b957a29796a585364da82872a545693",
+      "bytes": 123180
+    },
+    {
+      "name": "build.stderr",
+      "file": "build.stderr.txt",
+      "sha256": "f0788aa36d1c86b6ccdfb7f4042a5574102d82061c046422a2d42e008a1e4710",
+      "bytes": 72
+    },
+    {
+      "name": "own-01.stdout",
+      "file": "own-01.stdout.txt",
+      "sha256": "2f6ab857a731408b49e39426779537eb1f343707208a6c1e671ec5f564f8a97b",
+      "bytes": 77
+    },
+    {
+      "name": "own-01.stderr",
+      "file": "own-01.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "name": "own-01.evidence.stdout",
+      "file": "own-01.evidence.stdout.txt",
+      "sha256": "351c00576405d82ecb887764aea23e8f7048aa45096a8ce89a7633b6ecb203e8",
+      "bytes": 6733
+    },
+    {
+      "name": "own-02-03.stdout",
+      "file": "own-02-03.stdout.txt",
+      "sha256": "d035e49510f23ca796c9bbe2b51415ba45ffb4e4f88f93cc469040724018509c",
+      "bytes": 2032
+    },
+    {
+      "name": "own-02-03.stderr",
+      "file": "own-02-03.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "name": "own-03.stdout",
+      "file": "own-03.stdout.txt",
+      "sha256": "d035e49510f23ca796c9bbe2b51415ba45ffb4e4f88f93cc469040724018509c",
+      "bytes": 2032
+    },
+    {
+      "name": "own-03.stderr",
+      "file": "own-03.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "name": "own-04.stdout",
+      "file": "own-04.stdout.txt",
+      "sha256": "7b6f401054a17e94a40014b885fe5329618d6aa50be751951c29ccf41e4afd2e",
+      "bytes": 2644
+    },
+    {
+      "name": "own-04.stderr",
+      "file": "own-04.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "name": "own-05.stdout",
+      "file": "own-05.stdout.txt",
+      "sha256": "0a67686288888fc0dc567174d3460c84603e24996457cf25bc9a3a775019366d",
+      "bytes": 794
+    },
+    {
+      "name": "own-05.stderr",
+      "file": "own-05.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "name": "own-06.stdout",
+      "file": "own-06.stdout.txt",
+      "sha256": "b263ef9484295cf15d3aa5f5d8969d8c2bd7ab2a2eec933a97aadc58bd815b64",
+      "bytes": 535
+    },
+    {
+      "name": "own-06.stderr",
+      "file": "own-06.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "name": "own-07.stdout",
+      "file": "own-07.stdout.txt",
+      "sha256": "1589998c0f00eaff581d423cef5990e2b78133ea85fc821d2a13601eb679b10d",
+      "bytes": 399
+    },
+    {
+      "name": "own-07.stderr",
+      "file": "own-07.stderr.txt",
+      "sha256": "56d4bc6c69370a304223accbaa7c12368c8ca5f2214ec2dafa493e15d78ae336",
+      "bytes": 199
+    }
+  ],
   "observations": {
     "OWN-CASE-01": {
-      "result": 25,
       "case": "passed",
-      "guest_requests": 0
+      "lane": "crates/noble-cli/tests/live_slot_direct_quote.mjs",
+      "capture": [
+        {
+          "type": "I64",
+          "value": "5"
+        }
+      ],
+      "result": [
+        {
+          "kind": 1,
+          "value": "25"
+        }
+      ],
+      "guest_requests": 0,
+      "refused_released_owner": true,
+      "retired_code_spans": 1,
+      "exit": 0
     },
     "OWN-CASE-02": {
+      "case": "passed",
       "orders": [
         "A-then-B",
         "B-then-A"
@@ -3716,125 +3889,152 @@
           }
         ]
       ],
-      "case": "passed"
+      "lane": "crates/noble-cli/tests/live_slot_ownership_cases.mjs"
     },
     "OWN-CASE-03": {
-      "balanced": {
-        "before": [
-          {
-            "kind": 1,
-            "value": "8"
-          }
-        ],
-        "after": [
-          {
-            "kind": 1,
-            "value": "8"
-          }
-        ],
-        "released_before_root": 14,
-        "exit": 0
-      },
-      "left_deep": {
-        "composed": 7,
-        "before": [
-          {
-            "kind": 1,
-            "value": "8"
-          }
-        ],
-        "after": [
-          {
-            "kind": 1,
-            "value": "8"
-          }
-        ],
-        "released_before_root": 7,
-        "exit": 0,
-        "selected_binary_sha256": "d1e084df7a484c828fe2c5594ddf240fa1102dc6d25d6a07b7626effba193c29"
-      },
-      "right_deep": {
-        "composed": 7,
-        "before": [
-          {
-            "kind": 1,
-            "value": "8"
-          }
-        ],
-        "after": [
-          {
-            "kind": 1,
-            "value": "8"
-          }
-        ],
-        "released_before_root": 7,
-        "exit": 0,
-        "selected_binary_sha256": "d1e084df7a484c828fe2c5594ddf240fa1102dc6d25d6a07b7626effba193c29"
-      },
-      "bounded_control": {
-        "refused_at_compose": 16,
-        "diagnostic": "Error: checked captured value exceeds host observation bound",
-        "session_state": "terminated-after-guest-failure",
-        "exit": 2,
-        "selected_binary_sha256": "d1e084df7a484c828fe2c5594ddf240fa1102dc6d25d6a07b7626effba193c29"
-      },
-      "case": "passed",
-      "declared_bound": "captureValue: 32 nodes / 4096 bytes exact summary (representation); retention walks up to 4096 nodes"
+      "case": "unmet",
+      "lane": "crates/noble-cli/tests/live_slot_ownership_cases.mjs",
+      "diagnostic": "OWN-CASE-03 left-deep did not execute: {\"composed\":4,\"refused_at_compose\":5,\"diagnostic\":\"Error: checked captured value exceeds host observation bound\",\"session_state\":\"terminated-after-guest-failure\",\"released_before_root\":0,\"progressing\":[[{\"kind\":1,\"value\":\"3\"}],[{\"kind\":1,\"value\":\"6\"}],[{\"kind\":1,\"value\":\"10\"}],[{\"kind\":1,\"value\":\"15\"}]],\"refused\":true,\"exit\":2,\"selected_binary_sha256\":\"8020eb8611adae0bc1fa21e22d89706b89c5ddc46586dfee14a364a0d0bb45c5\"}"
     },
     "OWN-CASE-04": {
+      "case": "passed",
       "variants": [
         {
           "variant": "dup",
-          "outcome": "static-reject",
+          "input": "Account@1",
+          "source": "dup",
+          "outcome": "refused",
+          "stage": "command",
+          "diagnostic": "kernel rejected a non-capturable value; word dup; required S Data; actual S Nominal(NominalTypeId { module: 110, ordinal: 0 }, Opaque(Resource(ResourceKind(41))))",
+          "guest_requests": 0,
+          "protected_operations": 0,
           "emitted": false
         },
         {
           "variant": "drop",
-          "outcome": "static-reject",
+          "input": "Account@1",
+          "source": "drop",
+          "outcome": "refused",
+          "stage": "command",
+          "diagnostic": "kernel rejected a non-capturable value; word drop; required S Data; actual S Nominal(NominalTypeId { module: 110, ordinal: 0 }, Opaque(Resource(ResourceKind(41))))",
+          "guest_requests": 0,
+          "protected_operations": 0,
           "emitted": false
         },
         {
           "variant": "quote",
-          "outcome": "static-reject",
+          "input": "Account@1",
+          "source": "quote",
+          "outcome": "refused",
+          "stage": "command",
+          "diagnostic": "kernel rejected a non-capturable value; word quote; required S Data; actual S Nominal(NominalTypeId { module: 110, ordinal: 0 }, Opaque(Resource(ResourceKind(41))))",
+          "guest_requests": 0,
+          "protected_operations": 0,
           "emitted": false
         },
         {
           "variant": "pair-then-quote",
-          "outcome": "static-reject",
+          "input": "Pair<I64,Account@1>",
+          "source": "quote",
+          "outcome": "refused",
+          "stage": "command",
+          "diagnostic": "kernel rejected a non-capturable value; word quote; required S Data; actual S Pair(I64, Nominal(NominalTypeId { module: 110, ordinal: 0 }, Opaque(Resource(ResourceKind(41)))))",
+          "guest_requests": 0,
+          "protected_operations": 0,
           "emitted": false
         },
         {
           "variant": "sum-then-drop",
-          "outcome": "static-reject",
+          "input": "Sum<Account@1,I64>",
+          "source": "drop",
+          "outcome": "refused",
+          "stage": "command",
+          "diagnostic": "kernel rejected a non-capturable value; word drop; required S Data; actual S Sum(Nominal(NominalTypeId { module: 110, ordinal: 0 }, Opaque(Resource(ResourceKind(41)))), I64)",
+          "guest_requests": 0,
+          "protected_operations": 0,
           "emitted": false
         },
         {
           "variant": "list-then-drop",
-          "outcome": "static-reject",
+          "input": "List<Account@1>",
+          "source": "drop",
+          "outcome": "refused",
+          "stage": "command",
+          "diagnostic": "kernel rejected a non-capturable value; word drop; required S Data; actual S List(Nominal(NominalTypeId { module: 110, ordinal: 0 }, Opaque(Resource(ResourceKind(41)))))",
+          "guest_requests": 0,
+          "protected_operations": 0,
           "emitted": false
         }
       ],
-      "case": "passed",
-      "inapplicable": [
-        "borrow-dup",
-        "borrow-drop",
-        "borrow-quote",
-        "borrow-pair",
-        "borrow-sum",
-        "borrow-list",
-        "borrow-quote-escape",
-        "borrow-save-program"
-      ]
+      "controls": [
+        {
+          "control": "i64-program",
+          "inputs": [
+            "I64"
+          ],
+          "outcome": "installed",
+          "handle": 4103,
+          "artifact_sha256": "fc33557ef67e065cf159ccef90df2a8b118a45fcce57ff4dccd58b5826238202",
+          "guest_requests": 0,
+          "emitted": true
+        },
+        {
+          "control": "resource-pass-through",
+          "inputs": [
+            "I64",
+            "Account@1"
+          ],
+          "outcome": "installed",
+          "handle": 4105,
+          "artifact_sha256": "32f27fa592541523f71ac5372ff81dd2a05b1d81e1bcaf6142c0a84942a408fa",
+          "guest_requests": 0,
+          "emitted": true
+        }
+      ],
+      "inapplicable_variants": [
+        "borrow-escape-direct",
+        "borrow-escape-aggregate",
+        "borrow-escape-quote",
+        "borrow-escape-interface",
+        "borrow-escape-save-program",
+        "borrow-escape-release"
+      ],
+      "binary_sha256": "8020eb8611adae0bc1fa21e22d89706b89c5ddc46586dfee14a364a0d0bb45c5",
+      "lane": "crates/noble-cli/tests/live_slot_own_resource_rejection.mjs"
     },
     "OWN-CASE-05": {
-      "case": "withheld",
-      "designed_mechanism": {
-        "abort_refusal": {
-          "outcome": "refused",
-          "diagnostic": "inconsistent frontend arena",
-          "guest_requests": 0
+      "case": "passed",
+      "abnormal_exit": {
+        "mechanism": "policy-denied effect inside a dispatched frame after the Program is produced",
+        "target_trace": [
+          [
+            "dispatch",
+            "allowed"
+          ],
+          [
+            "effect",
+            "denied"
+          ]
+        ],
+        "saved_owner_tokens_issued": 0,
+        "frame_pins": {
+          "active": 0,
+          "entered": 2,
+          "released": 2
         },
-        "emit_installed": true,
+        "guest_instance": "terminated-after-guest-failure",
+        "session_state": "terminated-after-guest-failure",
+        "post_exit_session": "exits without another reply",
+        "guest_requests": 2,
+        "protected_operations": 0,
+        "exit": 2
+      },
+      "abort_refusal_witness": {
+        "source": "1 test.abort",
+        "outcome": "refused",
+        "stage": "command",
+        "diagnostic": "inconsistent frontend arena",
+        "guest_requests": 0,
         "exit": 0
       },
       "host_ledger": {
@@ -3842,14 +4042,21 @@
           "101:P-B1"
         ],
         "retained_versions_after": 1,
-        "normal_finish_refused": true
+        "normal_finish_refused": true,
+        "frame_pins": {
+          "entered": 2,
+          "released": 2,
+          "active": 0
+        }
       },
       "unobserved": [
-        "backend per-root frame-pin counters",
-        "a trap produced by the designed `test.abort` operation"
-      ]
+        "the backend frame-pin counter itself (the exposed count is the host ledger of frame entries and exits)",
+        "a trap produced by `test.abort` (not installable)"
+      ],
+      "lane": "crates/noble-cli/tests/live_slot_own_trap.mjs"
     },
     "OWN-CASE-06": {
+      "case": "passed",
       "before": [
         {
           "kind": 1,
@@ -3867,13 +4074,21 @@
         "length": 6,
         "start": 4
       },
-      "case": "passed"
+      "lane": "crates/noble-cli/tests/live_slot_module_root_retention.mjs"
     },
     "OWN-CASE-07": {
-      "saved_result": 1,
+      "case": "passed",
+      "saved_result": [
+        {
+          "handle": null,
+          "type": "I64",
+          "value": "1"
+        }
+      ],
       "old_span_retained_while_owner_lives": true,
       "old_span_retired_after_release": true,
-      "case": "passed"
+      "released_observed_roots": 1,
+      "lane": "crates/noble-cli/tests/live_repl.rs"
     }
   },
   "receipts": {
@@ -3887,15 +4102,15 @@
     },
     "OWN-CASE-03": {
       "lane": "crates/noble-cli/tests/live_slot_ownership_cases.mjs",
-      "case": "passed"
+      "case": "unmet"
     },
     "OWN-CASE-04": {
-      "lane": "crates/noble-cli/tests/core/ownership_cases.rs",
+      "lane": "crates/noble-cli/tests/live_slot_own_resource_rejection.mjs",
       "case": "passed"
     },
     "OWN-CASE-05": {
       "lane": "crates/noble-cli/tests/live_slot_own_trap.mjs",
-      "case": "withheld"
+      "case": "passed"
     },
     "OWN-CASE-06": {
       "lane": "crates/noble-cli/tests/live_slot_module_root_retention.mjs",
@@ -3909,20 +4124,20 @@
   "promotable": [
     "OWN-CASE-01",
     "OWN-CASE-02",
-    "OWN-CASE-03",
     "OWN-CASE-04",
+    "OWN-CASE-05",
     "OWN-CASE-06",
     "OWN-CASE-07"
   ],
-  "failed_cases": [],
-  "withheld": [
-    "OWN-CASE-05"
+  "failed_cases": [
+    "OWN-CASE-03"
   ],
+  "withheld": [],
   "non_claims": [
-    "OWN-CASE-03 now runs all three 8-leaf trees: the capture summary was using a smaller anonymous-only budget (1000 bytes, 64 nodes) than the selected-origin and retained-graph paths (4096 bytes, 32 nodes); it now uses the same exact bound. Accounting is unchanged: retention already walks up to 4096 nodes, and a 40-leaf chain is still refused past the 8-leaf depth with the declared 32-node exact-summary bound.",
-    "OWN-CASE-05 was not executed as designed: the live-slot source profile refuses any source containing test.abort with the internal diagnostic \"inconsistent frontend arena\" (the kernel bootstrap environment has no test.abort row for declared-module profiles). The host registry abortRoot releases the captured map pin exactly once, but backend per-root frame-pin counters are not exposed, so \"frame pins released exactly once\" is not observed.",
+    "OWN-CASE-03 executes the design's captured-I64 leaves (`quote [ + ] compose`, one dynamic I64 capture each). The balanced tree runs (36 before and after 14 releases); the left- and right-deep 8-leaf chains are refused at compose 5 by the anonymous summary's 32-node bound. The design's deep trees are therefore not executed, and the case is not promoted on this receipt.",
+    "OWN-CASE-05 uses a policy-denied effect inside a dispatched frame after the root produced a Program. The exposed per-root frame-pin count is the host ledger of frame entries and exits; the backend's own pin counter is still not exposed. `test.abort` is not installable in this profile and its internal-diagnostic refusal is recorded as a frontend-defect witness, not as success.",
     "OWN-CASE-02 observes shared-owner order independence through the surviving owner running and released owners being refused; the runtime exposes no live-cell count, so reclamation timing is not directly observed.",
-    "OWN-CASE-04's borrow variants are inapplicable (owner decision 2026-11-20: no borrow profile); only the six non-borrow variants are exercised, and they are rejected by the kernel acceptance boundary before any emission.",
+    "OWN-CASE-04 registers and executes the design's `Account@1` opaque nominal and source programs through the real CLI. The borrow variants are inapplicable (owner decision 2026-11-20, decision 7: no borrow profile is selected).",
     "No proof is claimed: every promoted case keeps proof open, and no lowering, runtime or host-ledger correspondence proof is supplied here."
   ]
 }

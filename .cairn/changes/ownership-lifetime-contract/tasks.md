@@ -80,6 +80,20 @@
     raw output file, re-hashes the executable after the run, reads the observed OWN-CASE-01/07
     values from the lanes, pins the bounded control's refusal point and diagnostic, takes the
     OWN-CASE-04 lane path from the tree, and never requires an internal diagnostic as success.
+  - **Receipt and promotions.** The gate ran from a clean tree at `81139111`:
+    `verification/own-cases/runs/20261120-r2/acceptance.json` sha256 `ae533fdd…`, source revision
+    `sha256:f09c0d…`, binary `8020eb86…` (re-hashed after the `cargo test` steps, unchanged), 17
+    hashed raw output files. `result: completed`, `verdict: unmet-cases`: OWN-CASE-01, 02, 04, 05,
+    06 and 07 are promoted implemented/passed/open/explicit from this receipt; OWN-CASE-03 is
+    recorded implemented/failed with the observed compose-5 refusal. The earlier receipts
+    (`runs/20261120c`, `runs/20261120-failed`) stay immutable beside it.
+  - **Consumer tests.** Every noble-cli live-slot target plus `live_repl` was run at the receipt's
+    commit: `live_slot`, `live_slot_capture_legacy`, `live_slot_cas_policy`,
+    `live_slot_coherent_maps`, `live_slot_direct_quote`, `live_slot_late_control`,
+    `live_slot_quota_replay`, `live_slot_relocation_witness`, `live_slot_resource_ref`,
+    `live_slot_selected_origin`, `live_slot_selected_retention`, `live_slot_typed_cases` and
+    `live_repl` all pass. The run also covers the new OWN-CASE-04 lane through
+    `live_slot_resource_ref`.
   - Independent review of this reworked registration is required by the integrator before the
     promotions are accepted (owner decision 1).
   - Independent review of the registration is still required, and OWN-CASE-05 is not executed as

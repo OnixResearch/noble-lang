@@ -14,9 +14,12 @@ It promotes nothing by itself.
 |---|---|---|
 | [`runs/20261120c`](runs/20261120c) | superseded gate at commit `5c9e38f4` | `completed`; OWN-CASE-03 misregistered (review F-01), OWN-CASE-04 rows constant (F-03) |
 | [`runs/20261120-failed`](runs/20261120-failed) | superseded gate before its row parser was fixed | `failed`; OWN-CASE-04 rows were misparsed after the test harness prefix |
+| [`runs/20261120-r2`](runs/20261120-r2) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `81139111` | `completed` / `unmet-cases`; OWN-CASE-01, 02, 04, 05, 06, 07 promoted; OWN-CASE-03 is an executed failure (deep chains refused at compose 5) |
 
-[`acceptance.json`](acceptance.json) is the latest receipt. Superseded receipts stay immutable;
-the rework receipts are added beside them, never edited.
+[`acceptance.json`](acceptance.json) is the same bytes as the latest run's receipt
+(`sha256 ae533fdd…`, `source_revision sha256:f09c0d…`, binary `8020eb86…`, tested commit
+`81139111`), retained as the stable path. Superseded receipts stay immutable; rework receipts are
+added beside them, never edited.
 
 ## Cases this gate executes
 
@@ -42,6 +45,9 @@ the rework receipts are added beside them, never edited.
   case's success condition.
 - **OWN-CASE-01, 02, 06, 07** run the lanes already described in the change's `tasks.md`; their
   observations are read from the lanes' JSONL evidence and printed values, not declared by the gate.
+  Every observed field is compared with the case's registered `expected` values; a mismatch is
+  recorded as `unmet`, and a case whose design cannot execute is recorded as a failure with the
+  observation that refused it.
 
 ## The anonymous capture summary bound
 
