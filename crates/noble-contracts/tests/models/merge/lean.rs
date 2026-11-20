@@ -350,9 +350,12 @@ pub(super) fn parse_transcript(stdout: &str, marker: &str) -> Result<Vec<String>
                 return Err("duplicate kernel acceptance marker".into());
             }
             is_accepted = true;
-        } else if trimmed.contains(ACCEPT) {
+            continue;
+        }
+        if trimmed.contains(ACCEPT) {
             return Err("unexpected acceptance marker in the checker transcript".into());
-        } else if trimmed.starts_with(AXIOM) {
+        }
+        if trimmed.starts_with(AXIOM) {
             if !is_accepted {
                 return Err("axiom report before kernel acceptance".into());
             }
@@ -370,7 +373,9 @@ pub(super) fn parse_transcript(stdout: &str, marker: &str) -> Result<Vec<String>
                 return Err("invalid transitive axiom report".into());
             }
             axioms.push(name.to_owned());
-        } else if trimmed.contains(AXIOM) {
+            continue;
+        }
+        if trimmed.contains(AXIOM) {
             return Err("unexpected axiom report in the checker transcript".into());
         }
     }
@@ -380,6 +385,10 @@ pub(super) fn parse_transcript(stdout: &str, marker: &str) -> Result<Vec<String>
     Ok(axioms)
 }
 
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-maintainers; the observation, its diagnostic and the tool/library/digest identities are one recorded value for this test-only checker, and the private helpers are called only by check_at with named fields"
+)]
 fn observed(
     submission: Submission,
     diagnostic: String,
@@ -415,6 +424,10 @@ fn refused(
     )
 }
 
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-maintainers; the failure kind, its diagnostic and the tool/library/digest identities are one recorded value for this test-only checker, and the private helper is called only by check_at with named fields"
+)]
 fn failed(
     failure: CheckFailure,
     diagnostic: String,
