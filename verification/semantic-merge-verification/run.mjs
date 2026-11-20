@@ -11,7 +11,9 @@ import { $ } from "bun";
 import { createHash } from "node:crypto";
 
 const root = new URL("../..", import.meta.url).pathname;
-const receiptPath = new URL("./receipt.json", import.meta.url).pathname;
+// A retained receipt is immutable: name a new one with the revision it binds.
+const receiptName = process.argv[2] ?? "receipt.json";
+const receiptPath = new URL(`./${receiptName}`, import.meta.url).pathname;
 const phase2Prefix = "NOBLE_SEMANTIC_MERGE_RECEIPT ";
 const verificationPrefix = "NOBLE_SEMANTIC_MERGE_VERIFICATION ";
 const leanPrefix = "NOBLE_SEMANTIC_MERGE_LEAN ";
@@ -49,7 +51,7 @@ const line = (stdout, prefix) => {
 const status = (
   await $`git status --porcelain`.cwd(root).text()
 ).trim();
-const excluded = [receiptPath];
+const excluded = [receiptPath, new URL("./receipt.json", import.meta.url).pathname];
 const dirty = status
   .split("\n")
   .filter((entry) => entry.trim().length !== 0)
