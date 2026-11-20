@@ -912,11 +912,82 @@ fn accepted_report(
             ),
         ),
     ]);
+    if !batch.elaborations.is_empty() {
+        fields.push(("elaboration", elaboration_evidence(batch)));
+    }
     fields.extend(super::diagnostics::classification_fields(
         schema,
         super::diagnostics::CHECKED,
     ));
     encoding::Json::Object(fields)
+}
+
+/// The inspect/copy-expanded record of every abbreviated proof in `batch`.
+fn elaboration_evidence(batch: &ProofBatch) -> encoding::Json {
+    let mut proofs = std::vec::Vec::with_capacity(batch.elaborations.len());
+    for record in &batch.elaborations {
+        let mut inserted = std::vec::Vec::with_capacity(record.inserted.len());
+        for argument in &record.inserted {
+            inserted.push(encoding::object([
+                ("span", span_evidence(argument.span)),
+                ("binder", encoding::string(&argument.binder)),
+                (
+                    "position",
+                    encoding::Json::Number(u64::from(argument.position)),
+                ),
+                ("head", encoding::string(&argument.head)),
+                ("solution", encoding::string(&argument.solution)),
+                (
+                    "constraints",
+                    encoding::Json::Array(
+                        argument
+                            .constraints
+                            .iter()
+                            .map(|span| span_evidence(*span))
+                            .collect(),
+                    ),
+                ),
+            ]));
+        }
+        proofs.push(encoding::object([
+            ("proof", encoding::string(&record.proof)),
+            ("revision", encoding::string(&record.revision)),
+            (
+                "abbreviated_sha256",
+                encoding::string(sha256(record.abbreviated.as_bytes())),
+            ),
+            (
+                "explicit_sha256",
+                encoding::string(sha256(record.explicit.as_bytes())),
+            ),
+            ("inserted", encoding::Json::Array(inserted)),
+            ("explicit", encoding::string(&record.explicit)),
+        ]));
+    }
+    encoding::object([
+        (
+            "revision",
+            encoding::string(noble_contracts::intrinsic::ELABORATION_REVISION),
+        ),
+        (
+            "work",
+            encoding::object([
+                (
+                    "normalization",
+                    encoding::Json::Number(u64::from(batch.elaboration_work.normalization)),
+                ),
+                (
+                    "substitution",
+                    encoding::Json::Number(u64::from(batch.elaboration_work.substitution)),
+                ),
+                (
+                    "total",
+                    encoding::Json::Number(u64::from(batch.elaboration_work.total)),
+                ),
+            ]),
+        ),
+        ("proofs", encoding::Json::Array(proofs)),
+    ])
 }
 
 /// Standalone, opt-in module source proof check, never a release decision.
@@ -1623,6 +1694,66 @@ fn execute(
 #[cfg(test)]
 mod tests {
     #[test]
+    fn elaboration_evidence_lists_inserted_arguments_and_digests() {
+        use noble_contracts::intrinsic::{
+            ElaborationRecord, InsertedArgument, ProofBatch, ProofWork, ELABORATION_REVISION,
+        };
+
+        let span = |start: u32, end: u32| noble_contracts::Span { start, end };
+        let batch = ProofBatch {
+            module: "logic".into(),
+            version: 1,
+            source: b"module logic@1 [ ]".to_vec(),
+            generation: 0,
+            dependencies: std::vec::Vec::new(),
+            obligations: std::vec::Vec::new(),
+            elaborations: std::vec![ElaborationRecord {
+                proof: "refl-list".into(),
+                revision: ELABORATION_REVISION.into(),
+                inserted: std::vec![InsertedArgument {
+                    span: span(10, 17),
+                    binder: "A".into(),
+                    position: 0,
+                    head: "logic@1/poly-refl".into(),
+                    solution: "(List I64)".into(),
+                    constraints: std::vec![span(30, 48)],
+                }],
+                abbreviated: "(intro (x (List I64)) (app (use poly-refl) x))".into(),
+                explicit: "(intro (x (List I64)) (apply (apply (use poly-refl) (List I64)) x))"
+                    .into(),
+            }],
+            elaboration_work: ProofWork {
+                normalization: 3,
+                substitution: 7,
+                total: 11,
+            },
+        };
+        let report = super::elaboration_evidence(&batch).encode();
+        for expected in [
+            "\"revision\":\"implicit-args/v1\"",
+            "\"binder\":\"A\"",
+            "\"position\":0",
+            "\"head\":\"logic@1/poly-refl\"",
+            "\"solution\":\"(List I64)\"",
+            "\"start\":30",
+            "\"start\":10",
+            "\"normalization\":3",
+            "\"substitution\":7",
+            "\"explicit\":\"(intro (x (List I64)) (apply (apply (use poly-refl) (List I64)) x))\"",
+        ] {
+            assert!(
+                report.contains(expected),
+                "elaboration evidence lost {expected}: {report}"
+            );
+        }
+        assert_eq!(
+            report.matches("\"explicit_sha256\":").count(),
+            1,
+            "one record must carry exactly one explicit digest"
+        );
+    }
+
+    #[test]
     fn dependency_revisions_preserve_preorder_error_priority() {
         use noble_contracts::intrinsic::{
             Form, FormKind, PendingGoal, ProofDependency, ProofObligation,
@@ -1651,6 +1782,7 @@ mod tests {
                     },
                     term: form,
                     span,
+                    elaboration: false,
                 },
                 exported: true,
                 dependencies,
