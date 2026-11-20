@@ -202,7 +202,7 @@
     "crates/noble-cli/src/workflow/intrinsic.rs": "3e5b0723595718b8897c5b64cceda6b451312004e32d38c7b247d618148da229",
     "crates/noble-cli/tests/c_backend.rs": "6ca34214831c63fff14de15805106f3b0734365541e3358c86c39f0fa97a1652",
     "crates/noble-cli/tests/fixtures/worker-send-dispatch.noble": "0bb7e63ef292cfa871f15b6f154a9426cb739fe5185a7098e324c653de84f65e",
-    "crates/noble-cli/tests/live_repl.rs": "d1b5501006d735b267608ca1fc67c4dc76a43d90653fc5b67a449d4bb646a3f1",
+    "crates/noble-cli/tests/live_repl.rs": "072d6da6bf34d5d6596656ef06939496133b0ca838fdba0782c9b166b97eb1ef",
     "crates/noble-cli/tests/live_slot_selected_origin.mjs": "1a3ae8a348c93e63792d200fc1e4ee9a13868c88cb8bb1709267fce68dba90d4",
     "crates/noble-cli/tests/live_slot_selected_retention.rs": "c3d570334884cbda25ed5b7822ff76aefba3cf8f3e3f36699c49e98cb38d6fa0",
     "crates/noble-cli/tests/smoke.rs": "bbb2777afb51c3b2a2853226c3379e43cc282ebec21f155661a79d7efbaac1a2",
