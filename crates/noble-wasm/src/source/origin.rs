@@ -1267,49 +1267,47 @@ struct TemplateWalk {
 /// Canonical structural spelling of a fixed I64 source recipe: `#2` for a
 /// literal and `add(#1,#1)` for checked input-independent arithmetic.
 #[expect(
+    tigerstyle::mutating_input_in_pure,
     tigerstyle::no_recursion,
-    reason = "Owner: noble-wasm-maintainers; the recursion follows the structure of an already checked, size-bounded fixed recipe and charges depth and nodes on every call."
+    reason = "Owner: noble-wasm-maintainers; the recursion follows the structure of an already checked, size-bounded fixed recipe, and the node meter is the caller's bounded derivation state."
 )]
 fn recipe_binding(
     recipe: &Rc<OriginFixedExpression>,
-    out: &mut alloc::string::String,
     depth: usize,
     nodes: &mut usize,
-) -> Option<()> {
+) -> Option<alloc::string::String> {
     *nodes = nodes.checked_add(1)?;
     if *nodes > MAX_ORIGIN_OPERATIONS || depth > MAX_ORIGIN_DEPTH {
         return None;
     }
     match recipe.as_ref() {
-        OriginFixedExpression::Literal(value) => {
-            out.push('#');
-            let _ = core::fmt::Write::write_fmt(out, format_args!("{value}"));
-        }
+        OriginFixedExpression::Literal(value) => Some(alloc::format!("#{value}")),
         OriginFixedExpression::Arithmetic {
             kind, left, right, ..
         } => {
-            out.push_str(match kind {
-                OriginFixedArithmetic::Add => "add(",
-                OriginFixedArithmetic::Sub => "sub(",
-                OriginFixedArithmetic::Mul => "mul(",
-            });
-            recipe_binding(left, out, depth + 1, nodes)?;
-            out.push(',');
-            recipe_binding(right, out, depth + 1, nodes)?;
-            out.push(')');
+            let kind = match kind {
+                OriginFixedArithmetic::Add => "add",
+                OriginFixedArithmetic::Sub => "sub",
+                OriginFixedArithmetic::Mul => "mul",
+            };
+            Some(alloc::format!(
+                "{kind}({},{})",
+                recipe_binding(left, depth + 1, nodes)?,
+                recipe_binding(right, depth + 1, nodes)?
+            ))
         }
     }
-    Some(())
 }
 
 /// Canonical structural spelling of one retained Program cell's logical
 /// source binding. A revisited cell keeps the key of its first occurrence, so
 /// physical sharing never changes the key.
 #[expect(
+    tigerstyle::function_length,
     tigerstyle::mutating_input_in_pure,
     tigerstyle::no_recursion,
     tigerstyle::too_many_parameters,
-    reason = "Owner: noble-wasm-maintainers; the walk mutates only its own exclusively borrowed work state, the recursion follows an already checked size-bounded returned graph, and the parameters are the four independent checked inputs plus the shared bound state threaded explicitly."
+    reason = "Owner: noble-wasm-maintainers; the walk keeps one ordered derivation of captures, classes and owner in a single reviewable unit; it mutates only its own exclusively borrowed work state, the recursion follows an already checked size-bounded returned graph, and the parameters are the four independent checked inputs plus the shared bound state threaded explicitly."
 )]
 fn template_key(
     value: &Rc<OriginProgramValue>,
@@ -1353,18 +1351,13 @@ fn template_key(
             if !walk.captures.contains(position) {
                 walk.captures.push(*position);
             }
-            let mut key = alloc::string::String::from("q(r");
-            let _ = core::fmt::Write::write_fmt(&mut key, format_args!("{position})"));
-            key
+            alloc::format!("q(r{position})")
         }
         OriginProgramValue::Quote {
             operand: OriginOperand::I64(OriginI64::Fixed { recipe, .. }),
             ..
         } => {
-            let mut key = alloc::string::String::from("q(");
-            recipe_binding(recipe, &mut key, 0, fixed_nodes)?;
-            key.push(')');
-            key
+            alloc::format!("q({})", recipe_binding(recipe, 0, fixed_nodes)?)
         }
         OriginProgramValue::Quote {
             operand: OriginOperand::Program(child),
@@ -1454,22 +1447,13 @@ fn static_program_key(
         return None;
     }
     *walk.static_visiting.get_mut(index)? = true;
-    let mut key = alloc::string::String::from("p");
-    let _ = core::fmt::Write::write_fmt(
-        &mut key,
-        format_args!("{}:{}[", program.input_signature, program.output_signature),
-    );
-    let mut first = true;
-    for operation in &program.operations {
-        if !first {
+    let mut key = alloc::format!("p{}:{}[", program.input_signature, program.output_signature);
+    for (at, operation) in program.operations.iter().enumerate() {
+        if at > 0 {
             key.push(';');
         }
-        first = false;
         match operation.action {
-            OriginAction::I64(value) => {
-                key.push('#');
-                let _ = core::fmt::Write::write_fmt(&mut key, format_args!("{value}"));
-            }
+            OriginAction::I64(value) => key.push_str(&alloc::format!("#{value}")),
             OriginAction::Add => key.push_str("add"),
             OriginAction::Sub => key.push_str("sub"),
             OriginAction::Mul => key.push_str("mul"),
