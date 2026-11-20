@@ -427,6 +427,11 @@ const lanes = {
     authority: authorityOf(path.join(lane06.directory, 'LSLOT06-valid-borrow.jsonl')),
     stageSteps: steps06.map(step => step.row.stage), installInputs06 },
   'LSLOT-07': { cases: cas, slot: 'emit', pinnedEpoch,
+    emit_v1_source: pairedFiles(
+      path.join(lane0407.directory, 'LSLOT07-publication-without-grant.requests.jsonl'),
+      path.join(lane0407.directory, 'LSLOT07-publication-without-grant.jsonl'))
+      .find(step => step.request?.operation === 'install' && step.request.id === 'emit1')
+      .request.source,
     stageSteps: casSteps.map(step => step.row.stage) },
   'LSLOT-09': { legacy: summary09Legacy, repl: summary09Repl,
     replProfileLabel: 'guarded Live-Wasm-Draft',

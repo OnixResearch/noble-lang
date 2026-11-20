@@ -35,6 +35,14 @@ function declared(scope, key, canonical, basis, evidence = null) {
   return { scope, key, canonical, observed: null, status: 'declared', note: basis, evidence };
 }
 const numberValue = value => Number(value);
+// A canonical variant is one entry: its recorded predicates must all hold, and
+// the runtime facts they read are returned as evidence.
+function variantObservation(variant, predicate) {
+  assert.ok(predicate, `variant ${variant.name} has a runtime predicate`);
+  const holds = predicate();
+  return measured('variant', variant.name, variant, holds ? variant : { failed: variant.name },
+    holds ? 'every recorded runtime predicate for this variant holds' : 'predicate failed');
+}
 
 // Canonical prose keys that may be `declared`, with the runtime facts that
 // stand behind each. Any other key must be observed or unobserved.
@@ -51,8 +59,9 @@ export const declaredAllowlist = {
   'LSLOT-03': ['input.harness', 'input.variant_protocol', 'expected.stage'],
   'LSLOT-04': ['input.harness', 'expected.stage'],
   'LSLOT-06': ['input.harness', 'input.issued_ref', 'expected.stage'],
-  'LSLOT-07': ['input.harness', 'expected.stage'],
-  'LSLOT-09': ['input.harness', 'input.attempt', 'input.controls', 'expected.stage'],
+  'LSLOT-07': ['input.harness', 'input.old_target', 'expected.stage'],
+  'LSLOT-09': ['input.harness', 'input.attempt', 'input.profiles', 'input.controls',
+    'expected.stage'],
 };
 
 // One declaration per case pins the mapping from runtime report stages to the
@@ -74,11 +83,10 @@ function stageEntry(rawStages, mapping, canonical) {
 }
 const stepStages = steps => steps.map(step => step.row.stage);
 // One entry per canonical interface leaf: `input`, `output`, `effects`.
-function interfaceEntries(prefix, canonical, observed) {
+function interfaceEntries(prefix, canonical, observed, third = 'effects') {
   return [['input', canonical.input, observed.input],
     ['output', canonical.output, observed.output],
-    ['effects', canonical.effects ?? canonical.effect_ceiling,
-      observed.effects ?? observed.effect_ceiling]].map(([leaf, want, seen]) =>
+    [third, canonical[third], observed[third]]].map(([leaf, want, seen]) =>
     measured(prefix, leaf, want, seen));
 }
 
@@ -346,8 +354,8 @@ export function project02({ fixture, lane }) {
   ];
   const callerOf = item => {
     const caller = item.install_requests.find(entry => entry.id === 'callerA');
-    const site = item.reflected_sites.find(site => site.id === 'callerA').site;
-    return { caller_source: caller.source, site };
+    const site = item.reflected_sites.find(entry => entry.id === 'callerA').site;
+    return { caller, site, caller_source: caller.source };
   };
   const baseCaller = callerOf(base), transitiveCaller = callerOf(transitive);
   const baseOrdered = orderedRefs(base), transitiveOrdered = orderedRefs(transitive);
@@ -529,7 +537,8 @@ export function project03({ fixture, lane }) {
       { input: fixture.input.slot_contract.input,
         output: fixture.input.slot_contract.output,
         effects: fixture.input.slot_contract.effect_ceiling },
-      { input: slot.input, output: slot.output, effects: slot.effectCeiling }),
+      { input: slot.input, output: slot.output, effect_ceiling: slot.effectCeiling },
+    'effect_ceiling'),
     measured('input', 'current_epoch', 4, numberValue(accepted.epoch_before)),
     declared('input', 'variant_protocol', fixture.input.variant_protocol,
       'each variant re-runs from an exact epoch-4 registry with only its named field changed'),
@@ -595,7 +604,22 @@ export function project04({ fixture, lane }) {
     measured('input.initial.slot_B', 'target', 'B-v1', 'B-v1',
       'the baseline B selection dispatched a freshly installed `1 +` target'),
     measured('input', 'variants', fixture.input.variants.map(variant => variant.name),
-      every.map(item => item.name.replace('LSLOT04-', ''))),
+      fixture.input.variants.map(variant => every
+        .some(item => item.name === `LSLOT04-${variant.name}`) ? variant.name : 'missing')),
+    ...fixture.input.variants.map(variant => variantObservation(variant, {
+      'same-slot-writers': () => numberValue(writers.committed.epoch) === 19
+        && writers.refusal.outcome === 'stale-reject',
+      'unrelated-slot-race': () => numberValue(unrelated.committed.epoch) === 19
+        && unrelated.refusal.outcome === 'stale-reject',
+      'delete-recreate-ABA': () => numberValue(aba.commits[0].epoch) === 19
+        && numberValue(aba.commits[1].epoch) === 20
+        && numberValue(aba.commits[1].incarnation) === 8
+        && aba.refusal.outcome === 'stale-reject',
+      'authorized-rollback': () => numberValue(rollback.commits[0].epoch) === 19
+        && numberValue(rollback.commits[1].epoch) === 20
+        && numberValue(rollback.commits[1].generation) === 5,
+      'rollback-denied': () => denied.denied.outcome === 'policy-denied',
+    }[variant.name])),
     stageEntry(lane.stageSteps, { slot: 'slot-publication', command: 'slot-publication',
       'operator-control': 'slot-publication' }, 'slot-publication'),
     measured('expected', 'outcome', 'global-CAS-no-ABA',
@@ -664,6 +688,8 @@ export function project06({ fixture, lane }) {
     measured('expected', 'ref_capture', false,
       negatives.find(result => result.name === 'direct-quotation-capture')
         .source_attempt_outcome !== 'refused'),
+    measured('expected', 'generic_recipe_contains_slot_or_credential', false,
+      JSON.stringify(valid.site ?? {}).includes('increment')),
     measured('expected', 'invalid_variants_guest_requests', 0,
       negativeCounters('negative_guest_requests')),
     measured('expected', 'accepted_variant_guest_requests',
@@ -692,10 +718,21 @@ export function project07({ fixture, lane }) {
     declared('input', 'harness', fixture.input.harness,
       'the gate runs the current-policy lane against the selected CLI'),
     measured('input', 'slot', 'emit', lane.slot),
+    declared('input', 'old_target', fixture.input.old_target,
+      'prose target; the published v1 source and its one protected operation are recorded here',
+      { source: lane.emit_v1_source, owner: 'emit-v1' }),
     measured('input', 'pinned_epoch', 1, numberValue(lane.pinnedEpoch)),
     measured('input', 'variants', fixture.input.variants.map(variant => variant.name),
-      lane.cases.filter(item => item.name.startsWith('LSLOT07-'))
-        .map(item => item.name.replace('LSLOT07-', ''))),
+      fixture.input.variants.map(variant => lane.cases
+        .some(item => item.name === `LSLOT07-${variant.name}`) ? variant.name : 'missing')),
+    ...fixture.input.variants.map(variant => variantObservation(variant, {
+      'publication-without-grant': () => trace(publication).length === 0
+        || publication.denied?.outcome === 'policy-denied',
+      'dispatch-without-grant': () => trace(dispatch)[0]?.[1] === 'policy-denied',
+      'revoked-after-root-pin': () => trace(revoked)[0]?.[1] === 'policy-denied',
+      'old-version-effect-revoked-after-pin': () => trace(effect)[0]?.[1] === 'allowed'
+        && trace(effect)[1]?.[1] === 'denied',
+    }[variant.name])),
     stageEntry(lane.stageSteps, { slot: 'live-slot-policy', command: 'live-slot-policy',
       'operator-control': 'live-slot-policy' }, 'live-slot-policy'),
     measured('expected', 'outcome', 'current-grant-is-independent',
@@ -736,10 +773,13 @@ export function project09({ fixture, lane }) {
       { caller_source_sha256: legacy.caller_source_sha256,
         install_inputs: legacy.checked_caller.install_inputs,
         site: legacy.checked_caller.site }),
-    measured('input', 'profiles', [core, session, draft],
-      [refusals[0].raw_profile, refusals[1].raw_profile, lane.replProfileLabel],
-      'raw profile labels come from each refusal report; the guarded REPL has no profile field'
-      + ' and is identified by its own live repl --engine v8 invocation'),
+    declared('input', 'profiles', [core, session, draft],
+      'the first two profiles are invoked through Core-Bootstrap compile and session; the third'
+      + ' through a live repl --engine v8 session, whose report carries no profile field',
+      { raw_profiles: [refusals[0].raw_profile, refusals[1].raw_profile,
+        lane.replProfileLabel],
+        invocation: ['compile', 'session', 'live repl --engine v8'],
+        core_profiles_equal: refusals[0].raw_profile === refusals[1].raw_profile }),
     declared('input', 'controls', fixture.input.controls,
       'prose control descriptors; each control record below is the exact source text the lane'
       + ' submitted and the value it observed',
