@@ -450,6 +450,10 @@ fn selected_template(
     Ok(output.template.clone())
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the harness helper borrows a checked class list and scans it linearly, which is not const-compatible; it asserts only fixture observations."
+)]
 fn class_occurrences(template: &noble_wasm::source::OriginTemplate, binding: &str) -> Option<u32> {
     template
         .classes
