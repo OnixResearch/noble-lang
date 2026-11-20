@@ -38,10 +38,11 @@ lowers checked `pair`/`unpair`, `inl`/`inr`/`case` and
 preflight operand order and kind before each supported operation;
 Pair/Sum/List cells and static/dynamic Program values retain checked
 shape identities. List cells retain their exact length, with a maximum
-255-element source-only ceiling and an effective policy bound enforced
-before `cons` growth. The exact supplied policy bytes participate in the
-build subject, and the effective bound is retained in the manifest and
-emitted C. An iterative step-charged walk accounts for nested quotation
+255-element source-only ceiling and an effective policy bound with a
+pre-`cons` check, not executed as native code. The exact supplied policy
+bytes participate in the build subject, and the effective bound is retained
+in the manifest and emitted C. An iterative step-charged walk accounts for
+nested quotation
 captures. This source-only policy acceptance does NOT satisfy the
 CB-CASE-01/06 native runtime, quota or C/Wasm observations.
 Final Pair/Sum/List/Syntax/Program results, `reflect`, typed runtime
@@ -184,12 +185,12 @@ executable/writable mapping MUST refuse before effects, not pass because
 a manifest or syntax check succeeded.
 
 The restricted source-only emitter is not CB-ADMIT-01 admission. Its current
-final-component `O_NOFOLLOW` reads refuse only a final-component symlink,
-authenticate no path component and seal no inputs, and its output child
-paths are re-resolved after directory creation; it MUST NOT turn those file
-digests into a claim of native correspondence or permit native execution.
-This gap remains OPEN until a separately admitted native build/launch path
-implements the descriptor-bound contract above.
+final-component `O_NOFOLLOW` reads refuse only a final-component symlink and
+non-regular or oversized files, authenticate no path component and seal no
+inputs, and its output child paths are re-resolved after directory creation;
+it MUST NOT turn those file digests into a claim of native correspondence or
+permit native execution. This gap remains OPEN until a separately admitted
+native build/launch path implements the descriptor-bound contract above.
 
 
 

@@ -18,11 +18,12 @@ Subject under review:
   `specs/conformance/c-backend-cases.json`.
 
 Revision: this version resolves the independent review record of 2026-11-20
-(findings R-01 to R-17). The delta text changed for R-01 (`rdtsc`
-restored), R-06 (limit insertion reworded for post-sync reading) and R-08
-(input-read disclosure), and the preview hashes were refreshed. Packet and
-reconciliation text changed for the remaining findings; no canonical text
-changed.
+(findings R-01 to R-17 and round-2 notes N-1 to N-6). The delta text changed
+for R-01 (`rdtsc` restored), R-06 (limit insertion reworded for post-sync
+reading), R-08 and N-5 (input reads refuse symlinks and non-regular or
+oversized files) and N-6 (CB-BUILD-01 "not executed" qualifier), and the
+preview hashes were refreshed. Packet and reconciliation text changed for
+the remaining findings; no canonical text changed.
 
 How the canonical text was reached: `git log -p -- .cairn/specs/c-backend/spec.md`.
 The surviving canonical text of CB-BUILD-01 equals the creation commit
@@ -131,10 +132,11 @@ Second paragraph, added in full:
 ```
 
 History: `da465a52` temporarily replaced the canonical paragraph-1
-escape/"terminate with zero" clause with TSC/containment wording;
-`5c1d124c` narrowed it to namespace/sandbox escape and extended the clock
-probes (vDSO family, direct vvar, `rdtscp`); `27f7fd79` reverted both and
-restored the canonical sentence above. `fd54c757` is a twin of `e76d8469`
+escape/"terminate with zero" clause with TSC/containment wording and changed
+the paragraph-2 seccomp sentence to `rdtsc`/`rdtscp`; `5c1d124c` narrowed
+the paragraph-1 clause to namespace/sandbox escape and added the
+vDSO/vvar/`rdtscp` hostile-probe sentence; `27f7fd79` reverted both and
+restored the canonical sentences above. `fd54c757` is a twin of `e76d8469`
 with the same resulting blob. The delta now adds the clock probes as
 insertions, so a sync can no longer drop the canonical wording.
 
@@ -201,10 +203,16 @@ safety delta") changed only these two cases in
 - CB-CASE-06: each quota control's `list_length_limit` became
   `policy.limits.list_length`; `expected` gained
   `manifest_list_length_by_quota_control: [1, 0]`.
-- CB-CASE-08: the harness name gained `-and-clock-bypass-probes`; the
-  attempts grew from 7 to 15 (seven vDSO/vvar/`rdtsc`/`rdtscp` clock probes
-  plus `unshare`); `expected` gained
-  `guest_host_clock_observations: 0` and
+- CB-CASE-08: the harness name changed from
+  `isolated-test-only-sandbox-runner-direct-syscall-probe` to
+  `isolated-test-only-sandbox-runner-direct-syscall-and-clock-bypass-probes`;
+  `input.clock_probe_source_design` was added (AT_SYSINFO_EHDR vDSO
+  resolution of `__vdso_clock_gettime`, `__vdso_time` and
+  `__vdso_gettimeofday` plus the coarse clock, direct vvar mapping reads,
+  `rdtsc` `0f31` and `rdtscp` `0f01f9`, with the trusted runner comparing
+  repeated guest clock values and deltas against independent host realtime
+  and monotonic samples); the attempts grew from 7 to 15 (seven clock probes
+  plus `unshare`); `expected` gained `guest_host_clock_observations: 0` and
   `guest_host_elapsed_time_observations: 0`.
 
 ### CB-CASE-06 (CB-LIMIT-01, CB-VALUE-01, CB-GATE-01)
@@ -226,9 +234,11 @@ safety delta") changed only these two cases in
   the delta insertion.
 - Open design gap: the quota-control policies are partial overlays
   (`{"limits":{"list_length":1}}`). The current decoder would refuse them
-  because `stack_slots`, `steps` and `output_bytes` are absent, and those
-  values decide the expected `normal` / `[I64 21]` outcome. The policies
-  must be completed before any execution; checklist item 5 "Revise".
+  before the limit values matter: the policy also lacks the outer `profile`,
+  `target`, `allowed_effects` and four-field `limits` shape. In addition,
+  the limits overlay omits `stack_slots`, `steps` and `output_bytes`, which
+  decide the expected `normal` / `[I64 21]` outcome. The policies must be
+  completed before any execution; checklist item 5 "Revise".
 
 ### CB-CASE-08 (CB-SANDBOX-01, CB-GATE-01)
 
@@ -251,7 +261,7 @@ safety delta") changed only these two cases in
 
 ## 3. Safety obligations
 
-### Canonical CB-LIMIT-01 (added by `e76d8469`)
+### Canonical CB-LIMIT-01 (paragraph added by `e76d8469`)
 
 - a supplied `limits.list_length` is an exact policy value even for scalar
   sources;
@@ -272,7 +282,7 @@ safety delta") changed only these two cases in
   names at every nesting level, so an earlier supplied bound cannot be
   overwritten by a later value before validation.
 
-### Canonical CB-SANDBOX-01 (added by `e76d8469`)
+### Canonical CB-SANDBOX-01 (paragraph 1 from `9a2e4092`, narrowed by `e76d8469`; paragraph 2 added by `e76d8469`)
 
 - confinement applies **before candidate instructions** (a narrowing from
   the pre-edit "before loading admitted bytes"; see §1.2): close inherited
@@ -344,14 +354,14 @@ evidence.
 Seven of eleven delta blocks are byte-identical to the canonical requirement
 prose (the canonical also carries generated scenario regions). The other four
 contain every canonical sentence verbatim plus inserted reviewed text:
-CB-BUILD-01 one paragraph, CB-LIMIT-01 two sentences, CB-SANDBOX-01 two
+CB-BUILD-01 one paragraph, CB-LIMIT-01 three sentences, CB-SANDBOX-01 two
 sentences, CB-ADMIT-01 one paragraph. No canonical sentence is deleted or
 modified by a sync. The dry-run preview reports `blocked: false` with eleven
-`modified` operations. After the review revisions (R-01, R-06, R-08) the
-preview was re-run: delta hash
-`14ff1574c20707e95871d898bc7a978d7e1894d29b14f8fd835f157d4cfd0035`,
+`modified` operations. After the review revisions (R-01, R-06, R-08, N-5,
+N-6) the preview was re-run: delta hash
+`ebb57a7aff2992febb9fd83021a77d5e516cabc48261854f93db445908573c61`,
 `expected_after_hash`
-`bd84b26a63902668d09e604412985065d424cc8767cbe664d90aa7ef22d3150b`.
+`e2b67dc4087dbf73b245e91bf4f525e8091bfbb86ad3c7aa10564435ee7493d2`.
 Details, per-requirement hashes and the exact pre-fix differences are in
 `reconciliation.md`.
 
@@ -412,11 +422,17 @@ Please mark one line per item.
    - Accept: the obligations are sufficient as written.
    - Reject: a named obligation is insufficient or unsafe; state which.
    - Revise: require additional clock/vvar/TSC, loader or FD obligations.
-   - Accept/Reject the `e76d8469` timing relaxation: confinement now starts
-     "before candidate instructions" rather than "before loading admitted
-     bytes", and process creation/exec is blocked only "post-load". Pinned
-     loader/startup code may run before the post-load filter; no guest
-     computation may. Compensating obligations are in §1.2 and §3.
+   - Accept/Reject the `e76d8469` timing relaxation **and its reading**:
+     confinement now starts "before candidate instructions" rather than
+     "before loading admitted bytes", and process creation/exec is blocked
+     only "post-load". This line records the interpretation that ¶1
+     "candidate instructions" and ¶2 "untrusted instructions" name the same
+     boundary, after pinned loader/startup setup and before the admitted
+     program's own instructions: pinned startup/runtime code may run before
+     the post-load filter, but no guest computation may. A later reviewed
+     canonical edit could align the two terms. Compensating obligations are
+     in §1.2 and §3; the owner's answer should record both the relaxation
+     and this reading.
    - Accept/Revise the FD set: ¶1 enumerates request/response protocol FDs,
      ¶2 also keeps output FDs open, and the runtime writes stdout/stderr.
 

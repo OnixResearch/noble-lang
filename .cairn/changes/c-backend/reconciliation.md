@@ -32,7 +32,7 @@ omitted a canonical obligation.
 | CB-NUM-01 | 887 | 887 | identical | identical; generated region removed |
 | CB-VALUE-01 | 1116 | 1116 | identical | identical; generated region removed |
 | CB-ORDER-01 | 697 | 697 | identical | identical; generated region removed |
-| CB-LIMIT-01 | 1469 | 1717 | both changed (one status sentence replaced, one obligation added) | canonical verbatim + 2 inserted sentences |
+| CB-LIMIT-01 | 1469 | 1717 | both changed (one status sentence replaced, one obligation added) | canonical verbatim + 3 inserted sentences |
 | CB-HOST-01 | 1426 | 1426 | identical | identical; generated region removed |
 | CB-SANDBOX-01 | 2954 | 3296 | both changed (escape obligation narrowed, clock clause strengthened) | canonical verbatim + 2 inserted sentences |
 | CB-ADMIT-01 | 2345 | 2808 | delta stronger (canonical verbatim + 1 paragraph) | unchanged prose; generated region removed |
@@ -57,8 +57,9 @@ I64/Bool/Unit/Text result; `stack_slots`/`steps`/`output_bytes` plus an
 optional exact `list_length` 0..255 (default 255); `expected_interface`
 comparison against source preparation and kernel acceptance; internal
 Pair/Sum/List lowering with checked shapes and a 256-slot arena; effective
-list bound retained in the manifest and emitted C; recursive duplicate JSON
-member refusal; and the explicit statement that this is not native
+list bound retained in the manifest and emitted C with a pre-`cons` check
+that is not executed as native code; recursive duplicate JSON member
+refusal; and the explicit statement that this is not native
 compilation, admission, sandbox evidence or CB-CASE-01/06 observation.
 
 ### CB-LIMIT-01 (fixed)
@@ -242,7 +243,8 @@ requirement identities.
 |---|---|---|---|
 | before fix | `9a5c9b2a779cfa378afbf853fe5c53e72d66075df022a802769eed014c0d1bb6` | `a5515aa621083bdca8564ed52976788d79b77e627e6768a4d8e9395149ef18c4` | 11 modified |
 | after fix | `cdb0eae6a0b9d188d8339d16b15e36551fa0ac9f9a673b23b800797a379f7336` | `11d99f29b0b54218d40ad6804bdde0202a8bcf99711c258c9044536c58434940` | 11 modified |
-| after review revisions (current) | `14ff1574c20707e95871d898bc7a978d7e1894d29b14f8fd835f157d4cfd0035` | `bd84b26a63902668d09e604412985065d424cc8767cbe664d90aa7ef22d3150b` | 11 modified |
+| after round-1 review revisions | `14ff1574c20707e95871d898bc7a978d7e1894d29b14f8fd835f157d4cfd0035` | `bd84b26a63902668d09e604412985065d424cc8767cbe664d90aa7ef22d3150b` | 11 modified |
+| after round-2 notes (current) | `ebb57a7aff2992febb9fd83021a77d5e516cabc48261854f93db445908573c61` | `e2b67dc4087dbf73b245e91bf4f525e8091bfbb86ad3c7aa10564435ee7493d2` | 11 modified |
 
 Every `expected_after` value was reproduced independently from the two
 documents before being trusted; the preview is a dry run and does not
