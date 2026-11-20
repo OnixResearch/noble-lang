@@ -713,7 +713,7 @@ async function observeLive05() {
   observe('LIVE-05', 'expected.atomic_save_after_ack_next_call_stack_bottom_to_top', isStack(next, ['I64:22']),
     { stack: stackOf(next) });
   observe('LIVE-05', 'expected.successful_ack_only_after_commit',
-    ack.outcome === 'reload-committed' && ack.source_freshness === 'matched-at-postpublish-check',
+    ack.outcome === 'reload-committed' && ack.source_freshness === 'matched-at-watch-ack-check',
     { outcome: ack.outcome, source_freshness: ack.source_freshness });
   observe('LIVE-05', 'expected.new_submission_after_ack_uses_new_generation', isStack(next, ['I64:22']),
     { stack: stackOf(next) });
