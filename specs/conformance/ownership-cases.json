@@ -23,8 +23,30 @@
         "stale_handle_traps": 0,
         "guest_requests": 0
       },
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+      "kind": "test",
+      "subject": "OWN-CASE-01",
+      "claim": "The direct typed quote `def k [ quote ]` saves a Program whose captured value 5 is still live after the creating root exits; a second root runs it with 20 via `swap [ run ] dip +` and returns 25 with zero guest requests, and the owner is refused after release while its installed span retires.",
+      "revision": "0.1.0-draft.5",
+      "result": "passed",
+      "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+      "configuration": {
+            "profile": "Ownership-Lifetime-Design",
+            "receipt": "../../verification/own-cases/acceptance.json",
+            "receipt_sha256": "e873df587c72f0d741ccf746a55bb5baff40b2816b9d08ca6f29e3a99d5e4b38",
+            "gate": "../../verification/own-cases/gate.mjs",
+            "tested_commit": "5c9e38f499da9091636257a0ff1aff4afcecfc26",
+            "binary_sha256": "d1e084df7a484c828fe2c5594ddf240fa1102dc6d25d6a07b7626effba193c29",
+            "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+            "case_id": "OWN-CASE-01",
+            "lane": "crates/noble-cli/tests/live_slot_direct_quote.mjs"
+      },
+      "assumptions": [
+            "Executed through `noble live slot` on the binary built from commit 5c9e38f4; the receipt binds the source snapshot and binary digest.",
+            "Finite behavioral evidence for this run; it does not prove capture lifetime, reclamation or compiler correctness."
+      ]
+}]
     },
     {
       "id": "OWN-CASE-02",
@@ -46,8 +68,30 @@
         "final_owner_refused_after_second_release": true,
         "identical_final_live_count": "not-directly-observable"
       },
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+      "kind": "test",
+      "subject": "OWN-CASE-02",
+      "claim": "Both `[ 1 + ] dup` release orders leave the surviving owner runnable (42) after the first release, refuse the released owner, and refuse both owners after the second release.",
+      "revision": "0.1.0-draft.5",
+      "result": "passed",
+      "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+      "configuration": {
+            "profile": "Ownership-Lifetime-Design",
+            "receipt": "../../verification/own-cases/acceptance.json",
+            "receipt_sha256": "e873df587c72f0d741ccf746a55bb5baff40b2816b9d08ca6f29e3a99d5e4b38",
+            "gate": "../../verification/own-cases/gate.mjs",
+            "tested_commit": "5c9e38f499da9091636257a0ff1aff4afcecfc26",
+            "binary_sha256": "d1e084df7a484c828fe2c5594ddf240fa1102dc6d25d6a07b7626effba193c29",
+            "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+            "case_id": "OWN-CASE-02",
+            "lane": "crates/noble-cli/tests/live_slot_ownership_cases.mjs"
+      },
+      "assumptions": [
+            "Executed through `noble live slot` on the binary built from commit 5c9e38f4.",
+            "The runtime exposes no live-cell count; reclamation timing is observed only through owner refusal and the survivor running."
+      ]
+}]
     },
     {
       "id": "OWN-CASE-03",
@@ -71,8 +115,31 @@
           "right-deep": {"result_before": 8, "result_after": 8, "released_before_root": 14}
         }
       },
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+      "kind": "test",
+      "subject": "OWN-CASE-03",
+      "claim": "Balanced, left-deep and right-deep 8-leaf `compose` trees each return 8 before and after every other owner is released. The capture summary now uses the same 32-node/4096-byte exact bound as the selected-origin and retained-graph paths; a 40-leaf control is still refused at compose 16 by the 32-node bound, so the representation budget remains charged.",
+      "revision": "0.1.0-draft.5",
+      "result": "passed",
+      "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+      "configuration": {
+            "profile": "Ownership-Lifetime-Design",
+            "receipt": "../../verification/own-cases/acceptance.json",
+            "receipt_sha256": "e873df587c72f0d741ccf746a55bb5baff40b2816b9d08ca6f29e3a99d5e4b38",
+            "gate": "../../verification/own-cases/gate.mjs",
+            "tested_commit": "5c9e38f499da9091636257a0ff1aff4afcecfc26",
+            "binary_sha256": "d1e084df7a484c828fe2c5594ddf240fa1102dc6d25d6a07b7626effba193c29",
+            "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+            "case_id": "OWN-CASE-03",
+            "lane": "crates/noble-cli/tests/live_slot_ownership_cases.mjs"
+      },
+      "assumptions": [
+            "The former 1000-byte/64-node budget applied only to anonymous capture summaries; retention already walks up to 4096 nodes and the selected-origin summary already used 4096 bytes.",
+            "The bounded control shows the representation limit still refuses deeper chains after the change.",
+            "Reclamation is observed through owner refusal, not a live-cell count."
+      ]
+}]
     },
     {
       "id": "OWN-CASE-04",
@@ -122,8 +189,30 @@
           "borrow-save-program": "inapplicable-no-borrow-profile"
         }
       },
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+      "kind": "test",
+      "subject": "OWN-CASE-04",
+      "claim": "The six non-borrow resource variants (`dup`, `drop`, `quote`, `Pair` then `quote`, `Sum` then `drop`, `List` then `drop`) are rejected by the kernel at the check stage with the exact `Eligibility` constraint before any candidate submission or emission; `I64` controls are accepted by the same harness.",
+      "revision": "0.1.0-draft.5",
+      "result": "passed",
+      "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+      "configuration": {
+            "profile": "Ownership-Lifetime-Design",
+            "receipt": "../../verification/own-cases/acceptance.json",
+            "receipt_sha256": "e873df587c72f0d741ccf746a55bb5baff40b2816b9d08ca6f29e3a99d5e4b38",
+            "gate": "../../verification/own-cases/gate.mjs",
+            "tested_commit": "5c9e38f499da9091636257a0ff1aff4afcecfc26",
+            "binary_sha256": "d1e084df7a484c828fe2c5594ddf240fa1102dc6d25d6a07b7626effba193c29",
+            "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+            "case_id": "OWN-CASE-04",
+            "command": "test --locked -p noble-cli --test core own_case_04_non_borrow_variants_reject_before_emission -- --nocapture --test-threads=1"
+      },
+      "assumptions": [
+            "The matrix uses the kernel acceptance boundary directly; it does not emit or execute Wasm.",
+            "The borrow variants of the case are inapplicable under the recorded owner decision (no borrow profile)."
+      ]
+}]
     },
     {
       "id": "OWN-CASE-05",
@@ -165,8 +254,30 @@
         "module_retires_only_after_owner_release": true,
         "stale_handle_traps": 0
       },
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+      "kind": "test",
+      "subject": "OWN-CASE-06",
+      "claim": "A saved `[ g ]` whose compiled body reads `g` through module M's global still returns 42 after M's supersession; M's code span retires only after the saved owner is released.",
+      "revision": "0.1.0-draft.5",
+      "result": "passed",
+      "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+      "configuration": {
+            "profile": "Ownership-Lifetime-Design",
+            "receipt": "../../verification/own-cases/acceptance.json",
+            "receipt_sha256": "e873df587c72f0d741ccf746a55bb5baff40b2816b9d08ca6f29e3a99d5e4b38",
+            "gate": "../../verification/own-cases/gate.mjs",
+            "tested_commit": "5c9e38f499da9091636257a0ff1aff4afcecfc26",
+            "binary_sha256": "d1e084df7a484c828fe2c5594ddf240fa1102dc6d25d6a07b7626effba193c29",
+            "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+            "case_id": "OWN-CASE-06",
+            "lane": "crates/noble-cli/tests/live_slot_module_root_retention.mjs"
+      },
+      "assumptions": [
+            "Executed through `noble live slot` on the binary built from commit 5c9e38f4.",
+            "Code-to-global owner edges are still not counted; module lifetime is extended to saved callers instead."
+      ]
+}]
     },
     {
       "id": "OWN-CASE-07",
@@ -187,8 +298,30 @@
         "old_code_span_retained_while_saved_owner_lives": true,
         "old_code_span_retired_after_release": true
       },
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+      "kind": "test",
+      "subject": "OWN-CASE-07",
+      "claim": "After `def n [ 1 ]` saves `[ n ]` and `def n [ 2 ]` is reloaded, the saved Program returns 1; the old code span stays installed while the owner lives, and `:release-observed-roots` retires it with zero guest requests.",
+      "revision": "0.1.0-draft.5",
+      "result": "passed",
+      "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+      "configuration": {
+            "profile": "Ownership-Lifetime-Design",
+            "receipt": "../../verification/own-cases/acceptance.json",
+            "receipt_sha256": "e873df587c72f0d741ccf746a55bb5baff40b2816b9d08ca6f29e3a99d5e4b38",
+            "gate": "../../verification/own-cases/gate.mjs",
+            "tested_commit": "5c9e38f499da9091636257a0ff1aff4afcecfc26",
+            "binary_sha256": "d1e084df7a484c828fe2c5594ddf240fa1102dc6d25d6a07b7626effba193c29",
+            "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+            "case_id": "OWN-CASE-07",
+            "command": "test --locked -p noble-cli --test live_repl retained_old_definition_yields_old_value_and_retires_after_release -- --test-threads=1"
+      },
+      "assumptions": [
+            "Executed through `noble live repl` on the binary built from commit 5c9e38f4.",
+            "The retirement receipt names the exact old span; the test does not prove general reload ordering."
+      ]
+}]
     },
     {
       "id": "OWN-CASE-08",

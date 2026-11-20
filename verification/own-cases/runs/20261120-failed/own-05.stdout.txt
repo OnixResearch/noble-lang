@@ -1,0 +1,1 @@
+{"case":"OWN-CASE-05","designed_mechanism":{"abort_refusal":{"outcome":"refused","diagnostic":"inconsistent frontend arena","guest_requests":0},"emit_installed":true,"exit":0},"host_ledger":{"retired_exactly_once":["101:P-B1"],"retained_versions_after":1,"normal_finish_refused":true}}

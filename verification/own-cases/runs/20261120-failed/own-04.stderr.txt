@@ -1,0 +1,3 @@
+   Compiling noble-cli v0.0.0 (/home/brittonr/.cache/noble-cairn/wt/own-cases/crates/noble-cli)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.50s
+     Running tests/core.rs (/home/brittonr/.cache/noble-cairn/target/own-cases/debug/deps/core-6ca12cbb30d90ce6)

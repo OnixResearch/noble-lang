@@ -1,0 +1,2 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
+     Running tests/live_repl.rs (/home/brittonr/.cache/noble-cairn/target/own-cases/debug/deps/live_repl-48e23d5e143e1359)

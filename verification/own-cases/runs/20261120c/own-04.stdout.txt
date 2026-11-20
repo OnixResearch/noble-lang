@@ -1,0 +1,12 @@
+
+running 1 test
+test ownership::own_case_04_non_borrow_variants_reject_before_emission ... {"id":"OWN-CASE-04","variant":"dup","outcome":"static-reject","stage":"check","emitted":false,"guest_requests":0,"protected_operations":0}
+{"id":"OWN-CASE-04","variant":"drop","outcome":"static-reject","stage":"check","emitted":false,"guest_requests":0,"protected_operations":0}
+{"id":"OWN-CASE-04","variant":"quote","outcome":"static-reject","stage":"check","emitted":false,"guest_requests":0,"protected_operations":0}
+{"id":"OWN-CASE-04","variant":"pair-then-quote","outcome":"static-reject","stage":"check","emitted":false,"guest_requests":0,"protected_operations":0}
+{"id":"OWN-CASE-04","variant":"sum-then-drop","outcome":"static-reject","stage":"check","emitted":false,"guest_requests":0,"protected_operations":0}
+{"id":"OWN-CASE-04","variant":"list-then-drop","outcome":"static-reject","stage":"check","emitted":false,"guest_requests":0,"protected_operations":0}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
