@@ -436,3 +436,206 @@ fn explicitly_granted_test_host_retains_two_checked_effects_and_selected_body() 
     }
     Ok(())
 }
+
+/// The exact checked template projection of one selected builder.
+fn selected_template(
+    prepared: &noble_wasm::source::Prepared,
+) -> Result<noble_wasm::source::OriginTemplate, String> {
+    let origin = prepared
+        .selected_origin()
+        .ok_or("source-bound selected origin absent")?;
+    let [output] = origin.outputs.as_slice() else {
+        return Err("selected builder does not return exactly one classified Program".into());
+    };
+    Ok(output.template.clone())
+}
+
+fn class_occurrences(template: &noble_wasm::source::OriginTemplate, binding: &str) -> Option<u32> {
+    template
+        .classes
+        .iter()
+        .find(|class| class.binding == binding)
+        .map(|class| class.occurrences)
+}
+
+#[test]
+fn selected_target_projection_classifies_fixed_computed_and_root_bindings() -> Result<(), String> {
+    use noble_wasm::source::OriginOwner;
+    let varying = selected_template(&selected_builder(
+        b"def builder [ quote [ + ] compose ]",
+        &[Ty::I64],
+    )?)?;
+    let fixed2 = selected_template(&selected_builder(
+        b"def builder [ 2 quote [ + ] compose ]",
+        &[Ty::I64],
+    )?)?;
+    let fixed3 = selected_template(&selected_builder(
+        b"def builder [ 3 quote [ + ] compose ]",
+        &[Ty::I64],
+    )?)?;
+    let computed2 = selected_template(&selected_builder(
+        b"def builder [ 1 1 + quote [ + ] compose ]",
+        &[Ty::I64],
+    )?)?;
+    let computed3 = selected_template(&selected_builder(
+        b"def builder [ 1 2 + quote [ + ] compose ]",
+        &[Ty::I64],
+    )?)?;
+    if varying.captures != [0] || class_occurrences(&varying, "q(r0)") != Some(1) {
+        return Err(format!(
+            "varying root input lost its ordered capture slot: {:?} {:?}",
+            varying.captures, varying.classes
+        ));
+    }
+    if !fixed2.captures.is_empty() || class_occurrences(&fixed2, "q(#2)") != Some(1) {
+        return Err(format!(
+            "fixed literal 2 became a capture or lost its binding: {:?} {:?}",
+            fixed2.captures, fixed2.classes
+        ));
+    }
+    if class_occurrences(&fixed3, "q(#3)") != Some(1)
+        || class_occurrences(&computed2, "q(add(#1,#1))") != Some(1)
+        || class_occurrences(&computed3, "q(add(#1,#2))") != Some(1)
+        || class_occurrences(&computed2, "q(#2)").is_some()
+    {
+        return Err(format!(
+            "checked computed constants lost their exact binding: {:?} {:?}",
+            computed2.classes, computed3.classes
+        ));
+    }
+    if fixed2.classes == fixed3.classes || computed2.classes == computed3.classes {
+        return Err("fixed or computed 2->3 kept one binding class".into());
+    }
+    // The root-input projection cannot contain the runtime value: ordered
+    // positions are the capture slots and the host binds the exact values.
+    for template in [&varying, &fixed2, &computed2] {
+        if template.owner != OriginOwner::Absent
+            || template.classes.iter().any(|class| {
+                class.binding.contains(' ')
+                    || class.binding.contains('\n')
+                    || class.binding.contains("builder")
+            })
+        {
+            return Err("selected template projection leaked source text or an owner".into());
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn selected_template_projection_separates_logical_bindings_from_vm_sharing() -> Result<(), String> {
+    let shared = selected_template(&selected_builder(
+        b"def builder [ quote [ + ] compose let q q q compose [ 0 + ] compose ]",
+        &[Ty::I64],
+    )?)?;
+    let fresh = selected_template(&selected_builder(
+        b"def builder [ dup quote [ + ] compose swap quote [ + ] compose compose [ 0 + ] compose ]",
+        &[Ty::I64],
+    )?)?;
+    let aliased = selected_template(&selected_builder(
+        b"def builder [ drop dup quote swap quote compose [ + + + ] compose ]",
+        &[Ty::I64, Ty::I64],
+    )?)?;
+    let independent = selected_template(&selected_builder(
+        b"def builder [ quote swap quote compose [ + + + ] compose ]",
+        &[Ty::I64, Ty::I64],
+    )?)?;
+    let bindings = |template: &noble_wasm::source::OriginTemplate| {
+        template
+            .classes
+            .iter()
+            .map(|class| class.binding.clone())
+            .collect::<Vec<_>>()
+    };
+    // Reusing one immutable Program cell and re-executing the same binding
+    // must agree on every logical binding class; only the observed cell count
+    // changes.
+    if bindings(&shared) != bindings(&fresh) || shared.captures != fresh.captures {
+        return Err(format!(
+            "physical Program sharing changed the logical bindings: {:?} {:?}",
+            shared.classes, fresh.classes
+        ));
+    }
+    if shared.classes == fresh.classes {
+        return Err("physical Program sharing was not observed distinctly".into());
+    }
+    // The same root binding quoted twice is one class with two cells; two
+    // independent bindings with equal runtime values stay two classes.
+    if aliased.captures != [0]
+        || class_occurrences(&aliased, "q(r0)") != Some(2)
+        || independent.captures != [1, 0]
+        || class_occurrences(&independent, "q(r1)") != Some(1)
+        || class_occurrences(&independent, "q(r0)") != Some(1)
+    {
+        return Err(format!(
+            "logical alias and independent binding classes were conflated: {:?} {:?}",
+            aliased.classes, independent.classes
+        ));
+    }
+    if bindings(&aliased) == bindings(&independent) {
+        return Err("independent equal-valued root bindings shared the alias classes".into());
+    }
+    Ok(())
+}
+
+#[test]
+fn selected_template_projection_refuses_absent_forged_truncated_and_stale_metadata(
+) -> Result<(), String> {
+    use noble_wasm::source::{verify_selected_origin_template, OriginOwner};
+    let prepared = selected_builder(b"def builder [ quote [ + ] compose ]", &[Ty::I64])?;
+    let origin = prepared
+        .selected_origin()
+        .ok_or("source-bound selected origin absent")?
+        .clone();
+    if !verify_selected_origin_template(&origin) {
+        return Err("a freshly classified projection did not re-derive".into());
+    }
+    let refused = |candidate: &noble_wasm::source::SelectedOriginMetadata| {
+        !verify_selected_origin_template(candidate)
+    };
+    let mut absent = origin.clone();
+    absent.outputs.clear();
+    if !refused(&absent) {
+        return Err("absent template metadata acquired a verified projection".into());
+    }
+    let mut forged_capture = origin.clone();
+    forged_capture.outputs[0].template.captures = vec![1];
+    if !refused(&forged_capture) {
+        return Err("forged capture slot acquired a verified projection".into());
+    }
+    let mut forged_binding = origin.clone();
+    forged_binding.outputs[0].template.classes[0].binding = "q(#2)".to_owned();
+    if !refused(&forged_binding) {
+        return Err("forged binding class acquired a verified projection".into());
+    }
+    let mut forged_occurrences = origin.clone();
+    forged_occurrences.outputs[0].template.classes[0].occurrences += 1;
+    if !refused(&forged_occurrences) {
+        return Err("forged occurrence count acquired a verified projection".into());
+    }
+    let mut truncated = origin.clone();
+    truncated.outputs[0].template.classes.clear();
+    if !refused(&truncated) {
+        return Err("truncated binding classes acquired a verified projection".into());
+    }
+    let mut recursive = origin.clone();
+    recursive.outputs[0].template.owner = OriginOwner::SelfNamed;
+    if !refused(&recursive) {
+        return Err("an unclassified lexical recursive owner was accepted".into());
+    }
+    let other = selected_builder(
+        b"def builder [ drop dup quote swap quote compose [ + + + ] compose ]",
+        &[Ty::I64, Ty::I64],
+    )?;
+    let mut stale = origin.clone();
+    stale.outputs[0].template = other
+        .selected_origin()
+        .ok_or("other selected origin absent")?
+        .outputs[0]
+        .template
+        .clone();
+    if !refused(&stale) {
+        return Err("stale cross-selection metadata acquired a verified projection".into());
+    }
+    Ok(())
+}

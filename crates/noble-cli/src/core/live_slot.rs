@@ -247,6 +247,24 @@ fn selected_origin_json(
             "effect_mask":program.effect_mask,"operations":operations})
         })
         .collect::<Vec<_>>();
+    let templates = origin
+        .outputs
+        .iter()
+        .map(|output| {
+            Ok(json!({
+                "captures":output.template.captures,
+                "classes":output.template.classes.iter()
+                    .map(|class| json!({"binding":class.binding,
+                        "occurrences":class.occurrences}))
+                    .collect::<Vec<_>>(),
+                "owner":match output.template.owner {
+                    noble_wasm::source::OriginOwner::Absent => json!({"kind":"absent"}),
+                    noble_wasm::source::OriginOwner::SelfNamed =>
+                        json!({"kind":"self-named"}),
+                },
+            }))
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(json!({"definition_index":origin.definition_id.index(),
         "definition_identity":origin.definition_id.identity().to_string(),
         "source_generation":origin.source_generation.to_string(),
@@ -261,7 +279,8 @@ fn selected_origin_json(
             let mut fixed_nodes = 0;
             Ok(json!({"stack_position":output.stack_position,
                 "result":result(&output.result, &mut seen, &mut count, &mut fixed_nodes)?}))
-        }).collect::<Result<Vec<_>, String>>()? }))
+        }).collect::<Result<Vec<_>, String>>()?,
+        "templates":templates }))
 }
 
 fn assemble_slot(wat: &[u8]) -> Result<Vec<u8>, String> {

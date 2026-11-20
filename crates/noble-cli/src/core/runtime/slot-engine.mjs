@@ -1125,11 +1125,69 @@ class SlotEngine {
     }
   }
 
+  /// Canonical normalized recipe spelling of one static quotation body. Two
+  /// independently written but equal quotation bodies therefore share one
+  /// logical source-binding class.
+  selectedStaticBinding(module, index, visiting, memo, depth) {
+    if (memo.has(index)) return memo.get(index);
+    if (depth >= 32 || visiting.has(index)) {
+      throw Error('selected static quotation binding is recursive or over depth');
+    }
+    const program = module.selected_origin.programs[index];
+    if (!program || program.source_artifact !== 'definition' || program.effect_mask !== 0
+      || !Array.isArray(program.operations) || program.operations.length > 128) {
+      throw Error('selected static quotation binding is foreign or over bound');
+    }
+    visiting.add(index);
+    let key = `p${program.input_signature}:${program.output_signature}[`;
+    program.operations.forEach((operation, at) => {
+      if (at > 0) key += ';';
+      if (operation.kind === 'i64') key += `#${operation.value}`;
+      else if (operation.kind === 'static-program') {
+        key += this.selectedStaticBinding(module, operation.static_program_index,
+          visiting, memo, depth + 1);
+      } else if (operation.kind === 'quote-i64' || operation.kind === 'quote-program') {
+        key += 'quote';
+      } else if (['add', 'sub', 'mul', 'dup', 'drop', 'swap', 'dip', 'run', 'compose']
+        .includes(operation.kind)) key += operation.kind;
+      else throw Error('selected static quotation has an unclassified binding operation');
+    });
+    key += ']';
+    visiting.delete(index);
+    memo.set(index, key);
+    return key;
+  }
+
+  /// Canonical structural spelling of a fixed I64 source recipe.
+  selectedRecipeBinding(recipe, depth, budget) {
+    if (++budget.nodes > 128 || depth > 32) {
+      throw Error('selected fixed I64 expression exceeds bounded source');
+    }
+    if (recipe?.kind === 'literal') {
+      if (typeof recipe.value !== 'string') {
+        throw Error('selected fixed I64 literal lacks a canonical value');
+      }
+      return `#${recipe.value}`;
+    }
+    if (['add', 'sub', 'mul'].includes(recipe?.kind)) {
+      return `${recipe.kind}(${this.selectedRecipeBinding(recipe.left, depth + 1, budget)},`
+        + `${this.selectedRecipeBinding(recipe.right, depth + 1, budget)})`;
+    }
+    throw Error('selected fixed I64 expression has an unsupported source operation');
+  }
+
   selectedResultTemplate(module, result, inputs, dependencies, bodies) {
     const aliases = new Map(), normalized = new Map();
-    const captures = [], captured = new Set();
+    const captures = [], capturePositions = [], captured = new Set();
     const constructedSites = [], staticSites = [];
+    const classes = new Map();
+    const staticBindings = new Map(), staticVisiting = new Set();
     const fixedBudget = { nodes: 0 };
+    const intern = binding => {
+      const prior = classes.get(binding);
+      if (prior) prior.occurrences += 1;
+      else classes.set(binding, { binding, occurrences: 1 });
+    };
     const sites = module.selected_origin.programs.flatMap(program => program.operations);
     const site = (description, kind) => {
       const matches = sites.filter(op => op.kind === kind
@@ -1157,16 +1215,23 @@ class SlotEngine {
           node: value.node, table_entry: op.table_entry });
         const body = { kind: value.kind,
           program: this.selectedStaticBody(module, value.program_index, [], dependencies, bodies) };
-        normalized.set(value.alias, body);
-        return body;
+        const binding = this.selectedStaticBinding(module, value.program_index,
+          staticVisiting, staticBindings, 0);
+        intern(binding);
+        const entry = { body, binding };
+        normalized.set(value.alias, entry);
+        return entry;
       }
       if (value.kind === 'quote-i64' || value.kind === 'quote-program') {
         const op = site(value, value.kind);
         constructedSites.push({ kind: value.kind, node: op.node, table_entry: op.table_entry });
         if (value.kind === 'quote-program') {
-          const body = { kind: value.kind, operand: walk(value.operand) };
-          normalized.set(value.alias, body);
-          return body;
+          const operand = walk(value.operand);
+          const binding = `q(${operand.binding})`;
+          intern(binding);
+          const entry = { body: { kind: value.kind, operand: operand.body }, binding };
+          normalized.set(value.alias, entry);
+          return entry;
         }
         const operand = value.operand;
         if (operand?.kind === 'root-i64') {
@@ -1176,11 +1241,15 @@ class SlotEngine {
           }
           if (!captured.has(position)) {
             captured.add(position);
+            capturePositions.push(position);
             captures.push({ type: 'I64', value: inputs[position].value });
           }
           const body = { kind: value.kind, operand: { kind: 'root-i64', position } };
-          normalized.set(value.alias, body);
-          return body;
+          const binding = `q(r${position})`;
+          intern(binding);
+          const entry = { body, binding };
+          normalized.set(value.alias, entry);
+          return entry;
         }
         if (operand?.kind !== 'fixed-i64'
           || typeof operand.value !== 'string'
@@ -1191,20 +1260,29 @@ class SlotEngine {
         this.countSelectedFixedRecipe(operand.recipe, fixedBudget);
         const body = { kind: value.kind,
           operand: { kind: 'fixed-i64', value: operand.value, recipe: operand.recipe } };
-        normalized.set(value.alias, body);
-        return body;
+        const binding = `q(${this.selectedRecipeBinding(operand.recipe, 0, { nodes: 0 })})`;
+        intern(binding);
+        const entry = { body, binding };
+        normalized.set(value.alias, entry);
+        return entry;
       }
       if (value.kind === 'compose') {
         const op = site(value, 'compose');
         constructedSites.push({ kind: value.kind, node: op.node, table_entry: op.table_entry });
-        const body = { kind: value.kind,
-          left: walk(value.left), right: walk(value.right) };
-        normalized.set(value.alias, body);
-        return body;
+        const left = walk(value.left), right = walk(value.right);
+        const binding = `c(${left.binding},${right.binding})`;
+        intern(binding);
+        const entry = { body: { kind: value.kind, left: left.body, right: right.body }, binding };
+        normalized.set(value.alias, entry);
+        return entry;
       }
       throw Error('selected returned Program contains an unsupported source node');
     };
-    return { template: walk(result), captures, constructedSites, staticSites };
+    const walked = walk(result);
+    const templateClasses = [...classes.values()]
+      .sort((left, right) => left.binding < right.binding ? -1 : left.binding > right.binding ? 1 : 0);
+    return { template: walked.body, captures, capturePositions, templateClasses,
+      constructedSites, staticSites };
   }
 
   returnedManifest(owner, saved, claimed) {
@@ -1228,7 +1306,8 @@ class SlotEngine {
     const result = this.evaluateSelectedOrigin(caller, selected.inputs).get(selected.position);
     const dependencies = new Set();
     const bodies = new Map();
-    const { template, captures, constructedSites, staticSites } =
+    const { template, captures, capturePositions, templateClasses, constructedSites,
+      staticSites } =
       this.selectedResultTemplate(caller, result, selected.inputs, dependencies, bodies);
     if (result.kind === 'static-program') {
       throw Error('pinned static Program cannot acquire a constructed returned-target identity');
@@ -1285,26 +1364,32 @@ class SlotEngine {
       }
     };
     boundTemplate(template, 1);
-    const definitionDescriptor = { schema: 'noble-returned-pure-i64-dag/experimental-v3',
-      interface: targetInterface, template, lexical_recursive_owner: null };
-    const definitionId = `anonymous-template-experimental-v3-sha256:${sha256(Buffer.concat([
-      Buffer.from('noble returned pure-i64 DAG definition experimental v3\0'),
+    const lexicalRecursiveOwner = { kind: 'absent' };
+    const definitionDescriptor = { schema: 'noble-returned-pure-i64-dag/experimental-v4',
+      interface: targetInterface, template, lexical_recursive_owner: lexicalRecursiveOwner };
+    const definitionId = `anonymous-template-experimental-v4-sha256:${sha256(Buffer.concat([
+      Buffer.from('noble returned pure-i64 DAG definition experimental v4\0'),
       Buffer.from(canonicalSlotJSON(definitionDescriptor))]))}`;
     const valueDescriptor = { definition_id: definitionId, captures };
-    const programValueId = `anonymous-program-experimental-v3-sha256:${sha256(Buffer.concat([
-      Buffer.from('noble returned pure-i64 DAG value experimental v3\0'),
+    const programValueId = `anonymous-program-experimental-v4-sha256:${sha256(Buffer.concat([
+      Buffer.from('noble returned pure-i64 DAG value experimental v4\0'),
       Buffer.from(canonicalSlotJSON(valueDescriptor))]))}`;
+    const templateProjection = { interface: targetInterface, template,
+      lexical_recursive_owner: lexicalRecursiveOwner, captures,
+      template_classes: templateClasses };
     const descriptor = {
       schema: 'noble-live-slot-composite-code-donors/v1',
       owner: { token: owner, handle: saved.handle },
       identity: { definition_id: definitionId, program_value_id: programValueId,
-        captures, interface: targetInterface, lexical_recursive_owner: null },
+        captures, interface: targetInterface, lexical_recursive_owner: lexicalRecursiveOwner,
+        template_classes: templateClasses },
       source: { caller_id: caller.id, source_sha256: caller.source_sha256,
         selected_source_sha256: caller.selected_origin.selected_source_sha256,
         definition_identity: caller.selected_origin.definition_identity,
         source_generation: caller.selected_origin.source_generation,
         constructed_sites: constructedSites, static_sites: staticSites,
-        program_indices: programIndices },
+        program_indices: programIndices, template_captures: capturePositions,
+        template_classes: templateClasses },
       donors: {
         native: { module_id: core.id, artifact_sha256: core.artifactSha256,
           source_sha256: core.source_sha256, span: { ...core.code_span }, entries: nativeEntries },
@@ -1312,6 +1397,9 @@ class SlotEngine {
           source_sha256: caller.source_sha256, span: { ...caller.code_span },
           entries: staticEntries },
       },
+      template_sha256: sha256(Buffer.concat([
+        Buffer.from('noble returned pure-i64 template projection experimental v1\0'),
+        Buffer.from(canonicalSlotJSON(templateProjection))])),
       graph_sha256: sha256(Buffer.from(canonicalSlotJSON(graph))),
       recipe_sha256: sha256(Buffer.from(canonicalSlotJSON(recipe))),
     };
