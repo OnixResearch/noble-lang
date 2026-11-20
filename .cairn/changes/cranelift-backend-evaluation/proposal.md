@@ -27,3 +27,13 @@ A direct Cranelift backend would bypass the isolation that Wasm validation suppl
 ## Out of Scope
 
 Implementing either route; selecting or replacing the backend; changing `config.json`, `unselected_tools`, the live REPL engine, WIT/component hosts, Cargo dependencies or vendored sources; running benchmarks; GPU offload (#2); allocator selection (#5); ownership/lifetime redesign (#3); live-reference semantics (#1); and any proof, receipt or conformance-state promotion.
+
+**Scope amendment (owner decision, 2026-11-20).** The repository owner directed
+that this change's Phase 2 be carried out here rather than in a follow-up
+change. In scope now: the opt-in Wasmtime Core engine profile (route 2a), the
+NB-W1..W5 benchmarks with retained raw samples, registration and execution of
+the NATIVE-PLAN cases, and the conditional tasks. A conditional task whose
+condition does not hold is completed by recording that outcome with its
+evidence. Still out of scope: selecting or replacing the default backend,
+changing `config.json`'s selected target or `unselected_tools`, GPU offload,
+allocator selection, ownership/lifetime redesign and live-reference semantics.
