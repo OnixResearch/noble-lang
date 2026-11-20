@@ -1966,11 +1966,10 @@ mod walk_order_tests {
 
     #[test]
     fn template_projection_requires_a_classified_recursive_owner() {
-        use alloc::rc::Rc;
         let mut programs = table(&[alloc::vec::Vec::new(), alloc::vec::Vec::new()]);
         programs[0].source_artifact = super::OriginSource::Selection;
         let named = 1usize;
-        let self_reference = Rc::new(super::OriginProgramValue::Static {
+        let self_reference = alloc::rc::Rc::new(super::OriginProgramValue::Static {
             node: noble_kernel::untrusted::NodeId(2),
             program_index: named,
         });
@@ -1981,7 +1980,7 @@ mod walk_order_tests {
             Some(super::OriginOwner::SelfNamed),
             "a reachable reference to the enclosing named definition is a required recursive owner"
         );
-        let quotation = Rc::new(super::OriginProgramValue::Quote {
+        let quotation = alloc::rc::Rc::new(super::OriginProgramValue::Quote {
             node: noble_kernel::untrusted::NodeId(3),
             table_entry: 3,
             operand: super::OriginOperand::I64(super::OriginI64::RootInput(0)),
