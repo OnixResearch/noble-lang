@@ -559,8 +559,10 @@ clean tree at `3beddcd9`, after `e471a9e7` pinned the 34 Merge theorems in
 `proofs/mc1/ContractGate.lean`), and
 `verification/semantic-merge-verification/receipt-4a2bb986.json`
 (sha256 `6d2645d847415d8a54c6d89b5d31bdcbc4ae0e1ac35ef444ef15b777368f6f87`,
-clean tree at `4a2bb986`, which also clears the last two Octet findings in
-code). Both regenerated claims (`SMERGE-CASE-04`, `SMERGE-CASE-01`) were
+clean tree at `4a2bb986`), and its final successor
+`verification/semantic-merge-verification/receipt-d515869b.json`
+(sha256 `ad17ee14a7d4e675a5157b6b67cdfd2da150a86e630f811424e0f3c07e3dba81`,
+clean tree at `d515869b`). Both regenerated claims (`SMERGE-CASE-04`, `SMERGE-CASE-01`) were
 kernel-checked by the pinned model with axioms `propext`/`Quot.sound`, the
 Phase 2 lane was re-run unchanged, and the wrong-proof and command-submission
 controls stayed `unknown`.
