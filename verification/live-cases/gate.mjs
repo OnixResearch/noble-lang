@@ -26,9 +26,15 @@ const content = file => fs.readFileSync(path.join(root, file));
 
 const selected = JSON.parse(content('policy/tool-selection.json'));
 const node = path.join(selected.tool_paths.node.output, 'bin/node');
-const cargo = path.join(selected.tool_paths.quality_rust.output, 'bin/cargo');
+const rust = path.join(selected.tool_paths.quality_rust.output, 'bin');
+const cargo = path.join(rust, 'cargo');
 assert.equal(fs.realpathSync(process.execPath), fs.realpathSync(node), 'selected Node required');
 assert.deepEqual(process.execArgv, [], 'unreviewed Node flags');
+// The build uses the pinned toolchain and the system C compiler only: user or
+// host cargo wrappers, mold flags and target rustflags are neutralized so the
+// same committed tree builds the same way wherever the gate runs.
+const cc = spawnSync('sh', ['-c', 'command -v cc'], { encoding: 'utf8' });
+assert.equal(cc.status, 0, 'a system `cc` is required');
 
 const caseFile = 'specs/conformance/live-wasm-cases.json';
 const packet = JSON.parse(content(caseFile));
@@ -112,6 +118,20 @@ const recordProcess = (label, executable, args, { input, environment = {}, expec
   });
   return result;
 };
+const buildEnvironment = {
+  PATH: `${rust}:${process.env.PATH}`,
+  CARGO_TARGET_DIR: path.join(destination, 'target'),
+  CARGO_NET_OFFLINE: 'true',
+  CARGO_INCREMENTAL: '0',
+  CARGO_BUILD_JOBS: '4',
+  RUSTC_WRAPPER: '',
+  RUSTC_WORKSPACE_WRAPPER: '',
+  CARGO_BUILD_RUSTC_WRAPPER: '',
+  RUSTFLAGS: '',
+  CARGO_ENCODED_RUSTFLAGS: '',
+  CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS: '',
+  CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER: cc.stdout.trim(),
+};
 const run = (label, executable, args, environment = {}) => {
   const stdoutPath = path.join(raw, `${label}.out`);
   const stderrPath = path.join(raw, `${label}.err`);
@@ -137,7 +157,8 @@ const run = (label, executable, args, environment = {}) => {
 // ---------------------------------------------------------------------------
 // Production build and selected integration tests.
 const build = run('production-build', cargo,
-  ['build', '-p', 'noble-cli', '--bin', 'noble', '--locked', '--offline', '-j', '4', '--message-format=json-render-diagnostics']);
+  ['build', '-p', 'noble-cli', '--bin', 'noble', '--locked', '--offline', '-j', '4', '--message-format=json-render-diagnostics'],
+  buildEnvironment);
 const artifacts = build.stdout.toString().split('\n').filter(Boolean).flatMap(line => {
   try { return [JSON.parse(line)]; } catch { return []; }
 });
@@ -146,7 +167,8 @@ assert.ok(binary && fs.existsSync(binary), 'production build omitted the noble e
 const binarySha256 = sha256(fs.readFileSync(binary));
 
 const testBuild = run('test-build', cargo,
-  ['test', '-p', 'noble-cli', '--test', 'live_repl', '--no-run', '--locked', '--offline', '-j', '4', '--message-format=json-render-diagnostics']);
+  ['test', '-p', 'noble-cli', '--test', 'live_repl', '--no-run', '--locked', '--offline', '-j', '4', '--message-format=json-render-diagnostics'],
+  buildEnvironment);
 const testArtifacts = testBuild.stdout.toString().split('\n').filter(Boolean).flatMap(line => {
   try { return [JSON.parse(line)]; } catch { return []; }
 });
