@@ -4,6 +4,7 @@ mod admit;
 mod core;
 pub(crate) mod digest;
 mod guard;
+mod guard_v2;
 mod registry;
 mod release;
 mod rules;
@@ -14,6 +15,7 @@ pub use admit::{
     Admission, AdmissionRequest, CheckObservation, ClaimTemplate, EvidenceOffer, EvidencePayload,
     Outcome,
 };
+pub use guard_v2::{GuardTemplateV2, GUARD_SET_VERSION_V2};
 pub use registry::{ContractId, EvidenceClass, EvidenceId};
 pub use rules::{Derivation, Derived, RuleId, RULESET_V1};
 pub use subject::{observe, CAPTURE_I64_EVENT};

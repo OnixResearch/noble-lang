@@ -1,7 +1,14 @@
 struct Completed {
     report: crate::core::report::Value,
-    template: noble_contracts::companion::GuardTemplate,
+    /// The selected template's stable code, from either set version.
+    template: &'static str,
     wrapper: std::string::String,
+    /// The session prelude that removes the companion operand cell so the
+    /// wrapper's `run` sees exactly the contract's declared input. The v1 path
+    /// parks the frame instead and has none.
+    prelude: Option<&'static str>,
+    /// The template-set version. `None` keeps the frozen v1 report fields.
+    set_version: Option<u32>,
     companion: crate::core::companions::CertifiedSlot,
     has_changed_identity: bool,
 }
@@ -25,6 +32,14 @@ pub(in crate::core::companions) fn op_invoke(
     let argument = attempt!(crate::core::companions::reporting::integer_of(args[1]));
     let companion = attempt!(driver.certified_at(index));
     let program = attempt!(driver.bound_companion(&companion));
+    // The v2 set is a separate versioned dispatch. A stale or unsupported v2
+    // set is not an error here: the frozen v1 path below owns that refusal with
+    // its own message, so v1 behaviour stays identical.
+    if let Ok(templates) = driver.core.evidence_guard_templates_v2(companion.evidence) {
+        if templates.contains(&noble_contracts::companion::GuardTemplateV2::NonEmptyList) {
+            return invoke_list(driver, args, companion, program);
+        }
+    }
     let templates = attempt!(driver
         .core
         .evidence_guard_templates(companion.evidence)
@@ -53,8 +68,94 @@ pub(in crate::core::companions) fn op_invoke(
     let has_changed_identity = again.subject != companion.subject;
     render(&Completed {
         report,
-        template,
+        template: template.code(),
         wrapper,
+        prelude: None,
+        set_version: None,
+        companion,
+        has_changed_identity,
+    })
+}
+
+/// The v2 `NonEmptyList` invocation path.
+///
+/// The argument is a typed `List A` taken from a live session slot, never a CLI
+/// literal: it cannot be reconstructed as an `I64` injection. The subject's
+/// declared input is exactly that one value, and `run` types only when the
+/// whole stack matches it, so the session stack must be the argument with the
+/// companion operand cell directly above it (`[list, Certified]`). The prelude
+/// `swap drop` removes that companion cell from the operand stack; the wrapper
+/// text itself is then exactly the fixed live text and consumes the argument.
+fn invoke_list(
+    driver: &mut crate::core::companions::Driver,
+    args: &[&str],
+    companion: crate::core::companions::CertifiedSlot,
+    program: crate::core::companions::ProgramSlot,
+) -> crate::core::companions::Attempt<crate::workflow::encoding::Json> {
+    let list_slot = attempt!(crate::core::companions::reporting::index_of(
+        args[1],
+        driver.stack.len()
+    ));
+    if driver.stack.len() != 2 || list_slot != 0 {
+        return Err(crate::core::companions::Refused::new(
+            "refused",
+            "stack-type",
+            std::format!(
+                "the list argument must be the bottom of a two-slot session stack, found slot {list_slot} of {}",
+                driver.stack.len()
+            ),
+        ));
+    }
+    let list_ty = attempt!(driver.stack.first().cloned().ok_or_else(|| {
+        crate::core::companions::Refused::new(
+            "malformed",
+            "stack-type",
+            std::string::String::from("the session stack has no list slot"),
+        )
+    }));
+    let expected = attempt!(driver
+        .core
+        .list_guard_interface(companion.contract)
+        .map_err(crate::core::companions::Refused::core));
+    if list_ty != expected {
+        return Err(crate::core::companions::Refused::new(
+            "refused",
+            "stack-type",
+            std::string::String::from(
+                "the list slot type does not match the retained list interface",
+            ),
+        ));
+    }
+    let wrapper = driver
+        .core
+        .invocation_wrapper_v2(noble_contracts::companion::GuardTemplateV2::NonEmptyList);
+    const PRELUDE: &str = "swap drop";
+    let source = std::format!("{PRELUDE} {wrapper} run");
+    let report = attempt!(driver.execute(
+        source.as_bytes(),
+        &[list_ty, noble_kernel::types::Ty::Certified, program.ty,],
+        &[crate::core::companions::reporting::inputs::program_injection(companion.subject)],
+    ));
+    let outcome = report
+        .member("outcome")
+        .and_then(crate::core::report::Value::text)
+        .unwrap_or_default();
+    if outcome != "normal" {
+        return Err(crate::core::companions::Refused::new(
+            "refused",
+            "guard-runtime",
+            std::format!("the v2 guard invocation did not return normally: {outcome}"),
+        ));
+    }
+    // The frame injected the observed subject handle itself, so the wrapper
+    // never reconstructs or replaces code.
+    let has_changed_identity = program.handle != companion.subject;
+    render(&Completed {
+        report,
+        template: noble_contracts::companion::GuardTemplateV2::NonEmptyList.code(),
+        wrapper,
+        prelude: Some(PRELUDE),
+        set_version: Some(noble_contracts::companion::GUARD_SET_VERSION_V2),
         companion,
         has_changed_identity,
     })
@@ -120,6 +221,18 @@ fn render(
             crate::workflow::encoding::Json::Number(1),
         ),
     ]);
+    if let Some(prelude) = invocation.prelude {
+        fields.push((
+            "invocation_prelude",
+            crate::workflow::encoding::string(prelude),
+        ));
+    }
+    if let Some(version) = invocation.set_version {
+        fields.push((
+            "guard_template_set_version",
+            crate::workflow::encoding::Json::Number(u64::from(version)),
+        ));
+    }
     Ok(crate::core::companions::reporting::line(
         crate::core::companions::reporting::Header {
             operation: "invoke",
@@ -139,7 +252,7 @@ fn provenance(
     std::vec::Vec::from([
         (
             "guard_template",
-            crate::workflow::encoding::string(invocation.template.code()),
+            crate::workflow::encoding::string(invocation.template),
         ),
         ("guard_erased", crate::workflow::encoding::Json::Bool(false)),
         (

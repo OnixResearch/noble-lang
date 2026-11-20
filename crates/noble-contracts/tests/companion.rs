@@ -289,5 +289,8 @@ fn release_requires_a_matching_subject() -> Result<(), String> {
     Ok(())
 }
 
+#[path = "companion/guard_v2.rs"]
+mod guard_v2;
+
 #[path = "companion/transport.rs"]
 mod transport;
