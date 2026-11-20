@@ -66,8 +66,11 @@ pub(super) struct Preparation {
 impl Preparation {
     /// Lower one `Program` to the MC1 reference code the Lean model runs.
     /// Captures are inlined as literals: a capture is data here, and the
-    /// stored preparation keeps the capture list for identity.
-    pub(super) fn lean_code(&self) -> String {
+    /// stored preparation keeps the capture list for identity.  An index
+    /// outside the retained capture list has no lowered value, so it is
+    /// refused exactly as the consumer's replay refuses it; lowering it to a
+    /// literal would describe a different subject.
+    pub(super) fn lean_code(&self) -> Result<String, Refusal> {
         let mut rendered = String::from("[");
         let mut at = 0usize;
         while at < self.program.ops.len() {
@@ -79,7 +82,9 @@ impl Preparation {
                     rendered.push_str(&format!("Op.lit (Value.i64 (BitVec.ofNat 64 {value}))"));
                 }
                 Op::PushCapture(index) => {
-                    let value = self.program.captures.get(index).copied().unwrap_or(0);
+                    let Some(value) = self.program.captures.get(index).copied() else {
+                        return Err(Refusal::UnsupportedFragment);
+                    };
                     rendered.push_str(&format!("Op.lit (Value.i64 (BitVec.ofNat 64 {value}))"));
                 }
                 Op::Add => rendered.push_str("Op.word 4"),
@@ -90,7 +95,7 @@ impl Preparation {
             at += 1;
         }
         rendered.push(']');
-        rendered
+        Ok(rendered)
     }
 
     fn lean_types(types: &[Observable]) -> String {
@@ -150,7 +155,7 @@ impl Preparation {
         digest.finish()
     }
 
-    pub(super) fn lean_subject(&self) -> String {
+    pub(super) fn lean_subject(&self) -> Result<String, Refusal> {
         self.lean_code()
     }
 }
@@ -305,17 +310,75 @@ impl Outcome {
     }
 }
 
+/// A bound or tool failure the isolated checker may report itself.  A checker
+/// acceptance is not an `Outcome` here, because `checked` is the only
+/// constructor of `Verified`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum CheckFailure {
+    Exhausted,
+    InternalFailure,
+}
+
+impl CheckFailure {
+    pub(super) fn outcome(self) -> Outcome {
+        match self {
+            CheckFailure::Exhausted => Outcome::Exhausted,
+            CheckFailure::InternalFailure => Outcome::InternalFailure,
+        }
+    }
+}
+
+/// One isolated checker observation.  `accepted` is the checker's own
+/// post-check of the exact regenerated claim; `failure` is present only for a
+/// bound or tool failure, so no submission can express `Verified` on its own.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(super) struct Submission {
+    pub(super) accepted: bool,
+    pub(super) axioms: Vec<String>,
+    pub(super) failure: Option<CheckFailure>,
+}
+
+impl Submission {
+    pub(super) fn accepted(axioms: Vec<String>) -> Self {
+        Self {
+            accepted: true,
+            axioms,
+            failure: None,
+        }
+    }
+
+    pub(super) fn refused() -> Self {
+        Self {
+            accepted: false,
+            axioms: Vec::new(),
+            failure: None,
+        }
+    }
+
+    pub(super) fn failed(failure: CheckFailure) -> Self {
+        Self {
+            accepted: false,
+            axioms: Vec::new(),
+            failure: Some(failure),
+        }
+    }
+}
+
 /// The consumer's regeneration: it selects the subjects, interface and
 /// observable list itself, requires exact `Ty` equality across the four
-/// preparations, an observable-only output stack, `true` preconditions and a
-/// nonempty input domain, then renders the exact `MergeRel` proposition.
+/// preparations, an observable-only output stack, `true` preconditions and the
+/// lane's nonempty input interface, then renders the exact `MergeRel`
+/// proposition.  A capture index outside the retained capture list has no
+/// exact MC1 subject, so regeneration refuses it.
 pub(super) fn regenerate(selection: &Selection) -> Result<Proposition, Refusal> {
     if selection.precondition != Precondition::True {
         return Err(Refusal::VacuousPrecondition);
     }
-    // The relation quantifies over a nonempty input domain.  Every observable
-    // type of the fragment is inhabited, so a nonempty input stack is the
-    // non-vacuity witness; an empty input stack would quantify over nothing.
+    // `MergeRel` itself is not vacuous on an empty input stack (`StackTyped
+    // [] []` has exactly one inhabitant), but this lane's bounded corpus needs
+    // at least one input position to generate a witness, and its regeneration
+    // contract, evidence record and search are defined over a nonempty
+    // interface.  The refusal is a lane restriction, not a vacuity claim.
     if selection.input.is_empty() {
         return Err(Refusal::VacuousPrecondition);
     }
@@ -328,10 +391,10 @@ pub(super) fn regenerate(selection: &Selection) -> Result<Proposition, Refusal> 
         "MergeRel {} {} {} {} {} {}",
         Preparation::lean_types(&selection.input),
         Preparation::lean_types(&selection.output),
-        selection.base.lean_subject(),
-        selection.first.lean_subject(),
-        selection.second.lean_subject(),
-        selection.candidate.lean_subject(),
+        selection.base.lean_subject()?,
+        selection.first.lean_subject()?,
+        selection.second.lean_subject()?,
+        selection.candidate.lean_subject()?,
     );
     Ok(Proposition {
         relation: RELATION_REVISION,

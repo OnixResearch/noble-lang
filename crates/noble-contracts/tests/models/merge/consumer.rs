@@ -18,7 +18,7 @@
 //! confirms the four exact subjects.  Only Lean acceptance of the regenerated
 //! claim yields `verified` (see `claim::checked`).
 
-use super::claim::{admit, checked, Evidence, Observable, Outcome, Refusal, Selection};
+use super::claim::{admit, checked, Evidence, Observable, Outcome, Refusal, Selection, Submission};
 use super::model::{combined_value, run, Precondition};
 
 /// Declared work bound of one search: at most this many input vectors.
@@ -202,15 +202,18 @@ fn verdict(selection: &Selection, input: &[u64], seed: u64, examined: usize) -> 
 /// The complete consumer path for one submission:
 /// 1. admit (regenerate + refuse differing producer fields),
 /// 2. let a validated refutation or an unsupported subject dominate,
-/// 3. otherwise ask the isolated pinned Lean consumer about the exact claim.
+/// 3. otherwise ask the isolated pinned Lean consumer about the exact claim,
+/// 4. route acceptance through `checked` and keep a bound or tool failure as
+///    itself (`exhausted`/`internal-failure`), never as `verified`.
 ///
 /// `verify` is the isolated Lean check; it receives only the regenerated claim
-/// text and the admitted proof bytes.
+/// text and the admitted proof bytes, and returns the consumer's own post-check
+/// observation rather than an outcome.
 pub(super) fn evaluate(
     selection: &Selection,
     evidence: &Evidence,
     search: &Search,
-    verify: impl Fn(&str, &str) -> (bool, Vec<String>),
+    verify: impl Fn(&str, &str) -> Submission,
 ) -> Outcome {
     let claim = match admit(selection, evidence) {
         Ok(claim) => claim,
@@ -223,8 +226,11 @@ pub(super) fn evaluate(
     if search.outcome != Outcome::Unknown {
         return search.outcome;
     }
-    let (accepted, axioms) = verify(&claim.claim_text, &evidence.proof);
-    checked(&claim, accepted, &axioms)
+    let submission = verify(&claim.claim_text, &evidence.proof);
+    match submission.failure {
+        Some(failure) => failure.outcome(),
+        None => checked(&claim, submission.accepted, &submission.axioms),
+    }
 }
 
 /// A claim whose precondition is `true` and whose input stack has at least one

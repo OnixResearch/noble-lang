@@ -1,10 +1,24 @@
 ## Context
 
 This change specifies a bounded four-version semantic merge relation and an
-evaluated checking path. It implements a test-only model of the relation and
-its fixtures, writes no Lean definition, checks no proof and authorizes no
-merge. The relation is not a textual merge, not a recipe comparison and not a
-claim that a candidate is the unique merge.
+evaluated checking path. Phase 2 implemented a test-only Rust model of the
+relation and its fixtures; Phase 3 (selected by owner decision) adds the
+Mathlib-free Lean model `proofs/mc1/NobleContracts/Merge.lean`, the untrusted
+claim generator, the consumer's regeneration and the isolated pinned Lean
+check, and records the obligation dispositions and integration plan. Nothing is
+wired into production and no merge is authorized. The relation is not a textual
+merge, not a recipe comparison and not a claim that a candidate is the unique
+merge.
+
+**Phase 3 note (2026-11-20, after independent review).** A fresh-context
+review of commit `adf643d0` returned REVISE with one blocker: the isolated
+check accepted producer-printable output, so a producer proof could print the
+acceptance marker and exit before the axiom walk. The fix replaces the
+producer-as-source protocol with a producer-as-data consumer (closed-term
+submission, consumer parse and kernel check, strict nonced post-check), and the
+go/no-go, dispositions, plan and receipts below are restated accordingly. The
+review record is retained outside the repository by the integrator; its
+findings and their resolutions are summarized in tasks.md.
 
 **Baseline.** All source references are at `de1044b` (the change's base). The
 issue cites `66eb7cd`; the cited contract and README lines have moved only by
@@ -387,7 +401,18 @@ semantics:
   every candidate return must be the merge. Quantifying over all normal returns
   makes the encoding independent of evaluator determinism; the design's
   `Obs_X(xs)` is recovered per concrete subject, and the fixture theorems below
-  prove those returns unique by chaining the `exec_*_iff` rules.
+  prove those returns unique by chaining the `exec_*_iff` rules. A general
+  determinism lemma is not stated, so uniqueness holds for the fixture
+  subjects, not for every subject.
+- **Where the observable restriction lives.** `MergeRel` itself accepts any
+  `List Ty`; the restriction to `ObservableTy` appears as the input premise of
+  `mergeRel_terminating`/`observable_allLeaf`. The regenerated claim is
+  therefore restricted by the **consumer's claim generator**, whose
+  `Observable` is a closed Rust enum: it can render only first-order
+  observables, and a preparation carrying anything else has no `Selection`.
+  Claiming that the Lean relation restricts observables would overstate the
+  model; the restriction is enforced at regeneration and used by the
+  termination theorem.
 - `OuterCode`/`LeafCode`/`LeafValue` (a mutual definition) express the proved
   terminating fragment; `outer_exec` is its termination theorem and
   `mergeRel_terminating` states that a fragment subject's four normal returns
@@ -400,8 +425,8 @@ SM-1 is discharged by `mergeVal_functional`, `mergeVal_total`,
 `i64_value_eq` and `wrap_max_add_one`. The wrapping reading is fixed by
 `BitVec 64` equality; `mergeRel_identical_increment` and
 `mergeRel_independent_changes` prove the case-04 and case-01 instances, and
-`wrapping_boundary_is_not_merge` proves that a candidate reading a
-mathematical integer is not the merge at the wrapping boundary.
+`wrapping_boundary_is_not_merge` proves that a candidate computing `MAX + 2` as
+a mathematical integer and wrapping it to `1` is not the merge at `y = MAX`.
 
 **Narrowing of SM-2.** The theorem proves a strict sub-fragment of the
 design's. Leaf code is straight-line dataflow (`CoreOp`/`LeafCode`) whose
@@ -439,13 +464,21 @@ and `merge/verification.rs`.
 - **Regeneration.** `Preparation` is the consumer's retained record of one
   subject (program, input/output observables). `regenerate` selects the four
   preparations, the common interface and the observable list itself, requires
-  exact interface equality, `preconditions = true` and a nonempty input domain,
-  lowers each program to MC1 code and renders the exact
+  exact interface equality, `preconditions = true`, a nonempty input interface
+  and a retained capture for every `PushCapture`, then lowers each program to
+  MC1 code and renders the exact
   `MergeRel <in> <out> O A B M` proposition. The lowering maps `Push`/capture
   to `Op.lit (Value.i64 (BitVec.ofNat 64 n))`, `Add`/`Sub`/`Swap`/`Drop` to
   `Op.word 4/5/2/1`; captures are inlined as literals and remain bound by the
   subject digest, so the live `quote`/`run` form is covered by the Lean
-  fragment theorem, not by this lane's lowering.
+  fragment theorem, not by this lane's lowering. Two refusals are part of this
+  revision. The empty-input rule is a **lane restriction**, not a vacuity
+  claim: `MergeRel` over `StackTyped [] []` is not vacuous (that stack type has
+  one inhabitant), but the bounded corpus, the regeneration contract and the
+  evidence record are defined over a nonempty interface. An out-of-range
+  capture index has no lowered value, so regeneration and replay both refuse
+  it as `unsupported-fragment` instead of inventing literal `0` (which would
+  describe a different subject than the consumer's own model, which aborts).
 - **Subject identity.** `subject_digest` is SHA-256 over length-delimited
   fields: semantic revision, ordered input and output types, every op with its
   code and payload, the capture list and the callee. A changed callee or
@@ -455,31 +488,60 @@ and `merge/verification.rs`.
   (must be false), the four subject digests, the claim text, the declared claim
   hash and a premarked `verified` outcome.
 - **Outcomes.** `Outcome` has exactly the seven design states; `name` renders
-  them and only `Verified` is success. `checked` is the single constructor of
-  `Verified` and requires the admitted proof bytes plus an axiom set inside
+  them and only `Verified` is success. The isolated checker returns a
+  `Submission` (accepted flag, axiom list, optional `CheckFailure::Exhausted`
+  or `InternalFailure`), never an `Outcome`; `checked` is the only constructor
+  of `Verified` and requires the admitted proof bytes plus an axiom set inside
   `propext`/`Classical.choice`/`Quot.sound`. `evaluate` orders the steps:
-  refusal, then a validated refutation (which dominates and does not consult
-  the checker), then the isolated check.
+  admission refusal, then a validated refutation (which dominates and does not
+  consult the checker), then `checked` for an accepted/refused submission and
+  the checker's own bound/tool failure for anything else. The lane verifies
+  the CASE-04/CASE-01 claims through `evaluate`; no receipt result comes from
+  calling the checker directly.
 - **Search.** `replay` re-checks the input types, re-runs the four exact
   subjects on a fresh stack and compares the full output stack. `search` runs
   at most 25 vectors from a retained seed; a mismatch is replayed before it
   becomes `validated-counterexample`, a conflict is `conflict`, and a passing
   or truncated corpus stays `unknown`.
-- **Isolated check.** `lean::check` refuses an over-bound claim/proof, a proof
-  line that could smuggle a command, a library that does not select
-  `leanprover/lean4:v4.35.0`, or a missing pinned `NobleContracts.Merge`
-  module. It then writes a consumer that imports only `Lean` and
-  `NobleContracts.Merge`, kernel-checks `merge_claim : <regenerated claim>`,
-  walks the theorem's axioms against the allowlist and prints
-  `NOBLE-MERGE-ACCEPT`; the child runs with a fixed `LEAN_PATH` and a wall
-  deadline, and a timeout is `exhausted`. The check also records a digest of
-  the pinned `Merge`/`Rules`/`Model` sources and the `lean --version` identity.
+- **Isolated check: the submission is data, not Lean source.** Before any
+  process starts, `lean::check` refuses an over-bound claim/proof and every
+  submission that is not one closed ASCII term: `#` directives, the protocol
+  marker, `sorry`/`admit`, command/IO/trace tokens (`run_cmd`, `run_elab`,
+  `run_tac`, `elab`, `macro`, `syntax`, `open`, `import`, `IO`, `System`,
+  `dbg_trace`, `Lean`, ...), control characters and non-ASCII text. The
+  consumer then writes a module that imports only `Lean` and
+  `NobleContracts.Merge`; the claim and the submission appear in it only as
+  escaped string literals. The module's own elaborator parses the claim as a
+  type and the submission as exactly one `term` (the parser requires end of
+  input), elaborates it against that type, adds `merge_claim` with
+  `Elab.async false` so the kernel check completes before the next command,
+  walks the declaration's axioms against the mc1 allowlist, fails on any other
+  axiom, and only then prints `NOBLE-MERGE-ACCEPT:<digest>` and the axiom
+  lines. Acceptance requires the exit status, exactly one digest-derived
+  marker, axioms only after it, all allowlisted and distinct; any other
+  marker-like line fails closed. The child runs with a **cleared environment**
+  (only `LEAN_PATH`), the binary's banner is checked against the pinned
+  release, output goes to files (no pipe-buffer stall) and a wall-clock
+  deadline kills it. A bound is `exhausted`; a tool failure is
+  `internal-failure`. Both are observed by real controls (a proof over the byte
+  bound; a library root without a toolchain pin); the wall-clock arm of
+  `exhausted` is not exercised by the lane.
+- **What is recorded, not pinned.** Source and `.olean` digests are recorded,
+  not compared with a pinned digest. The runner rebuilds first, so the object
+  digest binds the bytes Lean loaded; the version banner is the only compared
+  tool identity, and the binary is selected by the environment. The
+  reviewer's forgeries (`sorry` + a printed marker + `#exit`; the same channel
+  on CASE-07 and through the CASE-03 consumer path; an IO write; a
+  trace-printed marker) are regression tests and stay nonverified.
 
 Phase 3 tests: `claim_regeneration_is_exact_and_canonical`,
 `consumer_refuses_every_differing_producer_field`,
 `interface_observable_and_precondition_refusals`,
 `bounded_search_validates_witnesses_and_never_certifies`,
 `outcome_discipline_is_total_and_visible`,
+`forged_proof_submissions_stay_nonverified`,
+`acceptance_protocol_refuses_forged_transcripts`,
+`checker_bounds_and_tool_failures_are_visible`,
 `search_receipts_retain_the_witness`, and the `#[ignore]`d
 `semantic_merge_lean_check` (run by the lane).
 
@@ -489,10 +551,10 @@ Phase 3 tests: `claim_regeneration_is_exact_and_canonical`,
 |---|---|---|
 | SM-1 | **Proved** | `MergeRel` and the `mergeVal_*`/`mergeStack_*` theorems in `proofs/mc1/NobleContracts/Merge.lean`; case-01/04 instances; wrapping-boundary theorem |
 | SM-2 | **Proved for the narrowed fragment** | `outer_exec`, `mergeRel_terminating`, `leaf_exec`; narrowing and reasons above |
-| SM-3 | **Narrowed and tested** | The claim is regenerated from consumer-selected preparations and lowered to exact MC1 subjects; there is no Lean formalization of the preparation pipeline, so elaboration is enforced by exact-text regeneration plus the subject digests, and is tested rather than proved (`claim_regeneration_is_exact_and_canonical`, `consumer_refuses_every_differing_producer_field`). The `Push`/capture lowering is documented above as this lane's exact subject form. |
-| SM-4 | **Narrowed** | The isolated check is a fresh pinned Lean process over a pinned source digest with the mc1 axiom allowlist; kernel soundness is Lean's, and refinement of the MC1 reference semantics against the design's model is not re-proved here. The repository's production bubblewrap consumer is not wired and no production claim path exists; that integration is unselected. |
-| SM-5 | **Tested** | `admit` refuses every differing producer field; `subject_digest` binds code, captures, callee, interface and revision; the digest is recorded as an integrity index, not proof validity |
-| SM-6 | **Tested** | The seven-state `Outcome`, the single `checked` constructor of `Verified`, refutation dominance and the never-verified truncated/passing search are exercised by `outcome_discipline_is_total_and_visible` |
+| SM-3 | **Narrowed and tested; not discharged** | Covered: exact-text regeneration from consumer-selected preparations, subject digests over code/captures/callee/interface/revision, the lane's lowering (captures are literals) and the refusal of an out-of-range capture by both regeneration and replay. Not covered: a formalized preparation→MC1 lowering, dependency closure, schema/builtin identities and the live `quote`/`run` form; there is no Lean formalization of the pipeline, so this is tested, not proved. Discharge route: PO-19 (contract export) plus a proved or extracted faithful lowering, or an owner-accepted narrower statement. |
+| SM-4 | **Narrowed; not discharged** | The isolated check is a fresh pinned Lean process with a cleared environment, a closed-term consumer and a strict post-check; kernel soundness is Lean's. A merge proof is **producer-supplied**, so the production path must be the production compile → bounded export → fresh-kernel-replay consumer (`workflow::verification::verify`), never the `verify_intrinsic_pure` stdout-marker template, whose safety rests on a consumer-generated term. PO-09/PO-16 refinement of the MC1 reference semantics against the design model is not re-proved here. Production is not wired. |
+| SM-5 | **Tested only; not discharged** | Covered by the lane: `admit` refuses every differing producer field (schema, revision, assumptions, trust flag, subject digests, claim text, claim hash, premarked outcome), and `subject_digest` binds code, captures, callee, interface and semantic revision. Not covered: dependency closure, schema/builtin identities and prepared-subject linkage; those move to plan step 2. A digest is a recorded integrity index, not proof validity. No universal argument is claimed. |
+| SM-6 | **Tested only; not discharged** | Covered: totality of the Rust `Outcome` enum (seven states), refutation dominance, `checked` as the only `Verified` constructor, the checker's `exhausted`/`internal-failure` propagated through `evaluate`, and the forged-submission regressions. Not covered: a machine-checked totality argument; "only Lean acceptance" is a property of this lane's code (after the F1 redesign), not a proved universal statement. |
 | SM-7 | **Documented separate** | The lane proves source-model facts only; no installed Wasm execution claim, compiler refinement or artifact correspondence is made (owned by #10/PO-18) |
 | SM-8 | **Documented** | The lane performs no merge, publication, live-slot admission, migration or release; the receipt records the no-go decision |
 
@@ -500,77 +562,139 @@ Phase 3 tests: `claim_regeneration_is_exact_and_canonical`,
 
 This plan is written for the independent reviewer the integrator schedules
 (OWNER DECISION 2026-11-20 item 1). Each step names its blocker; no step is
-implemented by the Phase 3 lane.
+implemented by the Phase 3 lane. "Pass" is the step's pass criterion and 7b is
+a precondition of 8.
 
 1. **Production claim module.** Move `noble-merge-claim/v1` and
    `noble-merge-evidence/v1` into a `noble-contracts` module with the crate's
    `Limits`, diagnostics and `export_lean` surface; `prepare` must not run a
    prover. Blocker: an owner decision to integrate plus the architecture
-   capacity review (Octet's fixed unit budget).
+   capacity review (Octet's fixed unit budget). Pass: `prepare` never starts a
+   prover, and the shipped claim/evidence revisions are the ones the lane
+   checked.
 2. **Consumer regeneration from prepared subjects.** Replace the test lane's
    lowered `Program` records with `Prepared` subject metadata (`ProgramValueId`,
    canonical recipe, instantiated interfaces, dependency closure, captures,
    schema/builtin identities, semantic revision) and regenerate the claim from
-   those. Blocker: #15's identity/linkage rules for captured subjects.
-3. **Production isolated consumer.** Extend the sandboxed consumer with the
-   `NobleContracts.Merge` import closure and the merge axiom policy, replacing
-   the lane's process-level check. Blocker: a pinned-model extension of
-   `workflow::intrinsic` (the exact MC1 model source pins) and its review.
+   those. This step also carries SM-5's uncovered part (dependency closure,
+   schema and builtin identities) and SM-3's exact lowering: the route to a
+   faithful `Prepared → MC1 code` lowering is PO-19 (contract export), proved
+   or extracted; until it lands, exact-text regeneration is the only tested
+   path. Blocker: #15's identity/linkage rules for captured subjects; PO-19 for
+   the lowering. Pass: a changed dependency, schema or builtin is refused or
+   regenerates a different claim, and a dangling capture is refused.
+3. **Production consumer for producer-supplied proofs.** Extend the sandboxed
+   consumer with the `NobleContracts.Merge` import closure and the merge axiom
+   policy. Because the merge proof is producer-supplied, the production path
+   must be the compile → bounded export → fresh-kernel-replay consumer used by
+   `workflow::verification::verify`; the `verify_intrinsic_pure` stdout-marker
+   template must not be reused, because it is safe only when the consumer
+   generates the term. Blocker: a pinned-model extension of
+   `workflow::intrinsic` (the exact MC1 model source pins), PO-09/PO-16
+   refinement for SM-4, and the review. Pass: the production consumer refuses
+   the F1 forgeries and an IO-writing proof, and accepts the honest claims.
 4. **Evidence envelope.** Emit the full `noble-merge-evidence/v1` field list
    (toolchain/library/source-tree identities, checker limits, policy revision,
    precondition/non-vacuity evidence, termination-obligation status, exact
-   scope). Blocker: the production consumer from step 3.
-5. **Fragment admission.** Encode the narrowed fragment as a subject check that
-   refuses named definitions, deeper quotations, `compose`/`reflect`, host
-   effects, resources, live dispatch, async and runtime-generated Programs as
-   `unsupported-fragment`. Blocker: extending the Lean theorem to named
-   definitions or restricting the admitted subjects in the checker.
+   scope). Blocker: the production consumer from step 3. Pass: every field is
+   populated from the consumer, and no digest is presented as proof.
+5. **Fragment admission.** Admit exactly the Lean `OuterCode`/`LeafCode`
+   fragment: straight-line leaf code plus **one level** of invocation of leaf
+   programs, with no `if`/`case`/`dip`/`run`/`listCase` inside an invoked or
+   embedded program, and literal programs only over the core ops. Named
+   definitions, deeper quotations, `compose`/`reflect`, host effects,
+   resources, live dispatch, async and runtime-generated Programs are
+   `unsupported-fragment`. Prefer deciding this with the kernel inside the
+   regenerated claim (a consumer-written fragment predicate conjoined with
+   `MergeRel` and pinned in the gate); otherwise the checker predicate must
+   mirror the Lean definitions exactly. Blocker: extending the Lean theorem to
+   named definitions or adding the fragment predicate. Pass: every excluded
+   shape, including nested invocation and non-core literal ops, refuses with
+   the same outcome as the Lean predicate.
 6. **Frozen fixture matrix.** Run the full SMERGE-CASE list against frozen
    subjects with retained raw observations, claims and proofs, including the
    outcomes that need a real bound (`exhausted` after the production deadline)
-   and the abnormal/unsupported refusals the lane can only model.
-7. **Independent review.** Retain the reviewer's record with the reviewed
-   commit, findings and verdict in this change. The owner keeps a veto.
-8. **Opt-in selection only.** If steps 1-7 pass, select the check behind an
-   explicit opt-in flag; still no automatic merge, publication, live-slot
-   admission or release permission.
+   and the abnormal/unsupported refusals the lane can only model. Pass: every
+   case has a retained raw observation, claim, proof and tool identity;
+   CASE-05's live `quote`/`run` form is exercised (the lane lowers it to a
+   literal, so no Lean claim exercises it today).
+7a. **Plan review (this step).** Retain the independent reviewer's record of
+   this plan, with the reviewed commit, findings and verdict, in the change.
+   Pass: a reviewer record at a named commit with no unresolved blocker. This
+   is the review task 3 requires; it does not review the implementation.
+7b. **Implementation review.** Retain an independent review of implemented
+   steps 1-6 at a frozen commit, with the reviewer's record, findings, verdict
+   and the owner's veto. Pass: no unresolved blocker and the owner does not
+   veto. 7b is a precondition of step 8.
+8. **Opt-in selection only.** If steps 1-6 and 7a/7b pass, select the check
+   behind an explicit opt-in flag; still no automatic merge, publication,
+   live-slot admission or release permission. Pass: the flag is off by
+   default, and the receipt records no automatic action.
+
+**Plan non-claims.** The plan does not select production integration, does not
+claim that the Lean `MergeRel` restricts observables (the claim generator
+does), does not treat SM-7 (#10/PO-18) as satisfied, and does not claim that
+the lane's tests are the production consumer.
 
 ### Re-evaluated go/no-go
 
-The frozen criteria ("reopen only after those obligations are discharged and a
-separately reviewed integration plan exists") are **partly** met: SM-1 and
-narrowed SM-2 are proved in the pinned model, SM-3/SM-4 are narrowed with
-written reasons, and SM-5/SM-6 are tested; the integration plan is written.
-The decision is **NO-GO for integration at this revision**, with reasons:
+The frozen criterion (base section "Model and proof outcome, go/no-go") reads
+"reopen only after those obligations [SM-1–SM-6] are discharged and a
+separately reviewed integration plan exists"; SMERGE-GATE-01 adds that "a test
+corpus alone MUST NOT close a universal obligation". The **GO condition** is
+all three of:
 
+(a) SM-1–SM-6 discharged, or narrowed by a statement the owner accepts, with
+    the narrowing encoded as an admission restriction. SM-7 is a separate
+    obligation (#10/PO-18) and is not a Phase 3 GO criterion;
+(b) plan steps 1-6 implemented with their pass criteria;
+(c) the 7b implementation review at a frozen commit (the 7a plan review alone
+    is not enough).
+
+At this revision: SM-1 and narrowed SM-2 are proved; SM-3 and SM-4 are
+narrowed with written reasons; **SM-3, SM-5 and SM-6 are tested only**; the
+plan is written but not reviewed, and steps 1-6 are not implemented. The
+decision is **NO-GO for integration**, with reasons:
+
+- SM-3 is not discharged: there is no formalized preparation/lowering pipeline
+  and PO-19 remains open. Exact-text regeneration is tested, and a dangling
+  capture is now refused rather than lowered.
+- SM-5 and SM-6 are not discharged: producer-field refusals and the total
+  outcome enum are tested, not proved; dependency closure and schema/builtin
+  binding are step 2 work.
 - SM-4 remains narrowed: the isolated check is process-level and the
-  production sandboxed consumer is not wired.
-- step 7 of the plan (independent review) is pending; the plan is reviewable
-  but not reviewed.
-- SM-7 stays a separate obligation, so a source-model proof does not transfer
-  to an installed artifact.
+  production consumer is not wired; PO-09/PO-16 refinement is not proved.
+- The integration plan's 7a review has not run, and 7b cannot run before steps
+  1-6 exist.
+- The review's F1 blocker (producer-printable acceptance) is fixed in this
+  revision and its forgeries refuse, but that is a lane fix, not a discharge
+  of the frozen criterion.
 
 The evidence is `verification/semantic-merge-verification/receipt.json`
 (sha256 `d059a8153800b8982d080830618ab49465980d36860d049e4d64584a6bdef21b`,
 clean tree at `9338c66d`) and its successor
 `verification/semantic-merge-verification/receipt-3beddcd9.json`
 (sha256 `e1382407a04bafec3f8e096b3b041d37d8f4976df4fe5f8c8904ff0947af367c`,
-clean tree at `3beddcd9`, after `e471a9e7` pinned the 34 Merge theorems in
+clean tree at `3beddcd9`, after `e471a9e7` pinned the 31 Merge theorems in
 `proofs/mc1/ContractGate.lean`), and
 `verification/semantic-merge-verification/receipt-4a2bb986.json`
 (sha256 `6d2645d847415d8a54c6d89b5d31bdcbc4ae0e1ac35ef444ef15b777368f6f87`,
 clean tree at `4a2bb986`), and its final successor
 `verification/semantic-merge-verification/receipt-d515869b.json`
 (sha256 `ad17ee14a7d4e675a5157b6b67cdfd2da150a86e630f811424e0f3c07e3dba81`,
-clean tree at `d515869b`). Both regenerated claims (`SMERGE-CASE-04`, `SMERGE-CASE-01`) were
-kernel-checked by the pinned model with axioms `propext`/`Quot.sound`, the
-Phase 2 lane was re-run unchanged, and the wrong-proof and command-submission
-controls stayed `unknown`.
+clean tree at `d515869b`, after `e471a9e7` pinned 31 Merge theorems — the gate
+prints 121 required theorems against the earlier 90). The receipt for this
+revision is retained beside them (the file named in tasks.md); it records the
+code at the preceding clean commit of this revision. In it, both regenerated
+claims (`SMERGE-CASE-04`, `SMERGE-CASE-01`) are verified through `evaluate`
+with axioms `propext`/`Quot.sound`, the Phase 2 lane is re-run unchanged, the
+CASE-07/CASE-03 forgeries and the file-writing and wrong-proof submissions
+stay nonverified, and the byte-bound and missing-pin controls report
+`exhausted`/`internal-failure`. The wall-clock timeout arm is not exercised.
 
 No claim generator is wired into `prepare`, no admission path exists, no merge,
 branch, live slot, migration or release action follows, and the production
-surfaces are unchanged. The GO condition is the completion of plan steps 1-7
-with the reviewer's record.
+surfaces are unchanged.
 
 ## Proof obligations
 
@@ -586,10 +710,11 @@ with the reviewer's record.
 | SM-8 | No automatic merge, publication, live-slot admission, source-control migration or release permission follows | issue #30 |
 
 SM-1 and narrowed SM-2 are proved in the pinned model; SM-3 and SM-4 are
-narrowed with written reasons; SM-5 and SM-6 are tested by the Phase 3 lane;
-SM-7 and SM-8 are documented. No disposition claims more than its evidence:
-the termination theorem is a new obligation and is not inherited from an
-effect set, purity or the existing partial-correctness claim, and the
+narrowed with written reasons; **SM-3, SM-5 and SM-6 are tested only and are
+not discharged** (SMERGE-GATE-01: a test corpus cannot close a universal
+obligation); SM-7 and SM-8 are documented. No disposition claims more than its
+evidence: the termination theorem is a new obligation and is not inherited
+from an effect set, purity or the existing partial-correctness claim, and the
 source-model proof does not transfer to an installed artifact.
 
 ## Evaluation, go/no-go and coordination
@@ -607,16 +732,26 @@ source-model proof does not transfer to an installed artifact.
 5. Record positive, conflict, counterexample, unknown, unsupported, exhausted
    and internal outcomes exactly.
 
-**Go/no-go.** Steps 1-6 of the experimental plan are executed by the Phase 3
-lane: the statement and proofs are in the pinned model, the claim generator and
-consumer regeneration refuse producer-supplied fields, the isolated check and
-the bounded search retain reproducible evidence, and the observed outcomes are
-recorded in `verification/semantic-merge-verification/receipt.json`. The
-re-evaluated decision is **no-go for integration at this revision**, for the
-reasons in "Re-evaluated go/no-go": SM-4 is narrowed rather than discharged,
-and the integration plan awaits its independent review. A successful check
-would still not be an automatic merge: no merge is performed, no branch is
-published, no live slot is admitted and no release permission is granted.
+**What the Phase 3 lane executed.** Steps 2 and 3 in full; part of step 1 (the
+statements and proofs are in the pinned model and the gate pins them, but no
+separate pre-proof statement-review record is retained); part of step 4
+(`SMERGE-CASE-04` and `SMERGE-CASE-01` are Lean-checked through `evaluate`;
+`SMERGE-CASE-02`, `-03` and `-05` have no library proof and are not
+Lean-checked; CASE-05's live `quote`/`run` form is lowered by the lane, so no
+Lean claim exercises it). Step 5 is **partly observed**: `exhausted` (byte
+bound) and `internal-failure` (missing pin) now have real controls, while the
+wall-clock `exhausted` arm and the production abnormal/unsupported outcomes
+remain plan step 6 work. The raw model and Lean transcripts are retained in
+the receipt. Remaining from the experimental plan: the statement-review
+record, the full fixture matrix, the live quotation exercise and the
+production bound.
+
+**Go/no-go.** The re-evaluated decision is **no-go for integration at this
+revision**, for the reasons in "Re-evaluated go/no-go": SM-3/SM-5/SM-6 are
+tested only, SM-4 is narrowed, and the integration plan has not been reviewed.
+A successful check would still not be an automatic merge: no merge is
+performed, no branch is published, no live slot is admitted and no release
+permission is granted.
 
 **Coordination.** #15 owns preservation, effect safety and the broader proof
 foundation; #10 owns proof-to-executed-artifact correspondence, so an installed
@@ -661,9 +796,18 @@ claim/evidence design.
 - The Phase 3 lane's claim is over the MC1 code its consumer lowering produces
   from the retained preparations. It is not a claim that the lowered code is
   the live quotation form (the Lean fragment admits `quote`/`run`, and the
-  capture stays bound by the subject digest), and not a claim about the
-  repository's production claim path.
-- The Phase 3 check isolates a fresh pinned Lean process with a fixed
-  `LEAN_PATH`, a pinned source digest and the mc1 axiom allowlist. It is not
-  the production bubblewrap sandbox, and its acceptance is not a policy
+  capture stays bound by the subject digest; the lane lowers it to a literal,
+  so CASE-05 is not Lean-exercised), and not a claim about the repository's
+  production claim path. A capture index outside the retained list is refused,
+  so the lowering never invents a value.
+- The Phase 3 check isolates a fresh pinned Lean process with a cleared
+  environment (only `LEAN_PATH`), recorded source and `.olean` digests and the
+  mc1 axiom allowlist; the submission is parsed as one closed term by the
+  consumer rather than written as source. The digests are recorded, not
+  compared with a pinned digest, the binary is selected by the environment
+  (its banner is checked) and the wall-clock deadline arm is not exercised. It
+  is not the production bubblewrap sandbox, and its acceptance is not a policy
   decision, an admission or a release.
+- The integration plan is a plan: steps 1-6 are unimplemented, 7a has not run,
+  and 7b cannot run before they exist. No plan step discharges SM-3, SM-5 or
+  SM-6 today.

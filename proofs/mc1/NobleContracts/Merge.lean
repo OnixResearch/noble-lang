@@ -757,8 +757,8 @@ def Observes (outputTys : List Ty) (p : List Op) (xs out : Stack) : Prop :=
 normally, the merge is defined at every output position, and every normal
 return of the candidate is the merge of the variants' normal returns.  The
 relation quantifies over all normal returns, so it never chooses one output of
-a nondeterministic evaluator; for the fragment the reference semantics is
-deterministic per concrete subject, which the fixture theorems check. -/
+a nondeterministic evaluator; each fixture subject's uniqueness is proved by
+its `exec_*_unique` lemma, and no general determinism lemma is stated. -/
 def MergeRel (inputTys outputTys : List Ty) (O A B M : List Op) : Prop :=
   ∀ xs, StackTyped xs inputTys →
     (∃ mo, Observes outputTys O xs mo) ∧
@@ -1064,8 +1064,9 @@ theorem no_candidate_for_incompatible_increments {x y : BitVec 64} (M : List Op)
     (ov := .i64 y) (av := .i64 (y + 1)) (bv := .i64 (y + 2)) (mv := .i64 q)
     rfl rfl rfl rfl (conflict_incompatible_increments y)
 
-/-- SMERGE-CASE-08: at the wrapping boundary the merge reads `0`, not a
-mathematical integer, so a candidate computing `1` is not the merge. -/
+/-- SMERGE-CASE-08: at the wrapping boundary the merge reads `0`; a candidate
+that computes `MAX + 1` as a mathematical integer and wraps it to `1` is not
+the merge. -/
 theorem wrapping_boundary_is_not_merge :
     ¬ MergeVal (.i64 18446744073709551615) (.i64 0) (.i64 18446744073709551615)
       (.i64 1) := by

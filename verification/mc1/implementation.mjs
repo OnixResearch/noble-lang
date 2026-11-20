@@ -163,16 +163,18 @@ try {
     'NobleContracts.NamedSubjectConservative', 'NobleContracts.NamedSubjectTests',
     'NobleContracts.NamedV2Examples',
     'NobleContracts.NamedV3', 'NobleContracts.SpecQuality', 'NobleContracts.Wire',
+    'NobleContracts.Merge',
     'NobleContractImpl', 'NobleContractImpl.Projection', 'NobleContractImpl.Statement'], proofRoot);
   // This CLI-embedded witness is a standalone file, not a lake library target.
   run('intrinsic-type-witness', tool('lean', 'lake'), ['env', 'lean', 'IntrinsicTypeWitness.lean'], proofRoot);
   const library = run('contract-library', tool('lean', 'lake'), ['env', 'lean', 'ContractGate.lean'], proofRoot);
   // The contract library grew with NamedV3 (T1/T6), the specification-quality module
   // (#65), the submission-refusal witnesses for #65 and the recheck-during-shrinking lane
-  // for #65's residual, then with the 23 `wire@1` law theorems of the Wire module, so the
-  // strict verdict now pins 90 required theorems; the exact string keeps the verdict
-  // non-substitutable.
-  if (!library.includes('MC1-CONTRACT-LIBRARY: 90 required theorems; strict axioms accepted')) {
+  // for #65's residual, then with the 23 `wire@1` law theorems of the Wire module (90),
+  // and then with the 31 Merge relation/termination theorems (121). The exact string
+  // keeps the verdict non-substitutable; a merged branch that also adds pins must sum
+  // its additions here rather than read the gate's printed count.
+  if (!library.includes('MC1-CONTRACT-LIBRARY: 121 required theorems; strict axioms accepted')) {
     throw Error('missing strict contract-library verdict');
   }
   const audit = run('implementation-audit', tool('lean', 'lake'), ['env', 'lean', 'ImplementationGate.lean'], proofRoot);
