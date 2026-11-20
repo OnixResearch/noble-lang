@@ -110,84 +110,34 @@ pub fn elaborate_obligations(
     let mut elaborated = Vec::with_capacity(obligations.len());
     let mut records = Vec::new();
     let mut at = 0usize;
-    while at < obligations.len() {
-        let obligation = &obligations[at];
-        let abbreviation = scan_abbreviation(&obligation.term, limits)?;
-        if !obligation.elaboration {
-            if abbreviation.infer {
-                let span =
-                    find_infer_span(&obligation.term, limits)?.unwrap_or(obligation.term.span);
-                return Err(unsupported(
-                    span,
-                    "infer requires the infer elaboration opt-in",
-                ));
+    // Aeneas refuses early returns inside loops: the loop only accumulates the
+    // first refusal, and one loop-free helper stages one obligation.
+    let mut outcome: Result<(), Diagnostic> = Ok(());
+    while outcome.is_ok() && at < obligations.len() {
+        match stage_obligation(
+            module,
+            version,
+            obligations,
+            dependencies,
+            at,
+            limits,
+            meter,
+        ) {
+            Ok((next, staged)) => {
+                meter = next;
+                match staged {
+                    Some((obligation, record)) => {
+                        elaborated.push(obligation);
+                        records.push(record);
+                    }
+                    None => elaborated.push(obligations[at].clone()),
+                }
             }
-            if abbreviation.app {
-                return Err(unsupported(
-                    obligation.term.span,
-                    "app requires the infer elaboration opt-in",
-                ));
-            }
-            elaborated.push(obligation.clone());
-            at += 1;
-            continue;
+            Err(error) => outcome = Err(error),
         }
-        scan_positions(&obligation.term, limits)?;
-        if !abbreviation.infer && !abbreviation.app {
-            elaborated.push(obligation.clone());
-            at += 1;
-            continue;
-        }
-        let mut available = Vec::new();
-        for dependency in dependencies {
-            push_available(
-                &mut available,
-                format!(
-                    "{}@{}/{}",
-                    dependency.module, dependency.version, dependency.declaration.name
-                ),
-                dependency.declaration.name.clone(),
-                &dependency.declaration.goal,
-            );
-        }
-        let mut prior = 0usize;
-        while prior < at {
-            push_available(
-                &mut available,
-                format!("{module}@{version}/{}", obligations[prior].name),
-                obligations[prior].name.clone(),
-                &obligations[prior].goal,
-            );
-            prior += 1;
-        }
-        match &obligation.goal {
-            PendingGoal::Pure {
-                proposition: statement,
-            } if obligation.revision == 1 => {
-                let (explicit, record, next_meter) =
-                    pure(obligation, statement, &available, limits, meter)?;
-                meter = next_meter;
-                let mut rewritten = obligation.clone();
-                rewritten.term = explicit;
-                elaborated.push(rewritten);
-                records.push(record);
-            }
-            PendingGoal::Contract { contract } => {
-                let (explicit, record) = contract_rule(obligation, contract, limits)?;
-                let mut rewritten = obligation.clone();
-                rewritten.term = explicit;
-                elaborated.push(rewritten);
-                records.push(record);
-            }
-            PendingGoal::Pure { .. } => {
-                return Err(unsupported(
-                    obligation.term.span,
-                    "inference requires a revision-1 pure proof",
-                ))
-            }
-        }
-        at += 1;
+        at = at.saturating_add(1);
     }
+    outcome?;
     Ok(Elaborated {
         obligations: elaborated,
         records,
@@ -197,6 +147,92 @@ pub fn elaborate_obligations(
             total: meter.work,
         },
     })
+}
+
+/// Stage one obligation: check its abbreviations and elaborate it when it
+/// opted in. Returns the rewritten obligation and record, or the unchanged
+/// pass-through as no staged pair.
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; one obligation's admission order stays reviewable in one loop-free helper"
+)]
+fn stage_obligation<'m>(
+    module: &str,
+    version: u32,
+    obligations: &[ProofObligation],
+    dependencies: &[ProofDependency],
+    at: usize,
+    limits: Limits,
+    meter: Meter<'m>,
+) -> Result<(Meter<'m>, Option<(ProofObligation, ElaborationRecord)>), Diagnostic> {
+    let obligation = &obligations[at];
+    let abbreviation = scan_abbreviation(&obligation.term, limits)?;
+    if !obligation.elaboration {
+        if abbreviation.infer {
+            let span = find_infer_span(&obligation.term, limits)?.unwrap_or(obligation.term.span);
+            return Err(unsupported(
+                span,
+                "infer requires the infer elaboration opt-in",
+            ));
+        }
+        if abbreviation.app {
+            return Err(unsupported(
+                obligation.term.span,
+                "app requires the infer elaboration opt-in",
+            ));
+        }
+        return Ok((meter, None));
+    }
+    scan_positions(&obligation.term, limits)?;
+    if !abbreviation.infer && !abbreviation.app {
+        return Ok((meter, None));
+    }
+    let mut available = Vec::new();
+    let mut dependency_at = 0usize;
+    while dependency_at < dependencies.len() {
+        let dependency = &dependencies[dependency_at];
+        push_available(
+            &mut available,
+            format!(
+                "{}@{}/{}",
+                dependency.module, dependency.version, dependency.declaration.name
+            ),
+            dependency.declaration.name.clone(),
+            &dependency.declaration.goal,
+        );
+        dependency_at = dependency_at.saturating_add(1);
+    }
+    let mut prior = 0usize;
+    while prior < at {
+        push_available(
+            &mut available,
+            format!("{module}@{version}/{}", obligations[prior].name),
+            obligations[prior].name.clone(),
+            &obligations[prior].goal,
+        );
+        prior = prior.saturating_add(1);
+    }
+    match &obligation.goal {
+        PendingGoal::Pure {
+            proposition: statement,
+        } if obligation.revision == 1 => {
+            let (explicit, record, next_meter) =
+                pure(obligation, statement, &available, limits, meter)?;
+            let mut rewritten = obligation.clone();
+            rewritten.term = explicit;
+            Ok((next_meter, Some((rewritten, record))))
+        }
+        PendingGoal::Contract { contract } => {
+            let (explicit, record) = contract_rule(obligation, contract, limits)?;
+            let mut rewritten = obligation.clone();
+            rewritten.term = explicit;
+            Ok((meter, Some((rewritten, record))))
+        }
+        PendingGoal::Pure { .. } => Err(unsupported(
+            obligation.term.span,
+            "inference requires a revision-1 pure proof",
+        )),
+    }
 }
 
 /// Record one pure proposition goal as an available proof.
@@ -362,11 +398,24 @@ fn rewrite_exec_literal(
             }
             let mut rewritten = Vec::with_capacity(items.len());
             let next = deeper(depth, form.span)?;
-            for item in items {
-                rewritten.push(rewrite_exec_literal(
-                    item, literal, origin, head, inserted, limits, next,
-                )?);
+            let mut index = 0usize;
+            let mut outcome: Result<(), Diagnostic> = Ok(());
+            while outcome.is_ok() && index < items.len() {
+                match rewrite_exec_literal(
+                    &items[index],
+                    literal,
+                    origin,
+                    head,
+                    inserted,
+                    limits,
+                    next,
+                ) {
+                    Ok(child) => rewritten.push(child),
+                    Err(error) => outcome = Err(error),
+                }
+                index = index.saturating_add(1);
             }
+            outcome?;
             Ok(Form {
                 kind: FormKind::List(rewritten),
                 span: form.span,
@@ -489,12 +538,14 @@ impl Head {
     /// The next telescope binder's name and position.
     fn binder(&self) -> (String, u32) {
         let position = self.next;
-        let name = match usize::try_from(position)
-            .ok()
-            .and_then(|index| self.names.get(index))
-        {
-            Some(name) => name.clone(),
-            None => format!("#{position}"),
+        // Aeneas refuses function-definition types with regions; avoid
+        // function items and closure chains in place of a plain match.
+        let name = match usize::try_from(position) {
+            Ok(index) => match self.names.get(index) {
+                Some(name) => name.clone(),
+                None => format!("#{position}"),
+            },
+            Err(_) => format!("#{position}"),
         };
         (name, position)
     }
@@ -534,10 +585,15 @@ impl Elaborator<'_, '_> {
         let explicit = self.finish_out(&out, 0)?;
         let mut inserted = Vec::with_capacity(self.metas.len());
         let mut index = 0usize;
-        while index < self.metas.len() {
-            inserted.push(self.inserted_row(index)?);
-            index += 1;
+        let mut outcome: Result<(), Diagnostic> = Ok(());
+        while outcome.is_ok() && index < self.metas.len() {
+            match self.inserted_row(index) {
+                Ok(row) => inserted.push(row),
+                Err(error) => outcome = Err(error),
+            }
+            index = index.saturating_add(1);
         }
+        outcome?;
         Ok((explicit, inserted))
     }
 
@@ -545,17 +601,24 @@ impl Elaborator<'_, '_> {
     /// further deferred checks; the queue drains deterministically.
     fn finish_deferred(&mut self) -> Result<(), Diagnostic> {
         let mut at = 0usize;
-        while at < self.deferred.len() {
-            let Some(item) = self.deferred[at].take() else {
-                return Err(internal(
-                    Span { start: 0, end: 0 },
-                    "deferred premise processed twice",
-                ));
-            };
-            let out = self.check(&item.form, &item.expected, item.depth)?;
-            self.deferred_forms.push(out);
-            at += 1;
+        let mut outcome: Result<(), Diagnostic> = Ok(());
+        while outcome.is_ok() && at < self.deferred.len() {
+            outcome = self.deferred_step(at);
+            at = at.saturating_add(1);
         }
+        outcome
+    }
+
+    /// One deferred step: check the queued premise and resolve its hole.
+    fn deferred_step(&mut self, at: usize) -> Result<(), Diagnostic> {
+        let Some(item) = self.deferred[at].take() else {
+            return Err(internal(
+                Span { start: 0, end: 0 },
+                "deferred premise processed twice",
+            ));
+        };
+        let out = self.check(&item.form, &item.expected, item.depth)?;
+        self.deferred_forms.push(out);
         Ok(())
     }
 
@@ -563,38 +626,45 @@ impl Elaborator<'_, '_> {
     /// term; a value metavariable must be a level below its depth.
     fn verify_ground(&self) -> Result<(), Diagnostic> {
         let mut index = 0usize;
-        while index < self.metas.len() {
-            let meta = &self.metas[index];
-            let level = u32_level(index, meta.span)?;
-            match meta.kind {
-                MetaKind::Code => {
-                    let solved = self.resolve_ty(&Ty::Meta(level), meta.span)?;
-                    if let Ty::Meta(_) = solved {
-                        return Err(self.underconstrained(index));
-                    }
-                    self.scope_ty(&solved, meta.depth, meta.span)?;
+        let mut outcome: Result<(), Diagnostic> = Ok(());
+        while outcome.is_ok() && index < self.metas.len() {
+            outcome = self.ground_step(index);
+            index = index.saturating_add(1);
+        }
+        outcome
+    }
+
+    /// One metavariable's groundness and scope check.
+    fn ground_step(&self, index: usize) -> Result<(), Diagnostic> {
+        let meta = &self.metas[index];
+        let level = u32_level(index, meta.span)?;
+        match meta.kind {
+            MetaKind::Code => {
+                let solved = self.resolve_ty(&Ty::Meta(level), meta.span)?;
+                if let Ty::Meta(_) = solved {
+                    return Err(self.underconstrained(index));
                 }
-                MetaKind::Value => {
-                    let solved = self.resolve_val(Val::Meta(level), meta.span)?;
-                    match solved {
-                        Val::Meta(_) => return Err(self.underconstrained(index)),
-                        Val::Level(found) => {
-                            if found >= meta.depth {
-                                return Err(ill_scoped(
-                                    meta.span,
-                                    &format!(
-                                        "solution for `{}` names level {found} at depth {}",
-                                        meta.binder, meta.depth
-                                    ),
-                                ));
-                            }
+                self.scope_ty(&solved, meta.depth, meta.span)
+            }
+            MetaKind::Value => {
+                let solved = self.resolve_val(Val::Meta(level), meta.span)?;
+                match solved {
+                    Val::Meta(_) => Err(self.underconstrained(index)),
+                    Val::Level(found) => {
+                        if found >= meta.depth {
+                            return Err(ill_scoped(
+                                meta.span,
+                                &format!(
+                                    "solution for `{}` names level {found} at depth {}",
+                                    meta.binder, meta.depth
+                                ),
+                            ));
                         }
+                        Ok(())
                     }
                 }
             }
-            index += 1;
         }
-        Ok(())
     }
 
     /// The record row of one metavariable.
@@ -698,16 +768,18 @@ impl Elaborator<'_, '_> {
         let mut names = Vec::with_capacity(self.context.total);
         let mut sorts = Vec::with_capacity(self.context.total);
         let mut level = 0usize;
-        while level < self.context.total {
-            match u32_level(level, Span { start: 0, end: 0 })
-                .ok()
-                .and_then(|value| self.context_at(value))
-            {
+        let mut complete = true;
+        while complete && level < self.context.total {
+            let binder = match u32_level(level, Span { start: 0, end: 0 }) {
+                Ok(value) => self.context_at(value),
+                Err(_) => None,
+            };
+            match binder {
                 Some(binder) => {
                     names.push(binder.name.clone());
                     sorts.push(binder.sort.clone());
                 }
-                None => break,
+                None => complete = false,
             }
             level = level.saturating_add(1);
         }
@@ -850,27 +922,23 @@ impl Elaborator<'_, '_> {
 
     /// Resolve a value metavariable; bindings are acyclic because every
     /// binding is resolved first.
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-contracts; resolution follows the finite value-metavariable chain, and binding always resolves both sides first, so every meta-to-meta link strictly lowers the index"
+    )]
     fn resolve_val(&self, value: Val, span: Span) -> Result<Val, Diagnostic> {
-        let mut current = value;
-        let mut steps = 0usize;
-        loop {
-            match current {
-                Val::Level(_) => return Ok(current),
-                Val::Meta(meta) => {
-                    let index = meta_index(meta, span)?;
-                    let entry = self
-                        .metas
-                        .get(index)
-                        .ok_or_else(|| internal(span, "unknown value metavariable"))?;
-                    match entry.value {
-                        Some(next) => current = next,
-                        None => return Ok(current),
-                    }
+        match value {
+            Val::Level(_) => Ok(value),
+            Val::Meta(meta) => {
+                let index = meta_index(meta, span)?;
+                let entry = self
+                    .metas
+                    .get(index)
+                    .ok_or_else(|| internal(span, "unknown value metavariable"))?;
+                match entry.value {
+                    Some(next) => self.resolve_val(next, span),
+                    None => Ok(value),
                 }
-            }
-            steps = steps.saturating_add(1);
-            if steps > self.metas.len() {
-                return Err(internal(span, "value metavariable cycle"));
             }
         }
     }
@@ -918,28 +986,31 @@ impl Elaborator<'_, '_> {
         let mut pending = Vec::new();
         pending.push(ty);
         let mut budget = 4096usize;
-        while let Some(next) = pending.pop() {
-            if budget == 0 {
-                return;
-            }
-            budget -= 1;
-            match next {
-                Ty::Meta(value) => {
-                    if let Ok(index) = meta_index(*value, span) {
-                        if let Some(meta) = self.metas.get_mut(index) {
-                            if meta.constraints.last() != Some(&span) {
-                                meta.constraints.push(span);
+        let mut next = pending.pop();
+        let mut running = next.is_some() && budget > 0;
+        while running {
+            if let Some(node) = next {
+                budget -= 1;
+                match node {
+                    Ty::Meta(value) => {
+                        if let Ok(index) = meta_index(*value, span) {
+                            if let Some(meta) = self.metas.get_mut(index) {
+                                if meta.constraints.last() != Some(&span) {
+                                    meta.constraints.push(span);
+                                }
                             }
                         }
                     }
+                    Ty::Pair(left, right) | Ty::Sum(left, right) => {
+                        pending.push(right);
+                        pending.push(left);
+                    }
+                    Ty::List(item) => pending.push(item),
+                    Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Var(_) => {}
                 }
-                Ty::Pair(left, right) | Ty::Sum(left, right) => {
-                    pending.push(right);
-                    pending.push(left);
-                }
-                Ty::List(item) => pending.push(item),
-                Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Var(_) => {}
+                next = pending.pop();
             }
+            running = next.is_some() && budget > 0;
         }
     }
 
@@ -1181,17 +1252,35 @@ impl Elaborator<'_, '_> {
     fn bind_value(&mut self, meta: u32, solution: Val, span: Span) -> Result<(), Diagnostic> {
         let index = meta_index(meta, span)?;
         let (required, sorts) = match self.metas.get(index) {
-            Some(entry) => (entry.required.as_ref().map(clone_ty), entry.sorts.clone()),
+            Some(entry) => {
+                // Aeneas refuses function-definition types with regions, so
+                // the map function item `Option::map(clone_ty)` is written as
+                // a plain assignment here.
+                let mut required = None;
+                if let Some(code) = &entry.required {
+                    required = Some(clone_ty(code));
+                }
+                (required, entry.sorts.clone())
+            }
             None => return Err(internal(span, "unknown value metavariable")),
         };
         if let (Some(required), Val::Level(level)) = (required, solution) {
             let code = {
-                let sort = usize::try_from(level)
-                    .ok()
-                    .and_then(|value| sorts.get(value))
-                    .ok_or_else(|| {
-                        internal(span, "value level outside the recorded proof context")
-                    })?;
+                let index = match usize::try_from(level) {
+                    Ok(index) => index,
+                    Err(_) => {
+                        return Err(internal(span, "value level exceeds the host address space"))
+                    }
+                };
+                let sort = match sorts.get(index) {
+                    Some(sort) => sort,
+                    None => {
+                        return Err(internal(
+                            span,
+                            "value level outside the recorded proof context",
+                        ))
+                    }
+                };
                 match sort {
                     Sort::Value(code) => ty_of_code(code, span)?,
                     _ => {
@@ -1803,53 +1892,82 @@ impl Elaborator<'_, '_> {
         let head_depth = deeper(depth, head_form.span)?;
         let mut inferred = self.infer(head_form, head_depth)?;
         let mut argument_at = 2usize;
-        loop {
-            let prop = clone_prop(&inferred.prop);
-            let (index, sort, body) = match prop {
-                PropTerm::Pi(index, sort, body) => {
-                    let current = u32_level(self.context.total, form.span)?;
-                    if index != current {
-                        return Err(super::reject(form.span, "apply binder scope mismatch"));
-                    }
-                    (index, sort, body)
+        let mut outcome: Result<(), Diagnostic> = Ok(());
+        let mut complete = false;
+        while outcome.is_ok() && !complete {
+            match Self::app_step(self, form, items, &mut inferred, argument_at, depth) {
+                Ok((next_argument, is_complete)) => {
+                    argument_at = next_argument;
+                    complete = is_complete;
                 }
-                _ => {
-                    if argument_at < items.len() {
-                        return Err(unsupported(form.span, "app over-application"));
-                    }
-                    return Ok(inferred);
-                }
-            };
-            let (arg_out, arg_term) = if matches!(sort, SortTerm::Codes) {
-                let current = u32_level(self.context.total, form.span)?;
-                let (binder, position) = inferred.head.binder();
-                inferred.head.next = position
-                    .checked_add(1)
-                    .ok_or_else(|| stage_exhausted(form.span, "telescope"))?;
-                let identity = inferred.head.identity.clone();
-                let level = self.alloc_code(&binder, position, &identity, form.span, current)?;
-                (Out::Infer(level, form.span), ArgTerm::Code(Ty::Meta(level)))
-            } else if argument_at < items.len() {
-                let argument = &items[argument_at];
-                argument_at = argument_at.saturating_add(1);
-                let child = deeper(depth, argument.span)?;
-                self.argument(&sort, argument, &mut inferred.head, child)?
-            } else {
-                return Err(unsupported(form.span, "app under-application"));
-            };
-            let size = prop_size_of(&body);
-            self.meter_step(MeterStep::Substitute(size), "substitution", form.span)?;
-            let next = inst_prop(&body, index, &arg_term, form.span)?;
-            let out = Out::List(
-                alloc::vec![out_atom("apply", form.span), inferred.out, arg_out],
-                form.span,
-            );
-            inferred = Inferred {
-                prop: next,
-                out,
-                head: inferred.head,
-            };
+                Err(error) => outcome = Err(error),
+            }
         }
+        outcome?;
+        Ok(inferred)
+    }
+
+    /// One telescope step of an A2 spine: fill one binder, or report that the
+    /// spine is complete. Returns the updated spine state and argument cursor.
+    #[expect(
+        tigerstyle::function_length,
+        reason = "Owner: noble-contracts; one spine step keeps its binder cases and substitution in one reviewable helper"
+    )]
+    fn app_step(
+        &mut self,
+        form: &Form,
+        items: &[Form],
+        inferred: &mut Inferred,
+        argument_at: usize,
+        depth: u32,
+    ) -> Result<(usize, bool), Diagnostic> {
+        let prop = clone_prop(&inferred.prop);
+        let (index, sort, body) = match prop {
+            PropTerm::Pi(index, sort, body) => {
+                let current = u32_level(self.context.total, form.span)?;
+                if index != current {
+                    return Err(super::reject(form.span, "apply binder scope mismatch"));
+                }
+                (index, sort, body)
+            }
+            _ => {
+                if argument_at < items.len() {
+                    return Err(unsupported(form.span, "app over-application"));
+                }
+                return Ok((argument_at, true));
+            }
+        };
+        let (arg_out, arg_term, next_argument) = if matches!(sort, SortTerm::Codes) {
+            let current = u32_level(self.context.total, form.span)?;
+            let (binder, position) = inferred.head.binder();
+            inferred.head.next = position
+                .checked_add(1)
+                .ok_or_else(|| stage_exhausted(form.span, "telescope"))?;
+            let identity = inferred.head.identity.clone();
+            let level = self.alloc_code(&binder, position, &identity, form.span, current)?;
+            (
+                Out::Infer(level, form.span),
+                ArgTerm::Code(Ty::Meta(level)),
+                argument_at,
+            )
+        } else if argument_at < items.len() {
+            let argument = &items[argument_at];
+            let child = deeper(depth, argument.span)?;
+            let (arg_out, arg_term) = self.argument(&sort, argument, &mut inferred.head, child)?;
+            (arg_out, arg_term, argument_at.saturating_add(1))
+        } else {
+            return Err(unsupported(form.span, "app under-application"));
+        };
+        let size = prop_size_of(&body);
+        self.meter_step(MeterStep::Substitute(size), "substitution", form.span)?;
+        let next = inst_prop(&body, index, &arg_term, form.span)?;
+        let previous = core::mem::replace(&mut inferred.out, out_atom("apply", form.span));
+        inferred.out = Out::List(
+            alloc::vec![out_atom("apply", form.span), previous, arg_out],
+            form.span,
+        );
+        inferred.prop = next;
+        Ok((next_argument, false))
     }
 
     /// Resolve one constructed term after solving, mapping inserted nodes to
@@ -1865,10 +1983,15 @@ impl Elaborator<'_, '_> {
                 let next = deeper(depth, *span)?;
                 let mut forms = Vec::with_capacity(items.len());
                 let mut index = 0usize;
-                while index < items.len() {
-                    forms.push(self.finish_out(&items[index], next)?);
+                let mut outcome: Result<(), Diagnostic> = Ok(());
+                while outcome.is_ok() && index < items.len() {
+                    match self.finish_out(&items[index], next) {
+                        Ok(form) => forms.push(form),
+                        Err(error) => outcome = Err(error),
+                    }
                     index = index.saturating_add(1);
                 }
+                outcome?;
                 Ok(Form {
                     kind: FormKind::List(forms),
                     span: *span,
@@ -1993,11 +2116,22 @@ impl Elaborator<'_, '_> {
 
 /// The binder name at a solution level, from the metavariable's snapshot.
 fn level_name(names: &[String], level: u32, span: Span) -> Result<String, Diagnostic> {
-    usize::try_from(level)
-        .ok()
-        .and_then(|index| names.get(index))
-        .cloned()
-        .ok_or_else(|| internal(span, "solution level outside the recorded proof context"))
+    let index = match usize::try_from(level) {
+        Ok(index) => index,
+        Err(_) => {
+            return Err(internal(
+                span,
+                "solution level exceeds the host address space",
+            ))
+        }
+    };
+    match names.get(index) {
+        Some(name) => Ok(name.clone()),
+        None => Err(internal(
+            span,
+            "solution level outside the recorded proof context",
+        )),
+    }
 }
 
 /// The last available proof named `name`, as a reverse index walk.
@@ -2057,34 +2191,61 @@ fn scan_abbreviation(form: &Form, limits: Limits) -> Result<Abbreviation, Diagno
     let mut pending = Vec::new();
     pending.push((form, 0u32));
     let mut visited = 0u32;
-    while let Some((current, depth)) = pending.pop() {
-        if depth > limits.depth {
-            return Err(stage_exhausted(current.span, "depth"));
+    let mut outcome: Result<(), Diagnostic> = Ok(());
+    let mut current = pending.pop();
+    while outcome.is_ok() && current.is_some() {
+        if let Some((node, depth)) = current {
+            outcome = abbreviation_step(
+                node,
+                depth,
+                limits,
+                &mut abbreviation,
+                &mut visited,
+                &mut pending,
+            );
         }
-        visited = visited.saturating_add(1);
-        if visited > limits.nodes {
-            return Err(stage_exhausted(current.span, "node"));
-        }
-        match &current.kind {
-            FormKind::Atom(_) => {}
-            FormKind::List(items) => {
-                if is_infer_form(current) {
-                    abbreviation.infer = true;
-                    continue;
-                }
-                if head_atom(items) == Some("app") {
-                    abbreviation.app = true;
-                }
-                let next = depth.saturating_add(1);
-                let mut index = 0usize;
-                while index < items.len() {
-                    pending.push((&items[index], next));
-                    index = index.saturating_add(1);
-                }
+        current = pending.pop();
+    }
+    outcome?;
+    Ok(abbreviation)
+}
+
+/// Visit one abbreviation-scan node: record the abbreviation and schedule its
+/// children. The loop only accumulates this helper's verdict.
+fn abbreviation_step<'a>(
+    current: &'a Form,
+    depth: u32,
+    limits: Limits,
+    abbreviation: &mut Abbreviation,
+    visited: &mut u32,
+    pending: &mut Vec<(&'a Form, u32)>,
+) -> Result<(), Diagnostic> {
+    if depth > limits.depth {
+        return Err(stage_exhausted(current.span, "depth"));
+    }
+    *visited = visited.saturating_add(1);
+    if *visited > limits.nodes {
+        return Err(stage_exhausted(current.span, "node"));
+    }
+    match &current.kind {
+        FormKind::Atom(_) => Ok(()),
+        FormKind::List(items) => {
+            if is_infer_form(current) {
+                abbreviation.infer = true;
+                return Ok(());
             }
+            if head_atom(items) == Some("app") {
+                abbreviation.app = true;
+            }
+            let next = depth.saturating_add(1);
+            let mut index = 0usize;
+            while index < items.len() {
+                pending.push((&items[index], next));
+                index = index.saturating_add(1);
+            }
+            Ok(())
         }
     }
-    Ok(abbreviation)
 }
 
 /// The span of the first `(infer)` placeholder, in walk order.
@@ -2092,31 +2253,53 @@ fn find_infer_span(form: &Form, limits: Limits) -> Result<Option<Span>, Diagnost
     let mut pending = Vec::new();
     pending.push((form, 0u32));
     let mut visited = 0u32;
-    while let Some((current, depth)) = pending.pop() {
-        if depth > limits.depth {
-            return Err(stage_exhausted(current.span, "depth"));
-        }
-        visited = visited.saturating_add(1);
-        if visited > limits.nodes {
-            return Err(stage_exhausted(current.span, "node"));
-        }
-        match &current.kind {
-            FormKind::Atom(_) => {}
-            FormKind::List(items) => {
-                if is_infer_form(current) {
-                    return Ok(Some(current.span));
-                }
-                let next = depth.saturating_add(1);
-                // Push in reverse so the walk visits the leftmost form first.
-                let mut remaining = items.len();
-                while remaining > 0 {
-                    remaining -= 1;
-                    pending.push((&items[remaining], next));
-                }
+    let mut outcome: Result<(), Diagnostic> = Ok(());
+    let mut found = None;
+    let mut current = pending.pop();
+    while outcome.is_ok() && found.is_none() && current.is_some() {
+        if let Some((node, depth)) = current {
+            match infer_span_step(node, depth, limits, &mut visited, &mut pending) {
+                Ok(span) => found = span,
+                Err(error) => outcome = Err(error),
             }
         }
+        current = pending.pop();
     }
-    Ok(None)
+    outcome?;
+    Ok(found)
+}
+
+/// Visit one infer-span node: report the first placeholder or schedule its
+/// children in reverse so the leftmost form is visited first.
+fn infer_span_step<'a>(
+    current: &'a Form,
+    depth: u32,
+    limits: Limits,
+    visited: &mut u32,
+    pending: &mut Vec<(&'a Form, u32)>,
+) -> Result<Option<Span>, Diagnostic> {
+    if depth > limits.depth {
+        return Err(stage_exhausted(current.span, "depth"));
+    }
+    *visited = visited.saturating_add(1);
+    if *visited > limits.nodes {
+        return Err(stage_exhausted(current.span, "node"));
+    }
+    match &current.kind {
+        FormKind::Atom(_) => Ok(None),
+        FormKind::List(items) => {
+            if is_infer_form(current) {
+                return Ok(Some(current.span));
+            }
+            let next = depth.saturating_add(1);
+            let mut remaining = items.len();
+            while remaining > 0 {
+                remaining -= 1;
+                pending.push((&items[remaining], next));
+            }
+            Ok(None)
+        }
+    }
 }
 
 /// The syntactic position of one proof subterm.
@@ -2177,31 +2360,51 @@ fn scan_positions(form: &Form, limits: Limits) -> Result<(), Diagnostic> {
     let mut pending = Vec::new();
     pending.push((form, Position::Root, 0u32));
     let mut visited = 0u32;
-    while let Some((current, position, depth)) = pending.pop() {
-        if depth > limits.depth {
-            return Err(stage_exhausted(current.span, "depth"));
+    let mut outcome: Result<(), Diagnostic> = Ok(());
+    let mut current = pending.pop();
+    while outcome.is_ok() && current.is_some() {
+        if let Some((node, position, depth)) = current {
+            outcome = position_step(node, position, depth, limits, &mut visited, &mut pending);
         }
-        visited = visited.saturating_add(1);
-        if visited > limits.nodes {
-            return Err(stage_exhausted(current.span, "node"));
-        }
-        match &current.kind {
-            FormKind::Atom(_) => {}
-            FormKind::List(items) => {
-                if is_infer_form(current) {
-                    match position {
-                        Position::ApplyArgument | Position::AppArgument | Position::ExecLiteral => {
-                        }
-                        other => return Err(unsupported(current.span, other.refusal())),
+        current = pending.pop();
+    }
+    outcome
+}
+
+/// Visit one position-scan node: refuse a misplaced placeholder or schedule
+/// the node's children. The loop only accumulates this helper's verdict.
+fn position_step<'a>(
+    current: &'a Form,
+    position: Position,
+    depth: u32,
+    limits: Limits,
+    visited: &mut u32,
+    pending: &mut Vec<(&'a Form, Position, u32)>,
+) -> Result<(), Diagnostic> {
+    if depth > limits.depth {
+        return Err(stage_exhausted(current.span, "depth"));
+    }
+    *visited = visited.saturating_add(1);
+    if *visited > limits.nodes {
+        return Err(stage_exhausted(current.span, "node"));
+    }
+    match &current.kind {
+        FormKind::Atom(_) => Ok(()),
+        FormKind::List(items) => {
+            if is_infer_form(current) {
+                match position {
+                    Position::ApplyArgument | Position::AppArgument | Position::ExecLiteral => {
+                        Ok(())
                     }
-                    continue;
+                    other => Err(unsupported(current.span, other.refusal())),
                 }
+            } else {
                 let next = depth.saturating_add(1);
-                push_positions(&mut pending, items, position, next);
+                push_positions(pending, items, position, next);
+                Ok(())
             }
         }
     }
-    Ok(())
 }
 
 /// Schedule the children of one proof form with their positions.
@@ -2216,11 +2419,12 @@ fn push_positions<'a>(
     let mut remaining = items.len();
     while remaining > 0 {
         remaining -= 1;
-        if remaining == 0 && !matches!(position, Position::IntroBinder | Position::SubstBinder) {
-            continue;
+        let is_head =
+            remaining == 0 && !matches!(position, Position::IntroBinder | Position::SubstBinder);
+        if !is_head {
+            let child = child_position(head, position, remaining);
+            pending.push((&items[remaining], child, depth));
         }
-        let child = child_position(head, position, remaining);
-        pending.push((&items[remaining], child, depth));
     }
 }
 
@@ -2261,25 +2465,34 @@ fn pi_names(form: &Form) -> Vec<String> {
     let mut names = Vec::new();
     let mut current = form;
     let mut remaining = 64usize;
-    while remaining > 0 {
+    let mut running = true;
+    while running && remaining > 0 {
         remaining -= 1;
-        let FormKind::List(items) = &current.kind else {
-            break;
-        };
-        if items.len() != 3 || head_atom(items) != Some("Pi") {
-            break;
+        match &current.kind {
+            FormKind::List(items) => {
+                if items.len() != 3 || head_atom(items) != Some("Pi") {
+                    running = false;
+                } else {
+                    match &items[1].kind {
+                        FormKind::List(binding) => {
+                            if binding.len() != 2 {
+                                running = false;
+                            } else {
+                                match &binding[0].kind {
+                                    FormKind::Atom(name) => {
+                                        names.push(name.clone());
+                                        current = &items[2];
+                                    }
+                                    FormKind::List(_) => running = false,
+                                }
+                            }
+                        }
+                        FormKind::Atom(_) => running = false,
+                    }
+                }
+            }
+            FormKind::Atom(_) => running = false,
         }
-        let FormKind::List(binding) = &items[1].kind else {
-            break;
-        };
-        if binding.len() != 2 {
-            break;
-        }
-        let FormKind::Atom(name) = &binding[0].kind else {
-            break;
-        };
-        names.push(name.clone());
-        current = &items[2];
     }
     names
 }
@@ -2381,26 +2594,30 @@ fn occurs_code(meta: u32, ty: &Ty) -> bool {
     let mut pending = Vec::new();
     pending.push(ty);
     let mut budget = 4096usize;
-    while let Some(next) = pending.pop() {
-        if budget == 0 {
-            return true;
-        }
-        budget -= 1;
-        match next {
-            Ty::Meta(other) => {
-                if *other == meta {
-                    return true;
+    let mut found = false;
+    let mut next = pending.pop();
+    while !found && next.is_some() {
+        if let Some(node) = next {
+            if budget == 0 {
+                // The original walk treated a spent budget as conservative
+                // membership; keep that exact outcome.
+                found = true;
+            } else {
+                budget -= 1;
+                match node {
+                    Ty::Meta(other) => found = *other == meta,
+                    Ty::Pair(left, right) | Ty::Sum(left, right) => {
+                        pending.push(right);
+                        pending.push(left);
+                    }
+                    Ty::List(item) => pending.push(item),
+                    Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Var(_) => {}
                 }
             }
-            Ty::Pair(left, right) | Ty::Sum(left, right) => {
-                pending.push(right);
-                pending.push(left);
-            }
-            Ty::List(item) => pending.push(item),
-            Ty::Unit | Ty::Bool | Ty::I64 | Ty::Text | Ty::Var(_) => {}
+            next = pending.pop();
         }
     }
-    false
+    found
 }
 
 /// The node count of one metavariable code.
@@ -2528,13 +2745,18 @@ fn render_into(
             text.push('(');
             let next = deeper(depth, form.span)?;
             let mut index = 0usize;
-            while index < items.len() {
+            let mut outcome: Result<(), Diagnostic> = Ok(());
+            while outcome.is_ok() && index < items.len() {
                 if index > 0 {
                     text.push(' ');
                 }
-                render_into(&items[index], limits, next, text)?;
+                match render_into(&items[index], limits, next, text) {
+                    Ok(()) => {}
+                    Err(error) => outcome = Err(error),
+                }
                 index = index.saturating_add(1);
             }
+            outcome?;
             text.push(')');
             Ok(())
         }
