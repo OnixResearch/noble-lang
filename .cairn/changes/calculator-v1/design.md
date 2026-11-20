@@ -183,10 +183,10 @@ After the splits every traced compile of `f(3)` and `1+2` is at least 143.3M bel
 **Choice:** The selected entry is `noble calculator`. It reads stdin and runs one submission per line. An unframed line is delimited by `\n` and counts that terminator; `--framed` reads each line as a counted byte frame. Both are bounded by the same 65,536-byte input frame, and a frame over it is a `TransportLimit InputFrameBytes` refusal with exit status 2 before any guest runs. A line is exactly one of:
 
 - `EXPR` — evaluate the expression over exact rationals. A successful value prints on stdout.
-- `let NAME = EXPR` — evaluate `EXPR`, print its exact display on stdout, then commit the binding. The display charge runs before the new State is published, so a refused display leaves the earlier binding, or its absence, unchanged.
+- `let NAME = EXPR` — evaluate `EXPR`, produce its exact display, commit the binding and print that display on stdout. The display charge runs before the new State is published, so a refused display commits nothing and prints nothing: the earlier binding, or its absence, is unchanged.
 - `fn NAME(P, ...) = EXPR` — check and install the definition, printing nothing on stdout. A definition never evaluates its body, and the zero-parameter form is `fn NAME() = EXPR`.
 
-Whitespace between tokens is insignificant, so `let x=7` and `let x = 7` are the same line and `fn f(y)=y*2` is the README spelling; `,` separates parameters and no other separator exists. `name` is an identifier token, so a name cannot be a keyword of the line grammar. The host never classifies source bytes: the guest lexer produces the tokens and the definition route, and the shell only schedules checked guest modules.
+Whitespace between tokens is insignificant, so `let x=7` and `let x = 7` are the same line and `fn f(y)=y*2` is the README spelling; `,` separates parameters and no other separator exists. `NAME` is an identifier token. The host never classifies source bytes: the guest lexer produces the tokens and the definition route, and the shell only schedules checked guest modules.
 
 `OWNER DECISION 2026-11-20:` "Definition grammar: `let NAME = EXPR` (echoes the value) and `fn NAME(P, ...) = EXPR` (silent)."
 

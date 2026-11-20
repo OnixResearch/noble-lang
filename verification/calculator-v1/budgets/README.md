@@ -125,6 +125,42 @@ No category bracket, budget value or predicted boundary N changed.
   status 2. The `44329dc` row expected the scope to kill the process with no
   output at all.
 
+## Run of the revised plan (`cb5e9f71`, 2026-11-20)
+
+A release binary of `cb5e9f71` (sha256
+`b4b2931a27e7de1bc932a69c2c2a47e52b36fd6aac940e02ef811e3acb2d1736`) ran the
+v2 plan in 22 sessions; the two retired rows are recorded but not run, and the
+other 20 all matched. Concurrency was 2 under `MemoryMax=2G` and
+`MemorySwapMax=0`, total wall 1,660 s. The compact form is
+[`summary-2026-11-20.json`](summary-2026-11-20.json); the raw receipt
+(sha256 `b1d66e0d31aa1821cc4c5266c345aa8acc54d154a6188d5a105effe355762034`)
+and per-session I/O are external to the repository. The old
+[`summary.json`](summary.json) is kept as the `44329dc` record.
+
+| Category | Budget N−1 / N | N−1 stderr (stdout) | N stdout | Wall N−1 / N |
+|---|---|---|---|---|
+| InputBytes | 8 / 9 | `ResourceLimit InputBytes [0,9)` (`7`, `7`) | `7`, `100007`, `7` | 162 s / 272 s |
+| NumericDigits | 2 / 3 | `ResourceLimit NumericDigits [2,5)` (`7`, `7`) | `7`, `130`, `7` | 196 s / 312 s |
+| IntermediateIntegerBits | 25 / 26 | `ResourceLimit IntermediateIntegerBits [0,7)` (`7`, `7`) | `7`, `1234567`, `7` | 210 s / 209 s |
+| SyntaxDepth | 2 / 3 | `ResourceLimit SyntaxDepth [2,3)` (`7`, `7`) | `7`, `7`, `7` | 151 s / 170 s |
+| CallDepth | 1 / 2 | `ResourceLimit CallDepth [8,9)` (`2` from `g(1)`) | `3`, `2` | 250 s / 269 s |
+| EvaluationWork | 38,052 / 38,053 | `ResourceLimit EvaluationWork [3,3)` (`7`, `7`) | `7`, `77`, `7` | 188 s / 191 s |
+| OutputSize | 6 / 7 | `ResourceLimit OutputSize [14,14)` twice, then `UnknownName [0,1)` (`7`, `7`) | `7` and `1234567` ×4 | 149 s / 146 s |
+
+Every N−1 refusal names its category, N accepts, and the follow-up line still
+sees the prior state. `input-bytes 7` (N−2) refuses the 8-byte setup line as
+well. `evaluation-work 38,051` (N−2) refuses too, so the boundary is exactly
+38,053. Peak RSS over the bracket sessions was 218–380 MiB.
+
+The four non-retired controls matched and printed no `ResourceLimit` line:
+
+| Control | Observed | Status | Wall | Peak RSS |
+|---|---|---|---|---|
+| `control/worker-killed` | `7`, then `noble calculator: calculator restore failed` | 2 | 112 s | 303 MiB |
+| `control/host-timeout` | no output, `SIGKILL` after the 20 s timeout | signal | 20 s | – |
+| `control/transport-limit` | `TransportLimit InputFrameBytes: source byte limit exceeded` | 2 | 1.7 s | 146 MiB |
+| `control/memory-cap` (48M) | `noble calculator: engine worker closed its reply stream` | 2 | 0.1 s | 75 MiB |
+
 ## Slow numeric-path tier on the integrated tree
 
 The ignored release tier ran on `main` at `05a50b0`, whose sources match the
