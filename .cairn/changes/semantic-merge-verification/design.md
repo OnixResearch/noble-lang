@@ -722,13 +722,9 @@ receipt `verification/semantic-merge-verification/receipt-0b63bc0d3379.json`
 clean tree at `0b63bc0d3379`) and its Octet-clean successor
 `verification/semantic-merge-verification/receipt-f1ac840999f4.json`
 (sha256 `55193e408ac3f7c63b64ec4b9d719d0279483abfde15b8f0a05834b213aec855`,
-clean tree at `f1ac840999f4`). In the final successor, both regenerated claims
-(`SMERGE-CASE-04`, `SMERGE-CASE-01`) are verified through `evaluate` with
-axioms `propext`/`Quot.sound`, the Phase 2 lane is re-run unchanged, the
-CASE-07/CASE-03 forgeries and the file-writing and wrong-proof submissions
-stay nonverified, and the byte-bound and missing-pin controls report
-`exhausted`/`internal-failure`. The wall-clock timeout arm is not exercised.
-
+clean tree at `f1ac840999f4`). The replay successor receipt is retained beside
+these once its clean revision is recorded; this paragraph is updated with its
+name and digest then.
 No claim generator is wired into `prepare`, no admission path exists, no merge,
 branch, live slot, migration or release action follows, and the production
 surfaces are unchanged.
