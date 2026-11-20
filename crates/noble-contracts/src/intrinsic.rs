@@ -12,6 +12,10 @@ use alloc::{boxed::Box, string::String, vec::Vec};
 
 mod named_v2;
 pub use named_v2::prepare_named_contract;
+mod elaborate;
+pub use elaborate::{
+    elaborate_obligations, Elaborated, ElaborationRecord, InsertedArgument, ELABORATION_REVISION,
+};
 
 #[derive(Debug, Eq)]
 pub struct Form {
@@ -375,6 +379,8 @@ pub struct ProofObligation {
     pub goal: PendingGoal,
     pub term: Form,
     pub span: Span,
+    /// The declaration opted into elaborator revision `implicit-args/v1`.
+    pub elaboration: bool,
 }
 pub struct ProofDependency {
     pub name: String,
@@ -534,6 +540,10 @@ pub struct ProofBatch {
     pub generation: u64,
     pub dependencies: Vec<ProofDependency>,
     pub obligations: Vec<ProofObligation>,
+    /// Elaboration records for abbreviated proofs, in obligation order.
+    pub elaborations: Vec<elaborate::ElaborationRecord>,
+    /// Work charged to the shared elaboration meter.
+    pub elaboration_work: ProofWork,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ProofKind {
@@ -4950,6 +4960,7 @@ mod form_impl_tests {
                 },
                 term: list(vec![atom("t", 2)], 2),
                 span: crate::Span { start: 0, end: 4 },
+                elaboration: false,
             },
             exported: name.len().is_multiple_of(2),
             dependencies,
@@ -5181,7 +5192,14 @@ mod proposition_impl_tests {
                 goal: super::PendingGoal::Pure { proposition },
                 term,
                 span: crate::Span { start: 0, end: 18 },
+                elaboration: false,
             }],
+            elaborations: Vec::new(),
+            elaboration_work: super::ProofWork {
+                normalization: 0,
+                substitution: 0,
+                total: 0,
+            },
         }
     }
 

@@ -123,6 +123,18 @@ pub(super) fn stage(request: Request<'_>) -> Result<Staged, crate::source::Error
             "proof dependency snapshot byte budget exhausted",
         ));
     }
+    // Elaboration is untrusted: it rewrites opted-in abbreviations into the
+    // explicit core before any proof is checked or published. A refusal here
+    // rejects only the opted-in submission; it never accepts or assumes.
+    let elaborated = attempt!(crate::intrinsic::elaborate_obligations(
+        request.name,
+        request.version,
+        &obligations,
+        &dependencies,
+        request.limits,
+        crate::intrinsic::ProofBudgets::from_limits(request.limits),
+    )
+    .map_err(|problem| crate::source::declared::diagnostic(crate::source::Stage::Check, problem)));
     Ok(Staged {
         contracts,
         proof_exports,
@@ -132,7 +144,9 @@ pub(super) fn stage(request: Request<'_>) -> Result<Staged, crate::source::Error
             source: request.source.to_vec(),
             generation: request.generation,
             dependencies,
-            obligations,
+            obligations: elaborated.obligations,
+            elaborations: elaborated.records,
+            elaboration_work: elaborated.work,
         }),
     })
 }
@@ -260,6 +274,7 @@ fn stage_proof(
             goal,
             term,
             span: proof.span,
+            elaboration: proof.elaboration,
         },
         dependencies,
     ))
@@ -1397,6 +1412,7 @@ mod tests {
                 },
                 term: form,
                 span,
+                elaboration: false,
             },
             exported: true,
             dependencies,
@@ -1540,6 +1556,7 @@ mod tests {
             },
             term: atom("p", 0),
             span: crate::Span { start: 0, end: 0 },
+            elaboration: false,
         }
     }
 

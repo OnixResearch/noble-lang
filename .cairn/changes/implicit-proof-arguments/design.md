@@ -290,3 +290,20 @@ The plan keeps three claims apart:
 | Negative cases: wrong value/type, forged inferred argument, illegal resource/Program code in `Type0`, capture or incorrect rebasing, stale theorem dependency, changed expected claim, unresolved holes | Negative cases (IMPL-CASE-09 to 16) |
 | Determinism, budget exhaustion and bounded diagnostic-output tests | Determinism, budget and diagnostic-bound tests (IMPL-CASE-17 to 19) |
 | Evidence plan separating example checking from elaborator correctness and source-to-Lean translation | Evidence plan |
+
+## Selected concrete grammar and implementation (2026-11-20)
+
+OWNER DECISION 2026-11-20: implicit arguments are spelled `(infer)` (decision 13).
+
+**Selected spellings.** The placeholder is the nullary form `(infer)`. The opt-in is the word `infer` between a proof name and its claim (`proof 1 NAME infer : …` / `proof 1 NAME infer for LAW [ … ]`), so the revision is recorded with the declaration. The elaborator revision is `implicit-args/v1`. These selections are the `IMPL-GRAMMAR-01` delta in `specs/developer-experience/spec.md`.
+
+**Implementation.** `crates/noble-contracts/src/intrinsic/elaborate.rs` implements A1-A3 behind the opt-in. It runs at module staging (`register/logical.rs::stage`) before the unchanged explicit checker, so a published proof always stores its explicit term; `ProofBatch::elaborations` carries the records and `ProofBatch::elaboration_work` the shared-meter charge. `verify-module` prints the record as an `elaboration` object (revision, work, per-proof inserted rows with binder, 1-based position, head identity, solution, constraint spans, abbreviated/explicit digests and the full explicit text) only when a record exists, so fully explicit modules keep byte-identical reports.
+
+**Refusal categories.** Diagnostics are `underconstrained`, `invalid-constraint` (including the occurs check), `ill-scoped`, `unsupported`, `exhausted` and `internal`, each prefixed with its category and raised at the abbreviation's span. Premise inference lists up to eight local-premise and accepted-proof candidates and never chooses one.
+
+**Implementation notes (recorded honestly).**
+
+- IMPL-CASE-12: under the A2 rule that every non-`Type0` position must be written, `(app (use T) (infer))` for a two-value-binder telescope is refused as `unsupported: app under-application` before any name comparison. The `ill-scoped` refusal remains implemented and unit-tested (a solution naming a level at or beyond its meta's depth), but a strictly telescoped head cannot produce one; it guards the rebasing contract.
+- IMPL-CASE-16's editor-only hole rendering stays with #6; refusal diagnostics name the unresolved binder, head identity and category, without the copy-ready hole form.
+- Candidate rows name local premise binders and accepted proofs; the proof context stores no binder spans, so candidate spans are the declared spans of accepted proofs only.
+- The source `use` resolver names only prior or imported proofs, so a premise binder is exercised through an inferable witness (`refl`, `apply`, `use`) in the executed controls, as the accepted CONTRACT fixtures do. Premise placeholders are refused in every case.
