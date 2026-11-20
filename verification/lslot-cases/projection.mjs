@@ -85,24 +85,27 @@ function stageEntry(rawStages, mapping, canonical) {
 }
 const stepStages = steps => steps.map(step => step.row.stage);
 // One entry per canonical interface leaf: `input`, `output`, `effects`.
+const spellTypes = list => list.map(normalizeType);
 function interfaceEntries(prefix, canonical, observed, third = 'effects') {
-  return [['input', canonical.input, observed.input],
-    ['output', canonical.output, observed.output],
-    [third, canonical[third], observed[third]]].map(([leaf, want, seen]) =>
+  return [['input', spellTypes(canonical.input), observed.input],
+    ['output', spellTypes(canonical.output), observed.output],
+    [third, canonical[third].map(effect => effect === 'pure' ? '{}' : effect),
+      observed[third]]].map(([leaf, want, seen]) =>
     measured(prefix, leaf, want, seen));
 }
 
 // Parse `LiveRef<IN,OUT,EFF>` with `+`-joined inputs and a flat effect set, and
 // spell it the way the canonical design does: `borrow LiveRef<[..],[..],{..}>`.
 export function normalizeType(type) {
-  const text = String(type).trim();
+  const text = String(type).trim().replace(/^borrow /, '');
   if (!text.startsWith('LiveRef<')) return text;
   const body = text.slice('LiveRef<'.length, -1);
   const parts = splitTop(body, ',');
   assert.equal(parts.length, 3, `three LiveRef components: ${type}`);
-  const inputs = splitTop(parts[0], '+').map(normalizeType);
-  const outputs = splitTop(parts[1], '+').map(normalizeType);
-  const effects = splitTop(parts[2].trim(), '+')
+  const strip = list => list.trim().replace(/^\[/, '').replace(/\]$/, '');
+  const inputs = splitTop(strip(parts[0]), '+').map(normalizeType);
+  const outputs = splitTop(strip(parts[1]), '+').map(normalizeType);
+  const effects = splitTop(strip(parts[2]), '+')
     .filter(effect => effect.length > 0 && effect !== 'pure').sort();
   const spell = list => list.length === 1 ? list[0] : `[${list.join(',')}]`;
   return `borrow LiveRef<${spell(inputs)},${spell(outputs)},{${effects.join(',')}}>`;
