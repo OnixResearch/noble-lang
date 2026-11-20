@@ -336,9 +336,9 @@ const cases = [];
 const mismatches = [];
 for (const row of fixture.cases) {
   if (!Object.hasOwn(projectors, row.id)) {
-    cases.push({ id: row.id, promotable: false, entries: [],
-      reason: 'template identity: this gate does not execute the positive selected-target proof'
-        + ' or exact replay case before P-ID-03/P-ID-04 target identity is established' });
+    cases.push(pending(row.id,
+      'template identity: this gate does not execute the positive selected-target proof'
+      + ' or exact replay case before P-ID-03/P-ID-04 target identity is established'));
     continue;
   }
   let entries;
