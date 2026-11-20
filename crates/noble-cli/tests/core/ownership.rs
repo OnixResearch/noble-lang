@@ -65,6 +65,12 @@ fn invocation(
         },
         limits: limits(),
     };
+    assert_eq!(candidate.body.len(), 1, "fixture body must be one node");
+    assert_eq!(
+        request.expected.stack_in.len(),
+        1,
+        "fixture must take exactly one operand"
+    );
     Ok((request, candidate))
 }
 
@@ -99,15 +105,17 @@ fn own_case_04_non_borrow_variants_reject_before_emission() -> Result<(), String
             1,
         ),
     ];
-    let mut violations = Vec::new();
+    assert_eq!(variants.len(), 6, "six non-borrow variants are declared");
+    // Bounded growth: at most one violation per declared variant and per data control.
+    let mut violations = Vec::with_capacity(variants.len() + 3);
     for (name, input, word) in variants {
         let (request, candidate) = invocation(&input, word)?;
-        let eligible = matches!(
+        let is_eligible = matches!(
             noble_kernel::acceptance::check(&environment, &request, &candidate),
             noble_kernel::untrusted::Outcome::Invalid(diagnostic)
                 if diagnostic.constraint == noble_kernel::untrusted::Constraint::Eligibility(input.clone())
         );
-        if !eligible {
+        if !is_eligible {
             violations.push(format!("{name} was not rejected by the eligibility rule"));
         }
         println!(
@@ -125,8 +133,6 @@ fn own_case_04_non_borrow_variants_reject_before_emission() -> Result<(), String
             violations.push(format!("data control {word} was not accepted"));
         }
     }
-    if violations.is_empty() {
-        return Ok(());
-    }
-    Err(violations.join("; "))
+    assert!(violations.is_empty(), "{}", violations.join("; "));
+    Ok(())
 }
