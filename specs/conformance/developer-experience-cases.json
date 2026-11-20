@@ -122,7 +122,8 @@
         },
         "assumptions": [
           "The pinned production CLI, source compiler, independent Rust kernel peer, managed-memory Wasm, selected Node/V8 and tools, and explicit test.emit host adapter are trusted at the retained source and executable hashes.",
-          "Finite compiled execution and kernel checks do not establish universal frontend, host, engine or compiler refinement; the prior DXM1 Octet compiler-derived inventory and MC2 proof/admission are separate, unrenewed scopes."
+          "Finite compiled execution and kernel checks do not establish universal frontend, host, engine or compiler refinement; the prior DXM1 Octet compiler-derived inventory and MC2 proof/admission are separate, unrenewed scopes.",
+          "The run used an uncommitted worktree based on a46f588a; its source identity is the content hash `sha256:16f9d850…`, which no commit reproduces, and the external raw-artifact directory is no longer retained."
         ]
       }]
     },

@@ -715,7 +715,7 @@ omitted from PATH; retrying with that pinned linker passed without a source
 change. Environment-gated `named_v2` and MC2 paths do not become new Lean
 or MC2 proof evidence. The already reported full boundary-controls/Octet
 failure was not rerun or promoted; M3 Aeneas SCC and VC-OWNER-01/CONTRACT-16
-owner-law prerequisites remain open.
+owner-law prerequisites remained open at that receipt.
 
 The separate [S-CASE-02 bounded-region change](../.cairn/archive/2026-11-20-safety-bounded-region-adapter/proposal.md)
 uses a new versioned WIT resource and the production
@@ -1464,6 +1464,10 @@ retained/engine memory. Any future resource/component-positive trial must
 add independent WIT ownership/ABI/retirement evidence. M3's completed
 WasmGC-versus-managed-memory result is unchanged.
 
+The frozen [finite trial](../verification/adapt17/decision.md) executed with all
+2,562 checks passing and a NO-GO decision (one cell regressed 20.00%, above the
+5% ceiling); the default backend is unchanged.
+
 Only **after** the required branch/schema/interface gates, ADAPT-18 may
 study explicitly independent finite resource-free pure fork/join with
 precharged bounds, left-then-right results and deterministic abnormal-outcome
@@ -1473,6 +1477,9 @@ GPU backend, changes no M6 sequential import behavior and cannot count
 unsettled work as cleaned up. The independent study has no new milestone
 edge or release deadline; each case needs its own execution evidence before
 any measured-result claim.
+
+By owner decision (2026-11-20) ADAPT-18 is not selected and remains deferred
+and unexecuted.
 
 ## Octet contract delivery
 

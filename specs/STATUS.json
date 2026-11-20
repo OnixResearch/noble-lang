@@ -1124,7 +1124,7 @@
     "general_refinement": "open; correspondence is exact host-compiled bytes on one Core route, not universal backend/loader proof or cross-host provenance"
   },
   "scoped_bend_qcue_research": {
-    "lane": "selected-result-library-and-finite-oracle-methodology-review-other-lanes-open-not-milestone-acceptance",
+    "lane": "result-library-and-owner-law-release-passed-layout-trial-no-go-oracle-review-only-pure-join-deferred-not-milestone-acceptance",
     "implementation": "partial",
     "execution": "passed",
     "execution_scope": "DX-04 Result-Library-Draft passed its source-bound runtime gate; DX-13 separately passed a pinned-source methodology review of ten controls and five exclusions, without executing a Noble oracle or establishing model agreement. ADAPT-17's finite compiled-Wasm trial passed its gate with a NO-GO performance decision and remains proof-open; CONTRACT-16 passed the independent owner-law proof-required release gate (the law-conforming v1 increment release is eligible and all six canonical variants match; the release route starts no guest, so its zero request counters are structural) and remains proof-open; ADAPT-18 remains unexecuted. The owner-frozen pre-edit laws are retained at verification/owner-law/laws with their recorded digests. This does not complete the bend/qcue change or renew Octet source coverage.",
@@ -1138,6 +1138,8 @@
     "result_library_case": "DX-04",
     "result_library_receipt": "../verification/result-library/acceptance.json",
     "managed_memory_layout_case": "ADAPT-17",
+    "managed_memory_layout_receipt": "../verification/adapt17/receipts/2026-11-13-full.json",
+    "managed_memory_layout_decision": "NO-GO",
     "pure_fork_join_case": "ADAPT-18",
     "pure_fork_join_disposition": "deferred-unexecuted-by-owner-decision-2026-11-20",
     "unexecuted_cases": [
