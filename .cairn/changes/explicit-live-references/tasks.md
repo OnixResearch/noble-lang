@@ -56,11 +56,14 @@
   builds the selected CLI from a committed clean tree, requires one projection entry for every
   canonical leaf path and every variant, and refuses a case for each machine-expressible field
   whose canonical attempt did not run. Receipt: `verification/lslot-cases/acceptance.json`
-  (sha256 `7c33c0be5778c1bdaa5b1198b28558034980476f6e8e5f08e407906542191341`, source commit
-  `4d515e594fc7151852e4803be40d251d5ffb5f89`, source revision
-  `sha256:4de8149b05c17781d53e9ac77f9fd3d67d3d9e939e22fda137c2a7205b73f043`, binary sha256
-  `96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4`); raw lane evidence and
-  command output are retained under `verification/lslot-cases/raw/r3c-150242/`.
+  (sha256 `3b743cef1c72a0f481407e1b2d08a856dffb2fe2d841e722c486cfd34222a1de`, source commit
+  `9cf2cdebe96f09fdd82679d04e55114a0ca36120`, source revision
+  `sha256:e94ef83ac94b5a5366919b15e107e73739a98aba6958d1b55a5d9a95022e8afe`, binary sha256
+  `422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb`); raw lane evidence and
+  command output are retained under `verification/lslot-cases/raw/r3e-151546/`. The receipt binds
+  the runtime after merging `cairn/wave1`'s template identity (experimental local identities v4,
+  `template_sha256` and template classes): no LSLOT expectation names the identity version or a
+  descriptor field, and the companion origin-control lane now asserts the v4 identity directly.
   - **LSLOT-02 (promoted):** both independent epoch-1 registry boots; the A-to-B-to-B root
     performs two B dispatches that both select B-v1 while B-v2 publishes as epoch 2 (result 22);
     the A-to-B-to-C root keeps A-v1/B-v1/C-v1 with host-issued typed refs passed through ordered
@@ -74,8 +77,10 @@
     Core-Bootstrap `compile` and an ordinary Core session (exit 4) and at admission by
     `noble live repl` (exit 2, generation 0), each with zero guest requests, while ordinary `[ n ]`
     capture and guarded `:reload` keep the old capture (21). The LIVE-01..10 contract fields are
-    compared with the change's base commit `8075d3c0`; later state/evidence transitions are
-    recorded separately.
+    compared with the change's base commit `8075d3c083474884f9a7c72b5b1a483f73eec314`; at
+    `cairn/wave1` the LIVE-01..10 contract fields are still identical to it (only state/evidence
+    transitions landed), and the only accepted difference is owner decision 21a's LIVE-02
+    `input.after_reload_ack`. Later state/evidence transitions are recorded separately.
   - **LSLOT-03 (promoted, round 3):** the exact ordered candidate publishes at epoch 5 while the
     reversed-input, both-sides `Account@2` schema, unknown-effect and under-declare candidates are
     each refused with the epoch and map unchanged; the constructible generic caller's reflected

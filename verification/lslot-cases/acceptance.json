@@ -10,9 +10,9 @@
   ],
   "proof": "open",
   "source": {
-    "commit": "4d515e594fc7151852e4803be40d251d5ffb5f89",
+    "commit": "9cf2cdebe96f09fdd82679d04e55114a0ca36120",
     "clean": true,
-    "revision": "sha256:4de8149b05c17781d53e9ac77f9fd3d67d3d9e939e22fda137c2a7205b73f043",
+    "revision": "sha256:e94ef83ac94b5a5366919b15e107e73739a98aba6958d1b55a5d9a95022e8afe",
     "files": {
       "crates/noble-kernel/src/acceptance/frames.rs": "eda1a811d8eb4decdf4f8da213e610ec6e1e3663d85c017aa66371ca5e9d5e28",
       "crates/noble-kernel/src/acceptance/mod.rs": "3b50b0439710e1913932731e7e7160cbade6ad6f894ff30707492f39b12a655f",
@@ -91,7 +91,7 @@
       "crates/noble-kernel/src/words/subst/schedule.rs": "aa002bbe003739fa07cde5164c62acfea147ac817956c30fd79ce37b79e7be00",
       "crates/noble-kernel/src/words/subst.rs": "744e42758ca3c39f5274b68413ad338e6cd04a67a2a14d10ef05d9612e5fc143",
       "crates/noble-kernel/src/words.rs": "d1f593ba85770a758b0d4df692b868095649be1538429a7166820a5d5c662941",
-      "crates/noble-contracts/src/companion/admit/accept.rs": "7db7f141db27f81d01a3e569c5b562d2717cdd94ef19352ab0589014b95bd7b9",
+      "crates/noble-contracts/src/companion/admit/accept.rs": "68cbce40ed372652718641ada7ef8db2a057c33abaf65e8a31f1a177d8980729",
       "crates/noble-contracts/src/companion/admit/mod.rs": "264818198e36f98e032fb955d0a0dd9b9bed05bfc609efc6f43262e3f974b767",
       "crates/noble-contracts/src/companion/admit/observation.rs": "d17cec93d48e322f408c4b3ce1e26e410529be8e6911b19746796dfee2f97979",
       "crates/noble-contracts/src/companion/admit/program.rs": "3c27a6d3d482d88d56fbd6892e6de8f958dce8baf581c84f4ebb9b0af98c203b",
@@ -100,15 +100,16 @@
       "crates/noble-contracts/src/companion/admit/types.rs": "eb9c4e2fbf549857c61d79cfc6d8fbbde3e9e8aa08c6f930ea99079fc34c1164",
       "crates/noble-contracts/src/companion/core/context.rs": "42bef7e1ffbea8e5c7861a780125dfcded0d531d28e085894562976d158abb5c",
       "crates/noble-contracts/src/companion/core/refusal.rs": "c017b814c14c317bd13fea0417fd3338aea83d3e9f13533f0c1192898a5a58bc",
-      "crates/noble-contracts/src/companion/core.rs": "805194fdf1ada7eb5996cf89a0a6bef3b8d48464c4deb6928dd256dac30cb5a3",
+      "crates/noble-contracts/src/companion/core.rs": "d6a0488205d2b14a5d7f3ae72501726da5b5488c686fc58822c9dbd59b97ef97",
       "crates/noble-contracts/src/companion/digest.rs": "3ddf1d465af4e905034bb939dcfbab0c98d99744607e6b37295eb4122ace3201",
+      "crates/noble-contracts/src/companion/guard_v2.rs": "323b8d2cbea753045adc0d2e2c9ee9c443bcee4eb7b1fb397351367372dbf20d",
       "crates/noble-contracts/src/companion/guard.rs": "6949b5aa42530b351f1ae4496fd5a056d8fe7bc7cca30d21c0eac7acfb750ac2",
-      "crates/noble-contracts/src/companion/mod.rs": "31ff835dd6f7ca0fb044b3f698e63c772f2554ef15b4bfacc21f7212e805f528",
+      "crates/noble-contracts/src/companion/mod.rs": "ecdc0f43926334329e0dc4a515e3894ce23252ab7b402750cbc5cd3409ec6e2b",
       "crates/noble-contracts/src/companion/registry/application.rs": "1eb48dcae96bec1db4ef53c2c42ee8ee50b1a29e9c4e7b18ac09299a655695c6",
       "crates/noble-contracts/src/companion/registry/entries.rs": "c30d7f1848d8919ee03851d3b9f8a3bb8046fdd7e9fd0971a79802a436aa4174",
-      "crates/noble-contracts/src/companion/registry/mod.rs": "8755a01f7f1042999dc1b0a8f4b87b389421d5c1222a4072c92a1f69266936a1",
+      "crates/noble-contracts/src/companion/registry/mod.rs": "d39b7d3dceadef71296e9a8a3eccbf82410457b5509275fef4eb94f7e0580955",
       "crates/noble-contracts/src/companion/release.rs": "d85bbf9befcf6285222d1fb2577d4a2eb7cc043719b121d0dc29a3afca7e5f0b",
-      "crates/noble-contracts/src/companion/rules/derive.rs": "cacdcb104abf70bd2e6b376293e2d5fe50adebfeee906cd83b4b54a66c666dc7",
+      "crates/noble-contracts/src/companion/rules/derive.rs": "75bfc9465eec7d1687c96c7927460e6003794bc0470e05c390f8909d908f1d47",
       "crates/noble-contracts/src/companion/rules/mod.rs": "deaadd1a3336593cc00260f18520eb368ebdb614887452a266848e09e0d61188",
       "crates/noble-contracts/src/companion/rules/premises/step.rs": "d3a55001f4537a8306790b6b11c8900a1845d6d1e4b1cb373fb9345eeb59e93d",
       "crates/noble-contracts/src/companion/rules/premises.rs": "f7dfd0dab43d1838bcb9b70c3073b3d7d32f747aa43a1e1af92974f8723bb731",
@@ -142,6 +143,7 @@
       "crates/noble-contracts/src/fixtures/result.noble": "6efdbbffe55379b6e05160b1ebd6cbd01a51000b1747777c5be610debca2fb80",
       "crates/noble-contracts/src/fixtures/structural-map.noble": "43185ec76a74d195f3a74974f27b78201bd8261249db6527ad3db8c617274f17",
       "crates/noble-contracts/src/fixtures/structural.noble": "81d08ba64328de03b44ea1669b051d76a07d59cb8a213c2220e90c21998a7550",
+      "crates/noble-contracts/src/fixtures/wire.noble": "96a5a269a5d227ac16f2e71b0d2aa7846576c4a11b2ff1bb2eefb49ceed9db28",
       "crates/noble-contracts/src/frontend/bindings.rs": "5b034788036e9863f75324baf8a1cb2040f3def8c5fb1df9904346f499e1cb26",
       "crates/noble-contracts/src/frontend/fields.rs": "94aef56657221833ebe16795fdc68a224f734432699d90eea7d42f6a97f1f166",
       "crates/noble-contracts/src/frontend/logic.rs": "c3d41fd2ca6671119483e783f0addf6295c31fe6cf42f481b90f2bb3e7762079",
@@ -174,7 +176,7 @@
       "crates/noble-contracts/src/program/traversal.rs": "95fe8cc2bb07a954ee3507913d757053a3da4470523271ca791672a676d9ea37",
       "crates/noble-contracts/src/program/witness.rs": "fb8beba233061d81b771b73ed6c1cdf3fafbb5e488ff06a056489fba3ed9f763",
       "crates/noble-contracts/src/program/words.rs": "4ba6b7d12f5deaabe128263f79f95988d7956118da8b3240ce44f0c37e6628d3",
-      "crates/noble-contracts/src/program.rs": "7dcc7e577237fe885829305cccb8c140582440b42c9d75a4027006ad56d9b82e",
+      "crates/noble-contracts/src/program.rs": "9499b196e1f27ab76e5c86c40ca635066b5eaeb24f6fb428475fcdfae35b0afd",
       "crates/noble-contracts/src/rendering/expression.rs": "25523deba0bd5df66b5fb9b6f86685c1b5064a219a41335b0bcd50a9c50c86f5",
       "crates/noble-contracts/src/rendering/mod.rs": "7b2cfcd5271ce19bb4c39067bf2ce62cda4fe218201228173bf67a6be7770590",
       "crates/noble-contracts/src/rendering/subject.rs": "d47c830314d77fe2efa81d52af3060baf98e480262df356af745a2b900bf8748",
@@ -205,7 +207,7 @@
       "crates/noble-contracts/src/source/declared/state/register/schema/nominals.rs": "5d4d739934501d364d34181245f14fe6991937a1947235f990f507cf51470d58",
       "crates/noble-contracts/src/source/declared/state/register/schema/types.rs": "8dc1ee64cf75b28584c6bcf5509b2855fc2424487e4463acc4e1a83e4bec0f15",
       "crates/noble-contracts/src/source/declared/state/register/schema.rs": "0cc134b1d9179be5bfb4d7f3e5cdeb53f70b5cd3f47d221fa57b2d87b3eb8b2a",
-      "crates/noble-contracts/src/source/declared/state/register.rs": "ef6442631f4dbda0ff48f2242102dd89e9cf162ecd695ad7a58bf6e9c1fc2509",
+      "crates/noble-contracts/src/source/declared/state/register.rs": "a7f339d5456ad8312ef6716dba270224ba2a94acb6d55ef645144bdb59efde1d",
       "crates/noble-contracts/src/source/declared/state.rs": "35c41abd8206a208a056c5f615b1697a581d2f30e19ef5b8149794bf795498bc",
       "crates/noble-contracts/src/source/declared/types.rs": "7561c06c4287daa92772fc0b66ea60a88dd3272fae7e1f8d18e1c0f3b2043889",
       "crates/noble-contracts/src/source/declared.rs": "fa30c64b49d0b574d8de0a456b56ad3435eadbd73685437d3abf5e2dda53bac3",
@@ -215,7 +217,7 @@
       "crates/noble-contracts/src/source/emission/identity.rs": "11b416ee0d85a5bd81f9b23c73422b855656c8a98db75302165d2a73d797696c",
       "crates/noble-contracts/src/source/emission/interfaces.rs": "7a3b59365d43012980d65e49da597dada574094625e61bb668a9c6dab0803387",
       "crates/noble-contracts/src/source/emission/materialization.rs": "5acdd981cadefa166563e27c91b1632911526f3e264ce466b343aca64952f87b",
-      "crates/noble-contracts/src/source/emission/mod.rs": "947817c3f46ce6afbe0358f3e7ccbb2d51a3fbe31c03527019464c1bf916f8cd",
+      "crates/noble-contracts/src/source/emission/mod.rs": "3807d4eb77302dfe37a06324f9ceea42031fd69f5ed1b22b5f8f6a56e8ee8089",
       "crates/noble-contracts/src/source/inference/completion.rs": "221136f12a06adc95697c517449593873fad523e4e573ffc26a6338d4d1921d0",
       "crates/noble-contracts/src/source/inference/mod.rs": "32eaba30aec764b8bc697e17d14d73c753c060c0ab0899baaabd7fdaf37dde98",
       "crates/noble-contracts/src/source/inference/operations.rs": "c801591484f2bf206566abb9f93050713d5395634c0ff8df166b76b3591901f2",
@@ -229,7 +231,7 @@
       "crates/noble-contracts/src/source/preflight/paths.rs": "9c8352025e6bd3defe4fbd9a3d216746bc2ef06a2678b98cef034d571f5bab54",
       "crates/noble-contracts/src/source/preflight.rs": "c34d8a4df9251e67756593ee69f6dbdffa4d80fa2ee527bc9d8e533f66a2c90e",
       "crates/noble-contracts/src/source/preparation/symbolic.rs": "524e6180c423ca5019eef2baaa97392b60f5c5bff4fb1cd1d2d73de1f42b972a",
-      "crates/noble-contracts/src/source/preparation.rs": "34918ed8f1e425fd7c3a4c6e889f87503156f3b7b6ed37abc69ab9f443db00db",
+      "crates/noble-contracts/src/source/preparation.rs": "20538b77f07ff3bc794ce77bb05d62aa34028f6da6c5f028cf33f7bbdc6aa9d6",
       "crates/noble-contracts/src/source/procedures/acceptance.rs": "76def74c472f190d9f25b28730180032d588ef69e7b54968002d3e02eadf0e8f",
       "crates/noble-contracts/src/source/procedures/alias.rs": "cad04c12a60cff15526bf2679f1a585b67acd0de755f258300658493f753e27e",
       "crates/noble-contracts/src/source/procedures/composition.rs": "75abf1bb8bc2af295a0ef859dd6d5b849c49d2e3f6bd6e5d394f1e11e4062ecc",
@@ -242,7 +244,7 @@
       "crates/noble-contracts/src/source/resolution/comparison.rs": "ef6bd9b570fba7ca8b63fa46037e65c4acd7694db4c2c8795d7779e8b93d0e1e",
       "crates/noble-contracts/src/source/resolution.rs": "e23f8f71a67893f933c8d73de54d99e410dd8499e5f5f904b0b7d5b6866d3611",
       "crates/noble-contracts/src/source/sizechange.rs": "044579e5b6d392ff5b6fd1bed6b036cd6e9811b5aebba5052c0f119719ac9818",
-      "crates/noble-contracts/src/source.rs": "c3bd458ea0dc02f2cb64c78420759e011363f830d8754289600b200c809ebab4",
+      "crates/noble-contracts/src/source.rs": "d869ec06350c5fdc17e74bd490f6aa14d16b93fca0c4f410205f507822105899",
       "crates/noble-contracts/src/syntax/constructors.rs": "70eb27a6805caf5c230bed99cd0f49ab1925f6fa80b7124eb4fc811e7aa6a06e",
       "crates/noble-contracts/src/syntax/identifiers.rs": "32bf4e675bd54f497a2448bfdfbb9fdd0f7b2a846dfac50b0c7e250b0442de97",
       "crates/noble-contracts/src/syntax/integer.rs": "fa33fe5666b9e372ad49a9d816b207a78f71485caec7d90fcb3fa7446e1924c7",
@@ -251,6 +253,7 @@
       "crates/noble-contracts/src/syntax/typing.rs": "655b289ae1076d45d2b1e532b5c316039d779916abd5678a2ad0a87e55ede3e4",
       "crates/noble-contracts/src/wire.rs": "f55b69c075fffcc7babaa560092128edbeb296c53f69d391281fbaad16445410",
       "crates/noble-wasm/src/admission.rs": "12ffbbb5f81d3166d8dc01e996df3e3c42ec90faa2bd25d8d78ac83a9f4792d9",
+      "crates/noble-wasm/src/assets.rs": "50f17541f74e3fd12a24918f95ba3611608b5cd78a6bf5b5a05d9e0034e2900b",
       "crates/noble-wasm/src/component/abi.rs": "46a44b62d7214859fefcf36d7fe5a1312bd8670c935c6204dcc9d1a25ffd9864",
       "crates/noble-wasm/src/component/admission/body.rs": "25871816b7695685e832cf93c32c3e3b5992229d2cc3712cfe40b8c11959009b",
       "crates/noble-wasm/src/component/admission/mod.rs": "45c11a70b204bd16fafcde05a698d4d78e2df1aa88efe7c7f40cc816c9134cf8",
@@ -267,7 +270,7 @@
       "crates/noble-wasm/src/component/runtime.wat": "c1a21dd7573c87235d176722b3cdd0f7319c896912be564bb210c8cc41eb5754",
       "crates/noble-wasm/src/emit/initialization.rs": "c4f99d19e90ff84a47c2e3fc2e1be3c706904427f68867c7ae84821d8ec651bf",
       "crates/noble-wasm/src/emit.rs": "e0a4f56aa928347d004e18c4fcb4350c51f025c2164a94620593e8d29e1c5d46",
-      "crates/noble-wasm/src/lib.rs": "8cbfb086832d319fe2c9628e2580efd0179a4f6cfee186b1f2b630452f21ef16",
+      "crates/noble-wasm/src/lib.rs": "89b3796110cb7f332781d8abb665ad97c3654504edbe4ca56763e5bfc38002af",
       "crates/noble-wasm/src/lowering/topology.rs": "455a5ca2d20e91a43472b40d90f5780c4aaf643da8f0a3dede6970be385991ae",
       "crates/noble-wasm/src/lowering.rs": "77dbd929c79aeacf40de9ef0129fc41a39d19e6b1e18323dfb94b3ca01042323",
       "crates/noble-wasm/src/operations.rs": "011486bba310dc34d93e08fa72792b580df96702c530486370b91515970b6fbd",
@@ -300,8 +303,8 @@
       "crates/noble-wasm/src/source/emit/reflection.rs": "5743e7c38b72a23d32434762f477fd41584661e5cf4be4b7c29c15963db3a0dd",
       "crates/noble-wasm/src/source/emit/worker.rs": "6dee8c6e18bd7f903e9adf53381c7e9b32c7827d879baaab1b9eab8bd5d54c22",
       "crates/noble-wasm/src/source/emit.rs": "3d8479e8a76ae20a47c779694aa2b6a534e9d69c8fbb0b2ed5409329865aff0b",
-      "crates/noble-wasm/src/source/mod.rs": "d1440951838d14bc47a66123c1743855fcb8eaa3dbe49f505263b23575328f9c",
-      "crates/noble-wasm/src/source/origin.rs": "3c0591267e262aa895356812b4fb2caa45473c14194399202af8221ec91ab146",
+      "crates/noble-wasm/src/source/mod.rs": "6160aef8cac6e90a3c5dd2f04e6afe270e5b037df59053ca6b0e528f9beb22f8",
+      "crates/noble-wasm/src/source/origin.rs": "3182e911688f51d273ba787753ff4dac59cb27ed284783e1180191073fcbed09",
       "crates/noble-wasm/src/source/plan/allocation.rs": "369d45e8f0fe8917a6b5ef1d751e96e807baf81d693257bba4fdc7b25f11c8a2",
       "crates/noble-wasm/src/source/plan/operations/nominal.rs": "e731c21f37ea39da26fa0f6d968fe85465a324f3d1a6477879f4db1b3c93e14d",
       "crates/noble-wasm/src/source/plan/operations/quotation.rs": "627830568fdfda25cb4e16b27edccaa4a516d5b75c2d61ea3e66370efccab9bb",
@@ -355,19 +358,25 @@
       "crates/noble-wasm/wit/worker-transition.wit": "f788988352acbccfe9a9f4fd6811551b1b3e4d4b43f1436b7a8c5e702e7652f0",
       "crates/noble-cli/src/backend/vocabulary.noble": "f8d7a7e587cf85bcc36fe21c75506dd0c58a4c7e18baa8ddb1e11fde8aeb23e3",
       "crates/noble-cli/src/backend.rs": "443798531adb131336744d94aa242875e65bda5b17f8520fb4ed88956f0ac073",
-      "crates/noble-cli/src/build/arguments.rs": "668cc05d70b0b07df70ab14fd6d745bf1f78c31bcd5ad524d70d49239f959c71",
+      "crates/noble-cli/src/build/arguments.rs": "6ff0276f5c1319cbd338cf7681e545559d0b4cfb81ce7e0d5217ed4adbd24e2e",
       "crates/noble-cli/src/build/artifacts.rs": "10fefea771a90c326585041a904e75b5f8e027340b4fd355c140b947b4abcad5",
-      "crates/noble-cli/src/build/compilation.rs": "63cd4f7f5fa8bccd0008c00067e756c474a0dea49319c1d3157ab6fcf94f595a",
+      "crates/noble-cli/src/build/compilation.rs": "3ac7a680ab60449ba5c4292c46043a3f8776d989567b2d18ceee555606782b28",
+      "crates/noble-cli/src/build/owner_law/arguments.rs": "0fa3be1fac21d6a0046d15387eda6195a5fee5bb1512b60b751dc9b3e341724f",
+      "crates/noble-cli/src/build/owner_law/compare.rs": "111651cc80b922883c33335c9c923eba86cef4c579fff99eeead637fc36df0fd",
+      "crates/noble-cli/src/build/owner_law/law.rs": "63c7138bda322002e217c49a36a3e3fff9b75b32fa84197de0fe427628401a3d",
+      "crates/noble-cli/src/build/owner_law/terms.rs": "50d3a238b9a35b0ea0896be9921d96a42aca40d03ea60191f7dd50f0440b91fd",
+      "crates/noble-cli/src/build/owner_law.rs": "065f8fceddf035c5e17aa4e0848cadaffac0e5e1dcbe8686f1255f6b3b954865",
       "crates/noble-cli/src/build/release.rs": "0d388536da0cb5fe2a526c4000a9ca1f73f62003deac8e7b50f20d86dbd5cc68",
+      "crates/noble-cli/src/build/report/pins.rs": "e80033b91c9d92a33bafb1a8d18d414b54496c1bc9f9b4a9325e40ef16583fbd",
       "crates/noble-cli/src/build/report/release.rs": "1bc68b2a37ee52bba04083ed5753a618d240d3e731d1d3e2af2336ac4172a015",
-      "crates/noble-cli/src/build/report/toolchain.rs": "613edf4d8a770cd23ddfc4d82655ad32f264bc7cccbaa0e066a8d75c475af370",
-      "crates/noble-cli/src/build/report.rs": "804381ff10def58538bc2ff6b73d0d34463468368c3fcfed1af6f28c148d9b2c",
-      "crates/noble-cli/src/build.rs": "598903ddd41b0a4537fca51a8bc926d901a83dd56cc6ad2e5808231d25c6f8d8",
+      "crates/noble-cli/src/build/report/toolchain.rs": "9e86ae223b7b605e56fcad4fb0c386e690fa502edb69dddf9b65ab80ba7d5730",
+      "crates/noble-cli/src/build/report.rs": "ed10ca90d36912cc0b2f76179324ccc87106ecf06b9fa537d9288ea94d018e6d",
+      "crates/noble-cli/src/build.rs": "353e3359db8d9e04fffcce20a2d903adc84cbd6050a875784f83451b500889b2",
       "crates/noble-cli/src/c_backend.rs": "8b8023c91975723b39e1f092d7b70be88254f678164561a454a6c53be688eee2",
       "crates/noble-cli/src/calculator/cache.rs": "058b4e68f20e3bc1fdfdddeae88063d0e05aa380a5cac7f6a09c5e8e5762a3ef",
       "crates/noble-cli/src/calculator/metrics.rs": "0d4343148eaadeb352cddd0f2c3797c2d6c77effe7957ef2567c2b7bc3626322",
       "crates/noble-cli/src/calculator/trace.rs": "b9d361c64d4992263978d6d09887588a632d1769b4c334693e8ffb3edad124e9",
-      "crates/noble-cli/src/calculator.rs": "599f4459707ed0e26817707266855e353c99f9b5d01b28652569c2bd728d8c50",
+      "crates/noble-cli/src/calculator.rs": "116074f226d3adbcd1d1b733394c8e5f145e453f20ac21940b91c7498f9c365e",
       "crates/noble-cli/src/compiler.lean": "8286e69ee4e9f461737495f032428ea450f39b9055b52002728d3677b7d62dea",
       "crates/noble-cli/src/component/artifacts.rs": "584dbd064218b304fa0d0e174e0b7b5fef129265c950a0793b14b93dd9c29610",
       "crates/noble-cli/src/component/authorized_fs.rs": "5b2dc7094d8181fddfeb6c80ad43338662597b8ac0f06c5f41f03639cacabe7a",
@@ -398,7 +407,7 @@
       "crates/noble-cli/src/core/companions/operations/composition.rs": "a6bd042ed2cac269e52acc1d10685b0158fb553becd9262d7d3d67d568456793",
       "crates/noble-cli/src/core/companions/operations/derivations.rs": "b7b228a7ffbd968e6d3708fdff2e0b72842dc74bfa78570f054c62ae642b172e",
       "crates/noble-cli/src/core/companions/operations/instantiation.rs": "88e602b7101ee127da9c1cce1e133a344d9f0c1d809e18a3db02dcba0cdc4d80",
-      "crates/noble-cli/src/core/companions/operations/invocation.rs": "e6be372fd667e168169e62f59f88dbc62d0bfd6567e3c7f7aa344f80a802112e",
+      "crates/noble-cli/src/core/companions/operations/invocation.rs": "88fae4d8472868e61d0800c7059bbbbf09f7be7b7dfeb040f590699758629be9",
       "crates/noble-cli/src/core/companions/operations.rs": "8a11bad1b9cf4260f6b4a68619d85dc89143671cdac248789d7b315f650ca8da",
       "crates/noble-cli/src/core/companions/reporting/inputs.rs": "f76d97047e14ac2bc318a0d2bbe4a4d8946f79aff1e378ca3033f0e8d49e787c",
       "crates/noble-cli/src/core/companions/reporting/values/tests.rs": "e4898262d5f0a5d80cc6210e849b09807d855c29a937473781d784af13b8cf78",
@@ -423,8 +432,8 @@
       "crates/noble-cli/src/core/live/encoding.rs": "e2b1cfa1831682bbb3ad61973dbd913b832b2eaaa05b5bf66e2623a7749043a9",
       "crates/noble-cli/src/core/live/watch.rs": "dfd0f32d85f4c80fa9455e9bc01a1580b4a158702a7b1cfde15ed51a4ed70a57",
       "crates/noble-cli/src/core/live_slot_origin.rs": "b173f1649587d94d846acf1cf9119c268f9673202dc4133990f67ae5ebc3c0cb",
-      "crates/noble-cli/src/core/live_slot_returned_dag.rs": "bb4fad9de54b38bd49f7ab3d3c96f3bedb928364014064827809fe10eedf0a3e",
-      "crates/noble-cli/src/core/live_slot.rs": "8cf7aa908c2c594115c7ba1df7540c1c6b84188786afd33f6ae6002e4c823bf1",
+      "crates/noble-cli/src/core/live_slot_returned_dag.rs": "5452edfd0ff3fa45d4f970710fb6626c5552aca21fd0ea1bbe98ef77e5c6227c",
+      "crates/noble-cli/src/core/live_slot.rs": "84a711277d0db9d1aecfaabd6a4a32b8926b6f1f3adbfaa0dd18fbf5e844c40a",
       "crates/noble-cli/src/core/live.rs": "0031bbd51611d3aaaaf99fed0f1e5a6688ee252e217008a5b1b93b668ed010f9",
       "crates/noble-cli/src/core/output/declared.rs": "6ace4412583cde7ac27d9fa1f680dc6c235db96deef966b5abb59356781f693a",
       "crates/noble-cli/src/core/output.rs": "95e6c5530ab86448db67adc5707e0886bd7948cf0dbea1fae083bbb3792f1a90",
@@ -437,9 +446,9 @@
       "crates/noble-cli/src/core/report/tests.rs": "8e3ade6a0c8746fb04cb5540663d7eea5436bb83490d2555079ac187f54a06cc",
       "crates/noble-cli/src/core/report.rs": "b2a2a7b591fc3b768ec3cf0997485307f6d29d1b411cffc1eff1a13e18bb8601",
       "crates/noble-cli/src/core/runtime/abi.json": "fea51903d9155f31cb27be173ca96644adb67c7ca08e9bd0898f206ff4faa589",
-      "crates/noble-cli/src/core/runtime/config.json": "be38ad3c8d647968ed44628efe5d945dcaf57d162764b3cec51bab661738dcfd",
+      "crates/noble-cli/src/core/runtime/config.json": "400365e6de281bbde84cbde772dde705fdf97e7e8ee534884fa029c627fb2be8",
       "crates/noble-cli/src/core/runtime/declared-abi.json": "6927b379477ee6318d292e7aa09b2103f488349931a89ed84e2e3bf7dac3eb0d",
-      "crates/noble-cli/src/core/runtime/engine-assets.test.mjs": "6062faf506968e2c80b43e4b1df9cce0c3da76cfc470c193a63b0e7988c11f5f",
+      "crates/noble-cli/src/core/runtime/engine-assets.test.mjs": "d0ca65c0c571003ef635429a0482196c9947e91b475ac6b7beb9971ca11da70f",
       "crates/noble-cli/src/core/runtime/engine-calculator.test.mjs": "7ce262d5eb93b4e872b675cd90d70fc3872c1261a3b3ecab7d08106ef28e218c",
       "crates/noble-cli/src/core/runtime/engine-host.mjs": "4d353abd1c076edfa2bc44a020b8ba1dba0ea3ad96f4ed5d23b64c4ba4e76981",
       "crates/noble-cli/src/core/runtime/engine.mjs": "ec72cd59255938ae952f1737caa1d5e308dccff6a090f1503d280583ffd821b3",
@@ -448,14 +457,14 @@
       "crates/noble-cli/src/core/runtime/preamble.mjs": "5736053747fc9f7fd84e8c098769fbb213f2908ea7ad06a47ef5174502ac4086",
       "crates/noble-cli/src/core/runtime/protocol.mjs": "b1655238b8b68b3265b2940e211736ea2e6bc907134c47697e00b41ff54f68fd",
       "crates/noble-cli/src/core/runtime/safety-observe.mjs": "dd2a78f22a175d80762557401c6083269e690ded61a31b0ee5a1b68c10b01b59",
-      "crates/noble-cli/src/core/runtime/slot-engine.mjs": "85481b0223891a9150127fa8b859d477af0117fd3794811164fe6ec993262a9c",
+      "crates/noble-cli/src/core/runtime/slot-engine.mjs": "1dbfdcda72c6a4d80bcfc6df01d212d73797fced3738358ce907594944ab1861",
       "crates/noble-cli/src/core/runtime/slot-policy.mjs": "d6d6976247001cbaa06c5a6278e2412a947dd209972c92dc67f630a579bd27c6",
       "crates/noble-cli/src/core/runtime/slot-registry.mjs": "67fe4007d69b0592fcf2ae70c0db17293d09275c77ea1cb09e476c1b7ee9a10a",
       "crates/noble-cli/src/core/runtime/values.mjs": "1b305dd458b50a8b7eb4390f39938e8087b699d16b295024b0d68aff835ca1c3",
       "crates/noble-cli/src/core/spec_quality/predicate.rs": "73782167b915a8364f5c13d150ee02dec7e225aace728f81090a1e4c0d492b83",
       "crates/noble-cli/src/core/spec_quality/relation.rs": "5ba0ff31a2f5cf53cef4e26ce7b41c0f25703e59e57c653c51c73034e5ef16b7",
       "crates/noble-cli/src/core/spec_quality.rs": "70cbe6858293d9a0706a663f0a48d9a375bfffe14fb52f487c0048f4da722c8e",
-      "crates/noble-cli/src/core/worker/assembly.rs": "88c860993ce391d6b197bae7ab1ce123852bfdd9610200acff75354477853cfb",
+      "crates/noble-cli/src/core/worker/assembly.rs": "91905f7c567c15ea2df27c509de9213e15d61b641f601ba2edacd4ed777fce7b",
       "crates/noble-cli/src/core/worker/configuration.rs": "47f52b8a4a3380228802e9d1b831aebb6a152d7ed071de77ce14b02057437c60",
       "crates/noble-cli/src/core/worker/process.rs": "6fd43083f07a66330e91568d59a21f0c954d1e688d9b65787729b6b949356267",
       "crates/noble-cli/src/core/worker/protocol.rs": "2f411ae83f9e8d2fbab3e42534d9efd7a99d7c2ca8f26093c78dc80d711ddfa9",
@@ -472,7 +481,7 @@
       "crates/noble-cli/src/core/worker_value.rs": "129d960b389e1f122ea0224e43a7050111fcfaeddfe6d5c8f839faaa8b2c294f",
       "crates/noble-cli/src/core/worker.rs": "2fd3e8ccc8b3ae8b3177a40acce9615e05a665104520727f198c2949101c11e2",
       "crates/noble-cli/src/core.rs": "f848587c1121f316c7785ca72abce1abb1aaa55061103106687fc4294c03f8c0",
-      "crates/noble-cli/src/main.rs": "86a9a42e1062c12e1bda39d17bce62f0286167b9672f87117706ca95e481b2c6",
+      "crates/noble-cli/src/main.rs": "b6149d75998f52c7cc8e7b8e8a4f65f15e273e69409c1d27ee14bd246d27fbba",
       "crates/noble-cli/src/ngraph/arguments.rs": "5e060125e953984efb872d38b3ff484a4f39e6b68e30fd370029331027f9d76b",
       "crates/noble-cli/src/ngraph/files.rs": "8d4b3534cfa49a6fe1ac6a26d0a1ab011085a95f502905861c878bd7f3ce59eb",
       "crates/noble-cli/src/ngraph/literals.rs": "b452d53fb70935292610348af6c8ce27e596bcb33d9544b8508882c64a28634c",
@@ -500,28 +509,28 @@
       "crates/noble-cli/src/workflow/verification.rs": "7ad38c5b1d5da74b40372283ed812db07cc0d25aeda8cf5a2562388a5ed3f683",
       "crates/noble-cli/src/workflow.rs": "604f6ded69fa38cf1a9f23074fc6b3a006633c3adf5939de067737a4b0bf2bca",
       "specs/conformance/live-reference-cases.json": "3db5f59952b69428173094ad6d2b851e7a020b978ab26d1447f5ae32b82ad8ff",
-      "specs/conformance/live-wasm-cases.json": "47b25497314216a05efda7cdf4352adb1f422a280af80dcea36b6af4e70abeca",
+      "specs/conformance/live-wasm-cases.json": "704c482c93f403f360aa51c8fe6f35c959b4c34ac8daaf70d80c2fce763484e4",
       "Cargo.toml": "28f50596ae329c104c28d0c4ae10c35b2ef1f20e95662356e69affda47e13bf9",
       "Cargo.lock": "582a7c91d10c3a6cbdaec2968b61e878821acc9781dfb84d53df096a778a862c",
       "rust-toolchain.toml": "7bfd3ca943dcce5b34de4c5f57414eae7496a698034208cf026690ada5130271",
-      "policy/tool-selection.json": "8ed766cdfa42f8228bfba41c28c6aee91afd97652418ae7f16952cdc51875e9b",
+      "policy/tool-selection.json": "ff84a3a276759e9581e4f3705339fc2f23e2c4b4b3d5af9d50ea285ec261b181",
       "crates/noble-cli/Cargo.toml": "ad45ae25a1ec15133f57cf8fe3bc52dd97e7d21e97f3fc2ec2c11392b9c88bb0",
       "crates/noble-ngraph/Cargo.toml": "9fdaf8bf88be311b40962fbedf4af3349ff1f1768c89785a1ea21ff39202138d",
       "crates/noble-contracts/Cargo.toml": "4d3fb9854611e8e3329562d3cd9235d9f53e5a0e4f5818fca998916240f769ec",
       "crates/noble-kernel/Cargo.toml": "19e6c70441ef5d51b9caf828ecb4a7432c8bd7efc40bfdafa158d4d95efc949b",
       "crates/noble-wasm/Cargo.toml": "7f369eb31795dc375df3d752cf1f63f64efcdde89d6614832d0d4aeece41a666",
-      "verification/lslot-cases/gate.mjs": "5337b2fc0d15c6f30722a39f5ecaaa57909d187f673f616cac5cb8c7acbd6806",
-      "verification/lslot-cases/projection.mjs": "d9db898827e0d8aeb60c5833f3de6994b07f1f7d4f68627a3b271ede393becc7",
+      "verification/lslot-cases/gate.mjs": "a60540c5700be0977df5b2e1d4c88dffc677dfc8a65f1d2a369e645356f7a021",
+      "verification/lslot-cases/projection.mjs": "97a158427fe1cdda7ebd90207878bb343484b0a338108ab9c0f82a5367d1d29a",
       "verification/lslot-cases/live-baseline.mjs": "6498579f6befbb38d6f20eb22d9af439acd9ed1dfd2825c5f0ea641bd9e5e870",
       "verification/dx06-current-source/source.mjs": "4a5de718c0521f312f5059d8b695841e49e452568c3b7cc3af73a9b843240fde",
       "crates/noble-wasm/tests/live_slot_admission.rs": "7c85bd032dd947bc23bc7d16a0c69907cfa504ef13334cd409d1612004577337",
       "crates/noble-contracts/tests/source_proof.rs": "5ef30f24a8669b16699cc023776ffd4df2ffa249b201f1e66453bdd34104a92a",
       "crates/noble-cli/tests/live_slot.rs": "157eab1823f2174219822f965910bf74ef375dcc9aca3f29892653a05033953c",
-      "crates/noble-cli/tests/live_repl.rs": "ea7d6f4e4c196640e8380515109ee8d7ecbc3c37b0b9cd20b5c59c6854d4e46a",
+      "crates/noble-cli/tests/live_repl.rs": "6ac9f0238892771ff360eec80bd2ae26b0ad6c82053eedaf21440bce2bafe2cf",
       "crates/noble-cli/tests/live_slot_resource_ref_cli.mjs": "0b9c588fbb19fe1b479a57331b60a7b2ad87f2a225ab474a2fffb22e013204a9",
       "crates/noble-cli/tests/live_slot_capture_legacy.mjs": "966174f8b00e1105800cc276f183d071544229e05885e9a915e54a821e4b2088",
       "crates/noble-cli/tests/live_slot_late_control.mjs": "dd4da66a0745a6c70417b89e4d8a94848d058e7f31405669252d3d03572a188a",
-      "crates/noble-cli/tests/live_slot_selected_origin.mjs": "1a3ae8a348c93e63792d200fc1e4ee9a13868c88cb8bb1709267fce68dba90d4",
+      "crates/noble-cli/tests/live_slot_selected_origin.mjs": "3d9049e6bd273d9f0b6b827069b37475576d87f071e0dfd5178fbf506e91d350",
       "crates/noble-cli/tests/live_slot_nested_roots.mjs": "665b893eeeeb9de798cb0568852d96b1c1ac11f02f195918d22f1f072e80dd77",
       "crates/noble-cli/tests/live_slot_resource_ref_admission.mjs": "75b19b9d01af190097f42ca10213c7f01a1cb5a6f6f1df4cff31d83575b7168a",
       "crates/noble-cli/tests/live_slot_resource_ref_static.mjs": "31226c534b4d99e30b1239c38d0713a75a3bfa09623f82cfdf35d38392408f64",
@@ -608,9 +617,9 @@
       "crates/noble-wasm/wit",
       "crates/noble-cli/src"
     ],
-    "dep_info_paths": 563,
+    "dep_info_paths": 572,
     "dep_info_closure_complete": true,
-    "ingredients": 553
+    "ingredients": 562
   },
   "fixture": {
     "path": "specs/conformance/live-reference-cases.json",
@@ -665,8 +674,8 @@
     ]
   },
   "tool_selection": {
-    "configuration_sha256": "8ed766cdfa42f8228bfba41c28c6aee91afd97652418ae7f16952cdc51875e9b",
-    "runtime_configuration_sha256": "be38ad3c8d647968ed44628efe5d945dcaf57d162764b3cec51bab661738dcfd",
+    "configuration_sha256": "ff84a3a276759e9581e4f3705339fc2f23e2c4b4b3d5af9d50ea285ec261b181",
+    "runtime_configuration_sha256": "400365e6de281bbde84cbde772dde705fdf97e7e8ee534884fa029c627fb2be8",
     "child_environment": {
       "HOME": "/home/brittonr",
       "TMPDIR": "/home/brittonr/.cache/noble-cairn/tmp",
@@ -705,7 +714,7 @@
   },
   "binary": {
     "path": "/home/brittonr/.cache/noble-cairn/target/lslot-cases/debug/noble",
-    "sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
+    "sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
     "cargo_target_dir": "/home/brittonr/.cache/noble-cairn/target/lslot-cases",
     "build_status": 0,
     "build_claim": "offline Cargo reported the selected `noble` bin artifact for this target; the recorded sha256 is the exact selected binary this gate executed"
@@ -1155,7 +1164,7 @@
         "input.harness",
         "expected.stage"
       ],
-      "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
+      "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
       "prepromotion_case_sha256": "5c017bb9f6a4683f994823d2b9cd85ced2284bee3fdeeb38acd604f9084e5a4f"
     },
     {
@@ -1432,8 +1441,8 @@
           "status": "observed",
           "note": null,
           "evidence": {
-            "base_session": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-base-parent-child.jsonl",
-            "transitive_session": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-transitive-A-B-C.jsonl",
+            "base_session": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-base-parent-child.jsonl",
+            "transitive_session": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-transitive-A-B-C.jsonl",
             "base_epochs": [
               "0",
               "1"
@@ -1882,7 +1891,7 @@
         "expected.stage",
         "input.transitive_variant.root_A_entry.borrow_pass_through"
       ],
-      "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
+      "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
       "prepromotion_case_sha256": "5faeb05d62c71e410a16b337e83a9dd68465e97d240cc8e82a510bb3fc84b17f"
     },
     {
@@ -2143,7 +2152,7 @@
         "input.variant_protocol",
         "expected.stage"
       ],
-      "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
+      "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
       "prepromotion_case_sha256": "7b671fcbd9311bab3e8d97f3432e62aeba1dcbf15fc7a4071076c3b90cf43bbc"
     },
     {
@@ -2198,8 +2207,17 @@
           "canonical": "A-v1",
           "observed": "A-v1",
           "status": "observed",
-          "note": "the baseline A selection dispatched the installed A1 artifact",
-          "evidence": null
+          "note": "the baseline A dispatch selected exactly the artifact the A-v1 publication installed at incarnation 7 generation 3",
+          "evidence": {
+            "publication": {
+              "id": "Ainc7",
+              "epoch": "18",
+              "incarnation": "7",
+              "generation": "3",
+              "source": "1 +",
+              "artifactSha256": "8107a1a192f364dec1066e22d96da7757a2c98c356237633fc535495e4134f65"
+            }
+          }
         },
         {
           "scope": "input.initial.slot_B",
@@ -2225,8 +2243,17 @@
           "canonical": "B-v1",
           "observed": "B-v1",
           "status": "observed",
-          "note": "the baseline B selection dispatched the installed B1 artifact",
-          "evidence": null
+          "note": "the baseline B dispatch selected exactly the artifact the B-v1 publication installed at incarnation 2 generation 1",
+          "evidence": {
+            "publication": {
+              "id": "B1fresh",
+              "epoch": "3",
+              "incarnation": "2",
+              "generation": "1",
+              "source": "1 +",
+              "artifactSha256": "454cf43c9ddbcf889b2e5f07ca944585fdad9f2449aaa78ba65f88063093d40e"
+            }
+          }
         },
         {
           "scope": "input",
@@ -2480,7 +2507,7 @@
       "unobserved": [
         "expected.successful_rollback_requires_fresh_admission_authorization_and_evidence"
       ],
-      "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
+      "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
       "prepromotion_case_sha256": "e7a4d0202735ae49c781e0f71bc344cc53dadda8bdcc9473cb4c1af2136b56dd"
     },
     {
@@ -2488,7 +2515,7 @@
       "reason": "template identity: this gate does not execute the positive selected-target proof or exact replay case before P-ID-03/P-ID-04 target identity is established",
       "entries": [],
       "promotable": false,
-      "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
+      "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
       "prepromotion_case_sha256": "dd4f97f20ff937c0a8a9d0612a85437ab4d24e1fde9251e24c8b80597e7069f1"
     },
     {
@@ -2762,7 +2789,7 @@
         "input.issued_ref",
         "expected.stage"
       ],
-      "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
+      "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
       "prepromotion_case_sha256": "1f152ffad62b70240c509213a1218a2a17ea1fe8ac407a85123dfa6dd349a299"
     },
     {
@@ -2994,7 +3021,7 @@
       "unobserved": [
         "expected.publication_or_dispatch_authorized_by_id_ref_effect_or_evidence"
       ],
-      "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
+      "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
       "prepromotion_case_sha256": "0c0b6fe2090636e86b9cafdc07f0ec7a377bfdbb61f9dc58128ddab7851bd5e1"
     },
     {
@@ -3002,7 +3029,7 @@
       "reason": "template identity: this gate does not execute the positive selected-target proof or exact replay case before P-ID-03/P-ID-04 target identity is established",
       "entries": [],
       "promotable": false,
-      "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
+      "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
       "prepromotion_case_sha256": "128ea67ce35b161021e9a28792b7135bc29f7d74cc271e7ead7a8e4dc7298f03"
     },
     {
@@ -3251,9 +3278,61 @@
           "evidence": {
             "commit": "8075d3c083474884f9a7c72b5b1a483f73eec314",
             "baseline_sha256": "47b25497314216a05efda7cdf4352adb1f422a280af80dcea36b6af4e70abeca",
-            "current_sha256": "47b25497314216a05efda7cdf4352adb1f422a280af80dcea36b6af4e70abeca",
+            "current_sha256": "704c482c93f403f360aa51c8fe6f35c959b4c34ac8daaf70d80c2fce763484e4",
             "design_changed": false,
-            "state_changes": [],
+            "state_changes": [
+              {
+                "id": "LIVE-01",
+                "baseline_state": {
+                  "implementation": "absent",
+                  "execution": "not-run",
+                  "proof": "open",
+                  "trust": "unassessed"
+                },
+                "state": {
+                  "implementation": "implemented",
+                  "execution": "passed",
+                  "proof": "open",
+                  "trust": "explicit"
+                },
+                "baseline_evidence": 0,
+                "evidence": 1
+              },
+              {
+                "id": "LIVE-06",
+                "baseline_state": {
+                  "implementation": "absent",
+                  "execution": "not-run",
+                  "proof": "open",
+                  "trust": "unassessed"
+                },
+                "state": {
+                  "implementation": "implemented",
+                  "execution": "passed",
+                  "proof": "open",
+                  "trust": "explicit"
+                },
+                "baseline_evidence": 0,
+                "evidence": 1
+              },
+              {
+                "id": "LIVE-07",
+                "baseline_state": {
+                  "implementation": "absent",
+                  "execution": "not-run",
+                  "proof": "open",
+                  "trust": "unassessed"
+                },
+                "state": {
+                  "implementation": "implemented",
+                  "execution": "passed",
+                  "proof": "open",
+                  "trust": "explicit"
+                },
+                "baseline_evidence": 0,
+                "evidence": 1
+              }
+            ],
             "approved_changes": {
               "LIVE-02": {
                 "path": [
@@ -3317,7 +3396,7 @@
         "input.controls",
         "expected.stage"
       ],
-      "binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
+      "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
       "prepromotion_case_sha256": "60e9366e629c69cfcd024752c2fe04b2901330052c482b03b49441b629a3d340"
     }
   ],
@@ -3365,13 +3444,13 @@
           "protected_operations": 0
         },
         "after_checkpoint_epoch": "2",
-        "selected_binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4"
+        "selected_binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb"
       }
     },
     {
       "lane": "live_slot_selected_origin.mjs",
       "summary": {
-        "selected_binary_sha256": "96fe860b1116313df37582af57d650d9feb3733c8a998bfff4b34d4613dbdce4",
+        "selected_binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
         "owner_count": 27,
         "installed_artifacts": {
           "variable": "8a89540dd0368865116f77bde5df2e13877f5ac86b0453b1c5999fd38427e50b",
@@ -3395,7 +3474,7 @@
           "runner2": "e57cb6e63058efbf4a93757080e464141b1994a33eeba67f9b068e53e7b4dbd3",
           "generic": "9a31e6fe0c8d0b9bc1d4f26e06d6c4ac9a60388eac57f66dcea3e2a2f84ab363"
         },
-        "returned_target_manifest_sha256": "61f0808f428cf8d32aee07930b97900f7751736f6fdb9b03c04460004dbbdbf4",
+        "returned_target_manifest_sha256": "d109beac468fdeff853b83e237da6208eae36a7f9c29a154d1707ec5c5b06d85",
         "published_epoch": "3",
         "guest_requests": 3,
         "protected_operations": 0
@@ -3438,9 +3517,61 @@
   "live_cases": {
     "commit": "8075d3c083474884f9a7c72b5b1a483f73eec314",
     "baseline_sha256": "47b25497314216a05efda7cdf4352adb1f422a280af80dcea36b6af4e70abeca",
-    "current_sha256": "47b25497314216a05efda7cdf4352adb1f422a280af80dcea36b6af4e70abeca",
+    "current_sha256": "704c482c93f403f360aa51c8fe6f35c959b4c34ac8daaf70d80c2fce763484e4",
     "design_changed": false,
-    "state_changes": [],
+    "state_changes": [
+      {
+        "id": "LIVE-01",
+        "baseline_state": {
+          "implementation": "absent",
+          "execution": "not-run",
+          "proof": "open",
+          "trust": "unassessed"
+        },
+        "state": {
+          "implementation": "implemented",
+          "execution": "passed",
+          "proof": "open",
+          "trust": "explicit"
+        },
+        "baseline_evidence": 0,
+        "evidence": 1
+      },
+      {
+        "id": "LIVE-06",
+        "baseline_state": {
+          "implementation": "absent",
+          "execution": "not-run",
+          "proof": "open",
+          "trust": "unassessed"
+        },
+        "state": {
+          "implementation": "implemented",
+          "execution": "passed",
+          "proof": "open",
+          "trust": "explicit"
+        },
+        "baseline_evidence": 0,
+        "evidence": 1
+      },
+      {
+        "id": "LIVE-07",
+        "baseline_state": {
+          "implementation": "absent",
+          "execution": "not-run",
+          "proof": "open",
+          "trust": "unassessed"
+        },
+        "state": {
+          "implementation": "implemented",
+          "execution": "passed",
+          "proof": "open",
+          "trust": "explicit"
+        },
+        "baseline_evidence": 0,
+        "evidence": 1
+      }
+    ],
     "approved_changes": {
       "LIVE-02": {
         "path": [
@@ -3592,9 +3723,9 @@
       "stdin": null,
       "stdin_sha256": null,
       "stdout": "03-source-build.stdout",
-      "stdout_sha256": "f151049d528d80aded257da054bd975ee198e9d1885668725fb68f9cced4c9ef",
+      "stdout_sha256": "76875c96af30b48c7acab6c629c3959ad018d96a31706c7021af9150bb9ca960",
       "stderr": "03-source-build.stderr",
-      "stderr_sha256": "a41051563a4cb5fc1b1bcdd9aa0ba28ca80f7736d629d90cc138218756e8e3a9"
+      "stderr_sha256": "3995580a97d77c15e41531816f5cc438b3bb57590e2c0dcdfb612f584e94259f"
     },
     {
       "label": "lane-01",
@@ -3618,8 +3749,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-y5ohup",
-        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-01-8Cch8u"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-ZoEe46",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-01-M5q7IA"
       },
       "status": 0,
       "signal": null,
@@ -3653,8 +3784,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-6Of0yF",
-        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-01-late-fkXrVj"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-iP9NXo",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-01-late-G9y0Pu"
       },
       "status": 0,
       "signal": null,
@@ -3688,8 +3819,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-k1yuT6",
-        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-01-origin-711Fh2"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-C0ada7",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-01-origin-oiR2D4"
       },
       "status": 0,
       "signal": null,
@@ -3723,8 +3854,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT",
-        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-02-hUgdMD"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-02-ClWiPR"
       },
       "status": 0,
       "signal": null,
@@ -3732,7 +3863,7 @@
       "stdin": null,
       "stdin_sha256": null,
       "stdout": "07-lane-02.stdout",
-      "stdout_sha256": "5f14ad5fd080ca7ac18707853414427c78fb20b48d46407f222672c445116728",
+      "stdout_sha256": "bed9c4cc7427b3652e08b0cf9896db054c5f796c4da076942398cacd0ee77914",
       "stderr": "07-lane-02.stderr",
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -3758,8 +3889,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n",
-        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-03-4iihaP"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-03-Kd6vZD"
       },
       "status": 0,
       "signal": null,
@@ -3767,7 +3898,7 @@
       "stdin": null,
       "stdin_sha256": null,
       "stdout": "08-lane-03.stdout",
-      "stdout_sha256": "5d0d5ada9a4d7e139c6232b57c903c602d6d3eb3bebadf7d14ca08d0a87c10e7",
+      "stdout_sha256": "e9d23602f14b7fbe1b65d1ad4213811a9e0c554ed69c342231d7d43e08982185",
       "stderr": "08-lane-03.stderr",
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -3793,8 +3924,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t",
-        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-06-9UZOye"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-06-lt3ak8"
       },
       "status": 0,
       "signal": null,
@@ -3802,7 +3933,7 @@
       "stdin": null,
       "stdin_sha256": null,
       "stdout": "09-lane-06.stdout",
-      "stdout_sha256": "f2be0c680d7e7b26ce1bf90d325a7dfd6eeb352f44815d3450c1bade1cfa746b",
+      "stdout_sha256": "4376cb2aca902dcbcb47fddffc696635de0484d5e8cbf045154ff61f0bf0fc91",
       "stderr": "09-lane-06.stderr",
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -3828,8 +3959,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3",
-        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-0407-GJ8fON"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-0407-jMNGG9"
       },
       "status": 0,
       "signal": null,
@@ -3837,7 +3968,7 @@
       "stdin": null,
       "stdin_sha256": null,
       "stdout": "10-lane-0407.stdout",
-      "stdout_sha256": "2346ebf6a53a0dbaa714dc9f287ab055b02a63aadf2a7985a4cc8e8c73117691",
+      "stdout_sha256": "4edd6d39571331de25c7a0812261f44d7474efabba9c20fd093e6ba7f423315f",
       "stderr": "10-lane-0407.stderr",
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -3863,8 +3994,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-legacy-bazjIg",
-        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-09-legacy-MLAzsQ"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-legacy-rTiZGM",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-09-legacy-y1acrT"
       },
       "status": 0,
       "signal": null,
@@ -3872,7 +4003,7 @@
       "stdin": null,
       "stdin_sha256": null,
       "stdout": "11-lane-09-legacy.stdout",
-      "stdout_sha256": "72feba42b29460f064dfdd50220feb773e3631b720b4ef4e2a21e0ae63769f55",
+      "stdout_sha256": "9a79a252ba957c4b0e0d06a1e12b01bae69629070d2caa7d3dac9ffaeb42dbb5",
       "stderr": "11-lane-09-legacy.stderr",
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -3898,8 +4029,8 @@
         "CARGO_BUILD_RUSTC_WRAPPER": "",
         "RUSTFLAGS": "",
         "CARGO_ENCODED_RUSTFLAGS": "",
-        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-repl-GEauag",
-        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-09-repl-hJkQeb"
+        "NOBLE_SLOT_EVIDENCE_DIR": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-repl-yGSC3j",
+        "NOBLE_SLOT_AUTHORITY_ROOT": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-authority-09-repl-I4tVbB"
       },
       "status": 0,
       "signal": null,
@@ -3907,7 +4038,7 @@
       "stdin": null,
       "stdin_sha256": null,
       "stdout": "12-lane-09-repl.stdout",
-      "stdout_sha256": "617d2311f5f369a9cf0e8b97f9cf760784750adc7073a693eb9d28419aa2f082",
+      "stdout_sha256": "d00f6024ddd732b7e1840d16c61aa178350702e7455a622ab53c90efa75e9c0b",
       "stderr": "12-lane-09-repl.stderr",
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }
@@ -3945,136 +4076,136 @@
     "`verification/live-slot-current-source/gate.mjs` and `verification/live-update-corpus` are historical: they replay only at their recorded source states and are not re-run here."
   ],
   "external_evidence_sha256": {
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-y5ohup/LSLOT01.jsonl": "52ad33ed3f242db0438df87498401006a5ca4eaf50efdbbbe02622d52ab1da0c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-6Of0yF/LSLOT01-late-control.jsonl": "8f494ffd33be47437df6c936fc00d5977cfed299af8baf972068342860808e8f",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-6Of0yF/LSLOT01-late-control.requests.jsonl": "815f5f269e3e5a5ea48f5ed31ab40160f21914dfa052dfe1e39c05560165ddaf",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-6Of0yF/LSLOT01-late-control.responses.jsonl": "5de7c3414ea13d1b25878ca0be5d58e7edc2912607773ea9a7b815b0b47c3b55",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-6Of0yF/LSLOT01-late-control.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-6Of0yF/LSLOT01-late-control.summary.json": "e4dcc65e08c97b60a00a8d4ebd95b737f66cd4c5c781db1cd9266a1bd96756e9",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-k1yuT6/LSLOT01-selected-distinct-source-reload.jsonl": "758fd56782d542fa285266c31d10e11e3a3aa5f9a810a2d07c496e5eff9485ff",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-k1yuT6/LSLOT01-selected-distinct-source-reload.requests.jsonl": "40848f3eaa8f82d7ab9380f6f27cdef3b4fc4e9be959afb87294c15071c28ff3",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-k1yuT6/LSLOT01-selected-distinct-source-reload.responses.jsonl": "eaf33bacadd92e5e8be6fb363ecea79bc6782600793ce5736581616465650c85",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-k1yuT6/LSLOT01-selected-distinct-source-reload.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-k1yuT6/LSLOT01-selected-origin-control.jsonl": "7b1bf78fbefe95b8dc1afbebdc3f0d3948e5d1f6e639fcda748f3f1c35a2f62e",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-k1yuT6/LSLOT01-selected-origin-control.requests.jsonl": "5c112f343e0c79fa346b2563f4926719b4380eade236eb62aebedb1cfa20a2c0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-k1yuT6/LSLOT01-selected-origin-control.responses.jsonl": "b018bb1908a67cc3044c58455a061ccbc26aaa0f6afd78ddb33406b4adda2d1a",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-k1yuT6/LSLOT01-selected-origin-control.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-k1yuT6/LSLOT01-selected-origin-control.summary.json": "1837b51245d11e194d80d902656c21b44c5a1828a05cd0c0c4b40d8bfcb21158",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-k1yuT6/LSLOT01-selected-origin-missing-core.jsonl": "f2cb0d77b2f93ba0c7e23c8fb6d4861f590fe9eb9c53d6099b16de1fa54eb4be",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-k1yuT6/LSLOT01-selected-origin-missing-core.requests.jsonl": "900f5fe99b214debab4b5fa967bb6a9b9a06d81265e86c89ab544a838ba24894",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-k1yuT6/LSLOT01-selected-origin-missing-core.responses.jsonl": "d636817687bebdd93ffddc446dfeea1d2c3c94d66b4f6d335a3d08df598adba0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-k1yuT6/LSLOT01-selected-origin-missing-core.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-base-parent-child.jsonl": "28fc88572d77666c95de9fcb536e1c3733b49c4a6666ed6c77b71ece101e8fe9",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-base-parent-child.requests.jsonl": "e1042f322a0009367357a99fe2b4cd286fd53c4626725d4e07ef6af232220a32",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-base-parent-child.responses.jsonl": "ef9a93ac3a2b687dfb0bc1f420c806b0b520b756c9c21d7c1eeb3d7c1850ce33",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-base-parent-child.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-later-member-budget-refusal.jsonl": "11ddb8e1555f8f677cc973a9f24a1bd9c6f59ba46f6afd4ee9e928cc59f9a81f",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-later-member-budget-refusal.requests.jsonl": "8f9d028388ff3abb60df95805e021f637b6c3f099df40d92bb53a7e2353c5e35",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-later-member-budget-refusal.responses.jsonl": "6555aea3163c45a70830ffd829e30050d7970bd7546a74af0213ede083b68a76",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-later-member-budget-refusal.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-summary.json": "84dc94cd95e9ccc687b0f5bfc5ad8e4f1b4d883bd977127482b672a9c00f55bc",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-transitive-A-B-C.jsonl": "37dbc58d40698e14102e65e96cfd68cdcc5a585ba5875d3483228b3a5ad27082",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-transitive-A-B-C.requests.jsonl": "2165138b02da444b64feea7cf21e53a677cee83cf845fbd92388c0ef3f717004",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-transitive-A-B-C.responses.jsonl": "27372ea340735f512cc28f0f926c4fc6fa39310a4178101482c1867e5dc4d68c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-tbohRT/LSLOT02-transitive-A-B-C.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-ceiling-control-empty-ceiling.jsonl": "86c89ad92f60546e66093b2e49a740ff806b8d553cdb1840522fe41e5167503b",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-ceiling-control-empty-ceiling.requests.jsonl": "c9fe313d90b82ddb95cf23e146b0634b411c64aa923cd09d0184902e6e6607f6",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-ceiling-control-empty-ceiling.responses.jsonl": "abcb80456743cd12aeb12ab21583d27b61cb63b4fbddd9d7b3926f69115e6dd4",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-ceiling-control-empty-ceiling.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-ceiling-control-matching-ceiling.jsonl": "917139fb334941bf945c71e58b58fc48b21891f600575ccff90d2c2d3b7a9c90",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-ceiling-control-matching-ceiling.requests.jsonl": "8bc73170992ac9d063cea0c5c2d4327ce9d8b04d6b6e91f8b7234a1c11d9e358",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-ceiling-control-matching-ceiling.responses.jsonl": "4bd096791e699827ed10c46635c2634fe2ea119c5f41fe465b8befa06f856fc1",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-ceiling-control-matching-ceiling.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-generic-caller-underdeclares-dispatch.jsonl": "0ca088f7cf86b3df2f4307da7b618e9d4e1591e13e2849acb2a49fa8e97d06b0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-generic-caller-underdeclares-dispatch.requests.jsonl": "2a228a3bb56aa7cbcff10b453a97da20cfeaebcd2797410c13cf76f34eeaad13",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-generic-caller-underdeclares-dispatch.responses.jsonl": "2a728d49d4e7347d331bbd7998cd18022bfe5e96d976b48bf908bacf34e9e574",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-generic-caller-underdeclares-dispatch.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-reversed-input.jsonl": "71951e8d609d38f6c400aaa6cd9b689eef1d9bd21400ec690dae81f6e984ec1c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-reversed-input.requests.jsonl": "3e157c724ecd4193f58c31644955c5c30e01bab997b13e431cfbc4c8e78f3574",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-reversed-input.responses.jsonl": "03d82ae9d5b52539f687df5e46446b35d5956ca6fb53147ed215b2cf1594c506",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-reversed-input.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-same-exact-interface.jsonl": "e2ff98f23e722946e867cc8e67cdd85b433865d2fa2823b1b58270716128fb88",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-same-exact-interface.requests.jsonl": "c0f9ef924b8ed4457645ed3369f7d5f188b92cc2ab1c11d35456ab09eba617f6",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-same-exact-interface.responses.jsonl": "102badbf8d42d9e8908e8e7db5d556c99f7d5ec0fb254d5ab90ded55ace90c5d",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-same-exact-interface.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-same-layout-different-resource-schema.jsonl": "cc89d0b44e4b753306bec665f2f7d6bbc08c63732af0d66396404da3bfb6565c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-same-layout-different-resource-schema.requests.jsonl": "7b48a8b7d7711b4a58377d515cb815008dd5f6eeb3b5fc3d6c255a049ad6ed6b",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-same-layout-different-resource-schema.responses.jsonl": "dd438610d36af93230ec699b87771c7fbcca555d6e1328b918161febbc66d7a0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-same-layout-different-resource-schema.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-summary.json": "464dd6efdf74a684e2dc1a6e1cef06e9cb4ed66574b68a8fd6f575a7b64b4987",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-unknown-host-contract.jsonl": "e7d86c70b1bc82a91dc87e98a5e0f325ddacdc1c25d6aa433be3d22d0e487818",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-unknown-host-contract.requests.jsonl": "fe3dfa46539dc0d069732b217ab7e4816932eed3d0a45caeda49624d148795f7",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-unknown-host-contract.responses.jsonl": "30b6970d3ea348b74a728a7c19ab18bac0a14a8d6b7cf770edf344ec420ab3c4",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-wZk96n/LSLOT03-unknown-host-contract.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-aggregate-capture.jsonl": "e08d4c544ded6c7c071686725bffb076f87a5589967c15c1e6a04a25844acc5c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-aggregate-capture.requests.jsonl": "f32d2d4d2b3ef12d066411983a6f194be81fd7c320ef0e30741bd98665738ea3",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-aggregate-capture.responses.jsonl": "8035ba7adf4d9932cedb4f19ac2d7d6d025f744ebe9f750511eb9d3cc8d2b1c7",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-aggregate-capture.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-aggregate-storage.jsonl": "efba9562a7d66324f750d2fb2a3d9141e94ac53e742bdcde74396941fe7709cf",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-aggregate-storage.requests.jsonl": "e0ae036f73fd7973ff7c91074e5b191e38e066f52058e04ce1b99dbd80513834",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-aggregate-storage.responses.jsonl": "a1d6748320fe07650ee216b9e00ef2ea279296fe0b5a71654bf467019789a0b0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-aggregate-storage.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-direct-quotation-capture.jsonl": "6467544414d6c5127f4c0ea5a81382164ee4dfd84271dd41bca8ef059322cb9b",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-direct-quotation-capture.requests.jsonl": "0927ee79530c04559e271fce6632ca476f58422047fb2ca12c24dd3e0251c981",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-direct-quotation-capture.responses.jsonl": "27de4298a35090fb4051e2f02027eaaf30ca8b49bc28168b6878c27e26c08881",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-direct-quotation-capture.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-export-or-return.jsonl": "625dc4e0f08bbfcf33fb8db94930364cda1ed8a8baaa08739c348f5081fbfe97",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-export-or-return.requests.jsonl": "1f79dccba3451715a127feb84e8c6aa45ef2cdf4d9e04031bc5ecc4a13c3d21a",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-export-or-return.responses.jsonl": "8035ba7adf4d9932cedb4f19ac2d7d6d025f744ebe9f750511eb9d3cc8d2b1c7",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-export-or-return.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-retain.jsonl": "c53f9d808335379382e14cdd917866882b3a1f8ccd69a7c75c4a138fa6dd1de3",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-retain.requests.jsonl": "6582b0f3be7586ee3c1adc6909aa836cd2968640bd21c91841074d37bfd88e9c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-retain.responses.jsonl": "434aafacfbb4cdf21bd14f21f9d4c4a7f2b14f1f8e2296b8653d157a4d8d175f",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-retain.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-summary.json": "160a910023d8ee912ec4d52cee75a0c2e62b388aa82536411efe691de67adecf",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-valid-borrow.jsonl": "e9a950b74821245b71fe13bd027a8fe295ca678906e6e9b737e8412c813c877d",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-valid-borrow.requests.jsonl": "6f8a25c8a5a75c9270be5b82b8c924b56a51818d047a0511c8f6e982bba99590",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-valid-borrow.responses.jsonl": "6e7a6029724f68def69f16e2975c98d8f6a315fe34562b83d629ced9281042f0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-2lqi2t/LSLOT06-valid-borrow.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-authorized-rollback.counters.json": "38dce40bbf16766c123d41cb726b0981b918dc5f4a8ffbb0953a59139dbca0d4",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-authorized-rollback.jsonl": "db22054a624ff165ea65ef54e3fa835f3de556ba975004cc0689b31e6d611496",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-authorized-rollback.requests.jsonl": "9da64f693b0393d758dff5279b1d18681caad778200185e5ebe99a7635a0c797",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-authorized-rollback.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-delete-recreate-ABA.counters.json": "2e9746581541cd968cba1fa82202b8f6c711943d529030fa86b0907625a5074e",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-delete-recreate-ABA.jsonl": "7c31613828be6f97124817d52b8078a3588e61d9215577bc0fc2255ecb02f214",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-delete-recreate-ABA.requests.jsonl": "e7ad9490b2597d82bb98389d4f0fe1865eb7bdbbd098bbba9fd4017872d8150e",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-delete-recreate-ABA.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-rollback-denied.counters.json": "e213a9ac6f6d336823b9bc2417ac9522603ce9505750d868f6260618686956d9",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-rollback-denied.jsonl": "f021043a90d5b81563724bdef779d94005a15c2d4b3574a2c3c87967cecc46f0",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-rollback-denied.requests.jsonl": "bf8304e6c96f86a424719af161ed9a7ba93d7d2ca498fc68d4ebd9efddeb7cd1",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-rollback-denied.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-same-slot-writers.counters.json": "fbdac030aa51c88e427a10d6e6aa6dc59b15c245bbd5f254d2bff17aca53d321",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-same-slot-writers.jsonl": "f57e0a6d075a618d946ffd7c2e6d7efe29449156d4f83f749b47c7f259c7f724",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-same-slot-writers.requests.jsonl": "66ed778767bf658001635a258235479299aca034479defdc73713a2b917d9a72",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-same-slot-writers.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-unrelated-slot-race.counters.json": "fdfd1f3aba7db4937754e15fac6635ad6e24d7afde55c21e1f75cc9d2529bad6",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-unrelated-slot-race.jsonl": "cd03012c7c1e1519c2be48df1d1d493dae9ae4f195c4bd7e25e36d30f7eb63bb",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-unrelated-slot-race.requests.jsonl": "c55a8454b1942236142d91b96ec622b2c678b7463f8a44603daf7c9253dc287c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT04-unrelated-slot-race.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-dispatch-without-grant.counters.json": "9a7bf8f2e6846b2ea575f53435680416e8e902b8bfea13e2108d6b76fc47e6f3",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-dispatch-without-grant.jsonl": "70e8955ef261c3d73bcad301a147cd73b54058dfedb6dbd1c623c4248cca49d5",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-dispatch-without-grant.requests.jsonl": "8c151cf797e7b60c53f11ac3b874a7208997263d706afc66bc41bf7fc498ff07",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-dispatch-without-grant.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-old-version-effect-revoked-after-pin.counters.json": "cead62e400909f31cac4b6def66d397457db414abbfda3bf1108ea09f984b604",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-old-version-effect-revoked-after-pin.jsonl": "344a8de3c7d37463b080e679a59eaec7410d86ef0c9e93431f71de53e2838f36",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-old-version-effect-revoked-after-pin.requests.jsonl": "f723fc998c8e62e4729b64fb0740f40955ccd48f185fad8b9e25901df077f341",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-old-version-effect-revoked-after-pin.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-publication-without-grant.counters.json": "101b579bd4798446799c96d5eb4362242b397255025fd1bd95a37e736606cec7",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-publication-without-grant.jsonl": "cfdaa8711a5f77791bab1ef86533c4d4dd3ab54686b49efd5568473443391da5",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-publication-without-grant.requests.jsonl": "bbc9bab9770aa20e157d76fd612595a1a48b368bcd02dfc67be36940ea2b5d09",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-publication-without-grant.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-revoked-after-root-pin.counters.json": "b06aa6f3583792189a77e71a9275aa6dbc2fd20dc07ec8b9dcfd5cdf2d0b2b5b",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-revoked-after-root-pin.jsonl": "05d6c92ce1915c5cb174a4623bb15406e6bec3e6272d8fab950890885e4c9856",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-revoked-after-root-pin.requests.jsonl": "de4be87389374f447baa33a1b7812407fbfe2b4e7140e851a7b494f09b06849c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-revoked-after-root-pin.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-static-dispatch-without-grant.counters.json": "f02d0d7d0be6d52ba9c9f7f1d1c77ee314322b5f72e151c51fd15aa697a3a11c",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-static-dispatch-without-grant.jsonl": "1593229560b5de19f8ac4aa4da80e9a682ea2efedf1d5034e877b7308981adca",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-static-dispatch-without-grant.requests.jsonl": "2e5bb77e03f77a740c3fb1dd909caa01fb08dcaca33365a008b2b19982f36a89",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-hkVtq3/LSLOT07-static-dispatch-without-grant.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-legacy-bazjIg/LSLOT09-legacy-summary.json": "867bc64d7a212097363f521b407dedbf2644f6279142efd05e86b1e937324319",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-legacy-bazjIg/LSLOT09-legacy.jsonl": "ffc6d09a1f978797989ea5b7ab735845270378f81149c8d9e8e368ffdd294bcc",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-repl-GEauag/LSLOT09-repl-summary.json": "f2153771ef1da2566a15940619a3c27dd7d0196f04024e963dca89f1c715e403",
-    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-repl-GEauag/LSLOT09-repl.jsonl": "f0f31e0aacda8a4f2cf874f665b578a24b6e28b39dff2a6e289fe48200dc29af"
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-ZoEe46/LSLOT01.jsonl": "dfa54bbf08077a506f9432e905ceb7a642e579c5e9948929f244c44a9b10e909",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-iP9NXo/LSLOT01-late-control.jsonl": "b7590ca992c45f36de9388f51ad690b2cdc21c4a65b1b75a417bc751b7baa509",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-iP9NXo/LSLOT01-late-control.requests.jsonl": "815f5f269e3e5a5ea48f5ed31ab40160f21914dfa052dfe1e39c05560165ddaf",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-iP9NXo/LSLOT01-late-control.responses.jsonl": "ac7e0c39bdd0e1a146e6c43e0a3534e4dac4f1892f8fdfd674d669ca4f602abb",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-iP9NXo/LSLOT01-late-control.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-late-iP9NXo/LSLOT01-late-control.summary.json": "d28fcc1c8b164f91936ee7eded4ce8fc691abfc17314afb61627af3c84eaa9dc",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-C0ada7/LSLOT01-selected-distinct-source-reload.jsonl": "87ea1bd3b7ea56e6313a46e1e270cb7dbfba9069d6023af23b3f8244b7b8beb5",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-C0ada7/LSLOT01-selected-distinct-source-reload.requests.jsonl": "40848f3eaa8f82d7ab9380f6f27cdef3b4fc4e9be959afb87294c15071c28ff3",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-C0ada7/LSLOT01-selected-distinct-source-reload.responses.jsonl": "d0684c7589b8125099364b0ba79ede86f83372b5652e420b0749abd53e59d7a9",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-C0ada7/LSLOT01-selected-distinct-source-reload.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-C0ada7/LSLOT01-selected-origin-control.jsonl": "acd009bda1b3e7303af446c903a1e5963475c82c03e02a92551c7e830c95411b",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-C0ada7/LSLOT01-selected-origin-control.requests.jsonl": "5b9304882e7e52b03999172cb2fbbbbebe84b7990cee2e4cd94d1676f915e8ab",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-C0ada7/LSLOT01-selected-origin-control.responses.jsonl": "3c4622c06ea67abf090b8754959472bb744f567733297d31851847bd18ab27e8",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-C0ada7/LSLOT01-selected-origin-control.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-C0ada7/LSLOT01-selected-origin-control.summary.json": "94ff309b84e301aac73fe3423a1c911d095f078319f6fbc209c990864c78d67b",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-C0ada7/LSLOT01-selected-origin-missing-core.jsonl": "922f427020545dd522863b0168661090fe2fddfd2504253090e3c0713ae9f415",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-C0ada7/LSLOT01-selected-origin-missing-core.requests.jsonl": "900f5fe99b214debab4b5fa967bb6a9b9a06d81265e86c89ab544a838ba24894",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-C0ada7/LSLOT01-selected-origin-missing-core.responses.jsonl": "e41d26c99b35c5da391e5eb34af84e6cf5a8cbcb9fd8d2300c7d46357ddb8958",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-01-origin-C0ada7/LSLOT01-selected-origin-missing-core.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-base-parent-child.jsonl": "3f6c9555c1cf667e7f45895310f58d98b55779ccd6759a2a44f32e888c4d0d97",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-base-parent-child.requests.jsonl": "e1042f322a0009367357a99fe2b4cd286fd53c4626725d4e07ef6af232220a32",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-base-parent-child.responses.jsonl": "ef9a93ac3a2b687dfb0bc1f420c806b0b520b756c9c21d7c1eeb3d7c1850ce33",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-base-parent-child.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-later-member-budget-refusal.jsonl": "14b5747b82a4fa4de54b3ae0833db672e53b52f7de968e38389b632d2b04d985",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-later-member-budget-refusal.requests.jsonl": "8f9d028388ff3abb60df95805e021f637b6c3f099df40d92bb53a7e2353c5e35",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-later-member-budget-refusal.responses.jsonl": "6555aea3163c45a70830ffd829e30050d7970bd7546a74af0213ede083b68a76",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-later-member-budget-refusal.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-summary.json": "2db96e9b6b7d64921bea6d43c5596b384fff21b1c9638d754de283e6403c1667",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-transitive-A-B-C.jsonl": "11451a537a71062324706f3e71cdd9981bf0542c8e11a61e53b201e6ecf4ed27",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-transitive-A-B-C.requests.jsonl": "2165138b02da444b64feea7cf21e53a677cee83cf845fbd92388c0ef3f717004",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-transitive-A-B-C.responses.jsonl": "27372ea340735f512cc28f0f926c4fc6fa39310a4178101482c1867e5dc4d68c",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-02-eFq2yg/LSLOT02-transitive-A-B-C.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-ceiling-control-empty-ceiling.jsonl": "dc0c57e3ea7b10eca3aa8518b0942c7b8817a132d0f8bba4387aa8ac73ddc985",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-ceiling-control-empty-ceiling.requests.jsonl": "c9fe313d90b82ddb95cf23e146b0634b411c64aa923cd09d0184902e6e6607f6",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-ceiling-control-empty-ceiling.responses.jsonl": "abcb80456743cd12aeb12ab21583d27b61cb63b4fbddd9d7b3926f69115e6dd4",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-ceiling-control-empty-ceiling.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-ceiling-control-matching-ceiling.jsonl": "aa674a996bd5b85ba89cc8eafa765302c75039f00a093912325afe8c70f03554",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-ceiling-control-matching-ceiling.requests.jsonl": "8bc73170992ac9d063cea0c5c2d4327ce9d8b04d6b6e91f8b7234a1c11d9e358",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-ceiling-control-matching-ceiling.responses.jsonl": "4bd096791e699827ed10c46635c2634fe2ea119c5f41fe465b8befa06f856fc1",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-ceiling-control-matching-ceiling.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-generic-caller-underdeclares-dispatch.jsonl": "50b4194be495ca7d14c814301095a01066e1cdb0c593cc9a570e23e6320a5277",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-generic-caller-underdeclares-dispatch.requests.jsonl": "2a228a3bb56aa7cbcff10b453a97da20cfeaebcd2797410c13cf76f34eeaad13",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-generic-caller-underdeclares-dispatch.responses.jsonl": "2a728d49d4e7347d331bbd7998cd18022bfe5e96d976b48bf908bacf34e9e574",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-generic-caller-underdeclares-dispatch.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-reversed-input.jsonl": "938b5c83300da670e9be1e453a03e4b56c156ba3c94aaf6b0c450c3d3459642d",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-reversed-input.requests.jsonl": "3e157c724ecd4193f58c31644955c5c30e01bab997b13e431cfbc4c8e78f3574",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-reversed-input.responses.jsonl": "03d82ae9d5b52539f687df5e46446b35d5956ca6fb53147ed215b2cf1594c506",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-reversed-input.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-same-exact-interface.jsonl": "d74a63e032630b3bc3b37139bbad41551ad389fa848c0431c95455ba2c2fbf89",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-same-exact-interface.requests.jsonl": "c0f9ef924b8ed4457645ed3369f7d5f188b92cc2ab1c11d35456ab09eba617f6",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-same-exact-interface.responses.jsonl": "102badbf8d42d9e8908e8e7db5d556c99f7d5ec0fb254d5ab90ded55ace90c5d",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-same-exact-interface.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-same-layout-different-resource-schema.jsonl": "784809e5606078ef0b6e2a8420460125c9e5840056f19bef8655c886272f5d15",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-same-layout-different-resource-schema.requests.jsonl": "7b48a8b7d7711b4a58377d515cb815008dd5f6eeb3b5fc3d6c255a049ad6ed6b",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-same-layout-different-resource-schema.responses.jsonl": "dd438610d36af93230ec699b87771c7fbcca555d6e1328b918161febbc66d7a0",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-same-layout-different-resource-schema.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-summary.json": "275269d4cde1ab5100edeeb08a6cbc8fcb57a951b6117b8664cc294b84dd0df8",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-unknown-host-contract.jsonl": "062f6f78e73a4fa4eb9b22e191ee3f83a7ff55379508b2e8fda4d5fcd1ced17e",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-unknown-host-contract.requests.jsonl": "fe3dfa46539dc0d069732b217ab7e4816932eed3d0a45caeda49624d148795f7",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-unknown-host-contract.responses.jsonl": "30b6970d3ea348b74a728a7c19ab18bac0a14a8d6b7cf770edf344ec420ab3c4",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-03-7trcfB/LSLOT03-unknown-host-contract.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-aggregate-capture.jsonl": "49268074552470aee6eed85fe0a96e322211e2cfb990e0657a75fbdfbc39ba6b",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-aggregate-capture.requests.jsonl": "f32d2d4d2b3ef12d066411983a6f194be81fd7c320ef0e30741bd98665738ea3",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-aggregate-capture.responses.jsonl": "8035ba7adf4d9932cedb4f19ac2d7d6d025f744ebe9f750511eb9d3cc8d2b1c7",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-aggregate-capture.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-aggregate-storage.jsonl": "731361a9e0037b0d03ee750c3d48c776b5236ee34c90a40ca39c723af1815191",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-aggregate-storage.requests.jsonl": "e0ae036f73fd7973ff7c91074e5b191e38e066f52058e04ce1b99dbd80513834",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-aggregate-storage.responses.jsonl": "a1d6748320fe07650ee216b9e00ef2ea279296fe0b5a71654bf467019789a0b0",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-aggregate-storage.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-direct-quotation-capture.jsonl": "6a96081b5b548f09f2d796f113aead1c1539f28b9857029a29a55e25eb880ffb",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-direct-quotation-capture.requests.jsonl": "0927ee79530c04559e271fce6632ca476f58422047fb2ca12c24dd3e0251c981",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-direct-quotation-capture.responses.jsonl": "27de4298a35090fb4051e2f02027eaaf30ca8b49bc28168b6878c27e26c08881",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-direct-quotation-capture.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-export-or-return.jsonl": "43ff7b1120e70afbeb7ca5f6260d3f9332f4996a43b5f60267f8cf5ba09342aa",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-export-or-return.requests.jsonl": "1f79dccba3451715a127feb84e8c6aa45ef2cdf4d9e04031bc5ecc4a13c3d21a",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-export-or-return.responses.jsonl": "8035ba7adf4d9932cedb4f19ac2d7d6d025f744ebe9f750511eb9d3cc8d2b1c7",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-export-or-return.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-retain.jsonl": "594502b4c95b2f7343f4cd221b1623f5474d0020bc2fe213e4b461e50588744e",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-retain.requests.jsonl": "6582b0f3be7586ee3c1adc6909aa836cd2968640bd21c91841074d37bfd88e9c",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-retain.responses.jsonl": "434aafacfbb4cdf21bd14f21f9d4c4a7f2b14f1f8e2296b8653d157a4d8d175f",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-retain.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-summary.json": "d4db2b768071091797a05449df4a97ad0754ba36bfb1a92281c495c09d48fa76",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-valid-borrow.jsonl": "15f71bb4689c8be69befc64befdda5ba810712ba25ba9aa227ab1a2ec10c6b5c",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-valid-borrow.requests.jsonl": "6f8a25c8a5a75c9270be5b82b8c924b56a51818d047a0511c8f6e982bba99590",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-valid-borrow.responses.jsonl": "6e7a6029724f68def69f16e2975c98d8f6a315fe34562b83d629ced9281042f0",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-Gt57J0/LSLOT06-valid-borrow.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-authorized-rollback.counters.json": "f8b237d8aa572984f3d8b1e8e7b9c66ced9a5df1b363c1574dcccdc495f027c9",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-authorized-rollback.jsonl": "db22054a624ff165ea65ef54e3fa835f3de556ba975004cc0689b31e6d611496",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-authorized-rollback.requests.jsonl": "9da64f693b0393d758dff5279b1d18681caad778200185e5ebe99a7635a0c797",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-authorized-rollback.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-delete-recreate-ABA.counters.json": "2cef1df457f8eea99444ffa4ba29128808031bf796b12553a82a7d9b979d34c7",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-delete-recreate-ABA.jsonl": "7c31613828be6f97124817d52b8078a3588e61d9215577bc0fc2255ecb02f214",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-delete-recreate-ABA.requests.jsonl": "e7ad9490b2597d82bb98389d4f0fe1865eb7bdbbd098bbba9fd4017872d8150e",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-delete-recreate-ABA.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-rollback-denied.counters.json": "72da13a71e2d06aa213c9570da4d7a2abbb499705eaee4cab85d0247d55c8dcf",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-rollback-denied.jsonl": "f021043a90d5b81563724bdef779d94005a15c2d4b3574a2c3c87967cecc46f0",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-rollback-denied.requests.jsonl": "bf8304e6c96f86a424719af161ed9a7ba93d7d2ca498fc68d4ebd9efddeb7cd1",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-rollback-denied.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-same-slot-writers.counters.json": "961c48808e3c9ad28bc6940478fef679b4a09bdc2a8d2c01db846584b9b7cf78",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-same-slot-writers.jsonl": "f57e0a6d075a618d946ffd7c2e6d7efe29449156d4f83f749b47c7f259c7f724",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-same-slot-writers.requests.jsonl": "66ed778767bf658001635a258235479299aca034479defdc73713a2b917d9a72",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-same-slot-writers.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-unrelated-slot-race.counters.json": "3da77e927358ea0bd8a189f2d30863ac67a1d0e9051d99a7a17df4c1fd1ef26b",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-unrelated-slot-race.jsonl": "cd03012c7c1e1519c2be48df1d1d493dae9ae4f195c4bd7e25e36d30f7eb63bb",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-unrelated-slot-race.requests.jsonl": "c55a8454b1942236142d91b96ec622b2c678b7463f8a44603daf7c9253dc287c",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT04-unrelated-slot-race.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-dispatch-without-grant.counters.json": "dd2e85c088b3bab2d944a10dac8d4a8c99a7c324e5ef1f6e7897b3a973db61fa",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-dispatch-without-grant.jsonl": "70e8955ef261c3d73bcad301a147cd73b54058dfedb6dbd1c623c4248cca49d5",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-dispatch-without-grant.requests.jsonl": "8c151cf797e7b60c53f11ac3b874a7208997263d706afc66bc41bf7fc498ff07",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-dispatch-without-grant.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-old-version-effect-revoked-after-pin.counters.json": "387696f395fb096daf00ef4fa76b9aa683124c4feb712bcd172a84bd9d8938f6",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-old-version-effect-revoked-after-pin.jsonl": "344a8de3c7d37463b080e679a59eaec7410d86ef0c9e93431f71de53e2838f36",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-old-version-effect-revoked-after-pin.requests.jsonl": "f723fc998c8e62e4729b64fb0740f40955ccd48f185fad8b9e25901df077f341",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-old-version-effect-revoked-after-pin.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-publication-without-grant.counters.json": "f001c8387646a87f22988a9f58b00f31cb20215ee36f4c34e3c6870ab950a038",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-publication-without-grant.jsonl": "cfdaa8711a5f77791bab1ef86533c4d4dd3ab54686b49efd5568473443391da5",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-publication-without-grant.requests.jsonl": "bbc9bab9770aa20e157d76fd612595a1a48b368bcd02dfc67be36940ea2b5d09",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-publication-without-grant.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-revoked-after-root-pin.counters.json": "3ef84cc082a03c6d708f78572b58d0ad4e942f38d8931f4f44e2d2f75a7d3c09",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-revoked-after-root-pin.jsonl": "05d6c92ce1915c5cb174a4623bb15406e6bec3e6272d8fab950890885e4c9856",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-revoked-after-root-pin.requests.jsonl": "de4be87389374f447baa33a1b7812407fbfe2b4e7140e851a7b494f09b06849c",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-revoked-after-root-pin.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-static-dispatch-without-grant.counters.json": "25d7a38eb4ee53b7f9dda5aface8a35b3122cc9b8274174030c72f5ae4845d7f",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-static-dispatch-without-grant.jsonl": "1593229560b5de19f8ac4aa4da80e9a682ea2efedf1d5034e877b7308981adca",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-static-dispatch-without-grant.requests.jsonl": "2e5bb77e03f77a740c3fb1dd909caa01fb08dcaca33365a008b2b19982f36a89",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-static-dispatch-without-grant.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-legacy-rTiZGM/LSLOT09-legacy-summary.json": "d6292f91c6c4da80aefe7abf13399656477dda6757e6f8947a9575c46c46a015",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-legacy-rTiZGM/LSLOT09-legacy.jsonl": "9d903f8c23535e151741b5f6cff68f81d55e1d2fa0f07f8542e1b92029a465e7",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-repl-yGSC3j/LSLOT09-repl-summary.json": "429f1851eebe0857d5ba6aa8ef5cc043a62487236db400a73e11e7ffa0e33e65",
+    "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-09-repl-yGSC3j/LSLOT09-repl.jsonl": "7700a3d631a6772d17e51b80b90ba13e3f8f1edad806c1e400814ffd93b704d3"
   },
   "raw_mirror": {
     "directory": "raw",
@@ -4082,12 +4213,12 @@
   },
   "version_control": {
     "before": {
-      "head": "4d515e594fc7151852e4803be40d251d5ffb5f89",
+      "head": "9cf2cdebe96f09fdd82679d04e55114a0ca36120",
       "status": "",
       "clean": true
     },
     "after": {
-      "head": "4d515e594fc7151852e4803be40d251d5ffb5f89",
+      "head": "9cf2cdebe96f09fdd82679d04e55114a0ca36120",
       "status": "",
       "clean": true
     }
