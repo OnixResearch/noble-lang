@@ -17,12 +17,12 @@ const verificationPrefix = "NOBLE_SEMANTIC_MERGE_VERIFICATION ";
 const leanPrefix = "NOBLE_SEMANTIC_MERGE_LEAN ";
 const started = Date.now();
 
-const run = (args, extra = {}) => {
+const run = (args, { cwd = root, env = {} } = {}) => {
   const result = Bun.spawnSync(args, {
-    cwd: root,
+    cwd,
     stdout: "pipe",
     stderr: "pipe",
-    env: { ...process.env, CARGO_INCREMENTAL: "0", ...extra },
+    env: { ...process.env, CARGO_INCREMENTAL: "0", ...env },
   });
   return {
     status: result.exitCode ?? 1,
@@ -55,7 +55,9 @@ if (dirty.length !== 0) {
 }
 const revision = (await $`git rev-parse HEAD`.cwd(root).text()).trim();
 
-const leanBuild = run(["lake", "build", "NobleContracts.Merge"], { cwd: `${root}proofs/mc1` });
+const leanBuild = run(["lake", "build", "NobleContracts.Merge"], {
+  cwd: `${root}proofs/mc1`,
+});
 if (leanBuild.status !== 0) {
   process.stderr.write(leanBuild.stdout);
   process.stderr.write(leanBuild.stderr);
@@ -96,8 +98,10 @@ const lean = run(
     "semantic_merge_lean_check",
   ],
   {
-    NOBLE_LEAN: process.env.NOBLE_LEAN ?? "lean",
-    NOBLE_CONTRACT_LIBRARY: process.env.NOBLE_CONTRACT_LIBRARY ?? `${root}proofs/mc1`,
+    env: {
+      NOBLE_LEAN: process.env.NOBLE_LEAN ?? "lean",
+      NOBLE_CONTRACT_LIBRARY: process.env.NOBLE_CONTRACT_LIBRARY ?? `${root}proofs/mc1`,
+    },
   },
 );
 if (lean.status !== 0) {
