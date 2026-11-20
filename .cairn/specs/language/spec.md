@@ -149,7 +149,14 @@ r[K-SCOPE-02]
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: OWN-CASE-02 for K-SCOPE-02
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-02](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: K-SCOPE-03
@@ -159,7 +166,22 @@ r[K-SCOPE-03]
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: OWN-CASE-02 for K-SCOPE-03
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-02](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-03 for K-SCOPE-03
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-03](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: K-SCOPE-04
@@ -269,7 +291,14 @@ r[K-SAFE-02]
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: OWN-CASE-05 for K-SAFE-02
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-05](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: K-SAFE-03
@@ -950,7 +979,22 @@ r[K-PROG-07]
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: OWN-CASE-01 for K-PROG-07
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-01](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-03 for K-PROG-07
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-03](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: K-PROG-08
@@ -960,7 +1004,22 @@ r[K-PROG-08]
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: OWN-CASE-01 for K-PROG-08
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-01](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-04 for K-PROG-08
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-04](../../../specs/conformance/ownership-cases.json)
+- WHEN the `static` procedure for case `OWN-CASE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### 6.6 Ordinary higher-order definitions
@@ -1090,7 +1149,14 @@ r[K-STACK-01]
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: OWN-CASE-05 for K-STACK-01
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-05](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### 7.2 Products and sums
@@ -1610,7 +1676,30 @@ r[K-RES-01]
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: OWN-CASE-04 for K-RES-01
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-04](../../../specs/conformance/ownership-cases.json)
+- WHEN the `static` procedure for case `OWN-CASE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-10 for K-RES-01
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-10](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-12 for K-RES-01
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-12](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-12` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-12`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: K-RES-02
@@ -1625,6 +1714,22 @@ r[K-RES-02]
 - GIVEN the `Core-Bootstrap` profile and every field of `input` in [CORE-15](../../../specs/conformance/cases.json)
 - WHEN the `static` procedure for case `CORE-15` runs against those inputs
 - THEN the observations match every field of `expected` in case `CORE-15`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-04 for K-RES-02
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-04](../../../specs/conformance/ownership-cases.json)
+- WHEN the `static` procedure for case `OWN-CASE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-09 for K-RES-02
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-09](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-09`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -1646,7 +1751,14 @@ Both success and failure return the directory handle exactly once. A different o
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: OWN-CASE-09 for K-RES-03
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-09](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### 9.2 Branches and aggregate data
@@ -1668,7 +1780,30 @@ This is a requirement on local handle accounting, not a guarantee that a remote 
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: OWN-CASE-05 for K-RES-04
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-05](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-08 for K-RES-04
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-08](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-12 for K-RES-04
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-12](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-12` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-12`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ## 10. Definitions and resolution
@@ -1680,7 +1815,46 @@ r[K-DEF-01]
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: OWN-CASE-01 for K-DEF-01
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-01](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-03 for K-DEF-01
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-03](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-06 for K-DEF-01
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-06](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-07 for K-DEF-01
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-07](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-11 for K-DEF-01
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-11](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-11` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-11`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: K-DEF-02
@@ -1727,6 +1901,22 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-08](../../../specs/conformance/recursion-cases.json)
 - WHEN the `runtime` procedure for case `REC-08` runs against those inputs
 - THEN the observations match every field of `expected` in case `REC-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-07 for K-DEF-03
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-07](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-11 for K-DEF-03
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-11](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-11` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-11`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -2111,6 +2301,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: OWN-CASE-06 for P-PACK-01
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-06](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 #### Scenario: v2 hostile package closure
@@ -2143,6 +2341,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN the `Worker-Design` profile and every field of `input` in [WORKER-05](../../../specs/conformance/worker-cases.json)
 - WHEN the `admission` procedure for case `WORKER-05` runs against those inputs
 - THEN the observations match every field of `expected` in case `WORKER-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-06 for P-PACK-02
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-06](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-06`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -2181,6 +2387,14 @@ r[P-ID-01]
 - GIVEN the `ProgramsData-Draft` profile and every field of `input` in [ID-01](../../../specs/conformance/identity-cases.json)
 - WHEN the `identity` procedure for case `ID-01` runs against those inputs
 - THEN the observations match every field of `expected` in case `ID-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-07 for P-ID-01
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-07](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-07`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -3734,6 +3948,30 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN the `Live-Slot-Design` profile and every field of `input` in [LSLOT-09](../../../specs/conformance/live-reference-cases.json)
 - WHEN the `static` procedure for case `LSLOT-09` runs against those inputs
 - THEN the observations match every field of `expected` in case `LSLOT-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-01 for K-LSLOT-01
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-01](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-06 for K-LSLOT-01
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-06](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-07 for K-LSLOT-01
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-07](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-07`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
