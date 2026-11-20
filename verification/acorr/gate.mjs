@@ -5,6 +5,7 @@
 //
 // Every control runs the frozen CLI supplied here:
 //   bun verification/acorr/gate.mjs CLI NEW_DIR [--barrier-cli PATH] [--allow-dirty]
+//     [--only ACORR-CASE-NN[,...]]
 // CLI is copied to NEW_DIR/bin/noble-executed and chmod 0500 before anything
 // runs; its SHA-256, the source commit/tree and the clean worktree are
 // retained. Negative candidates and altered pin documents are produced by
@@ -12,6 +13,10 @@
 // JSON text edits), never through the admission code path, and every prepared
 // input is hashed. The gate writes NEW_DIR/receipt.json and exits non-zero
 // unless all twelve cases executed and every assertion held.
+//
+// `--only` runs a subset for rehearsal. It never yields `passed`: the receipt
+// records the selection, every unselected case stays `not-executed`, and the
+// result is `incomplete`.
 //
 // --barrier-cli names a CLI built with the `paa1-test-barrier` feature. It is
 // the only way ACORR-CASE-09 can replace files between the byte comparison and
@@ -37,7 +42,7 @@ const fail = message => { throw Error(message); };
 const requireThat = (condition, message) => { if (!condition) fail(message); };
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const fileHash = path => digest(readFileSync(path));
-const read = path => readFileSync(path);
+const read = (path, encoding) => readFileSync(path, encoding);
 const json = text => JSON.parse(text);
 const wrap = value => BigInt.asIntN(64, value);
 const I64_MAX = 9223372036854775807n;
@@ -51,6 +56,16 @@ requireThat(supplied && outputArg,
   'usage: gate.mjs CLI NEW_DIR [--barrier-cli PATH] [--allow-dirty]');
 const allowDirty = args.includes('--allow-dirty');
 const barrierSupplied = option('--barrier-cli');
+const caseIds = ['ACORR-CASE-01', 'ACORR-CASE-02', 'ACORR-CASE-03', 'ACORR-CASE-04',
+  'ACORR-CASE-05', 'ACORR-CASE-06', 'ACORR-CASE-07', 'ACORR-CASE-08',
+  'ACORR-CASE-09', 'ACORR-CASE-10', 'ACORR-CASE-11', 'ACORR-CASE-12'];
+const onlyArg = option('--only');
+const only = onlyArg === undefined ? null : onlyArg.split(',').map(id => id.trim()).filter(Boolean);
+requireThat(!args.includes('--only') || onlyArg !== undefined, '--only needs a case list');
+if (only !== null) {
+  requireThat(only.length > 0, '--only names no case');
+  for (const id of only) requireThat(caseIds.includes(id), `--only names unknown case ${id}`);
+}
 const out = resolve(outputArg);
 mkdirSync(out);
 mkdirSync(join(out, 'bin'));
@@ -146,11 +161,11 @@ function emit(sourcePath, mode, label) {
   instrument(wat);
   return { module, wat, directory: destination };
 }
-function pinsDocument(name, changes = {}) {
-  const base = json(read(join(out, `pins-${name}.json`)));
+function pinsDocument(name, label, changes = {}) {
+  const base = json(read(join(out, `pins-${name}.json`), 'utf8'));
   const merged = { ...base, ...changes };
   if (changes.helpers) merged.helpers = { ...base.helpers, ...changes.helpers };
-  const path = input(`pins-${name}-prepared.json`, JSON.stringify(merged, null, 2) + '\n');
+  const path = input(`pins-${name}-${label}-prepared.json`, JSON.stringify(merged, null, 2) + '\n');
   return path;
 }
 function mutateWat(watPath, transform, label) {
@@ -163,15 +178,9 @@ function mutateWat(watPath, transform, label) {
   instrument(wasm);
   return wasm;
 }
-function textEdit(sourcePath, transform, label) {
-  const text = read(sourcePath, 'utf8');
-  const edited = transform(text);
-  requireThat(edited !== text, `${label}: the text edit changed nothing`);
-  return input(label, edited);
-}
-
 // Counterexample bodies prepared for substituted candidates.
-const wrongBody = input('wrong-body.noble', '[ 2 + ]\n');
+const wrongBodyText = '[ 2 + ]\n';
+const wrongBody = input('wrong-body.noble', wrongBodyText);
 const definition = input('definition.noble', 'def twice [ dup compose ]\n');
 
 // Pin documents: the release-owner preparation route observes the frozen CLI
@@ -271,6 +280,14 @@ function barrierRecord(admission, field) {
   const raw = admission.envelope?.load?.[field];
   return typeof raw === 'string' ? json(raw) : null;
 }
+// An admitted report carries no top-level counter pair: the design keeps the
+// host-selected invocation observations (`guest_requests`,
+// `protected_operations`, `outcome`, `stack`) outside the envelope identity,
+// so they are read from the envelope's `invocation` record. A refusal report
+// carries the two counters at its top level.
+function invocationOf(admission) {
+  return admission.envelope?.invocation ?? {};
+}
 
 const observed = [];
 function observation(label, passed, details = {}) {
@@ -282,6 +299,10 @@ const cases = [];
 function case_(id, title, work) {
   const entry = { case: id, title, status: 'not-executed', variants: [] };
   cases.push(entry);
+  if (only !== null && !only.includes(id)) {
+    entry.reason = 'not selected by --only';
+    return entry;
+  }
   try {
     work(entry);
     entry.status = entry.variants.every(variant => variant.status === 'passed') ? 'passed' : 'failed';
@@ -329,6 +350,10 @@ function admitted(entry, name, admission, mode, pinsName = mode, expectedCli = n
       admission.envelope.build.opt === mode);
     observation(`${name}: fresh worker per artifact`,
       admission.envelope.load.subject_worker !== admission.envelope.load.call_worker);
+    observation(`${name}: zero guest requests`,
+      invocationOf(admission).guest_requests === 0, { invocation: invocationOf(admission) });
+    observation(`${name}: zero protected operations`,
+      invocationOf(admission).protected_operations === 0, { invocation: invocationOf(admission) });
     observation(`${name}: pinned CLI identity`,
       admission.envelope.toolchain.cli_sha256 === expectedCli,
       { observed: admission.envelope.toolchain.cli_sha256, expected: expectedCli });
@@ -364,8 +389,10 @@ case_('ACORR-CASE-01', 'positive `[ 1 + ]` increment law, no guard, off and on',
             JSON.stringify([['I64', String(wrap(argument + 1n))]]),
           { stack: stackPairs(admission) });
         observation('no guard is bound', admission.envelope.guard === null);
-        observation('zero guest requests', admission.report.guest_requests === 0);
-        observation('zero protected operations', admission.report.protected_operations === 0);
+        observation('zero guest requests', invocationOf(admission).guest_requests === 0,
+          { invocation: invocationOf(admission) });
+        observation('zero protected operations', invocationOf(admission).protected_operations === 0,
+          { invocation: invocationOf(admission) });
         return { stack: stackOf(admission) };
       });
     }
@@ -404,7 +431,8 @@ case_('ACORR-CASE-02', 'guarded `[ 1 + ]` with the LtI64Max wrapper', entry => {
             tagged.value.value === String(wrap(argument + 1n)),
           { stack });
       }
-      observation('zero guest requests', admission.report.guest_requests === 0);
+      observation('zero guest requests', invocationOf(admission).guest_requests === 0,
+        { invocation: invocationOf(admission) });
       return { stack };
     });
   }
@@ -412,14 +440,22 @@ case_('ACORR-CASE-02', 'guarded `[ 1 + ]` with the LtI64Max wrapper', entry => {
 
 // ---- ACORR-CASE-03: correct proof, wrong body ------------------------------
 case_('ACORR-CASE-03', 'correct proof with a wrong body', entry => {
+  // The design's first control: the candidate *and* the consumer-selected
+  // SOURCE are `[ 2 + ]` (same interface). The valid increment proof and
+  // contract are submitted, so the exact check binds the regenerated `[ 2 + ]`
+  // subject against the increment contract and refuses `subject-mismatch`
+  // before any rebuild or execution.
   const subject = emit(wrongBody, 'off', 'c3-wrong-subject');
-  const call = emit(input('c3-call.noble', callSource(41n, sourceText(mc2 + '/q-one.noble'), null)),
+  const wrongBodyCall = emit(input('c3-call.noble', callSource(41n, wrongBodyText, null)),
     'off', 'c3-call');
-  refused(entry, 'wrong body subject: subject binding', admit('case03-wrong-subject', {
-    subject: subject.module, call: call.module, law: increment, pins: join(out, 'pins-off.json'),
-    argument: 41n, mode: 'off',
-  }), 'subject-mismatch');
-  // Candidate `[ 2 + ]` bytes against the consumer-selected `[ 1 + ]` source.
+  refused(entry, 'candidate and SOURCE `[ 2 + ]`: subject binding',
+    admit('case03-wrong-body', {
+      subject: subject.module, call: wrongBodyCall.module,
+      law: { ...increment, source: wrongBody }, pins: join(out, 'pins-off.json'),
+      argument: 41n, mode: 'off',
+    }), 'subject-mismatch');
+  // The design's second control: candidate `[ 2 + ]` bytes against the
+  // consumer-selected `[ 1 + ]` SOURCE: the final-byte comparison refuses.
   const validSubject = emit(increment.source, 'off', 'c3-valid-subject');
   const validCall = emit(input('c3-valid-call.noble', callSource(41n, Q_ONE, null)), 'off', 'c3-valid-call');
   const substituted = admit('case03-substituted-bytes', {
@@ -443,14 +479,14 @@ case_('ACORR-CASE-04', 'stale dependency, tool and helper versions', entry => {
     pins: join(out, 'pins-off.json'), argument: 41n, mode: 'off',
   });
   refused(entry, 'SOURCE with a definition', outOfProfile, 'unsupported-profile');
-  const altered = pinsDocument('off', {
+  const altered = pinsDocument('off', 'old-helpers', {
     helpers: { count: 26, set_sha256: '0'.repeat(64) },
   });
   refused(entry, 'pin with an older helper set', admit('case04-old-helpers', {
     subject: subject.module, call: call.module, law: increment, pins: altered,
     argument: 41n, mode: 'off',
   }), 'tool-pin-reject');
-  const olderCli = pinsDocument('off', { cli: { sha256: '0'.repeat(64) } });
+  const olderCli = pinsDocument('off', 'old-cli', { cli: { sha256: '0'.repeat(64) } });
   refused(entry, 'pin with an older CLI', admit('case04-old-cli', {
     subject: subject.module, call: call.module, law: increment, pins: olderCli,
     argument: 41n, mode: 'off',
@@ -561,7 +597,7 @@ case_('ACORR-CASE-08', 'altered helper implementation, extra import and helper-t
   }), 'correspondence-reject');
   refused(entry, 'pinned helper tree of another size', admit('case08-helper-tree', {
     subject: subject.module, call: call.module, law: increment,
-    pins: pinsDocument('off', { helpers: { count: 26 } }), argument: 41n, mode: 'off',
+    pins: pinsDocument('off', 'helper-tree', { helpers: { count: 26 } }), argument: 41n, mode: 'off',
   }), 'tool-pin-reject');
 });
 
@@ -688,11 +724,14 @@ case_('ACORR-CASE-11', 'proof-only edits change no executable byte, off and on',
   const proof = read(increment.proof, 'utf8');
   const editedProof = input('c11-proof-edited.lean', `-- a proof-only comment edit\n${proof}`);
   const results = {};
-  for (const [name, proofPath] of [['original', increment.proof], ['proof-only edit', editedProof]]) {
-    for (const mode of ['off', 'on']) {
-      const subject = emit(increment.source, mode, `c11-subject-${mode}`);
-      const call = emit(input(`c11-call-${mode}.noble`, callSource(41n, Q_ONE, null)), mode,
-        `c11-call-${mode}`);
+  for (const mode of ['off', 'on']) {
+    // One producer candidate per mode: the erasure control compares the
+    // consumer's rebuilds under the two proof artifacts, so both admissions
+    // offer the same candidate bytes.
+    const subject = emit(increment.source, mode, `c11-subject-${mode}`);
+    const call = emit(input(`c11-call-${mode}.noble`, callSource(41n, Q_ONE, null)), mode,
+      `c11-call-${mode}`);
+    for (const [name, proofPath] of [['original', increment.proof], ['proof-only edit', editedProof]]) {
       const admission = admit(`case11-${name.replaceAll(' ', '-')}-${mode}`, {
         subject: subject.module, call: call.module,
         law: { ...increment, proof: proofPath }, pins: join(out, `pins-${mode}.json`),
@@ -748,7 +787,7 @@ case_('ACORR-CASE-12', 'mode, policy, law and pin changes force full revalidatio
   // Only the pin document's opt_mode changes: full revalidation refuses it.
   refused(entry, 'pin mode change forces revalidation', admit('case12-pin-mode', {
     subject: subject.module, call: call.module, law: increment,
-    pins: pinsDocument('off', { opt_mode: 'on' }), argument: 41n, mode: 'off',
+    pins: pinsDocument('off', 'pin-mode', { opt_mode: 'on' }), argument: 41n, mode: 'off',
   }), 'tool-pin-reject');
   // Only the policy revision changes: a new envelope and fresh workers.
   const revised = admit('case12-policy-revision', {
@@ -800,9 +839,8 @@ const failed = cases.filter(entry => entry.status === 'failed');
 const notExecuted = cases.filter(entry => entry.status === 'not-executed');
 const receipt = {
   schema: 'noble-acorr-gate/v1',
-  case_ids: ['ACORR-CASE-01', 'ACORR-CASE-02', 'ACORR-CASE-03', 'ACORR-CASE-04',
-    'ACORR-CASE-05', 'ACORR-CASE-06', 'ACORR-CASE-07', 'ACORR-CASE-08',
-    'ACORR-CASE-09', 'ACORR-CASE-10', 'ACORR-CASE-11', 'ACORR-CASE-12'],
+  case_ids: caseIds,
+  selection: only === null ? null : { only, complete: caseIds.every(id => only.includes(id)) },
   source: {
     commit: initial.head, tree: initial.tree, clean: initial.status === '',
     dirty_allowed: allowDirty,
@@ -812,7 +850,7 @@ const receipt = {
   environment,
   pins: Object.fromEntries(Object.entries(pinsSha).map(([name, sha256]) => [name, {
     path: join(out, `pins-${name}.json`), sha256,
-    document: json(read(join(out, `pins-${name}.json`))),
+    document: json(read(join(out, `pins-${name}.json`), 'utf8')),
   }])),
   inputs,
   gate_sha256: instrument(join(root, 'verification/acorr/gate.mjs')),
