@@ -305,10 +305,8 @@ const crossProfile = {
   liveGenerations: [summary09Repl.control.initial_generation,
     summary09Repl.control.saved_generation, summary09Repl.control.reload.generation,
     summary09Repl.control.reload.installed_generation],
-  liveReportsHaveEpoch: 'epoch' in JSON.parse(fs.readFileSync(
-    path.join(lane09Repl.directory, 'LSLOT09-repl.jsonl'), 'utf8')
-    .trim().split('\n').map(line => JSON.parse(line))
-    .filter(row => row.kind === 'cli').at(-1).report),
+  liveReportsHaveEpoch: jsonLines(path.join(lane09Repl.directory, 'LSLOT09-repl.jsonl'))
+    .filter(row => row.kind === 'cli').some(row => Object.hasOwn(row.report, 'epoch')),
   refusedSlotCaller: summary09Repl.refusal.generation === 0,
 };
 const caseSteps = (directory, prefix, names) => names.flatMap(name =>
