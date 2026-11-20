@@ -1,0 +1,102 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.26
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling log v0.4.34
+   Compiling hashbrown v0.17.1
+   Compiling equivalent v1.0.2
+   Compiling cranelift-srcgen v0.127.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/cranelift/srcgen)
+   Compiling cranelift-assembler-x64-meta v0.127.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/cranelift/assembler-x64/meta)
+   Compiling heck v0.5.0
+   Compiling syn v3.0.6
+   Compiling syn v2.0.119
+   Compiling anyhow v1.0.100
+   Compiling libm v0.2.16
+   Compiling cranelift-isle v0.127.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/cranelift/isle/isle)
+   Compiling cranelift-bitset v0.127.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/cranelift/bitset)
+   Compiling allocator-api2 v0.2.21
+   Compiling foldhash v0.1.5
+   Compiling hashbrown v0.15.5
+   Compiling bumpalo v3.20.3
+   Compiling indexmap v2.14.2
+   Compiling cfg-if v1.0.5
+   Compiling target-lexicon v0.13.5
+   Compiling serde_derive v1.0.229
+   Compiling cranelift-codegen-shared v0.127.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/cranelift/codegen/shared)
+   Compiling pulley-macros v40.0.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/pulley/macros)
+   Compiling pulley-interpreter v40.0.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/pulley)
+   Compiling cranelift-assembler-x64 v0.127.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/cranelift/assembler-x64)
+   Compiling memchr v2.8.3
+   Compiling zmij v1.0.23
+   Compiling wasmtime-internal-math v40.0.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/math)
+   Compiling gimli v0.32.3
+   Compiling cranelift-codegen-meta v0.127.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/cranelift/codegen/meta)
+   Compiling serde_json v1.0.151
+   Compiling smallvec v1.16.2
+   Compiling cranelift-entity v0.127.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/cranelift/entity)
+   Compiling wasm-encoder v0.243.0
+   Compiling shlex v2.0.1
+   Compiling bitflags v2.13.2
+   Compiling crc32fast v1.5.2
+   Compiling arbitrary v1.4.2
+   Compiling thiserror v2.0.21
+   Compiling find-msvc-tools v0.1.14
+   Compiling rustc-hash v2.1.3
+   Compiling regalloc2 v0.13.3
+   Compiling cranelift-control v0.127.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/cranelift/control)
+   Compiling cc v1.5.1
+   Compiling cranelift-bforest v0.127.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/cranelift/bforest)
+   Compiling cranelift-codegen v0.127.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/cranelift/codegen)
+   Compiling thiserror-impl v2.0.21
+   Compiling itoa v1.0.18
+   Compiling leb128fmt v0.1.0
+   Compiling object v0.37.3
+   Compiling wasmparser v0.243.0
+   Compiling rustversion v1.0.23
+   Compiling semver v1.0.28
+   Compiling cobs v0.3.0
+   Compiling wasmtime-internal-versioned-export-macros v40.0.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/versioned-export-macros)
+   Compiling wasmtime-internal-unwinder v40.0.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/unwinder)
+   Compiling unicode-xid v0.2.6
+   Compiling id-arena v2.3.0
+   Compiling rustix v1.1.5
+   Compiling wasmtime-internal-component-util v40.0.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/component-util)
+   Compiling libc v0.2.189
+   Compiling termcolor v1.4.1
+   Compiling wasmprinter v0.243.0
+   Compiling wit-parser v0.243.0
+   Compiling encoding_rs v0.8.42
+   Compiling postcard v1.1.3
+   Compiling noble-kernel v0.0.0 (/home/brittonr/.cache/noble-cairn/wt/own-cases/crates/noble-kernel)
+   Compiling wasmtime-internal-component-macro v40.0.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/component-macro)
+   Compiling either v1.18.0
+   Compiling linux-raw-sys v0.12.1
+   Compiling noble-contracts v0.0.0 (/home/brittonr/.cache/noble-cairn/wt/own-cases/crates/noble-contracts)
+   Compiling itertools v0.14.0
+   Compiling wasmtime-internal-wit-bindgen v40.0.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/wit-bindgen)
+   Compiling wasmtime-environ v40.0.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/environ)
+   Compiling wasmtime v40.0.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/wasmtime)
+   Compiling blake3 v1.8.7
+   Compiling unicode-width v0.2.2
+   Compiling simdutf8 v0.1.5
+   Compiling scopeguard v1.2.0
+   Compiling multiversion_no_op v1.0.0
+   Compiling core_detect v1.0.0
+   Compiling wast v243.0.0
+   Compiling wasmtime-internal-jit-icache-coherence v40.0.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/jit-icache-coherence)
+   Compiling memfd v0.6.5
+   Compiling async-trait v0.1.92
+   Compiling arrayvec v0.7.8
+   Compiling once_cell v1.21.4
+   Compiling cpufeatures v0.3.1
+   Compiling wasmtime-internal-slab v40.0.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/slab)
+   Compiling constant_time_eq v0.4.2
+   Compiling wat v1.243.0
+   Compiling noble-ngraph v0.0.0 (/home/brittonr/.cache/noble-cairn/wt/own-cases/crates/noble-ngraph)
+   Compiling noble-wasm v0.0.0 (/home/brittonr/.cache/noble-cairn/wt/own-cases/crates/noble-wasm)
+   Compiling cranelift-native v0.127.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/cranelift/native)
+   Compiling cranelift-frontend v0.127.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/cranelift/frontend)
+   Compiling wasmtime-internal-cranelift v40.0.2 (/nix/store/26a8xzacbx01hidm70lpyphyw926zhc5-source/crates/cranelift)
+   Compiling noble-cli v0.0.0 (/home/brittonr/.cache/noble-cairn/wt/own-cases/crates/noble-cli)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1m 39s

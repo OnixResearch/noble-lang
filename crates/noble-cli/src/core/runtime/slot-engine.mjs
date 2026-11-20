@@ -2067,8 +2067,12 @@ class SlotEngine {
       } else {
         observedCaptures = ['cell_a', 'cell_b'].flatMap(field => {
           const child = runtime[field](handle) >>> 0;
+          // The summary is an exact representation of the same graph `observeProgramGraph`
+          // already walks (4096 nodes) and the selected-origin path already encodes (32 nodes /
+          // 4096 bytes). It is bounded identically for anonymous and selected results so a deep
+          // composite is refused by retained-graph accounting, not by a smaller summary budget.
           return child ? [{ field, value: JSON.parse(this.captureValue(runtime, child,
-            selectedResult === null ? 64 : 32, selectedResult === null ? 1000 : 4096)) }] : [];
+            32, 4096)) }] : [];
         });
       }
     }

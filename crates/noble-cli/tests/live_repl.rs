@@ -2833,6 +2833,70 @@ fn dependent_rebuild_is_transitive_and_preserves_saved_old_program(
 }
 
 #[test]
+fn retained_old_definition_yields_old_value_and_retires_after_release(
+) -> Result<(), Box<dyn std::error::Error>> {
+    // OWN-CASE-07: `def n [ 1 ]`, `[ n ]` saved on the session stack, `def n [ 2 ]` reloaded. The
+    // saved Program must run the old definition (1), the old code span must stay while that owner
+    // lives, and retirement of the old span must succeed once the owner is released.
+    let fixture = Fixture::new("def n [ 1 ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    let saved = live.submit("[ n ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+    let saved_span = saved["installed_code_span"].clone();
+    assert!(number_field(&saved_span, "length") > 0, "{saved}");
+    fixture.replace("def n [ 2 ]")?;
+    let committed = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&committed, "outcome"),
+        "reload-committed",
+        "{committed}"
+    );
+    assert_eq!(number_field(&committed, "guest_requests"), 0, "{committed}");
+    assert_eq!(
+        number_field(&committed, "protected_operations"),
+        0,
+        "{committed}"
+    );
+    assert!(
+        !committed["retired_code_spans"]
+            .as_array()
+            .ok_or("reload omitted checked retirement receipts")?
+            .iter()
+            .any(|row| row["code_span"] == saved_span),
+        "old definition code must stay while the saved owner lives: {committed}"
+    );
+    let ran = live.submit("run")?;
+    normal(&ran, &["1"]);
+    assert_eq!(number_field(&ran, "guest_requests"), 0, "{ran}");
+    let released = live.submit(":release-observed-roots")?;
+    assert_eq!(
+        text_field(&released, "outcome"),
+        "observed-roots-released",
+        "{released}"
+    );
+    assert!(
+        number_field(&released, "released_observed_roots") > 0,
+        "{released}"
+    );
+    assert_eq!(number_field(&released, "guest_requests"), 0, "{released}");
+    assert_eq!(
+        number_field(&released, "protected_operations"),
+        0,
+        "{released}"
+    );
+    assert!(
+        released["retired_code_spans"]
+            .as_array()
+            .ok_or("release omitted checked retirement receipts")?
+            .iter()
+            .any(|row| released_guest_instance(row, &saved_span, &saved["module"])),
+        "releasing the saved owner must retire the old definition span: {released}"
+    );
+    live.finish()
+}
+
+#[test]
 fn dependent_inside_nested_quotation_resolves_new_identity(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;

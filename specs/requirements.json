@@ -2605,8 +2605,14 @@
         "model-proof",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "OWN-CASE-01",
+        "OWN-CASE-03",
+        "OWN-CASE-06",
+        "OWN-CASE-07",
+        "OWN-CASE-11"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "K-DEF-02",
@@ -2630,6 +2636,8 @@
         "review"
       ],
       "scenarios": [
+        "OWN-CASE-07",
+        "OWN-CASE-11",
         "REC-01",
         "REC-04",
         "REC-08"
@@ -2842,7 +2850,10 @@
       "scenarios": [
         "LSLOT-01",
         "LSLOT-06",
-        "LSLOT-09"
+        "LSLOT-09",
+        "OWN-CASE-01",
+        "OWN-CASE-06",
+        "OWN-CASE-07"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -2970,8 +2981,11 @@
         "model-proof",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "OWN-CASE-01",
+        "OWN-CASE-03"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "K-PROG-08",
@@ -2982,8 +2996,11 @@
         "model-proof",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "OWN-CASE-01",
+        "OWN-CASE-04"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "K-PROG-09",
@@ -3058,8 +3075,12 @@
         "model-proof",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "OWN-CASE-04",
+        "OWN-CASE-10",
+        "OWN-CASE-12"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "K-RES-02",
@@ -3071,7 +3092,9 @@
         "review"
       ],
       "scenarios": [
-        "CORE-15"
+        "CORE-15",
+        "OWN-CASE-04",
+        "OWN-CASE-09"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -3084,8 +3107,10 @@
         "model-proof",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "OWN-CASE-09"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "K-RES-04",
@@ -3096,8 +3121,12 @@
         "model-proof",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "OWN-CASE-05",
+        "OWN-CASE-08",
+        "OWN-CASE-12"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "K-SAFE-01",
@@ -3120,8 +3149,10 @@
         "model-proof",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "OWN-CASE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "K-SAFE-03",
@@ -3183,8 +3214,10 @@
         "model-proof",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "OWN-CASE-02"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "K-SCOPE-03",
@@ -3195,8 +3228,11 @@
         "model-proof",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "OWN-CASE-02",
+        "OWN-CASE-03"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "K-SCOPE-04",
@@ -3236,8 +3272,10 @@
         "model-proof",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "OWN-CASE-05"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "K-STATUS-01",
@@ -4012,7 +4050,8 @@
         "review"
       ],
       "scenarios": [
-        "ID-01"
+        "ID-01",
+        "OWN-CASE-07"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -4119,6 +4158,7 @@
         "review"
       ],
       "scenarios": [
+        "OWN-CASE-06",
         "WORKER-04",
         "WORKER-05",
         "WORKER-12"
@@ -4135,6 +4175,7 @@
         "review"
       ],
       "scenarios": [
+        "OWN-CASE-06",
         "WORKER-04",
         "WORKER-05"
       ],
@@ -5174,6 +5215,8 @@
         "review"
       ],
       "scenarios": [
+        "OWN-CASE-05",
+        "OWN-CASE-10",
         "S-CASE-03",
         "S-CASE-08"
       ],
@@ -5202,8 +5245,14 @@
         "correspondence",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "OWN-CASE-02",
+        "OWN-CASE-03",
+        "OWN-CASE-08",
+        "OWN-CASE-11",
+        "OWN-CASE-12"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "S-RES-01",
