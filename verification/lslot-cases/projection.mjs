@@ -103,8 +103,10 @@ export function normalizeType(type) {
   assert.equal(parts.length, 3, `three LiveRef components: ${type}`);
   const strip = list => list.trim().replace(/^\[/, '').replace(/\]$/, '');
   const stripBraces = list => list.trim().replace(/^\{/, '').replace(/\}$/, '');
-  const inputs = splitTop(strip(parts[0]), '+').map(normalizeType);
-  const outputs = splitTop(strip(parts[1]), '+').map(normalizeType);
+  const splitList = text => text.trim().startsWith('[')
+    ? splitTop(strip(text), ',') : splitTop(text, '+');
+  const inputs = splitList(parts[0]).map(normalizeType);
+  const outputs = splitList(parts[1]).map(normalizeType);
   const effects = splitTop(stripBraces(parts[2]), '+')
     .filter(effect => effect.length > 0 && effect !== 'pure').sort();
   const spell = list => list.length === 1 ? list[0] : `[${list.join(',')}]`;
