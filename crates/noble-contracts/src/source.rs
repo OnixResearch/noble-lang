@@ -1663,7 +1663,7 @@ impl Session {
     /// Whether one effect slot is inside this live session's own scope: the
     /// two self-edit identities always, and the two resource-free Core test
     /// hosts only when the host selected them.
-    fn scoped_live_effect(&self, effect: &noble_kernel::shapes::EffectSlot) -> bool {
+    const fn scoped_live_effect(&self, effect: &noble_kernel::shapes::EffectSlot) -> bool {
         if self.live_selected.is_none() {
             return false;
         }
@@ -1873,10 +1873,6 @@ pub(crate) fn checked_i64_environment() -> Result<noble_kernel::contracts::Env, 
     adapt_environment(env, false)
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; the fixed bootstrap environment and emit slot are checked fallibly before appending matching scheme, behavior, dependency, and effect entries."
-)]
 fn adapt_environment(
     mut env: noble_kernel::contracts::Env,
     source_abort: bool,
