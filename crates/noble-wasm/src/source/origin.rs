@@ -1281,7 +1281,11 @@ fn recipe_binding(
         return None;
     }
     match recipe.as_ref() {
-        OriginFixedExpression::Literal(value) => Some(alloc::format!("#{value}")),
+        OriginFixedExpression::Literal(value) => {
+            let mut key = alloc::string::String::from("#");
+            push_i64(&mut key, *value);
+            Some(key)
+        }
         OriginFixedExpression::Arithmetic {
             kind, left, right, ..
         } => {
@@ -1290,12 +1294,48 @@ fn recipe_binding(
                 OriginFixedArithmetic::Sub => "sub",
                 OriginFixedArithmetic::Mul => "mul",
             };
-            Some(alloc::format!(
-                "{kind}({},{})",
-                recipe_binding(left, depth + 1, nodes)?,
-                recipe_binding(right, depth + 1, nodes)?
-            ))
+            let left = recipe_binding(left, depth + 1, nodes)?;
+            let right = recipe_binding(right, depth + 1, nodes)?;
+            let mut key = alloc::string::String::from(kind);
+            key.push('(');
+            key.push_str(&left);
+            key.push(',');
+            key.push_str(&right);
+            key.push(')');
+            Some(key)
         }
+    }
+}
+
+/// Append the decimal spelling of `value`, exactly as `{value}` displays it,
+/// without `format!`: the pinned extraction erases formatting arguments, and
+/// M4 refuses an `alloc::fmt::format` external rather than fabricate keys.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::borrowed_argument_types,
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-wasm-maintainers; push_i64 bounds scratch writes by twenty slots and reverse reads by the filled count; every i64 including MIN has a defined unsigned_abs encoding, with no assertion precondition. Only the private String grows, which a slice cannot express."
+)]
+fn push_i64(out: &mut alloc::string::String, value: i64) {
+    if value < 0 {
+        out.push('-');
+    }
+    let mut digits = [0u8; 20];
+    let mut count = 0usize;
+    let mut remaining = value.unsigned_abs();
+    if remaining == 0 {
+        out.push('0');
+        return;
+    }
+    while remaining > 0 && count < 20 {
+        let digit = (remaining % 10).to_le_bytes()[0];
+        digits[count] = digit.saturating_add(b'0');
+        remaining /= 10;
+        count = count.saturating_add(1);
+    }
+    while count > 0 {
+        count -= 1;
+        out.push(char::from(digits[count]));
     }
 }
 
@@ -1350,13 +1390,19 @@ fn template_key(
             if !walk.captures.contains(position) {
                 walk.captures.push(*position);
             }
-            alloc::format!("q(r{position})")
+            let mut key = alloc::string::String::from("q(r");
+            push_i64(&mut key, i64::from(*position));
+            key.push(')');
+            key
         }
         OriginProgramValue::Quote {
             operand: OriginOperand::I64(OriginI64::Fixed { recipe, .. }),
             ..
         } => {
-            alloc::format!("q({})", recipe_binding(recipe, 0, fixed_nodes)?)
+            let mut key = alloc::string::String::from("q(");
+            key.push_str(&recipe_binding(recipe, 0, fixed_nodes)?);
+            key.push(')');
+            key
         }
         OriginProgramValue::Quote {
             operand: OriginOperand::Program(child),
@@ -1509,11 +1555,12 @@ fn static_key_enter(
         return None;
     }
     *walk.static_visiting.get_mut(index)? = true;
-    Some(alloc::format!(
-        "p{}:{}[",
-        program.input_signature,
-        program.output_signature
-    ))
+    let mut key = alloc::string::String::from("p");
+    push_i64(&mut key, i64::from(program.input_signature));
+    key.push(':');
+    push_i64(&mut key, i64::from(program.output_signature));
+    key.push('[');
+    Some(key)
 }
 
 /// Advance the static key walk by one event: spell the innermost open body's
@@ -1552,7 +1599,11 @@ fn static_key_step(
         frames.frames[top].2.push(';');
     }
     let fragment = match operations[at].action {
-        OriginAction::I64(value) => alloc::format!("#{value}"),
+        OriginAction::I64(value) => {
+            let mut text = alloc::string::String::from("#");
+            push_i64(&mut text, value);
+            text
+        }
         OriginAction::Add => alloc::string::String::from("add"),
         OriginAction::Sub => alloc::string::String::from("sub"),
         OriginAction::Mul => alloc::string::String::from("mul"),
@@ -2117,5 +2168,18 @@ mod walk_order_tests {
             Some(super::OriginOwner::Absent),
             "a bounded root capture requires no lexical recursive owner"
         );
+    }
+
+    #[test]
+    fn template_keys_spell_integers_as_their_display() {
+        for value in [0, 1, -1, 7, -42, 1_000_000, i64::MAX, i64::MIN] {
+            let mut spelled = alloc::string::String::new();
+            super::push_i64(&mut spelled, value);
+            assert_eq!(
+                spelled,
+                alloc::format!("{value}"),
+                "decimal spelling of {value}"
+            );
+        }
     }
 }
