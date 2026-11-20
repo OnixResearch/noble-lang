@@ -194,8 +194,8 @@ save('canonical-fixture.json', fixtureBytes);
 // resource-reference lanes refuse any other parent. The authority root keeps
 // the lanes from writing into the source tree.
 const temporaryRoot = fs.realpathSync(environment.TMPDIR);
-function privateDirectory(label) {
-  const directory = fs.mkdtempSync(path.join(temporaryRoot, `noble-lslot-resource-${label}-`));
+function privateDirectory(label, prefix = `noble-lslot-resource-${label}-`) {
+  const directory = fs.mkdtempSync(path.join(temporaryRoot, prefix));
   fs.chmodSync(directory, 0o700);
   const metadata = fs.lstatSync(directory);
   assert.ok(metadata.isDirectory() && !metadata.isSymbolicLink());
@@ -207,7 +207,8 @@ const evidenceDirectories = [];
 function lane(label, script) {
   const directory = privateDirectory(label);
   evidenceDirectories.push(directory);
-  const authorityRoot = privateDirectory(`${label}-authority`);
+  const authorityRoot = privateDirectory(label,
+    `noble-lslot-resource-authority-${label}-`);
   evidenceDirectories.push(authorityRoot);
   const result = run(`lane-${label}`, node,
     [path.join(root, 'crates/noble-cli/tests', script), binary],
