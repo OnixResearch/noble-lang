@@ -264,6 +264,12 @@ fn main() -> std::process::ExitCode {
     }
     if arguments
         .first()
+        .is_some_and(|argument| argument == "admit-proof-artifact")
+    {
+        return build::paa1::run(&arguments);
+    }
+    if arguments
+        .first()
         .is_some_and(|argument| argument == "editor")
     {
         return core::editor::run(&arguments);

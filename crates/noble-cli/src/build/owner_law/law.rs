@@ -9,7 +9,7 @@
 use serde::Deserialize;
 
 /// The largest owner-law record this consumer reads.
-pub(super) const LAW_LIMIT: usize = 65_536;
+pub(crate) const LAW_LIMIT: usize = 65_536;
 
 /// The one law-record schema this consumer understands.
 const SCHEMA: &str = "noble-owner-law/v1";
@@ -19,58 +19,58 @@ const CASE: &str = "CONTRACT-16";
 const REQUIREMENT: &str = "VC-OWNER-01";
 
 /// The proof-required release policy and fragment this consumer implements.
-pub(super) const FRAGMENT: &str = "MC2-v1-resource-free-Core-Bootstrap";
-pub(super) const POLICY: &str = "proof-required-release";
+pub(crate) const FRAGMENT: &str = "MC2-v1-resource-free-Core-Bootstrap";
+pub(crate) const POLICY: &str = "proof-required-release";
 
 /// One decoded frozen owner law.
 #[derive(Debug)]
-pub(super) struct Law {
-    pub(super) revision: std::string::String,
-    pub(super) supersedes: Option<std::string::String>,
-    pub(super) variant: Option<std::string::String>,
-    pub(super) frozen: std::string::String,
-    pub(super) fragment: std::string::String,
-    pub(super) subject_interface: std::string::String,
-    pub(super) declaration: std::string::String,
-    pub(super) expected_statement: std::string::String,
-    pub(super) obligation: Obligation,
-    pub(super) observations: Observations,
-    pub(super) scope: std::string::String,
-    pub(super) preconditions: std::vec::Vec<std::string::String>,
-    pub(super) assumptions: std::vec::Vec<std::string::String>,
-    pub(super) proof_library: ProofLibrary,
-    pub(super) consumer_policy: std::string::String,
-    pub(super) non_claims: std::vec::Vec<std::string::String>,
-    pub(super) candidate_unknown_at_authoring: std::vec::Vec<std::string::String>,
+pub(crate) struct Law {
+    pub(crate) revision: std::string::String,
+    pub(crate) supersedes: Option<std::string::String>,
+    pub(crate) variant: Option<std::string::String>,
+    pub(crate) frozen: std::string::String,
+    pub(crate) fragment: std::string::String,
+    pub(crate) subject_interface: std::string::String,
+    pub(crate) declaration: std::string::String,
+    pub(crate) expected_statement: std::string::String,
+    pub(crate) obligation: Obligation,
+    pub(crate) observations: Observations,
+    pub(crate) scope: std::string::String,
+    pub(crate) preconditions: std::vec::Vec<std::string::String>,
+    pub(crate) assumptions: std::vec::Vec<std::string::String>,
+    pub(crate) proof_library: ProofLibrary,
+    pub(crate) consumer_policy: std::string::String,
+    pub(crate) non_claims: std::vec::Vec<std::string::String>,
+    pub(crate) candidate_unknown_at_authoring: std::vec::Vec<std::string::String>,
     /// The digest of the exact bytes this process read.
-    pub(super) computed_sha256: std::string::String,
+    pub(crate) computed_sha256: std::string::String,
     /// The digest the release owner supplied independently of the candidate.
-    pub(super) expected_sha256: std::string::String,
+    pub(crate) expected_sha256: std::string::String,
 }
 
 /// The law's formal MC1 contract obligation.
 #[derive(Debug)]
-pub(super) struct Obligation {
-    pub(super) language: std::string::String,
-    pub(super) input: std::vec::Vec<(std::string::String, std::string::String)>,
-    pub(super) output: std::vec::Vec<(std::string::String, std::string::String)>,
-    pub(super) requires: std::string::String,
-    pub(super) ensures: std::string::String,
-    pub(super) arithmetic: std::string::String,
+pub(crate) struct Obligation {
+    pub(crate) language: std::string::String,
+    pub(crate) input: std::vec::Vec<(std::string::String, std::string::String)>,
+    pub(crate) output: std::vec::Vec<(std::string::String, std::string::String)>,
+    pub(crate) requires: std::string::String,
+    pub(crate) ensures: std::string::String,
+    pub(crate) arithmetic: std::string::String,
 }
 
 /// The law's recorded initial and final observations.
 #[derive(Debug)]
-pub(super) struct Observations {
-    pub(super) initial: std::string::String,
-    pub(super) final_observation: std::string::String,
+pub(crate) struct Observations {
+    pub(crate) initial: std::string::String,
+    pub(crate) final_observation: std::string::String,
 }
 
 /// The law's accepted proof-library requirement.
 #[derive(Debug)]
-pub(super) struct ProofLibrary {
-    pub(super) requirement: std::string::String,
-    pub(super) accepted: std::string::String,
+pub(crate) struct ProofLibrary {
+    pub(crate) requirement: std::string::String,
+    pub(crate) accepted: std::string::String,
 }
 
 #[derive(Deserialize)]
@@ -135,7 +135,7 @@ struct RecordProofLibrary {
 /// `owner-law-record-invalid` when the verified bytes are not the closed
 /// record this consumer implements, plus the closed policy, fragment and
 /// identity refusals the record's own fields select.
-pub(super) fn decode(
+pub(crate) fn decode(
     bytes: &[u8],
     computed_sha256: std::string::String,
     expected_sha256: std::string::String,

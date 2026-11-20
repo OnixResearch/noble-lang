@@ -10,11 +10,11 @@
 use super::terms;
 
 /// One recorded comparison observation.
-pub(super) struct Check {
-    pub(super) name: &'static str,
-    pub(super) status: &'static str,
-    pub(super) observed: std::string::String,
-    pub(super) expected: std::string::String,
+pub(crate) struct Check {
+    pub(crate) name: &'static str,
+    pub(crate) status: &'static str,
+    pub(crate) observed: std::string::String,
+    pub(crate) expected: std::string::String,
 }
 
 impl Check {
@@ -46,11 +46,11 @@ impl Check {
 }
 
 /// The candidate contract the consumer prepared and compared itself.
-pub(super) struct Candidate {
-    pub(super) prepared: noble_contracts::Prepared,
+pub(crate) struct Candidate {
+    pub(crate) prepared: noble_contracts::Prepared,
     /// The exact generated Lean proposition the consumer regenerated.
-    pub(super) statement: std::string::String,
-    pub(super) statement_sha256: std::string::String,
+    pub(crate) statement: std::string::String,
+    pub(crate) statement_sha256: std::string::String,
 }
 
 /// The one precondition and the four assumptions the frozen law may name.
@@ -73,7 +73,7 @@ const CLAIM_SHAPE: &str = "def claim : Prop := exportedClaim program inputTypes 
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-maintainers; the compared law, the consumer's independently regenerated preparation and the accumulating check record are borrowed exactly as read; copying them would duplicate owner-law and typed-IR state"
 )]
-pub(super) fn compare(
+pub(crate) fn compare(
     law: &super::law::Law,
     contract_bytes: &[u8],
     checks: &mut std::vec::Vec<Check>,

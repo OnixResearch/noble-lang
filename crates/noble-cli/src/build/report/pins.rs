@@ -15,10 +15,10 @@ use crate::workflow::encoding::Json;
 use crate::workflow::output::Failure;
 
 /// The pin document schema a v4 selection must name.
-pub(super) const SCHEMA: &str = "noble-build-report-pins/v1";
+pub(crate) const SCHEMA: &str = "noble-build-report-pins/v1";
 
 /// The declared root every pin document must name for the helper set.
-pub(super) const HELPER_ROOT: &str = "crates/noble-wasm/runtime";
+pub(crate) const HELPER_ROOT: &str = "crates/noble-wasm/runtime";
 
 /// The only optimizer mode this build lane produces: assembly is
 /// `wasm-tools parse`/`validate` and no optimizer runs.
@@ -79,27 +79,27 @@ pub(crate) struct ToolSet {
 /// One reviewed pin document, digested as read.
 pub(crate) struct Selection {
     pub(crate) document_sha256: std::string::String,
-    pub(super) cli_sha256: std::string::String,
-    pub(super) helper_count: u64,
-    pub(super) helper_set_sha256: std::string::String,
-    pub(super) lean_binary_sha256: std::string::String,
-    pub(super) lean_toolchain: std::string::String,
-    pub(super) lean_commit: std::string::String,
-    pub(super) library_blake3: std::string::String,
-    pub(super) tools: ToolSet,
-    pub(super) opt_mode: std::string::String,
+    pub(crate) cli_sha256: std::string::String,
+    pub(crate) helper_count: u64,
+    pub(crate) helper_set_sha256: std::string::String,
+    pub(crate) lean_binary_sha256: std::string::String,
+    pub(crate) lean_toolchain: std::string::String,
+    pub(crate) lean_commit: std::string::String,
+    pub(crate) library_blake3: std::string::String,
+    pub(crate) tools: ToolSet,
+    pub(crate) opt_mode: std::string::String,
 }
 
 /// The identities this build actually observed.
 pub(crate) struct Observed {
-    pub(super) cli_sha256: std::string::String,
-    cli_path: std::string::String,
-    helpers: std::vec::Vec<(std::string::String, std::string::String)>,
-    helper_set_sha256: std::string::String,
-    pub(super) lean_binary_sha256: std::string::String,
-    lean_toolchain: &'static str,
-    lean_commit: &'static str,
-    pub(super) library_blake3: std::string::String,
+    pub(crate) cli_sha256: std::string::String,
+    pub(crate) cli_path: std::string::String,
+    pub(crate) helpers: std::vec::Vec<(std::string::String, std::string::String)>,
+    pub(crate) helper_set_sha256: std::string::String,
+    pub(crate) lean_binary_sha256: std::string::String,
+    pub(crate) lean_toolchain: &'static str,
+    pub(crate) lean_commit: &'static str,
+    pub(crate) library_blake3: std::string::String,
     pub(crate) tools: Option<ToolSet>,
 }
 
@@ -412,6 +412,21 @@ pub(crate) fn observe_tools(contents: &[u8]) -> Result<ToolSet, Failure> {
 /// # Errors
 /// `build-pin-mismatch` naming the first differing identity.
 pub(crate) fn verify(selection: &Selection, observed: &Observed) -> Result<(), Failure> {
+    attempt!(verify_static(selection, observed));
+    if selection.opt_mode != OPT_MODE {
+        return Err(mismatch("opt_mode", &selection.opt_mode, OPT_MODE));
+    }
+    Ok(())
+}
+
+/// Refuse unless every static identity except the optimizer mode equals the
+/// selection. A consumer that selects the optimizer mode itself (PAA-1 binds
+/// `build.opt` into its own envelope) compares the rest here and checks the
+/// mode against its selection.
+///
+/// # Errors
+/// `build-pin-mismatch` naming the first differing identity.
+pub(crate) fn verify_static(selection: &Selection, observed: &Observed) -> Result<(), Failure> {
     if selection.cli_sha256 != observed.cli_sha256 {
         return Err(mismatch(
             "cli.sha256",
@@ -460,9 +475,6 @@ pub(crate) fn verify(selection: &Selection, observed: &Observed) -> Result<(), F
             &selection.library_blake3,
             &observed.library_blake3,
         ));
-    }
-    if selection.opt_mode != OPT_MODE {
-        return Err(mismatch("opt_mode", &selection.opt_mode, OPT_MODE));
     }
     Ok(())
 }

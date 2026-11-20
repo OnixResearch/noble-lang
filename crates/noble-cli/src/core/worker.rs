@@ -63,6 +63,36 @@ pub(crate) struct Engine {
     // A committed Calculator-v1 worker survives a failed command until the
     // host restores its last commit (see calculator_restore).
     restorable: bool,
+    // The selected worker's own `{node, wasm_tools, wasm_opt}` identity record
+    // from its ready reply, re-encoded so a consumer can bind the exact tools
+    // that verified and instantiated an artifact.
+    startup_tools: Option<std::vec::Vec<u8>>,
+}
+
+/// The admission host, with the test-only comparison barrier appended when
+/// this build enables it. The production host never defines the barrier.
+#[cfg(feature = "paa1-test-barrier")]
+fn admission_host() -> std::borrow::Cow<'static, str> {
+    const BARRIER: &str = concat!("\n", include_str!("runtime/paa1-test-barrier.mjs"));
+    let mut host = std::string::String::with_capacity(HOST.len().saturating_add(BARRIER.len()));
+    host.push_str(HOST);
+    host.push_str(BARRIER);
+    std::borrow::Cow::Owned(host)
+}
+
+#[cfg(not(feature = "paa1-test-barrier"))]
+fn admission_host() -> std::borrow::Cow<'static, str> {
+    std::borrow::Cow::Borrowed(HOST)
+}
+
+/// Re-encode the ready reply's `tools` object for pin comparison.
+fn startup_tools(report: &super::output::Report) -> Option<std::vec::Vec<u8>> {
+    let value: serde_json::Value = serde_json::from_str(&report.json).ok()?;
+    let tools = value.get("tools")?;
+    if !tools.is_object() {
+        return None;
+    }
+    serde_json::to_vec(tools).ok()
 }
 
 impl Engine {
@@ -72,14 +102,16 @@ impl Engine {
         let config = configuration::admission(optimized);
         let (send, replies) = std::sync::mpsc::sync_channel(1);
         let scratch = attempt!(private_scratch());
+        let host = admission_host();
         let mut engine = Self {
-            child: attempt!(launch(&config, HOST, None, Some(&scratch.path))),
+            child: attempt!(launch(&config, host.as_ref(), None, Some(&scratch.path))),
             scratch: Some(scratch),
             replies,
             reader: None,
             control: None,
             has_failed: false,
             restorable: false,
+            startup_tools: None,
         };
         let stream = attempt!(engine.child.stdout.take().ok_or_else(protocol::error));
         engine.reader = Some(attempt!(std::thread::Builder::new()
@@ -87,6 +119,7 @@ impl Engine {
             .spawn(move || protocol::receive(stream, send))
             .map_err(super::framing::io_error)));
         let ready = attempt!(engine.reply());
+        engine.startup_tools = startup_tools(&ready);
         if ready.outcome != "ready" {
             engine.has_failed = true;
             return Err(super::output::Failure::new(
@@ -98,6 +131,18 @@ impl Engine {
             ));
         }
         Ok(engine)
+    }
+
+    /// The selected worker's own tool identity record, when its ready reply
+    /// carried one.
+    pub(crate) fn tools_record(&self) -> Option<&[u8]> {
+        self.startup_tools.as_deref()
+    }
+
+    /// The fresh worker process this admission owns. A second admission never
+    /// shares it, so V8's in-process module cache cannot carry code across.
+    pub(crate) fn worker_id(&self) -> u32 {
+        self.child.id()
     }
 
     pub fn start_typed_worker() -> Result<Self, super::output::Failure> {
@@ -185,6 +230,7 @@ impl Engine {
             control: None,
             has_failed: false,
             restorable: false,
+            startup_tools: None,
         };
         let stream = attempt!(engine.child.stdout.take().ok_or_else(protocol::error));
         engine.reader = Some(attempt!(std::thread::Builder::new()
@@ -275,6 +321,7 @@ impl Engine {
             control,
             has_failed: false,
             restorable: false,
+            startup_tools: None,
         };
         let stream = attempt!(engine.child.stdout.take().ok_or_else(protocol::error));
         engine.reader = Some(attempt!(std::thread::Builder::new()
@@ -282,6 +329,7 @@ impl Engine {
             .spawn(move || protocol::receive(stream, send))
             .map_err(super::framing::io_error)));
         let ready = attempt!(engine.reply());
+        engine.startup_tools = startup_tools(&ready);
         if ready.outcome != "ready" {
             engine.has_failed = true;
             return Err(super::output::Failure::new(
