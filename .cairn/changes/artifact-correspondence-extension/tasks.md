@@ -31,6 +31,43 @@
   Remaining for this task: nothing in the code path; the delivered-value check is
   `cargo test -p noble-cli --test build` plus the ignored lane
   `report_pins::v4_binds_every_identity_and_refuses_a_changed_one`.
-- [ ] [serial] Implement the opt-in PAA-1 consumer by joining Route A comparison with Route B evidence/subject binding, comparing subject and wrapper bytes, instantiating only the compared buffers, and refusing with distinct codes before instantiation. r[ACORR-ENV-01] r[ACORR-CACHE-01]
+- [x] [serial] Implement the opt-in PAA-1 consumer by joining Route A comparison with Route B evidence/subject binding, comparing subject and wrapper bytes, instantiating only the compared buffers, and refusing with distinct codes before instantiation. r[ACORR-ENV-01] r[ACORR-CACHE-01]
+  Progress (2026-11-20, commits `f73e560b`, `22e2d166`, `61ff634a`): `noble admit-proof-artifact`
+  implements the `noble-proof-artifact-admission/v1` envelope in the design's order: profile
+  validation, owner-law (frozen record or consumer-selected MC1 contract) statement equality, the
+  shared exact proof recheck and `bind_artifact` subject binding, policy-pin toolchain verification,
+  the consumer rebuild in the selected optimizer mode, subject and certified-call byte equality,
+  start-section/import reflection and host authorization, then instantiation of exactly the compared
+  in-memory buffers in two fresh workers. The distinct codes are `invalid-envelope`,
+  `unsupported-profile`, `law-mismatch`, `proof-inconclusive`, `subject-mismatch`,
+  `tool-pin-reject`, `correspondence-reject`, `guard-mismatch`, `stale-context` and
+  `authorization-denied`; every refusal reports zero guest requests and protected operations. The
+  `--emit-pins` route observes the running toolchain and writes the
+  `noble-build-report-pins/v1` document the release owner freezes; admission compares the CLI, all
+  27 embedded helpers, the Lean binary and the Node, wasm-tools and wasm-opt identities to it. The
+  optional v1 guard wrapper is bound only from the registry's recognized template and its certified
+  call is compiled, byte-compared and executed from the compared buffer. The comparison/
+  instantiation hook for ACORR-CASE-09 exists only in a `paa1-test-barrier` build. Observed
+  end-to-end on 2026-11-20: one off-mode positive admission (`admitted`, `I64 42` from the compared
+  buffer), one guarded `LtI64Max` admission (`inr 9223372036854775807`), one `EqI64Literal 5`
+  admission, and one barrier admission whose replaced files left the executed result `42` with
+  `load` equal to the compared hashes. Tests: `cargo test -p noble-cli --test build paa1` (5),
+  `--test smoke paa1` (3), `--bin noble paa1` (2); clippy `-D warnings` clean; rustfmt clean.
 - [ ] [serial] Build the independent negative-preparation script, then execute ACORR-CASE-01…12 against a frozen consumer with immutable receipts. r[ACORR-CTRL-01]
+  Progress (2026-11-20, commits `f73e560b`, `7a123120`, `61ff634a`): the independent preparation
+  (`verification/acorr/prepare.mjs`: sealed wrapper/call renderings, wasm-tools print/parse
+  mutations, pin-document text edits) and `verification/acorr/gate.mjs` are committed. The gate
+  freezes a 0500 CLI, records the clean source commit/tree, emits `noble-build-report-pins/v1`
+  documents for the off, on and barrier builds, prepares every positive and negative candidate
+  outside the admission path, and asserts all twelve cases; it reports `passed` only when every case
+  executed. The conformance registration is prepared in
+  `specs/conformance/artifact-correspondence-cases.json` with all twelve cases `not-run` (no state
+  is promoted), the spec-family entry and the `ACORR` route. The full gate run was not completed in
+  this session: measured at ~3–4 minutes per admission (one isolated Lean recheck each) and 38
+  admissions, the run exceeded the remaining session time after one admitted case
+  (`001-case01-off-41.json`, `admission: admitted`, compared buffer executed). No receipt is retained,
+  so this task stays open. Re-run with
+  `bun verification/acorr/gate.mjs NOBLE NEW_DIR --barrier-cli NOBLE_BARRIER` on a clean commit
+  (`NOBLE` a `cargo build -p noble-cli --bin noble` artifact, `NOBLE_BARRIER` the same build with
+  `--features paa1-test-barrier`); then promote only the cases the retained receipt records.
 - [ ] [serial] Pursue O1–O7 separately (PO-17/18 slices, optimizer, PO-21 C6, the PO-20 erasure theorem, PO-16 refinement); never close them from hashes, tests or extraction success. Extend the envelope for the #7 named-call profile only after its dependency-closure design is accepted. r[ACORR-TB-01]

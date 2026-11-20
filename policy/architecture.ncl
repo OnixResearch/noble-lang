@@ -9,11 +9,12 @@ let contracts = import "./architecture.contracts.ncl" in
     targets = [{
       triple = "x86_64-unknown-linux-gnu",
       # The complete plan. `noble-cli` declares the empty `safety-observe`
-      # feature for its explicit evidence build and the test-only
-      # `live-test-barrier` safepoint feature; the deny-all gate's
-      # --all-features plan enables both. Units without those features retain
-      # the default configuration. The installed CLI enables neither.
-      features = ["live-test-barrier", "safety-observe"],
+      # feature for its explicit evidence build, the test-only
+      # `live-test-barrier` safepoint feature and the test-only
+      # `paa1-test-barrier` comparison hook; the deny-all gate's
+      # --all-features plan enables all three. Units without those features
+      # retain the default configuration. The installed CLI enables none.
+      features = ["live-test-barrier", "paa1-test-barrier", "safety-observe"],
       default_features = true,
     }],
   },
