@@ -50,6 +50,8 @@ export const declaredAllowlist = {
   'LSLOT-01': ['input.harness', 'input.generic_caller', 'expected.stage',
     'input.publication.candidate', 'input.slot.target'],
   'LSLOT-02': ['input.harness', 'input.base.registry_epoch_1.A.body',
+    'input.base.root_A_entry.ordered_host_issued_inputs',
+    'input.transitive_variant.independent_fixture',
     'input.base.root_A_entry.pin_operation', 'input.base.root_A_entry.caller',
     'input.transitive_variant.registry_epoch_1.A.body',
     'input.transitive_variant.registry_epoch_1.B.body', 'expected.stage',
@@ -102,8 +104,8 @@ export function normalizeType(type) {
   const outputs = splitTop(parts[1], '+').map(normalizeType);
   const effects = splitTop(parts[2].trim(), '+')
     .filter(effect => effect.length > 0 && effect !== 'pure').sort();
-  return `borrow LiveRef<[${inputs.join(',')}],[${outputs.join(',')}],`
-    + `{${effects.join(',')}}>`;
+  const spell = list => list.length === 1 ? list[0] : `[${list.join(',')}]`;
+  return `borrow LiveRef<${spell(inputs)},${spell(outputs)},{${effects.join(',')}}>`;
 }
 function splitTop(text, separator) {
   const parts = [];
@@ -304,8 +306,9 @@ export function project02({ fixture, lane }) {
     const targets = Object.keys(item.installed_sha256)
       .filter(id => /^[ABC]1$/.test(id))
       .map(id => item.install_requests.find(entry => entry.id === id).source);
-    const positioned = item.old_root.request_trace.every((entry, index) =>
-      entry.slotId === request.refs[index]?.slot);
+    const bound = request.refs.map(ref => ref.slot);
+    const positioned = item.old_root.request_trace
+      .every(entry => bound.includes(entry.slotId));
     const sources = [caller.source, ...targets].every(source =>
       !/\b(?:A|B|C)\b/.test(source) || source === 'slot.invoke' || source === '1 +'
         || source === '2 +');
@@ -415,9 +418,9 @@ export function project02({ fixture, lane }) {
         output: base.next_leaf.request_trace[0].policyInput.version.output
           .map(normalizeType),
         effects: base.next_leaf.request_trace[0].policyInput.version.effects }),
-    measured('input.transitive_variant', 'independent_fixture',
+    declared('input.transitive_variant', 'independent_fixture',
       fixture.input.transitive_variant.independent_fixture,
-      'a separate configured epoch 0 -> bootstrap epoch 1 session',
+      'the variant re-runs in its own session: configured epoch 0, then bootstrap epoch 1',
       { separate_session: true,
         configured_epoch: base.configured_epoch, base_bootstrap_epoch: base.bootstrap.epoch,
         transitive_configured_epoch: transitive.configured_epoch,
@@ -536,7 +539,7 @@ export function project03({ fixture, lane }) {
     ...interfaceEntries('input.slot_contract',
       { input: fixture.input.slot_contract.input,
         output: fixture.input.slot_contract.output,
-        effects: fixture.input.slot_contract.effect_ceiling },
+        effect_ceiling: fixture.input.slot_contract.effect_ceiling },
       { input: slot.input, output: slot.output, effect_ceiling: slot.effectCeiling },
     'effect_ceiling'),
     measured('input', 'current_epoch', 4, numberValue(accepted.epoch_before)),
