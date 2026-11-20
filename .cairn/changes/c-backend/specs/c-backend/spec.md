@@ -111,14 +111,14 @@ MUST refuse the policy before emission rather than silently strip the bound
 or advertise an unenforced no-op. CB-CASE-01 retains its supplied list bound
 and remains OPEN while the restricted source-only emitter refuses it.
 
-That refusal clause is stale in this first-parent canonical: the current
+The preceding refusal clause records the `e76d8469` state. The current
 nonselected source-only emitter accepts and retains an exact supplied
-`limits.list_length` from 0 to 255 (default 255) and enforces the effective
-bound before `cons` growth, so CB-CASE-01 remains OPEN because no native
-runtime or selected-Wasm comparison has run, not because the policy field is
-refused. Contract and policy JSON MUST reject duplicate object member names
-at every nesting level so an earlier supplied bound cannot be overwritten by
-a later value before validation.
+`limits.list_length` from 0 to 255 (default 255) and emits a pre-`cons` bound
+check that has not been executed as native code, so CB-CASE-01 remains OPEN
+because no native runtime or selected-Wasm comparison has run, not because
+the policy field is refused. Contract and policy JSON MUST reject duplicate
+object member names at every nesting level so an earlier supplied bound
+cannot be overwritten by a later value before validation.
 
 
 
@@ -136,7 +136,7 @@ r[CB-SANDBOX-01]
 
 **CB-SANDBOX-01.**
 
-Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before candidate instructions it closes inherited file descriptors except explicitly enumerated private request/response protocol FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock, post-load process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and escape attempts MUST refuse or terminate with zero protected operations, with a benign authorized `test.emit` control under the same confinement. Hostile vDSO `__vdso_clock_gettime`, `__vdso_time`, `__vdso_gettimeofday`, coarse-clock, direct-vvar and x86 `rdtscp` attempts likewise MUST refuse or be demonstrably contained without host-time or elapsed-time disclosure; trapping or virtualizing only the TSC is insufficient, and a vDSO-only or coarse-clock-only mechanism is not equivalent. A native crash cannot become a successful Noble result.
+Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before candidate instructions it closes inherited file descriptors except explicitly enumerated private request/response protocol FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock, post-load process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and escape attempts MUST refuse or terminate with zero protected operations, with a benign authorized `test.emit` control under the same confinement. Hostile vDSO `__vdso_clock_gettime`, `__vdso_time`, `__vdso_gettimeofday`, coarse-clock, direct-vvar and x86 `rdtsc`/`rdtscp` attempts likewise MUST refuse or be demonstrably contained without host-time or elapsed-time disclosure; trapping or virtualizing only the TSC is insufficient, and a vDSO-only or coarse-clock-only mechanism is not equivalent. A native crash cannot become a successful Noble result.
 
 The native runner MUST select a reviewed immutable derivation and policy
 separate from the proof-only Lean runner and any package merely cached on
@@ -184,12 +184,12 @@ executable/writable mapping MUST refuse before effects, not pass because
 a manifest or syntax check succeeded.
 
 The restricted source-only emitter is not CB-ADMIT-01 admission. Its current
-final-component `O_NOFOLLOW` reads do not authenticate ancestor components
-or seal inputs, and its output child paths are re-resolved after directory
-creation; it MUST NOT turn those file digests into a claim of native
-correspondence or permit native execution. This gap remains OPEN until a
-separately admitted native build/launch path implements the descriptor-bound
-contract above.
+final-component `O_NOFOLLOW` reads refuse only a final-component symlink,
+authenticate no path component and seal no inputs, and its output child
+paths are re-resolved after directory creation; it MUST NOT turn those file
+digests into a claim of native correspondence or permit native execution.
+This gap remains OPEN until a separately admitted native build/launch path
+implements the descriptor-bound contract above.
 
 
 

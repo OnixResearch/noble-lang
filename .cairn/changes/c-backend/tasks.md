@@ -29,7 +29,16 @@ CB-LIMIT-01, CB-SANDBOX-01 and CB-ADMIT-01 are canonical text plus only
 reviewed insertions, without relaxing the first-parent bound, clock or
 descriptor requirements. The delta omits the generated scenario-link
 regions; regeneration restores them on the canonical document. This is not
-owner approval or legal sync while the eight remaining gates are undone.
+owner approval, and it does not authorize an unreviewed sync while the eight
+remaining gates are undone. A reviewed mid-change sync that applies the
+delta without archiving is the owner's decision in the packet; no gate is
+closed by it.
+
+Document checks at the reconciled commit on 2026-11-20: `cairn validate`
+0 issues and 0 findings over 21 changes; the `cairn sync c-backend` dry run
+is unblocked with eleven `modified` operations; `cairn-specs.mjs
+--self-test` passes 26 checks and `check-specs.mjs --self-test` passes 230.
+These are document checks, not runtime, native or proof evidence.
 
 OWNER DECISION 2026-11-20: c-backend: do the source-only slices (input
 integrity, emitter coverage, reconciliation of the eleven MODIFIED blocks,
