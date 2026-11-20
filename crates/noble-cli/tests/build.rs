@@ -18,6 +18,8 @@
 
 #[path = "build/owner_law.rs"]
 mod owner_law;
+#[path = "build/paa1.rs"]
+mod paa1;
 #[path = "build/report_pins.rs"]
 mod report_pins;
 #[path = "build/runtime_assets.rs"]

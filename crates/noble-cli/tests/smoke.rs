@@ -20,6 +20,8 @@ mod checked_i64_guards;
 mod epoch;
 #[path = "smoke/guardv2.rs"]
 mod guardv2;
+#[path = "smoke/paa1.rs"]
+mod paa1;
 #[path = "smoke/reports.rs"]
 mod reports;
 #[path = "smoke/wire.rs"]

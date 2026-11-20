@@ -16,6 +16,10 @@ safety-observe = []
 # this feature. Production host-only revocation is available without
 # this feature and does not change guest bytes.
 live-test-barrier = []
+# Test-only PAA-1 comparison barrier: it injects a file replacement between the
+# artifact byte comparison and instantiation so ACORR-CASE-09 can observe that
+# only the compared in-memory buffer is instantiated. Never shipped.
+paa1-test-barrier = []
 
 [dependencies]
 noble-kernel = { path = "../noble-kernel" }

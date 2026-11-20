@@ -13,6 +13,17 @@ pub(crate) fn assemble_wat(
     directory: &std::path::Path,
     wat: &[u8],
 ) -> Result<Assembly, std::string::String> {
+    assemble_wat_optimized(directory, wat, false)
+}
+
+/// Assemble one accepted WAT module in the selected mode. The optimizer runs
+/// only when `optimized` selects it, and the emitted module file is the one
+/// that mode produces.
+pub(crate) fn assemble_wat_optimized(
+    directory: &std::path::Path,
+    wat: &[u8],
+    optimized: bool,
+) -> Result<Assembly, std::string::String> {
     let options = super::super::arguments::Options {
         source: None,
         compile_only: false,
@@ -30,7 +41,7 @@ pub(crate) fn assemble_wat(
         bindings: None,
         manifest: None,
         framed: false,
-        optimized: false,
+        optimized,
         type_directed_experimental: false,
         lowering_selected: false,
         emit: Some(directory.to_path_buf()),
@@ -43,7 +54,11 @@ pub(crate) fn assemble_wat(
     if report.outcome != "ready" {
         return Err(report.json);
     }
-    let module = directory.join("engine").join("module-1.wasm");
+    let module = directory.join("engine").join(if optimized {
+        "module-1-optimized.wasm"
+    } else {
+        "module-1.wasm"
+    });
     let bytes = attempt!(read_artifact(&module, MODULE_LIMIT, "assembled module"));
     // The worker reported the identities of the bytes it assembled, validated
     // and compiled. Re-reading `module-1.wasm` is only evidence while the file
