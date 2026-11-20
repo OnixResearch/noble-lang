@@ -1,0 +1,31 @@
+{
+  "schema": "noble-receipt-retention/v1",
+  "lane": "verification/calculator-precursor/decimal-fold-gate.mjs",
+  "gate_sha256": "3f7d17a2051940862928828eff2af08d4a7841f839a285510b406d84f3443b53",
+  "source_commit": "7f131ef05c460b14f62ce7e2144139fc9505de5e",
+  "run": "node verification/calculator-precursor/decimal-fold-gate.mjs <binary> <binary_sha256> <output> <build-evidence>",
+  "binary": {
+    "profile": "cargo build -p noble-cli --bin noble (dev: unoptimized + debuginfo), pinned nightly 1.96.0-nightly-2026-03-21, offline, no wrapper",
+    "sha256": "9e0921d2b1667a7356e92cf289dbc5e4bd43e0aeb80bcca0b3c590a0e4dd78b7",
+    "recorded_in": "build.json binary_sha256 and run.json binary_sha256"
+  },
+  "build_evidence": {
+    "source_scope": "crates/** + Cargo.toml + Cargo.lock + rust-toolchain.toml",
+    "source_files": 1196,
+    "source_manifest_sha256": "2f7fd5a6a68e9c362ba806b324c3a099b3c609fb21eb76e1fd525a05d6fb8717",
+    "files": ["build.json", "build.stdout", "build.stderr", "source-manifest.json"]
+  },
+  "retained": "every other gate output file, including each run's stdin/stdout/stderr and every *.artifacts engine WAT, Wasm and source snapshot",
+  "elided": [
+    {
+      "path": "noble",
+      "reason": "the gate copies the 67 MB dev CLI binary beside the receipt; its exact bytes are identified by the sha256 above and are reproducible from the recorded commit and build evidence",
+      "sha256": "9e0921d2b1667a7356e92cf289dbc5e4bd43e0aeb80bcca0b3c590a0e4dd78b7"
+    }
+  ],
+  "not_claimed": [
+    "exact BigInt/decimal arithmetic or any CALC acceptance (run.json exact_bigint is false)",
+    "the separately owned exact-number current28 gate",
+    "the combined signed-epoch/live opt-off/on sweep"
+  ]
+}

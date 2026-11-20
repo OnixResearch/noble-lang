@@ -1,0 +1,2 @@
+111
+module invalid@1 [ signature f forall<S:stack> [ S I64 I64 -- S I64 ! pure ] export f def f [ let x let x x ] ]
