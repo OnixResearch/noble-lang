@@ -319,15 +319,13 @@ fn check_with_owner(
     let (outcome, work_used) = kernel_outcome(env, candidate, request, owner);
     let result = match outcome {
         noble_kernel::untrusted::Outcome::Accepted(checked) => Ok(checked),
-        noble_kernel::untrusted::Outcome::Invalid(diagnostic) => {
-            Err(invalid_rejection(
-                &diagnostic,
-                request,
-                spans,
-                span,
-                application,
-            ))
-        }
+        noble_kernel::untrusted::Outcome::Invalid(diagnostic) => Err(invalid_rejection(
+            &diagnostic,
+            request,
+            spans,
+            span,
+            application,
+        )),
         noble_kernel::untrusted::Outcome::Unsupported(_) => Err(crate::Diagnostic::new(
             crate::DiagnosticKind::Unsupported,
             span,
