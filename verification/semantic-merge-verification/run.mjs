@@ -121,6 +121,7 @@ const claims = [
     case: "SMERGE-CASE-04",
     claim: verification.case04_claim,
     claim_sha256: sha256(verification.case04_claim),
+    claim_binding_sha256: verification.case04_binding_sha256,
     proof: acceptance.proof_case04,
     proof_sha256: sha256(acceptance.proof_case04),
     outcome: acceptance.case04,
@@ -129,15 +130,16 @@ const claims = [
     case: "SMERGE-CASE-01",
     claim: verification.case01_claim,
     claim_sha256: sha256(verification.case01_claim),
+    claim_binding_sha256: verification.case01_binding_sha256,
     proof: acceptance.proof_case01,
     proof_sha256: sha256(acceptance.proof_case01),
     outcome: acceptance.case01,
   },
 ];
-if (claims[0].claim_sha256 !== verification.case04_digest) {
+if (claims[0].claim_sha256 !== verification.case04_text_sha256) {
   fail("case-04 claim digest disagrees between the lane and the runner");
 }
-if (claims[1].claim_sha256 !== verification.case01_digest) {
+if (claims[1].claim_sha256 !== verification.case01_text_sha256) {
   fail("case-01 claim digest disagrees between the lane and the runner");
 }
 if (claims[0].outcome !== "verified" || claims[1].outcome !== "verified") {

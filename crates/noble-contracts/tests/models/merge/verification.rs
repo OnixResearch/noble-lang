@@ -403,12 +403,14 @@ fn outcome_discipline_is_total_and_visible() {
 
     let names: Vec<String> = all.iter().map(|outcome| outcome.name().into()).collect();
     std::println!(
-        "NOBLE_SEMANTIC_MERGE_VERIFICATION {{\"relation\":\"{}\",\"semantic_revision\":\"{}\",\"case04_claim\":{},\"case04_digest\":\"{}\",\"case01_claim\":{},\"case01_digest\":\"{}\",\"search_seed\":{},\"search_vectors\":{},\"search_outcome\":\"{}\",\"subject_candidate\":\"{}\",\"outcomes\":{}}}",
+        "NOBLE_SEMANTIC_MERGE_VERIFICATION {{\"relation\":\"{}\",\"semantic_revision\":\"{}\",\"case04_claim\":{},\"case04_text_sha256\":\"{}\",\"case04_binding_sha256\":\"{}\",\"case01_claim\":{},\"case01_text_sha256\":\"{}\",\"case01_binding_sha256\":\"{}\",\"search_seed\":{},\"search_vectors\":{},\"search_outcome\":\"{}\",\"subject_candidate\":\"{}\",\"outcomes\":{}}}",
         RELATION_REVISION,
         SEMANTIC_REVISION,
         json_string(&case04_claim_text()),
+        sha256(case04_claim_text().as_bytes()),
         regenerate(&case04()).expect("claim").digest(),
         json_string(&case01_claim_text()),
+        sha256(case01_claim_text().as_bytes()),
         regenerate(&case01()).expect("claim").digest(),
         SEED,
         MAX_VECTORS,
