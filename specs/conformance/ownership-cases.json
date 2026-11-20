@@ -7,10 +7,15 @@
       "id": "OWN-CASE-01",
       "profile": "Ownership-Lifetime-Design",
       "kind": "runtime",
-      "requirements": ["K-PROG-07", "K-PROG-08", "K-DEF-01", "K-LSLOT-01"],
+      "requirements": [
+        "K-PROG-07",
+        "K-PROG-08",
+        "K-DEF-01",
+        "K-LSLOT-01"
+      ],
       "input": {
         "harness": "live-slot-saved-capture",
-        "definition": "def k [ quote ]",
+        "definition": "def q [ quote ]",
         "argument": 5,
         "saved": "the Program returned by invoking k at 5, retained by the host",
         "second_root": "swap [ run ] dip +",
@@ -23,15 +28,21 @@
         "stale_handle_traps": 0,
         "guest_requests": 0
       },
-      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
-      "evidence": [{
-      "kind": "test",
-      "subject": "OWN-CASE-01",
-      "claim": "The direct typed quote `def k [ quote ]` saves a Program whose captured value 5 is still live after the creating root exits; a second root runs it with 20 via `swap [ run ] dip +` and returns 25 with zero guest requests, and the owner is refused after release while its installed span retires.",
-      "revision": "0.1.0-draft.5",
-      "result": "passed",
-      "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
-      "configuration": {
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "OWN-CASE-01",
+          "claim": "The direct typed quote `def q [ quote ]` saves a Program whose captured value 5 is still live after the creating root exits; a second root runs it with 20 via `swap [ run ] dip +` and returns 25 with zero guest requests, and the owner is refused after release while its installed span retires.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+          "configuration": {
             "profile": "Ownership-Lifetime-Design",
             "receipt": "../../verification/own-cases/acceptance.json",
             "receipt_sha256": "e873df587c72f0d741ccf746a55bb5baff40b2816b9d08ca6f29e3a99d5e4b38",
@@ -41,22 +52,30 @@
             "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
             "case_id": "OWN-CASE-01",
             "lane": "crates/noble-cli/tests/live_slot_direct_quote.mjs"
-      },
-      "assumptions": [
+          },
+          "assumptions": [
             "Executed through `noble live slot` on the binary built from commit 5c9e38f4; the receipt binds the source snapshot and binary digest.",
             "Finite behavioral evidence for this run; it does not prove capture lifetime, reclamation or compiler correctness."
+          ]
+        }
       ]
-}]
     },
     {
       "id": "OWN-CASE-02",
       "profile": "Ownership-Lifetime-Design",
       "kind": "runtime",
-      "requirements": ["K-SCOPE-02", "K-SCOPE-03", "S-MEM-04"],
+      "requirements": [
+        "K-SCOPE-02",
+        "K-SCOPE-03",
+        "S-MEM-04"
+      ],
       "input": {
         "harness": "live-slot-shared-owners",
         "program": "[ 1 + ] dup",
-        "variants": ["A-then-B", "B-then-A"],
+        "variants": [
+          "A-then-B",
+          "B-then-A"
+        ],
         "argument": 41,
         "run_between_releases": true
       },
@@ -66,17 +85,24 @@
         "remaining_owner_result_after_first_release": 42,
         "released_owner_refused": true,
         "final_owner_refused_after_second_release": true,
-        "identical_final_live_count": "not-directly-observable"
+        "identical_final_live_count": "not-directly-observable",
+        "reclamation": "storage reclaims only after the second release, and the final live count is identical in both orders (not-directly-observable: the runtime exposes no live-cell count, and the saved Program is the module-pinned `[ 1 + ]` literal, so owner release never reclaims it)"
       },
-      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
-      "evidence": [{
-      "kind": "test",
-      "subject": "OWN-CASE-02",
-      "claim": "Both `[ 1 + ] dup` release orders leave the surviving owner runnable (42) after the first release, refuse the released owner, and refuse both owners after the second release.",
-      "revision": "0.1.0-draft.5",
-      "result": "passed",
-      "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
-      "configuration": {
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "OWN-CASE-02",
+          "claim": "Both `[ 1 + ] dup` release orders leave the surviving owner runnable (42) after the first release, refuse the released owner, and refuse both owners after the second release.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+          "configuration": {
             "profile": "Ownership-Lifetime-Design",
             "receipt": "../../verification/own-cases/acceptance.json",
             "receipt_sha256": "e873df587c72f0d741ccf746a55bb5baff40b2816b9d08ca6f29e3a99d5e4b38",
@@ -86,64 +112,94 @@
             "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
             "case_id": "OWN-CASE-02",
             "lane": "crates/noble-cli/tests/live_slot_ownership_cases.mjs"
-      },
-      "assumptions": [
-            "Executed through `noble live slot` on the binary built from commit 5c9e38f4.",
+          },
+          "assumptions": [
+            "Executed through `noble live slot` on the binary built from the recorded clean commit; the receipt binds the source snapshot and binary digest.",
+            "The saved Program is the module-pinned `[ 1 + ]` literal; the lane exercises owner bookkeeping, not storage reclamation of a dynamically built graph.",
             "The runtime exposes no live-cell count; reclamation timing is observed only through owner refusal and the survivor running."
+          ]
+        }
       ]
-}]
     },
     {
       "id": "OWN-CASE-03",
       "profile": "Ownership-Lifetime-Design",
       "kind": "runtime",
-      "requirements": ["K-PROG-07", "K-DEF-01", "K-SCOPE-03", "S-MEM-04"],
+      "requirements": [
+        "K-PROG-07",
+        "K-DEF-01",
+        "K-SCOPE-03",
+        "S-MEM-04"
+      ],
       "input": {
         "harness": "live-slot-composed-tree",
         "leaves": 8,
         "leaf": "def tree [ drop [ 1 + ] ]: a leaf that drops the input I64 and returns a Program capturing that I64",
         "composer": "compose",
-        "variants": ["balanced", "left-deep", "right-deep"],
+        "variants": [
+          "balanced",
+          "left-deep",
+          "right-deep"
+        ],
         "release": "every leaf and intermediate owner except the root"
       },
       "expected": {
         "stage": "live-slot-root",
         "outcome": "equal-results-for-all-three-trees",
         "variants": {
-          "balanced": {"result_before": 8, "result_after": 8, "released_before_root": 14},
-          "left-deep": {"result_before": 8, "result_after": 8, "released_before_root": 14},
-          "right-deep": {"result_before": 8, "result_after": 8, "released_before_root": 14}
+          "balanced": {
+            "result_before": 8,
+            "result_after": 8,
+            "released_before_root": 14
+          },
+          "left-deep": {
+            "result_before": 8,
+            "result_after": 8,
+            "released_before_root": 14
+          },
+          "right-deep": {
+            "result_before": 8,
+            "result_after": 8,
+            "released_before_root": 14
+          }
         },
         "reclamation": "every intermediate is reclaimed only when unreferenced; no leaf is reclaimed while the root lives (not-directly-observable: the runtime exposes no live-cell count)"
       },
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "state": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
+      },
       "evidence": []
     },
     {
       "id": "OWN-CASE-04",
       "profile": "Ownership-Lifetime-Design",
       "kind": "static",
-      "requirements": ["K-RES-01", "K-RES-02", "K-PROG-08"],
+      "requirements": [
+        "K-RES-01",
+        "K-RES-02",
+        "K-PROG-08"
+      ],
       "input": {
-        "harness": "static-resource-eligibility",
-        "resource": "Account@1, a registered opaque nominal with one ownership obligation",
+        "harness": "live-slot-source-resource-rejection",
+        "resource": "Account@1, a registered opaque nominal with one ownership obligation (module 110, ordinal 0, resource kind 41)",
         "variants": {
-          "dup": "Account@1 dup",
-          "drop": "Account@1 drop",
-          "quote": "Account@1 quote",
-          "pair-then-quote": "I64 Account@1 pair quote",
-          "sum-then-drop": "Account@1 inl drop where the sum alternative is I64",
-          "list-then-drop": "nil Account@1 cons drop",
-          "borrow-dup": "dir [ borrow.dup pair ] borrow",
-          "borrow-drop": "dir [ swap drop ] borrow",
-          "borrow-quote": "dir [ quote ] borrow",
-          "borrow-pair": "dir [ pair ] borrow",
-          "borrow-sum": "dir [ inl ] borrow",
-          "borrow-list": "dir [ nil cons ] borrow",
-          "borrow-quote-escape": "dir [ quote ] borrow where the return stack mentions the scope tag",
-          "borrow-save-program": "dir [ save-program ] borrow"
+          "dup": "dup admitted with the root input `Account@1`",
+          "drop": "drop admitted with the root input `Account@1`",
+          "quote": "quote admitted with the root input `Account@1`",
+          "pair-then-quote": "quote admitted with the root input `Pair<I64,Account@1>`",
+          "sum-then-drop": "drop admitted with the root input `Sum<Account@1,I64>`",
+          "list-then-drop": "drop admitted with the root input `List<Account@1>`",
+          "borrow-escape-direct": "dir [ ] borrow (inapplicable)",
+          "borrow-escape-aggregate": "dir [ borrow.dup pair ] borrow (inapplicable)",
+          "borrow-escape-quote": "dir [ quote ] borrow (inapplicable)",
+          "borrow-escape-interface": "dir [ [ fs.read.borrowed ] ] borrow (inapplicable)",
+          "borrow-escape-save-program": "dir [ save-program ] borrow (inapplicable)",
+          "borrow-escape-release": "dir [ swap release ] borrow (inapplicable)"
         },
-        "owner_decision": "OWNER DECISION 2026-11-20: no borrow profile is selected, so the borrow variants are inapplicable and OWN-PO-2 is not applicable"
+        "owner_decision": "OWNER DECISION 2026-11-20 (decision 7): no borrow profile is selected, so the six borrow escape variants of Decision 1 are inapplicable and OWN-PO-2 is not applicable"
       },
       "expected": {
         "stage": "check",
@@ -157,67 +213,67 @@
           "pair-then-quote": "reject",
           "sum-then-drop": "reject",
           "list-then-drop": "reject",
-          "borrow-dup": "inapplicable-no-borrow-profile",
-          "borrow-drop": "inapplicable-no-borrow-profile",
-          "borrow-quote": "inapplicable-no-borrow-profile",
-          "borrow-pair": "inapplicable-no-borrow-profile",
-          "borrow-sum": "inapplicable-no-borrow-profile",
-          "borrow-list": "inapplicable-no-borrow-profile",
-          "borrow-quote-escape": "inapplicable-no-borrow-profile",
-          "borrow-save-program": "inapplicable-no-borrow-profile"
-        }
+          "borrow-escape-direct": "inapplicable-no-borrow-profile",
+          "borrow-escape-aggregate": "inapplicable-no-borrow-profile",
+          "borrow-escape-quote": "inapplicable-no-borrow-profile",
+          "borrow-escape-interface": "inapplicable-no-borrow-profile",
+          "borrow-escape-save-program": "inapplicable-no-borrow-profile",
+          "borrow-escape-release": "inapplicable-no-borrow-profile"
+        },
+        "controls": "an I64 program and a resource pass-through both install and emit an artifact"
       },
-      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
-      "evidence": [{
-      "kind": "test",
-      "subject": "OWN-CASE-04",
-      "claim": "The six non-borrow resource variants (`dup`, `drop`, `quote`, `Pair` then `quote`, `Sum` then `drop`, `List` then `drop`) are rejected by the kernel at the check stage with the exact `Eligibility` constraint before any candidate submission or emission; `I64` controls are accepted by the same harness.",
-      "revision": "0.1.0-draft.5",
-      "result": "passed",
-      "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
-      "configuration": {
-            "profile": "Ownership-Lifetime-Design",
-            "receipt": "../../verification/own-cases/acceptance.json",
-            "receipt_sha256": "e873df587c72f0d741ccf746a55bb5baff40b2816b9d08ca6f29e3a99d5e4b38",
-            "gate": "../../verification/own-cases/gate.mjs",
-            "tested_commit": "5c9e38f499da9091636257a0ff1aff4afcecfc26",
-            "binary_sha256": "d1e084df7a484c828fe2c5594ddf240fa1102dc6d25d6a07b7626effba193c29",
-            "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
-            "case_id": "OWN-CASE-04",
-            "command": "test --locked -p noble-cli --test core own_case_04_non_borrow_variants_reject_before_emission -- --nocapture --test-threads=1"
+      "state": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
       },
-      "assumptions": [
-            "The matrix uses the kernel acceptance boundary directly; it does not emit or execute Wasm.",
-            "The borrow variants of the case are inapplicable under the recorded owner decision (no borrow profile)."
-      ]
-}]
+      "evidence": []
     },
     {
       "id": "OWN-CASE-05",
       "profile": "Ownership-Lifetime-Design",
       "kind": "runtime",
-      "requirements": ["K-RES-04", "K-STACK-01", "K-SAFE-02", "S-MEM-02"],
+      "requirements": [
+        "K-RES-04",
+        "K-STACK-01",
+        "K-SAFE-02",
+        "S-MEM-02"
+      ],
       "input": {
-        "harness": "live-slot-trapping-root",
-        "root": "a root that produces a Program and then traps before returning",
-        "trap": "test.abort"
+        "harness": "live-slot-abnormal-exit-with-a-produced-program",
+        "root": "a root that produces a Program, then fails before returning",
+        "mechanism": "a policy-denied effect inside a dispatched frame after the Program is produced; the target source `quote \"x\" test.emit drop` captures an I64 Program and then has its `test.emit` grant revoked before the invocation",
+        "unavailable_mechanism": "`test.abort` is not installable in this profile (the kernel bootstrap table has no abort row for declared-module profiles); its refusal is recorded as a frontend-defect witness, not as this case's success condition",
+        "owner_decision": "OWNER DECISION 2026-11-20 (decision 6): continue the host session when the pin ledger proves an exact release; poison otherwise"
       },
       "expected": {
         "stage": "live-slot-root",
         "outcome": "abnormal-exit-without-a-saved-owner",
         "saved_owner_tokens_issued": 0,
-        "frame_pins_released": "exactly-once",
-        "session_state": "terminated-after-guest-failure",
+        "frame_pins_released": "exactly-once (entered equals released, active zero)",
+        "guest_instance": "poisoned",
+        "session_state": "OWNER DECISION 2026-11-20 (decision 6): the host continues only when the pin ledger proves an exact release; the exposed per-root count is the host ledger of frame entries and exits and the backend's own pin counter is not exposed, so the poison branch applies: terminated-after-guest-failure",
         "retained_owner_reaches_failed_root_cell": false
       },
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "state": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
+      },
       "evidence": []
     },
     {
       "id": "OWN-CASE-06",
       "profile": "Ownership-Lifetime-Design",
       "kind": "runtime",
-      "requirements": ["K-DEF-01", "P-PACK-01", "P-PACK-02", "K-LSLOT-01"],
+      "requirements": [
+        "K-DEF-01",
+        "P-PACK-01",
+        "P-PACK-02",
+        "K-LSLOT-01"
+      ],
       "input": {
         "harness": "live-slot-module-root-retirement",
         "module": "def h [ 1 + ]; def g [ h ]; def mk [ [ g ] ]",
@@ -232,15 +288,21 @@
         "module_retires_only_after_owner_release": true,
         "stale_handle_traps": 0
       },
-      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
-      "evidence": [{
-      "kind": "test",
-      "subject": "OWN-CASE-06",
-      "claim": "A saved `[ g ]` whose compiled body reads `g` through module M's global still returns 42 after M's supersession; M's code span retires only after the saved owner is released.",
-      "revision": "0.1.0-draft.5",
-      "result": "passed",
-      "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
-      "configuration": {
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "OWN-CASE-06",
+          "claim": "A saved `[ g ]` whose compiled body reads `g` through module M's global still returns 42 after M's supersession; M's code span retires only after the saved owner is released.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+          "configuration": {
             "profile": "Ownership-Lifetime-Design",
             "receipt": "../../verification/own-cases/acceptance.json",
             "receipt_sha256": "e873df587c72f0d741ccf746a55bb5baff40b2816b9d08ca6f29e3a99d5e4b38",
@@ -250,18 +312,25 @@
             "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
             "case_id": "OWN-CASE-06",
             "lane": "crates/noble-cli/tests/live_slot_module_root_retention.mjs"
-      },
-      "assumptions": [
+          },
+          "assumptions": [
             "Executed through `noble live slot` on the binary built from commit 5c9e38f4.",
             "Code-to-global owner edges are still not counted; module lifetime is extended to saved callers instead."
+          ]
+        }
       ]
-}]
     },
     {
       "id": "OWN-CASE-07",
       "profile": "Ownership-Lifetime-Design",
       "kind": "runtime",
-      "requirements": ["K-DEF-01", "K-DEF-03", "P-ID-01", "K-LSLOT-01"],
+      "requirements": [
+        "K-DEF-01",
+        "K-DEF-03",
+        "P-ID-01",
+        "H-LIVE-03",
+        "K-LSLOT-01"
+      ],
       "input": {
         "harness": "live-repl-retained-definition",
         "session": "def n [ 1 ]",
@@ -276,15 +345,21 @@
         "old_code_span_retained_while_saved_owner_lives": true,
         "old_code_span_retired_after_release": true
       },
-      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
-      "evidence": [{
-      "kind": "test",
-      "subject": "OWN-CASE-07",
-      "claim": "After `def n [ 1 ]` saves `[ n ]` and `def n [ 2 ]` is reloaded, the saved Program returns 1; the old code span stays installed while the owner lives, and `:release-observed-roots` retires it with zero guest requests.",
-      "revision": "0.1.0-draft.5",
-      "result": "passed",
-      "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
-      "configuration": {
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "OWN-CASE-07",
+          "claim": "After `def n [ 1 ]` saves `[ n ]` and `def n [ 2 ]` is reloaded, the saved Program returns 1; the old code span stays installed while the owner lives, and `:release-observed-roots` retires it with zero guest requests.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
+          "configuration": {
             "profile": "Ownership-Lifetime-Design",
             "receipt": "../../verification/own-cases/acceptance.json",
             "receipt_sha256": "e873df587c72f0d741ccf746a55bb5baff40b2816b9d08ca6f29e3a99d5e4b38",
@@ -294,18 +369,23 @@
             "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
             "case_id": "OWN-CASE-07",
             "command": "test --locked -p noble-cli --test live_repl retained_old_definition_yields_old_value_and_retires_after_release -- --test-threads=1"
-      },
-      "assumptions": [
-            "Executed through `noble live repl` on the binary built from commit 5c9e38f4.",
+          },
+          "assumptions": [
+            "Executed through `noble live repl` on the binary built from the recorded clean commit.",
+            "H-LIVE-03 states the retained old code/instance rule this case exercises; K-LSLOT-01 is kept because the saved named definition is dispatched through the live-slot code-span ledger.",
             "The retirement receipt names the exact old span; the test does not prove general reload ordering."
+          ]
+        }
       ]
-}]
     },
     {
       "id": "OWN-CASE-08",
       "profile": "Ownership-Lifetime-Design",
       "kind": "runtime",
-      "requirements": ["S-MEM-04", "K-RES-04"],
+      "requirements": [
+        "S-MEM-04",
+        "K-RES-04"
+      ],
       "input": {
         "harness": "scratch-arena-reset-with-escaping-capture",
         "profile_requirement": "a scratch-arena profile with reset",
@@ -315,32 +395,48 @@
         "stage": "profile-selection",
         "outcome": "inapplicable-no-scratch-arena-profile"
       },
-      "state": {"implementation": "unsupported", "execution": "unsupported", "proof": "not-applicable", "trust": "unassessed"},
+      "state": {
+        "implementation": "unsupported",
+        "execution": "unsupported",
+        "proof": "not-applicable",
+        "trust": "unassessed"
+      },
       "evidence": []
     },
     {
       "id": "OWN-CASE-09",
       "profile": "Ownership-Lifetime-Design",
       "kind": "runtime",
-      "requirements": ["K-RES-02", "K-RES-03"],
+      "requirements": [
+        "RA-TYPE-02",
+        "WI-RES-02"
+      ],
       "input": {
         "harness": "borrow-profile-positive",
         "source": "dir [ \"a\" fs.read.borrowed borrow.dup \"b\" fs.read.borrowed ] borrow",
         "profile_requirement": "a source-level borrow profile",
-        "owner_decision": "OWNER DECISION 2026-11-20: no borrow profile is selected, so the borrow positive case is inapplicable"
+        "owner_decision": "Derived from OWNER DECISION 2026-11-20 (decision 7: no borrow profile is selected), so the borrow positive case is inapplicable"
       },
       "expected": {
         "stage": "profile-selection",
         "outcome": "inapplicable-no-borrow-profile"
       },
-      "state": {"implementation": "unsupported", "execution": "unsupported", "proof": "not-applicable", "trust": "unassessed"},
+      "state": {
+        "implementation": "unsupported",
+        "execution": "unsupported",
+        "proof": "not-applicable",
+        "trust": "unassessed"
+      },
       "evidence": []
     },
     {
       "id": "OWN-CASE-10",
       "profile": "Ownership-Lifetime-Design",
       "kind": "runtime",
-      "requirements": ["K-RES-01", "S-MEM-02"],
+      "requirements": [
+        "K-RES-01",
+        "S-MEM-02"
+      ],
       "input": {
         "harness": "live-slot-counter-saturation",
         "incoming_references": 65535,
@@ -352,14 +448,23 @@
         "existing_owners_stay_valid": true,
         "counter_wrapped": false
       },
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "state": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
+      },
       "evidence": []
     },
     {
       "id": "OWN-CASE-11",
       "profile": "Ownership-Lifetime-Design",
       "kind": "runtime",
-      "requirements": ["K-DEF-01", "K-DEF-03", "S-MEM-04"],
+      "requirements": [
+        "K-DEF-01",
+        "K-DEF-03",
+        "S-MEM-04"
+      ],
       "input": {
         "harness": "live-slot-self-recursive-package",
         "definition": "a self-recursive definition with an explicit signature",
@@ -370,25 +475,41 @@
         "outcome": "package-reclaimed",
         "self_reference_counted_as_owner_edge": false
       },
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "state": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
+      },
       "evidence": []
     },
     {
       "id": "OWN-CASE-12",
       "profile": "Ownership-Lifetime-Design",
       "kind": "runtime",
-      "requirements": ["K-RES-01", "K-RES-04", "S-MEM-04"],
+      "requirements": [
+        "K-RES-01",
+        "K-RES-04",
+        "S-MEM-04",
+        "K-RES-03"
+      ],
       "input": {
         "harness": "live-slot-data-drop-with-held-resource",
         "held": "a resource held by dip",
-        "dropped": "a Pair<I64,Text>"
+        "dropped": "a Pair<I64,Text>",
+        "move_threading": "the held resource is returned exactly once on the normal result (K-RES-03); error-alternative threading is not exercised by this design"
       },
       "expected": {
         "stage": "live-slot-root",
         "outcome": "storage-claim-ends-resource-returned-exactly-once",
         "resource_released_by_drop": false
       },
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "state": {
+        "implementation": "absent",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
+      },
       "evidence": []
     }
   ]

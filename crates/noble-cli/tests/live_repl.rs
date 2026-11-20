@@ -2893,6 +2893,23 @@ fn retained_old_definition_yields_old_value_and_retires_after_release(
             .any(|row| released_guest_instance(row, &saved_span, &saved["module"])),
         "releasing the saved owner must retire the old definition span: {released}"
     );
+    // The acceptance gate reads these observed values from `--nocapture` output instead of
+    // declaring them itself.
+    println!(
+        "{}",
+        serde_json::json!({
+            "id": "OWN-CASE-07",
+            "saved_result": ran["stack"],
+            "old_span_retained_while_owner_lives": committed["retired_code_spans"]
+                .as_array()
+                .is_some_and(|rows| !rows.iter().any(|row| row["code_span"] == saved_span)),
+            "old_span_retired_after_release": released["retired_code_spans"]
+                .as_array()
+                .is_some_and(|rows| rows.iter().any(|row| released_guest_instance(row, &saved_span, &saved["module"]))),
+            "released_observed_roots": number_field(&released, "released_observed_roots"),
+            "guest_requests": number_field(&released, "guest_requests"),
+        })
+    );
     live.finish()
 }
 

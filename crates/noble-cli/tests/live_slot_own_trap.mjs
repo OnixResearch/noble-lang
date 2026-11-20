@@ -2,60 +2,102 @@ import assert from 'node:assert/strict';
 import { SlotRegistry } from '../src/core/runtime/slot-registry.mjs';
 import { cli, expectOutcome, selectedAuthority } from './live_slot_resource_ref_cli.mjs';
 
-// OWN-CASE-05 (`.cairn/changes/ownership-lifetime-contract`): a root that produces a Program and
-// then traps before returning. The design names `test.abort` as the trap. Two measured facts:
+// OWN-CASE-05 (`.cairn/changes/ownership-lifetime-contract`): "a root that saves a Program, then
+// traps before return". The design names no trap mechanism, so this lane uses one the live-slot
+// profile already has: a policy-denied effect inside a dispatched frame after the Program has been
+// produced. Two facts are recorded, both measured:
 //
-// 1. The live-slot source profile cannot bind `test.abort`. The kernel bootstrap table ends at
-//    `test.emit` (Definition 22); the ordinary Core source environment appends the `test.abort`
-//    row (Definition 23, effect id 1) through `adapt_environment`, but the live-slot session's
-//    environment is the kernel environment directly, so `prepare` of any source containing
-//    `test.abort` fails with the internal diagnostic "inconsistent frontend arena". The profile's
-//    `bootstrap_matches` rule also fixes its effect list to `test.emit` plus `live.dispatch`, so
-//    adding the row without the kernel rule is refused as "unknown source host effect" or
-//    "kernel rejected a changed module operation or adapter contract". This lane records the
-//    refusal; it cannot execute the designed trap.
+// 1. The abnormal exit itself. The caller dispatches into a target that produces a captured I64
+//    Program and then performs `test.emit`; the effect grant is revoked first, so the guest fails
+//    before the root returns. The reply reports no stack (no saved-owner token), the
+//    request trace [dispatch allowed, effect denied], the session state, and the per-root
+//    frame-pin ledger: every frame pin the root held is released exactly once by `abortRoot`
+//    (`entered === released`, `active === 0`). What remains unobservable is the backend's own
+//    frame-pin counter; the exposed count is the host ledger of frame entries and exits.
 //
-// 2. The host ledger's abnormal-exit path can still be observed directly at the registry layer:
-//    a root whose captured map is the last owner of a version, and which has active dispatch
-//    frames, is aborted. `abortRoot` clears the frame ledger and retires the map-pinned version
-//    exactly once. Backend per-root frame-pin counters are not exposed by any operator request or
-//    registry accessor, so their exact release is NOT observed here.
+// 2. `test.abort` is not installable in this profile. The kernel bootstrap environment has no
+//    abort row for declared-module profiles, so a source containing `test.abort` is refused with
+//    an internal `inconsistent frontend arena` diagnostic. That message is a frontend robustness
+//    defect (the refusal should be an ordinary check diagnostic); this lane records it as a
+//    witness only and never treats it as the case's success condition.
 const binary = process.argv[2];
-const SOURCE = 'Program<I64,I64,pure>';
 
-async function mechanism() {
-  // A slot whose ceiling contains `test.emit` and an authorized effect grant select the trusted
-  // test hosts; `test.emit` then prepares, while `test.abort` is refused.
-  const sources = { emit: '"x" test.emit drop 1 +', emit2: '"x" test.emit drop 1 +',
-    abort: '1 test.abort' };
+async function abnormalExit() {
+  const sources = { caller: 'slot.invoke', target: 'quote "x" test.emit drop' };
+  const authority = selectedAuthority({ sources, quota: 24,
+    effects: ['test.emit', 'live.dispatch'],
+    slots: [{ slotId: 'own', input: ['I64'], output: ['Program<empty,I64,pure>'],
+      effectCeiling: ['test.emit'], proofRequired: false }],
+    grants: [{ operation: 'publish', slotId: 'own', allowed: true },
+      { operation: 'dispatch', slotId: 'own', allowed: true },
+      { operation: 'effect', slotId: 'own', allowed: true }] });
+  const live = await cli(binary, 'OWN-CASE-05-abnormal-exit', authority);
+  let complete = false;
+  try {
+    expectOutcome(await live.configured, 'configured');
+    for (const [id, inputs] of [
+      ['caller', ['I64', 'LiveRef<I64,Program<empty,I64,pure>,test.emit>']],
+      ['target', ['I64']]]) {
+      expectOutcome(await live.issue({ operation: 'install', id, source: sources[id], inputs }),
+        'installed');
+    }
+    expectOutcome(await live.issue({ operation: 'candidate', id: 'target' }), 'candidate-staged');
+    expectOutcome(await live.issue({ operation: 'publish', slot: 'own', id: 'target',
+      expected_epoch: '0', expected_incarnation: null, expected_generation: null }), 'published');
+    expectOutcome(await live.issue({ operation: 'policy',
+      grant: { operation: 'effect', slotId: 'own', allowed: false } }), 'policy-updated');
+    const refused = await live.issue({ operation: 'invoke', id: 'caller',
+      inputs: [{ kind: 'i64', value: '7' }], refs: [{ position: 1, ordinal: 0, slot: 'own' }] });
+    assert.equal(refused.outcome, 'execution-failed', JSON.stringify(refused));
+    assert.equal(refused.session_state, 'terminated-after-guest-failure');
+    assert.equal(refused.stack, undefined, 'a failed root returns no stack and issues no owner');
+    assert.deepEqual(refused.request_trace.map(row => [row.operation, row.outcome]),
+      [['dispatch', 'allowed'], ['effect', 'denied']]);
+    assert.deepEqual(refused.frame_pins, { entered: 2, released: 2, active: 0 },
+      'the host ledger releases every frame pin of the failed root exactly once');
+    // The poisoned host exits instead of answering another operator request; the exit status is the
+    // observation that the session did not continue (owner decision 6 selects this branch only
+    // because the backend's own frame-pin counter is still not exposed -- see the receipt notes).
+    const exit = await live.close();
+    assert.equal(exit, 2, 'the failed session exits instead of taking further operator work');
+    complete = true;
+    return { mechanism: 'policy-denied effect inside a dispatched frame after the Program is produced',
+      target_trace: refused.request_trace.map(row => [row.operation, row.outcome]),
+      saved_owner_tokens_issued: refused.stack === undefined ? 0 : refused.stack.length,
+      frame_pins: refused.frame_pins, guest_instance: refused.session_state,
+      session_state: refused.session_state, post_exit_session: 'exits without another reply',
+      guest_requests: refused.guest_requests,
+      protected_operations: refused.protected_operations, exit };
+  } finally { if (!complete) await live.abort(); }
+}
+
+async function abortRefusalWitness() {
+  // `test.abort` is outside the declared-module bootstrap table; the refusal is recorded as a
+  // frontend-defect witness, not as this case's success condition.
+  const sources = { abort: '1 test.abort' };
   const authority = selectedAuthority({ sources, quota: 24,
     effects: ['test.emit', 'test.abort', 'live.dispatch'],
     slots: [{ slotId: 'T', input: ['I64'], output: ['I64'],
       effectCeiling: ['test.emit', 'test.abort'], proofRequired: false }],
     grants: [{ operation: 'effect', slotId: 'T', allowed: true }] });
-  const live = await cli(binary, 'OWN-CASE-05-mechanism', authority);
+  const live = await cli(binary, 'OWN-CASE-05-abort-witness', authority);
   let complete = false;
   try {
     expectOutcome(await live.configured, 'configured');
-    expectOutcome(await live.issue({ operation: 'install', id: 'emit', source: sources.emit,
-      inputs: ['I64'] }), 'installed');
-    const abort = await live.issue({ operation: 'install', id: 'abort', source: sources.abort,
+    const refused = await live.issue({ operation: 'install', id: 'abort', source: sources.abort,
       inputs: ['I64'] });
-    assert.equal(abort.outcome, 'refused', JSON.stringify(abort));
-    assert.equal(abort.diagnostic, 'inconsistent frontend arena', JSON.stringify(abort));
-    assert.equal(abort.guest_requests, 0, JSON.stringify(abort));
-    assert.equal(abort.protected_operations, 0, JSON.stringify(abort));
-    // The refusal is a command refusal, not a poisoned session: the same test-hosts profile still
-    // admits `test.emit` afterwards.
-    expectOutcome(await live.issue({ operation: 'install', id: 'emit2', source: sources.emit2,
-      inputs: ['I64'] }), 'installed');
+    assert.equal(refused.outcome, 'refused', JSON.stringify(refused));
+    assert.equal(refused.guest_requests, 0, JSON.stringify(refused));
+    assert.equal(refused.protected_operations, 0, JSON.stringify(refused));
     const exit = await live.close();
     complete = true;
-    return { abort_refusal: { outcome: abort.outcome, diagnostic: abort.diagnostic,
-      guest_requests: abort.guest_requests }, emit_installed: true, exit };
+    return { source: sources.abort, outcome: refused.outcome, stage: refused.stage,
+      diagnostic: refused.diagnostic, guest_requests: refused.guest_requests, exit };
   } finally { if (!complete) await live.abort(); }
 }
 
+// The in-process ledger half: a root with two entered dispatch frames that is aborted releases the
+// map pin and both frame pins exactly once, and the abandoned entries cannot be released again.
 const digest = 'a'.repeat(64);
 const descriptor = (input = ['I64'], output = ['I64'], effectCeiling = []) =>
   ({ input, output, effectCeiling });
@@ -120,15 +162,17 @@ function ledger() {
   assert.ok(!released.includes('101:P-B1'), 'a live root must pin its captured map version');
   assert.throws(() => registry.finishRoot(root), /still has an active frame/,
     'a normal root finish is refused while the dispatch frames are entered');
-  registry.abortRoot(root);
+  assert.deepEqual(registry.abortRoot(root), { entered: 2, released: 2, active: 0 },
+    'the aborted root releases its frame pins exactly once');
   assert.deepEqual(released.filter(row => row === '101:P-B1'), ['101:P-B1'],
     'the aborted root releases its map pin exactly once');
   assert.equal(registry.retainedVersions, 1, 'only the new map version remains retained');
   assert.throws(() => registry.rootEpoch(root), /inactive/,
     'the aborted root is gone; no operation can reach its ledger');
   return { retired_exactly_once: ['101:P-B1'], retained_versions_after: registry.retainedVersions,
-    normal_finish_refused: true };
+    normal_finish_refused: true, frame_pins: { entered: 2, released: 2, active: 0 } };
 }
 
-const observed = { case: 'OWN-CASE-05', designed_mechanism: await mechanism(), host_ledger: ledger() };
+const observed = { case: 'OWN-CASE-05', abnormal_exit: await abnormalExit(),
+  abort_refusal_witness: await abortRefusalWitness(), host_ledger: ledger() };
 console.log(JSON.stringify(observed));

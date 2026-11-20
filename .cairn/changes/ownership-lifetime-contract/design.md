@@ -211,12 +211,12 @@ Every layer assumes the following:
 2. Select or reject the borrow profile, with concrete syntax (out of scope here) and checker refinement evidence for OWN-PO-2.
 3. Choose a promotion form for any scratch-arena profile, with measured costs (#5 benchmark plan).
 
-   Decisions 2 and 3 (owner, 2026-11-20): neither a borrow profile nor a
-   scratch-arena profile is selected. OWN-CASE-04's borrow variants and OWN-CASE-08
-   are inapplicable, and OWN-PO-2 is not applicable. Either profile can be
-   reopened later in a new change with its own syntax, measurements and evidence.
+   OWNER DECISION 2026-11-20 (decision 7): no borrow profile and no scratch-arena
+   profile are selected now. OWN-CASE-04's borrow variants and OWN-CASE-08 are
+   inapplicable, and OWN-PO-2 is not applicable. Either profile can be reopened
+   later in a new change with its own syntax, measurements and evidence.
 4. Mechanize OWN-PO-1/3 in the abstract model, then obtain correspondence evidence per layer. Abstract proofs never imply runtime correctness.
-5. Register OWN-CASE designs in `specs/conformance` only through a separate reviewed change.
+5. Register OWN-CASE designs in `specs/conformance` through a reviewed change. OWNER DECISION 2026-11-20 (decision 1): a fresh-context reviewer performs that review, and the review record is retained in the repository. The campaign scope amendment registers and executes the OWN-CASE scenarios inside this change under those terms; the reviewer verdict on the first attempt required revision, and only receipt-backed cases are promoted.
 
 ## Acceptance mapping
 

@@ -3,18 +3,20 @@
 //
 // Builds the production `noble` binary from a clean checkout, then runs the committed lanes for
 // OWN-CASE-01, 02, 03, 04 (non-borrow variants), 05, 06 and 07 against it. The receipt binds the
-// source snapshot, the built binary, the exact case projections and every raw observation.
+// source snapshot, the built binary (hashed before and after the run), the exact case projections
+// and every raw output file it wrote. Promotion verdicts are derived from the observations: a case
+// is `promotable` only when its lane observed every registered expectation.
 //
-// OWN-CASE-05 is measured but withheld: the live-slot source profile refuses the designed
-// `test.abort` trap (the kernel bootstrap environment has no abort row for declared-module
-// profiles), and the backend per-root frame-pin counters are not observable through any operator
-// request. The host registry's abnormal-exit release is measured at the ledger layer.
+// OWN-CASE-03 is the design's case: 8-leaf `compose` trees of captured I64 Programs. The lane
+// records whether each tree executed; a refused deep chain is an unmet case, never a narrowed one.
+// OWN-CASE-05 uses a policy-denied effect inside a dispatched frame after the Program is produced;
+// `test.abort` is not installable in this profile and its internal-diagnostic refusal is recorded
+// as a frontend-defect witness, not as the case's success condition.
 //
 // Usage (inside the pinned devShell):
 //   node verification/own-cases/gate.mjs --out NEW_DIRECTORY
 //
-// Not a proof and not a registration. Derived from the settled
-// `noble-conformance-case-promotion` recipe; it promotes nothing by itself.
+// Not a proof and not a registration. It promotes nothing by itself.
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
@@ -27,6 +29,8 @@ const SCOPE = ['crates', 'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml',
   'verification/own-cases/gate.mjs'];
 const CASE_FILE = 'specs/conformance/ownership-cases.json';
 const REVISION = '0.1.0-draft.5';
+const CASE_IDS = ['OWN-CASE-01', 'OWN-CASE-02', 'OWN-CASE-03', 'OWN-CASE-04', 'OWN-CASE-05',
+  'OWN-CASE-06', 'OWN-CASE-07'];
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const hash = file => sha(fs.readFileSync(file));
 
@@ -65,7 +69,7 @@ function buildNoble(output) {
   const build = spawnSync('cargo', ['build', '--locked', '-p', 'noble-cli', '--bin', 'noble',
     '--message-format=json-render-diagnostics'],
   { cwd: root, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
-  fs.writeFileSync(path.join(output, 'build.stderr.txt'), build.stderr ?? '');
+  writeRaw(output, 'build', build.stdout ?? '', build.stderr ?? '');
   assert.equal(build.status, 0, `cargo build failed:\n${build.stderr}`);
   const artifacts = build.stdout.split('\n').filter(Boolean).map(line => JSON.parse(line))
     .filter(message => message.reason === 'compiler-artifact'
@@ -77,19 +81,66 @@ function buildNoble(output) {
 }
 
 const node = process.execPath;
+const raw = [];
 
-function run(output, name, command, args) {
+function recordRaw(output, name, stream, text) {
+  const file = path.join(output, `${name}.${stream}.txt`);
+  fs.writeFileSync(file, text);
+  raw.push({ name: `${name}.${stream}`, file: path.relative(output, file),
+    sha256: sha(text), bytes: Buffer.byteLength(text) });
+}
+
+function writeRaw(output, name, stdout, stderr) {
+  recordRaw(output, name, 'stdout', stdout);
+  recordRaw(output, name, 'stderr', stderr);
+}
+
+function run(output, name, command, args, environment = {}) {
   const result = spawnSync(command, args, { cwd: root, encoding: 'utf8',
-    maxBuffer: 64 * 1024 * 1024, timeout: 120_000 });
-  fs.writeFileSync(path.join(output, `${name}.stdout.txt`), result.stdout ?? '');
-  fs.writeFileSync(path.join(output, `${name}.stderr.txt`), result.stderr ?? '');
+    maxBuffer: 64 * 1024 * 1024, timeout: 180_000,
+    env: { ...process.env, ...environment } });
+  writeRaw(output, name, result.stdout ?? '', result.stderr ?? '');
   return { command, args: args.map(one => one.replace(root, '.')),
     status: result.status, stdout: result.stdout ?? '', stderr: result.stderr ?? '' };
 }
 
+function parsed(text, at = 0) {
+  return JSON.parse(text.slice(text.indexOf('{', at)));
+}
+
 function lines(text, prefix) {
-  return text.split('\n').filter(line => line.startsWith(prefix))
-    .map(line => JSON.parse(line));
+  return text.split('\n').filter(line => line.startsWith(prefix)).map(line => JSON.parse(line));
+}
+
+// Promotion verdicts are a pure function of the observations so a failed lane can never remain
+// promotable. `--self-test` checks that derivation without building anything.
+function deriveVerdicts(observations) {
+  const caseOf = id => observations[id]?.case ?? 'not-run';
+  const receipts = Object.fromEntries(CASE_IDS.map(id => [id, {
+    lane: observations[id]?.lane ?? null, case: caseOf(id) }]));
+  return {
+    receipts,
+    promotable: CASE_IDS.filter(id => caseOf(id) === 'passed'),
+    unmet: CASE_IDS.filter(id => caseOf(id) === 'unmet'),
+    failed: CASE_IDS.filter(id => caseOf(id) === 'failed'),
+    withheld: CASE_IDS.filter(id => caseOf(id) === 'withheld'),
+  };
+}
+
+if (process.argv.includes('--self-test')) {
+  const all = Object.fromEntries(CASE_IDS.map(id => [id, { case: 'passed' }]));
+  const passing = deriveVerdicts(all);
+  assert.deepEqual(passing.promotable, CASE_IDS);
+  const oneFailed = { ...all, 'OWN-CASE-04': { case: 'failed', lane: 'lane.mjs' } };
+  const derived = deriveVerdicts(oneFailed);
+  assert.deepEqual(derived.promotable, CASE_IDS.filter(id => id !== 'OWN-CASE-04'));
+  assert.deepEqual(derived.failed, ['OWN-CASE-04']);
+  assert.equal(derived.receipts['OWN-CASE-04'].case, 'failed');
+  const oneUnmet = { ...all, 'OWN-CASE-03': { case: 'unmet' } };
+  assert.deepEqual(deriveVerdicts(oneUnmet).promotable, CASE_IDS.filter(id => id !== 'OWN-CASE-03'));
+  assert.equal(deriveVerdicts(oneUnmet).receipts['OWN-CASE-03'].case, 'unmet');
+  console.log('gate self-test: a failing case is never promotable');
+  process.exit(0);
 }
 
 const out = argument('--out');
@@ -101,203 +152,244 @@ const snapshot = sourceSnapshot();
 const sourceRevision = `sha256:${sha(JSON.stringify(snapshot))}`;
 const testedCommit = git('rev-parse', 'HEAD').trim();
 const { byId, project } = cases();
-const projections = ['OWN-CASE-01', 'OWN-CASE-02', 'OWN-CASE-03', 'OWN-CASE-04',
-  'OWN-CASE-05', 'OWN-CASE-06', 'OWN-CASE-07'].map(project);
+const projections = CASE_IDS.map(project);
 const projectionDigest = sha(JSON.stringify(projections));
 const binary = buildNoble(out);
 
-const runs = [];
 const observations = {};
-const failures = [];
+const runs = [];
 
-// OWN-CASE-01: the direct typed quote retains its boxed capture and runs after root exit.
-{
-  const lane = path.join(root, 'crates/noble-cli/tests/live_slot_direct_quote.mjs');
-  const executed = run(out, 'own-01', node, [lane, binary.executable]);
-  runs.push(executed);
-  if (executed.status === 0
-    && executed.stdout.includes('checked direct quote retained, ran with 20 to yield 25, released and retired')) {
-    observations['OWN-CASE-01'] = { result: 25, case: 'passed', guest_requests: 0 };
-  } else {
-    failures.push('OWN-CASE-01: lane did not report the checked capture result');
-    observations['OWN-CASE-01'] = { case: 'unmet' };
+function observe(id, lane, body) {
+  try {
+    const observation = body();
+    assert.equal(typeof observation.case, 'string', `${id}: observation has no verdict`);
+    observations[id] = { ...observation, lane: observation.lane ?? lane };
+  } catch (error) {
+    observations[id] = { case: 'failed', lane, diagnostic: String(error?.message ?? error) };
   }
 }
 
-// OWN-CASE-02 and OWN-CASE-03: shared duplicates in both orders and the three 8-leaf trees.
-{
-  const lane = path.join(root, 'crates/noble-cli/tests/live_slot_ownership_cases.mjs');
-  const executed = run(out, 'own-02-03', node, [lane, binary.executable]);
+// OWN-CASE-01: the direct typed quote retains its boxed capture and runs after root exit. The lane
+// writes its own JSONL evidence; the gate reads the values the CLI actually returned.
+observe('OWN-CASE-01', 'crates/noble-cli/tests/live_slot_direct_quote.mjs', () => {
+  const evidence = path.join(out, 'own-01.evidence.jsonl');
+  const executed = run(out, 'own-01',
+    node, [path.join(root, 'crates/noble-cli/tests/live_slot_direct_quote.mjs'),
+      binary.executable], { NOBLE_SLOT_QUOTE_EVIDENCE: evidence });
   runs.push(executed);
-  const packet = JSON.parse(executed.stdout.slice(executed.stdout.indexOf('{')));
+  recordRaw(out, 'own-01.evidence', 'stdout', fs.readFileSync(evidence, 'utf8'));
+  const rows = fs.readFileSync(evidence, 'utf8').split('\n').filter(Boolean).map(line => JSON.parse(line));
+  const replies = rows.filter(row => row.kind === 'cli').map(row => row.row);
+  const invokes = replies.filter(row => row.outcome === 'executed' && row.stack);
+  const quoted = invokes.find(row => row.stack[0]?.kind === 4);
+  const ran = invokes.find(row => row.stack[0]?.kind === 1);
+  const discarded = replies.find(row => row.outcome === 'discarded');
+  const stale = replies.filter(row => row.outcome === 'refused');
+  const exit = rows.find(row => row.kind === 'exit');
+  assert.equal(executed.status, 0, executed.stderr);
+  assert.ok(quoted && ran && discarded && exit, 'the lane evidence lacks a reply');
+  return {
+    case: quoted.stack[0].capture_values?.[0]?.value === '5'
+      && JSON.stringify(ran.stack) === JSON.stringify([{ kind: 1, value: '25' }])
+      && quoted.guest_requests === 0 && ran.guest_requests === 0
+      && stale.length >= 1
+      && discarded.retire_code_spans?.length === 1 && exit.code === 0 ? 'passed' : 'unmet',
+    lane: 'crates/noble-cli/tests/live_slot_direct_quote.mjs',
+    capture: quoted.stack[0].capture_values,
+    result: ran.stack,
+    guest_requests: ran.guest_requests,
+    refused_released_owner: stale.length > 0,
+    retired_code_spans: discarded.retire_code_spans?.length ?? null,
+    exit: exit.code,
+  };
+});
+
+// OWN-CASE-02 and OWN-CASE-03: shared duplicates in both orders and the design's captured-I64
+// trees. A deep chain refused by the summary node bound makes OWN-CASE-03 unmet, with the refusal
+// recorded exactly as observed.
+observe('OWN-CASE-02', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', () => {
+  const executed = run(out, 'own-02-03',
+    node, [path.join(root, 'crates/noble-cli/tests/live_slot_ownership_cases.mjs'),
+      binary.executable]);
+  runs.push(executed);
+  const packet = parsed(executed.stdout);
   const shared = packet.cases['OWN-CASE-02'];
   const orders = shared.map(row => row.order);
   const survivors = shared.map(row => row.survivor);
-  if (executed.status === 0 && JSON.stringify(orders) === JSON.stringify(['A-then-B', 'B-then-A'])
-    && survivors.every(stack => JSON.stringify(stack) === JSON.stringify([{ kind: 1, value: '42' }]))
-    && shared.every(row => row.exit === 0)) {
-    observations['OWN-CASE-02'] = { orders, survivor_results: survivors, case: 'passed' };
-  } else {
-    failures.push('OWN-CASE-02: shared-owner lanes did not observe order independence');
-    observations['OWN-CASE-02'] = { case: 'unmet', orders, survivors };
-  }
-  const trees = packet.cases['OWN-CASE-03'];
-  const balanced = trees.balanced;
-  const chains = ['left_deep', 'right_deep'].map(side => trees[side]);
-  const chainResult = row => row && row.composed === 7 && row.exit === 0
-    && JSON.stringify(row.before) === JSON.stringify([{ kind: 1, value: '8' }])
-    && JSON.stringify(row.after) === JSON.stringify(row.before)
-    && row.released_before_root === 7;
-  const control = trees.bounded_control;
-  const bounded = (balanced.exit === 0
-    && JSON.stringify(balanced.before) === JSON.stringify([{ kind: 1, value: '8' }])
-    && JSON.stringify(balanced.after) === JSON.stringify(balanced.before)
-    && balanced.released_before_root === 14
-    && chains.every(chainResult)
-    // The representation bound is still charged: a 40-leaf chain is refused past the 8-leaf
-    // trees' depth with the declared 32-node/4096-byte exact-summary bound, and the failed root
-    // terminates the session.
-    && control && control.refused_at_compose > 8 && control.exit === 2
-    && /host observation bound|exceed bounded exact trace representation/.test(control.diagnostic)
-    && control.session_state === 'terminated-after-guest-failure');
-  observations['OWN-CASE-03'] = {
-    balanced: balanced ? { before: balanced.before, after: balanced.after,
-      released_before_root: balanced.released_before_root, exit: balanced.exit } : null,
-    left_deep: chains[0], right_deep: chains[1], bounded_control: control,
-    case: bounded ? 'passed' : 'unmet',
-    declared_bound: 'captureValue: 32 nodes / 4096 bytes exact summary (representation); retention walks up to 4096 nodes',
+  return {
+    case: executed.status === 0
+      && JSON.stringify(orders) === JSON.stringify(['A-then-B', 'B-then-A'])
+      && survivors.every(stack => JSON.stringify(stack) === JSON.stringify([{ kind: 1, value: '42' }]))
+      && shared.every(row => row.exit === 0) ? 'passed' : 'unmet',
+    orders, survivor_results: survivors,
+    released_owner_refused: shared.every(row => row.exit === 0),
   };
-  if (!bounded) failures.push('OWN-CASE-03: tree observations differ from the declared summary bound');
-}
+});
 
-// OWN-CASE-04: the six non-borrow variants are rejected at the check stage, before emission.
-{
-  const test = run(out, 'own-04', 'cargo', ['test', '--locked', '-p', 'noble-cli', '--test', 'core',
-    'own_case_04_non_borrow_variants_reject_before_emission', '--', '--nocapture', '--test-threads=1']);
-  runs.push(test);
-  // The test harness prints its `test ... ` progress prefix on the same line as the first row, so
-  // locate each exact OWN-CASE-04 row inside the line instead of requiring it to start the line.
-  const rows = test.stdout.split('\n').flatMap(line => {
-    const at = line.indexOf('{"id":"OWN-CASE-04"');
-    return at < 0 ? [] : [JSON.parse(line.slice(at))];
-  });
-  const names = rows.map(row => row.variant);
-  const expectedNames = ['dup', 'drop', 'quote', 'pair-then-quote', 'sum-then-drop', 'list-then-drop'];
-  if (test.status === 0 && JSON.stringify(names) === JSON.stringify(expectedNames)
-    && rows.every(row => row.outcome === 'static-reject' && row.emitted === false
-      && row.guest_requests === 0 && row.protected_operations === 0)) {
-    observations['OWN-CASE-04'] = { variants: rows.map(row => ({ variant: row.variant,
-      outcome: row.outcome, emitted: row.emitted })), case: 'passed',
-      inapplicable: Object.entries(byId.get('OWN-CASE-04').expected.variants)
-        .filter(([, value]) => value === 'inapplicable-no-borrow-profile').map(([key]) => key) };
-  } else {
-    failures.push('OWN-CASE-04: non-borrow variants did not statically reject');
-    observations['OWN-CASE-04'] = { case: 'unmet', variants: rows };
-  }
-}
-
-// OWN-CASE-05: the designed `test.abort` trap is refused by the live-slot source profile, so the
-// case is measured but withheld; the host ledger's abort release is observed at registry level.
-{
-  const lane = path.join(root, 'crates/noble-cli/tests/live_slot_own_trap.mjs');
-  const executed = run(out, 'own-05', node, [lane, binary.executable]);
+observe('OWN-CASE-03', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', () => {
+  const executed = run(out, 'own-03',
+    node, [path.join(root, 'crates/noble-cli/tests/live_slot_ownership_cases.mjs'),
+      binary.executable]);
   runs.push(executed);
-  const observed = executed.status === 0
-    ? JSON.parse(executed.stdout.slice(executed.stdout.indexOf('{'))) : null;
-  const measured = observed
-    && observed.designed_mechanism.abort_refusal.outcome === 'refused'
-    && observed.designed_mechanism.abort_refusal.diagnostic === 'inconsistent frontend arena'
-    && observed.designed_mechanism.abort_refusal.guest_requests === 0
-    && observed.designed_mechanism.emit_installed === true
-    && JSON.stringify(observed.host_ledger.retired_exactly_once) === JSON.stringify(['101:P-B1'])
-    && observed.host_ledger.retained_versions_after === 1
-    && observed.host_ledger.normal_finish_refused === true;
-  if (!measured) failures.push('OWN-CASE-05: trap lane did not report the measured refusal and ledger release');
-  observations['OWN-CASE-05'] = {
-    case: 'withheld',
-    designed_mechanism: observed?.designed_mechanism ?? null,
-    host_ledger: observed?.host_ledger ?? null,
-    unobserved: ['backend per-root frame-pin counters',
-      'a trap produced by the designed `test.abort` operation'],
+  const trees = parsed(executed.stdout).cases['OWN-CASE-03'];
+  const executedTree = (row, value) => row && row.refused === false && row.exit === 0
+    && row.released_before_root === 14
+    && JSON.stringify(row.before) === JSON.stringify([{ kind: 1, value }])
+    && JSON.stringify(row.after) === JSON.stringify(row.before);
+  const balanced = executedTree(trees.balanced, '36');
+  const left = executedTree(trees.left_deep, '36');
+  const right = executedTree(trees.right_deep, '36');
+  const control = trees.bounded_control;
+  const controlPinned = control && control.refused_at_compose === 5 && control.exit === 2
+    && control.diagnostic === 'Error: checked captured value exceeds host observation bound'
+    && control.session_state === 'terminated-after-guest-failure';
+  const verdict = balanced && left && right ? 'passed' : 'unmet';
+  return {
+    case: verdict,
+    balanced: trees.balanced, left_deep: trees.left_deep, right_deep: trees.right_deep,
+    bounded_control: control,
+    control_pinned: controlPinned,
+    declared_bound: 'captureValue: 32 nodes / 4096 bytes per anonymous summary child',
   };
-}
+});
+
+// OWN-CASE-04: the registered `Account@1` nominal and source programs, through the real CLI.
+observe('OWN-CASE-04', 'crates/noble-cli/tests/live_slot_own_resource_rejection.mjs', () => {
+  const executed = run(out, 'own-04',
+    node, [path.join(root, 'crates/noble-cli/tests/live_slot_own_resource_rejection.mjs'),
+      binary.executable]);
+  runs.push(executed);
+  const observed = parsed(executed.stdout);
+  const expectedInputs = ['Account@1', 'Account@1', 'Account@1', 'Pair<I64,Account@1>',
+    'Sum<Account@1,I64>', 'List<Account@1>'];
+  const names = observed.variants.map(row => row.variant);
+  const eligible = observed.variants.every((row, index) => row.outcome === 'refused'
+    && row.stage === 'command'
+    && row.diagnostic.includes('kernel rejected a non-capturable value')
+    && row.diagnostic.includes(row.input)
+    && row.input === expectedInputs[index]
+    && row.guest_requests === 0 && row.protected_operations === 0 && row.emitted === false);
+  const emitted = observed.controls.length === 2
+    && observed.controls.every(row => row.outcome === 'installed' && row.emitted === true
+      && typeof row.artifact_sha256 === 'string');
+  return {
+    case: executed.status === 0 && observed.exit === 0
+      && JSON.stringify(names) === JSON.stringify(['dup', 'drop', 'quote', 'pair-then-quote',
+        'sum-then-drop', 'list-then-drop']) && eligible && emitted ? 'passed' : 'unmet',
+    variants: observed.variants, controls: observed.controls,
+    binary_sha256: observed.selected_binary_sha256,
+  };
+});
+
+// OWN-CASE-05: an abnormal exit that produces a Program, with the per-root frame-pin ledger.
+observe('OWN-CASE-05', 'crates/noble-cli/tests/live_slot_own_trap.mjs', () => {
+  const executed = run(out, 'own-05',
+    node, [path.join(root, 'crates/noble-cli/tests/live_slot_own_trap.mjs'), binary.executable]);
+  runs.push(executed);
+  const observed = parsed(executed.stdout);
+  const exit = observed.abnormal_exit;
+  const witness = observed.abort_refusal_witness;
+  const ledger = observed.host_ledger;
+  const exact = exit.frame_pins.entered === exit.frame_pins.released
+    && exit.frame_pins.active === 0 && exit.frame_pins.entered > 0;
+  return {
+    case: executed.status === 0
+      && exit.saved_owner_tokens_issued === 0 && exact
+      && exit.guest_instance === 'terminated-after-guest-failure'
+      && JSON.stringify(exit.target_trace) === JSON.stringify([['dispatch', 'allowed'],
+        ['effect', 'denied']])
+      && witness.outcome === 'refused' && witness.guest_requests === 0
+      && ledger.frame_pins.entered === ledger.frame_pins.released
+      && ledger.normal_finish_refused === true
+      && exit.exit === 2 ? 'passed' : 'unmet',
+    abnormal_exit: exit, abort_refusal_witness: witness, host_ledger: ledger,
+    unobserved: ['the backend frame-pin counter itself (the exposed count is the host ledger of '
+      + 'frame entries and exits)', 'a trap produced by `test.abort` (not installable)'],
+  };
+});
 
 // OWN-CASE-06: the saved named caller survives module-root retirement and code retires on release.
-{
-  const lane = path.join(root, 'crates/noble-cli/tests/live_slot_module_root_retention.mjs');
-  const executed = run(out, 'own-06', node, [lane, binary.executable]);
+observe('OWN-CASE-06', 'crates/noble-cli/tests/live_slot_module_root_retention.mjs', () => {
+  const executed = run(out, 'own-06',
+    node, [path.join(root, 'crates/noble-cli/tests/live_slot_module_root_retention.mjs'),
+      binary.executable]);
   runs.push(executed);
   const observed = lines(executed.stdout, '{"case":"OWN-CASE-06"')[0];
-  if (executed.status === 0 && observed && observed.case === 'OWN-CASE-06'
-    && JSON.stringify(observed.before) === JSON.stringify([{ kind: 1, value: '42' }])
-    && JSON.stringify(observed.after_supersession) === JSON.stringify(observed.before)
-    && observed.retired_span) {
-    observations['OWN-CASE-06'] = { before: observed.before,
-      after_supersession: observed.after_supersession, retired_span: observed.retired_span,
-      case: 'passed' };
-  } else {
-    failures.push('OWN-CASE-06: module-root retention lane did not retire after the owner release');
-    observations['OWN-CASE-06'] = { case: 'unmet' };
-  }
-}
+  return {
+    case: executed.status === 0 && observed && observed.case === 'OWN-CASE-06'
+      && JSON.stringify(observed.before) === JSON.stringify([{ kind: 1, value: '42' }])
+      && JSON.stringify(observed.after_supersession) === JSON.stringify(observed.before)
+      && Boolean(observed.retired_span) ? 'passed' : 'unmet',
+    before: observed?.before ?? null, after_supersession: observed?.after_supersession ?? null,
+    retired_span: observed?.retired_span ?? null,
+  };
+});
 
 // OWN-CASE-07: the retained old definition still yields 1, stays pinned, and retires on release.
-{
+// The test prints its observed values; the gate reads them instead of declaring them.
+observe('OWN-CASE-07', 'crates/noble-cli/tests/live_repl.rs', () => {
   const executed = run(out, 'own-07', 'cargo', ['test', '--locked', '-p', 'noble-cli', '--test',
     'live_repl', 'retained_old_definition_yields_old_value_and_retires_after_release', '--',
-    '--test-threads=1']);
+    '--nocapture', '--test-threads=1']);
   runs.push(executed);
-  if (executed.status === 0
-    && executed.stdout.includes('test retained_old_definition_yields_old_value_and_retires_after_release ... ok')) {
-    observations['OWN-CASE-07'] = { saved_result: 1,
-      old_span_retained_while_owner_lives: true, old_span_retired_after_release: true,
-      case: 'passed' };
-  } else {
-    failures.push('OWN-CASE-07: retained-definition lane did not pass');
-    observations['OWN-CASE-07'] = { case: 'unmet' };
-  }
-}
+  const observed = lines(executed.stdout, '{"id":"OWN-CASE-07"')[0];
+  const value = observed?.saved_result?.[0]?.value;
+  return {
+    case: executed.status === 0
+      && executed.stdout.includes('test retained_old_definition_yields_old_value_and_retires_after_release ... ok')
+      && observed && value === '1'
+      && observed.old_span_retained_while_owner_lives === true
+      && observed.old_span_retired_after_release === true
+      && observed.guest_requests === 0 ? 'passed' : 'unmet',
+    saved_result: observed?.saved_result ?? null,
+    old_span_retained_while_owner_lives:
+      observed?.old_span_retained_while_owner_lives ?? null,
+    old_span_retired_after_release: observed?.old_span_retired_after_release ?? null,
+    released_observed_roots: observed?.released_observed_roots ?? null,
+  };
+});
 
-const receipts = {
-  'OWN-CASE-01': { lane: 'crates/noble-cli/tests/live_slot_direct_quote.mjs', case: 'passed' },
-  'OWN-CASE-02': { lane: 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', case: 'passed' },
-  'OWN-CASE-03': { lane: 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', case: 'passed' },
-  'OWN-CASE-04': { lane: 'crates/noble-cli/tests/core/ownership_cases.rs', case: 'passed' },
-  'OWN-CASE-05': { lane: 'crates/noble-cli/tests/live_slot_own_trap.mjs', case: 'withheld' },
-  'OWN-CASE-06': { lane: 'crates/noble-cli/tests/live_slot_module_root_retention.mjs', case: 'passed' },
-  'OWN-CASE-07': { lane: 'crates/noble-cli/tests/live_repl.rs', case: 'passed' },
-};
+const { receipts, promotable, unmet, withheld } = deriveVerdicts(observations);
+const failed = deriveVerdicts(observations).failed;
+const binaryAfter = hash(binary.executable);
+if (binaryAfter !== binary.executable_sha256) {
+  failed.push('binary changed during the run');
+  receipts.binary = { case: 'failed' };
+}
 
 const acceptance = {
   schema: 'noble-own-cases-acceptance/v1',
-  claim: 'selected host executions of OWN-CASE-01, 02, 03, 04 (non-borrow variants), 05, 06 and 07 on one CLI built from the recorded clean commit; not a proof, not a registration and not a promotion',
-  result: failures.length ? 'failed' : 'completed',
-  failures,
+  claim: 'selected host executions of OWN-CASE-01..07 on one CLI built from the recorded clean '
+    + 'commit; promotion verdicts are derived from the observations, not declared here',
+  result: failed.length ? 'failed' : 'completed',
+  failures: [...unmet.map(id => `${id}: observed values differ from the registered expectation`),
+    ...failed.map(id => `${id}: lane or run failed`)],
   tested_commit: testedCommit,
   source_revision: sourceRevision,
   scope: SCOPE,
   source: snapshot,
   case_file: CASE_FILE,
-  projections: { sha256: projectionDigest, ids: projections.map(one => one.id) },
-  binary,
+  projections: { sha256: projectionDigest, ids: CASE_IDS },
+  binary: { ...binary, executable_sha256_after: binaryAfter },
   build: 'cargo build --locked -p noble-cli --bin noble',
   runs: runs.map(row => ({ command: row.command, args: row.args, status: row.status })),
+  raw_outputs: raw,
   observations,
   receipts,
-  promotable: ['OWN-CASE-01', 'OWN-CASE-02', 'OWN-CASE-03', 'OWN-CASE-04', 'OWN-CASE-06', 'OWN-CASE-07'],
-  failed_cases: [],
-  withheld: ['OWN-CASE-05'],
+  promotable,
+  failed_cases: [...unmet, ...failed],
+  withheld,
   non_claims: [
-    'OWN-CASE-03 now runs all three 8-leaf trees: the capture summary was using a smaller anonymous-only budget (1000 bytes, 64 nodes) than the selected-origin and retained-graph paths (4096 bytes, 32 nodes); it now uses the same exact bound. Accounting is unchanged: retention already walks up to 4096 nodes, and a 40-leaf chain is still refused past the 8-leaf depth with the declared 32-node exact-summary bound.',
-    'OWN-CASE-05 was not executed as designed: the live-slot source profile refuses any source containing test.abort with the internal diagnostic "inconsistent frontend arena" (the kernel bootstrap environment has no test.abort row for declared-module profiles). The host registry abortRoot releases the captured map pin exactly once, but backend per-root frame-pin counters are not exposed, so "frame pins released exactly once" is not observed.',
+    'OWN-CASE-03 executes the design\'s captured-I64 leaves (`quote [ + ] compose`, one dynamic I64 capture each). The balanced tree runs (36 before and after 14 releases); the left- and right-deep 8-leaf chains are refused at compose 5 by the anonymous summary\'s 32-node bound. The design\'s deep trees are therefore not executed, and the case is not promoted on this receipt.',
+    'OWN-CASE-05 uses a policy-denied effect inside a dispatched frame after the root produced a Program. The exposed per-root frame-pin count is the host ledger of frame entries and exits; the backend\'s own pin counter is still not exposed. `test.abort` is not installable in this profile and its internal-diagnostic refusal is recorded as a frontend-defect witness, not as success.',
     'OWN-CASE-02 observes shared-owner order independence through the surviving owner running and released owners being refused; the runtime exposes no live-cell count, so reclamation timing is not directly observed.',
-    'OWN-CASE-04\'s borrow variants are inapplicable (owner decision 2026-11-20: no borrow profile); only the six non-borrow variants are exercised, and they are rejected by the kernel acceptance boundary before any emission.',
+    'OWN-CASE-04 registers and executes the design\'s `Account@1` opaque nominal and source programs through the real CLI. The borrow variants are inapplicable (owner decision 2026-11-20, decision 7: no borrow profile is selected).',
     'No proof is claimed: every promoted case keeps proof open, and no lowering, runtime or host-ledger correspondence proof is supplied here.',
   ],
 };
 const receiptPath = path.join(out, 'acceptance.json');
 fs.writeFileSync(receiptPath, `${JSON.stringify(acceptance, null, 2)}\n`);
 console.log(JSON.stringify({ receipt: receiptPath, receipt_sha256: hash(receiptPath),
-  result: acceptance.result, failures, tested_commit: testedCommit,
-  source_revision: sourceRevision, observations }, null, 1));
-if (failures.length) process.exitCode = 1;
+  result: acceptance.result, failures: acceptance.failures, tested_commit: testedCommit,
+  source_revision: sourceRevision, promotable, observations }, null, 1));
+if (failed.length) process.exitCode = 1;

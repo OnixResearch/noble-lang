@@ -213,6 +213,37 @@ const frame = (address, parent, handle, pairs) => {
   assert.throws(() => registry.rootEpoch(trapped), /inactive/);
 }
 
+// The per-root frame-pin ledger is observable and an abnormal exit closes every abandoned pin
+// exactly once. Before this ledger existed, `abortRoot` cleared the frame stack silently and no
+// operator request could see how many pins the failed root still held (OWN-CASE-05, LREF-EXIT-01).
+{
+  const registry = host(4);
+  const b = admit(registry, 'pins-B', 701);
+  grants('publish', 'B', true); grants('dispatch', 'B', true);
+  assert.equal(registry.publish({ slotId: 'B', expectedEpoch: 0n, interface: descriptor(),
+    version: b }).outcome, 'published');
+  const module = registry.registerModule(digest, [site(['I64'], ['I64'], [])]);
+  const root = registry.pinRoot(950, module);
+  registry.bindRef(root, 1, 7, 'B', descriptor());
+  assert.equal(registry.validateBorrowBinding(root, module, 1, 7), 1);
+  view.setUint32(ROOT_BINDING_COUNT, 1, true);
+  frame(FRAME, 0, 950, [[1, 7]]);
+  registry.enterFrame(root, module, -1, FRAME, 950, memory);
+  assert.deepEqual(registry.framePinCounts(root), { entered: 1, released: 0, active: 1 });
+  assert.equal(registry.dispatch(root, 7, module, 3).handle, 701);
+  frame(FRAME + 64, FRAME, 701, []);
+  const inner = registry.enterFrame(root, module, 3, FRAME + 64, 701, memory);
+  assert.deepEqual(registry.framePinCounts(root), { entered: 2, released: 0, active: 2 });
+  registry.leaveFrame(root, inner);
+  assert.deepEqual(registry.framePinCounts(root), { entered: 2, released: 1, active: 1 });
+  assert.throws(() => registry.finishRoot(root), /active frame/,
+    'a root with a live frame cannot finish normally');
+  assert.deepEqual(registry.abortRoot(root), { entered: 2, released: 2, active: 0 },
+    'an abnormal exit releases every abandoned frame pin exactly once and reports it');
+  assert.throws(() => registry.framePinCounts(root), /inactive/,
+    'the aborted root has no live pin ledger left to release twice');
+}
+
 // A→B→C forwards independently issued root borrows through checked frame
 // positions. Publishing C-v2 after A starts cannot change old-root C-v1.
 {
