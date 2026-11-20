@@ -1,9 +1,8 @@
 //! OWN-CASE-04 non-borrow variants: a linear resource is never `Data`, so `dup`, `drop`, `quote`
 //! and capture through `Pair`/`Sum`/`List` are statically rejected before any emission. The borrow
-//! variants of the case are inapplicable (owner decision 2026-11-20: no borrow profile), and the
-//! resource-bearing source forms that would build these stack values are the live-slot profile's
-//! `Account@1` inputs; this harness uses the kernel acceptance boundary directly so the rejection
-//! is the exact `Eligibility` constraint, not a downstream emission failure.
+//! variants of the case are inapplicable (owner decision 2026-11-20: no borrow profile). This
+//! harness uses the kernel acceptance boundary directly so the rejection is the exact
+//! `Eligibility` constraint, not a downstream emission failure.
 
 const fn limits() -> noble_kernel::untrusted::Limits {
     noble_kernel::untrusted::Limits {
@@ -20,10 +19,6 @@ const fn limits() -> noble_kernel::untrusted::Limits {
 #[expect(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; candidate construction clones recursive contract types and allocates Vec-backed bindings, which are not const on the pinned compiler."
-)]
-#[expect(
-    tigerstyle::too_many_parameters,
-    reason = "Owner: noble-maintainers; the typed fixture is assembled from the exact kernel vocabulary (input type, word, bindings, expected interface) so a rejection names the same values the checker sees."
 )]
 fn invocation(
     input: &noble_kernel::types::Ty,
@@ -74,10 +69,6 @@ fn invocation(
 }
 
 #[test]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; the matrix requires exactly one Invalid/Eligibility outcome per declared resource variant plus accepted data controls, and every other outcome must name itself in the failure."
-)]
 fn own_case_04_non_borrow_variants_reject_before_emission() -> Result<(), String> {
     let environment =
         noble_kernel::contracts::environment().map_err(|error| format!("{error:?}"))?;
@@ -108,19 +99,16 @@ fn own_case_04_non_borrow_variants_reject_before_emission() -> Result<(), String
             1,
         ),
     ];
+    let mut violations = Vec::new();
     for (name, input, word) in variants {
         let (request, candidate) = invocation(&input, word)?;
-        match noble_kernel::acceptance::check(&environment, &request, &candidate) {
-            noble_kernel::untrusted::Outcome::Invalid(diagnostic) => assert_eq!(
-                diagnostic.constraint,
-                noble_kernel::untrusted::Constraint::Eligibility(input.clone()),
-                "{name}"
-            ),
-            other => {
-                return Err(format!(
-                    "{name} unexpectedly returned {other:?} instead of an eligibility rejection"
-                ))
-            }
+        let eligible = matches!(
+            noble_kernel::acceptance::check(&environment, &request, &candidate),
+            noble_kernel::untrusted::Outcome::Invalid(diagnostic)
+                if diagnostic.constraint == noble_kernel::untrusted::Constraint::Eligibility(input.clone())
+        );
+        if !eligible {
+            violations.push(format!("{name} was not rejected by the eligibility rule"));
         }
         println!(
             "{{\"id\":\"OWN-CASE-04\",\"variant\":\"{name}\",\"outcome\":\"static-reject\",\"stage\":\"check\",\"emitted\":false,\"guest_requests\":0,\"protected_operations\":0}}"
@@ -130,10 +118,15 @@ fn own_case_04_non_borrow_variants_reject_before_emission() -> Result<(), String
     // the resource eligibility rule rather than a malformed fixture.
     for word in [0, 1, 8] {
         let (request, candidate) = invocation(&noble_kernel::types::Ty::I64, word)?;
-        match noble_kernel::acceptance::check(&environment, &request, &candidate) {
-            noble_kernel::untrusted::Outcome::Accepted(_) => {}
-            other => return Err(format!("data control {word} was not accepted: {other:?}")),
+        if !matches!(
+            noble_kernel::acceptance::check(&environment, &request, &candidate),
+            noble_kernel::untrusted::Outcome::Accepted(_)
+        ) {
+            violations.push(format!("data control {word} was not accepted"));
         }
     }
-    Ok(())
+    if violations.is_empty() {
+        return Ok(());
+    }
+    Err(violations.join("; "))
 }

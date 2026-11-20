@@ -6,8 +6,8 @@
 mod eligibility;
 #[path = "core/mutations.rs"]
 mod mutations;
-#[path = "core/ownership_cases.rs"]
-mod ownership_cases;
+#[path = "core/ownership.rs"]
+mod ownership;
 
 const fn source_limits() -> noble_contracts::Limits {
     noble_contracts::Limits {
