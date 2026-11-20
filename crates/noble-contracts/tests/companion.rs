@@ -1,5 +1,7 @@
 //! Deterministic companion security regressions; real-Lean controls live in the CLI.
 #![cfg(test)]
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
 
 const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     bytes: 65_536,
@@ -288,6 +290,9 @@ fn release_requires_a_matching_subject() -> Result<(), String> {
     );
     Ok(())
 }
+
+#[path = "companion/guardv2.rs"]
+mod guardv2;
 
 #[path = "companion/transport.rs"]
 mod transport;

@@ -58,24 +58,26 @@ sync MUST NOT erase. The open delta records, without syncing:
   r[CB-LIMIT-01]
 - CB-SANDBOX-01 preserves the first-parent VM/virtualized-clock-or-equivalent
   barrier and initial ELF load versus post-load no-exec ordering; **retains**
-  the prior MUST that direct syscall, inherited-FD
-  and namespace/sandbox escape attempts refuse or terminate with zero
-  protected operations; and adds vDSO/coarse/vvar/TSC host-time and
-  elapsed-time controls. TSC-only isolation is not a complete clock
-  barrier. r[CB-SANDBOX-01]
+  the canonical MUST that direct syscall, inherited-FD and escape attempts
+  refuse or terminate with zero protected operations (the fixed delta keeps
+  the canonical unqualified "escape attempts"); and adds vDSO, coarse-clock,
+  direct-vvar, `rdtsc` and `rdtscp` host-time and elapsed-time controls.
+  TSC-only isolation is not a complete clock barrier. r[CB-SANDBOX-01]
 - CB-ADMIT-01 retains the first-parent descriptor-bound obligation for
   every build and execution request, while disclosing the source-only
   ancestor and output re-resolution gaps without claiming conformance.
   r[CB-ADMIT-01]
 
 All eleven requirement blocks in the active delta are MODIFIED: seven
-normative bodies match the planned first-parent canonical, while CB-BUILD-01,
-CB-LIMIT-01, CB-SANDBOX-01 and CB-ADMIT-01 retain its obligations and add
-explicit source-only disclosures or narrower hostile controls.
-The delta retains all 25 canonical linked scenario designs, with paths
-relative to its own location. Independent owner review of the direct
-canonical edits, the expanded source-only scope and case designs remains
-REQUIRED **before integration**, without automatic owner acceptance.
+normative bodies are byte-identical to the first-parent canonical, while
+CB-BUILD-01, CB-LIMIT-01, CB-SANDBOX-01 and CB-ADMIT-01 retain every
+canonical obligation verbatim and add explicit source-only disclosures or
+clock controls. The canonical retains all 25 linked scenario designs; the
+delta omits the generated scenario-link regions, which regeneration restores,
+and the reconciliation is recorded in `reconciliation.md`. Independent owner
+review of the direct canonical edits, the expanded source-only scope, the
+reconciled delta and the case designs remains REQUIRED **before integration**,
+without automatic owner acceptance.
 The complete native implementation/evidence tasks remain undone. A
 structurally nonblocked sync preview is not permission to replace the
 held canonical requirements or to archive. Generated compatibility views

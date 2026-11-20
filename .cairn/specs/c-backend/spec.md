@@ -64,6 +64,43 @@ The proposed *only* native invocation is explicit `noble execute --target c --ar
 
 The proposed explicit interface is `noble build SOURCE --target c --out DIR --contract CONTRACT_JSON --policy POLICY_JSON [--native]` for host-selected SOURCE and C11 source plus a machine-readable build manifest. The host-owned `CONTRACT_JSON` supplies the exact ordered expected input/output stack interface, resolved immutable definition/schema/test-host contracts and candidate/environment revision; `POLICY_JSON` supplies supported subset, allowed *effect bound*, target/ABI/tool pins and finite checking/emission/runtime limits. Both are bounded, validated independently of candidate-provided metadata and required even for effect-free source (empty allowed bound), not ambient defaults or inferred grants. `--native` additionally invokes only the pinned compiler and linker with an argument vector, never a candidate-provided command or shell. `SOURCE` is the existing positional host-owned source input (not a path supplied by the emitted guest); the existing build grammar without `--target c` MUST remain unchanged. No C artifact runs as a side effect of building. The first possible native target is `x86_64-unknown-linux-gnu`, pinned Linux loader/libc and C11 compiler/linker revisions, fixed options, compile mode and exact runtime/ABI revision. The build manifest MUST record these pins, exact host-selected SOURCE byte digest, the checked candidate/environment and source correspondence, a content digest of the emitted C, compile argv, target, executable digest if built, and finite limits. Native source and binary bytes are distinct artifacts; source-only output MUST NOT be advertised as a runnable binary. Unsupported target/toolchain/ABI/options, absent pin, incompatible architecture or failed build MUST refuse explicitly without switching compilers, linker flags, targets or backends. Missing confinement blocks `noble execute` even when C source or an ELF can be emitted; that output remains nonrunnable. Build-side filesystem and subprocess effects are compiler-service effects, not candidate-body authority.
 
+The current nonselected **source-only** route is narrower: it accepts checked,
+effect-free Core-Bootstrap expressions with no runtime inputs, definitions
+or host contracts and one I64/Bool/Unit/Text result, with
+`stack_slots`/`steps`/`output_bytes` and an optional exact `list_length`
+from 0 to 255 (default 255). The host-supplied
+`expected_interface` is parsed with the existing bounded checked Core type
+grammar into ordered input/output stacks; those stacks and the empty effect
+bound are compared against source preparation and independent kernel acceptance.
+Recognizing nested Core types in the control parser does not admit them as
+runtime inputs or final results. This isolated source-only WIP additionally
+lowers checked `pair`/`unpair`, `inl`/`inr`/`case` and
+`nil`/`cons`/`list.case` internally through an immutable tagged
+256-slot aggregate arena. Interned exact checked Core type shapes
+preflight operand order and kind before each supported operation;
+Pair/Sum/List cells and static/dynamic Program values retain checked
+shape identities. List cells retain their exact length, with a maximum
+255-element source-only ceiling and an effective policy bound with a
+pre-`cons` check, not executed as native code. The exact supplied policy
+bytes participate in the build subject, and the effective bound is retained
+in the manifest and emitted C. An iterative step-charged walk accounts for
+nested quotation
+captures. This source-only policy acceptance does NOT satisfy the
+CB-CASE-01/06 native runtime, quota or C/Wasm observations.
+Final Pair/Sum/List/Syntax/Program results, `reflect`, typed runtime
+inputs, named definitions and host effects still refuse.
+It emits source and manifest without compiler/ELF pin or compile argv, and
+`--native` and `execute --target c` refuse. This MUST NOT be represented
+as satisfying the complete proposed C/native build contract. Its ordinary
+unsupported contract, policy, type, effect and target inputs refuse. The
+source-only control decoder rejects duplicate JSON object member names
+recursively, including escaped spellings of the same key, before interpreting
+limits; an earlier bound cannot silently disappear through last-wins decoding.
+These source-only input-integrity and List-bound changes do not close the
+complete CB-LIMIT-01 limits or CB-BUILD-01 native build contract; both remain
+open. This is not native compilation, execution, sandbox or artifact admission
+evidence.
+
 
 <!-- cairn:scenario-links:start -->
 #### Scenario: CB-CASE-04 for CB-BUILD-01
@@ -201,6 +238,15 @@ MUST refuse the policy before emission rather than silently strip the bound
 or advertise an unenforced no-op. CB-CASE-01 retains its supplied list bound
 and remains OPEN while the restricted source-only emitter refuses it.
 
+The preceding refusal clause records the `e76d8469` state. The current
+nonselected source-only emitter accepts and retains an exact supplied
+`limits.list_length` from 0 to 255 (default 255) and emits a pre-`cons` bound
+check that has not been executed as native code, so CB-CASE-01 remains OPEN
+because no native runtime or selected-Wasm comparison has run, not because
+the policy field is refused. Contract and policy JSON MUST reject duplicate
+object member names at every nesting level so an earlier supplied bound
+cannot be overwritten by a later value before validation.
+
 
 <!-- cairn:scenario-links:start -->
 #### Scenario: CB-CASE-06 for CB-LIMIT-01
@@ -247,7 +293,7 @@ r[CB-SANDBOX-01]
 
 **CB-SANDBOX-01.**
 
-Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before candidate instructions it closes inherited file descriptors except explicitly enumerated private request/response protocol FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock, post-load process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and escape attempts MUST refuse or terminate with zero protected operations, with a benign authorized `test.emit` control under the same confinement. A native crash cannot become a successful Noble result.
+Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before candidate instructions it closes inherited file descriptors except explicitly enumerated private request/response protocol FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock, post-load process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and escape attempts MUST refuse or terminate with zero protected operations, with a benign authorized `test.emit` control under the same confinement. Hostile vDSO `__vdso_clock_gettime`, `__vdso_time`, `__vdso_gettimeofday`, coarse-clock, direct-vvar and x86 `rdtsc`/`rdtscp` attempts likewise MUST refuse or be demonstrably contained without host-time or elapsed-time disclosure; trapping or virtualizing only the TSC is insufficient, and a vDSO-only or coarse-clock-only mechanism is not equivalent. A native crash cannot become a successful Noble result.
 
 The native runner MUST select a reviewed immutable derivation and policy
 separate from the proof-only Lean runner and any package merely cached on
@@ -265,7 +311,9 @@ an owner-selected and verified VM/virtualized-clock or equivalent clock/TSC
 and loader barrier, native execution MUST remain unavailable. A parent-owned
 cgroup/process-tree memory, CPU, task, output and monotonic wall deadline
 MUST kill and reap the entire worker tree; signal, crash, timeout or partial
-output MUST NOT count as success or authorize protected operations.
+output MUST NOT count as success or authorize protected operations. The
+barrier MUST also cover direct vvar reads and x86 `rdtscp`; a vDSO-only,
+coarse-clock-only, TSC-only or offset-TSC mechanism does not satisfy it.
 
 
 <!-- cairn:scenario-links:start -->
@@ -301,6 +349,14 @@ compiler, linker, sysroot, startup/runtime, ABI and environment. Unsupported
 architecture, interpreter, dynamic import, load segment, relocation or
 executable/writable mapping MUST refuse before effects, not pass because
 a manifest or syntax check succeeded.
+
+The restricted source-only emitter is not CB-ADMIT-01 admission. Its current
+final-component `O_NOFOLLOW` reads refuse only a final-component symlink and
+non-regular or oversized files, authenticate no path component and seal no
+inputs, and its output child paths are re-resolved after directory creation;
+it MUST NOT turn those file digests into a claim of native correspondence or
+permit native execution. This gap remains OPEN until a separately admitted
+native build/launch path implements the descriptor-bound contract above.
 
 
 <!-- cairn:scenario-links:start -->

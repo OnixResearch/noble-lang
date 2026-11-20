@@ -10,6 +10,7 @@
 mod arguments;
 mod artifacts;
 mod compilation;
+pub(crate) mod owner_law;
 mod release;
 mod report;
 
@@ -87,76 +88,13 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     report.contract_path = options.contract.to_string_lossy().into_owned();
     report.timeout_ms = options.timeout_ms;
     report.schema = options.schema;
-    // v3 binds the exact Lean binary and contract library bytes the caller names, and the
-    // selection itself refuses them unless they are the configured Lean release and library root
-    // this build actually invokes. The parser refuses v3 without both paths, and v1 with them.
-    // v4 adds the reviewed policy pin document and refuses unless every observed identity matches.
-    let mut pins = None;
-    if let (Some(lean_binary), Some(library_tree)) = (&options.lean_binary, &options.library_tree) {
-        match report::toolchain::select(lean_binary, library_tree) {
-            Ok(selected) => {
-                if let Some(path) = options.pins.as_deref() {
-                    let selection = match report::pins::select(path) {
-                        Ok(selection) => selection,
-                        Err(error) => {
-                            report.fail(error);
-                            return print_report(&report);
-                        }
-                    };
-                    let observed = match report::pins::observe(&selected) {
-                        Ok(observed) => observed,
-                        Err(error) => {
-                            report.fail(error);
-                            return print_report(&report);
-                        }
-                    };
-                    if let Err(error) = report::pins::verify(&selection, &observed) {
-                        report.fail(error);
-                        return print_report(&report);
-                    }
-                    report.pin_selection_sha256 = Some(selection.document_sha256.clone());
-                    pins = Some(selection);
-                    report.pins = Some(observed);
-                }
-                report.selected_toolchain = Some(selected);
-            }
-            Err(error) => {
-                report.fail(error);
-                return print_report(&report);
-            }
-        }
-    }
-    let mut products = match execute(&options, &mut report) {
+    let products = match checked(&options, &mut report) {
         Ok(products) => Some(products),
         Err(error) => {
             report.fail(error);
             None
         }
     };
-    // The assembly ran, so its own tool identities are observable: bind them
-    // before anything is emitted, and drop the products on a mismatch so a
-    // refused pin can never leave an artifact behind.
-    let bound = match (pins.as_ref(), products.as_ref()) {
-        (Some(selection), Some(products)) => Some(
-            report::pins::observe_tools(&products.tools).and_then(|tools| {
-                report::pins::verify_tools(selection, &tools)?;
-                Ok(tools)
-            }),
-        ),
-        _ => None,
-    };
-    match bound {
-        Some(Ok(tools)) => {
-            if let Some(observed) = report.pins.as_mut() {
-                observed.record_tools(tools);
-            }
-        }
-        Some(Err(error)) => {
-            report.fail(error);
-            products = None;
-        }
-        None => {}
-    }
     if let (Some(destination), Some(products)) = (&options.out, products.as_ref()) {
         let emission = artifacts::Emission {
             contract: &products.contract,
@@ -179,6 +117,50 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         }
     }
     print_report(&report)
+}
+
+/// The exact-checking path `noble build --require-proof` performs.
+///
+/// The owner-law release gate calls this same function so it can never run a
+/// second, weaker proof route: v3 toolchain selection, source compilation,
+/// contract preparation, independent evidence recheck and the artifact
+/// binding are one implementation. A `v4` selection binds its pin document
+/// here too, so every caller of this path records and refuses the same
+/// identities: the CLI's own bytes, the embedded helper set, the selected Lean
+/// binary and contract library, and the assembly's verified tool record.
+fn checked(
+    options: &arguments::Options,
+    report: &mut report::Document,
+) -> Result<Products, crate::workflow::output::Failure> {
+    // v3 binds the exact Lean binary and contract library bytes the caller names, and the
+    // selection itself refuses them unless they are the configured Lean release and library root
+    // this build actually invokes. The parser refuses v3 without both paths, and v1 with them.
+    // v4 adds the reviewed policy pin document and refuses unless every observed identity matches.
+    let mut pins = None;
+    if let (Some(lean_binary), Some(library_tree)) = (&options.lean_binary, &options.library_tree) {
+        let selected = report::toolchain::select(lean_binary, library_tree)?;
+        if let Some(path) = options.pins.as_deref() {
+            let selection = report::pins::select(path)?;
+            let observed = report::pins::observe(&selected)?;
+            report::pins::verify(&selection, &observed)?;
+            report.pin_selection_sha256 = Some(selection.document_sha256.clone());
+            report.pins = Some(observed);
+            pins = Some(selection);
+        }
+        report.selected_toolchain = Some(selected);
+    }
+    let products = execute(options, report)?;
+    // The assembly ran, so its own tool identities are observable: bind them
+    // before anything is emitted, and refuse the whole check on a mismatch so
+    // a refused pin can never leave an artifact behind.
+    if let Some(selection) = &pins {
+        let tools = report::pins::observe_tools(&products.tools)?;
+        report::pins::verify_tools(selection, &tools)?;
+        if let Some(observed) = report.pins.as_mut() {
+            observed.record_tools(tools);
+        }
+    }
+    Ok(products)
 }
 
 fn print_report(report: &report::Document) -> std::process::ExitCode {

@@ -4849,3 +4849,64 @@ fn preview_measures_installed_state_and_preserves_an_active_grant(
     assert_eq!(text_field(&committed, "outcome"), "proposal-committed");
     live.finish()
 }
+
+#[test]
+fn mixed_definition_and_module_source_refuses_at_startup_with_one_report(
+) -> Result<(), Box<dyn std::error::Error>> {
+    // A default-profile selected file cannot carry a declared `module` word: the
+    // token grammar excludes its `@`. The refusal must be one typed startup
+    // report delivered before EOF, not a silent wait for a submission.
+    let fixture = Fixture::new(
+        "def addone [ 1 + ]\nmodule count@1 [ opaque Count I64 public export Count ]",
+    )?;
+    let live = LiveChild::start(&fixture.source)?;
+    let refusal = live.report()?;
+    assert_eq!(text_field(&refusal, "schema"), "noble-live-report/v1");
+    assert_eq!(text_field(&refusal, "stage"), "admission");
+    assert_eq!(text_field(&refusal, "outcome"), "reload-refused");
+    assert!(!text_field(&refusal, "diagnostic").is_empty());
+    assert_eq!(number_field(&refusal, "generation"), 0);
+    assert_eq!(number_field(&refusal, "guest_requests"), 0);
+    assert_eq!(number_field(&refusal, "protected_operations"), 0);
+    assert_eq!(refusal["stack"], serde_json::json!([]));
+    live.finish_with_status(2)
+}
+
+#[test]
+fn mismatched_declared_binding_refuses_at_startup_with_one_report(
+) -> Result<(), Box<dyn std::error::Error>> {
+    // The binding names a Bool input where the module requires Text. The host
+    // refuses the typed slot at startup instead of holding a half-built session.
+    let fixture = Fixture::new(
+        "module ledger@1 [ require emit Text -- ! test.emit export send def send [ \"A\" emit ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(
+        &bindings,
+        "bind ledger@1 test.emit emit-a Bool -- ! test.emit allow\n",
+    )?;
+    let live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let refusal = live.report()?;
+    assert_eq!(text_field(&refusal, "schema"), "noble-live-report/v1");
+    assert_eq!(text_field(&refusal, "stage"), "admission");
+    assert_eq!(text_field(&refusal, "outcome"), "reload-refused");
+    assert!(
+        text_field(&refusal, "diagnostic").contains("bound adapter"),
+        "{refusal}"
+    );
+    assert_eq!(number_field(&refusal, "generation"), 0);
+    assert_eq!(number_field(&refusal, "guest_requests"), 0);
+    assert_eq!(number_field(&refusal, "protected_operations"), 0);
+    live.finish_with_status(2)?;
+
+    // Control: the exact declared signature starts and publishes generation 1.
+    let control = fixture.directory.join("control.txt");
+    fs::write(
+        &control,
+        "bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n",
+    )?;
+    let accepted = LiveChild::start_declared(&fixture.source, &control)?;
+    let (generation, _) = live_ack(&accepted.report()?, &[]);
+    assert_eq!(generation, 1);
+    accepted.finish()
+}

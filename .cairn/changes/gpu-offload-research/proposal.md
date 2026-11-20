@@ -38,3 +38,12 @@ Without a defined eligible subset, an explicit dispatch boundary, an I64-exact d
 ## Out of Scope
 
 Implementation; selecting a GPU API, crate or driver; new syntax or a packed array type; floating point, division or checked arithmetic; automatic parallel-region inference; resources, host effects, live slots or live-REPL integration; general arena reclamation or lifetime redesign; benchmarks; proof or conformance-state promotion.
+
+**Scope amendment (owner decision, 2026-11-20).** The repository owner directed
+that this change's Phase 2 be carried out here. In scope now: the CPU-side cost
+study (task 1) and, depending on its outcome, the eligibility checker, kernel
+generator and device runs (tasks 2–4). A conditional step whose precondition
+the measurements refute is completed by recording that outcome with its
+evidence (for example, "no GPU until a packed batch type exists"). Still out of
+scope: new syntax or a packed array type, floating point, automatic
+parallel-region inference, and resources, host effects or live slots.

@@ -133,6 +133,8 @@ import NobleFoundation.RegionProtocol
 import NobleFoundation.ImplicitUnification
 import NobleFoundation.ImplicitScope
 import NobleFoundation.ImplicitPropositions
+import NobleFoundation.IntrinsicCalculus
+import NobleFoundation.IntrinsicErasure
 import NobleFoundation.UsePermissions
 import NobleFoundation.GuardedRewrite
 import NobleFoundation.GuardedRewriteCorpus

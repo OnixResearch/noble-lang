@@ -1530,16 +1530,22 @@ Only restricted inert checked I64/Bool/Unit/Text-result C11 source emission
 is present in this isolated source-only integration, including internal
 Pair/Sum/List construction/elimination, exact checked value-shape preflights
 and bounded immutable aggregate/Program captures. Pair/Sum/List/Syntax/Program
-final results, supplied list-length policies, reflect, runtime inputs and host
-mediation remain unsupported. The fixed internal List ceiling is 255, not
-CB-CASE-01/06 admission. The held canonical CB-BUILD-01 still describes a
-narrower route; the reconciled active delta cannot replace it before
-independent owner review and legal sync. `--native` and `execute --target c`
-refuse. CB-CASE-01 supplies `limits.list_length` and remains open because the
-exact source-only policy rejects it. Recursive duplicate JSON members refuse
-before policy interpretation, but this is not native admission or case
-evidence. The current source-only path does not satisfy CB-ADMIT-01's sealed,
-ancestor-anchored native build contract.
+final results, reflect, runtime inputs and host mediation remain unsupported.
+An optional exact supplied `limits.list_length` from 0 to 255 (default 255)
+is accepted, retained in the manifest and emitted as the effective
+`LIST_LIMIT` with a pre-`cons` check that has not been executed, so the field
+cannot be silently dropped or advertised as an unenforced no-op; the internal
+List ceiling stays 255. This is not CB-CASE-01/06 admission. The held
+canonical CB-BUILD-01 does not describe the source-only route; the reconciled
+delta's disclosure needs independent owner review and legal sync, and the
+eleven-block reconciliation is recorded in the change's `reconciliation.md`.
+`--native` and `execute --target c` refuse. CB-CASE-01
+supplies `limits.list_length` and remains open because no native runtime or
+selected-Wasm comparison has run, not because the exact source-only policy
+rejects it. Recursive duplicate JSON members refuse before policy
+interpretation, but this is not native admission or case evidence. The current
+source-only path does not satisfy CB-ADMIT-01's sealed, ancestor-anchored
+native build contract.
 Full watch-case acceptance and complete source-bound LIVE-02 remain open
 despite the guarded partial runtime. Integrated real guests observed only
 the historical exact queued proposal root released after a terminal trap

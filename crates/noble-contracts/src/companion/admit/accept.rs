@@ -66,6 +66,7 @@ fn register(
     ));
     let template = crate::companion::admit::recognize::classify(prepared, statement, &program);
     let guards = crate::companion::guard::templates_of(prepared);
+    let guards_v2 = crate::companion::guard_v2::templates_of(prepared);
     let input_signature = crate::companion::admit::statement::interface_signature(
         &prepared.checked().interface.stack_in,
     );
@@ -79,6 +80,7 @@ fn register(
         policy: engine.policy,
         revision: engine.revision,
         guards,
+        guards_v2,
         program,
         input_signature,
         output_signature,

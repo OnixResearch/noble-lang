@@ -188,6 +188,65 @@ impl crate::companion::Core {
         crate::companion::guard::invocation_wrapper(template)
     }
 
+    /// The finite v2 template set whose predicate shape the contract's
+    /// precondition matches, under the current context.
+    pub fn guard_templates_v2(
+        &self,
+        contract: crate::companion::ContractId,
+    ) -> Result<alloc::vec::Vec<crate::companion::GuardTemplateV2>, crate::companion::Refusal> {
+        crate::companion::guard_v2::templates(self, contract)
+    }
+
+    /// V2 guards of the current evidence's actual conclusion descriptor.
+    pub fn evidence_guard_templates_v2(
+        &self,
+        evidence: crate::companion::registry::EvidenceId,
+    ) -> Result<alloc::vec::Vec<crate::companion::GuardTemplateV2>, crate::companion::Refusal> {
+        let entry = attempt!(crate::companion::registry::application::proved(
+            self, evidence
+        ));
+        crate::companion::guard_v2::templates(self, entry.contract)
+    }
+
+    /// Render the exact v2 wrapper text for a template around the supplied
+    /// subject program text. The three v1 templates keep their v1 bytes.
+    pub fn wrapper_source_v2(
+        &self,
+        template: crate::companion::GuardTemplateV2,
+        subject: &str,
+    ) -> alloc::string::String {
+        crate::companion::guard_v2::wrapper_source(self, template, subject)
+    }
+
+    /// Wrap an existing `[argument, Program]` pair for a v2 template.
+    pub fn invocation_wrapper_v2(
+        &self,
+        template: crate::companion::GuardTemplateV2,
+    ) -> alloc::string::String {
+        crate::companion::guard_v2::invocation_wrapper(template)
+    }
+
+    /// The exact `[List A]` argument type a retained v2 list guard was formed
+    /// over. A contract without a list guard refuses rather than guessing.
+    pub fn list_guard_interface(
+        &self,
+        contract: crate::companion::ContractId,
+    ) -> Result<noble_kernel::types::Ty, crate::companion::Refusal> {
+        crate::companion::guard_v2::list_interface(self, contract)
+    }
+
+    /// Integrity index of one frozen v1 guard template. It is a lookup aid and
+    /// never admission authority.
+    pub fn guard_template_digest(&self, template: crate::companion::GuardTemplate) -> u64 {
+        template.digest()
+    }
+
+    /// Integrity index of one v2 guard template under its own domain, so a v1
+    /// and a v2 digest can never be compared as equal evidence.
+    pub fn guard_template_digest_v2(&self, template: crate::companion::GuardTemplateV2) -> u64 {
+        template.digest()
+    }
+
     /// Proof-required build release (VC-TOOL-04): only an applicable accepted
     /// `proved` claim for the exact subject/claim/context/policy releases. The
     /// caller supplies the observed subject; a claim about any other subject

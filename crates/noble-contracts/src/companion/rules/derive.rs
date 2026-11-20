@@ -159,6 +159,7 @@ fn conclusion(
             policy: engine.policy,
             revision: engine.revision,
             guards: alloc::vec::Vec::new(),
+            guards_v2: alloc::vec::Vec::new(),
             program: crate::companion::registry::application::op_stream(&derivation.subject.events),
             input_signature: derivation.subject.input_signature,
             output_signature: derivation.subject.output_signature,

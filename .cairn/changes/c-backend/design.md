@@ -2,7 +2,7 @@
 
 ## Context
 
-`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles checked, effect-free Core-Bootstrap I64/Bool/Unit/Text-result expressions plus internal Pair/Sum/List operations; it does not compile or execute native ELF. The held canonical CB-BUILD-01 status paragraph still excludes the new internal aggregate slice, pending independent owner review and legal delta sync. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
+`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles checked, effect-free Core-Bootstrap I64/Bool/Unit/Text-result expressions plus internal Pair/Sum/List operations; it does not compile or execute native ELF. The held canonical CB-BUILD-01 does not describe the source-only route, so the reconciled delta's disclosure needs independent owner review and legal delta sync. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
 
 The isolated source-only emitter now lowers checked pure `dip` and `if`
 as well as literal/stack/arithmetic/Unit/quotation/`quote`/`compose`/`run`.
@@ -185,7 +185,8 @@ evidence remain HOLD until a separate owner decision.
    hostile `__vdso_clock_gettime`,
    `__vdso_time`, `__vdso_gettimeofday`, coarse-clock, direct vvar,
    `rdtsc` and `rdtscp` controls prove no host wall or elapsed time
-   disclosure in the actual pinned guest. A specific **unselected**
+   disclosure in the actual pinned guest. The owner has authorized this lane
+   for construction and sealed hostile testing; a specific
    software-emulation candidate for review is single-thread TCG with
    fixed `-icount shift=N,sleep=off,align=off`, a fixed-date
    `-rtc base=<reviewed-date>,clock=vm`, one vCPU and an enumerated
@@ -195,13 +196,29 @@ evidence remain HOLD until a separate owner decision.
    instruction time is not cycle-accurate, and this candidate has not
    been tested for guest TSC/vDSO/vvar nondisclosure or hypervisor
    escapes. It is not a KVM configuration; the host KVM device alone
-   cannot establish an instruction-time barrier. Review the exact
+   cannot establish an instruction-time barrier. That authorization does not
+   select these pins and is not native GO. Review the exact
    selected QEMU release and guest kernel, not only upstream
    [TCG icount](https://www.qemu.org/docs/master/devel/tcg-icount.html),
    [invocation](https://www.qemu.org/docs/master/system/invocation.html)
    and [KVM clock](https://www.qemu.org/docs/master/system/i386/kvm-pv.html)
    descriptions. No such VM, instruction-time behavior or equivalent
    sealed-loader barrier is currently verified.
+
+   OWNER DECISION 2026-11-20: c-backend: do the source-only slices (input
+   integrity, emitter coverage, reconciliation of the eleven MODIFIED blocks,
+   a review packet). The owner also authorizes a pinned QEMU TCG VM lane from
+   nixpkgs (icount, fixed clock) and sealed hostile native test execution
+   inside it. The canonical-edit review ("explicit independent owner review
+   ... before integration") still gets an owner yes/no on the prepared packet
+   after an independent reviewer agent pass.
+
+   This authorizes constructing and testing that lane only. The QEMU release,
+   guest kernel, image, machine model and clock pins remain unreviewed, so
+   the lane is neither selected nor verified, `--native` and
+   `execute --target c` continue to refuse, canonical C text and every CB
+   case remain on HOLD, and no case is promoted.
+
 4. **Fail closed on guest authority and resources.** Any guest loader
    setup must finish before a reviewed no-exec/no-writable-executable
    policy is active and before untrusted instructions; rejecting initial

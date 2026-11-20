@@ -15,9 +15,50 @@
   `(eq x0 k)` and `(eq k x0)`, and `(not (eq x0 i64::MIN))` and its swap. `recognized_link`
   covers every v1 template, and a control shows the refused `(le x0 i64::MAX)` holds at
   `i64::MAX`, where `ltI64Max`'s precondition fails. `MC2Gate.lean` pins the seven theorems
-  under the strict axioms, 42 in all. Still open: C1 for `NonEmptyList`, which waits for the
-  v2 template set, and the extracted correspondence for `templates_of`, which needs a proved
-  link from the `Prepared` arena to MC1 terms.
-- [ ] [serial] Implement the versioned v2 template set (`NonEmptyList` recognizer, wrappers, `List A` slot injection for `op_invoke`, registry/digest version) with v1 bytes and gate unchanged; prove C2–C5 for `NonEmptyList` in a v2 MC2 gate. r[GUARD-LIST-01]
+  under the strict axioms, 42 in all. Still open: the extracted correspondence for
+  `templates_of` (v1) and `guard_v2::templates_of`, which needs a proved link from the
+  `Prepared` arena to MC1
+  terms. C1 for `NonEmptyList` is now proved at model level in `GuardsV2.nonEmptyList_link` and
+  `nonEmptyList_link_of_type` (2026-11-20); its extracted link is the same open obligation.
+- [x] [serial] Implement the versioned v2 template set (`NonEmptyList` recognizer, wrappers, `List A` slot injection for `op_invoke`, registry/digest version) with v1 bytes and gate unchanged; prove C2–C5 for `NonEmptyList` in a v2 MC2 gate. r[GUARD-LIST-01]
+  Progress (2026-11-20): Lean model. `proofs/mc2/NobleCertificates/GuardsV2.lean` adds a separate
+  `GuardTemplateV2` set (the three frozen v1 templates plus `nonEmptyList`), the pure
+  `Type0Code` element predicate with exclusion controls, `HasInput`, `GuardPreconditionV2`,
+  `guardRejectsV2`, the fixed guard/wrapper programs and both fixed renderer texts. It proves
+  C1 (`nonEmptyList_link`, `nonEmptyList_link_of_type`), C2
+  (`guardProgramV2_nonEmptyList_exec_iff`, `guardProgramV2_exec_iff`), C3
+  (`nonEmptyList_sound`, `nonEmptyList_exact`, `guard_sound_v2`), C4
+  (`wrapperProgramV2_exec_iff`, `wrapperProgramV2_rejects`, `wrapperProgramV2_accepts`,
+  `guard_correspondence_v2`) and C5's refinement half (`sourceWrapperProgramV2_refines`,
+  `liveWrapperProgramV2_refines`). `lake env lean MC2Gate.lean` (unchanged file) still reports
+  `"guard_templates":3,"required_theorems":42,"result":"passed"`; `lake env lean
+  MC2V2Gate.lean` reports `"guard_templates_v2":4,"guard_templates_v1":3,"type0_codes":7`
+  and `"required_theorems":21,"result":"passed"` with `strict_axioms` exactly
+  `["propext","Classical.choice","Quot.sound"]`. The `parse(renderer)` half of C5 and the C1
+  link for `guard_v2::templates_of` are the extracted-Rust legs (task 1).
+  Rust.
+  `crates/noble-contracts/src/companion/guard_v2.rs` is the versioned implementation: the same
+  four-template set under its own digest domain (`GUARD_SET_VERSION_V2 = 2`), a whole-root
+  recognizer for exactly `Not(IsNil(Input 0))` on a one-element `[List A]` interface whose
+  element is a pure `Type0` code, and the exact wrapper texts; `guard.rs` and `GuardTemplate`
+  are byte-identical and `MC2Gate` is untouched. `ContractEntry` retains the recognised v2 set
+  separately in `guards_v2`, so a v1 entry and a v2 entry can never be confused.
+  `op_invoke` enters the v2 path only when the evidence's retained v2 set contains
+  `NonEmptyList`; it takes the argument from a live session slot (never a CLI literal), requires
+  that slot's type to equal the retained `[List A]` interface and the
+  `[list, companion, Program]` operand layout, then runs the fixed live text on
+  `[list, Program]`. The companion operand cell is removed by the recorded `swap drop` prelude
+  (`invocation_prelude` in the report) because the guest exposes no cell-copy injection; the
+  wrapper text itself is byte-identical to the design. Tests (observed): `cargo test -p
+  noble-contracts --test companion guardv2` → 7 passed (recognition, nested `List (List I64)`,
+  eight hostile whole-root/interface shapes plus two ill-typed refusals, frozen v1 bytes and
+  their v2 lifts, the two fixed v2 texts, versions and digest domain separation, stable codes);
+  `cargo test -p noble-cli --test smoke guardv2` → 4 passed, executing on the real runtime the
+  source text (`nil` → `Sum left 1` with the body not run, `7 nil cons` → `Sum right 99`), the
+  live text, the prelude-plus-live-text composition (empty → `left 1`, nonempty → `right 99`,
+  prelude leaves `[list, Program]`), and the frozen v1 texts (`MAX` → reject, `MAX-1` → accept,
+  `eq 5` accept/reject). Still open from this task: an execution of the companion-level
+  `op_invoke` path against a frozen executable with an admitted list-contract proof (GUARD-CASE
+  lane, task 3).
 - [ ] [serial] Register and execute GUARD-CASE-01…12 against frozen executables, retaining stacks, identities, counters and refusal stages; keep exhaustion/trap distinct from rejection. r[GUARD-BIND-01] r[GUARD-CORR-01]
 - [ ] [serial] Coordinate C6 (Wasm lowering/loading of wrappers, PO-17/PO-18) through #10. Static-witness companion rules wait for #7; resource-bearing applicability waits for #3. r[GUARD-FACT-01]

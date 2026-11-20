@@ -66,6 +66,10 @@ pub(crate) struct ContractEntry {
     pub(crate) policy: u32,
     pub(crate) revision: u32,
     pub(crate) guards: alloc::vec::Vec<crate::companion::GuardTemplate>,
+    /// The versioned v2 template set recognized for the same whole precondition.
+    /// It is retained separately so the v1 set and its bytes stay frozen; a
+    /// contract with no v2 template keeps an empty list.
+    pub(crate) guards_v2: alloc::vec::Vec<crate::companion::GuardTemplateV2>,
     /// The contract program's canonical op-event list, folded from the
     /// retained candidate. Applicability compares observed recipe events
     /// against this, so a same-interface different body is refused.

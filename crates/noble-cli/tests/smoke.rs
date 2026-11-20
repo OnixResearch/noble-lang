@@ -16,6 +16,8 @@
 mod checked_i64;
 #[path = "smoke/checked/guards.rs"]
 mod checked_i64_guards;
+#[path = "smoke/guardv2.rs"]
+mod guardv2;
 #[path = "smoke/reports.rs"]
 mod reports;
 
