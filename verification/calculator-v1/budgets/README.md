@@ -98,6 +98,33 @@ Work charge.
   runtime step quota is a runtime status with quota reason 6, and produces no
   guest value.
 
+## Plan revision: the four drifted control rows (2026-11-20)
+
+`OWNER DECISION 2026-11-20:` the reviewed revision of the four drifted CALC-08
+control rows is authorized. [`plan.json`](plan.json) is now schema
+`noble-calculator-budget-plan/v2`; its `revision` object repeats each change
+below, and the runner refuses a retired row that still carries an expectation.
+No category bracket, budget value or predicted boundary N changed.
+
+- `control/history-bytes` and `control/replay-work` are **retired**. Both rows
+  asserted a `44329dc` replay-preflight `HostLimit` refusal. The selected
+  committed-session route removed replay, so those bounds no longer exist and
+  the rows would assert a refusal the design cannot produce. Re-pointing them
+  at a guest `ResourceLimit` would stop them being host-bound controls; the
+  surviving host input bound is the 65,536-byte frame, exercised by
+  `control/transport-limit`. The design's post-format output assertion is a
+  defensive `InfrastructureFailure` with no reachable input.
+- `control/worker-killed` now expects the selected failure: the dead worker
+  fails restore verification, so the host ends the session with
+  `noble calculator: calculator restore failed` and exit status 2, printing no
+  `ResourceLimit`. The `44329dc` tree started a fresh worker per line and
+  replayed the history, so the kill was invisible and the run exited 0.
+- `control/memory-cap` now expects the selected failure: a 48 MiB scope leaves
+  no room for the retained worker, whose reply stream closes, and the host
+  reports `noble calculator: engine worker closed its reply stream` with exit
+  status 2. The `44329dc` row expected the scope to kill the process with no
+  output at all.
+
 ## Slow numeric-path tier on the integrated tree
 
 The ignored release tier ran on `main` at `05a50b0`, whose sources match the
@@ -125,8 +152,8 @@ runtime observations; no CALC case state changed.
 - Each bracket shows one deterministic boundary per category. It does not show
   that every charge site, or every input, is bounded.
 - The controls show distinct labels for a host timeout, a killed worker, a
-  memory-capped scope, and host replay/transport preflight. They do not
-  enumerate every native failure.
+  memory-capped scope and the input transport bound. They do not enumerate
+  every native failure, and the two retired replay rows are not observations.
 - Nothing here proves the accounting, exact arithmetic or the conversions.
 
 ### 2026-11-10 rerun on this tree
