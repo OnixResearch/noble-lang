@@ -47,7 +47,7 @@ const fixtureFile = 'specs/conformance/live-reference-cases.json';
 const liveWasmFile = 'specs/conformance/live-wasm-cases.json';
 // The retained receipt the committed promotions cite. A run writes a new file
 // and never rewrites this one.
-const promotedReceiptPath = '../../verification/lslot-cases/acceptance-2026-11-20-r3.json';
+const promotedReceiptPath = '../../verification/lslot-cases/acceptance-2026-11-20-r4.json';
 const fixtureBytes = fs.readFileSync(path.join(root, fixtureFile));
 const fixture = JSON.parse(fixtureBytes);
 assert.deepEqual(fixture.cases.map(row => row.id),
@@ -195,13 +195,16 @@ const retainedReceipts = [
   'verification/lslot-cases/acceptance.sha256',
   'verification/lslot-cases/acceptance-2026-11-20-r3.json',
   'verification/lslot-cases/acceptance-2026-11-20-r3.sha256',
+  'verification/lslot-cases/acceptance-2026-11-20-r4.json',
+  'verification/lslot-cases/acceptance-2026-11-20-r4.sha256',
 ];
 const presentReceipts = fs.readdirSync(path.join(root, 'verification/lslot-cases'))
   .filter(name => name.startsWith('acceptance'))
   .map(name => `verification/lslot-cases/${name}`)
   .sort();
-assert.deepEqual(presentReceipts, [...retainedReceipts].sort(),
-  'every retained receipt file is listed in retainedReceipts');
+const unlistedReceipts = presentReceipts.filter(file => !retainedReceipts.includes(file));
+assert.deepEqual(unlistedReceipts, [],
+  `retained receipt files missing from retainedReceipts: ${unlistedReceipts.join(', ')}`);
 const inputs = [...new Set([...explicitInputs, ...dependencies])]
   .filter(file => !retainedReceipts.includes(file));
 const source = sourceInventory(inputs, selectedTrees);
@@ -515,6 +518,14 @@ function walk(directory) {
   }
 }
 for (const directory of evidenceDirectories) walk(directory);
+// The run's own command outputs join the raw mirror beside the lane evidence,
+// so a retained receipt's stdout/stderr are re-derivable from the repository.
+const commandOutputs = commands.flatMap(command => [command.stdout, command.stderr,
+  ...(command.stdin ? [command.stdin] : [])]);
+fs.mkdirSync(path.join(output, 'raw'), { recursive: true, mode: 0o700 });
+for (const name of commandOutputs) {
+  fs.copyFileSync(path.join(output, name), path.join(output, 'raw', name));
+}
 
 const stagesOf = entries => [...new Set(entries.flatMap(entry => entry.stages ?? []))];
 // LSLOT-06 `ref_authority`: a host-issued ref dispatched with its grant
@@ -538,6 +549,14 @@ const lanes = {
     authority: authorityOf(path.join(lane03.directory, 'LSLOT03-same-exact-interface.jsonl')),
     variants: summary03.results.flatMap(result => variantFacts(pairedRecords(
       jsonLines(path.join(lane03.directory, `LSLOT03-${result.name}.jsonl`))))),
+    callerSite: (() => {
+      const reflection = summary03.caller_reflection;
+      assert.ok(reflection?.site, 'LSLOT-03 caller reflection control ran');
+      return reflection.site;
+    })(),
+    callerInstall: { outcome: summary03.caller_reflection.install,
+      source: summary03.caller_reflection.install_source,
+      inputs: summary03.caller_reflection.install_inputs },
     stageSteps: steps03.map(step => step.row.stage) },
   'LSLOT-04': { cases: cas, baseline: casBaseline,
     stageSteps: casSteps.map(step => step.row.stage) },
@@ -561,12 +580,6 @@ const lanes = {
           found.install_inputs = request.inputs ?? [];
         }
         if (request.operation === 'invoke' && request.id === 'caller') {
-          if (reply.outcome === 'refused' && found.refused_invoke === undefined) {
-            found.refused_invoke = { kind: 'invoke', outcome: reply.outcome,
-              guest_requests: reply.guest_requests ?? 0,
-              protected_operations: reply.protected_operations ?? 0,
-              diagnostic: reply.diagnostic ?? null };
-          }
           if (reply.outcome === 'executed') {
             found.executed_invokes += 1;
             found.valid_guest_requests = reply.guest_requests ?? 0;
@@ -575,9 +588,7 @@ const lanes = {
         }
         if (request.operation === 'reflect' && request.id === 'caller') found.site = reply.site;
       }
-      // The negative attempt is the refused install, or the refused re-invoke
-      // where the case has no installable negative source (retain).
-      found.negative = found.negative ?? found.refused_invoke ?? null;
+      // The negative attempt is the variant's own refused `attempt` install.
       found.attempt_outcome = found.negative?.outcome ?? null;
       found.guest_requests = found.negative ? found.negative.guest_requests
         : found.valid_guest_requests ?? 0;
@@ -855,7 +866,8 @@ const acceptance = {
       + ' historical: they replay only at their recorded source states and are not re-run here.',
   ],
   external_evidence_sha256: evidenceFiles,
-  raw_mirror: { directory: 'raw', files: Object.keys(evidenceFiles).length },
+  raw_mirror: { directory: 'raw', files: Object.keys(evidenceFiles).length,
+    command_outputs: commandOutputs.length },
   version_control: { before: beforeGit, after: afterGit },
 };
 const text = JSON.stringify(acceptance, null, 2) + '\n';

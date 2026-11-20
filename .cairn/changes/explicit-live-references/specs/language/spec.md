@@ -22,7 +22,7 @@ For nested calls, the root host MUST supply every required typed ref (including 
 
 #### Scenario: LSLOT-06 input-only reference boundary
 
-- GIVEN the capture, aggregate, export and lifetime variants in LSLOT-06, with the serialization and forgery variants recorded as unexpressible by design (owner decision 2026-11-20)
+- GIVEN the capture, aggregate and export variants in LSLOT-06, with the serialization, forgery and retain variants recorded as impossible by design (owner decisions 2026-11-20, items 19 and 25)
 - WHEN static and invocation admission check them, accepting the earliest static refusal
 - THEN only the host-issued input borrowed by generic checked dispatch is eligible, ref-as-data is refused, and a host-issued ref without a dispatch grant is not authority
 

@@ -10,8 +10,8 @@ assert.equal(canonicalCase.input.issued_ref, 'LiveRef<I64,I64,{}> for slot incre
 const variants = canonicalCase.input.variants;
 assert.deepEqual(variants.map(row => row.name), [
   'direct-quotation-capture', 'aggregate-capture', 'aggregate-storage',
-  'export-or-return', 'retain', 'valid-borrow',
-], 'decision-19 amendment: only serialize and forge are dropped');
+  'export-or-return', 'valid-borrow',
+], 'owner decisions 19 and 25: serialize/forge and retain are recorded as impossible by design');
 const liveRef = 'LiveRef<I64,I64,pure>';
 const caller = { source: 'slot.invoke', inputs: ['I64', liveRef] };
 const invalid = {
@@ -19,8 +19,6 @@ const invalid = {
   'aggregate-capture': { source: '[ slot.invoke ]', inputs: ['I64', `Pair<I64,${liveRef}>`] },
   'aggregate-storage': { source: 'pair', inputs: caller.inputs },
   'export-or-return': { source: 'slot.invoke', inputs: ['I64', `LiveRef<I64,${liveRef},pure>`] },
-  'forge': { source: 'slot.invoke', inputs: ['I64', 'Text'] },
-  'retain': caller,
 };
 const slots = [{ slotId: 'increment', input: ['I64'], output: ['I64'],
   effectCeiling: [], proofRequired: false }];
@@ -44,7 +42,7 @@ for (const variant of variants) {
     let negative = null;
     let sourceAttempt = null;
     let scalarControl = null;
-    if (name !== 'valid-borrow' && name !== 'retain' && name !== 'serialize') {
+    if (name !== 'valid-borrow') {
       sourceAttempt = await session.issue({ operation: 'install', id: 'attempt',
         source: attempt.source, inputs: attempt.inputs });
       negative = sourceAttempt;
@@ -73,35 +71,12 @@ for (const variant of variants) {
     assert.deepEqual(site.site.effects, ['live.dispatch']);
     assert.equal(JSON.stringify(site.site).includes('increment'), false,
       'generic compiled site may not embed selected slot name');
-    if (name === 'forge') {
-      negative = await session.issue({ operation: 'invoke', id: 'caller', inputs,
-        refs: [{ position: 1, ordinal: 0, slot: 'increment-forged' }] });
-      expectOutcome(negative, 'refused');
-      const empty = expectOutcome(await session.issue({ operation: 'trace' }), 'trace-observed');
-      assert.deepEqual(empty.trace, []);
-    }
     const valid = expectOutcome(await session.issue({ operation: 'invoke', id: 'caller', inputs, refs }), 'executed');
     assert.equal(valid.epoch, '1');
     assert.deepEqual(valid.stack, [{ kind: 1, value: '21' }]);
     assert.equal(valid.guest_requests, 1);
     assert.equal(valid.protected_operations, 0);
     assert.deepEqual(valid.request_trace.map(item => item.operation), ['dispatch']);
-    if (name === 'retain') {
-      // There is no exportable ref credential. Supplying a claimed prior-root
-      // owner is refused before any second guest root, not proof that an actual
-      // expired borrowed ref could be represented by this input protocol.
-      negative = await session.issue({ operation: 'invoke', id: 'caller', inputs,
-        refs: [{ ...refs[0], owner: 'previous-root-R' }] });
-      expectOutcome(negative, 'refused');
-      const trace = expectOutcome(await session.issue({ operation: 'trace' }), 'trace-observed');
-      assert.deepEqual(trace.trace, valid.request_trace);
-      const freshRoot = expectOutcome(await session.issue({ operation: 'invoke', id: 'caller', inputs, refs }),
-        'executed');
-      assert.equal(freshRoot.epoch, '1');
-      assert.deepEqual(freshRoot.stack, valid.stack);
-      assert.equal(freshRoot.guest_requests, 1);
-      assert.equal(freshRoot.protected_operations, 0);
-    }
     if (negative) {
       assert.equal(negative.guest_requests, 0, JSON.stringify(negative));
       assert.equal(negative.protected_operations, 0, JSON.stringify(negative));
@@ -110,15 +85,9 @@ for (const variant of variants) {
       ? 'nested Pair<LiveRef> root type is refused before quotation-capture can be checked'
       : name === 'export-or-return'
         ? 'target output of LiveRef is refused at static type boundary; no source form returns the original root borrow'
-      : name === 'serialize'
-        ? 'no selected CLI source word encodes LiveRef as portable data; an unrelated dup would duplicate I64 instead'
-        : name === 'forge'
-          ? 'source has no input ref and forged slot binding is refused, but no decode-bytes-to-ref primitive exists'
-          : name === 'retain'
-            ? 'prior-root owner claim refused; CLI never exposes a ref credential to actually retain/reuse'
-            : null;
-    results.push({ name, status: name === 'serialize' ? 'non-run'
-      : name === 'valid-borrow' || !limitation && (!scalarControl || scalarControl.outcome === 'installed')
+        : null;
+    results.push({ name,
+      status: name === 'valid-borrow' || !limitation && (!scalarControl || scalarControl.outcome === 'installed')
         ? 'pass' : 'partial',
       negative_outcome: negative?.outcome ?? 'not applicable',
       negative_diagnostic: negative?.diagnostic ?? null,

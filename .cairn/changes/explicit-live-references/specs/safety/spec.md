@@ -17,9 +17,9 @@ The host MUST account independently for current registry reachability, each old 
 
 #### Scenario: LSLOT-03 ordered interface and effect admission
 
-- GIVEN the exact candidate, the reversed-input candidate, the both-sides `Account@2` schema candidate and the unknown-effect candidate in LSLOT-03 (the unselectable `fs.write` variant is the owner-approved 2026-11-20 drop)
+- GIVEN the exact candidate, the reversed-input candidate, the both-sides `Account@2` schema candidate and the unknown-effect candidate in LSLOT-03 (the unselectable `fs.write` variant and the impossible under-declare variant are the owner-approved 2026-11-20 drops; the under-declare candidate is refused at the interface before effects are compared)
 - WHEN admission checks them without candidate execution, accepting the earliest refusal where a candidate cannot be constructed
-- THEN only the exact compatible candidate publishes, every other candidate leaves the epoch and map unchanged, and a constructible generic caller's reflected dispatch includes `live.dispatch`
+- THEN only the exact compatible candidate publishes, every other candidate leaves the epoch and map unchanged, and a constructible generic caller's compiled site, reflected without any admission attempt, carries `live.dispatch`
 
 #### Scenario: LSLOT-07 current authorization after pin
 

@@ -51,23 +51,30 @@
 > dropped variant and its reviewer reason, are recorded in the `amendments` block of
 > `specs/conformance/live-reference-cases.json` dated 2026-11-20.
 
+> OWNER DECISION 2026-11-20 (decision 25, verbatim): "The live-slot protocol has no well-formed
+> request that retains a LiveRef beyond its call; the only spelling is an unknown `owner` field,
+> refused as a malformed request (\"unknown slot command or authority field\"), not at the scope
+> boundary. Like decision 19's serialize/forge variants, `retain` is recorded as an
+> owner-approved amendment: dropped as impossible by design, with this reason. LSLOT-06 may be
+> promoted from its remaining variants' real boundary refusals." The drop is recorded as the
+> second `amendments` entry dated 2026-11-20.
+
 - [ ] [serial] Implement independently checked `Live-Slot-Design` admission, root-issued typed ref inputs/pass-through, root pinning and nested dispatch with current host authorization. r[K-LSLOT-02] r[S-LSLOT-01] r[B-LSLOT-01]
-  Progress 2026-11-20 (round 3): executed, not yet complete. `verification/lslot-cases/gate.mjs`
+  Progress 2026-11-20 (round 4): executed, not yet complete. `verification/lslot-cases/gate.mjs`
   builds the selected CLI from a committed clean tree, requires one projection entry for every
   canonical leaf path and every variant, and refuses a case for each machine-expressible field
   whose canonical attempt did not run. Receipt:
-  `verification/lslot-cases/acceptance-2026-11-20-r3.json`
-  (sha256 `b62cf62b80c148add5e6126f06e854cad2ad44f0491573dc3d436cb96edf3cb7`, source commit
-  `ae972fd0cce81a4d82c0dc03b1e5fa1d0bbd7fac`, source revision
-  `sha256:9aa0b92c8314c6ba70f4d99e80cc0d6eb6780481677bb85366e4d3714a48fd2e`, binary sha256
-  `422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb`); raw lane evidence and
-  command output are retained under `verification/lslot-cases/raw/r3f-151856/`. The receipt binds
+  `verification/lslot-cases/acceptance-2026-11-20-r4.json`
+  (sha256 `RECEIPT_SHA`, source commit `SOURCE_COMMIT`, source revision `SOURCE_REVISION`, binary
+  sha256 `BINARY_SHA`); raw lane evidence and the run's command outputs are retained under
+  `verification/lslot-cases/raw/RUN_DIR/`. The receipt binds
   the runtime after merging `cairn/wave1`'s template identity (experimental local identities v4,
   `template_sha256` and template classes): no LSLOT expectation names the identity version or a
   descriptor field, and the companion origin-control lane now asserts the v4 identity directly.
-  Two earlier round-3 runs of the same design are superseded by this receipt; their receipts stay
-  in git history and their raw lane output is retained under `verification/lslot-cases/raw/r3c-150242/`
-  and `verification/lslot-cases/raw/r3e-151546/`.
+  Earlier round-3 runs of the same design are superseded by this receipt; their receipts stay in
+  git history (the promoted round-3 receipt is retained at
+  `verification/lslot-cases/acceptance-2026-11-20-r3.json`) and their raw lane output remains under
+  `verification/lslot-cases/raw/r3c-150242/`, `raw/r3e-151546/` and `raw/r3f-151856/`.
   - **LSLOT-02 (promoted):** both independent epoch-1 registry boots; the A-to-B-to-B root
     performs two B dispatches that both select B-v1 while B-v2 publishes as epoch 2 (result 22);
     the A-to-B-to-C root keeps A-v1/B-v1/C-v1 with host-issued typed refs passed through ordered
@@ -85,31 +92,35 @@
     `cairn/wave1` the LIVE-01..10 contract fields are still identical to it (only state/evidence
     transitions landed), and the only accepted difference is owner decision 21a's LIVE-02
     `input.after_reload_ack`. Later state/evidence transitions are recorded separately.
-  - **LSLOT-03 (promoted, round 3):** the exact ordered candidate publishes at epoch 5 while the
-    reversed-input, both-sides `Account@2` schema, unknown-effect and under-declare candidates are
-    each refused with the epoch and map unchanged; the constructible generic caller's reflected
-    site carries `["test.emit","live.dispatch"]`. The only dropped variant is decision 19's
-    unselectable `fs.write`.
-  - **LSLOT-06 (promoted, round 3):** the direct quotation, aggregate capture, aggregate storage,
-    export/return and retain attempts are each refused at their earliest static or invocation
-    boundary with zero guest requests; only the checked generic borrow executes (one guest request,
-    result 21). `serialize`/`forge` are decision 19's by-design drops; `ref_authority` is observed
-    from a host-issued ref whose dispatch grant is revoked.
+  - **LSLOT-03 (promoted, round 4):** the exact ordered candidate publishes at epoch 5 while the
+    reversed-input, both-sides `Account@2` schema and unknown-effect candidates are each refused
+    with the epoch and map unchanged; a non-variant constructible generic caller's reflected site
+    carries `["test.emit","live.dispatch"]`. Decision 19's unselectable `fs.write` and its
+    impossible under-declare variant (refused at the interface before effects are compared) are
+    the drops.
+  - **LSLOT-06 (promoted, round 4):** the direct quotation, aggregate capture, aggregate storage
+    and export/return attempts are each refused at their earliest static or invocation boundary
+    with zero guest requests; only the checked generic borrow executes (one guest request, result
+    21). `serialize`/`forge` (decision 19) and `retain` (decision 25) are the by-design drops;
+    `ref_authority` is observed from a host-issued ref whose dispatch grant is revoked.
 - [ ] [serial] Implement exact immutable target admission and bounded global-epoch/slot-incarnation/generation CAS publication, rollback-as-publication and last-pin retirement/reclamation across maps, frames and saved Programs. r[H-LSLOT-01] r[S-LSLOT-01]
   Progress 2026-11-20 (round 2): executed, not yet complete. **LSLOT-04** still refuses
   `successful_rollback_requires_fresh_admission_authorization_and_evidence`: re-admission and the
   rollback grant are observed, but no publication or rollback request carries evidence, and a
   proof-required slot refuses every publication. **LSLOT-07**'s `publication-without-grant` and the
   `or evidence` half refuse for the same reason. Both wait for evidence-carrying publication, the
-  capability LSLOT-05 waits for under template identity; decision 8's premise therefore does not
-  hold for 04 and 07. **LSLOT-08** (last-pin retirement/reclamation) is unexecuted for the same
-  template-identity reason. Observed and matching on LSLOT-04: every committed update increments
+  capability LSLOT-05 waits for; decision 8's premise therefore does not hold for 04 and 07.
+  **LSLOT-08** (last-pin retirement/reclamation) is unexecuted: the gate has no projector for the
+  exact replay case, and the positive target and proof-carrying publication are still absent.
+  Observed and matching on LSLOT-04: every committed update increments
   the epoch by one, same-slot and unrelated stale writers `stale-reject`, a deleted-and-recreated
   slot uses incarnation 8 without ABA, and rollback publishes a new epoch/generation without
   replaying prior roots.
 - [ ] [serial] Execute every LSLOT case and adversarial variants including cross-slot pinning, retry after last owner release and hostile frozen-replay bindings against actual runtime; record separately bound trace, evidence, proof and trust results without inheriting LIVE acceptance. r[EV-LSLOT-01] r[VC-LSLOT-01] r[DX-LSLOT-01]
-  Progress 2026-11-20 (round 3): seven of nine cases are projected; LSLOT-01/02/03/06/09 are
+  Progress 2026-11-20 (round 4): seven of nine cases are projected; LSLOT-01/02/03/06/09 are
   promotable from one receipt, LSLOT-04 and LSLOT-07 stay refused on the fields named above
-  (evidence-carrying publication), and LSLOT-05/LSLOT-08 wait on runtime template identity
-  (P-ID-03/P-ID-04). No case inherits LIVE acceptance, and no promoted case claims more than
-  `proof: open` / `trust: explicit`. This task stays open.
+  (evidence-carrying publication), and LSLOT-05/LSLOT-08 are not executed: the gate has no
+  projector for the positive selected-target proof or the exact replay case, and both still need
+  a positive target plus proof-carrying publication (template identity T1/T2 is merged). No case
+  inherits LIVE acceptance, and no promoted case claims more than `proof: open` /
+  `trust: explicit`. This task stays open.

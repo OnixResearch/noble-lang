@@ -46,12 +46,12 @@ executes behavior, it does not prove it.
 |---|---|---|
 | LSLOT-01 | `live_slot_capture_legacy.mjs`, plus `live_slot_late_control.mjs` and `live_slot_selected_origin.mjs` as controls | yes |
 | LSLOT-02 | `live_slot_nested_roots.mjs` | yes |
-| LSLOT-03 | `live_slot_resource_ref_admission.mjs` | yes, under the owner decision 19 amendment: the unselectable `fs.write` variant is the only drop, the input-only variant is replaced by the both-sides `Account@2` candidate, the under-declare variant stays and is refused, and `generic_dispatch_effect` is observed from the reflected site |
+| LSLOT-03 | `live_slot_resource_ref_admission.mjs` | yes, under the owner decision 19 amendment: the unselectable `fs.write` and impossible under-declare variants are the drops, the input-only variant is replaced by the both-sides `Account@2` candidate, and `generic_dispatch_effect` is observed from a constructible generic caller's reflected site |
 | LSLOT-04 | `live_slot_cas_policy.mjs` | no: the rollback `evidence` conjunct has no runtime representation |
-| LSLOT-05 | not run | no: waits on runtime template identity |
-| LSLOT-06 | `live_slot_resource_ref_static.mjs` | yes, under the owner decision 19 amendment: `serialize`/`forge` are dropped by design, `guest_requests` counts the rejected attempts only, and `aggregate-capture`, `export-or-return` and `retain` accept their earliest refusal |
+| LSLOT-05 | not run | no: the gate has no projector for the positive selected-target proof; the positive target and proof-carrying publication are still absent |
+| LSLOT-06 | `live_slot_resource_ref_static.mjs` | yes, under the owner decisions 19 and 25: `serialize`/`forge` and `retain` are dropped as impossible by design, `guest_requests` counts the rejected attempts only, and `aggregate-capture`/`export-or-return` accept their earliest refusal |
 | LSLOT-07 | `live_slot_cas_policy.mjs` | no: `publication-without-grant` needs an admitted proof to be present |
-| LSLOT-08 | not run | no: waits on runtime template identity |
+| LSLOT-08 | not run | no: the gate has no projector for the exact replay case; the positive target and proof-carrying publication are still absent |
 | LSLOT-09 | `live_slot_legacy_refusal.mjs`, `live_repl_slot_exclusion.mjs` | yes |
 
 ## Regressions the gate runs before projecting

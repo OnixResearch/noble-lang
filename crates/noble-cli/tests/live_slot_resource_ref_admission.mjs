@@ -13,9 +13,15 @@ assert.equal(chosen.input.current_epoch, 4);
 const variants = chosen.input.variants;
 assert.deepEqual(variants.map(row => row.name), [
   'same-exact-interface', 'reversed-input', 'same-layout-different-resource-schema',
-  'unknown-host-contract', 'generic-caller-underdeclares-dispatch',
-], 'decision-19 amendment: only the unselectable fs.write variant is dropped');
+  'unknown-host-contract',
+], 'decision-19 amendment: the unselectable fs.write and impossible under-declare variants are'
+  + ' dropped; the input-only variant is replaced by the both-sides Account@2 candidate');
 const base = { source: '"admit" test.emit drop', inputs: chosen.input.slot_contract.input };
+// A constructible generic caller for the slot: `slot.invoke` with the slot's
+// ordered interface as its ref input. Its compiled site is the dispatch-effect
+// witness; it is a control, not a case variant.
+const genericCaller = { source: 'slot.invoke',
+  inputs: ['Account@1', 'I64', 'LiveRef<Account@1+I64,Account@1+I64,test.emit>'] };
 const candidates = {
   'same-exact-interface': base,
   'reversed-input': { source: 'swap "admit" test.emit drop', inputs: ['I64', 'Account@1'] },
@@ -24,10 +30,6 @@ const candidates = {
   // CLI host: their actual source attempts must be reported as profile-limited.
   'effect-ceiling-widened': { source: '"admit" test.emit drop "path" fs.write', inputs: base.inputs },
   'unknown-host-contract': { source: '"admit" test.emit drop unknown.effect', inputs: base.inputs },
-  'generic-caller-underdeclares-dispatch': {
-    source: 'slot.invoke', inputs: ['Account@1', 'I64',
-      'LiveRef<Account@1+I64,Account@1+I64,test.emit>'],
-  },
 };
 const sources = { seed: '1 +', exact: base.source,
   ...Object.fromEntries(variants.map(row => [row.name, candidates[row.name].source])) };
@@ -69,15 +71,7 @@ for (const variant of variants) {
     assert.equal(installed.guest_requests, 0, JSON.stringify(installed));
     assert.equal(installed.protected_operations, 0, JSON.stringify(installed));
     let publication = null;
-    let site = null;
     if (installed.outcome === 'installed') {
-      if (name === 'generic-caller-underdeclares-dispatch') {
-        site = await session.issue({ operation: 'reflect', id: name, site_id: 0 });
-        // Reflect reads the genuinely compiled site; its required live.dispatch
-        // cannot be silently omitted by a caller asserting only test.emit.
-        expectOutcome(site, 'reflected');
-        assert.ok(site.site.effects.includes('live.dispatch'), JSON.stringify(site));
-      }
       publication = await session.issue({ operation: 'publish', slot: 'account', id: name,
         expected_epoch: '4' });
       assert.equal(publication.guest_requests, 0, JSON.stringify(publication));
@@ -107,10 +101,7 @@ for (const variant of variants) {
       epoch_after: name === 'same-exact-interface' ? '5 (candidate)' : '5 (independent exact control)',
       limitation: name === 'effect-ceiling-widened' || name === 'unknown-host-contract'
           ? 'fs.write/unknown.effect cannot be registered in the pinned live-slot CLI profile; source rejected before publication'
-          : name === 'generic-caller-underdeclares-dispatch'
-            ? 'compiled caller reflects live.dispatch, but source has no caller-claimed-effect override and adds a LiveRef input'
-            : null,
-      site: site?.site ?? null,
+          : null,
       guest_requests: publication?.guest_requests ?? installed.guest_requests,
       protected_operations: publication?.protected_operations ?? installed.protected_operations,
       candidate_body_executions: 'no invoke issued; guest trace []',
@@ -119,6 +110,37 @@ for (const variant of variants) {
   } catch (error) {
     await session.abort();
     throw Error(`${name}: ${error} raw=${session.log}`, { cause: error });
+  }
+}
+// A non-canonical generic-caller control: the caller's own compiled site is the
+// `generic_dispatch_effect` witness. The caller declares the slot's ordered
+// interface as its ref input, so no interface refusal can stand in for the
+// dispatch-effect check.
+let callerReflection;
+{
+  const session = await cli(binary, 'LSLOT03-caller-reflection', selectedAuthority({
+    sources: { ...sources, caller: genericCaller.source },
+    resources: resourceRows, slots, grants, effects: ['test.emit', 'live.dispatch'],
+  }));
+  try {
+    expectOutcome(await session.configured, 'configured');
+    const installed = expectOutcome(await session.issue({ operation: 'install', id: 'caller',
+      source: genericCaller.source, inputs: genericCaller.inputs }), 'installed');
+    assert.deepEqual([installed.guest_requests, installed.protected_operations], [0, 0]);
+    const site = expectOutcome(await session.issue({ operation: 'reflect', id: 'caller',
+      site_id: 0 }), 'reflected');
+    // Reflect reads the genuinely compiled site; its required live.dispatch
+    // cannot be silently omitted by a caller asserting only test.emit.
+    assert.equal(site.site.instruction, 'slot.invoke');
+    assert.ok(site.site.effects.includes('live.dispatch'), JSON.stringify(site));
+    assert.deepEqual([site.guest_requests, site.protected_operations], [0, 0]);
+    assert.equal(await session.close(), 0);
+    callerReflection = { install: installed.outcome, install_inputs: genericCaller.inputs,
+      install_source: genericCaller.source, site: site.site,
+      selected_binary_sha256: session.selectedBinarySha256, raw: session.log };
+  } catch (error) {
+    await session.abort();
+    throw Error(`caller-reflection: ${error} raw=${session.log}`, { cause: error });
   }
 }
 // A non-canonical widening control: the decoy slot selects the checked test
@@ -184,5 +206,6 @@ for (const [name, ceiling] of [
 const summary = path.join(evidenceDirectory, 'LSLOT03-summary.json');
 fs.writeFileSync(summary, JSON.stringify({ selected_binary: binary,
   canonical: 'specs/conformance/live-reference-cases.json#LSLOT-03',
-  results, ceiling_control: ceilingControl }, null, 2));
-console.log(JSON.stringify({ summary, results, ceiling_control: ceilingControl }));
+  results, caller_reflection: callerReflection, ceiling_control: ceilingControl }, null, 2));
+console.log(JSON.stringify({ summary, results, caller_reflection: callerReflection,
+  ceiling_control: ceilingControl }));

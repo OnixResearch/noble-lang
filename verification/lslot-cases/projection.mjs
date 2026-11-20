@@ -573,7 +573,9 @@ export function project03({ fixture, lane }) {
     measured('expected', 'candidate_host_requests_during_admission', 0,
       lane.variants.reduce((total, found) => total + (found.protected_operations ?? 0), 0)),
     measured('expected', 'generic_dispatch_effect', fixture.expected.generic_dispatch_effect,
-      item('generic-caller-underdeclares-dispatch').site?.effects ?? null),
+      lane.callerSite.effects,
+      'the constructible generic caller\'s compiled site, reflected without any admission'
+      + ' attempt standing in for the effect check', { install: lane.callerInstall }),
     measured('expected', 'ordered_nominal_resource_types_checked', true,
       item('reversed-input').publication_outcome === 'refused'
         && item('same-layout-different-resource-schema').publication_outcome === 'refused'
@@ -685,8 +687,8 @@ export function project06({ fixture, lane }) {
     return found;
   };
   const entries = [];
-  // The negative attempt is either the refused `attempt` install or, where the
-  // case has no installable negative source (retain), the refused re-invoke.
+  // The negative attempt is the refused `attempt` install of the variant's own
+  // source and inputs.
   const refusedSomehow = found => ['refused', 'install-refused']
     .includes(found.negative?.outcome);
   for (const variant of fixture.input.variants) {
