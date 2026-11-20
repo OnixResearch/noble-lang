@@ -550,6 +550,13 @@ The decision is **NO-GO for integration at this revision**, with reasons:
 - SM-7 stays a separate obligation, so a source-model proof does not transfer
   to an installed artifact.
 
+The evidence is `verification/semantic-merge-verification/receipt.json`
+(sha256 `d059a8153800b8982d080830618ab49465980d36860d049e4d64584a6bdef21b`,
+run on the clean tree at `9338c66d`): both regenerated claims
+(`SMERGE-CASE-04`, `SMERGE-CASE-01`) were kernel-checked by the pinned model
+with axioms `propext`/`Quot.sound`, the Phase 2 lane was re-run unchanged, and
+the wrong-proof and command-submission controls stayed `unknown`.
+
 No claim generator is wired into `prepare`, no admission path exists, no merge,
 branch, live slot, migration or release action follows, and the production
 surfaces are unchanged. The GO condition is the completion of plan steps 1-7

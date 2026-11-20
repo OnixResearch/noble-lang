@@ -2,6 +2,7 @@
     tigerstyle::assertion_density,
     tigerstyle::raw_arithmetic_overflow,
     tigerstyle::fragile_exhaustive_enum_match,
+    tigerstyle::function_length,
     reason = "Owner: noble-contracts-maintainers; this test-only consumer harness builds finite selections and replays bounded corpora, so long setup legs and fixed-width generator arithmetic are the readable form. Test-only lane: matches over the observable/fragment enums are intentional regression tables, panics and ignored cleanup results are fixture assertions, and the bounded checker's digest casts index a 16-entry nibble table."
 )]
 #![expect(

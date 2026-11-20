@@ -3,6 +3,7 @@
     tigerstyle::raw_arithmetic_overflow,
     tigerstyle::numeric_units,
     tigerstyle::fragile_exhaustive_enum_match,
+    tigerstyle::path_segment_repetition,
     tigerstyle::platform_dependent_cast,
     reason = "Owner: noble-contracts-maintainers; this test-only claim harness builds finite subjects, hash blocks and refusal tables, so long setup legs and fixed-width hash arithmetic are the readable form. Test-only lane: matches over the observable/fragment enums are intentional regression tables, panics and ignored cleanup results are fixture assertions, and the bounded checker's digest casts index a 16-entry nibble table."
 )]
