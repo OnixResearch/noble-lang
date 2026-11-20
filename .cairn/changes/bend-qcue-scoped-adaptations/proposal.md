@@ -4,9 +4,11 @@ The pinned Bend2 and qcue prototypes expose useful design and assurance
 questions, but Noble's accepted M3/M6/MC2 profiles already have different
 ownership, execution, and proof boundaries. Record only compatible, separately
 gated extensions without retroactively promoting their implementation. Keep
-this change open after its specification sync: DX-04 subsequently passed its
-selected finite Result library gate, DX-13 passed a methodology review only,
-and owner release and remaining optional trials are still open.
+this change open after its specification sync until all five lanes have a
+reviewed disposition: DX-04 passed its selected finite Result library gate,
+DX-13 passed a methodology review only, CONTRACT-16 passed its owner-law
+release gate with proof open, ADAPT-17 executed with a frozen NO-GO, and
+ADAPT-18 is deferred and unexecuted by owner decision.
 
 ## What Changes
 
@@ -27,16 +29,17 @@ and owner release and remaining optional trials are still open.
   not a proof or a new Noble language profile. r[DX-PROPERTY-02]
 
 The native requirement deltas and their scenario designs are already applied.
-CONTRACT-16 remains `absent`/`not-run`. ADAPT-17 executed and passed with a
+CONTRACT-16 is `implemented`/`passed` with proof open: the owner-law records
+were frozen on the owner's instruction on 2026-11-20
+(`verification/owner-law/laws/`, commit 12b52f9a) before the release consumer
+(e77c87e5), and the independent release gate passed at f1b8ae87
+(`verification/owner-law/acceptance.json`). ADAPT-17 executed and passed with a
 frozen NO-GO layout result; ADAPT-18 is deferred and unexecuted by owner
-decision (2026-11-20). DX-13's optional
-methodology review passed with a separate pinned-source review receipt, but no
-Noble finite oracle executed. The owner-law records for CONTRACT-16 were frozen
-on the owner's instruction on 2026-11-20 (`verification/owner-law/laws/`), before
-any consumer or candidate edit; no consumer has run yet. DX-04 separately
-passed its selected source-bound Result library gate. This active record
-preserves the remaining gates without making optional studies M3/M6/MC2
-dependencies or treating review as model agreement, proof or release.
+decision (2026-11-20). DX-13's optional methodology review passed with a
+separate pinned-source review receipt, but no Noble finite oracle executed.
+DX-04 separately passed its selected source-bound Result library gate. This
+record keeps the optional studies out of M3/M6/MC2 dependencies and does not
+treat review as model agreement, proof or release.
 
 ## Impact
 
@@ -44,7 +47,8 @@ dependencies or treating review as model agreement, proof or release.
   backend-experiments specs; supporting decisions, roadmap, status, and
   independently stated conformance designs; generated compatibility views/ledger.
   Future implementation is restricted to independently selected slices.
-- **Testing**: DX-04 has separate source-bound execution, and DX-13 has only
-  a pinned-source methodology-review receipt. Actual finite-model execution,
-  owner-law admission and other optional trials remain pending. Neither review
-  nor document validation supplies a new runtime or proof claim.
+- **Testing**: DX-04, CONTRACT-16 and ADAPT-17 have separate source-bound
+  execution receipts (ADAPT-17's frozen result is NO-GO); DX-13 has only a
+  pinned-source methodology-review receipt. No Noble finite-model oracle has
+  executed, and ADAPT-18 is unexecuted by owner decision. Neither review nor
+  document validation supplies a new runtime or proof claim.
