@@ -3,8 +3,8 @@
   "kind": "test",
   "result": "passed",
   "claim": "The promoted LIVE cases (LIVE-01, LIVE-06, LIVE-07) are exercised against the production `noble live repl` child built from this committed tree: LIVE-01 by a resident V8 reload whose ACK precedes a fresh next top-level stack, LIVE-06 by a retained old Program whose request is denied under the revoked current host policy, and LIVE-07 by an explicit interpreter choice refused at startup without a V8 fallback. No proof, no case outside the promoted set and no feature-gated seam result is claimed.",
-  "tested_commit": "ac878aa6555f9d470523c1ae90bb3fbf3b0ed3bf",
-  "source_revision": "sha256:99ac83c628a6eac7a6d9f3a8ae67ec69be8473323d16866f7ce0c40e6369cc47",
+  "tested_commit": "004d24c4142e3c94b6e18a232f04929e1a3515bf",
+  "source_revision": "sha256:f4abcb1e43efba0405040ec85d11468516585fbad174aaeace08930a564a7d1a",
   "scope": {
     "paths": [
       "crates",
@@ -201,7 +201,7 @@
     "crates/noble-cli/tests/fixtures/worker-state.json": "19c50ff459532d55d84b81a5fd3b34e6efdf00480ba742f89d40b9c41abb6907",
     "crates/noble-cli/tests/fixtures/worker-submit.json": "cb3bfb3768977a699112ccf705d78f1e30bdf5ae57a3bace5a84436aff886cf3",
     "crates/noble-cli/tests/fixtures/worker-transition.noble": "1fc74eae8be587ff5f380438f53abc4201e98f3fb149de6b127afd6c1926e9b1",
-    "crates/noble-cli/tests/live_repl.rs": "e60bda2bf81cbeaa6ca0f2c3d1afb69774f81250b4aa091624ccbd9ab8d7a328",
+    "crates/noble-cli/tests/live_repl.rs": "d1b5501006d735b267608ca1fc67c4dc76a43d90653fc5b67a449d4bb646a3f1",
     "crates/noble-cli/tests/live_slot.rs": "c23c15752485c115c2243cd12b7ead38e00bb310750d0c66357651816f453b4c",
     "crates/noble-cli/tests/live_slot_caller_emits.mjs": "f65329ae24bc0c9164940cf544bf130eeca79a35d952c33ccdb8241d08e47a06",
     "crates/noble-cli/tests/live_slot_capture_legacy.mjs": "966174f8b00e1105800cc276f183d071544229e05885e9a915e54a821e4b2088",
@@ -1215,26 +1215,65 @@
     "crates/noble-wasm/wit/worker-transition.wit": "f788988352acbccfe9a9f4fd6811551b1b3e4d4b43f1436b7a8c5e702e7652f0",
     "policy/tool-selection.json": "8ed766cdfa42f8228bfba41c28c6aee91afd97652418ae7f16952cdc51875e9b",
     "rust-toolchain.toml": "7bfd3ca943dcce5b34de4c5f57414eae7496a698034208cf026690ada5130271",
-    "verification/live-cases/gate.mjs": "b4201f95b129757fa436ba43456c85c7f631c1b39717ce6d6fd88431542343a9"
+    "verification/live-cases/gate.mjs": "341572d9d31441734ac164ae2e1a1a2ec5f4448ad84d1ce05dbc70f241ff6911"
   },
   "canonical_case_file": "specs/conformance/live-wasm-cases.json",
   "canonical_case_revision": "0.1.0-draft.5",
   "binaries": {
     "noble": {
-      "path": "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
-      "sha256": "3b48316d096f755ff43fd990fa0088376d433b78ac2a8b695ff4ed2b7214146b",
+      "path": "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
+      "sha256": "ca4b197c4b9e36d90b34456e71d5e21c122d496264acd9c8a221595fc9b76fb7",
       "bytes": 287924664
     },
     "live_repl_tests": {
-      "path": "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/deps/live_repl-010f3ea587a07416",
-      "sha256": "0ab763c31288abc836778cbda908f75d29a12a3769a8c478102a418facdf9c5f",
-      "bytes": 12632848
+      "path": "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/live_repl-default",
+      "sha256": "f6f4867d7d5e659e8eb0a94d2aa74677069fea5cb3ebee518524e44581757be3",
+      "bytes": 12649640
+    },
+    "noble_feature": {
+      "path": "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-feature",
+      "sha256": "f608530797df34664938203b73ba56f81fd95ba18c85b93ca2dd1100c4db08c1",
+      "bytes": 287934448,
+      "features": [
+        "live-test-barrier"
+      ]
+    },
+    "live_repl_tests_feature": {
+      "path": "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/live_repl-feature",
+      "sha256": "99b91ffbf866ecdfdf695bb6fc98755051b7045309aaa28421d58f3433bd4b2a",
+      "bytes": 14480288,
+      "features": [
+        "live-test-barrier"
+      ]
     },
     "node": {
       "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
       "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
       "version": "v24.13.0"
     }
+  },
+  "seams": [
+    {
+      "label": "barrier-env-ignored-by-default-binary",
+      "observed": true,
+      "detail": {
+        "stage": "wasm-live",
+        "defined": "defined",
+        "stack": [
+          "I64:21"
+        ],
+        "env": [
+          "NOBLE_LIVE_TEST_BARRIER_DIR",
+          "NOBLE_LIVE_TEST_BARRIER_POINT",
+          "NOBLE_LIVE_TEST_BARRIER_EXPECTED"
+        ]
+      }
+    }
+  ],
+  "barrier_tests": {
+    "inFlight": "feature-test-old_active_wasm_frame_finishes_before_queued_reload_ack",
+    "racing": "feature-test-watched_accepted_top_level_finishes_old_frame_before_new_save_ack",
+    "superseded": "feature-test-compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack"
   },
   "commands": [
     {
@@ -1253,16 +1292,16 @@
         "--message-format=json-render-diagnostics"
       ],
       "exit": 0,
-      "duration_ms": 66811,
+      "duration_ms": 56082,
       "stdout": {
         "path": "raw/production-build.out",
         "bytes": 126515,
-        "sha256": "6daeefdc9b1de3a24876eb7d9e20d13560c231f8999f1269c1b4e81e845616b4"
+        "sha256": "e03f6a42c649d9aec949ad10371e795d3048ece2d5f7871098e01fe92d49fe3d"
       },
       "stderr": {
         "path": "raw/production-build.err",
         "bytes": 5724,
-        "sha256": "ecea09afdaa9609605d95267cf22c6b2dc91ae24b436a54db8329d950259db86"
+        "sha256": "bff3ee93b5268fb8653f54ad88b7f274b442dd265f405c204e63468576da318b"
       }
     },
     {
@@ -1282,33 +1321,33 @@
         "--message-format=json-render-diagnostics"
       ],
       "exit": 0,
-      "duration_ms": 1770,
+      "duration_ms": 1463,
       "stdout": {
         "path": "raw/test-build.out",
         "bytes": 127191,
-        "sha256": "b8677d28633698f6312ad8e91c7362ec0c56675bc0c6cfb4f5820e0c372eafdb"
+        "sha256": "6fd04796cac212b18dc24fe1faa51b1d2b4bd95e2d9e2aee516c26c64f60dcfa"
       },
       "stderr": {
         "path": "raw/test-build.err",
         "bytes": 170,
-        "sha256": "96c4beef9b49d2c5cc8f1ea6cda54b09fbb9a95e13b8fa10300c97ae98b4c2a3"
+        "sha256": "12bd12d150c34b75c5f94c1d13ee7bd3aa99f419a237199af4817628192607ed"
       }
     },
     {
       "label": "test-live_01_reload_ack_precedes_fresh_next_top_level_call",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/deps/live_repl-010f3ea587a07416",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/live_repl-default",
         "--exact",
         "live_01_reload_ack_precedes_fresh_next_top_level_call",
         "--test-threads=1",
         "--nocapture"
       ],
       "exit": 0,
-      "duration_ms": 470,
+      "duration_ms": 399,
       "stdout": {
         "path": "raw/test-live_01_reload_ack_precedes_fresh_next_top_level_call.out",
         "bytes": 179,
-        "sha256": "6940449792dc1403c15b611cbb24c8199ec7a188a240a58c0d6396c322d96360"
+        "sha256": "757e9b17e3fbd3749941e32233924af93b0706a63d19bc913ce5d85f1e7e003c"
       },
       "stderr": {
         "path": "raw/test-live_01_reload_ack_precedes_fresh_next_top_level_call.err",
@@ -1319,18 +1358,18 @@
     {
       "label": "test-live06_host_revokes_old_effect_before_actual_retained_wasm_request",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/deps/live_repl-010f3ea587a07416",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/live_repl-default",
         "--exact",
         "live06_host_revokes_old_effect_before_actual_retained_wasm_request",
         "--test-threads=1",
         "--nocapture"
       ],
       "exit": 0,
-      "duration_ms": 346,
+      "duration_ms": 300,
       "stdout": {
         "path": "raw/test-live06_host_revokes_old_effect_before_actual_retained_wasm_request.out",
         "bytes": 192,
-        "sha256": "b9f7e2756d866dcb898a586fbfd13d2afd257088638b8c3ee3b74c1aa17db3bb"
+        "sha256": "f0b41cc186cfda02c114b82182c3a42db7114b28a4b927e0d100c4150781d95e"
       },
       "stderr": {
         "path": "raw/test-live06_host_revokes_old_effect_before_actual_retained_wasm_request.err",
@@ -1341,18 +1380,18 @@
     {
       "label": "test-live06_a_active_controls_isolate_host_revocation_from_alias_rebind",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/deps/live_repl-010f3ea587a07416",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/live_repl-default",
         "--exact",
         "live06_a_active_controls_isolate_host_revocation_from_alias_rebind",
         "--test-threads=1",
         "--nocapture"
       ],
       "exit": 0,
-      "duration_ms": 590,
+      "duration_ms": 486,
       "stdout": {
         "path": "raw/test-live06_a_active_controls_isolate_host_revocation_from_alias_rebind.out",
         "bytes": 192,
-        "sha256": "a0f185007aa367935b2f26e9aab074645d770137ae69c5a251879419b4b816ab"
+        "sha256": "b0c6fd0a50f2153703e6c542df67313a01c0ac4847e8309d4b654e8ab352fa88"
       },
       "stderr": {
         "path": "raw/test-live06_a_active_controls_isolate_host_revocation_from_alias_rebind.err",
@@ -1363,18 +1402,18 @@
     {
       "label": "test-revoked_declared_adapter_cannot_reauthorize_on_later_import",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/deps/live_repl-010f3ea587a07416",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/live_repl-default",
         "--exact",
         "revoked_declared_adapter_cannot_reauthorize_on_later_import",
         "--test-threads=1",
         "--nocapture"
       ],
       "exit": 0,
-      "duration_ms": 488,
+      "duration_ms": 245,
       "stdout": {
         "path": "raw/test-revoked_declared_adapter_cannot_reauthorize_on_later_import.out",
         "bytes": 185,
-        "sha256": "1c3737d92171d4825e1a374a13b967f27303756e2e31adb0cb43223457157700"
+        "sha256": "989473e68df14f446904d5a23f0680d8cd3fb400bba1e63b15dbe1ed04cd52ec"
       },
       "stderr": {
         "path": "raw/test-revoked_declared_adapter_cannot_reauthorize_on_later_import.err",
@@ -1385,18 +1424,18 @@
     {
       "label": "test-interpreter_choice_refuses_at_startup_without_v8_fallback",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/deps/live_repl-010f3ea587a07416",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/live_repl-default",
         "--exact",
         "interpreter_choice_refuses_at_startup_without_v8_fallback",
         "--test-threads=1",
         "--nocapture"
       ],
       "exit": 0,
-      "duration_ms": 46,
+      "duration_ms": 36,
       "stdout": {
         "path": "raw/test-interpreter_choice_refuses_at_startup_without_v8_fallback.out",
         "bytes": 183,
-        "sha256": "58814b1e8c046bdd27922e0f305e83d73ff871bc843d81bc50475d255cfd46b0"
+        "sha256": "ec27a10df091f30889e2a824c9269a9a9a681d51b3cb7d1bfdb95060ba5f67e6"
       },
       "stderr": {
         "path": "raw/test-interpreter_choice_refuses_at_startup_without_v8_fallback.err",
@@ -1408,20 +1447,20 @@
       "label": "LIVE-01",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/01-LIVE-01/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/01-LIVE-01/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 633,
-      "pid": 2008761,
+      "duration_ms": 346,
+      "pid": 2561902,
       "script": [
         "20 addone",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/01-LIVE-01/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/01-LIVE-01/math.noble/math.noble",
         "20 addone",
         ":generation"
       ],
@@ -1440,12 +1479,12 @@
       "label": "LIVE-01-run-definition",
       "kind": "direct-cli",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "run",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/02-LIVE-01-run/math.noble/math.noble"
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/02-LIVE-01-run/math.noble/math.noble"
       ],
       "exit": 0,
-      "duration_ms": 19,
+      "duration_ms": 14,
       "stdin": null,
       "stdout": {
         "path": "raw/LIVE-01-run-definition.out",
@@ -1462,11 +1501,11 @@
       "label": "LIVE-01-session",
       "kind": "direct-cli",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "session"
       ],
       "exit": 0,
-      "duration_ms": 423,
+      "duration_ms": 215,
       "stdin": "c457faae4c466261ef00dc0f79b31d744dc6426918001733e62e4393001a5dfd",
       "stdout": {
         "path": "raw/LIVE-01-session.out",
@@ -1483,11 +1522,11 @@
       "label": "LIVE-01-self-propose",
       "kind": "direct-cli",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "session"
       ],
       "exit": 2,
-      "duration_ms": 22,
+      "duration_ms": 14,
       "stdin": "71234d12153a7d264f2bd19f28c1c85abfe374a4c36cb559a54929e3ca450a86",
       "stdout": {
         "path": "raw/LIVE-01-self-propose.out",
@@ -1504,25 +1543,25 @@
       "label": "LIVE-06",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/03-LIVE-06/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/03-LIVE-06/math.noble/math.noble",
         "--engine",
         "v8",
         "--declared-modules",
         "--bindings",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/03-LIVE-06/math.noble/bindings.txt",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/03-LIVE-06/math.noble/bindings.txt",
         "--verify-source-before-execute"
       ],
       "exit": 2,
-      "duration_ms": 428,
-      "pid": 2008984,
+      "duration_ms": 299,
+      "pid": 2562071,
       "script": [
         "import ledger@1 as l",
         "[ l.send ]",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/03-LIVE-06/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/03-LIVE-06/math.noble/math.noble",
         "import ledger@2 as n",
         ":revoke-effect ledger@1 emit-a test.emit",
         "n.send",
@@ -1544,17 +1583,17 @@
       "label": "LIVE-07",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/04-LIVE-07/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/04-LIVE-07/math.noble/math.noble",
         "--engine",
         "interpreter"
       ],
       "exit": 2,
-      "duration_ms": 313,
-      "pid": 2009093,
+      "duration_ms": 315,
+      "pid": 2562127,
       "script": [],
       "stdout": {
         "path": "raw/LIVE-07.out",
@@ -1571,17 +1610,17 @@
       "label": "LIVE-07-v8",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/04-LIVE-07/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/04-LIVE-07/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 297,
-      "pid": 2010064,
+      "duration_ms": 182,
+      "pid": 2562183,
       "script": [
         ":generation"
       ],
@@ -1600,21 +1639,21 @@
       "label": "LIVE-02",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/05-LIVE-02/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/05-LIVE-02/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 740,
-      "pid": 2010205,
+      "duration_ms": 391,
+      "pid": 2562192,
       "script": [
         "def twice [ addone addone ]",
         "[ addone ]",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/05-LIVE-02/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/05-LIVE-02/math.noble/math.noble",
         "20 twice swap 20 swap run",
         "20 swap run"
       ],
@@ -1633,21 +1672,21 @@
       "label": "LIVE-03-malformed-source",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/06-LIVE-03-malformed-source/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/06-LIVE-03-malformed-source/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 648,
-      "pid": 2010482,
+      "duration_ms": 300,
+      "pid": 2562416,
       "script": [
         "7",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/06-LIVE-03-malformed-source/math.noble/unselected.noble",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/06-LIVE-03-malformed-source/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/06-LIVE-03-malformed-source/math.noble/unselected.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/06-LIVE-03-malformed-source/math.noble/math.noble",
         "addone"
       ],
       "stdout": {
@@ -1665,21 +1704,21 @@
       "label": "LIVE-03-wrong-input-type",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/07-LIVE-03-wrong-input-type/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/07-LIVE-03-wrong-input-type/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 613,
-      "pid": 2010732,
+      "duration_ms": 286,
+      "pid": 2562493,
       "script": [
         "7",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/07-LIVE-03-wrong-input-type/math.noble/unselected.noble",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/07-LIVE-03-wrong-input-type/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/07-LIVE-03-wrong-input-type/math.noble/unselected.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/07-LIVE-03-wrong-input-type/math.noble/math.noble",
         "addone"
       ],
       "stdout": {
@@ -1697,21 +1736,21 @@
       "label": "LIVE-03-effect-ceiling-increase",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/08-LIVE-03-effect-ceiling-increase/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/08-LIVE-03-effect-ceiling-increase/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 670,
-      "pid": 2010890,
+      "duration_ms": 286,
+      "pid": 2562549,
       "script": [
         "7",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/08-LIVE-03-effect-ceiling-increase/math.noble/unselected.noble",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/08-LIVE-03-effect-ceiling-increase/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/08-LIVE-03-effect-ceiling-increase/math.noble/unselected.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/08-LIVE-03-effect-ceiling-increase/math.noble/math.noble",
         "addone"
       ],
       "stdout": {
@@ -1729,21 +1768,21 @@
       "label": "LIVE-03-incompatible-public-interface",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/09-LIVE-03-incompatible-public-interface/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/09-LIVE-03-incompatible-public-interface/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 707,
-      "pid": 2011153,
+      "duration_ms": 299,
+      "pid": 2562605,
       "script": [
         "7",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/09-LIVE-03-incompatible-public-interface/math.noble/unselected.noble",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/09-LIVE-03-incompatible-public-interface/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/09-LIVE-03-incompatible-public-interface/math.noble/unselected.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/09-LIVE-03-incompatible-public-interface/math.noble/math.noble",
         "addone"
       ],
       "stdout": {
@@ -1761,21 +1800,21 @@
       "label": "LIVE-03-missing-module",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/10-LIVE-03-missing-module/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/10-LIVE-03-missing-module/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 652,
-      "pid": 2011295,
+      "duration_ms": 317,
+      "pid": 2562661,
       "script": [
         "7",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/10-LIVE-03-missing-module/math.noble/unselected.noble",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/10-LIVE-03-missing-module/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/10-LIVE-03-missing-module/math.noble/unselected.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/10-LIVE-03-missing-module/math.noble/math.noble",
         "addone"
       ],
       "stdout": {
@@ -1790,65 +1829,71 @@
       }
     },
     {
-      "label": "LIVE-03-incompatible-schema-declared",
+      "label": "LIVE-03-declared",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/11-LIVE-03-incompatible-schema-declared/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/11-LIVE-03-declared/math.noble/math.noble",
         "--engine",
         "v8",
         "--declared-modules",
         "--bindings",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/11-LIVE-03-incompatible-schema-declared/math.noble/bindings.txt"
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/11-LIVE-03-declared/math.noble/bindings.txt"
       ],
       "exit": 0,
-      "duration_ms": 265,
-      "pid": 2011516,
+      "duration_ms": 249,
+      "pid": 2562738,
       "script": [
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/11-LIVE-03-incompatible-schema-declared/math.noble/math.noble"
+        "def addone [ 1 + ]",
+        "7",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/11-LIVE-03-declared/math.noble/math.noble",
+        "addone"
       ],
       "stdout": {
-        "path": "raw/LIVE-03-incompatible-schema-declared.out",
-        "bytes": 792,
-        "sha256": "58369b04c30884186eacf63545d8d74df1fbfa2993f37ffa9b07eadf274cbfad"
+        "path": "raw/LIVE-03-declared.out",
+        "bytes": 8856,
+        "sha256": "2dccdeae777d19d24c7a89cf9bb38f54817685ca336310af70833e29d0e2acc4"
       },
       "stderr": {
-        "path": "raw/LIVE-03-incompatible-schema-declared.err",
+        "path": "raw/LIVE-03-declared.err",
         "bytes": 0,
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       }
     },
     {
-      "label": "LIVE-03-dependency-cycle-declared",
+      "label": "LIVE-03-declared-cycle",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/12-LIVE-03-dependency-cycle-declared/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/12-LIVE-03-declared-cycle/math.noble/math.noble",
         "--engine",
         "v8",
         "--declared-modules",
         "--bindings",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/12-LIVE-03-dependency-cycle-declared/math.noble/bindings.txt"
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/12-LIVE-03-declared-cycle/math.noble/bindings.txt"
       ],
       "exit": 0,
-      "duration_ms": 271,
-      "pid": 2011587,
+      "duration_ms": 261,
+      "pid": 2562755,
       "script": [
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/12-LIVE-03-dependency-cycle-declared/math.noble/math.noble"
+        "def addone [ 1 + ]",
+        "7",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/12-LIVE-03-declared-cycle/math.noble/math.noble",
+        "addone"
       ],
       "stdout": {
-        "path": "raw/LIVE-03-dependency-cycle-declared.out",
-        "bytes": 774,
-        "sha256": "f6d3a1a2153bd7873e6c5bde18c9224b32a1923ef50d7bf62080c893e99f5a5d"
+        "path": "raw/LIVE-03-declared-cycle.out",
+        "bytes": 9296,
+        "sha256": "96341c047eb90f1d3cb14f97377ecf6d144ee985786db69b4f5b4b66b8ed2f49"
       },
       "stderr": {
-        "path": "raw/LIVE-03-dependency-cycle-declared.err",
+        "path": "raw/LIVE-03-declared-cycle.err",
         "bytes": 0,
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       }
@@ -1857,17 +1902,17 @@
       "label": "LIVE-05-partial",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "watch",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/13-LIVE-05-partial/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/13-LIVE-05-partial/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 969,
-      "pid": 2011655,
+      "duration_ms": 600,
+      "pid": 2562818,
       "script": [
         "20 addone",
         "20 addone"
@@ -1887,17 +1932,17 @@
       "label": "LIVE-05-missing",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "watch",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/14-LIVE-05-missing/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/14-LIVE-05-missing/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 656,
-      "pid": 2012055,
+      "duration_ms": 337,
+      "pid": 2563111,
       "script": [
         "7",
         "20 addone",
@@ -1918,17 +1963,17 @@
       "label": "LIVE-05-escape",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "watch",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/15-LIVE-05-escape/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/15-LIVE-05-escape/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 388,
-      "pid": 2012530,
+      "duration_ms": 205,
+      "pid": 2563328,
       "script": [],
       "stdout": {
         "path": "raw/LIVE-05-escape.out",
@@ -1945,19 +1990,19 @@
       "label": "LIVE-05-budget",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "watch",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/16-LIVE-05-budget/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/16-LIVE-05-budget/math.noble/math.noble",
         "--engine",
         "v8",
         "--max-retained-generations",
         "2"
       ],
       "exit": 0,
-      "duration_ms": 635,
-      "pid": 2012749,
+      "duration_ms": 324,
+      "pid": 2563353,
       "script": [
         "[ addone ]"
       ],
@@ -1976,17 +2021,17 @@
       "label": "LIVE-05-trap",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/17-LIVE-05-trap/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/17-LIVE-05-trap/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 394,
-      "pid": 2013013,
+      "duration_ms": 213,
+      "pid": 2563424,
       "script": [
         "\"A\" test.emit test.abort"
       ],
@@ -1997,6 +2042,185 @@
       },
       "stderr": {
         "path": "raw/LIVE-05-trap.err",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "seam-absence-default",
+      "kind": "live-child",
+      "command": [
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/noble-default",
+        "live",
+        "repl",
+        "--source",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/18-seam-absence/math.noble/math.noble",
+        "--engine",
+        "v8"
+      ],
+      "exit": 0,
+      "duration_ms": 326,
+      "pid": 2563491,
+      "script": [
+        "def twice [ addone addone ]",
+        "20 addone"
+      ],
+      "stdout": {
+        "path": "raw/seam-absence-default.out",
+        "bytes": 5933,
+        "sha256": "da8ec7e6f6f4d2012a727fd00f8aa5fec583f53f8a1559fad3be64edbfceac06"
+      },
+      "stderr": {
+        "path": "raw/seam-absence-default.err",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "feature-build",
+      "command": [
+        "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo",
+        "build",
+        "-p",
+        "noble-cli",
+        "--bin",
+        "noble",
+        "--features",
+        "live-test-barrier",
+        "--locked",
+        "--offline",
+        "-j",
+        "4",
+        "--message-format=json-render-diagnostics"
+      ],
+      "exit": 0,
+      "duration_ms": 11267,
+      "stdout": {
+        "path": "raw/feature-build.out",
+        "bytes": 126398,
+        "sha256": "185546431799c05ef90a0d57b1f027830a2524e03e3935d89b1b5af2df5fedb1"
+      },
+      "stderr": {
+        "path": "raw/feature-build.err",
+        "bytes": 170,
+        "sha256": "0a40678ea1d95689dc689baa0927723cd7dab178a08e69aa345cdad45a559769"
+      }
+    },
+    {
+      "label": "feature-test-build",
+      "command": [
+        "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo",
+        "test",
+        "-p",
+        "noble-cli",
+        "--test",
+        "live_repl",
+        "--features",
+        "live-test-barrier",
+        "--no-run",
+        "--locked",
+        "--offline",
+        "-j",
+        "4",
+        "--message-format=json-render-diagnostics"
+      ],
+      "exit": 0,
+      "duration_ms": 1631,
+      "stdout": {
+        "path": "raw/feature-test-build.out",
+        "bytes": 127229,
+        "sha256": "556fba9de71cf164da2028b7e5a2ead2fc053c85f0c13dfb399f340004304886"
+      },
+      "stderr": {
+        "path": "raw/feature-test-build.err",
+        "bytes": 170,
+        "sha256": "e5cad76947e22775d7aeb5d42a10c6d046977b2b5febf108304b70b757a6eabe"
+      }
+    },
+    {
+      "label": "feature-test-old_active_wasm_frame_finishes_before_queued_reload_ack",
+      "command": [
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/live_repl-feature",
+        "--exact",
+        "old_active_wasm_frame_finishes_before_queued_reload_ack",
+        "--test-threads=1",
+        "--nocapture"
+      ],
+      "exit": 0,
+      "duration_ms": 429,
+      "stdout": {
+        "path": "raw/feature-test-old_active_wasm_frame_finishes_before_queued_reload_ack.out",
+        "bytes": 704,
+        "sha256": "2f7c4192a1cd834fd67d8f291aded7be5c095f6baf838133433a48a636d6522f"
+      },
+      "stderr": {
+        "path": "raw/feature-test-old_active_wasm_frame_finishes_before_queued_reload_ack.err",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "feature-test-watched_accepted_top_level_finishes_old_frame_before_new_save_ack",
+      "command": [
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/live_repl-feature",
+        "--exact",
+        "watched_accepted_top_level_finishes_old_frame_before_new_save_ack",
+        "--test-threads=1",
+        "--nocapture"
+      ],
+      "exit": 0,
+      "duration_ms": 386,
+      "stdout": {
+        "path": "raw/feature-test-watched_accepted_top_level_finishes_old_frame_before_new_save_ack.out",
+        "bytes": 191,
+        "sha256": "e014ee8eaf13c118f66277646e4b72ad1ac290f176b7514243caa7bb5d280505"
+      },
+      "stderr": {
+        "path": "raw/feature-test-watched_accepted_top_level_finishes_old_frame_before_new_save_ack.err",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "feature-test-compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack",
+      "command": [
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/live_repl-feature",
+        "--exact",
+        "compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack",
+        "--test-threads=1",
+        "--nocapture"
+      ],
+      "exit": 0,
+      "duration_ms": 374,
+      "stdout": {
+        "path": "raw/feature-test-compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack.out",
+        "bytes": 825,
+        "sha256": "242b55e7af9b7f980eaff7310e791499e166ad9fb5206e672dcbdd1f66a5a69c"
+      },
+      "stderr": {
+        "path": "raw/feature-test-compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack.err",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "feature-test-explicit_reload_pending_a_cannot_republish_in_place_drift",
+      "command": [
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/bin/live_repl-feature",
+        "--exact",
+        "explicit_reload_pending_a_cannot_republish_in_place_drift",
+        "--test-threads=1",
+        "--nocapture"
+      ],
+      "exit": 0,
+      "duration_ms": 334,
+      "stdout": {
+        "path": "raw/feature-test-explicit_reload_pending_a_cannot_republish_in_place_drift.out",
+        "bytes": 183,
+        "sha256": "77530dc7f231d4ec96a405ee633f1044cb3d92e59731297f75329f84cb79ab96"
+      },
+      "stderr": {
+        "path": "raw/feature-test-explicit_reload_pending_a_cannot_republish_in_place_drift.err",
         "bytes": 0,
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       }
@@ -2051,7 +2275,7 @@
             {
               "script": [
                 "20 addone",
-                ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/01-LIVE-01/math.noble/math.noble",
+                ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/01-LIVE-01/math.noble/math.noble",
                 "20 addone",
                 ":generation"
               ]
@@ -2119,7 +2343,7 @@
           "observed": true,
           "detail": [
             {
-              "pid": 2008761,
+              "pid": 2561902,
               "exit": 0,
               "report_count": 5
             }
@@ -2199,7 +2423,7 @@
                 "live",
                 "repl",
                 "--source",
-                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/05-LIVE-02/math.noble/math.noble",
+                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/05-LIVE-02/math.noble/math.noble",
                 "--engine",
                 "v8"
               ],
@@ -2269,19 +2493,24 @@
         },
         {
           "field": "expected.old_frame_completed_before_reload_ack",
-          "observed": false,
+          "observed": true,
           "detail": [
             {
-              "reason": "requires the live-test-barrier feature seam to hold a real guest frame across the ACK; only a feature-gated test with a different submission exercises it"
+              "basis": "feature-gated real-child test",
+              "seam": "live-test-barrier/in-flight-generation",
+              "test": "feature-test-old_active_wasm_frame_finishes_before_queued_reload_ack"
             }
           ]
         },
         {
           "field": "expected.publication_only_at_top_level_safepoint",
-          "observed": false,
+          "observed": true,
           "detail": [
             {
-              "reason": "the ACK here occurred with no in-flight invocation; the safepoint condition is only reachable through the barrier seam"
+              "basis": "feature-gated real-child test",
+              "seam": "live-test-barrier/in-flight-generation",
+              "test": "feature-test-old_active_wasm_frame_finishes_before_queued_reload_ack",
+              "observation": "the queued reload ACKs only after the paused active frame finishes and the host reaches the top-level boundary"
             }
           ]
         },
@@ -2296,10 +2525,12 @@
         },
         {
           "field": "expected.old_in_flight_frame_uses_old_generation",
-          "observed": false,
+          "observed": true,
           "detail": [
             {
-              "reason": "no in-flight frame existed at this ACK"
+              "basis": "feature-gated real-child test",
+              "seam": "live-test-barrier/in-flight-generation",
+              "test": "feature-test-old_active_wasm_frame_finishes_before_queued_reload_ack"
             }
           ]
         },
@@ -2329,10 +2560,7 @@
         "input.after_reload_ack",
         "expected.stage",
         "expected.outcome",
-        "expected.old_frame_completed_before_reload_ack",
-        "expected.publication_only_at_top_level_safepoint",
-        "expected.stack_bottom_to_top",
-        "expected.old_in_flight_frame_uses_old_generation"
+        "expected.stack_bottom_to_top"
       ]
     },
     "LIVE-03": {
@@ -2363,15 +2591,25 @@
             {
               "initial_source_sha256": "53cc6e3c29882e66faef3ef6c1890b22348bffa07722c8270565df5dd4a3905b",
               "generation": 1
+            },
+            {
+              "mapping": "the case initial definition is the first declared submission of the module-only session",
+              "definition": "namespace-committed",
+              "stack": [
+                "I64:7"
+              ]
             }
           ]
         },
         {
           "field": "input.initial_module",
-          "observed": false,
+          "observed": true,
           "detail": [
             {
-              "reason": "the selected file is one source: the case initial definition plus `module count@1` is refused at startup (`definition submission contains trailing expressions`), so the declared variants cannot run on the case initial state"
+              "module": "count@1",
+              "ack_stage": "wasm-live",
+              "definition_outcome": "namespace-committed",
+              "definition_generation": 2
             }
           ]
         },
@@ -2509,10 +2747,22 @@
         },
         {
           "field": "input.variants.incompatible-schema",
-          "observed": false,
+          "observed": true,
           "detail": [
             {
-              "reason": "no observation row"
+              "outcome": "reload-refused",
+              "stage": "admission",
+              "generation": 2,
+              "stack": [
+                "I64:7"
+              ],
+              "guest_requests": 0,
+              "protected_operations": 0,
+              "diagnostic": "duplicate module version or module count exceeded",
+              "old_call_stack": [
+                "I64:8"
+              ],
+              "mapping": "the profile refuses a second declaration of the same module version before comparing opaque schemas; the case reject outcome and preserved session are observed, a distinct schema diagnostic is not claimed"
             }
           ]
         },
@@ -2543,10 +2793,19 @@
         },
         {
           "field": "input.variants.changed-file-during-read",
-          "observed": false,
+          "observed": true,
           "detail": [
             {
-              "reason": "requires a seam between the two selected-file reads during :reload; the default binary exposes no such safepoint"
+              "basis": "feature-gated real-child test",
+              "seam": "live-test-barrier/before-snapshot+before-reconcile",
+              "test": "feature-test-explicit_reload_pending_a_cannot_republish_in_place_drift",
+              "observation": "the selected file is replaced between the snapshot and reconcile reads; the reload is superseded, the prior generation and selected inode stay current, and the old definition runs again only after the acknowledged bytes are restored"
+            },
+            {
+              "basis": "feature-gated real-child test",
+              "seam": "live-test-barrier/before-snapshot+before-reconcile",
+              "test": "feature-test-explicit_reload_pending_a_cannot_republish_in_place_drift",
+              "observation": "the final read bytes are never published: the superseded report names the first candidate digest and the old generation"
             }
           ]
         },
@@ -2555,16 +2814,27 @@
           "observed": false,
           "detail": [
             {
-              "reason": "a mismatched `bind` line produced no startup report and no exit within 30s, and the reload-selected-file path cannot carry a binding change; case input cannot be exercised"
+              "reason": "bindings are read once at startup and the selected-file reload cannot carry a binding change; the mismatched `bind` line is refused at startup (pinned by mismatched_declared_binding_refuses_at_startup_with_one_report) but then no session exists to preserve, so the case reload variant is not exercisable"
             }
           ]
         },
         {
           "field": "input.variants.dependency-cycle",
-          "observed": false,
+          "observed": true,
           "detail": [
             {
-              "reason": "no observation row"
+              "outcome": "reload-refused",
+              "stage": "admission",
+              "generation": 2,
+              "stack": [
+                "I64:7"
+              ],
+              "guest_requests": 0,
+              "protected_operations": 0,
+              "diagnostic": "cyclic local module definitions",
+              "old_call_stack": [
+                "I64:8"
+              ]
             }
           ]
         },
@@ -2574,6 +2844,8 @@
           "detail": [
             {
               "stages": [
+                "admission",
+                "admission",
                 "admission",
                 "admission",
                 "admission",
@@ -2589,6 +2861,8 @@
           "detail": [
             {
               "outcomes": [
+                "reload-refused",
+                "reload-refused",
                 "reload-refused",
                 "reload-refused",
                 "reload-refused",
@@ -2627,6 +2901,12 @@
                 ],
                 [
                   "I64:7"
+                ],
+                [
+                  "I64:7"
+                ],
+                [
+                  "I64:7"
                 ]
               ]
             }
@@ -2637,8 +2917,10 @@
           "observed": true,
           "detail": [
             {
-              "mapping": "the default profile installs no host authorizations; every refusal reported zero protected operations and left the session usable",
+              "mapping": "no refusal exercised a host authorization: every refusal reported zero guest requests and zero protected operations, and every session continued with its installed definitions and bindings usable",
               "protected_operations": [
+                0,
+                0,
                 0,
                 0,
                 0,
@@ -2658,6 +2940,8 @@
                 0,
                 0,
                 0,
+                0,
+                0,
                 0
               ]
             }
@@ -2669,6 +2953,8 @@
           "detail": [
             {
               "protected_operations": [
+                0,
+                0,
                 0,
                 0,
                 0,
@@ -2706,11 +2992,7 @@
         }
       ],
       "unobserved": [
-        "input.initial_module",
-        "input.variants.incompatible-schema",
-        "input.variants.changed-file-during-read",
-        "input.variants.host-binding-mismatch",
-        "input.variants.dependency-cycle"
+        "input.variants.host-binding-mismatch"
       ]
     },
     "LIVE-04": {
@@ -2750,7 +3032,7 @@
                 "live",
                 "watch",
                 "--source",
-                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/13-LIVE-05-partial/math.noble/math.noble",
+                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/13-LIVE-05-partial/math.noble/math.noble",
                 "--engine",
                 "v8"
               ],
@@ -2764,7 +3046,7 @@
           "detail": [
             {
               "watched_path": "math.noble",
-              "source": "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/13-LIVE-05-partial/math.noble/math.noble"
+              "source": "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/13-LIVE-05-partial/math.noble/math.noble"
             }
           ]
         },
@@ -2846,19 +3128,25 @@
         },
         {
           "field": "input.variants.watch-ack-races-new-top-level-submission",
-          "observed": false,
+          "observed": true,
           "detail": [
             {
-              "reason": "requires the live-test-barrier feature seam to hold a real guest frame across a watched save ACK"
+              "basis": "feature-gated real-child test",
+              "seam": "live-test-barrier/accepted-watch-submission",
+              "test": "feature-test-watched_accepted_top_level_finishes_old_frame_before_new_save_ack",
+              "observation": "an accepted top-level submission is held across the watched save; its old frame finishes before the new save ACK"
             }
           ]
         },
         {
           "field": "input.variants.superseded-during-compile",
-          "observed": false,
+          "observed": true,
           "detail": [
             {
-              "reason": "requires the live-test-barrier feature seam between candidate compilation and staging"
+              "basis": "feature-gated real-child test",
+              "seam": "live-test-barrier/host-seal",
+              "test": "feature-test-compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack",
+              "observation": "candidate A is held after compilation while a second fsynced rename B supersedes it; A is never ACKed as current"
             }
           ]
         },
@@ -2985,19 +3273,24 @@
         },
         {
           "field": "expected.racing_before_commit_reports_pinned_old_generation",
-          "observed": false,
+          "observed": true,
           "detail": [
             {
-              "reason": "depends on the barrier-gated racing variant"
+              "basis": "feature-gated real-child test",
+              "seam": "live-test-barrier/accepted-watch-submission",
+              "test": "feature-test-watched_accepted_top_level_finishes_old_frame_before_new_save_ack"
             }
           ]
         },
         {
           "field": "expected.superseded_candidate_acknowledged_as_current",
-          "observed": false,
+          "observed": true,
           "detail": [
             {
-              "reason": "depends on the barrier-gated superseded variant"
+              "basis": "feature-gated real-child test",
+              "seam": "live-test-barrier/host-seal",
+              "test": "feature-test-compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack",
+              "observation": "the superseded candidate reports watch-superseded and the previous generation stays current"
             }
           ]
         },
@@ -3033,13 +3326,9 @@
         }
       ],
       "unobserved": [
-        "input.variants.watch-ack-races-new-top-level-submission",
-        "input.variants.superseded-during-compile",
         "input.variants.effectful-runtime-trap",
         "expected.stage",
         "expected.outcome",
-        "expected.racing_before_commit_reports_pinned_old_generation",
-        "expected.superseded_candidate_acknowledged_as_current",
         "expected.runtime_trap_retains_prior_effect_prefix_and_poisons_session"
       ]
     },
@@ -3068,12 +3357,12 @@
                 "live",
                 "repl",
                 "--source",
-                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/03-LIVE-06/math.noble/math.noble",
+                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/03-LIVE-06/math.noble/math.noble",
                 "--engine",
                 "v8",
                 "--declared-modules",
                 "--bindings",
-                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/03-LIVE-06/math.noble/bindings.txt",
+                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/03-LIVE-06/math.noble/bindings.txt",
                 "--verify-source-before-execute"
               ],
               "initial_stage": "wasm-live"
@@ -3353,7 +3642,7 @@
                 "live",
                 "repl",
                 "--source",
-                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/04-LIVE-07/math.noble/math.noble",
+                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-6/fixtures/04-LIVE-07/math.noble/math.noble",
                 "--engine",
                 "interpreter"
               ]
@@ -9396,7 +9685,7 @@
       "submission": 3,
       "wasm_submission_generation": 3
     },
-    "LIVE-03-incompatible-schema-declared/initial": {
+    "LIVE-03-declared-schema/ack": {
       "declared_kind": "module",
       "generation": 1,
       "guest_requests": 0,
@@ -9414,9 +9703,239 @@
       "stage": "wasm-live",
       "watch_sequence": null
     },
-    "LIVE-03-incompatible-schema-declared/refused": {
-      "diagnostic": "duplicate module version or module count exceeded",
+    "LIVE-03-declared-schema/definition": {
+      "declared_kind": "definition",
+      "generation": 2,
+      "guest_requests": 0,
+      "outcome": "namespace-committed",
+      "proof_recheck": null,
+      "protected_operations": 0,
+      "rebuilt_import_definitions": null,
+      "retained_module_roots": 1,
+      "retired_code_spans": [],
+      "schema": "noble-live-report/v1",
+      "source_freshness": "not-file-backed",
+      "source_sha256": "53cc6e3c29882e66faef3ef6c1890b22348bffa07722c8270565df5dd4a3905b",
+      "source_version": "checked-submission",
+      "stack": [],
+      "stage": "declared",
+      "watch_sequence": null
+    },
+    "LIVE-03-declared-schema/pushed": {
+      "acquired_authority": false,
+      "adapter_invocations": [],
+      "adapter_versions": [],
+      "ambient_fallback_calls": 0,
+      "backend": "managed-linear-memory",
+      "candidate_prepare_requests": 0,
+      "declared_effect_preserved": true,
+      "effect_requests": [],
+      "effect_requests_unrecorded": 0,
       "generation": 1,
+      "guest_requests": 0,
+      "host_requests": 0,
+      "installed_code_span": {
+        "generation": 1,
+        "length": 1,
+        "start": 4
+      },
+      "metrics": {
+        "allocated_since_begin_bytes": 96,
+        "allocated_total_bytes": 96,
+        "allocation_peak_bytes": 96,
+        "continuation_peak_bytes": 8,
+        "execution_steps": 6,
+        "memory_bytes": 1048576,
+        "operand_peak_bytes": 16,
+        "quota_reason": 0,
+        "quote_invocations": 0,
+        "reflection_steps": 1,
+        "released_total_bytes": 0,
+        "retained_before_begin_bytes": 0,
+        "stack_length": 1,
+        "status": 0
+      },
+      "module": {
+        "bridge_wasm_sha256": "c1eb4121b1476e61a6abd6dc4e3346ac7a23ea01c1d50d3a4143d59bd94018a7",
+        "bridge_wat_sha256": "80471d33e0a6cd6da3a4ce434e1b561d9b812f12f173a1928966a65a89ec543e",
+        "compilations": 1,
+        "imports": [
+          {
+            "kind": "memory",
+            "module": "noble",
+            "name": "memory"
+          },
+          {
+            "kind": "table",
+            "module": "noble",
+            "name": "table"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "failure"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "quota_reason"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "phase"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "heap_cursor"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "heap_baseline"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "allocation_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "recipe_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "depth_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "operand_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "continuation_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "step_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "allocation_peak"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "operand_peak"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "continuation_peak"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "steps"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "quote_invocations"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "sp"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "cp"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "observed_program"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "recipe_count"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "reflection_steps"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "rp"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "generation"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "allocated_total"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "released_total"
+          }
+        ],
+        "optimized": false,
+        "signature_catalogue_sha256": "eb38180a60e3847d28bdce51b20f2d2a95dea73786db1cdfe5ad2d644042973f",
+        "source_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
+        "submission": 3,
+        "wasm_sha256": "cfaf81b47b5e8389587b1fb5ee61b22f3197b5d579fc5acc65e9c22e7e407991",
+        "wat_sha256": "5a1f8227ce497e055936e98226ab085e3b0c238e1292580044aaabac7aafaebc"
+      },
+      "native_trap": null,
+      "outcome": "normal",
+      "profile": "Declared-Modules-v1",
+      "proposal_queued": false,
+      "protected_operations": 0,
+      "queued_proposal_roots": 0,
+      "quota_reason": null,
+      "real_host_evidence": false,
+      "real_host_fallback_calls": 0,
+      "request_trace": [],
+      "request_trace_complete": true,
+      "retired_code_spans": [],
+      "runtime_prover_calls": 0,
+      "schema": "noble-core-report/v1",
+      "scripted_inputs": [],
+      "session_state": "retained",
+      "source_generation": 2,
+      "source_module_versions": [],
+      "stack": [
+        {
+          "handle": null,
+          "type": "I64",
+          "value": "7"
+        }
+      ],
+      "stage": "wasm",
+      "status": 0,
+      "submission": 3,
+      "substitutions": []
+    },
+    "LIVE-03-declared-schema/refused": {
+      "diagnostic": "duplicate module version or module count exceeded",
+      "generation": 2,
       "guest_requests": 0,
       "outcome": "reload-refused",
       "protected_operations": 0,
@@ -9426,10 +9945,251 @@
         "start": 0
       },
       "source_span_basis": "refused-candidate-file-byte-offsets",
-      "stack": [],
+      "stack": [
+        {
+          "handle": null,
+          "type": "I64",
+          "value": "7"
+        }
+      ],
       "stage": "admission"
     },
-    "LIVE-03-dependency-cycle-declared/initial": {
+    "LIVE-03-declared-schema/oldCall": {
+      "acquired_authority": false,
+      "adapter_invocations": [],
+      "adapter_versions": [],
+      "ambient_fallback_calls": 0,
+      "backend": "managed-linear-memory",
+      "candidate_prepare_requests": 0,
+      "declared_effect_preserved": true,
+      "effect_requests": [],
+      "effect_requests_unrecorded": 0,
+      "generation": 2,
+      "guest_requests": 0,
+      "host_requests": 0,
+      "installed_code_span": {
+        "generation": 2,
+        "length": 3,
+        "start": 5
+      },
+      "metrics": {
+        "allocated_since_begin_bytes": 288,
+        "allocated_total_bytes": 288,
+        "allocation_peak_bytes": 288,
+        "continuation_peak_bytes": 8,
+        "execution_steps": 9,
+        "memory_bytes": 1048576,
+        "operand_peak_bytes": 32,
+        "quota_reason": 0,
+        "quote_invocations": 0,
+        "reflection_steps": 2,
+        "released_total_bytes": 0,
+        "retained_before_begin_bytes": 96,
+        "stack_length": 1,
+        "status": 0
+      },
+      "module": {
+        "bridge_wasm_sha256": "e482b67cedff061733fe719633dbbc1544029cdbc7c8c49aef0920f94fcf1e75",
+        "bridge_wat_sha256": "03b5962698af4c3ffea1da644a6512b4786671234f6148ab125265b4b88152db",
+        "compilations": 2,
+        "imports": [
+          {
+            "kind": "memory",
+            "module": "noble",
+            "name": "memory"
+          },
+          {
+            "kind": "table",
+            "module": "noble",
+            "name": "table"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "failure"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "quota_reason"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "phase"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "heap_cursor"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "heap_baseline"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "allocation_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "recipe_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "depth_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "operand_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "continuation_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "step_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "allocation_peak"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "operand_peak"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "continuation_peak"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "steps"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "quote_invocations"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "sp"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "cp"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "observed_program"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "recipe_count"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "reflection_steps"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "rp"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "generation"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "allocated_total"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "released_total"
+          }
+        ],
+        "optimized": false,
+        "signature_catalogue_sha256": "d3dea5c246545ae2d38227df146edf7eb1d3691914a8496b5acc1b86f5e14491",
+        "source_sha256": "e819b0066ae062ad1cb898fc11e780258574097dc76850f0bc8b9910c6271229",
+        "submission": 4,
+        "wasm_sha256": "b5ac5ba9dfd4e75b7340b501205bb920af43e2fea853c9cdbfc65e3991de290d",
+        "wat_sha256": "014ba4a961250765ad638c32e9d6bce3f8ae138456a13bfe530b9f44d5a75d6d"
+      },
+      "native_trap": null,
+      "outcome": "normal",
+      "profile": "Declared-Modules-v1",
+      "proposal_queued": false,
+      "protected_operations": 0,
+      "queued_proposal_roots": 0,
+      "quota_reason": null,
+      "real_host_evidence": false,
+      "real_host_fallback_calls": 0,
+      "request_trace": [],
+      "request_trace_complete": true,
+      "retired_code_spans": [
+        {
+          "bridge_wasm_sha256": "c1eb4121b1476e61a6abd6dc4e3346ac7a23ea01c1d50d3a4143d59bd94018a7",
+          "bridge_wat_sha256": "80471d33e0a6cd6da3a4ce434e1b561d9b812f12f173a1928966a65a89ec543e",
+          "code_owners": 0,
+          "code_span": {
+            "generation": 1,
+            "length": 1,
+            "start": 4
+          },
+          "core_dispatch_bridge_owned": true,
+          "guest_instance_owner": 1,
+          "guest_instance_releasable": true,
+          "guest_js_owner_edges_remaining": 0,
+          "guest_source_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
+          "guest_table_entries_remaining": 0,
+          "guest_wasm_sha256": "cfaf81b47b5e8389587b1fb5ee61b22f3197b5d579fc5acc65e9c22e7e407991",
+          "guest_wat_sha256": "5a1f8227ce497e055936e98226ab085e3b0c238e1292580044aaabac7aafaebc",
+          "outcome": "code-retired",
+          "signature_catalogue_sha256": "eb38180a60e3847d28bdce51b20f2d2a95dea73786db1cdfe5ad2d644042973f",
+          "source_generation": "2",
+          "table_cleared": true
+        }
+      ],
+      "runtime_prover_calls": 0,
+      "schema": "noble-core-report/v1",
+      "scripted_inputs": [],
+      "session_state": "retained",
+      "source_generation": 2,
+      "source_module_versions": [],
+      "stack": [
+        {
+          "handle": null,
+          "type": "I64",
+          "value": "8"
+        }
+      ],
+      "stage": "wasm",
+      "status": 0,
+      "submission": 4,
+      "substitutions": []
+    },
+    "LIVE-03-declared-cycle/ack": {
       "declared_kind": "module",
       "generation": 1,
       "guest_requests": 0,
@@ -9447,9 +10207,261 @@
       "stage": "wasm-live",
       "watch_sequence": null
     },
-    "LIVE-03-dependency-cycle-declared/refused": {
-      "diagnostic": "cyclic local module definitions",
+    "LIVE-03-declared-cycle/definition": {
+      "declared_kind": "definition",
+      "generation": 2,
+      "guest_requests": 0,
+      "outcome": "namespace-committed",
+      "proof_recheck": null,
+      "protected_operations": 0,
+      "rebuilt_import_definitions": null,
+      "retained_module_roots": 1,
+      "retired_code_spans": [],
+      "schema": "noble-live-report/v1",
+      "source_freshness": "not-file-backed",
+      "source_sha256": "53cc6e3c29882e66faef3ef6c1890b22348bffa07722c8270565df5dd4a3905b",
+      "source_version": "checked-submission",
+      "stack": [],
+      "stage": "declared",
+      "watch_sequence": null
+    },
+    "LIVE-03-declared-cycle/pushed": {
+      "acquired_authority": false,
+      "adapter_invocations": [
+        {
+          "adapter_identity": "emit-a",
+          "count": 0,
+          "module": "ledger",
+          "slot": 0,
+          "version": 1
+        }
+      ],
+      "adapter_versions": [
+        {
+          "adapter_identity": "emit-a",
+          "module": "ledger",
+          "version": 1
+        }
+      ],
+      "ambient_fallback_calls": 0,
+      "backend": "managed-linear-memory",
+      "candidate_prepare_requests": 0,
+      "declared_effect_preserved": true,
+      "effect_requests": [],
+      "effect_requests_unrecorded": 0,
       "generation": 1,
+      "guest_requests": 0,
+      "host_requests": 0,
+      "installed_code_span": {
+        "generation": 1,
+        "length": 1,
+        "start": 4
+      },
+      "metrics": {
+        "allocated_since_begin_bytes": 96,
+        "allocated_total_bytes": 96,
+        "allocation_peak_bytes": 96,
+        "continuation_peak_bytes": 8,
+        "execution_steps": 6,
+        "memory_bytes": 1048576,
+        "operand_peak_bytes": 16,
+        "quota_reason": 0,
+        "quote_invocations": 0,
+        "reflection_steps": 1,
+        "released_total_bytes": 0,
+        "retained_before_begin_bytes": 0,
+        "stack_length": 1,
+        "status": 0
+      },
+      "module": {
+        "bridge_wasm_sha256": "c1eb4121b1476e61a6abd6dc4e3346ac7a23ea01c1d50d3a4143d59bd94018a7",
+        "bridge_wat_sha256": "80471d33e0a6cd6da3a4ce434e1b561d9b812f12f173a1928966a65a89ec543e",
+        "compilations": 1,
+        "imports": [
+          {
+            "kind": "memory",
+            "module": "noble",
+            "name": "memory"
+          },
+          {
+            "kind": "table",
+            "module": "noble",
+            "name": "table"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "failure"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "quota_reason"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "phase"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "heap_cursor"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "heap_baseline"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "allocation_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "recipe_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "depth_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "operand_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "continuation_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "step_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "allocation_peak"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "operand_peak"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "continuation_peak"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "steps"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "quote_invocations"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "sp"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "cp"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "observed_program"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "recipe_count"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "reflection_steps"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "rp"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "generation"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "allocated_total"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "released_total"
+          }
+        ],
+        "optimized": false,
+        "signature_catalogue_sha256": "eb38180a60e3847d28bdce51b20f2d2a95dea73786db1cdfe5ad2d644042973f",
+        "source_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
+        "submission": 3,
+        "wasm_sha256": "96c4ec68bc89109ea3493c90cfb3db3d5bf562536a902b1982412c7e62740983",
+        "wat_sha256": "05bf8344b437b56a3f1a8fe6fe8acf4ec7edd5741dc8b9002bb4f2760af65f60"
+      },
+      "native_trap": null,
+      "outcome": "normal",
+      "profile": "Declared-Modules-v1",
+      "proposal_queued": false,
+      "protected_operations": 0,
+      "queued_proposal_roots": 0,
+      "quota_reason": null,
+      "real_host_evidence": false,
+      "real_host_fallback_calls": 0,
+      "request_trace": [],
+      "request_trace_complete": true,
+      "retired_code_spans": [],
+      "runtime_prover_calls": 0,
+      "schema": "noble-core-report/v1",
+      "scripted_inputs": [],
+      "session_state": "retained",
+      "source_generation": 2,
+      "source_module_versions": [],
+      "stack": [
+        {
+          "handle": null,
+          "type": "I64",
+          "value": "7"
+        }
+      ],
+      "stage": "wasm",
+      "status": 0,
+      "submission": 3,
+      "substitutions": [
+        {
+          "adapter_identity": "emit-a",
+          "module": "ledger",
+          "operation": "test.emit",
+          "slot": 0,
+          "version": 1
+        }
+      ]
+    },
+    "LIVE-03-declared-cycle/refused": {
+      "diagnostic": "cyclic local module definitions",
+      "generation": 2,
       "guest_requests": 0,
       "outcome": "reload-refused",
       "protected_operations": 0,
@@ -9459,8 +10471,271 @@
         "start": 0
       },
       "source_span_basis": "refused-candidate-file-byte-offsets",
-      "stack": [],
+      "stack": [
+        {
+          "handle": null,
+          "type": "I64",
+          "value": "7"
+        }
+      ],
       "stage": "admission"
+    },
+    "LIVE-03-declared-cycle/oldCall": {
+      "acquired_authority": false,
+      "adapter_invocations": [
+        {
+          "adapter_identity": "emit-a",
+          "count": 0,
+          "module": "ledger",
+          "slot": 0,
+          "version": 1
+        }
+      ],
+      "adapter_versions": [
+        {
+          "adapter_identity": "emit-a",
+          "module": "ledger",
+          "version": 1
+        }
+      ],
+      "ambient_fallback_calls": 0,
+      "backend": "managed-linear-memory",
+      "candidate_prepare_requests": 0,
+      "declared_effect_preserved": true,
+      "effect_requests": [],
+      "effect_requests_unrecorded": 0,
+      "generation": 2,
+      "guest_requests": 0,
+      "host_requests": 0,
+      "installed_code_span": {
+        "generation": 2,
+        "length": 3,
+        "start": 5
+      },
+      "metrics": {
+        "allocated_since_begin_bytes": 288,
+        "allocated_total_bytes": 288,
+        "allocation_peak_bytes": 288,
+        "continuation_peak_bytes": 8,
+        "execution_steps": 9,
+        "memory_bytes": 1048576,
+        "operand_peak_bytes": 32,
+        "quota_reason": 0,
+        "quote_invocations": 0,
+        "reflection_steps": 2,
+        "released_total_bytes": 0,
+        "retained_before_begin_bytes": 96,
+        "stack_length": 1,
+        "status": 0
+      },
+      "module": {
+        "bridge_wasm_sha256": "e482b67cedff061733fe719633dbbc1544029cdbc7c8c49aef0920f94fcf1e75",
+        "bridge_wat_sha256": "03b5962698af4c3ffea1da644a6512b4786671234f6148ab125265b4b88152db",
+        "compilations": 2,
+        "imports": [
+          {
+            "kind": "memory",
+            "module": "noble",
+            "name": "memory"
+          },
+          {
+            "kind": "table",
+            "module": "noble",
+            "name": "table"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "failure"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "quota_reason"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "phase"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "heap_cursor"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "heap_baseline"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "allocation_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "recipe_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "depth_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "operand_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "continuation_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "step_limit"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "allocation_peak"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "operand_peak"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "continuation_peak"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "steps"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "quote_invocations"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "sp"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "cp"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "observed_program"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "recipe_count"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "reflection_steps"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "rp"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "generation"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "allocated_total"
+          },
+          {
+            "kind": "global",
+            "module": "noble",
+            "name": "released_total"
+          }
+        ],
+        "optimized": false,
+        "signature_catalogue_sha256": "d3dea5c246545ae2d38227df146edf7eb1d3691914a8496b5acc1b86f5e14491",
+        "source_sha256": "e819b0066ae062ad1cb898fc11e780258574097dc76850f0bc8b9910c6271229",
+        "submission": 4,
+        "wasm_sha256": "d82f9525cb43297ededf76495746693c7f0a01abb06972b3530444985f9399cb",
+        "wat_sha256": "490e8a3f3f8fe4d4c7ded74d0c0643c03cb4b85ab99cd253e8b7266959c4b07c"
+      },
+      "native_trap": null,
+      "outcome": "normal",
+      "profile": "Declared-Modules-v1",
+      "proposal_queued": false,
+      "protected_operations": 0,
+      "queued_proposal_roots": 0,
+      "quota_reason": null,
+      "real_host_evidence": false,
+      "real_host_fallback_calls": 0,
+      "request_trace": [],
+      "request_trace_complete": true,
+      "retired_code_spans": [
+        {
+          "bridge_wasm_sha256": "c1eb4121b1476e61a6abd6dc4e3346ac7a23ea01c1d50d3a4143d59bd94018a7",
+          "bridge_wat_sha256": "80471d33e0a6cd6da3a4ce434e1b561d9b812f12f173a1928966a65a89ec543e",
+          "code_owners": 0,
+          "code_span": {
+            "generation": 1,
+            "length": 1,
+            "start": 4
+          },
+          "core_dispatch_bridge_owned": true,
+          "guest_instance_owner": 1,
+          "guest_instance_releasable": true,
+          "guest_js_owner_edges_remaining": 0,
+          "guest_source_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
+          "guest_table_entries_remaining": 0,
+          "guest_wasm_sha256": "96c4ec68bc89109ea3493c90cfb3db3d5bf562536a902b1982412c7e62740983",
+          "guest_wat_sha256": "05bf8344b437b56a3f1a8fe6fe8acf4ec7edd5741dc8b9002bb4f2760af65f60",
+          "outcome": "code-retired",
+          "signature_catalogue_sha256": "eb38180a60e3847d28bdce51b20f2d2a95dea73786db1cdfe5ad2d644042973f",
+          "source_generation": "2",
+          "table_cleared": true
+        }
+      ],
+      "runtime_prover_calls": 0,
+      "schema": "noble-core-report/v1",
+      "scripted_inputs": [],
+      "session_state": "retained",
+      "source_generation": 2,
+      "source_module_versions": [],
+      "stack": [
+        {
+          "handle": null,
+          "type": "I64",
+          "value": "8"
+        }
+      ],
+      "stage": "wasm",
+      "status": 0,
+      "submission": 4,
+      "substitutions": [
+        {
+          "adapter_identity": "emit-a",
+          "module": "ledger",
+          "operation": "test.emit",
+          "slot": 0,
+          "version": 1
+        }
+      ]
     },
     "LIVE-05-canonical/initial": {
       "generation": 1,
@@ -11617,9 +12892,9 @@
   },
   "non_claims": [
     "No Lean/Aeneas/Verus proof, translation validation or refinement claim is made; every promoted case keeps proof open.",
-    "LIVE-02 stays absent/not-run: its canonical after-reload script is refused at check and the in-flight frame needs a feature-gated seam.",
-    "LIVE-03 stays absent/not-run: changed-file-during-read and host-binding-mismatch are not exercisable and the declared variants cannot run on the case initial state.",
-    "LIVE-05 stays absent/not-run: the effectful-runtime-trap submission is unbound in this profile and the racing/superseded variants need the feature-gated seam.",
+    "LIVE-02 stays absent/not-run: the canonical after-reload script `20 twice swap 20 swap run` is refused at check because `run` requires exactly [I64] below the Program (spec `run : S Program<S,T,e> -- T`), so the declared expected stack is unreachable; that is a case input defect, not an observed outcome, and the case text was not edited.",
+    "LIVE-03 stays absent/not-run: a mismatched declared binding is refused at startup, and the selected-file reload cannot carry a binding change, so the host-binding-mismatch variant has no session-preserving observation; the second declaration of the same module version also refuses before an opaque-schema comparison.",
+    "LIVE-05 stays absent/not-run: the declared submission `\"A\" test.emit test.abort` is unbound in this profile (effects are declared module imports; `test.abort` has no binding path), so the effectful-runtime-trap variant cannot be executed as written.",
     "LIVE-04, LIVE-08, LIVE-09 and LIVE-10 are not exercised by this gate.",
     "The interpreter refusal is an observed refusal, not a proof that no custom bytecode ISA exists anywhere.",
     "The gate observes single bounded child sessions; it does not claim filesystem-watch completeness or V8 garbage collection."
