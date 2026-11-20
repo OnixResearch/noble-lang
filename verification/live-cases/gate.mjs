@@ -213,7 +213,7 @@ class LiveChild {
         buffered = buffered.slice(index + 1);
         assert.ok(line.length <= reportLimit, `${this.label}: live report exceeds 65536 bytes`);
         const waiter = this.waiters.shift();
-        if (waiter) waiter(line); else this.queue.push(line);
+        if (waiter) waiter.resolve(line); else this.queue.push(line);
       }
     });
     this.child.stderr.setEncoding('utf8');
