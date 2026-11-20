@@ -288,6 +288,18 @@ fn main() -> std::process::ExitCode {
     }
     if arguments
         .first()
+        .is_some_and(|argument| argument == "obligations")
+    {
+        return workflow::obligations::run(&arguments);
+    }
+    if arguments
+        .first()
+        .is_some_and(|argument| argument == "goal-view")
+    {
+        return workflow::obligations::goal_view(&arguments);
+    }
+    if arguments
+        .first()
         .is_some_and(|argument| argument == "build")
     {
         if arguments.iter().any(|argument| argument == "--target")

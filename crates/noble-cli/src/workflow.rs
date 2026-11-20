@@ -4,7 +4,9 @@ pub const USAGE: &str = "usage:
   noble verify CONTRACT [--emit DIR] [--proof FILE | --refutation FILE] [--timeout-ms N]
   noble explain-proof CONTRACT
   noble verify-module SOURCE [--module PREVIOUS_SOURCE ...] [--timeout-ms N]
-      [--normalization-work N] [--substitution-work N]
+      [--normalization-work N] [--substitution-work N] [--report-schema v1|v2]
+  noble obligations SOURCE [--module PREVIOUS_SOURCE ...]
+  noble goal-view SOURCE [--module PREVIOUS_SOURCE ...]
   noble --internal-budget-smoke <u32>
 
 Consumer configuration (absolute paths): NOBLE_LEAN, NOBLE_BWRAP,
@@ -12,6 +14,10 @@ NOBLE_PRLIMIT, NOBLE_SYSTEMD_RUN, NOBLE_CONTRACT_LIBRARY
 (and NOBLE_NIX_STORE for a Nix toolchain).
 Lean must be release 4.35.0.
 Default proof budget: 120000 ms; maximum: 600000 ms. Missing evidence is unknown.
+--report-schema v2 (the default) reports the VC-TOOL-02 outcome unknown with exit 3
+when no proof obligation was supplied; v1 keeps the historical field set and exit.
+Obligations and the goal view are read-only projections of prepared source data:
+they never run the proof consumer and are never acceptance evidence.
 Explanation never executes Lean. Proof source runs only in a Linux bubblewrap
 sandbox with no network, credentials, or writable host directories.
 Proof checking requires an active user systemd manager and XDG_RUNTIME_DIR.
@@ -28,8 +34,10 @@ pub(crate) const MAX_TIMEOUT: u64 = 600_000;
 pub(crate) mod admission;
 mod arguments;
 pub(crate) mod artifacts;
+pub(crate) mod diagnostics;
 pub(crate) mod encoding;
 pub(crate) mod intrinsic;
+pub(crate) mod obligations;
 pub(crate) mod output;
 mod rules;
 mod subject;

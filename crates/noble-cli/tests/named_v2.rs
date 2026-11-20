@@ -20,6 +20,9 @@ use std::{
     process::Command,
 };
 
+#[path = "named_v2/obligations.rs"]
+mod obligations;
+
 const DEFINITIONS: &str = "module Definitions@5 [ export step def step [ 1 + ] ]";
 const IMPORT: &str = "import Definitions@5 as d";
 const SUBJECT: &str = "module Subject@3 [ def twice [ d.step d.step ] contract 2 twice-law [ subject twice input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 2)) ] ] proof 2 twice-correct for twice-law [ (export-named-unary-I64 (pc-named-call 0 (exec-literal-1) (exec-add)) (pc-named-call 1 (exec-literal-1) (exec-add)) (by-exact-tail) (named-true-eq-wrap)) ] ]";
