@@ -455,7 +455,7 @@ The axiom audit of every public theorem in the module reports only `propext`,
 the mc1 allowlist. No `sorry`, `admit`, custom `axiom`, `native_decide`,
 `opaque`, `partial`, `#eval` or `run_cmd` occurs in the module.
 
-### Claim lane (commits `5c2d19d3`, `0a387027`)
+### Claim lane (commits `5c2d19d3`, `0a387027`, F1 redesign `a5354d52`, `0b63bc0d`)
 
 The Phase 3 lane lives beside the model, as `#[path]` modules of the existing
 `source` test target: `merge/claim.rs`, `merge/consumer.rs`, `merge/lean.rs`
@@ -683,11 +683,12 @@ clean tree at `4a2bb986`), and its final successor
 `verification/semantic-merge-verification/receipt-d515869b.json`
 (sha256 `ad17ee14a7d4e675a5157b6b67cdfd2da150a86e630f811424e0f3c07e3dba81`,
 clean tree at `d515869b`, after `e471a9e7` pinned 31 Merge theorems — the gate
-prints 121 required theorems against the earlier 90). The receipt for this
-revision is retained beside them (the file named in tasks.md); it records the
-code at the preceding clean commit of this revision. In it, both regenerated
-claims (`SMERGE-CASE-04`, `SMERGE-CASE-01`) are verified through `evaluate`
-with axioms `propext`/`Quot.sound`, the Phase 2 lane is re-run unchanged, the
+prints 121 required theorems against the earlier 90), and the F1-redesign
+successor `verification/semantic-merge-verification/receipt-0b63bc0d3379.json`
+(sha256 `9e7206509d803135eeeeead493532845b0a222679cadc20f74c2ef7d3fd8a043`,
+clean tree at `0b63bc0d3379`). In the successor, both regenerated claims
+(`SMERGE-CASE-04`, `SMERGE-CASE-01`) are verified through `evaluate` with
+axioms `propext`/`Quot.sound`, the Phase 2 lane is re-run unchanged, the
 CASE-07/CASE-03 forgeries and the file-writing and wrong-proof submissions
 stay nonverified, and the byte-bound and missing-pin controls report
 `exhausted`/`internal-failure`. The wall-clock timeout arm is not exercised.
