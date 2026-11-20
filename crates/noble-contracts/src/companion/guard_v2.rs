@@ -118,6 +118,10 @@ fn is_type0(ty: &noble_kernel::types::Ty) -> bool {
 /// left, or `None` where the depth or visit bound refused. The declared
 /// profile's contract-type reader caps nesting and type size the same way.
 #[expect(
+    clippy::question_mark,
+    reason = "Owner: noble-maintainers; explicit Option propagation preserves the pinned extractor's supported control flow."
+)]
+#[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; the walk's bounds are carried by its two explicit counters and every refusal returns None, so there is no invalid-value assertion precondition."
 )]
@@ -126,8 +130,8 @@ fn is_type0(ty: &noble_kernel::types::Ty) -> bool {
     reason = "Owner: noble-maintainers; each call visits a child of a bounded prepared type and spends one of at most 256 visits, and plain recursion keeps a borrowed work stack out of the pinned extraction."
 )]
 #[expect(
-    tigerstyle::ambiguous_params,
-    reason = "Owner: noble-maintainers; `pending` (stack slots held below the node) and `remaining` (visits left) are the two counters of the eligibility walk, threaded positionally."
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the walk dereferences borrowed Box children of a prepared type, so it stays a runtime predicate matching the declared profile's recursive contract-type check and the pinned extraction."
 )]
 fn type0_subtree(ty: &noble_kernel::types::Ty, pending: usize, remaining: u32) -> Option<u32> {
     let remaining = match remaining.checked_sub(1) {

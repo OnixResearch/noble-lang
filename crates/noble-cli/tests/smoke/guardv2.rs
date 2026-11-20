@@ -55,22 +55,42 @@ fn session(sources: &[&str]) -> Result<Vec<serde_json::Value>, Box<dyn std::erro
     Ok(reports)
 }
 
-/// Assert the one-slot `Sum` outcome of an invocation text.
-fn assert_outcome(
-    report: &serde_json::Value,
-    variant: &str,
-    payload: &str,
+/// The one result cell of a normal invocation report.
+fn result_cell<'a>(
+    report: &'a serde_json::Value,
     name: &'static str,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<&'a serde_json::Value, Box<dyn std::error::Error>> {
     assert_eq!(report["outcome"], "normal", "{name}");
     let stack = report["stack"]
         .as_array()
         .ok_or_else(|| format!("{name}: stack is not an array"))?;
     assert_eq!(stack.len(), 1, "{name}: exactly one result cell");
     assert_eq!(stack[0]["type"], "Sum", "{name}");
-    assert_eq!(stack[0]["variant"], variant, "{name}");
-    assert_eq!(stack[0]["value"]["type"], "I64", "{name}");
-    assert_eq!(stack[0]["value"]["value"], payload, "{name}");
+    Ok(&stack[0])
+}
+
+/// Assert the defined rejection: `inl 1`, with no body result.
+fn assert_rejection(
+    report: &serde_json::Value,
+    name: &'static str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let cell = result_cell(report, name)?;
+    assert_eq!(cell["variant"], "left", "{name}");
+    assert_eq!(cell["value"]["type"], "I64", "{name}");
+    assert_eq!(cell["value"]["value"], "1", "{name}");
+    Ok(())
+}
+
+/// Assert the accepted invocation: `inr payload` from the body.
+fn assert_invocation(
+    report: &serde_json::Value,
+    payload: i64,
+    name: &'static str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let cell = result_cell(report, name)?;
+    assert_eq!(cell["variant"], "right", "{name}");
+    assert_eq!(cell["value"]["type"], "I64", "{name}");
+    assert_eq!(cell["value"]["value"], payload.to_string(), "{name}");
     Ok(())
 }
 
@@ -79,10 +99,10 @@ fn source_wrapper_text_rejects_empty_and_accepts_nonempty() -> Result<(), Box<dy
 {
     let empty = session(&[&format!("nil {SOURCE_WRAPPER} run")])?;
     let empty = empty.last().ok_or("no report for the empty list")?;
-    assert_outcome(empty, "left", "1", "empty list")?;
+    assert_rejection(empty, "empty list")?;
     let nonempty = session(&[&format!("7 nil cons {SOURCE_WRAPPER} run")])?;
     let nonempty = nonempty.last().ok_or("no report for the nonempty list")?;
-    assert_outcome(nonempty, "right", "99", "nonempty list")?;
+    assert_invocation(nonempty, 99, "nonempty list")?;
     Ok(())
 }
 
@@ -91,10 +111,10 @@ fn invocation_wrapper_text_preserves_the_argument_cell() -> Result<(), Box<dyn s
     // The live text runs on `[argument, Program]` and consumes both.
     let empty = session(&[&format!("nil {BODY} {LIVE_WRAPPER} run")])?;
     let empty = empty.last().ok_or("no report for the empty list")?;
-    assert_outcome(empty, "left", "1", "empty list")?;
+    assert_rejection(empty, "empty list")?;
     let nonempty = session(&[&format!("unit nil cons {BODY} {LIVE_WRAPPER} run")])?;
     let nonempty = nonempty.last().ok_or("no report for the nonempty list")?;
-    assert_outcome(nonempty, "right", "99", "nonempty list")?;
+    assert_invocation(nonempty, 99, "nonempty list")?;
     Ok(())
 }
 
@@ -113,7 +133,7 @@ fn invocation_prelude_removes_the_companion_cell_before_the_guard(
         &format!("{LIVE_WRAPPER} run"),
     ])?;
     let guarded = reports.pop().ok_or("no guard report")?;
-    assert_outcome(&guarded, "left", "1", "empty list behind the prelude")?;
+    assert_rejection(&guarded, "empty list behind the prelude")?;
     let after_prelude = reports.pop().ok_or("no prelude report")?;
     let stack = after_prelude["stack"]
         .as_array()
@@ -137,7 +157,7 @@ fn invocation_prelude_removes_the_companion_cell_before_the_guard(
         &format!("{LIVE_WRAPPER} run"),
     ])?;
     let guarded = reports.pop().ok_or("no guard report")?;
-    assert_outcome(&guarded, "right", "99", "nonempty list behind the prelude")?;
+    assert_invocation(&guarded, 99, "nonempty list behind the prelude")?;
     Ok(())
 }
 
@@ -145,25 +165,26 @@ fn invocation_prelude_removes_the_companion_cell_before_the_guard(
 fn v1_guard_texts_are_unchanged_at_runtime() -> Result<(), Box<dyn std::error::Error>> {
     let lt = "[ dup 9223372036854775807 = [ drop 1 inl ] [ [ drop 99 ] run inr ] if ]";
     let eq = "[ dup 5 = [ [ drop 99 ] run inr ] [ drop 1 inl ] if ]";
-    for (source, variant, payload, name) in [
+    for (source, accepted, name) in [
         (
             format!("9223372036854775807 {lt} run"),
-            "left",
-            "1",
+            None,
             "lt-i64-max at MAX",
         ),
         (
             format!("9223372036854775806 {lt} run"),
-            "right",
-            "99",
+            Some(99),
             "lt-i64-max at MAX-1",
         ),
-        (format!("5 {eq} run"), "right", "99", "eq-i64-literal at 5"),
-        (format!("6 {eq} run"), "left", "1", "eq-i64-literal at 6"),
+        (format!("5 {eq} run"), Some(99), "eq-i64-literal at 5"),
+        (format!("6 {eq} run"), None, "eq-i64-literal at 6"),
     ] {
         let reports = session(&[&source])?;
         let report = reports.last().ok_or("no report")?;
-        assert_outcome(report, variant, payload, name)?;
+        match accepted {
+            None => assert_rejection(report, name)?,
+            Some(payload) => assert_invocation(report, payload, name)?,
+        }
     }
     Ok(())
 }

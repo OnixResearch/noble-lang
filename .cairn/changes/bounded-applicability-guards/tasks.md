@@ -50,7 +50,7 @@
   `[list, Program]`. The companion operand cell is removed by the recorded `swap drop` prelude
   (`invocation_prelude` in the report) because the guest exposes no cell-copy injection; the
   wrapper text itself is byte-identical to the design. Tests (observed): `cargo test -p
-  noble-contracts --test companion guard_v2` → 7 passed (recognition, nested `List (List I64)`,
+  noble-contracts --test companion guardv2` → 7 passed (recognition, nested `List (List I64)`,
   eight hostile whole-root/interface shapes plus two ill-typed refusals, frozen v1 bytes and
   their v2 lifts, the two fixed v2 texts, versions and digest domain separation, stable codes);
   `cargo test -p noble-cli --test smoke guardv2` → 4 passed, executing on the real runtime the

@@ -2,11 +2,15 @@
 //!
 //! These are deterministic core regressions only. They exercise the recognizer,
 //! the exact rendered texts and the digest domains; runtime acceptance and
-//! rejection through a live invocation are the CLI's `guards_v2` smoke control.
+//! rejection through a live invocation are the CLI's `guardv2` smoke control.
 
 /// One contract over the supplied interface and whole-root predicate. The body
 /// drops the single input and returns `0`, so only the recognition under test
 /// decides whether a guard template exists.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-maintainers; the interface, program and predicate fragments are positional parts of one contract text, so a wrapper type would only rename the same three strings."
+)]
 fn source_with_program(interface: &str, program: &str, predicate: &str) -> String {
     format!(
         "(contract 1 guard-v2 (input {interface}) (output (y I64)) \
@@ -14,6 +18,10 @@ fn source_with_program(interface: &str, program: &str, predicate: &str) -> Strin
     )
 }
 
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-maintainers; interface and predicate are positional parts of one contract text, so a wrapper type would only rename the same two strings."
+)]
 fn source(interface: &str, predicate: &str) -> String {
     source_with_program(interface, "drop 0", predicate)
 }
@@ -24,6 +32,10 @@ fn core() -> noble_contracts::companion::Core {
 
 /// Admit one contract with an empty offer: the retained contract record exists
 /// while no evidence is minted, which is all recognition needs.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-maintainers; interface and predicate are positional parts of one contract text, so a wrapper type would only rename the same two strings."
+)]
 fn recognized(
     interface: &str,
     predicate: &str,
