@@ -3,8 +3,8 @@
   "kind": "test",
   "result": "passed",
   "claim": "The promoted LIVE cases (LIVE-01, LIVE-06, LIVE-07) are exercised against the production `noble live repl` child built from this committed tree: LIVE-01 by a resident V8 reload whose ACK precedes a fresh next top-level stack, LIVE-06 by a retained old Program whose request is denied under the revoked current host policy, and LIVE-07 by an explicit interpreter choice refused at startup without a V8 fallback. No proof, no case outside the promoted set and no feature-gated seam result is claimed.",
-  "tested_commit": "46af07b786e310bdcf6b096125d8766ed073431b",
-  "source_revision": "sha256:bafea2bb0abb1001301390d53c7d32d2107ccb2a99d964be85ca7a4fc7946bea",
+  "tested_commit": "ac878aa6555f9d470523c1ae90bb3fbf3b0ed3bf",
+  "source_revision": "sha256:99ac83c628a6eac7a6d9f3a8ae67ec69be8473323d16866f7ce0c40e6369cc47",
   "scope": {
     "paths": [
       "crates",
@@ -1215,19 +1215,19 @@
     "crates/noble-wasm/wit/worker-transition.wit": "f788988352acbccfe9a9f4fd6811551b1b3e4d4b43f1436b7a8c5e702e7652f0",
     "policy/tool-selection.json": "8ed766cdfa42f8228bfba41c28c6aee91afd97652418ae7f16952cdc51875e9b",
     "rust-toolchain.toml": "7bfd3ca943dcce5b34de4c5f57414eae7496a698034208cf026690ada5130271",
-    "verification/live-cases/gate.mjs": "0af318ec8c94c91f06ac3c2e93d89808f9505b8fb0e27c22768488cd6596c470"
+    "verification/live-cases/gate.mjs": "b4201f95b129757fa436ba43456c85c7f631c1b39717ce6d6fd88431542343a9"
   },
   "canonical_case_file": "specs/conformance/live-wasm-cases.json",
   "canonical_case_revision": "0.1.0-draft.5",
   "binaries": {
     "noble": {
-      "path": "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
-      "sha256": "90735a68c259712050a9448a0b787a6cdf6fb7c13b840db9d1bb6e757b86a942",
+      "path": "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
+      "sha256": "3b48316d096f755ff43fd990fa0088376d433b78ac2a8b695ff4ed2b7214146b",
       "bytes": 287924664
     },
     "live_repl_tests": {
-      "path": "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/deps/live_repl-010f3ea587a07416",
-      "sha256": "89a32920261e3ce497314991ae11d464d6289643bd88644da3157d7873e1c591",
+      "path": "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/deps/live_repl-010f3ea587a07416",
+      "sha256": "0ab763c31288abc836778cbda908f75d29a12a3769a8c478102a418facdf9c5f",
       "bytes": 12632848
     },
     "node": {
@@ -1253,16 +1253,16 @@
         "--message-format=json-render-diagnostics"
       ],
       "exit": 0,
-      "duration_ms": 42500,
+      "duration_ms": 66811,
       "stdout": {
         "path": "raw/production-build.out",
         "bytes": 126515,
-        "sha256": "6dd71ac405ad2046f38f807b6904a0638027c8a19d35d8e014cc6365b39e8088"
+        "sha256": "6daeefdc9b1de3a24876eb7d9e20d13560c231f8999f1269c1b4e81e845616b4"
       },
       "stderr": {
         "path": "raw/production-build.err",
         "bytes": 5724,
-        "sha256": "44a45a0d044705ee9aea4ec53cfbec5318cecd9c76d5a6c7db0904ec97343331"
+        "sha256": "ecea09afdaa9609605d95267cf22c6b2dc91ae24b436a54db8329d950259db86"
       }
     },
     {
@@ -1282,33 +1282,33 @@
         "--message-format=json-render-diagnostics"
       ],
       "exit": 0,
-      "duration_ms": 1191,
+      "duration_ms": 1770,
       "stdout": {
         "path": "raw/test-build.out",
         "bytes": 127191,
-        "sha256": "b734ae4d0fbdff379aac6c4f24f62179c0f16664d3d8c0d310b088bee354d41e"
+        "sha256": "b8677d28633698f6312ad8e91c7362ec0c56675bc0c6cfb4f5820e0c372eafdb"
       },
       "stderr": {
         "path": "raw/test-build.err",
         "bytes": 170,
-        "sha256": "fe9ec1f609cfc9fbf498d8a8fef56d38d6aee3be644a12342a66d769129d3b1d"
+        "sha256": "96c4beef9b49d2c5cc8f1ea6cda54b09fbb9a95e13b8fa10300c97ae98b4c2a3"
       }
     },
     {
       "label": "test-live_01_reload_ack_precedes_fresh_next_top_level_call",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/deps/live_repl-010f3ea587a07416",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/deps/live_repl-010f3ea587a07416",
         "--exact",
         "live_01_reload_ack_precedes_fresh_next_top_level_call",
         "--test-threads=1",
         "--nocapture"
       ],
       "exit": 0,
-      "duration_ms": 362,
+      "duration_ms": 470,
       "stdout": {
         "path": "raw/test-live_01_reload_ack_precedes_fresh_next_top_level_call.out",
         "bytes": 179,
-        "sha256": "c2253bb1613acac0cb8e228f942f24f68222c58801f01d153968dda0be697546"
+        "sha256": "6940449792dc1403c15b611cbb24c8199ec7a188a240a58c0d6396c322d96360"
       },
       "stderr": {
         "path": "raw/test-live_01_reload_ack_precedes_fresh_next_top_level_call.err",
@@ -1319,18 +1319,18 @@
     {
       "label": "test-live06_host_revokes_old_effect_before_actual_retained_wasm_request",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/deps/live_repl-010f3ea587a07416",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/deps/live_repl-010f3ea587a07416",
         "--exact",
         "live06_host_revokes_old_effect_before_actual_retained_wasm_request",
         "--test-threads=1",
         "--nocapture"
       ],
       "exit": 0,
-      "duration_ms": 282,
+      "duration_ms": 346,
       "stdout": {
         "path": "raw/test-live06_host_revokes_old_effect_before_actual_retained_wasm_request.out",
         "bytes": 192,
-        "sha256": "f5a45729eb59313aac27647acbfe23d43064f83ab3bc8a823ad39c84d0c568e5"
+        "sha256": "b9f7e2756d866dcb898a586fbfd13d2afd257088638b8c3ee3b74c1aa17db3bb"
       },
       "stderr": {
         "path": "raw/test-live06_host_revokes_old_effect_before_actual_retained_wasm_request.err",
@@ -1341,18 +1341,18 @@
     {
       "label": "test-live06_a_active_controls_isolate_host_revocation_from_alias_rebind",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/deps/live_repl-010f3ea587a07416",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/deps/live_repl-010f3ea587a07416",
         "--exact",
         "live06_a_active_controls_isolate_host_revocation_from_alias_rebind",
         "--test-threads=1",
         "--nocapture"
       ],
       "exit": 0,
-      "duration_ms": 449,
+      "duration_ms": 590,
       "stdout": {
         "path": "raw/test-live06_a_active_controls_isolate_host_revocation_from_alias_rebind.out",
         "bytes": 192,
-        "sha256": "0b1c6659f83ee35dc0ff8f6f66f63f320846f5e733f75df29b5b98e3d168bcfc"
+        "sha256": "a0f185007aa367935b2f26e9aab074645d770137ae69c5a251879419b4b816ab"
       },
       "stderr": {
         "path": "raw/test-live06_a_active_controls_isolate_host_revocation_from_alias_rebind.err",
@@ -1363,18 +1363,18 @@
     {
       "label": "test-revoked_declared_adapter_cannot_reauthorize_on_later_import",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/deps/live_repl-010f3ea587a07416",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/deps/live_repl-010f3ea587a07416",
         "--exact",
         "revoked_declared_adapter_cannot_reauthorize_on_later_import",
         "--test-threads=1",
         "--nocapture"
       ],
       "exit": 0,
-      "duration_ms": 223,
+      "duration_ms": 488,
       "stdout": {
         "path": "raw/test-revoked_declared_adapter_cannot_reauthorize_on_later_import.out",
         "bytes": 185,
-        "sha256": "b9b158dd82a917be16937a24056f87be5963ff39a5518804a4bc8e0625ae7702"
+        "sha256": "1c3737d92171d4825e1a374a13b967f27303756e2e31adb0cb43223457157700"
       },
       "stderr": {
         "path": "raw/test-revoked_declared_adapter_cannot_reauthorize_on_later_import.err",
@@ -1385,18 +1385,18 @@
     {
       "label": "test-interpreter_choice_refuses_at_startup_without_v8_fallback",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/deps/live_repl-010f3ea587a07416",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/deps/live_repl-010f3ea587a07416",
         "--exact",
         "interpreter_choice_refuses_at_startup_without_v8_fallback",
         "--test-threads=1",
         "--nocapture"
       ],
       "exit": 0,
-      "duration_ms": 23,
+      "duration_ms": 46,
       "stdout": {
         "path": "raw/test-interpreter_choice_refuses_at_startup_without_v8_fallback.out",
         "bytes": 183,
-        "sha256": "8285f1b1873d74bd30899392065cd12779717915321f1a0d287b605b1f62ed61"
+        "sha256": "58814b1e8c046bdd27922e0f305e83d73ff871bc843d81bc50475d255cfd46b0"
       },
       "stderr": {
         "path": "raw/test-interpreter_choice_refuses_at_startup_without_v8_fallback.err",
@@ -1408,20 +1408,20 @@
       "label": "LIVE-01",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/01-LIVE-01/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/01-LIVE-01/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 300,
-      "pid": 1865099,
+      "duration_ms": 633,
+      "pid": 2008761,
       "script": [
         "20 addone",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/01-LIVE-01/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/01-LIVE-01/math.noble/math.noble",
         "20 addone",
         ":generation"
       ],
@@ -1440,12 +1440,12 @@
       "label": "LIVE-01-run-definition",
       "kind": "direct-cli",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "run",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/02-LIVE-01-run/math.noble/math.noble"
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/02-LIVE-01-run/math.noble/math.noble"
       ],
       "exit": 0,
-      "duration_ms": 4,
+      "duration_ms": 19,
       "stdin": null,
       "stdout": {
         "path": "raw/LIVE-01-run-definition.out",
@@ -1462,11 +1462,11 @@
       "label": "LIVE-01-session",
       "kind": "direct-cli",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "session"
       ],
       "exit": 0,
-      "duration_ms": 168,
+      "duration_ms": 423,
       "stdin": "c457faae4c466261ef00dc0f79b31d744dc6426918001733e62e4393001a5dfd",
       "stdout": {
         "path": "raw/LIVE-01-session.out",
@@ -1483,11 +1483,11 @@
       "label": "LIVE-01-self-propose",
       "kind": "direct-cli",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "session"
       ],
       "exit": 2,
-      "duration_ms": 4,
+      "duration_ms": 22,
       "stdin": "71234d12153a7d264f2bd19f28c1c85abfe374a4c36cb559a54929e3ca450a86",
       "stdout": {
         "path": "raw/LIVE-01-self-propose.out",
@@ -1504,34 +1504,35 @@
       "label": "LIVE-06",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/03-LIVE-06/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/03-LIVE-06/math.noble/math.noble",
         "--engine",
         "v8",
         "--declared-modules",
         "--bindings",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/03-LIVE-06/math.noble/bindings.txt",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/03-LIVE-06/math.noble/bindings.txt",
         "--verify-source-before-execute"
       ],
       "exit": 2,
-      "duration_ms": 264,
-      "pid": 1865307,
+      "duration_ms": 428,
+      "pid": 2008984,
       "script": [
         "import ledger@1 as l",
         "[ l.send ]",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/03-LIVE-06/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/03-LIVE-06/math.noble/math.noble",
         "import ledger@2 as n",
         ":revoke-effect ledger@1 emit-a test.emit",
         "n.send",
+        "import ledger@2 as l",
         "run"
       ],
       "stdout": {
         "path": "raw/LIVE-06.out",
-        "bytes": 15710,
-        "sha256": "cff244376cdafe3c02e8d5797febb80c3d8bcdeeb245f66ef041d88394b4f6fe"
+        "bytes": 17241,
+        "sha256": "53c8b64b96019a670e2fd19277e0e4526ac287d3c5b71a4cec9cf28a594ef638"
       },
       "stderr": {
         "path": "raw/LIVE-06.err",
@@ -1543,17 +1544,17 @@
       "label": "LIVE-07",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/04-LIVE-07/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/04-LIVE-07/math.noble/math.noble",
         "--engine",
         "interpreter"
       ],
       "exit": 2,
-      "duration_ms": 304,
-      "pid": 1865323,
+      "duration_ms": 313,
+      "pid": 2009093,
       "script": [],
       "stdout": {
         "path": "raw/LIVE-07.out",
@@ -1570,17 +1571,17 @@
       "label": "LIVE-07-v8",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/04-LIVE-07/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/04-LIVE-07/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 178,
-      "pid": 1865422,
+      "duration_ms": 297,
+      "pid": 2010064,
       "script": [
         ":generation"
       ],
@@ -1599,21 +1600,21 @@
       "label": "LIVE-02",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/05-LIVE-02/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/05-LIVE-02/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 359,
-      "pid": 1865478,
+      "duration_ms": 740,
+      "pid": 2010205,
       "script": [
         "def twice [ addone addone ]",
         "[ addone ]",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/05-LIVE-02/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/05-LIVE-02/math.noble/math.noble",
         "20 twice swap 20 swap run",
         "20 swap run"
       ],
@@ -1632,21 +1633,21 @@
       "label": "LIVE-03-malformed-source",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/06-LIVE-03-malformed-source/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/06-LIVE-03-malformed-source/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 301,
-      "pid": 1865534,
+      "duration_ms": 648,
+      "pid": 2010482,
       "script": [
         "7",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/06-LIVE-03-malformed-source/math.noble/unselected.noble",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/06-LIVE-03-malformed-source/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/06-LIVE-03-malformed-source/math.noble/unselected.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/06-LIVE-03-malformed-source/math.noble/math.noble",
         "addone"
       ],
       "stdout": {
@@ -1664,21 +1665,21 @@
       "label": "LIVE-03-wrong-input-type",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/07-LIVE-03-wrong-input-type/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/07-LIVE-03-wrong-input-type/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 268,
-      "pid": 1865610,
+      "duration_ms": 613,
+      "pid": 2010732,
       "script": [
         "7",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/07-LIVE-03-wrong-input-type/math.noble/unselected.noble",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/07-LIVE-03-wrong-input-type/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/07-LIVE-03-wrong-input-type/math.noble/unselected.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/07-LIVE-03-wrong-input-type/math.noble/math.noble",
         "addone"
       ],
       "stdout": {
@@ -1696,21 +1697,21 @@
       "label": "LIVE-03-effect-ceiling-increase",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/08-LIVE-03-effect-ceiling-increase/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/08-LIVE-03-effect-ceiling-increase/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 265,
-      "pid": 1865683,
+      "duration_ms": 670,
+      "pid": 2010890,
       "script": [
         "7",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/08-LIVE-03-effect-ceiling-increase/math.noble/unselected.noble",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/08-LIVE-03-effect-ceiling-increase/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/08-LIVE-03-effect-ceiling-increase/math.noble/unselected.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/08-LIVE-03-effect-ceiling-increase/math.noble/math.noble",
         "addone"
       ],
       "stdout": {
@@ -1728,21 +1729,21 @@
       "label": "LIVE-03-incompatible-public-interface",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/09-LIVE-03-incompatible-public-interface/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/09-LIVE-03-incompatible-public-interface/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 286,
-      "pid": 1865692,
+      "duration_ms": 707,
+      "pid": 2011153,
       "script": [
         "7",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/09-LIVE-03-incompatible-public-interface/math.noble/unselected.noble",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/09-LIVE-03-incompatible-public-interface/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/09-LIVE-03-incompatible-public-interface/math.noble/unselected.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/09-LIVE-03-incompatible-public-interface/math.noble/math.noble",
         "addone"
       ],
       "stdout": {
@@ -1760,21 +1761,21 @@
       "label": "LIVE-03-missing-module",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/10-LIVE-03-missing-module/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/10-LIVE-03-missing-module/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 265,
-      "pid": 1865748,
+      "duration_ms": 652,
+      "pid": 2011295,
       "script": [
         "7",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/10-LIVE-03-missing-module/math.noble/unselected.noble",
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/10-LIVE-03-missing-module/math.noble/math.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/10-LIVE-03-missing-module/math.noble/unselected.noble",
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/10-LIVE-03-missing-module/math.noble/math.noble",
         "addone"
       ],
       "stdout": {
@@ -1792,22 +1793,22 @@
       "label": "LIVE-03-incompatible-schema-declared",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/11-LIVE-03-incompatible-schema-declared/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/11-LIVE-03-incompatible-schema-declared/math.noble/math.noble",
         "--engine",
         "v8",
         "--declared-modules",
         "--bindings",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/11-LIVE-03-incompatible-schema-declared/math.noble/bindings.txt"
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/11-LIVE-03-incompatible-schema-declared/math.noble/bindings.txt"
       ],
       "exit": 0,
-      "duration_ms": 129,
-      "pid": 1865818,
+      "duration_ms": 265,
+      "pid": 2011516,
       "script": [
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/11-LIVE-03-incompatible-schema-declared/math.noble/math.noble"
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/11-LIVE-03-incompatible-schema-declared/math.noble/math.noble"
       ],
       "stdout": {
         "path": "raw/LIVE-03-incompatible-schema-declared.out",
@@ -1824,22 +1825,22 @@
       "label": "LIVE-03-dependency-cycle-declared",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/12-LIVE-03-dependency-cycle-declared/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/12-LIVE-03-dependency-cycle-declared/math.noble/math.noble",
         "--engine",
         "v8",
         "--declared-modules",
         "--bindings",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/12-LIVE-03-dependency-cycle-declared/math.noble/bindings.txt"
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/12-LIVE-03-dependency-cycle-declared/math.noble/bindings.txt"
       ],
       "exit": 0,
-      "duration_ms": 132,
-      "pid": 1865827,
+      "duration_ms": 271,
+      "pid": 2011587,
       "script": [
-        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/12-LIVE-03-dependency-cycle-declared/math.noble/math.noble"
+        ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/12-LIVE-03-dependency-cycle-declared/math.noble/math.noble"
       ],
       "stdout": {
         "path": "raw/LIVE-03-dependency-cycle-declared.out",
@@ -1856,17 +1857,17 @@
       "label": "LIVE-05-partial",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "watch",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/13-LIVE-05-partial/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/13-LIVE-05-partial/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 577,
-      "pid": 1865928,
+      "duration_ms": 969,
+      "pid": 2011655,
       "script": [
         "20 addone",
         "20 addone"
@@ -1886,17 +1887,17 @@
       "label": "LIVE-05-missing",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "watch",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/14-LIVE-05-missing/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/14-LIVE-05-missing/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 270,
-      "pid": 1866136,
+      "duration_ms": 656,
+      "pid": 2012055,
       "script": [
         "7",
         "20 addone",
@@ -1917,17 +1918,17 @@
       "label": "LIVE-05-escape",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "watch",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/15-LIVE-05-escape/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/15-LIVE-05-escape/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 170,
-      "pid": 1866166,
+      "duration_ms": 388,
+      "pid": 2012530,
       "script": [],
       "stdout": {
         "path": "raw/LIVE-05-escape.out",
@@ -1944,19 +1945,19 @@
       "label": "LIVE-05-budget",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "watch",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/16-LIVE-05-budget/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/16-LIVE-05-budget/math.noble/math.noble",
         "--engine",
         "v8",
         "--max-retained-generations",
         "2"
       ],
       "exit": 0,
-      "duration_ms": 270,
-      "pid": 1866225,
+      "duration_ms": 635,
+      "pid": 2012749,
       "script": [
         "[ addone ]"
       ],
@@ -1975,17 +1976,17 @@
       "label": "LIVE-05-trap",
       "kind": "live-child",
       "command": [
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/target/debug/noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/target/debug/noble",
         "live",
         "repl",
         "--source",
-        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/17-LIVE-05-trap/math.noble/math.noble",
+        "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/17-LIVE-05-trap/math.noble/math.noble",
         "--engine",
         "v8"
       ],
       "exit": 0,
-      "duration_ms": 166,
-      "pid": 1866289,
+      "duration_ms": 394,
+      "pid": 2013013,
       "script": [
         "\"A\" test.emit test.abort"
       ],
@@ -2006,10 +2007,10 @@
       "promoted": true,
       "exercised": true,
       "state_before": {
-        "implementation": "absent",
-        "execution": "not-run",
+        "implementation": "implemented",
+        "execution": "passed",
         "proof": "open",
-        "trust": "unassessed"
+        "trust": "explicit"
       },
       "projection_sha256": "be2ad88418db0f93dda24e6536114f4a8c6657f12014bfd1a0542b46785effa2",
       "tests": [
@@ -2050,7 +2051,7 @@
             {
               "script": [
                 "20 addone",
-                ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/01-LIVE-01/math.noble/math.noble",
+                ":reload /home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/01-LIVE-01/math.noble/math.noble",
                 "20 addone",
                 ":generation"
               ]
@@ -2118,7 +2119,7 @@
           "observed": true,
           "detail": [
             {
-              "pid": 1865099,
+              "pid": 2008761,
               "exit": 0,
               "report_count": 5
             }
@@ -2198,7 +2199,7 @@
                 "live",
                 "repl",
                 "--source",
-                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/05-LIVE-02/math.noble/math.noble",
+                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/05-LIVE-02/math.noble/math.noble",
                 "--engine",
                 "v8"
               ],
@@ -2749,7 +2750,7 @@
                 "live",
                 "watch",
                 "--source",
-                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/13-LIVE-05-partial/math.noble/math.noble",
+                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/13-LIVE-05-partial/math.noble/math.noble",
                 "--engine",
                 "v8"
               ],
@@ -2763,7 +2764,7 @@
           "detail": [
             {
               "watched_path": "math.noble",
-              "source": "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/13-LIVE-05-partial/math.noble/math.noble"
+              "source": "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/13-LIVE-05-partial/math.noble/math.noble"
             }
           ]
         },
@@ -3046,10 +3047,10 @@
       "promoted": true,
       "exercised": true,
       "state_before": {
-        "implementation": "absent",
-        "execution": "not-run",
+        "implementation": "implemented",
+        "execution": "passed",
         "proof": "open",
-        "trust": "unassessed"
+        "trust": "explicit"
       },
       "projection_sha256": "6ab3f70f7edd8db1734f005680d48cb0bcd4b4f2cae975bebece606302b171d5",
       "tests": [
@@ -3067,12 +3068,12 @@
                 "live",
                 "repl",
                 "--source",
-                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/03-LIVE-06/math.noble/math.noble",
+                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/03-LIVE-06/math.noble/math.noble",
                 "--engine",
                 "v8",
                 "--declared-modules",
                 "--bindings",
-                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/03-LIVE-06/math.noble/bindings.txt",
+                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/03-LIVE-06/math.noble/bindings.txt",
                 "--verify-source-before-execute"
               ],
               "initial_stage": "wasm-live"
@@ -3154,7 +3155,9 @@
           "observed": true,
           "detail": [
             {
-              "outcome": "namespace-committed"
+              "b_alias_import": "namespace-committed",
+              "rebound_alias": "namespace-committed",
+              "rebound_stack_preserved": true
             }
           ]
         },
@@ -3331,10 +3334,10 @@
       "promoted": true,
       "exercised": true,
       "state_before": {
-        "implementation": "absent",
-        "execution": "not-run",
+        "implementation": "implemented",
+        "execution": "passed",
         "proof": "open",
-        "trust": "unassessed"
+        "trust": "explicit"
       },
       "projection_sha256": "aa80f1244e9039b8c7a2a3ebdfa19a05e97658cc8d03c4d78177b56d403d77b5",
       "tests": [
@@ -3350,7 +3353,7 @@
                 "live",
                 "repl",
                 "--source",
-                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-1/fixtures/04-LIVE-07/math.noble/math.noble",
+                "/home/brittonr/.cache/noble-cairn/scratch/live-cases/run-3/fixtures/04-LIVE-07/math.noble/math.noble",
                 "--engine",
                 "interpreter"
               ]
@@ -5050,6 +5053,74 @@
         }
       ]
     },
+    "LIVE-06/rebound": {
+      "declared_kind": "import",
+      "generation": 5,
+      "guest_requests": 0,
+      "outcome": "namespace-committed",
+      "proof_recheck": null,
+      "protected_operations": 0,
+      "rebuilt_import_definitions": [],
+      "retained_module_roots": 2,
+      "retired_code_spans": [
+        {
+          "bridge_wasm_sha256": "492d2c82e2c5da4d18e00a84d92b8a3cdabe95ae180a97fe30e77b3657d337ab",
+          "bridge_wat_sha256": "661ab1a2ee2a54cfb5a328a7f4460faec49487526f7bf5d0a6f1c11c499be53b",
+          "code_owners": 0,
+          "code_span": {
+            "generation": 2,
+            "length": 3,
+            "start": 8
+          },
+          "core_dispatch_bridge_owned": true,
+          "guest_instance_owner": 2,
+          "guest_instance_releasable": true,
+          "guest_js_owner_edges_remaining": 0,
+          "guest_source_sha256": "a01a81b869c0d5beffbba9852f547b5ceb8d64a525defa8f46b5ecb6e40f3918",
+          "guest_table_entries_remaining": 0,
+          "guest_wasm_sha256": "5b3811712cb4f37d5fc03aaff929f5aa143bf8e92603f906e1aa251e28dccb61",
+          "guest_wat_sha256": "7324bf2d353b34c8a6d30f54997bfb47467ab529fae36d9dc3fc5229715d2243",
+          "outcome": "code-retired",
+          "signature_catalogue_sha256": "d270687b6f258946b6f1adc606de9c7139f28fb8427d7ead855cb3f8edf451fc",
+          "source_generation": "4",
+          "table_cleared": true
+        }
+      ],
+      "schema": "noble-live-report/v1",
+      "source_freshness": "not-file-backed",
+      "source_sha256": "66db938e4ef88b03626521cbfcd1197b9af77a7c86ac6dd554357d4e5363fcdf",
+      "source_version": "checked-submission",
+      "stack": [
+        {
+          "handle": 7,
+          "interface": {
+            "effects": [
+              "test.emit"
+            ],
+            "stack_in": "[]",
+            "stack_out": "[]"
+          },
+          "recipe": [
+            {
+              "invoke": "definition:1589761739028781974"
+            }
+          ],
+          "type": "Program",
+          "witnesses": [
+            {
+              "effects": [
+                "test.emit"
+              ],
+              "node": 0,
+              "stack_in": "[]",
+              "stack_out": "[]"
+            }
+          ]
+        }
+      ],
+      "stage": "declared",
+      "watch_sequence": null
+    },
     "LIVE-06/denied": {
       "acquired_authority": false,
       "adapter_invocations": [
@@ -5251,9 +5322,9 @@
         "optimized": false,
         "signature_catalogue_sha256": "d270687b6f258946b6f1adc606de9c7139f28fb8427d7ead855cb3f8edf451fc",
         "source_sha256": "acba25512100f80b56fc3ccd14c65be55d94800cda77585c5f41a887e398f9be",
-        "submission": 7,
-        "wasm_sha256": "80da58f95514e3f2f5af4ffb986a945f66112728f6f7852cd166e934816fba0b",
-        "wat_sha256": "c6c549e86ea90d4411a7f0d8e258e458f27fab59e37e92ad0a574e485bf187d2"
+        "submission": 8,
+        "wasm_sha256": "bb33780e0343cdbe35e0c760f8b6dc343dcc464d8b70206f67a03cda1677baaa",
+        "wat_sha256": "b18beea9b7ba750a2de4d2cf0d812d060880dc169d4b8fd94aa7a2464e3c5d4c"
       },
       "native_trap": null,
       "outcome": "trap",
@@ -5281,11 +5352,11 @@
       "schema": "noble-core-report/v1",
       "scripted_inputs": [],
       "session_state": "terminated-after-runtime-failure",
-      "source_generation": 4,
+      "source_generation": 5,
       "stack": [],
       "stage": "wasm",
       "status": 5,
-      "submission": 7,
+      "submission": 8,
       "substitutions": [
         {
           "adapter_identity": "emit-a",

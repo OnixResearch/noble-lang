@@ -196,20 +196,20 @@ cases remain absent/not-run/open, with no Octet/Lean proof claim.
 
 A later isolated acceptance slice added `verification/live-cases/gate.mjs`
 and its retained receipt `verification/live-cases/acceptance.json` (SHA-256
-`47353005b8e670149f0f3febd74f1c89a26a97d15fd0795f564bdcfa00eb76fb`). The gate
+`d660f82575856bda946d4ad34d4ca2cfa6e61beeaa6a7f7befd3dd6a36ba9a9f`). The gate
 refuses a dirty source scope, pins each LIVE case's exact
 id/profile/kind/requirements/input/expected projection, builds the pinned CLI
 and the `live_repl` integration binary from the committed tree, runs the
 selected `live_repl` tests, drives real `noble live repl` and
 `noble live watch` children for every observed field, and writes one
 immutable `acceptance.json` outside the repository before it is copied in.
-It was measured on commit `46af07b7` with source revision
-`sha256:bafea2bb0abb1001301390d53c7d32d2107ccb2a99d964be85ca7a4fc7946bea`,
+It was measured on commit `ac878aa6` with source revision
+`sha256:99ac83c628a6eac7a6d9f3a8ae67ec69be8473323d16866f7ce0c40e6369cc47`,
 CLI SHA-256
-`90735a68c259712050a9448a0b787a6cdf6fb7c13b840db9d1bb6e757b86a942` and
+`3b48316d096f755ff43fd990fa0088376d433b78ac2a8b695ff4ed2b7214146b` and
 `live_repl` test-binary SHA-256
-`89a32920261e3ce497314991ae11d464d6289643bd88644da3157d7873e1c591`, over 27
-recorded commands and 68 retained JSON reports. LIVE-01 is promoted
+`0ab763c31288abc836778cbda908f75d29a12a3769a8c478102a418facdf9c5f`, over 27
+recorded commands and 69 retained JSON reports. LIVE-01 is promoted
 (`implemented`/`passed`/`open`/`explicit`): `20 addone` returned 21 on the old
 bytes, a fsynced paired rename to the case's after bytes was followed by a
 `reload-committed` ACK at the next generation with zero guest requests and zero
@@ -222,10 +222,12 @@ Core-Bootstrap reports with `self.propose` unbound. LIVE-06 is promoted: after
 `ledger@2` bytes and `import ledger@2 as n`, the host-only
 `:revoke-effect ledger@1 emit-a test.emit` changed that exact slot from
 allowed/active to denied/inactive with zero guest requests; `n.send` still ran
-through `emit-b` with one guest request and one protected operation, and `run`
-on the retained Program trapped with request identity `ledger@1:test.emit`
-through `emit-a`, one guest request, zero protected operations, decision
-deny/policy-denied and a terminal session. LIVE-07 is promoted:
+through `emit-b` with one guest request and one protected operation, the case's
+`import ledger@2 as l` rebound the original alias while the retained stack kept
+its exact A handle, and `run` on the retained Program trapped with request
+identity `ledger@1:test.emit` through `emit-a`, one guest request, zero
+protected operations, decision deny/policy-denied and a terminal session.
+LIVE-07 is promoted:
 `--engine interpreter` produced exactly one `engine-selection` report with
 outcome `interpreter-unavailable`, exit 2 and no second report within 300 ms,
 while `--engine v8` still reported engine `v8`. The selected real-child tests
