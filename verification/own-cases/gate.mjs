@@ -175,7 +175,12 @@ const failures = [];
   const test = run(out, 'own-04', 'cargo', ['test', '--locked', '-p', 'noble-cli', '--test', 'core',
     'own_case_04_non_borrow_variants_reject_before_emission', '--', '--nocapture', '--test-threads=1']);
   runs.push(test);
-  const rows = lines(test.stdout, '{"id":"OWN-CASE-04"');
+  // The test harness prints its `test ... ` progress prefix on the same line as the first row, so
+  // locate each exact OWN-CASE-04 row inside the line instead of requiring it to start the line.
+  const rows = test.stdout.split('\n').flatMap(line => {
+    const at = line.indexOf('{"id":"OWN-CASE-04"');
+    return at < 0 ? [] : [JSON.parse(line.slice(at))];
+  });
   const names = rows.map(row => row.variant);
   const expectedNames = ['dup', 'drop', 'quote', 'pair-then-quote', 'sum-then-drop', 'list-then-drop'];
   if (test.status === 0 && JSON.stringify(names) === JSON.stringify(expectedNames)
