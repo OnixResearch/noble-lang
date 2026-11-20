@@ -7,6 +7,9 @@ const GLOBAL_TRACE_BYTES = 2 * 1024 * 1024;
 const ROOT_TRACE_RESERVATION_BYTES = 1024 * 1024;
 const REPLAY_TRACE_BYTES = Buffer.byteLength(',"replay":"scripted"');
 const TRACE_ROWS = 4096;
+// Per-root frame-pin rows retained for the `trace` operation. Every root enters its own frame, so
+// this ring cannot be charged against request trace rows; each root's invoke reply is exact.
+const FRAME_PIN_ROWS = 256;
 
 function slotDecimal(value, label) {
   if (typeof value !== 'string' || !/^(0|[1-9][0-9]{0,19})$/.test(value)
@@ -102,6 +105,14 @@ class SlotEngine {
     this.active = null;
     this.trace = [];
     this.traceBytes = 0;
+    // One frame-pin row per root, retained as a bounded ring for the `trace` operation (every root
+    // enters its own frame, so this cannot be charged against trace rows). A row carries the root's
+    // entered/released/active counts, or an explicit error when the abort ledger itself failed. The
+    // ring keeps the most recent FRAME_PIN_ROWS roots and reports how many older rows it displaced;
+    // each root's own invoke reply always carries that root's row. Older rows are displaced, never
+    // silently mixed with a newer root's numbers.
+    this.rootFramePins = [];
+    this.rootFramePinsTotal = 0;
     this.traceFailure = null;
     this.poisoned = false;
     this.proposalInspectionFailed = false;
@@ -2155,10 +2166,14 @@ class SlotEngine {
       } else {
         observedCaptures = ['cell_a', 'cell_b'].flatMap(field => {
           const child = runtime[field](handle) >>> 0;
-          // The summary is an exact representation of the same graph `observeProgramGraph`
-          // already walks (4096 nodes) and the selected-origin path already encodes (32 nodes /
-          // 4096 bytes). It is bounded identically for anonymous and selected results so a deep
-          // composite is refused by retained-graph accounting, not by a smaller summary budget.
+          // Each child summary is an exact representation bounded at 32 nodes and 4096 bytes,
+          // the same per-child limit the selected-origin path encodes; an anonymous result may
+          // therefore carry two such summaries (about 65 cells), while a selected result is also
+          // capped as a whole by `verifySelectedGraph`. The node limit is what refuses a deep
+          // composite here: `captureValue` raises "checked captured value exceeds host observation
+          // bound" before `observeProgramGraph`'s separate 4096-node retained-graph walk can bind.
+          // Before this per-child limit the anonymous summary was capped at 1000 bytes / 64 nodes,
+          // whose byte cap bound first at about 10 nodes; admission is now about 32 nodes per child.
           return child ? [{ field, value: JSON.parse(this.captureValue(runtime, child,
             32, 4096)) }] : [];
         });
@@ -2276,6 +2291,12 @@ class SlotEngine {
     return slotReply('replay-released', { token });
   }
 
+  retainFramePins(row) {
+    this.rootFramePinsTotal += 1;
+    this.rootFramePins.push(row);
+    if (this.rootFramePins.length > FRAME_PIN_ROWS) this.rootFramePins.shift();
+  }
+
   appendRootTrace(trace, size) {
     const bytes = size.bytes + (this.replaying ? size.rows * REPLAY_TRACE_BYTES : 0);
     if (size.rows !== trace.length || this.traceBytes + bytes > GLOBAL_TRACE_BYTES) {
@@ -2382,14 +2403,17 @@ class SlotEngine {
         this.replays.set(replayToken, { snapshot, id: module.id, trace, stack, identity });
       }
       const traceSize = this.registry.traceSize(root);
+      const framePins = this.registry.framePinCounts(root);
       this.registry.finishRoot(root);
       this.active = null;
       for (const candidate of this.modules.values()) this.sweepRetirement(candidate);
       this.appendRootTrace(trace, traceSize);
+      this.retainFramePins({ root: this.rootSequence, ...framePins });
       return slotReply('executed', { epoch: rootEpoch, stack,
         ...(replayToken === null ? {} : { replay_token: replayToken }),
         ...(replayToken === null ? {} : { frozen_identity: this.replays.get(replayToken).identity }),
         request_trace: trace, control_events: this.controlEvents.splice(0),
+        frame_pins: framePins,
         guest_requests: trace.length,
         protected_operations: this.replaying ? 0 : trace.filter(item =>
           item.operation === 'effect' && item.outcome === 'performed').length });
@@ -2407,13 +2431,19 @@ class SlotEngine {
       let traceSize = { bytes: 0, rows: 0 };
       try { traceSize = this.registry.traceSize(root); }
       catch (inspection) { error = inspection; }
-      try { this.registry.abortRoot(root); } catch (retired) { error = retired; }
+      let framePins = null;
+      try { framePins = this.registry.abortRoot(root); } catch (retired) { error = retired; }
       this.active = null;
       this.poisoned = true;
       this.appendRootTrace(trace, traceSize);
+      // Never fabricate a zero row for a failed ledger: record that the counts are unavailable.
+      this.retainFramePins(framePins === null
+        ? { root: this.rootSequence, error: 'frame-pin ledger unavailable: abortRoot failed' }
+        : { root: this.rootSequence, ...framePins });
       return slotReply('execution-failed', { diagnostic: String(error)
         + (this.checkpointFailure === null ? '' : `; checkpoint: ${this.checkpointFailure}`),
         request_trace: trace, control_events: this.controlEvents.splice(0),
+        frame_pins: framePins,
         guest_requests: trace.length,
         protected_operations: this.replaying ? 0 : trace.filter(item =>
           item.operation === 'effect' && item.outcome === 'performed').length,
@@ -2459,7 +2489,10 @@ class SlotEngine {
       if (site === null) return slotReply('unadmitted-site', { id: request.id, site_id: request.site });
       return slotReply('reflected', { site });
     }
-    if (request.operation === 'trace') return slotReply('trace-observed', { trace: this.trace });
+    if (request.operation === 'trace') return slotReply('trace-observed', {
+      trace: this.trace,
+      frame_pins: { rows: this.rootFramePins, roots: this.rootFramePinsTotal,
+        omitted: this.rootFramePinsTotal - this.rootFramePins.length } });
     if (request.operation === 'policy') {
       const grant = request.grant;
       if (!grant || typeof grant.operation !== 'string'

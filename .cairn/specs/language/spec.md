@@ -1725,14 +1725,6 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
-#### Scenario: OWN-CASE-09 for K-RES-02
-
-- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-09](../../../specs/conformance/ownership-cases.json)
-- WHEN the `runtime` procedure for case `OWN-CASE-09` runs against those inputs
-- THEN the observations match every field of `expected` in case `OWN-CASE-09`
-
-This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
-
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: K-RES-03
@@ -1751,11 +1743,11 @@ Both success and failure return the directory handle exactly once. A different o
 
 
 <!-- cairn:scenario-links:start -->
-#### Scenario: OWN-CASE-09 for K-RES-03
+#### Scenario: OWN-CASE-12 for K-RES-03
 
-- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-09](../../../specs/conformance/ownership-cases.json)
-- WHEN the `runtime` procedure for case `OWN-CASE-09` runs against those inputs
-- THEN the observations match every field of `expected` in case `OWN-CASE-09`
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-12](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-12` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-12`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -3229,6 +3221,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN the `Live-Wasm-Draft` profile and every field of `input` in [LIVE-10](../../../specs/conformance/live-wasm-cases.json)
 - WHEN the `runtime` procedure for case `LIVE-10` runs against those inputs
 - THEN the observations match every field of `expected` in case `LIVE-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: OWN-CASE-07 for H-LIVE-03
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-07](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-07`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
