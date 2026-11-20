@@ -9,6 +9,9 @@ Noble is under active development. The core compiler and runtime work within
 defined, bounded profiles; the language and interfaces are not stable. See
 [what works today](#what-works-today) for the current scope.
 
+The draft website, including the language specification, is at
+[noble-lang.org](https://noble-lang.org/).
+
 ## Programs as values
 
 Operations run from left to right on a typed stack. Literals push values;
@@ -1470,11 +1473,10 @@ implementation-refinement evidence.
 [`.github/workflows/site-ci.yml`](.github/workflows/site-ci.yml) builds the tree
 on every pull request and on every push to `main`. It does not publish.
 
-[`.github/workflows/site.yml`](.github/workflows/site.yml) is a manual
-`workflow_dispatch` deploy. It direct-uploads the static tree with pinned
-Actions, Bun, and Wrangler versions, and only from `main`. It needs these
-operator-provided settings before a dispatch can publish. Until the zone and
-the secrets exist, leave the workflow manual; do not add a `push` trigger.
+[`.github/workflows/site.yml`](.github/workflows/site.yml) publishes every push
+to `main`, and a manual `workflow_dispatch` from `main`. It direct-uploads the
+static tree with pinned Actions, Bun, and Wrangler versions. It needs these
+operator-provided settings to publish:
 
 - A Cloudflare Pages **Direct Upload** project named `noble-lang`, with
   production branch `main`; the output is `site-dist` as configured in
@@ -1485,9 +1487,9 @@ the secrets exist, leave the workflow manual; do not add a `push` trigger.
   does not need zone/DNS permissions. Do not require manual environment approval
   if unattended main-branch updates are intended. Repository token permissions
   remain `contents: read`, and checkout credentials are not persisted.
-  A manual dispatch still tests and builds the tree, then skips publication
-  with a workflow warning when either secret is absent. Once both exist, a
-  failed publication fails the job.
+  A run still tests and builds the tree, then skips publication with a
+  workflow warning when either secret is absent. Once both exist, a failed
+  publication fails the job.
 - Add `noble-lang.org` and `www.noble-lang.org` as Pages custom domains before
   configuring their proxied DNS to the Pages-provided target. Enable Cloudflare
   **Always Use HTTPS** for HTTP-to-HTTPS at the apex. Import the build's
@@ -1507,31 +1509,25 @@ Advertise the public site in repository/homepage, README and Cargo/flake
 metadata only after HTTPS and redirects have been verified. This workflow does
 not change DNS, the registrar, or any Cloudflare account.
 
-Operator steps still required for `noble-lang.org`, none of which this
-repository performs:
+Deployment state of `noble-lang.org`, checked from outside on 2026-11-20:
 
-1. Add the `noble-lang.org` zone on the Cloudflare account that will host it.
-   Nameservers were `eric.ns.cloudflare.com` and `lucy.ns.cloudflare.com` when
-   the domain was registered; after the zone exists, confirm the pair
-   Cloudflare assigns and update the registrar if it differs. Wait until the
-   `.org` TLD delegates the name.
-2. Create the Pages project and `docs-production` secrets described above.
-   Add `noble-lang.org` and `www.noble-lang.org` as custom domains. Let Pages
-   create the proxied records, then enable **Always Use HTTPS**. Import
-   `cloudflare-bulk-redirects.csv` as the Bulk Redirect list
-   `noble_lang_www_to_apex` and enable its rule. Confirm certificates, the
-   HTTP-to-HTTPS redirect, and the `www` redirect, including a nested path
-   with a query string.
-3. This name is not for mail. Publish a null MX (`noble-lang.org. MX 0 .`,
-   [RFC 7505](https://www.rfc-editor.org/rfc/rfc7505)), a TXT record
-   `v=spf1 -all`, and a TXT record at `_dmarc.noble-lang.org` of
-   `v=DMARC1; p=reject`.
-4. Publish CAA records that allow only the certificate authorities Cloudflare
-   documents for its certificates
-   ([Pages debugging](https://developers.cloudflare.com/pages/configuration/debugging-pages/)):
-   `0 issue "letsencrypt.org"`, `0 issue "pki.goog; cansignhttpexchanges=yes"`,
-   `0 issue "ssl.com"`, and the same three values with `issuewild`. Re-check
-   that page before publishing, and drop any authority Cloudflare no longer
-   lists.
-5. Confirm registrar auto-renew and keep the registrar lock. Consider DNSSEC
-   only after the zone is serving.
+- The `.org` registry delegates the name to the Cloudflare zone
+  (`brady.ns.cloudflare.com`, `nucum.ns.cloudflare.com`).
+  `https://noble-lang.org/` serves the site over a valid certificate.
+  `http://noble-lang.org/` and `www.noble-lang.org` over either scheme
+  redirect with status 301 to `https://noble-lang.org/`, keeping the path and
+  the query string; an unknown route returns 404.
+- The name is not for mail: a null MX (`noble-lang.org. MX 0 .`,
+  [RFC 7505](https://www.rfc-editor.org/rfc/rfc7505)), the TXT record
+  `v=spf1 -all`, and `v=DMARC1; p=reject` at `_dmarc.noble-lang.org`.
+- CAA records list `letsencrypt.org`, `pki.goog`, `ssl.com`, `comodoca.com`
+  and `digicert.com` for both `issue` and `issuewild`.
+- The registry reports the registrar lock (client transfer and client delete
+  prohibited) and an expiry of 2027-11-17.
+
+Operator items that remain, none of which this repository performs:
+
+1. Keep `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in `docs-production`,
+   as described above; without them the push-triggered publication is skipped.
+2. Confirm registrar auto-renew; registry data does not show it. Consider
+   DNSSEC now that the zone is serving.

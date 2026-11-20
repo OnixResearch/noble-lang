@@ -6,6 +6,9 @@ resolver = "2"
 version = "0.0.0"
 edition = "2021"
 publish = false
+homepage = "https://noble-lang.org/"
+repository = "https://github.com/OnixResearch/noble-lang"
+documentation = "https://noble-lang.org/spec/"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

@@ -1,9 +1,13 @@
 name: Publish draft documentation
 
-# Manual until the Cloudflare zone, Pages project, and docs-production secrets exist.
-# After those are verified, add `push: branches: [main]` to publish from main.
-# This workflow does not change DNS. site-ci.yml builds the tree without publishing.
+# Publishes every push to main, and on manual dispatch from main. The Cloudflare zone,
+# the Pages project and the custom domains were verified against the live site before
+# the push trigger was added. A run without both docs-production secrets builds the
+# tree and skips publication with a warning. This workflow does not change DNS.
+# site-ci.yml builds the tree on pull requests and pushes without publishing.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:

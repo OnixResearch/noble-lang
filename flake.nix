@@ -213,6 +213,10 @@
         '';
         nativeCheckInputs = builtins.attrValues wasmVerificationTools;
         strictDeps = true;
+        meta = {
+          description = "The Noble command-line interface";
+          homepage = "https://noble-lang.org/";
+        };
       };
       m3Wasm = import ./nix/m3-wasm-app.nix {
         inherit pkgs src noble;

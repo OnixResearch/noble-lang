@@ -2,7 +2,7 @@
 {
   ".pre-commit-config.yaml" = "548cb1a1e56a47c8154dd20e58256033f4fa4d6f94fc20445ff5af45f9c1bdf4",
   "Cargo.lock" = "582a7c91d10c3a6cbdaec2968b61e878821acc9781dfb84d53df096a778a862c",
-  "Cargo.toml" = "d0d718b46958904e242065b9d20d5e6fac83ca1395570ed0da00ecac5aa6afd6",
+  "Cargo.toml" = "28f50596ae329c104c28d0c4ae10c35b2ef1f20e95662356e69affda47e13bf9",
   "crates/noble-cli/Cargo.toml" = "ad45ae25a1ec15133f57cf8fe3bc52dd97e7d21e97f3fc2ec2c11392b9c88bb0",
   "crates/noble-cli/src/core/live_slot.rs" = "8cf7aa908c2c594115c7ba1df7540c1c6b84188786afd33f6ae6002e4c823bf1",
   "crates/noble-cli/src/core/live_slot_origin.rs" = "b173f1649587d94d846acf1cf9119c268f9673202dc4133990f67ae5ebc3c0cb",
@@ -45,7 +45,7 @@
   "crates/noble-wasm/wit/syndicate.wit" = "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
   "dylint.toml" = "265d16c2a5bba73d011ce460e1e9d15ce04dca24cdf6e7bc0cf4e66a9040a88b",
   "flake.lock" = "a95c2c8aecf2169bc1f8aff45aabab06e17a559a0e7cf86570d6b936b25b3671",
-  "flake.nix" = "ae663bb2a1018ea3e0eebee140fd833bfae3e3bce1fca86c3f0b1449aa76f223",
+  "flake.nix" = "c97934faab3832b914dc56785c993ddab24315fb45ce7e71b4aa7d0a1a29f6a4",
   "nix/aeneas-string-escaping.patch" = "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
   "nix/octet-patched-source.nix" = "6d8ace72aa19c49166133fa24560c7b47603e5bc2dab2d84d5fb381d7a6b3c68",
   "nix/octet-typed-call-collector.patch" = "aaccd1b6d1fb9dfe6568856093b318bb3f9b6875bdfcb3ed3a8b5e14bc113429",

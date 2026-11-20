@@ -113,7 +113,7 @@
   "file_sha256": {
     ".pre-commit-config.yaml": "548cb1a1e56a47c8154dd20e58256033f4fa4d6f94fc20445ff5af45f9c1bdf4",
     "Cargo.lock": "582a7c91d10c3a6cbdaec2968b61e878821acc9781dfb84d53df096a778a862c",
-    "Cargo.toml": "d0d718b46958904e242065b9d20d5e6fac83ca1395570ed0da00ecac5aa6afd6",
+    "Cargo.toml": "28f50596ae329c104c28d0c4ae10c35b2ef1f20e95662356e69affda47e13bf9",
     "crates/noble-cli/Cargo.toml": "ad45ae25a1ec15133f57cf8fe3bc52dd97e7d21e97f3fc2ec2c11392b9c88bb0",
     "crates/noble-cli/src/backend/vocabulary.noble": "f8d7a7e587cf85bcc36fe21c75506dd0c58a4c7e18baa8ddb1e11fde8aeb23e3",
     "crates/noble-cli/src/build.rs": "598903ddd41b0a4537fca51a8bc926d901a83dd56cc6ad2e5808231d25c6f8d8",
@@ -274,7 +274,7 @@
     "crates/noble-wasm/wit/worker-transition.wit": "f788988352acbccfe9a9f4fd6811551b1b3e4d4b43f1436b7a8c5e702e7652f0",
     "dylint.toml": "265d16c2a5bba73d011ce460e1e9d15ce04dca24cdf6e7bc0cf4e66a9040a88b",
     "flake.lock": "a95c2c8aecf2169bc1f8aff45aabab06e17a559a0e7cf86570d6b936b25b3671",
-    "flake.nix": "ae663bb2a1018ea3e0eebee140fd833bfae3e3bce1fca86c3f0b1449aa76f223",
+    "flake.nix": "c97934faab3832b914dc56785c993ddab24315fb45ce7e71b4aa7d0a1a29f6a4",
     "nix/aeneas-string-escaping.patch": "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
     "nix/boundary-controls.nix": "4cbff5ead9fcb6e4c8fae0712bbc190f00a9284eb9fd3d86cd447c0a2c593476",
     "nix/boundary-fixture-tests.nix": "9d008b1cafac6c076c9fb1e58933b476efa0ac31a9569d09f887c1a9be8aa26f",
