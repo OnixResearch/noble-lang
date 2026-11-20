@@ -662,33 +662,67 @@ async function observeLive03() {
     JSON.stringify(firstRefused.effect_requests ?? []) === '[]' && firstRefused.protected_operations === 0,
     { mapping: 'no host effect was bound in the default profile, and the effect-ceiling-increase replacement was refused as an unbound word with zero protected operations',
       effect_requests: firstRefused.effect_requests, protected_operations: firstRefused.protected_operations });
-  // Declared-module approximations run in a module-only session: the case's
-  // `def addone` plus `module count@1` input cannot coexist in one selected
-  // file (the mixed file is refused at startup as a trailing expression), so
-  // these two variants are recorded but never counted as observed.
-  for (const [name, initial, bindings, replacement] of [
-    ['incompatible-schema-declared', 'module count@1 [ opaque Count I64 public export Count ]', '',
-      'module count@1 [ opaque Count Bool public export Count ]'],
-    ['dependency-cycle-declared', 'module ledger@1 [ require emit Text -- ! test.emit export send def send [ "A" emit ] ]',
-      'bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n',
-      'module cycle@1 [ export first def first [ second ] def second [ first ] ]'],
-  ]) {
-    const files = fixture(`LIVE-03-${name}`, 'math.noble', initial);
-    fs.writeFileSync(path.join(files.directory, 'bindings.txt'), bindings);
-    const live = start(`LIVE-03-${name}`, ['live', 'repl', '--source', files.source, '--engine', 'v8',
-      '--declared-modules', '--bindings', path.join(files.directory, 'bindings.txt')]);
-    const opened = await live.report();
-    replace(files.source, replacement);
-    const refused = await live.submit(`:reload ${files.source}`);
-    await live.close(0);
-    keep(`LIVE-03-${name}`, 'initial', opened);
-    keep(`LIVE-03-${name}`, 'refused', refused);
-    record('LIVE-03', `input.variants.${name}.replacement`, {
-      reason: 'approximate observation only: the module-only session cannot also hold the case initial definition; refusal recorded for information',
-      case_input_exact: false, outcome: refused.outcome, stage: refused.stage, generation: refused.generation,
-      guest_requests: refused.guest_requests, protected_operations: refused.protected_operations, diagnostic: refused.diagnostic,
-    });
-  }
+  // The case initial state is one session holding a checked definition and a
+  // declared module. The single selected file is the module-only declaration,
+  // so the case `initial_source` is delivered as the first declared submission;
+  // the definition namespace and the module root are both live before a reload.
+  const declaredFiles = fixture('LIVE-03-declared', 'math.noble',
+    'module count@1 [ opaque Count I64 public export Count ]');
+  fs.writeFileSync(path.join(declaredFiles.directory, 'bindings.txt'), '');
+  const declared = start('LIVE-03-declared', ['live', 'repl', '--source', declaredFiles.source, '--engine', 'v8',
+    '--declared-modules', '--bindings', path.join(declaredFiles.directory, 'bindings.txt')]);
+  const declaredAck = await declared.report();
+  const declaredDefinition = await declared.submit('def addone [ 1 + ]');
+  const declaredPushed = await declared.submit('7');
+  replace(declaredFiles.source, 'module count@1 [ opaque Count Bool public export Count ]');
+  const schemaRefused = await declared.submit(`:reload ${declaredFiles.source}`);
+  const schemaOldCall = await declared.submit('addone');
+  await declared.close(0);
+  for (const [label, report] of Object.entries({ ack: declaredAck, definition: declaredDefinition, pushed: declaredPushed,
+    refused: schemaRefused, oldCall: schemaOldCall })) keep('LIVE-03-declared-schema', label, report);
+  observe('LIVE-03', 'input.initial_module',
+    declaredAck.stage === 'wasm-live' && declaredDefinition.outcome === 'namespace-committed',
+    { module: 'count@1', ack_stage: declaredAck.stage, definition_outcome: declaredDefinition.outcome,
+      definition_generation: declaredDefinition.generation });
+  observe('LIVE-03', 'input.initial_source.declared-delivery',
+    declaredDefinition.outcome === 'namespace-committed' && isStack(declaredPushed, ['I64:7']),
+    { mapping: 'the case initial definition is the first declared submission of the module-only session',
+      definition: declaredDefinition.outcome, stack: stackOf(declaredPushed) });
+  observe('LIVE-03', 'input.variants.incompatible-schema.replacement',
+    schemaRefused.stage === 'admission' && schemaRefused.outcome === 'reload-refused'
+      && schemaRefused.generation === declaredDefinition.generation && isStack(schemaRefused, ['I64:7'])
+      && schemaRefused.guest_requests === 0 && schemaRefused.protected_operations === 0
+      && schemaOldCall.outcome === 'normal' && isStack(schemaOldCall, ['I64:7', 'I64:8']),
+    { outcome: schemaRefused.outcome, stage: schemaRefused.stage, generation: schemaRefused.generation,
+      stack: stackOf(schemaRefused), guest_requests: schemaRefused.guest_requests,
+      protected_operations: schemaRefused.protected_operations, diagnostic: schemaRefused.diagnostic,
+      old_call_stack: stackOf(schemaOldCall),
+      mapping: 'the profile refuses a second declaration of the same module version before comparing opaque schemas; the case reject outcome and preserved session are observed, a distinct schema diagnostic is not claimed' });
+
+  // The cycle variant uses its own session so the selected module name is not
+  // already bound to another declaration.
+  const cycleFiles = fixture('LIVE-03-declared-cycle', 'math.noble',
+    'module ledger@1 [ require emit Text -- ! test.emit export send def send [ "A" emit ] ]');
+  fs.writeFileSync(path.join(cycleFiles.directory, 'bindings.txt'),
+    'bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n');
+  const cycleLive = start('LIVE-03-declared-cycle', ['live', 'repl', '--source', cycleFiles.source, '--engine', 'v8',
+    '--declared-modules', '--bindings', path.join(cycleFiles.directory, 'bindings.txt')]);
+  const cycleAck = await cycleLive.report();
+  const cycleDefinition = await cycleLive.submit('def addone [ 1 + ]');
+  const cyclePushed = await cycleLive.submit('7');
+  replace(cycleFiles.source, 'module cycle@1 [ export first def first [ second ] def second [ first ] ]');
+  const cycleRefused = await cycleLive.submit(`:reload ${cycleFiles.source}`);
+  const cycleOldCall = await cycleLive.submit('addone');
+  await cycleLive.close(0);
+  for (const [label, report] of Object.entries({ ack: cycleAck, definition: cycleDefinition, pushed: cyclePushed,
+    refused: cycleRefused, oldCall: cycleOldCall })) keep('LIVE-03-declared-cycle', label, report);
+  observe('LIVE-03', 'input.variants.dependency-cycle.replacement',
+    cycleRefused.stage === 'admission' && cycleRefused.outcome === 'reload-refused'
+      && /cyclic/.test(cycleRefused.diagnostic ?? '') && cycleRefused.generation === cycleDefinition.generation
+      && isStack(cycleRefused, ['I64:7']) && cycleRefused.guest_requests === 0 && cycleRefused.protected_operations === 0
+      && cycleOldCall.outcome === 'normal' && isStack(cycleOldCall, ['I64:7', 'I64:8']),
+    { outcome: cycleRefused.outcome, stage: cycleRefused.stage, generation: cycleRefused.generation,
+      stack: stackOf(cycleRefused), diagnostic: cycleRefused.diagnostic, old_call_stack: stackOf(cycleOldCall) });
   // Only the five default-profile variants run on the case's exact initial
   // state; the declared-module approximations are separate, unobserved rows.
   const refused03 = observations.filter(row => row.case === 'LIVE-03' && row.field.endsWith('.replacement')
@@ -707,7 +741,7 @@ async function observeLive03() {
     { stacks: refused03.map(row => row.detail.stack) });
   observe('LIVE-03', 'expected.authorizations_unchanged',
     refused03.every(row => row.detail.protected_operations === 0),
-    { mapping: 'the default profile installs no host authorizations; every refusal reported zero protected operations and left the session usable',
+    { mapping: 'no refusal exercised a host authorization: every refusal reported zero guest requests and zero protected operations, and every session continued with its installed definitions and bindings usable',
       protected_operations: refused03.map(row => row.detail.protected_operations) });
   observe('LIVE-03', 'expected.guest_requests', refused03.every(row => row.detail.guest_requests === 0),
     { guest_requests: refused03.map(row => row.detail.guest_requests) });
@@ -717,14 +751,8 @@ async function observeLive03() {
     observations.filter(row => row.case === 'LIVE-03' && row.field.endsWith('.old-definition')).length === 5
       && observations.filter(row => row.case === 'LIVE-03' && row.field.endsWith('.old-definition')).every(row => row.observed),
     { submission: 'addone', stacks: observations.filter(row => row.case === 'LIVE-03' && row.field.endsWith('.old-definition')).map(row => row.detail.stack) });
-  record('LIVE-03', 'input.variants.changed-file-during-read.replacement', {
-    reason: 'requires a seam between the two selected-file reads during :reload; the default binary exposes no such safepoint',
-  });
   record('LIVE-03', 'input.variants.host-binding-mismatch.replacement', {
-    reason: 'a mismatched `bind` line produced no startup report and no exit within 30s, and the reload-selected-file path cannot carry a binding change; case input cannot be exercised',
-  });
-  record('LIVE-03', 'input.initial_module', {
-    reason: 'the selected file is one source: the case initial definition plus `module count@1` is refused at startup (`definition submission contains trailing expressions`), so the declared variants cannot run on the case initial state',
+    reason: 'bindings are read once at startup and the selected-file reload cannot carry a binding change; the mismatched `bind` line is refused at startup (pinned by mismatched_declared_binding_refuses_at_startup_with_one_report) but then no session exists to preserve, so the case reload variant is not exercisable',
   });
 }
 
@@ -892,6 +920,19 @@ async function observeBarrierSeams(feature) {
   });
   const racing = featureTest('watched_accepted_top_level_finishes_old_frame_before_new_save_ack', feature);
   const superseded = featureTest('compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack', feature);
+  const drift = featureTest('explicit_reload_pending_a_cannot_republish_in_place_drift', feature);
+  observe('LIVE-03', 'input.variants.changed-file-during-read.first_read', true, {
+    basis: 'feature-gated real-child test',
+    seam: 'live-test-barrier/before-snapshot+before-reconcile',
+    test: drift,
+    observation: 'the selected file is replaced between the snapshot and reconcile reads; the reload is superseded, the prior generation and selected inode stay current, and the old definition runs again only after the acknowledged bytes are restored',
+  });
+  observe('LIVE-03', 'input.variants.changed-file-during-read.final_read', true, {
+    basis: 'feature-gated real-child test',
+    seam: 'live-test-barrier/before-snapshot+before-reconcile',
+    test: drift,
+    observation: 'the final read bytes are never published: the superseded report names the first candidate digest and the old generation',
+  });
   observe('LIVE-05', 'input.variants.watch-ack-races-new-top-level-submission.event', true, {
     basis: 'feature-gated real-child test', seam: 'live-test-barrier/accepted-watch-submission', test: racing,
     observation: 'an accepted top-level submission is held across the watched save; its old frame finishes before the new save ACK',
@@ -1016,9 +1057,9 @@ const receipt = {
   reports,
   non_claims: [
     'No Lean/Aeneas/Verus proof, translation validation or refinement claim is made; every promoted case keeps proof open.',
-    'LIVE-02 stays absent/not-run: its canonical after-reload script is refused at check and the in-flight frame needs a feature-gated seam.',
-    'LIVE-03 stays absent/not-run: changed-file-during-read and host-binding-mismatch are not exercisable and the declared variants cannot run on the case initial state.',
-    'LIVE-05 stays absent/not-run: the effectful-runtime-trap submission is unbound in this profile and the racing/superseded variants need the feature-gated seam.',
+    'LIVE-02 stays absent/not-run: the canonical after-reload script `20 twice swap 20 swap run` is refused at check because `run` requires exactly [I64] below the Program (spec `run : S Program<S,T,e> -- T`), so the declared expected stack is unreachable; that is a case input defect, not an observed outcome, and the case text was not edited.',
+    'LIVE-03 stays absent/not-run: a mismatched declared binding is refused at startup, and the selected-file reload cannot carry a binding change, so the host-binding-mismatch variant has no session-preserving observation; the second declaration of the same module version also refuses before an opaque-schema comparison.',
+    'LIVE-05 stays absent/not-run: the declared submission `"A" test.emit test.abort` is unbound in this profile (effects are declared module imports; `test.abort` has no binding path), so the effectful-runtime-trap variant cannot be executed as written.',
     'LIVE-04, LIVE-08, LIVE-09 and LIVE-10 are not exercised by this gate.',
     'The interpreter refusal is an observed refusal, not a proof that no custom bytecode ISA exists anywhere.',
     'The gate observes single bounded child sessions; it does not claim filesystem-watch completeness or V8 garbage collection.',
