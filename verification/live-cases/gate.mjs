@@ -4,7 +4,7 @@
 // It builds the pinned `noble` CLI and the `live_repl` test binary from a clean
 // committed tree, runs the selected integration tests, drives real
 // `noble live repl` / `noble live watch` children for every observed field of
-// the conformance cases, and writes one immutable `acceptance.json` into a new
+// the conformance cases, and writes one new immutable receipt file into a new
 // external directory. Nothing here is a proof or a document check: every row is
 // an executed command with its exit status and byte hashes.
 //
@@ -77,7 +77,11 @@ const promoted = ['LIVE-01', 'LIVE-04', 'LIVE-06', 'LIVE-07', 'LIVE-09'];
 const scope = ['crates', 'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'policy/tool-selection.json', 'verification/live-cases'];
 // The gate never binds its own receipt: committing it must not change the
 // source revision it records.
-const excluded = ['verification/live-cases/acceptance.json'];
+// The earlier LIVE-01/06/07 receipt is immutable and stays in place; this
+// slice writes a separate receipt file, and neither self-binds its generator.
+const receiptName = 'acceptance-2026-11-20-seams.json';
+const excluded = ['verification/live-cases/acceptance.json',
+  `verification/live-cases/${receiptName}`];
 const git = args => {
   const result = spawnSync('git', args, { cwd: root, maxBuffer: 64 * 1024 * 1024 });
   assert.equal(result.status, 0, `git ${args.join(' ')} failed: ${result.stderr}`);
@@ -1922,12 +1926,12 @@ const receipt = {
     'The gate observes single bounded child sessions; it does not claim filesystem-watch completeness or V8 garbage collection.',
   ],
 };
-assert.equal(fs.existsSync(path.join(destination, 'acceptance.json')), false, 'acceptance.json already exists');
-fs.writeFileSync(path.join(destination, 'acceptance.json'), `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx' });
-const receiptSha256 = sha256(fs.readFileSync(path.join(destination, 'acceptance.json')));
+assert.equal(fs.existsSync(path.join(destination, receiptName)), false, `${receiptName} already exists`);
+fs.writeFileSync(path.join(destination, receiptName), `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx' });
+const receiptSha256 = sha256(fs.readFileSync(path.join(destination, receiptName)));
 console.log(JSON.stringify({
   result: receipt.result, tested_commit: studiedCommit, source_revision: sourceRevision,
-  acceptance: path.join(destination, 'acceptance.json'), acceptance_sha256: receiptSha256,
+  acceptance: path.join(destination, receiptName), acceptance_sha256: receiptSha256,
   binary_sha256: binarySha256, live_repl_tests_sha256: testBinarySha256,
   promoted, commands: commands.length, reports: Object.keys(reports).length,
 }));
