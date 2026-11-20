@@ -412,9 +412,12 @@ async function observeLive06() {
   const importedB = await live.submit('import ledger@2 as n');
   const revoked = await live.submit(':revoke-effect ledger@1 emit-a test.emit');
   const bCall = await live.submit('n.send');
+  // The case's after-reload import rebinds the original alias to version 2;
+  // the retained Program must keep its old A identity across that rebind.
+  const rebound = await live.submit('import ledger@2 as l');
   const denied = await live.submit('run');
   await live.close(2);
-  for (const [label, report] of Object.entries({ initial, imported, saved, updated, importedB, revoked, bCall, denied }))
+  for (const [label, report] of Object.entries({ initial, imported, saved, updated, importedB, revoked, bCall, rebound, denied }))
     keep('LIVE-06', label, report);
   const request = denied.request_trace?.[0] ?? {};
   const identity = `${request.module}@${request.version}:${request.effect}`;
@@ -434,7 +437,12 @@ async function observeLive06() {
     saved.outcome === 'normal' && saved.stack?.[0]?.type === 'Program'
       && JSON.stringify(saved.stack?.[0]?.interface?.effects) === JSON.stringify(['test.emit']),
     { stack: stackOf(saved), interface: saved.stack?.[0]?.interface });
-  observe('LIVE-06', 'input.after_reload_import', importedB.outcome === 'namespace-committed', { outcome: importedB.outcome });
+  observe('LIVE-06', 'input.after_reload_import',
+    importedB.outcome === 'namespace-committed' && rebound.outcome === 'namespace-committed'
+      && JSON.stringify(rebound.stack) === JSON.stringify(saved.stack),
+    { b_alias_import: importedB.outcome, rebound_alias: rebound.outcome,
+      rebound_stack_preserved: JSON.stringify(rebound.stack) === JSON.stringify(saved.stack),
+      diagnostic: rebound.diagnostic });
   observe('LIVE-06', 'input.revocation', revoked.outcome === 'host-policy-revoked'
     && revoked.binding_allowed_before === true && revoked.binding_allowed_after === false
     && revoked.active_slot_before === true && revoked.active_slot_after === false
