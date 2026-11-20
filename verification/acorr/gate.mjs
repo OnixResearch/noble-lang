@@ -178,6 +178,11 @@ function mutateWat(watPath, transform, label) {
   instrument(wasm);
   return wasm;
 }
+function replaceUnique(text, target, replacement, label) {
+  const occurrences = text.split(target).length - 1;
+  requireThat(occurrences === 1, `${label}: expected one \`${target}\`, found ${occurrences}`);
+  return text.replace(target, replacement);
+}
 // Counterexample bodies prepared for substituted candidates.
 const wrongBodyText = '[ 2 + ]\n';
 const wrongBody = input('wrong-body.noble', wrongBodyText);
@@ -513,11 +518,12 @@ case_('ACORR-CASE-05', 'weakened claim against the frozen increment law', entry 
 case_('ACORR-CASE-06', 'code and recipe divergence from the consumer rebuild', entry => {
   const subject = emit(increment.source, 'off', 'c6-subject');
   const call = emit(input('c6-call.noble', callSource(41n, Q_ONE, null)), 'off', 'c6-call');
-  const code = mutateWat(subject.wat, text => {
-    const at = text.indexOf('(i64.add');
-    requireThat(at >= 0, 'the emitted subject carries no i64.add');
-    return `${text.slice(0, at)}(i64.sub${text.slice(at + '(i64.add'.length)}`;
-  }, 'c6-code-mutation');
+  // S-CASE-07's targeted push mutation: the program-body literal in the code
+  // section records 2 while the recipe atom of the same program still records
+  // 1, so code and recipe diverge by one code byte.
+  const code = mutateWat(subject.wat, text => replaceUnique(text,
+    '(call $push_i64 (i64.const 1))', '(call $push_i64 (i64.const 2))', 'c6-code-mutation'),
+  'c6-code-mutation');
   refused(entry, 'targeted code mutation', admit('case06-code', {
     subject: code, call: call.module, law: increment, pins: join(out, 'pins-off.json'),
     argument: 41n, mode: 'off',
@@ -577,11 +583,12 @@ case_('ACORR-CASE-07', 'changed, substituted and omitted guard wrappers', entry 
 case_('ACORR-CASE-08', 'altered helper implementation, extra import and helper-tree pin', entry => {
   const subject = emit(increment.source, 'off', 'c8-subject');
   const call = emit(input('c8-call.noble', callSource(41n, Q_ONE, null)), 'off', 'c8-call');
-  const helper = mutateWat(subject.wat, text => {
-    const first = text.indexOf('(i64.add');
-    requireThat(first >= 0, 'the emitted subject carries no i64.add');
-    return `${text.slice(0, first)}(i64.sub${text.slice(first + '(i64.add'.length)}`;
-  }, 'c8-helper-mutation');
+  // The `+` operation helper from operations.wat (`$op_add`), altered to
+  // subtract: helper code changes while the subject's own recipe is untouched.
+  const helper = mutateWat(subject.wat, text => replaceUnique(text,
+    '(i64.add (local.get $left) (local.get $right))',
+    '(i64.sub (local.get $left) (local.get $right))', 'c8-helper-mutation'),
+  'c8-helper-mutation');
   refused(entry, 'altered add implementation', admit('case08-helper', {
     subject: helper, call: call.module, law: increment, pins: join(out, 'pins-off.json'),
     argument: 41n, mode: 'off',
@@ -617,7 +624,11 @@ case_('ACORR-CASE-09', 'file replacement between comparison and instantiation', 
   const candidate = join(out, 'candidates', 'c9-candidate.wasm');
   const callCandidate = join(out, 'candidates', 'c9-call-candidate.wasm');
   const tempModule = join(out, 'candidates', 'c9-build-temp-module-1.wasm');
-  for (const path of [candidate, callCandidate, tempModule]) copyFileSync(subject.module, path);
+  // The admission compares the subject candidate and the certified-call
+  // candidate with their own rebuilds, so each copy holds its own artifact.
+  const copies = [[candidate, subject.module], [callCandidate, call.module],
+    [tempModule, subject.module]];
+  for (const [path, source] of copies) copyFileSync(source, path);
   const plan = input('c9-plan.json', JSON.stringify({
     replacement: replacement.module,
     paths: [candidate, callCandidate, tempModule],
