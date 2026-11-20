@@ -75,7 +75,7 @@
     `frame_pins_released` and `retained_owner_reaches_failed_root_cell` as not-directly-observable,
     the case returns to `absent/not-run/open/unassessed`, and it is not promoted. Real per-frame
     release accounting on the abnormal path belongs to `live-reference-lifetimes` (OWNER DECISION
-    2026-11-20 decision 6, r[LREF-EXIT-01]), which will execute OWN-CASE-05 later. `test.abort`
+    2026-11-20 decision 6; that change's LREF-EXIT-01), which will execute OWN-CASE-05 later. `test.abort`
     remains uninstallable in this profile; its internal `inconsistent frontend arena` refusal is a
     frontend-defect witness tracked by the integrator and is not the case's success condition.
   - **OWN-CASE-07 bound to H-LIVE-03.** The saved old definition yields 1 after the reload, its old

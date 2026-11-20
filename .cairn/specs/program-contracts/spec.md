@@ -615,6 +615,46 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: ACORR-CASE-01 for VC-ADMIT-01
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-01](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-03 for VC-ADMIT-01
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-03](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-04 for VC-ADMIT-01
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-04](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-05 for VC-ADMIT-01
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-05](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-09 for VC-ADMIT-01
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-09](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: VC-ADMIT-02
@@ -624,7 +664,22 @@ r[VC-ADMIT-02]
 
 
 <!-- cairn:scenario-links:start -->
-Test design remains open for this requirement. No scenario or execution evidence is supplied.
+#### Scenario: ACORR-CASE-05 for VC-ADMIT-02
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-05](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-10 for VC-ADMIT-02
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-10](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: VC-ADMIT-03
@@ -650,6 +705,70 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: ACORR-CASE-01 for VC-ADMIT-03
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-01](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-02 for VC-ADMIT-03
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-02](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-03 for VC-ADMIT-03
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-03](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-06 for VC-ADMIT-03
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-06](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-07 for VC-ADMIT-03
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-07](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-08 for VC-ADMIT-03
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-08](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-09 for VC-ADMIT-03
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-09](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-11 for VC-ADMIT-03
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-11](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-11` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-11`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: VC-ADMIT-04
@@ -664,6 +783,30 @@ r[VC-ADMIT-04]
 - GIVEN the `Contracts-Draft` profile and every field of `input` in [CONTRACT-02](../../../specs/conformance/contract-cases.json)
 - WHEN the `admission` procedure for case `CONTRACT-02` runs against those inputs
 - THEN the observations match every field of `expected` in case `CONTRACT-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-04 for VC-ADMIT-04
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-04](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-08 for VC-ADMIT-04
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-08](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-12 for VC-ADMIT-04
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-12](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-12` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-12`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -691,6 +834,22 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN the `Contracts-Draft` profile and every field of `input` in [CONTRACT-07](../../../specs/conformance/contract-cases.json)
 - WHEN the `admission` procedure for case `CONTRACT-07` runs against those inputs
 - THEN the observations match every field of `expected` in case `CONTRACT-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-02 for VC-ADMIT-05
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-02](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-07 for VC-ADMIT-05
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-07](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-07`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -1003,6 +1162,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: ACORR-CASE-12 for VC-VALUE-03
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-12](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-12` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-12`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: VC-VALUE-04
@@ -1042,6 +1209,14 @@ r[VC-VALUE-05]
 - GIVEN the `Contracts-Draft` profile and every field of `input` in [CONTRACT-10](../../../specs/conformance/contract-cases.json)
 - WHEN the `runtime` procedure for case `CONTRACT-10` runs against those inputs
 - THEN the observations match every field of `expected` in case `CONTRACT-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: ACORR-CASE-11 for VC-VALUE-05
+
+- GIVEN the `MC2-pure-quotation@1` profile and every field of `input` in [ACORR-CASE-11](../../../specs/conformance/artifact-correspondence-cases.json)
+- WHEN the `admission` procedure for case `ACORR-CASE-11` runs against those inputs
+- THEN the observations match every field of `expected` in case `ACORR-CASE-11`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 

@@ -209,7 +209,7 @@ Annotations on the table (owner decisions and execution notes):
 - **OWN-CASE-05 not executed here.** The live-slot profile has no `test.abort` row, and on an
   abnormal exit the host neither releases nor counts the backend frame pins, so "frame pins are
   released exactly once" is not observable. Real per-frame release accounting on the abnormal path
-  belongs to `live-reference-lifetimes` (OWNER DECISION 2026-11-20 decision 6, r[LREF-EXIT-01]),
+  belongs to `live-reference-lifetimes` (OWNER DECISION 2026-11-20 decision 6; that change's LREF-EXIT-01),
   which will execute OWN-CASE-05 later.
 - **OWN-CASE-03 execution outcome.** The design's balanced tree runs; the left- and right-deep
   8-leaf chains are refused at compose 5 by the anonymous summary's node bound. The case is
