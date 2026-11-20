@@ -737,10 +737,11 @@ fn semantic(prepared: &noble_contracts::Prepared) -> Json {
 }
 
 fn law_json(law: &SelectedLaw) -> Json {
-    let mut entries: std::vec::Vec<(&'static str, Json)> = std::vec::Vec::new();
-    entries.push(("mode", string(law.mode)));
-    entries.push(("id", string(&law.id)));
-    entries.push(("revision", string(&law.revision)));
+    let mut entries: std::vec::Vec<(&'static str, Json)> = std::vec![
+        ("mode", string(law.mode)),
+        ("id", string(&law.id)),
+        ("revision", string(&law.revision)),
+    ];
     entries.push((
         "digest",
         object([
@@ -1285,7 +1286,7 @@ fn decide(options: &arguments::Options) -> Result<Admitted, Refusal> {
         ("call_buffer_sha256", string(&call_report.sha256)),
         (
             "buffers_sha256",
-            string(&crate::workflow::intrinsic::sha256(
+            string(crate::workflow::intrinsic::sha256(
                 std::format!("{}:{}", subject_report.sha256, call_report.sha256).as_bytes(),
             )),
         ),
@@ -1465,7 +1466,7 @@ fn guard_json(
         ),
         (
             "wrapper_source_sha256",
-            string(&crate::workflow::intrinsic::sha256(wrapper.as_bytes())),
+            string(crate::workflow::intrinsic::sha256(wrapper.as_bytes())),
         ),
         (
             "erasable",
