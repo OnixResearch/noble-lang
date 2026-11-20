@@ -126,6 +126,10 @@ impl super::ModuleSession {
 /// The pinned declaration bytes of a published library version, with the
 /// refusal text that names it. A published name registers only the exact
 /// source the host publishes for it, as `result@1` established.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the library name is compared through the non-const String::as_str, so this table cannot be a constant expression."
+)]
 fn published_library(request: &Registration<'_>) -> Option<(&'static [u8], &'static str)> {
     match (request.name.as_str(), request.version) {
         ("result", 1) => Some((

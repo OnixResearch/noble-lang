@@ -456,10 +456,6 @@ const fn rejection_message(constraint: &noble_kernel::untrusted::Constraint) -> 
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; this total formatter appends the fixed eligibility detail to an already constructed diagnostic and has no precondition to assert."
 )]
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-contracts; joining the applied and inner words grows owned Strings through non-const push and push_str."
-)]
 fn with_eligibility(
     mut problem: crate::Diagnostic,
     definition: noble_kernel::contracts::Definition,
@@ -467,11 +463,11 @@ fn with_eligibility(
     application: Option<&str>,
 ) -> crate::Diagnostic {
     let mut word = alloc::string::String::new();
+    if let Some(application) = application {
+        word.push_str(application);
+        word.push_str(" via ");
+    }
     append_bootstrap_spelling(definition, &mut word);
-    let word = match application {
-        Some(application) => applied_word(application, &word),
-        None => word,
-    };
     let required = alloc::string::String::from("S Data");
     let mut actual = alloc::string::String::from("S ");
     debug_ty(&mut actual, ty);
@@ -489,20 +485,6 @@ fn with_eligibility(
         value_origin: None,
         difference: None,
     })
-}
-
-/// `application via inner`: the whole applied word first, so the diagnostic
-/// names the library word before the bootstrap word it instantiated.
-fn applied_word(application: &str, inner: &str) -> alloc::string::String {
-    let capacity = application
-        .len()
-        .saturating_add(inner.len())
-        .saturating_add(5);
-    let mut word = alloc::string::String::with_capacity(capacity);
-    word.push_str(application);
-    word.push_str(" via ");
-    word.push_str(inner);
-    word
 }
 
 /// Append `ty` exactly as its `{:?}` renders it: the kernel's constructor
