@@ -44,7 +44,40 @@
       "id": "LIVE-02", "profile": "Live-Wasm-Draft", "kind": "runtime", "requirements": ["K-LIVE-01", "H-LIVE-02", "H-LIVE-03", "BE-LIVE-01"],
       "input": {"harness": "transitive-dependent-rebuild-and-immutable-capture", "before": ["def addone [ 1 + ]", "def twice [ addone addone ]"], "old_in_flight_submission": "[ addone ]", "reload_requested_while_old_submission_running": "def addone [ 2 + ]", "after_reload_ack": ["20 swap run 20 twice swap"], "owner_decision": "OWNER DECISION 2026-11-20 (Decision 21a): replace decision 21's script with [\"20 swap run 20 twice swap\"], which derives the unchanged declared stack [24, 21]; 21a replaces 21's script and nothing else in the case changes. Decision 21's `20 twice swap run` was refused by a wrong derivation: from the retained old Program P it yields [25] (`run` consumes 24 and the old capture adds 1). The case's unchanged script `20 twice swap 20 swap run` also cannot type-check: `run` requires exactly the Program's declared [I64] below it, and that script leaves [I64, I64]. Derivation: [P] -> 20 [P,20] -> swap [20,P] -> run (old capture, +1) [21] -> 20 [21,20] -> twice (rebuilt dependent, +4) [21,24] -> swap [24,21]."},
       "expected": {"stage": "wasm-live", "outcome": "new-dependent-and-old-capture", "old_frame_completed_before_reload_ack": true, "publication_only_at_top_level_safepoint": true, "stack_bottom_to_top": [{"type": "I64", "value": "24"}, {"type": "I64", "value": "21"}], "old_in_flight_frame_uses_old_generation": true, "previous_program_identity_mutated": false, "implicit_live_name_lookup_in_program": false},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "A resident V8 `noble live repl` child, on Decision 21a's script, rebuilds the dependent `twice` against the reloaded `addone` while the retained old Program stays immutable: after the `reload-committed` ACK, `20 swap run 20 twice swap` returned [I64 24, I64 21] (`run` on the old capture returned 21; the rebuilt dependent added 4), and the feature-gated safepoint seam separately observed an in-flight old frame finishing before the queued reload ACK with its old generation and the publication only at the top-level boundary. No proof is claimed.",
+        "subject": "LIVE-02",
+        "revision": "0.1.0-draft.5",
+        "kind": "test",
+        "result": "passed",
+        "source_revision": "sha256:cee9f7d6e59518e61ee5314bdae531e28f7cba994bb18c0f7bc525c09283ad5c",
+        "configuration": {
+          "profile": "Live-Wasm-Draft",
+          "harness": "real-live-repl-with-resident-v8",
+          "case": "LIVE-02",
+          "receipt": "../../verification/live-cases/acceptance-2026-11-20.json",
+          "receipt_sha256": "3b92757a7bb9f6595c7fe3e02fb996baaf486c6535fede5870065b32d318e553",
+          "gate": "verification/live-cases/gate.mjs",
+          "tested_commit": "dac85fa08e6e0b79d9b29899e0165600e1bbb4bf",
+          "binary_sha256": "a282866f3173fa6cd52fa0dd137dbc3a4fe34c426b43be0643057857b5793a88",
+          "live_repl_tests_sha256": "d620c69fc8c049ad26fbd66ae6a90111f329fab4847c94db64285f1ff42a4a2d",
+          "command": "noble live repl --source math.noble --engine v8",
+          "tests": [
+            "old_active_wasm_frame_finishes_before_queued_reload_ack"
+          ],
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 f5c9c947b0fed8b82d4414de4e2b20e38005871963e3b5770f7da356a6041baf); the input carries OWNER DECISION 2026-11-20 (Decision 21a). The receipt holds every observed field, raw command output hashes and the source manifest."
+        },
+        "assumptions": [
+          "The host selects the absolute `math.noble` path and writes exactly the case's before/after bytes, including the fsynced atomic rename where the case specifies one.",
+          "Every observation is the CLI's own JSON report or a feature-gated real-child test named in `tests`; the receipt retains each raw stdout/stderr hash.",
+          "The case's `stage`/`outcome` names are mapped to the CLI's `wasm-live`/`wasm` stages and `reload-committed`/`normal`/`trap` outcomes; the receipt records each mapping.",
+          "No proof is claimed: the case keeps `proof: open`, and the receipt covers only this exact source revision and binary.",
+          "`previous_program_identity_mutated` and `implicit_live_name_lookup_in_program` are observed from the post-reload stack: the old Program returned 21 (its captured +1), not 22.",
+          "The in-flight fields are observed by the named feature-gated test over a real child at the `in-flight-generation` safepoint; the plain child issues the reload between invocations and records that limitation."
+        ]
+      }
+      ]
     },
     {
       "id": "LIVE-03", "profile": "Live-Wasm-Draft", "kind": "admission", "requirements": ["H-LIVE-02", "S-LIVE-01", "DX-LIVE-01"],
@@ -62,7 +95,42 @@
       "id": "LIVE-05", "profile": "Live-Wasm-Draft", "kind": "runtime", "requirements": ["H-LIVE-01", "H-LIVE-02", "H-LIVE-03", "S-LIVE-01"],
       "input": {"harness": "watched-on-save-complete-file-snapshot", "watched_path": "math.noble", "initial_file": "def addone [ 1 + ]", "initial_stack_bottom_to_top": [], "save_protocol": "write-math.noble.tmp-then-fsync-and-atomic-rename-to-math.noble", "new_file": "def addone [ 2 + ]", "new_top_level_after_success_ack": "20 addone", "variants": [{"name": "partial-in-place-write", "bytes": "def addone [ 2 +", "event": "write-without-rename"}, {"name": "atomic-complete-rename-and-ack", "bytes": "def addone [ 2 + ]", "event": "rename-then-ack"}, {"name": "watch-ack-races-new-top-level-submission", "event": "submit-20-addone-concurrently-with-rename; record-accepted-sequence-and-ack"}, {"name": "superseded-during-compile", "first_rename": "def addone [ 2 + ]", "second_rename_before_publication": "def addone [ 3 + ]"}, {"name": "missing-import", "bytes": "import missing@1 as m", "registry": []}, {"name": "symlink-escape", "event": "rename-symlink-to-../unselected.noble"}, {"name": "retained-generation-budget-exhaustion", "max_retained_generations": 2, "keep_old_program": "[ addone ]", "successive_files": ["def addone [ 2 + ]", "def addone [ 3 + ]"]}, {"name": "effectful-runtime-trap", "submission": "\"A\" test.emit test.abort", "host_effects": ["test.emit", "test.abort"], "expected_prior_request": "test.emit:A"}]},
       "expected": {"stage": "wasm-live", "outcome": "complete-save-only-publishes", "partial_or_unsupported_in_place_write_runs": false, "atomic_save_after_ack_next_call_stack_bottom_to_top": [{"type": "I64", "value": "22"}], "successful_ack_only_after_commit": true, "new_submission_after_ack_uses_new_generation": true, "racing_before_commit_reports_pinned_old_generation": true, "superseded_candidate_acknowledged_as_current": false, "missing_or_escape_publishes": false, "retained_budget_failure_explicit_and_prior_generation_unchanged": true, "runtime_trap_retains_prior_effect_prefix_and_poisons_session": true},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "A resident V8 `noble live watch` child publishes only complete checked saves and the shipped `noble live repl --allow-effects test.emit,test.abort` executes the host-granted `\"A\" test.emit test.abort`: the trap report retained the exact request prefix [test.emit:A, test.abort], counted zero protected operations, and terminated the session; partial in-place writes, missing imports and symlink escapes published nothing, the retained-generation budget refused explicitly, and the feature-gated seams observed the racing and superseded save orderings. No proof is claimed.",
+        "subject": "LIVE-05",
+        "revision": "0.1.0-draft.5",
+        "kind": "test",
+        "result": "passed",
+        "source_revision": "sha256:cee9f7d6e59518e61ee5314bdae531e28f7cba994bb18c0f7bc525c09283ad5c",
+        "configuration": {
+          "profile": "Live-Wasm-Draft",
+          "harness": "real-live-watch-and-repl-with-resident-v8",
+          "case": "LIVE-05",
+          "receipt": "../../verification/live-cases/acceptance-2026-11-20.json",
+          "receipt_sha256": "3b92757a7bb9f6595c7fe3e02fb996baaf486c6535fede5870065b32d318e553",
+          "gate": "verification/live-cases/gate.mjs",
+          "tested_commit": "dac85fa08e6e0b79d9b29899e0165600e1bbb4bf",
+          "binary_sha256": "a282866f3173fa6cd52fa0dd137dbc3a4fe34c426b43be0643057857b5793a88",
+          "live_repl_tests_sha256": "d620c69fc8c049ad26fbd66ae6a90111f329fab4847c94db64285f1ff42a4a2d",
+          "command": "noble live watch --source math.noble --engine v8; noble live repl --source math.noble --engine v8 --allow-effects test.emit,test.abort",
+          "tests": [
+            "watched_accepted_top_level_finishes_old_frame_before_new_save_ack",
+            "compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack",
+            "explicit_reload_pending_a_cannot_republish_in_place_drift"
+          ],
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 a1d4c1df39a1f7a23f039233a92d333fa5abcff48c1cc0f8e8687e8331137785); the host grant is OWNER DECISION 2026-11-20 (Decision 22). The receipt holds every observed field, raw command output hashes and the source manifest."
+        },
+        "assumptions": [
+          "The host selects the absolute `math.noble` path and writes exactly the case's before/after bytes, including the fsynced atomic rename where the case specifies one.",
+          "Every observation is the CLI's own JSON report or a feature-gated real-child test named in `tests`; the receipt retains each raw stdout/stderr hash.",
+          "The case's `stage`/`outcome` names are mapped to the CLI's `wasm-live`/`wasm` stages and `reload-committed`/`normal`/`trap` outcomes; the receipt records each mapping.",
+          "No proof is claimed: the case keeps `proof: open`, and the receipt covers only this exact source revision and binary.",
+          "`test.abort` is a declared abnormal termination, not a protected operation: the trap report's `protected_operations` is 0 and its request trace is [test.emit:A, test.abort].",
+          "The host grant is the explicit `--allow-effects test.emit,test.abort` flag on the shipped CLI; no source or ambient default selects it."
+        ]
+      }
+      ]
     },
     {
       "id": "LIVE-06", "profile": "Live-Wasm-Draft", "kind": "runtime", "requirements": ["H-LIVE-03", "S-LIVE-01", "EV-LIVE-01"],
