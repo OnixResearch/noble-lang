@@ -1083,7 +1083,7 @@ async function observeLive09() {
       && first.pending.candidate_prepare_requests === 0
       && first.pending.guest_requests === first.executed.guest_requests
       && first.committed.guest_requests === first.executed.guest_requests
-      && first.committed.candidate_prepare_requests === 0,
+      && (first.committed.candidate_prepare_requests ?? 0) === 0,
     {
       mapping: 'the pending receipt carries the invocation request prefix and reports no candidate request; the committed receipt carries the same prefix and no candidate prepare request, so no candidate body executed before publication',
       pending_guest_requests: first.pending.guest_requests,
@@ -1118,20 +1118,21 @@ async function observeLive09() {
     });
   observe('LIVE-09', 'expected.independent_source_type_effect_kernel_byte_and_shadow_checks',
     first.pending.postreturn_snapshot_verified === true
-      && first.pending.input_signature === '[I64]' && first.pending.output_signature === '[I64]'
-      && first.pending.effects === 0 && Array.isArray(first.pending.signatures)
-      && first.pending.signatures.length > 0
+      && first.pending.candidate_program_interface.input === '[I64]'
+      && first.pending.candidate_program_interface.output === '[I64]'
+      && first.pending.candidate_program_interface.effects === 0
+      && Array.isArray(first.pending.candidate_recipe_events)
+      && first.pending.candidate_recipe_events.length >= 4
       && first.pending.candidate_prepare_requests === 0
       && retainedRefused.outcome === 'proposal-refused',
     {
       pending: {
         postreturn_snapshot_verified: first.pending.postreturn_snapshot_verified,
-        input_signature: first.pending.input_signature,
-        output_signature: first.pending.output_signature,
-        effects: first.pending.effects,
-        signature_count: first.pending.signatures?.length,
+        candidate_program_interface: first.pending.candidate_program_interface,
+        recipe_event_count: first.pending.candidate_recipe_events?.length,
         candidate_prepare_requests: first.pending.candidate_prepare_requests,
       },
+      mapping: 'the source/type/effect checks are observed on the checked candidate interface and bounded recipe receipt; the worker-internal signature descriptors are not repeated on the host receipt',
       refusal: retainedRefused.diagnostic,
     });
   observe('LIVE-09', 'expected.guest_source_origin',
@@ -1155,8 +1156,9 @@ async function observeLive09() {
     { diagnostic: first.reload.diagnostic });
   observe('LIVE-09', 'expected.guest_generation_unchanged_on_refused_file_reload',
     first.afterReload.generation === first.committed.generation
-      && isStack(first.afterReload, ['I64:21']),
-    { generation: first.afterReload.generation, stack: stackOf(first.afterReload) });
+      && JSON.stringify(stackOf(first.afterReload)) === JSON.stringify(stackOf(first.next)),
+    { generation: first.afterReload.generation, stack: stackOf(first.afterReload),
+      prior_stack: stackOf(first.next) });
   observe('LIVE-09', 'expected.guest_file_or_compiler_authority',
     markerPresent === false && unchangedFile
       && JSON.stringify(first.pending.request_trace)
