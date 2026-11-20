@@ -65,9 +65,12 @@
   canonical leaf path and every variant, and refuses a case for each machine-expressible field
   whose canonical attempt did not run. Receipt:
   `verification/lslot-cases/acceptance-2026-11-20-r4.json`
-  (sha256 `RECEIPT_SHA`, source commit `SOURCE_COMMIT`, source revision `SOURCE_REVISION`, binary
-  sha256 `BINARY_SHA`); raw lane evidence and the run's command outputs are retained under
-  `verification/lslot-cases/raw/RUN_DIR/`. The receipt binds
+  (sha256 `9a925e75eda4c04a5968234ef1540a322ef3430fbe1bfb003174c058242c39d4`, source commit
+  `ab1b16476a44b7a2175b331624c38c83d6e3868c`, source revision
+  `sha256:c4430e9b78aff231cc74c88eba0958880cdcf6ee52b96808355a03a96aabeb61`, binary sha256
+  `422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb`); raw lane evidence and the
+  run's 26 command outputs are retained under `verification/lslot-cases/raw/r4-155050/`. The
+  receipt binds
   the runtime after merging `cairn/wave1`'s template identity (experimental local identities v4,
   `template_sha256` and template classes): no LSLOT expectation names the identity version or a
   descriptor field, and the companion origin-control lane now asserts the v4 identity directly.

@@ -7,19 +7,106 @@
       "id": "LSLOT-01", "profile": "Live-Slot-Design", "kind": "runtime", "requirements": ["K-LSLOT-01", "K-LSLOT-02", "H-LSLOT-01", "DX-LSLOT-01"],
       "input": {"harness": "saved-capture-versus-opt-in-generic-root", "definition": "def n [ 1 + ]", "saved_program": "[ n ]", "generic_caller": "checked Program<[I64, borrowed LiveRef<I64,I64,{}>] -> [I64] ! {live.dispatch}> containing generic slot.invoke", "slot": {"id": "increment", "incarnation": 1, "generation": 1, "target": "n-v1:[ 1 + ]"}, "publication": {"expected_epoch": 1, "expected_incarnation": 1, "expected_generation": 1, "candidate": "n-v2:[ 2 + ]", "host_authorized": true}, "calls_after_publication": [{"subject": "saved_program", "argument": 20}, {"subject": "generic_caller", "argument": 20, "host_issued_input_ref": "increment"}]},
       "expected": {"stage": "live-slot-root", "outcome": "immutable-capture-and-explicit-fresh-target", "saved_result": 21, "generic_result": 22, "saved_target": "n-v1", "generic_selected_target": "n-v2", "caller_identity_unchanged": true, "ordinary_run_dynamic_lookup": false, "generic_recipe_embeds_slot_or_target": false, "new_global_epoch": 2},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "The selected CLI keeps an existing saved `[ n ]` owner on its pre-publication target (21, no dispatch trace) while a separately installed generic `slot.invoke` caller with a host-issued `LiveRef` input selects the freshly published target (22 at epoch 2) after that publication in call order; the reflected generic recipe is unchanged across publication and embeds no slot name, target or credential. This executes behavior; it is not a proof.",
+          "subject": "LSLOT-01",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:c4430e9b78aff231cc74c88eba0958880cdcf6ee52b96808355a03a96aabeb61",
+          "configuration": {
+            "profile": "Live-Slot-Design",
+            "harness": "saved-capture-versus-opt-in-generic-root",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r4.json",
+            "receipt_sha256": "9a925e75eda4c04a5968234ef1540a322ef3430fbe1bfb003174c058242c39d4",
+            "gate": "verification/lslot-cases/gate.mjs",
+            "case": "LSLOT-01",
+            "tested_commit": "ab1b16476a44b7a2175b331624c38c83d6e3868c",
+            "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+            "command": "node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY",
+            "prepromotion_case_sha256": "5c017bb9f6a4683f994823d2b9cd85ced2284bee3fdeeb38acd604f9084e5a4f",
+            "workload_binding": "Exact projection over the canonical {id,input,expected} digest (5c017bb9f6a4683f994823d2b9cd85ced2284bee3fdeeb38acd604f9084e5a4f): 22 observed field(s), 2 declared prose field(s), 0 unobserved, 0 mismatched; every observed value equals the canonical value and every leaf has exactly one entry."
+          },
+          "assumptions": [
+            "The pinned selected Rust toolchain and compiled `noble` CLI are trusted only at the recorded source revision and binary sha256; this receipt executes behavior and is not a proof.",
+            "`n-v1`/`n-v2` name the registered generation of the checked definition `n` and of its replacement; the entry records the install sources, the definition body and the artifact digests the runtime reported.",
+            "The companion lanes (`live_slot_late_control.mjs`, `live_slot_selected_origin.mjs`) ran as controls in the same gate run; their summaries are receipt `controls`, not canonical observations for this case."
+          ]
+        }
+      ]
     },
     {
       "id": "LSLOT-02", "profile": "Live-Slot-Design", "kind": "runtime", "requirements": ["K-LSLOT-02", "S-LSLOT-01", "H-LSLOT-01", "EV-LSLOT-01"],
       "input": {"harness": "parent-child-transitive-snapshot-and-new-root", "base": {"registry_epoch_1": {"A": {"version": "A-v1", "interface": {"input": ["I64", "borrow LiveRef<I64,I64,{}>"], "output": ["I64"], "effects": ["live.dispatch"]}, "body": "borrow the second explicit input ref for two typed slot.invoke calls; no embedded B ID/name"}, "B": {"version": "B-v1:[ 1 + ]", "interface": {"input": ["I64"], "output": ["I64"], "effects": []}}}, "root_A_entry": {"ordered_host_issued_inputs": ["I64:20", "borrow LiveRef<I64,I64,{}> issued for B", "borrow LiveRef<[I64,borrow LiveRef<I64,I64,{}>],[I64],{live.dispatch}> issued for A"], "pin_epoch": 1, "pin_operation": "O(1)-persistent-map-reference", "caller": "checked generic slot.invoke A with second input ref forwarded to A-v1"}, "interleaving": ["A-v1 borrows its explicit B ref and invokes B-v1 once", "authorized B-v2:[ 2 + ] publishes registry epoch 2", "A-v1 borrows same root-scoped B ref and invokes B again", "new root supplies a newly host-issued B ref and I64:20 to generic caller"], "new_root_B_interface": {"input": ["I64"], "output": ["I64"], "effects": []}}, "transitive_variant": {"independent_fixture": "reset to distinct registry epoch 1 before variant", "registry_epoch_1": {"A": {"version": "A-v1", "interface": {"input": ["I64", "borrow LiveRef<I64,I64,{}>", "borrow LiveRef<[I64,borrow LiveRef<I64,I64,{}>],[I64],{live.dispatch}>"], "output": ["I64"], "effects": ["live.dispatch"]}, "body": "pass explicit C ref and borrow explicit B ref for nested invoke, no slot ID/name in recipe"}, "B": {"version": "B-v1", "interface": {"input": ["I64", "borrow LiveRef<I64,I64,{}>"], "output": ["I64"], "effects": ["live.dispatch"]}, "body": "borrow explicit C input ref and slot.invoke once"}, "C": {"version": "C-v1:[ 1 + ]", "interface": {"input": ["I64"], "output": ["I64"], "effects": []}}}, "root_A_entry": {"ordered_host_issued_inputs": ["I64:20", "borrow C ref", "borrow B ref typed for I64+C-ref to I64", "borrow A ref typed for I64+C-ref+B-ref to I64"], "pin_epoch": 1, "borrow_pass_through": ["root passes C and B refs to A in that order", "A passes C ref to B", "B borrows C ref for slot.invoke"]}, "interleaving": ["A root pins epoch 1", "authorized C-v2:[ 2 + ] publishes epoch 2", "A invokes B which invokes C", "new root receives freshly host-issued C ref and I64:20"]}},
       "expected": {"stage": "live-slot-root", "outcome": "one-map-per-root-with-explicit-typed-ref-pass-through", "base_root_A_B_selections": ["B-v1", "B-v1"], "base_root_A_result": 22, "base_next_root_B_selection": "B-v2", "base_next_root_B_result": 22, "variant_old_root_A_B_C_selections": ["A-v1", "B-v1", "C-v1"], "variant_old_root_result": 21, "variant_next_root_C_selection": "C-v2", "variant_next_root_C_result": 22, "mixed_registry_epochs_within_root": false, "implicit_source_name_or_captured_ref_lookup": false, "current_authorization_rechecked_at_each_dispatch": true, "registry_epoch_distinct_from_live_wasm_namespace_or_source_generation": true},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "Two independent epoch-1 registry boots show one pinned map per root: the A-to-B-to-B root performs exactly two B dispatches, both against B-v1 (result 22), while B-v2 publishes as epoch 2 inside that root; the A-to-B-to-C root keeps A-v1/B-v1/C-v1 with host-issued typed refs passed through ordered callee interfaces (result 21). Every dispatch rechecks current policy for its slot and root epoch, no recipe or reflected site carries a slot identity, and the next roots select B-v2/C-v2. This executes behavior; it is not a proof.",
+          "subject": "LSLOT-02",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:c4430e9b78aff231cc74c88eba0958880cdcf6ee52b96808355a03a96aabeb61",
+          "configuration": {
+            "profile": "Live-Slot-Design",
+            "harness": "parent-child-transitive-snapshot-and-new-root",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r4.json",
+            "receipt_sha256": "9a925e75eda4c04a5968234ef1540a322ef3430fbe1bfb003174c058242c39d4",
+            "gate": "verification/lslot-cases/gate.mjs",
+            "case": "LSLOT-02",
+            "tested_commit": "ab1b16476a44b7a2175b331624c38c83d6e3868c",
+            "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+            "command": "node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY",
+            "prepromotion_case_sha256": "5faeb05d62c71e410a16b337e83a9dd68465e97d240cc8e82a510bb3fc84b17f",
+            "workload_binding": "Exact projection over the canonical {id,input,expected} digest (5faeb05d62c71e410a16b337e83a9dd68465e97d240cc8e82a510bb3fc84b17f): 43 observed field(s), 8 declared prose field(s), 0 unobserved, 0 mismatched; every observed value equals the canonical value and every leaf has exactly one entry."
+          },
+          "assumptions": [
+            "The pinned selected Rust toolchain and compiled `noble` CLI are trusted only at the recorded source revision and binary sha256; this receipt executes behavior and is not a proof.",
+            "Version names come from the registered slot generation and the exact install-request source bytes; interfaces are compared after structural normalisation of `LiveRef` spellings.",
+            "The lane summary is cross-checked against the raw CLI records it wrote: the old root, the in-root publication ACK, the bootstrap report, the next root and the next leaf.",
+            "`registry_epoch_distinct_from_live_wasm_namespace_or_source_generation` uses this case's own root epochs (1 then 2) and the guarded Live-Wasm-Draft lane of the same run, whose raw reports carry source generations 1/2/2/4, no `epoch` key, and refuse the caller at generation 0.",
+            "`A/B/C.body`, `pin_operation`, `caller` and `borrow_pass_through` are prose (`declared`), and each records the runtime facts behind it. The two `interleaving` lists are observed from the old-root `control_events` plus the checkpoint/ACK roots; the two `ordered_host_issued_inputs` lists are observed as typed, ordered ref lists rendered from the invoke refs and the caller install request, and a failed predicate is a mismatch."
+          ]
+        }
+      ]
     },
     {
       "id": "LSLOT-03", "profile": "Live-Slot-Design", "kind": "admission", "requirements": ["K-LSLOT-02", "H-LSLOT-01", "S-LSLOT-01"],
       "input": {"harness": "independent-exact-ordered-candidate-admission", "slot_contract": {"input": ["Account@1", "I64"], "output": ["Account@1", "I64"], "effect_ceiling": ["test.emit"]}, "current_epoch": 4, "variant_protocol": "each variant starts with same-exact-interface fields and overrides its named fields; run separately at epoch 4", "variants": [{"name": "same-exact-interface", "candidate_input": ["Account@1", "I64"], "candidate_output": ["Account@1", "I64"], "candidate_effects": ["test.emit"], "expected": "publish"}, {"name": "reversed-input", "candidate_input": ["I64", "Account@1"], "expected": "reject"}, {"name": "same-layout-different-resource-schema", "candidate_input": ["Account@2", "I64"], "candidate_output": ["Account@2", "I64"], "expected": "reject"}, {"name": "unknown-host-contract", "candidate_effects": ["unknown.effect"], "expected": "reject"}]},
       "expected": {"stage": "slot-candidate-admission", "outcome": "only-exact-compatible-candidate-publishes", "success_epoch": 5, "rejected_variants_leave_epoch_and_map_unchanged": true, "candidate_body_executions_during_admission": 0, "candidate_host_requests_during_admission": 0, "generic_dispatch_effect": ["test.emit", "live.dispatch"], "ordered_nominal_resource_types_checked": true, "guest_requests": 0, "protected_operations": 0},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "The exact ordered candidate publishes at epoch 5, while the reversed-input, both-sides `Account@2` schema and unknown-effect candidates are each refused with the epoch and map left unchanged, zero candidate body executions and zero host requests; a non-variant constructible generic caller's reflected site carries `[\"test.emit\",\"live.dispatch\"]`. This executes behavior; it is not a proof, and the case design carries the owner-approved 2026-11-20 amendments (the unselectable `fs.write` and impossible under-declare variants are dropped; the input-only variant is replaced by the both-sides candidate).",
+          "subject": "LSLOT-03",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:c4430e9b78aff231cc74c88eba0958880cdcf6ee52b96808355a03a96aabeb61",
+          "configuration": {
+            "profile": "Live-Slot-Design",
+            "harness": "independent-exact-ordered-candidate-admission",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r4.json",
+            "receipt_sha256": "9a925e75eda4c04a5968234ef1540a322ef3430fbe1bfb003174c058242c39d4",
+            "gate": "verification/lslot-cases/gate.mjs",
+            "case": "LSLOT-03",
+            "tested_commit": "ab1b16476a44b7a2175b331624c38c83d6e3868c",
+            "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+            "command": "node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY",
+            "prepromotion_case_sha256": "44242e3de20b19f0d85eae9978d7fcf4d9f995fd1e92f2910ad1fd48d9fb9687",
+            "workload_binding": "Exact projection over the canonical {id,input,expected} digest (44242e3de20b19f0d85eae9978d7fcf4d9f995fd1e92f2910ad1fd48d9fb9687): 18 observed field(s), 3 declared prose field(s), 0 unobserved, 0 mismatched; every observed value equals the canonical value and every leaf has exactly one entry."
+          },
+          "assumptions": [
+            "The pinned selected Rust toolchain and compiled `noble` CLI are trusted only at the recorded source revision and binary sha256; this receipt executes behavior and is not a proof.",
+            "Owner decision 2026-11-20 (decision 19) drops the unselectable `fs.write` variant and the impossible under-declare variant (whose candidate is refused at the ordered-interface check before effects are compared), replaces the input-only `same-layout-different-resource-schema` variant with the both-sides `Account@2` candidate, and keeps `unknown-host-contract`, refused at source resolution.",
+            "`generic_dispatch_effect` is observed from a non-variant constructible generic caller: the lane installs `slot.invoke` with the slot's ordered ref interface, reflects the genuinely compiled site without any admission attempt, and the entry records the install source/inputs and the reflected site.",
+            "`input.current_epoch`, `success_epoch` and the rejected variants' unchanged epoch are read from raw CLI records: the last seed publication reply, the accepted candidate's publication reply, and each variant's independent exact control reply. The refused variants' post-refusal trace replies are empty."
+          ]
+        }
+      ]
     },
     {
       "id": "LSLOT-04", "profile": "Live-Slot-Design", "kind": "admission", "requirements": ["H-LSLOT-01", "S-LSLOT-01", "EV-LSLOT-01"],
@@ -37,7 +124,37 @@
       "id": "LSLOT-06", "profile": "Live-Slot-Design", "kind": "static", "requirements": ["K-LSLOT-01", "K-LSLOT-02", "S-LSLOT-01", "B-LSLOT-01"],
       "input": {"harness": "host-issued-input-ref-noncapture-and-lifetime", "issued_ref": "LiveRef<I64,I64,{}> for slot increment in root R", "variants": [{"name": "direct-quotation-capture", "attempt": "[ ref slot.invoke ]", "result": "reject"}, {"name": "aggregate-capture", "attempt": "Pair<I64,LiveRef> then quote", "result": "reject"}, {"name": "aggregate-storage", "attempt": "List or Pair containing LiveRef", "result": "reject"}, {"name": "export-or-return", "attempt": "return/export ref from root R", "result": "reject"}, {"name": "valid-borrow", "attempt": "checked generic slot.invoke borrowing host-issued root input", "result": "accept"}]},
       "expected": {"stage": "static-and-invocation-boundary", "outcome": "only-ephemeral-input-borrow-permitted", "ref_capture": false, "generic_recipe_contains_slot_or_credential": false, "invalid_variants_guest_requests": 0, "guest_requests": 0, "protected_operations": 0, "accepted_variant_guest_requests": 1, "ref_data": false, "ref_authority": false},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "A direct quotation of `slot.invoke`, an aggregate capture, an aggregate storage and an export/return attempt are each refused at their earliest static or invocation boundary with zero guest requests and zero protected operations, while the checked generic caller borrowing the host-issued input executes once (21) and no reflected recipe carries the slot name or a credential; a host-issued ref whose dispatch grant is revoked is denied. This executes behavior; it is not a proof, and the case design carries the owner-approved 2026-11-20 amendments (serialize/forge and retain dropped as impossible by design, `guest_requests` counts rejected attempts only).",
+          "subject": "LSLOT-06",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:c4430e9b78aff231cc74c88eba0958880cdcf6ee52b96808355a03a96aabeb61",
+          "configuration": {
+            "profile": "Live-Slot-Design",
+            "harness": "host-issued-input-ref-noncapture-and-lifetime",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r4.json",
+            "receipt_sha256": "9a925e75eda4c04a5968234ef1540a322ef3430fbe1bfb003174c058242c39d4",
+            "gate": "verification/lslot-cases/gate.mjs",
+            "case": "LSLOT-06",
+            "tested_commit": "ab1b16476a44b7a2175b331624c38c83d6e3868c",
+            "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+            "command": "node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY",
+            "prepromotion_case_sha256": "0100a26cdbe76ab95fcd6355df86a5fff671eed80b5cf14ec21aebe49be4e826",
+            "workload_binding": "Exact projection over the canonical {id,input,expected} digest (0100a26cdbe76ab95fcd6355df86a5fff671eed80b5cf14ec21aebe49be4e826): 15 observed field(s), 3 declared prose field(s), 0 unobserved, 0 mismatched; every observed value equals the canonical value and every leaf has exactly one entry."
+          },
+          "assumptions": [
+            "The pinned selected Rust toolchain and compiled `noble` CLI are trusted only at the recorded source revision and binary sha256; this receipt executes behavior and is not a proof.",
+            "Owner decision 2026-11-20 (decision 19) drops `serialize` and `forge` as unexpressible by design, and owner decision 2026-11-20 (decision 25) drops `retain` as impossible by design: the protocol has no well-formed retain request, so the only spelling is a malformed-request refusal. `aggregate-capture` and `export-or-return` are kept and accept their earliest static refusal.",
+            "`guest_requests` and `invalid_variants_guest_requests` count the refused attempts (the `attempt` install) from each variant's own raw reply; `accepted_variant_guest_requests` is the accepted variant's executed invoke.",
+            "`ref_authority` is observed from the LSLOT-07 lane's raw policy-denied dispatch reply for a host-issued ref whose dispatch grant is revoked.",
+            "`issued_ref` is prose; the entry records the install input types and the reflected site that carry it."
+          ]
+        }
+      ]
     },
     {
       "id": "LSLOT-07", "profile": "Live-Slot-Design", "kind": "runtime", "requirements": ["K-LSLOT-02", "S-LSLOT-01", "VC-LSLOT-01", "EV-LSLOT-01"],
@@ -55,7 +172,36 @@
       "id": "LSLOT-09", "profile": "Live-Slot-Design", "kind": "static", "requirements": ["B-LSLOT-01", "K-LSLOT-01", "EV-LSLOT-01"],
       "input": {"harness": "legacy-profile-exclusion", "attempt": "checked caller with slot.invoke and input LiveRef<I64,I64,{}>", "profiles": ["Core-Bootstrap", "ordinary Core session", "guarded Live-Wasm-Draft"], "controls": [{"profile": "Core-Bootstrap", "source": "[ n ]", "expected": "ordinary-immutable-capture"}, {"profile": "guarded Live-Wasm-Draft", "source": "reload n then invoke saved [ n ]", "expected": "old-capture-not-slot"}]},
       "expected": {"stage": "profile-admission", "outcome": "explicit-unsupported-in-all-legacy-profiles", "unsupported_produces_generic_run_or_empty_effect": false, "candidate_body_executions": 0, "historical_LIVE_01_to_10_changed": false, "old_capture_semantics_changed": false, "profile_supported_by_current_runtime": false, "guest_requests": 0, "protected_operations": 0},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "The same checked `slot.invoke` caller with a borrowed `LiveRef` input that the opt-in profile installs is refused at resolve by Core-Bootstrap `compile` and by an ordinary Core session, and at admission by `noble live repl`, each with zero guest requests and zero protected operations; ordinary quotation capture still returns the old definition after redefinition, and guarded `:reload` keeps a saved quotation on its old capture. The LIVE-01..10 contract fields equal the change's base commit in the tested tree; the comparison accepts exactly the owner-approved decision-21a LIVE-02 `input.after_reload_ack` amendment and rejects every other LIVE contract change. This executes behavior; it is not a proof.",
+          "subject": "LSLOT-09",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:c4430e9b78aff231cc74c88eba0958880cdcf6ee52b96808355a03a96aabeb61",
+          "configuration": {
+            "profile": "Live-Slot-Design",
+            "harness": "legacy-profile-exclusion",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r4.json",
+            "receipt_sha256": "9a925e75eda4c04a5968234ef1540a322ef3430fbe1bfb003174c058242c39d4",
+            "gate": "verification/lslot-cases/gate.mjs",
+            "case": "LSLOT-09",
+            "tested_commit": "ab1b16476a44b7a2175b331624c38c83d6e3868c",
+            "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+            "command": "node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY",
+            "prepromotion_case_sha256": "60e9366e629c69cfcd024752c2fe04b2901330052c482b03b49441b629a3d340",
+            "workload_binding": "Exact projection over the canonical {id,input,expected} digest (60e9366e629c69cfcd024752c2fe04b2901330052c482b03b49441b629a3d340): 8 observed field(s), 5 declared prose field(s), 0 unobserved, 0 mismatched; every observed value equals the canonical value and every leaf has exactly one entry."
+          },
+          "assumptions": [
+            "The pinned selected Rust toolchain and compiled `noble` CLI are trusted only at the recorded source revision and binary sha256; this receipt executes behavior and is not a proof.",
+            "The caller is established as a genuine checked live-slot caller by installing the identical bytes in the opt-in profile; each legacy profile is then exercised with those same bytes, and every summary value the projection reads is cross-checked against the raw CLI records the lane wrote (refusals, REPL generations, and both controls).",
+            "The two Core refusals report profile `Core-Bootstrap`; the guarded REPL report carries no profile field and is identified by its own `live repl --engine v8` invocation. The recorded stages are `resolve` and `admission`.",
+            "LIVE-01..10 are compared on their contract fields (`profile`, `kind`, `requirements`, `input`, `expected`) with the full base commit `8075d3c083474884f9a7c72b5b1a483f73eec314`. The only accepted difference is decision 21a's LIVE-02 `input.after_reload_ack` value; the gate re-runs the comparison on synthetic copies and requires it to reject decision 21's superseded script and any other LIVE case change."
+          ]
+        }
+      ]
     }
   ],
   "amendments": [

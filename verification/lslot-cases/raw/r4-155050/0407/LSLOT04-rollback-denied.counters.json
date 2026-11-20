@@ -1,0 +1,62 @@
+{
+  "name": "LSLOT04-rollback-denied",
+  "expected_exit": 0,
+  "raw": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-lcMqSk/LSLOT04-rollback-denied.jsonl",
+  "counters": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-lcMqSk/LSLOT04-rollback-denied.counters.json",
+  "refusal": {
+    "outcome": "policy-denied",
+    "guest_requests": 0,
+    "protected_operations": 0
+  },
+  "denied": {
+    "epoch": "19",
+    "generation": null,
+    "guest_requests": 0,
+    "incarnation": null,
+    "outcome": "policy-denied",
+    "protected_operations": 0,
+    "retire_code_spans": [],
+    "schema": "noble-live-slot-report/v1",
+    "stage": "slot"
+  },
+  "after": {
+    "artifactSha256": "c7b7bdff62cea77552fe1c83992b561f962e7776c8ba4b75e8a5c4049a8b6c21",
+    "captures": [],
+    "definitionId": null,
+    "generation": "4",
+    "incarnation": "7",
+    "operation": "dispatch",
+    "outcome": "allowed",
+    "policyAllowed": true,
+    "policyInput": {
+      "operation": "dispatch",
+      "rootEpoch": "19",
+      "slotId": "A",
+      "version": {
+        "artifactSha256": "c7b7bdff62cea77552fe1c83992b561f962e7776c8ba4b75e8a5c4049a8b6c21",
+        "assumptions": "unverified",
+        "captures": [],
+        "claim": "unverified",
+        "definitionId": null,
+        "effects": [],
+        "handle": 4105,
+        "input": [
+          "I64"
+        ],
+        "output": [
+          "I64"
+        ],
+        "programValueId": "artifact:c7b7bdff62cea77552fe1c83992b561f962e7776c8ba4b75e8a5c4049a8b6c21:cell:4105",
+        "recipeSha256": "01d377051e920bd44b91c1c465f58abd8c1b2fcb84e44bcf8de60ed4ae8586c7",
+        "semanticContext": "definition-source:unavailable:selection-source:e587aabc0d6f5e75daf6494fe20c5b7c8ea1359f228e0f0d2bfb2db44b493101:artifact:c7b7bdff62cea77552fe1c83992b561f962e7776c8ba4b75e8a5c4049a8b6c21:occurrence:0:recipe:01d377051e920bd44b91c1c465f58abd8c1b2fcb84e44bcf8de60ed4ae8586c7"
+      }
+    },
+    "programValueId": "artifact:c7b7bdff62cea77552fe1c83992b561f962e7776c8ba4b75e8a5c4049a8b6c21:cell:4105",
+    "recipeSha256": "01d377051e920bd44b91c1c465f58abd8c1b2fcb84e44bcf8de60ed4ae8586c7",
+    "rootEpoch": "19",
+    "semanticContext": "definition-source:unavailable:selection-source:e587aabc0d6f5e75daf6494fe20c5b7c8ea1359f228e0f0d2bfb2db44b493101:artifact:c7b7bdff62cea77552fe1c83992b561f962e7776c8ba4b75e8a5c4049a8b6c21:occurrence:0:recipe:01d377051e920bd44b91c1c465f58abd8c1b2fcb84e44bcf8de60ed4ae8586c7",
+    "slotId": "A"
+  },
+  "result": "pass",
+  "exit": 0
+}
