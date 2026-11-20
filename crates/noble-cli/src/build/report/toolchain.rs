@@ -91,21 +91,28 @@ fn refused(message: std::string::String) -> crate::workflow::output::Failure {
     crate::workflow::output::Failure::unsupported("toolchain-binding", message)
 }
 
-fn read_bounded(
+/// One file's bytes, refused before allocation once the remaining budget is
+/// exceeded. The same read serves the toolchain binding and the v4 pin file, so
+/// the refusal code is the caller's: a pin-selection read failure must not
+/// report a toolchain-binding code.
+pub(super) fn read_bounded(
     path: &std::path::Path,
     limit: u64,
+    code: &'static str,
 ) -> Result<std::vec::Vec<u8>, crate::workflow::output::Failure> {
+    let refuse =
+        |message: std::string::String| crate::workflow::output::Failure::unsupported(code, message);
     debug_assert!(!path.as_os_str().is_empty());
     let file = std::fs::File::open(path)
-        .map_err(|error| refused(std::format!("cannot open {}: {error}", path.display())))?;
+        .map_err(|error| refuse(std::format!("cannot open {}: {error}", path.display())))?;
     let length = file
         .metadata()
-        .map_err(|error| refused(std::format!("cannot stat {}: {error}", path.display())))?
+        .map_err(|error| refuse(std::format!("cannot stat {}: {error}", path.display())))?
         .len();
     // Refuse before allocating: an oversized file costs no memory on the refusal path, which is what
     // the bound is for, not only what it checks.
     if length > limit {
-        return Err(refused(std::format!(
+        return Err(refuse(std::format!(
             "{} is {length} bytes, over the remaining {limit}-byte budget",
             path.display()
         )));
@@ -114,9 +121,9 @@ fn read_bounded(
     // `take(limit + 1)` covers the file growing between the metadata check and the read.
     file.take(limit.saturating_add(1))
         .read_to_end(&mut bytes)
-        .map_err(|error| refused(std::format!("cannot read {}: {error}", path.display())))?;
+        .map_err(|error| refuse(std::format!("cannot read {}: {error}", path.display())))?;
     if bytes.len() as u64 > limit {
-        return Err(refused(std::format!(
+        return Err(refuse(std::format!(
             "{} grew past the remaining {limit}-byte budget while being read",
             path.display()
         )));
@@ -224,7 +231,11 @@ fn tree_digest(
     let mut total_bytes: u64 = 0;
     for (relative, path) in files {
         debug_assert!(!relative.is_empty());
-        let bytes = attempt!(read_bounded(path, MAX_BYTES.saturating_sub(total_bytes)));
+        let bytes = attempt!(read_bounded(
+            path,
+            MAX_BYTES.saturating_sub(total_bytes),
+            "toolchain-binding"
+        ));
         total_bytes = total_bytes.saturating_add(bytes.len() as u64);
         hasher.update(&(relative.len() as u64).to_le_bytes());
         hasher.update(relative.as_bytes());
@@ -273,11 +284,11 @@ fn bind(
     let files = attempt!(walk(library_tree, MAX_FILES, MAX_DIRECTORIES));
     if files.is_empty() {
         return Err(refused(std::string::String::from(
-            "--library-tree contains no files; v2 binds the contract library the build compiles",
+            "--library-tree contains no files; v3 and v4 bind the contract library the build compiles",
         )));
     }
     let tree = attempt!(tree_digest(&files));
-    let binary = attempt!(read_bounded(lean_binary, MAX_BYTES));
+    let binary = attempt!(read_bounded(lean_binary, MAX_BYTES, "toolchain-binding"));
     debug_assert!(!tree.hash.is_empty());
     Ok(Selected {
         lean_sha256: crate::workflow::intrinsic::sha256(&binary),
@@ -294,7 +305,7 @@ fn verify_used(selected: &Selected) -> Result<(), crate::workflow::output::Failu
     debug_assert!(!selected.lean_sha256.is_empty());
     debug_assert!(!selected.library_blake3.is_empty());
     let lean = attempt!(crate::sandbox::release_binary());
-    let used_binary = attempt!(read_bounded(&lean, MAX_BYTES));
+    let used_binary = attempt!(read_bounded(&lean, MAX_BYTES, "toolchain-binding"));
     if crate::workflow::intrinsic::sha256(&used_binary) != selected.lean_sha256 {
         return Err(refused(std::format!(
             "--lean-binary bytes differ from the Lean release this build invokes ({})",
@@ -385,7 +396,7 @@ mod tests {
         };
         assert_eq!(lean_hash, &crate::workflow::intrinsic::sha256(lean_bytes));
         let mut document = crate::build::report::Document::new();
-        document.schema_v3 = true;
+        document.schema = crate::build::report::Schema::V3;
         document.selected_toolchain = Some(selected);
         assert!(document.json().encode().contains("noble-mc2-build/v3"));
         std::fs::remove_dir_all(&root).expect("clean up");
@@ -590,7 +601,7 @@ mod tests {
         std::fs::create_dir_all(&root).expect("create root");
         let path = root.join("big.olean");
         std::fs::write(&path, b"12345").expect("write big");
-        let refused = super::read_bounded(&path, 4);
+        let refused = super::read_bounded(&path, 4, "toolchain-binding");
         assert!(refused.is_err(), "a file over the budget is refused");
         let Err(failure) = refused else { return };
         assert!(
@@ -598,7 +609,7 @@ mod tests {
             "{}",
             failure.message
         );
-        let exact = super::read_bounded(&path, 5);
+        let exact = super::read_bounded(&path, 5, "toolchain-binding");
         assert!(exact.is_ok(), "a file exactly at the budget is allowed");
         let Ok(bytes) = exact else { return };
         assert_eq!(bytes.len(), 5);

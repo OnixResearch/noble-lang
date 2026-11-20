@@ -1,0 +1,122 @@
+//! The runtime helper sources this compiler embeds, by exact repository path.
+//!
+//! Every emitter includes these files with `include_str!`; a build report binds
+//! the same bytes, so the table names each helper once. Add a helper to
+//! `crates/noble-wasm/runtime` only together with an entry here: the table is
+//! the reported identity of the embedded helper set, and a helper missing from
+//! it would stay outside every receipt derived from that set.
+
+/// Every embedded runtime helper, in ascending path order.
+///
+/// The entries are the exact sources emission includes; no path is derived at
+/// run time, so the reported identity cannot drift from the embedded bytes.
+pub const HELPERS: [(&str, &str); 27] = [
+    (
+        "crates/noble-wasm/runtime/accounting.wat",
+        include_str!("../runtime/accounting.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/calculator-linear-address.wat",
+        include_str!("../runtime/calculator-linear-address.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/calculator.wat",
+        include_str!("../runtime/calculator.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/checked-i64.wat",
+        include_str!("../runtime/checked-i64.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/common.wat",
+        include_str!("../runtime/common.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/core-live-owners.wat",
+        include_str!("../runtime/core-live-owners.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/data.wat",
+        include_str!("../runtime/data.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/experiment-cleanup.wat",
+        include_str!("../runtime/experiment-cleanup.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/experiment.wat",
+        include_str!("../runtime/experiment.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/gc-storage.wat",
+        include_str!("../runtime/gc-storage.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/i64-less.wat",
+        include_str!("../runtime/i64-less.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/linear-address.wat",
+        include_str!("../runtime/linear-address.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/linear-storage.wat",
+        include_str!("../runtime/linear-storage.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/live-accounting.wat",
+        include_str!("../runtime/live-accounting.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/live-borrows.wat",
+        include_str!("../runtime/live-borrows.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/live-linear-storage.wat",
+        include_str!("../runtime/live-linear-storage.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/live-source.wat",
+        include_str!("../runtime/live-source.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/live-stack.wat",
+        include_str!("../runtime/live-stack.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/operations.wat",
+        include_str!("../runtime/operations.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/programs.wat",
+        include_str!("../runtime/programs.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/reflection.wat",
+        include_str!("../runtime/reflection.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/resource.wat",
+        include_str!("../runtime/resource.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/source.wat",
+        include_str!("../runtime/source.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/stack.wat",
+        include_str!("../runtime/stack.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/text-byte.wat",
+        include_str!("../runtime/text-byte.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/worker-input.wat",
+        include_str!("../runtime/worker-input.wat"),
+    ),
+    (
+        "crates/noble-wasm/runtime/worker-interruption.wat",
+        include_str!("../runtime/worker-interruption.wat"),
+    ),
+];

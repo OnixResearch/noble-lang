@@ -16,7 +16,7 @@ mod report;
 pub const USAGE: &str = "usage:
   noble build --require-proof SOURCE --contract FILE [--proof FILE | --refutation FILE]
               [--out NEW_DIR] [--timeout-ms N]
-              [--report-schema v3 --lean-binary PATH --library-tree DIR]
+              [--report-schema v1|v3|v4 --lean-binary PATH --library-tree DIR [--pins FILE]]
   noble build SOURCE --target c --out NEW_DIR --contract CONTRACT_JSON --policy POLICY_JSON
   noble companions
 
@@ -51,9 +51,15 @@ report: the exact --lean-binary bytes (SHA-256, with the pinned version and comm
 them) and the contract library tree (BLAKE3 over every file's relative path and content in sorted
 order). The selection is refused unless those bytes are the ones this build uses: the configured
 Lean release (NOBLE_LEAN or the selected installation) and the configured contract library root
-(NOBLE_CONTRACT_LIBRARY or the pinned default). v2 requires both paths and passing either without
-v2 is a usage error; without the flag the
-report keeps the noble-mc2-build/v1 schema and its exact field set. The emitted Wasm is build/loading evidence (PO-17/18),
+(NOBLE_CONTRACT_LIBRARY or the pinned default). `--report-schema v4` additionally binds the
+complete policy pin record: the running CLI's own SHA-256, each embedded runtime helper's SHA-256
+and the helper-set digest, the selected Lean binary and contract library, the selected node,
+wasm-tools and wasm-opt path, version and SHA-256 the worker verified, and the optimizer mode. The
+v4 report is refused unless every observed identity equals the reviewed --pins document
+(noble-build-report-pins/v1); an `on` optimizer pin is refused because this lane never invokes the
+optimizer. v3 and v4 require both toolchain paths and their pin document where v4 is selected;
+passing any of them without the matching revision is a usage error. Without the flag the report
+keeps the noble-mc2-build/v1 schema and its exact field set. The emitted Wasm is build/loading evidence (PO-17/18),
 never a verified backend correspondence. Exit status follows VC-TOOL-02:
 proved 0, disproved 1, error 2, unknown 3, unsupported 4, timeout 124, not-run 0.";
 
@@ -80,26 +86,77 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     report.source_path = options.source.to_string_lossy().into_owned();
     report.contract_path = options.contract.to_string_lossy().into_owned();
     report.timeout_ms = options.timeout_ms;
-    report.schema_v3 = options.schema_v3;
+    report.schema = options.schema;
     // v3 binds the exact Lean binary and contract library bytes the caller names, and the
     // selection itself refuses them unless they are the configured Lean release and library root
     // this build actually invokes. The parser refuses v3 without both paths, and v1 with them.
+    // v4 adds the reviewed policy pin document and refuses unless every observed identity matches.
+    let mut pins = None;
     if let (Some(lean_binary), Some(library_tree)) = (&options.lean_binary, &options.library_tree) {
         match report::toolchain::select(lean_binary, library_tree) {
-            Ok(selected) => report.selected_toolchain = Some(selected),
+            Ok(selected) => {
+                if let Some(path) = options.pins.as_deref() {
+                    let selection = match report::pins::select(path) {
+                        Ok(selection) => selection,
+                        Err(error) => {
+                            report.fail(error);
+                            return print_report(&report);
+                        }
+                    };
+                    let observed = match report::pins::observe(&selected) {
+                        Ok(observed) => observed,
+                        Err(error) => {
+                            report.fail(error);
+                            return print_report(&report);
+                        }
+                    };
+                    if let Err(error) = report::pins::verify(&selection, &observed) {
+                        report.fail(error);
+                        return print_report(&report);
+                    }
+                    report.pin_selection_sha256 = Some(selection.document_sha256.clone());
+                    pins = Some(selection);
+                    report.pins = Some(observed);
+                }
+                report.selected_toolchain = Some(selected);
+            }
             Err(error) => {
                 report.fail(error);
                 return print_report(&report);
             }
         }
     }
-    let products = match execute(&options, &mut report) {
+    let mut products = match execute(&options, &mut report) {
         Ok(products) => Some(products),
         Err(error) => {
             report.fail(error);
             None
         }
     };
+    // The assembly ran, so its own tool identities are observable: bind them
+    // before anything is emitted, and drop the products on a mismatch so a
+    // refused pin can never leave an artifact behind.
+    let bound = match (pins.as_ref(), products.as_ref()) {
+        (Some(selection), Some(products)) => Some(
+            report::pins::observe_tools(&products.tools).and_then(|tools| {
+                report::pins::verify_tools(selection, &tools)?;
+                Ok(tools)
+            }),
+        ),
+        _ => None,
+    };
+    match bound {
+        Some(Ok(tools)) => {
+            if let Some(observed) = report.pins.as_mut() {
+                observed.record_tools(tools);
+            }
+        }
+        Some(Err(error)) => {
+            report.fail(error);
+            products = None;
+        }
+        None => {}
+    }
     if let (Some(destination), Some(products)) = (&options.out, products.as_ref()) {
         let emission = artifacts::Emission {
             contract: &products.contract,
@@ -139,6 +196,8 @@ struct Products {
     wrapper: Option<std::string::String>,
     artifact_wat: Option<std::vec::Vec<u8>>,
     artifact_wasm: Option<std::vec::Vec<u8>>,
+    /// The selected worker's verified tool record; a v4 report binds it.
+    tools: std::vec::Vec<u8>,
     proof: Option<std::vec::Vec<u8>>,
 }
 
@@ -146,6 +205,8 @@ struct Artifact {
     prepared: noble_contracts::source::Prepared,
     wat: std::vec::Vec<u8>,
     wasm: std::vec::Vec<u8>,
+    /// The selected worker's own tool identities for this assembly.
+    tools: std::vec::Vec<u8>,
 }
 
 #[expect(
@@ -200,6 +261,7 @@ fn execute(
                 wrapper: None,
                 artifact_wat: Some(artifact.wat),
                 artifact_wasm: Some(artifact.wasm),
+                tools: artifact.tools,
                 proof: evidence,
             });
         }
@@ -224,6 +286,7 @@ fn execute(
         wrapper,
         artifact_wat: Some(artifact.wat),
         artifact_wasm: Some(artifact.wasm),
+        tools: artifact.tools,
         proof: evidence,
     })
 }

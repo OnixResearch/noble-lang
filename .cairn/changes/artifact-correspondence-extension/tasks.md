@@ -7,13 +7,30 @@
 
 ## Future implementation and evidence gates (not undertaken by this change)
 
-- [ ] [serial] Correct the stale `runtime_assets` helper list in a separate change, then add policy pins for the CLI, helpers, Lean binary and library, and a new build report schema that keeps `noble-mc2-build/v1` receipts unchanged. r[ACORR-ENV-01]
-  Progress (2026-11-09): the stale list is corrected outside this change. `runtime_assets` in
-  `crates/noble-cli/src/core/runtime/config.json` now declares all 25 helpers in
-  `crates/noble-wasm/runtime/`, and `tools/m3-wasm-policy.mjs` accepts any explicit, unique list
-  instead of exactly 11. The M3 harness, which had failed at its source snapshot since the helper
-  set grew, completes `eligible-for-selection` on the corrected tree. The policy pins for the CLI,
-  helpers and Lean binary and library, and the new build report schema, remain open.
+- [x] [serial] Correct the stale `runtime_assets` helper list in a separate change, then add policy pins for the CLI, helpers, Lean binary and library, and a new build report schema that keeps `noble-mc2-build/v1` receipts unchanged. r[ACORR-ENV-01]
+  Progress (2026-11-09): the stale list was corrected outside this change, but it drifted again:
+  `runtime_assets` declared 26 of the 27 helpers, because `experiment-cleanup.wat` (embedded at
+  `crates/noble-wasm/src/source/emit/imports/entry.rs`) was never added. Progress (2026-11-20,
+  slice `acorr-env`): `runtime_assets` now declares all 27 helpers and `tools/m3-wasm-policy.mjs`
+  owns the cross-check (`validateRuntimeAssets`) that `tools/m3-wasm.mjs` applies to the tree it
+  snapshots for the M3 harness. `crates/noble-cli/tests/build/runtime_assets.rs` drives that same
+  function against the real tree in `cargo test -p noble-cli --test build`; removing
+  `experiment-cleanup.wat` from the declaration fails
+  `the_declared_helper_list_equals_the_runtime_directory` (observed red, then green).
+  `noble-mc2-build/v4` (`--report-schema v4 --pins FILE`) records the running CLI's SHA-256, each
+  embedded runtime helper's SHA-256 with the helper-set digest, the selected Lean binary SHA-256
+  and contract-library BLAKE3, the worker-verified node/wasm-tools/wasm-opt path, version and
+  SHA-256, and the optimizer mode, and refuses the report unless every observed identity equals the
+  selection (`build-pin-mismatch`, one named identity per refusal). `v1` keeps its exact field set
+  and `v3` keeps its exact field set plus `selected_toolchain`; both were re-run on this tree.
+  `policy/tool-selection.ncl` carries the pin set as `build_report` (CLI identity rule, helper root
+  and count with `set_sha256`, Lean toolchain/rev/binary path and SHA-256, and the three tool
+  outputs/versions/SHA-256); `policy/tool-selection.json` regeneration is the integrator's step.
+  The assembly re-read at `crates/noble-cli/src/core/worker/assembly.rs` is now hash-checked
+  against the worker's reported `wat_sha256`/`wasm_sha256` before the bytes can become evidence.
+  Remaining for this task: nothing in the code path; the delivered-value check is
+  `cargo test -p noble-cli --test build` plus the ignored lane
+  `report_pins::v4_binds_every_identity_and_refuses_a_changed_one`.
 - [ ] [serial] Implement the opt-in PAA-1 consumer by joining Route A comparison with Route B evidence/subject binding, comparing subject and wrapper bytes, instantiating only the compared buffers, and refusing with distinct codes before instantiation. r[ACORR-ENV-01] r[ACORR-CACHE-01]
 - [ ] [serial] Build the independent negative-preparation script, then execute ACORR-CASE-01…12 against a frozen consumer with immutable receipts. r[ACORR-CTRL-01]
 - [ ] [serial] Pursue O1–O7 separately (PO-17/18 slices, optimizer, PO-21 C6, the PO-20 erasure theorem, PO-16 refinement); never close them from hashes, tests or extraction success. Extend the envelope for the #7 named-call profile only after its dependency-closure design is accepted. r[ACORR-TB-01]

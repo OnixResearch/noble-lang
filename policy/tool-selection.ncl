@@ -1,5 +1,57 @@
 # Reviewed selection policy. This is configuration, not an execution receipt.
 let Pin = { rev | String, narHash | String } in
+# The build-report v4 pin set (ACORR-ENV-01). `noble build --report-schema v4
+# --pins FILE` records each identity below and refuses the report unless the
+# value it observes equals the selection, so a v4 receipt cannot be produced by
+# another CLI, helper set or toolchain than the one it names. The selected Lean
+# and verification-tool records are parameters: naming them inside their own
+# nested field would recurse.
+let BuildReportPins = fun leanPin toolPaths verification => {
+  schema | String = "noble-build-report-pins/v1",
+  # This lane assembles WAT with wasm-tools and never invokes the optimizer, so
+  # an `on` selection is refused rather than silently ignored.
+  opt_mode | String = "off",
+  cli = {
+    identity | String = "sha256-of-running-executable",
+    basis | String = "the report binds the bytes of the executable it runs as; the selection carries the frozen CLI receipt's hash, so a rebuilt CLI cannot claim an earlier report",
+  },
+  helpers = {
+    root | String = "crates/noble-wasm/runtime",
+    count | Number = 27,
+    # SHA-256 over `<path> <sha256>` plus a newline, for every embedded helper
+    # in ascending path order.
+    set_sha256 | String = "211d016d58265968082e383f78790c26c20d8eaf135b0dd401253fa3c238639f",
+  },
+  lean = {
+    toolchain | String = leanPin.toolchain,
+    rev | String = leanPin.rev,
+    binary_output | String = toolPaths.lean.output,
+    binary_sha256 | String = "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+    # The library digest changes with proofs/mc1, so the selection carries it
+    # from the receipt rather than this file.
+    library_tree | String = "selected-contract-library-root",
+  },
+  tools = {
+    node = {
+      output = toolPaths.node.output,
+      # The worker records Node's declared version and the printed `--version`
+      # output of the other two; the report binds exactly those strings.
+      version = verification.node.version,
+      binary_sha256 = "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+    },
+    wasm_tools = {
+      output = toolPaths.wasm_tools.output,
+      version = "wasm-tools " ++ verification.wasm_tools.version,
+      binary_sha256 = "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+    },
+    wasm_opt = {
+      output = toolPaths.binaryen.output,
+      version = "wasm-opt version " ++ verification.binaryen.version,
+      binary_sha256 = "e68e014ba43ece72b23e4e9955b822d65ec2c3dbab6f407ca3af6cc5639543a2",
+    },
+  },
+}
+in
 {
   schema_version | String = "noble-tool-selection-policy/v1",
   sources | {
@@ -189,6 +241,7 @@ let Pin = { rev | String, narHash | String } in
     ],
   },
   # These file bindings use SHA-256; Octet separately binds compiler identities.
+  build_report = BuildReportPins lean tool_paths verification_tools,
   file_sha256 | { _ : String } = import "tool-selection-files.ncl",
   tool_paths | { _ : { derivation | String, output | String } } = import "tool-selection-tools.ncl",
   # A source-built independent Rust peer, not an unreviewed Wasmtime CLI.
