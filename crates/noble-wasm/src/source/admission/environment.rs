@@ -20,19 +20,11 @@ fn same_kind(
     left == right
 }
 
+/// The fixed terminal `test.abort` row. Core and the host-selected live test
+/// environment share the kernel's single constructor, so the identity cannot
+/// drift between profiles.
 fn abort_scheme() -> noble_kernel::words::Scheme {
-    noble_kernel::words::Scheme {
-        var_kinds: alloc::vec![noble_kernel::words::VariableKind::Stack],
-        stack_in: alloc::vec![noble_kernel::shapes::Pattern::StackVar(
-            noble_kernel::words::Variable(0)
-        )],
-        stack_out: alloc::vec![noble_kernel::shapes::Pattern::StackVar(
-            noble_kernel::words::Variable(0)
-        )],
-        effects: alloc::vec![noble_kernel::shapes::EffectSlot::Effect(
-            noble_kernel::types::EffId(1)
-        )],
-    }
+    noble_kernel::contracts::test_abort_scheme()
 }
 
 fn live_schemes() -> [noble_kernel::words::Scheme; 2] {
@@ -205,7 +197,7 @@ fn has_live_slot_mismatch(
     text_cursor: bool,
 ) -> bool {
     env.live_slots != live_slots
-        || (env.live_test_hosts && !live_slots)
+        || (env.live_test_hosts && !live_slots && !live)
         || (live_slots && (live || text_cursor || !env.declared_modules))
 }
 
@@ -287,15 +279,20 @@ fn has_noncanonical_core_declarations(env: &noble_kernel::contracts::Env) -> boo
             || !env.bound_adapters.is_empty())
 }
 
-/// Whether a live session allows an effect other than the live operations'.
+/// Whether a live session allows an effect other than the live operations'
+/// own two and, when the host selected the Core test environment, the two
+/// resource-free test hosts at Core's identities.
 fn has_live_effect_mismatch(submission: &noble_kernel::execution::Submission, live: bool) -> bool {
-    live && has_non_live_effect(submission)
+    live && has_non_live_effect(submission, submission.environment.live_test_hosts)
 }
 
 /// Whether the root request or any named definition allows an effect other
-/// than the live operations' own two, in that order.
-fn has_non_live_effect(submission: &noble_kernel::execution::Submission) -> bool {
-    let mut has_other = has_non_live(submission.request.expected.allowed_effects.as_slice());
+/// than the selected live operations, in that order.
+fn has_non_live_effect(submission: &noble_kernel::execution::Submission, test_hosts: bool) -> bool {
+    let mut has_other = has_non_live(
+        submission.request.expected.allowed_effects.as_slice(),
+        test_hosts,
+    );
     let mut index = 0usize;
     while !has_other && index < submission.definitions.len() {
         has_other = has_non_live(
@@ -303,15 +300,19 @@ fn has_non_live_effect(submission: &noble_kernel::execution::Submission) -> bool
                 .expected
                 .allowed_effects
                 .as_slice(),
+            test_hosts,
         );
         index += 1;
     }
     has_other
 }
 
-/// Whether `effects` contains an effect other than the two live operations'.
-fn has_non_live(effects: &[noble_kernel::types::EffId]) -> bool {
-    crate::scan::find_first(effects, |effect| !matches!(effect.0, 3 | 4)).is_some()
+/// Whether `effects` contains an effect outside the selected live set.
+fn has_non_live(effects: &[noble_kernel::types::EffId], test_hosts: bool) -> bool {
+    crate::scan::find_first(effects, |effect| {
+        !(matches!(effect.0, 3 | 4) || test_hosts && matches!(effect.0, 0 | 1))
+    })
+    .is_some()
 }
 
 #[expect(

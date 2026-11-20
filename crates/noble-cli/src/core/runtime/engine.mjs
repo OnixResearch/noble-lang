@@ -56,6 +56,11 @@ delete bridgeExportTypes.release_module_roots;
 const liveImportTypes = {
   live_propose: 'i64,i64,i32->i32',
   live_generation: '->i64',
+  // The host-selected Core test hosts. The compiler emits these imports only
+  // for a live session whose host passed --allow-effects; the engine already
+  // installs both ambient callbacks for every non-declared live session.
+  test_emit: 'i32,i32->i32',
+  test_abort: '->i32',
 };
 const declaredLiveImportTypes = {
   test_emit_bound: 'i32,i32,i32->i32',

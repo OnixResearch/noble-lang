@@ -284,6 +284,9 @@ pub(super) struct Layout {
     pub(super) core_live: bool,
     pub(super) live_slots: bool,
     pub(super) live_test_hosts: bool,
+    /// The host-selected Core live test environment: the session carries
+    /// Core's `test.abort` identity and may emit the two ambient test hosts.
+    pub(super) core_test_hosts: bool,
     pub(super) live_sites: alloc::vec::Vec<super::LiveSiteMetadata>,
     pub(super) text_cursor: bool,
     pub(super) calculator: bool,
@@ -427,6 +430,7 @@ fn start(
         core_live: is_core_live,
         live_slots: submission.environment.live_slots,
         live_test_hosts: submission.environment.live_test_hosts,
+        core_test_hosts: is_live && submission.environment.live_test_hosts,
         live_sites: alloc::vec::Vec::new(),
         text_cursor: submission.environment.text_cursor,
         calculator: submission.environment.calculator,
@@ -483,7 +487,7 @@ fn program_footprint(layout: &mut Layout, program: usize) -> Result<(), crate::D
 fn operation_footprint(layout: &mut Layout, action: Action) -> Result<(), crate::Diagnostic> {
     match action {
         Action::Word(22)
-            if layout.live
+            if (layout.live && !layout.core_test_hosts)
                 || layout.text_cursor
                 || layout.calculator
                 || (layout.declared_modules && !layout.live_test_hosts) =>
@@ -492,7 +496,7 @@ fn operation_footprint(layout: &mut Layout, action: Action) -> Result<(), crate:
         }
         Action::Word(23)
             if layout.declared_modules
-                || layout.live
+                || (layout.live && !layout.core_test_hosts)
                 || layout.text_cursor
                 || layout.calculator =>
         {

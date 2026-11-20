@@ -24,8 +24,7 @@ impl super::super::Env {
         if self.kinds.len() != self.defs.len() || self.bound_adapters.len() > self.defs.len() {
             return false;
         }
-        if self.live_test_hosts && (!self.live_slots || !self.declared_modules || self.text_cursor)
-        {
+        if self.live_test_hosts && (self.text_cursor || self.calculator) {
             return false;
         }
         if (!self.nominals.is_empty()

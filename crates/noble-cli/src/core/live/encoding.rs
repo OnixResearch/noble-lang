@@ -20,6 +20,10 @@ static ABI: LazyLock<Result<Value, String>> = LazyLock::new(|| {
 #[derive(Clone, Copy)]
 enum ImportProfile {
     CoreLive,
+    /// Core live with the host-selected resource-free test hosts. The checker
+    /// admits `test.emit`/`test.abort`; the runtime still authorizes each
+    /// request separately, and `test.abort` performs no protected work.
+    CoreLiveTestHosts,
     DeclaredLive,
     RuntimeBridge,
 }
@@ -193,10 +197,22 @@ fn check_import(
     if let TypeRef::Func(index) | TypeRef::FuncExact(index) = import.ty {
         let required: Option<(&[ValType], &[ValType])> = match (profile, import.module, import.name)
         {
-            (ImportProfile::CoreLive, "noble", "live_propose") => {
-                Some((&[ValType::I64, ValType::I64, ValType::I32], &[ValType::I32]))
+            (
+                ImportProfile::CoreLive | ImportProfile::CoreLiveTestHosts,
+                "noble",
+                "live_propose",
+            ) => Some((&[ValType::I64, ValType::I64, ValType::I32], &[ValType::I32])),
+            (
+                ImportProfile::CoreLive | ImportProfile::CoreLiveTestHosts,
+                "noble",
+                "live_generation",
+            ) => Some((&[], &[ValType::I64])),
+            (ImportProfile::CoreLiveTestHosts, "noble", "test_emit") => {
+                Some((&[ValType::I32, ValType::I32], &[ValType::I32]))
             }
-            (ImportProfile::CoreLive, "noble", "live_generation") => Some((&[], &[ValType::I64])),
+            (ImportProfile::CoreLiveTestHosts, "noble", "test_abort") => {
+                Some((&[], &[ValType::I32]))
+            }
             (ImportProfile::DeclaredLive, "noble", "test_emit_bound") => {
                 Some((&[ValType::I32, ValType::I32, ValType::I32], &[ValType::I32]))
             }
@@ -467,6 +483,13 @@ fn encode(wat: &[u8], profile: ImportProfile) -> Result<Vec<u8>, EncodeError> {
 /// only its two explicitly typed observation/proposal imports are admitted.
 pub(super) fn encode_live_checked(wat: &[u8]) -> Result<Vec<u8>, EncodeError> {
     encode(wat, ImportProfile::CoreLive)
+}
+
+/// Core live with the host-selected test environment: the same two live
+/// imports plus the exact typed `test.emit`/`test.abort` hosts. The frontend
+/// admits the words and the runtime authorizes each request.
+pub(super) fn encode_live_test_hosts_checked(wat: &[u8]) -> Result<Vec<u8>, EncodeError> {
+    encode(wat, ImportProfile::CoreLiveTestHosts)
 }
 
 /// The declared live source boundary permits only bound adapter effects and

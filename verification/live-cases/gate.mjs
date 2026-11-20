@@ -50,7 +50,7 @@ for (const id of ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-0
 // gate refuses instead of silently reinterpreting the case.
 const projections = {
   'LIVE-01': 'be2ad88418db0f93dda24e6536114f4a8c6657f12014bfd1a0542b46785effa2',
-  'LIVE-02': '0eeac6b751629ce202c589ace480d03ec86e684e2c880b4d7df1a94c7e49a40d',
+  'LIVE-02': 'ec9f76dd2daeb6537a588189910a19aa76b1a7d53d0bd7b62389ebe47779a215',
   'LIVE-03': 'bec86d121b5d6cee4c6de5f76d5235c5b442736d369f98e4581b5eb18d8ec2b5',
   'LIVE-04': '99aa94afa26f4e53eb2b63f91c68b621cf77bf984329950665df9d7f3fdbb570',
   'LIVE-05': 'a1d4c1df39a1f7a23f039233a92d333fa5abcff48c1cc0f8e8687e8331137785',
@@ -70,18 +70,19 @@ for (const [id, digest] of Object.entries(projections))
 
 // Promoted by this slice. Every `expected` field of these cases must be
 // observed below; see `promotionGate`.
-const promoted = ['LIVE-01', 'LIVE-04', 'LIVE-06', 'LIVE-07', 'LIVE-09'];
+// LIVE-05 stays unpromoted: its `missing-import` variant is refused lexically
+// before any import or registry check, so not every variant runs as designed.
+const promoted = ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-06', 'LIVE-07', 'LIVE-09'];
+
 
 // ---------------------------------------------------------------------------
 // Source scope, clean tree and manifest.
 const scope = ['crates', 'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'policy/tool-selection.json', 'verification/live-cases'];
-// The gate never binds its own receipt: committing it must not change the
-// source revision it records.
-// The earlier LIVE-01/06/07 receipt is immutable and stays in place; this
-// slice writes a separate receipt file, and neither self-binds its generator.
-const receiptName = 'acceptance-2026-11-20-seams.json';
-const excluded = ['verification/live-cases/acceptance.json',
-  `verification/live-cases/${receiptName}`];
+// The gate never binds any retained receipt: committing an old or new receipt
+// must not change the source revision this run records. Every
+// `verification/live-cases/acceptance*.json` file is excluded from the source
+// manifest, and `tools/check-specs.mjs` checks each cited receipt digest.
+const receiptName = 'acceptance-2026-11-20-r3.json';
 const git = args => {
   const result = spawnSync('git', args, { cwd: root, maxBuffer: 64 * 1024 * 1024 });
   assert.equal(result.status, 0, `git ${args.join(' ')} failed: ${result.stderr}`);
@@ -90,8 +91,11 @@ const git = args => {
 const dirty = git(['status', '--porcelain', '--untracked-files=all', '--', ...scope]);
 assert.equal(dirty.toString(), '', `source scope is not clean:\n${dirty}`);
 const studiedCommit = git(['rev-parse', 'HEAD']).toString().trim();
-const files = git(['ls-files', '-z', '--', ...scope]).toString().split('\0').filter(Boolean)
-  .filter(file => !excluded.includes(file)).sort();
+const scopedFiles = git(['ls-files', '-z', '--', ...scope]).toString().split('\0').filter(Boolean);
+const excluded = scopedFiles
+  .filter(file => /^verification\/live-cases\/acceptance[^/]*\.json$/.test(file))
+  .sort();
+const files = scopedFiles.filter(file => !excluded.includes(file)).sort();
 assert.ok(files.length > 0, 'empty source scope');
 const manifest = {};
 for (const file of files) manifest[file] = sha256(content(file));
@@ -117,6 +121,7 @@ const recordProcess = (label, executable, args, { input, environment = {}, expec
   fs.writeFileSync(stderrPath, result.stderr, { flag: 'wx' });
   commands.push({
     label, kind: 'direct-cli', command: [executable, ...args], exit: result.status, duration_ms: Date.now() - started,
+    environment: { ...environment },
     stdin: input === undefined ? null : sha256(input),
     stdout: { path: `raw/${label}.out`, bytes: result.stdout.length, sha256: sha256(result.stdout) },
     stderr: { path: `raw/${label}.err`, bytes: result.stderr.length, sha256: sha256(result.stderr) },
@@ -243,6 +248,7 @@ class LiveChild {
     this.label = label;
     this.argv = args;
     this.executable = executable;
+    this.environment = { ...environment };
     this.stdout = '';
     this.stderr = '';
     this.queue = [];
@@ -318,6 +324,7 @@ class LiveChild {
     commands.push({
       label: this.label, kind: 'live-child', command: [this.executable, ...this.argv], exit: code,
       duration_ms: Date.now() - this.started, pid: this.pid, script: this.script,
+      environment: this.environment,
       stdout: { path: `raw/${this.label}.out`, bytes: Buffer.byteLength(this.stdout), sha256: sha256(this.stdout) },
       stderr: { path: `raw/${this.label}.err`, bytes: Buffer.byteLength(this.stderr), sha256: sha256(this.stderr) },
     });
@@ -340,6 +347,15 @@ function fixture(label, name, bytes) {
   fs.writeFileSync(source, bytes);
   return { directory, source, bytes };
 }
+// A fixture whose selected file carries the case's own name, e.g.
+// `evolve.noble`, so the reload command and detail rows use the real path.
+function namedFixture(label, name, bytes) {
+  const directory = path.join(fixtures, `${String(++fixtureCounter).padStart(2, '0')}-${label}`);
+  fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+  const source = path.join(directory, name);
+  fs.writeFileSync(source, bytes);
+  return { directory, source, bytes };
+}
 function replace(source, bytes) {
   const temporaryPath = `${source}.tmp`;
   const descriptor = fs.openSync(temporaryPath, 'wx', 0o600);
@@ -351,6 +367,16 @@ function replace(source, bytes) {
 }
 const stackOf = report => (report.stack ?? []).map(row => `${row.type}:${row.value ?? ''}`);
 const isStack = (report, values) => JSON.stringify(stackOf(report)) === JSON.stringify(values);
+// Direct child PIDs of a live CLI process, read from procfs. The resident
+// Node/V8 worker is a direct child; a restart would change this set.
+const childPids = pid => {
+  const pids = new Set();
+  for (const task of fs.readdirSync(`/proc/${pid}/task`)) {
+    const text = fs.readFileSync(`/proc/${pid}/task/${task}/children`, 'utf8').trim();
+    if (text) text.split(/\s+/).forEach(entry => pids.add(entry));
+  }
+  return [...pids].sort();
+};
 
 // ---------------------------------------------------------------------------
 // Observation records.
@@ -395,6 +421,7 @@ async function observeLive01() {
   keep('LIVE-01', 'initial', initial);
   const first = await live.submit('20 addone');
   keep('LIVE-01', 'first', first);
+  const workerPidsBefore = childPids(live.pid);
   const replaced = replace(files.source, after);
   const ack = await live.submit(`:reload ${files.source}`);
   keep('LIVE-01', 'reload', ack);
@@ -402,6 +429,7 @@ async function observeLive01() {
   keep('LIVE-01', 'next', next);
   const inspection = await live.submit(':generation');
   keep('LIVE-01', 'generation', inspection);
+  const workerPidsAfter = childPids(live.pid);
   await live.close(0);
   const reloadedMarker = fs.existsSync(marker);
   assert.equal(reloadedMarker, false, 'an external assembler/optimizer was invoked during reload');
@@ -423,8 +451,12 @@ async function observeLive01() {
       ack_outcome: ack.outcome, initial_generation: initial.generation, ack_generation: ack.generation });
   observe('LIVE-01', 'expected.first_stack', isStack(first, ['I64:21']), { stack: stackOf(first) });
   observe('LIVE-01', 'expected.final_stack_bottom_to_top', isStack(next, ['I64:21', 'I64:22']), { stack: stackOf(next) });
-  observe('LIVE-01', 'expected.process_restarts', live.pid > 0 && live.exit === 0,
-    { pid: live.pid, exit: live.exit, report_count: Object.keys(reports).filter(key => key.startsWith('LIVE-01/')).length });
+  observe('LIVE-01', 'expected.process_restarts',
+    live.pid > 0 && live.exit === 0 && workerPidsBefore.length === 1
+      && JSON.stringify(workerPidsAfter) === JSON.stringify(workerPidsBefore),
+    { pid: live.pid, exit: live.exit, worker_pids_before: workerPidsBefore,
+      worker_pids_after: workerPidsAfter,
+      observation: 'the resident worker child PID was the same before the first submission and after the reload ACK and next call' });
   observe('LIVE-01', 'expected.external_compiler_invocations_on_reload', true, {
     observation: 'the reload committed while PATH contained only failing wasm-tools/wasm-opt/binaryen traps and no trap marker exists',
     marker_present: reloadedMarker,
@@ -585,40 +617,138 @@ async function observeLive07() {
     { protected_operations: refusal.protected_operations });
 }
 
-// LIVE-02: transitive dependent rebuild and immutable capture. The canonical
-// in-flight variant needs a feature-gated safepoint seam and the case's
-// post-reload script does not execute, so this stays unpromoted.
-async function observeLive02() {
-  const files = fixture('LIVE-02', 'math.noble', 'def addone [ 1 + ]');
+// LIVE-02: transitive dependent rebuild and immutable capture. Decision 21a's
+// post-reload script runs the retained old Program on 20 first (21), then the
+// rebuilt dependent (24), and swaps to the declared [24, 21]. The plain child
+// drives the case's workload on the default binary; the feature-built child
+// runs the *same* source, flags, in-flight submission and replacement under
+// the `in-flight-execution` seam, which holds the real guest frame so the
+// queued reload is genuinely requested while it is active.
+async function observeLive02(feature) {
+  const before = 'def addone [ 1 + ]';
+  const after = 'def addone [ 2 + ]';
+  const script = '20 swap run 20 twice swap';
+  const files = fixture('LIVE-02', 'math.noble', before);
   const live = start('LIVE-02', ['live', 'repl', '--source', files.source, '--engine', 'v8']);
   const initial = await live.report();
   const twice = await live.submit('def twice [ addone addone ]');
   const quote = await live.submit('[ addone ]');
-  replace(files.source, 'def addone [ 2 + ]');
+  const replaced = replace(files.source, after);
   const ack = await live.submit(`:reload ${files.source}`);
-  const script = await live.submit('20 twice swap 20 swap run');
-  const oldBody = await live.submit('20 swap run');
+  const scriptReport = await live.submit(script);
   await live.close(0);
-  for (const [label, report] of Object.entries({ initial, twice, quote, ack, script, oldBody }))
+  for (const [label, report] of Object.entries({ initial, twice, quote, ack, script: scriptReport }))
     keep('LIVE-02', label, report);
 
-  observe('LIVE-02', 'input.harness', initial.stage === 'wasm-live', { argv: live.argv, initial_stage: initial.stage });
-  observe('LIVE-02', 'input.before', twice.outcome === 'defined', { twice: twice.outcome });
-  observe('LIVE-02', 'input.old_in_flight_submission', quote.outcome === 'normal' && quote.stack?.[0]?.type === 'Program',
+  observe('LIVE-02', 'input.harness', initial.stage === 'wasm-live',
+    { argv: live.argv, binary: { path: binary, sha256: binarySha256 }, initial_stage: initial.stage });
+  observe('LIVE-02', 'input.before', twice.outcome === 'defined' && twice.stack?.length === 0,
+    { twice: twice.outcome });
+  observe('LIVE-02', 'input.old_in_flight_submission',
+    quote.outcome === 'normal' && quote.stack?.[0]?.type === 'Program',
     { stack: stackOf(quote) });
-  observe('LIVE-02', 'input.reload_requested_while_old_submission_running', ack.outcome === 'reload-committed',
-    { note: 'the reload was issued while no invocation was in flight; the barrier seam was not used', outcome: ack.outcome });
-  record('LIVE-02', 'input.after_reload_ack', {
-    reason: 'the canonical after-reload script is refused at check; a corrected single-input execution of the retained Program still shows the old body, but the specified script is not executed as written',
-    script: '20 twice swap 20 swap run', outcome: script.outcome, diagnostic: script.diagnostic,
-  });
-  observe('LIVE-02', 'expected.previous_program_identity_mutated', oldBody.outcome === 'normal' && isStack(oldBody, ['I64:21']),
-    { observation: 'the retained [ addone ] Program still returns 21 (the old body) after the reload; executed as `20 swap run` because `run` alone type-rejects for the Program input',
-      stack: stackOf(oldBody) });
-  observe('LIVE-02', 'expected.implicit_live_name_lookup_in_program', isStack(oldBody, ['I64:21']),
-    { observation: 'the Program did not resolve the new addone body implicitly' });
-  record('LIVE-02', 'expected.stack_bottom_to_top',
-    { reason: `the canonical after-reload script is refused at check: ${JSON.stringify({ outcome: script.outcome, diagnostic: script.diagnostic })}` });
+  observe('LIVE-02', 'input.after_reload_ack',
+    scriptReport.outcome === 'normal' && isStack(scriptReport, ['I64:24', 'I64:21']),
+    { script, outcome: scriptReport.outcome, diagnostic: scriptReport.diagnostic,
+      stack: stackOf(scriptReport) });
+  observe('LIVE-02', 'expected.stage',
+    initial.stage === 'wasm-live' && ack.stage === 'wasm-live' && scriptReport.stage === 'wasm',
+    { initial_stage: initial.stage, ack_stage: ack.stage, submission_stage: scriptReport.stage });
+  observe('LIVE-02', 'expected.outcome',
+    ack.outcome === 'reload-committed' && scriptReport.outcome === 'normal'
+      && isStack(scriptReport, ['I64:24', 'I64:21']),
+    { mapping: 'the retained old Program yields 21 while the rebuilt dependent (twice) yields 24 in the same stack',
+      ack_outcome: ack.outcome, script_outcome: scriptReport.outcome, stack: stackOf(scriptReport) });
+  observe('LIVE-02', 'expected.previous_program_identity_mutated',
+    scriptReport.outcome === 'normal' && isStack(scriptReport, ['I64:24', 'I64:21']),
+    { observation: 'the retained [ addone ] Program still returns 21 (the old body) after the reload; the rebuilt twice returns 24',
+      stack: stackOf(scriptReport) });
+  observe('LIVE-02', 'expected.implicit_live_name_lookup_in_program', isStack(scriptReport, ['I64:24', 'I64:21']),
+    { observation: 'the Program did not resolve the new addone body implicitly (it returned 21, not 22)',
+      stack: stackOf(scriptReport) });
+  observe('LIVE-02', 'expected.stack_bottom_to_top', isStack(scriptReport, ['I64:24', 'I64:21']),
+    { script, stack: stackOf(scriptReport) });
+
+  // The in-flight lane. The checked digest of `[ addone ]` is the plain
+  // child's own report of that submission, so the barrier matches exactly the
+  // case's bytes. The only difference from the plain child is the private
+  // test delay.
+  const quoteSha256 = quote.module?.source_sha256;
+  assert.match(String(quoteSha256), /^[a-f0-9]{64}$/, 'plain child omitted the quote source digest');
+  // The checked source generation the quotation executes at, taken from the
+  // plain child's own report of the identical submission. `def twice` commits
+  // a frontend-private definition without publishing a worker generation, so
+  // the held frame and its reload ACK are stated relative to this value.
+  const quoteGeneration = quote.source_generation;
+  assert.ok(Number.isInteger(quoteGeneration) && quoteGeneration > 0,
+    'plain child omitted the quote source generation');
+  const barrierDirectory = path.join(fixtures, 'LIVE-02-in-flight-barrier');
+  fs.mkdirSync(barrierDirectory, { recursive: true, mode: 0o700 });
+  for (const name of ['reached', 'release']) {
+    const fifo = spawnSync('mkfifo', ['-m', '600', path.join(barrierDirectory, name)]);
+    assert.equal(fifo.status, 0, `mkfifo ${name}: ${fifo.stderr}`);
+  }
+  const inFlightFiles = fixture('LIVE-02-in-flight', 'math.noble', before);
+  const inFlight = start('LIVE-02-in-flight',
+    ['live', 'repl', '--source', inFlightFiles.source, '--engine', 'v8'], {
+      NOBLE_LIVE_TEST_BARRIER_DIR: barrierDirectory,
+      NOBLE_LIVE_TEST_BARRIER_POINT: 'in-flight-execution',
+      NOBLE_LIVE_TEST_BARRIER_EXPECTED: quoteSha256,
+    }, feature.binary);
+  const inFlightInitial = await inFlight.report();
+  const inFlightTwice = await inFlight.submit('def twice [ addone addone ]');
+  inFlight.child.stdin.write('[ addone ]\n');
+  const frameText = spawnSync('timeout', ['20', 'cat', path.join(barrierDirectory, 'reached')],
+    { encoding: 'utf8' });
+  assert.equal(frameText.status, 0, `in-flight barrier was not reached: ${frameText.stderr}`);
+  const frame = JSON.parse(frameText.stdout.trim());
+  const inFlightReplaced = replace(inFlightFiles.source, after);
+  inFlight.child.stdin.write(`:reload ${inFlightFiles.source}\n`);
+  const released = fs.openSync(path.join(barrierDirectory, 'release'), fs.constants.O_WRONLY);
+  fs.writeSync(released, 'R');
+  fs.closeSync(released);
+  const oldFrame = await inFlight.report();
+  const inFlightAck = await inFlight.report();
+  const inFlightScript = await inFlight.submit(script);
+  await inFlight.close(0);
+  for (const [label, report] of Object.entries({ initial: inFlightInitial, twice: inFlightTwice,
+    old: oldFrame, reload: inFlightAck, script: inFlightScript }))
+    keep('LIVE-02-in-flight', label, report);
+
+  observe('LIVE-02', 'input.reload_requested_while_old_submission_running',
+    frame.point === 'in-flight-execution' && frame.matched === quoteSha256
+      && frame.guest_frame_active === true && frame.source_generation === String(quoteGeneration)
+      && inFlightReplaced === sha256(after)
+      && oldFrame.outcome === 'normal' && oldFrame.source_generation === quoteGeneration
+      && oldFrame.stack?.[0]?.type === 'Program'
+      && inFlightAck.outcome === 'reload-committed'
+      && inFlightAck.generation === quoteGeneration + 1,
+    { note: 'the case replacement bytes were on disk while the checked quotation frame was active; the reload ACK followed the old frame',
+      barrier: frame, quote_source_generation: quoteGeneration,
+      replacement_sha256: inFlightReplaced,
+      old: { outcome: oldFrame.outcome, source_generation: oldFrame.source_generation,
+        stack: stackOf(oldFrame) },
+      ack: { outcome: inFlightAck.outcome, generation: inFlightAck.generation } });
+  observe('LIVE-02', 'expected.old_frame_completed_before_reload_ack',
+    oldFrame.outcome === 'normal' && oldFrame.source_generation === quoteGeneration
+      && inFlightAck.outcome === 'reload-committed'
+      && inFlightAck.generation === quoteGeneration + 1
+      && JSON.stringify(inFlightAck.stack) === JSON.stringify(oldFrame.stack),
+    { observation: 'the held frame returned its own report first; the reload ACK then committed with the retained stack unchanged',
+      order: ['old-frame', 'reload-ack'], old_stack: stackOf(oldFrame), ack_stack: stackOf(inFlightAck) });
+  observe('LIVE-02', 'expected.publication_only_at_top_level_safepoint',
+    frame.guest_frame_active === true && inFlightAck.guest_requests === 0
+      && inFlightAck.outcome === 'reload-committed'
+      && isStack(inFlightScript, ['I64:24', 'I64:21']),
+    { observation: 'the reload was queued behind the active frame and published only after its top-level return; the post-ACK script then rebuilt the dependent',
+      ack_guest_requests: inFlightAck.guest_requests, script_stack: stackOf(inFlightScript) });
+  observe('LIVE-02', 'expected.old_in_flight_frame_uses_old_generation',
+    oldFrame.module?.wasm_sha256 === quote.module?.wasm_sha256
+      && oldFrame.module?.source_sha256 === quoteSha256
+      && isStack(inFlightScript, ['I64:24', 'I64:21']),
+    { observation: 'the held frame ran the exact old checked module digest, and its retained Program later captured 21 (the old body), not 22',
+      quote_wasm_sha256: quote.module?.wasm_sha256, old_wasm_sha256: oldFrame.module?.wasm_sha256,
+      script_stack: stackOf(inFlightScript) });
 }
 
 // LIVE-03: every reload variant must be refused while the session survives.
@@ -731,8 +861,51 @@ async function observeLive03() {
       stack: stackOf(cycleRefused), guest_requests: cycleRefused.guest_requests,
       protected_operations: cycleRefused.protected_operations,
       diagnostic: cycleRefused.diagnostic, old_call_stack: stackOf(cycleOldCall) });
-  // Only the five default-profile variants run on the case's exact initial
-  // state; the declared-module approximations are separate, unobserved rows.
+  // host-binding-mismatch: the binding arrives in the startup manifest, not in
+  // the reload. The session starts on the case's module-only selected file,
+  // installs the case's initial definition, then atomically replaces the file
+  // with the case's effectful module. The reload checks that module against
+  // the unchanged manifest line and refuses without ending the session, so the
+  // variant runs exactly as written.
+  const bindingFiles = fixture('LIVE-03-host-binding', 'math.noble',
+    'module count@1 [ opaque Count I64 public export Count ]');
+  fs.writeFileSync(path.join(bindingFiles.directory, 'bindings.txt'),
+    'bind emit@1 test.emit adapter Bool -- ! test.emit allow\n');
+  const bindingLive = start('LIVE-03-host-binding', ['live', 'repl', '--source', bindingFiles.source,
+    '--engine', 'v8', '--declared-modules', '--bindings', path.join(bindingFiles.directory, 'bindings.txt')]);
+  const bindingAck = await bindingLive.report();
+  const bindingDefinition = await bindingLive.submit('def addone [ 1 + ]');
+  const bindingPushed = await bindingLive.submit('7');
+  replace(bindingFiles.source,
+    'module emit@1 [ require emit Text -- ! test.emit export send def send [ "x" emit ] ]');
+  const bindingRefused = await bindingLive.submit(`:reload ${bindingFiles.source}`);
+  const bindingOldCall = await bindingLive.submit('addone');
+  await bindingLive.close(0);
+  for (const [label, report] of Object.entries({ ack: bindingAck, definition: bindingDefinition,
+    pushed: bindingPushed, refused: bindingRefused, oldCall: bindingOldCall }))
+    keep('LIVE-03-host-binding', label, report);
+  observe('LIVE-03', 'input.variants.host-binding-mismatch.replacement',
+    bindingAck.stage === 'wasm-live' && bindingDefinition.outcome === 'namespace-committed'
+      && isStack(bindingPushed, ['I64:7'])
+      && bindingRefused.stage === 'admission' && bindingRefused.outcome === 'reload-refused'
+      && /bound adapter (input|output|effect) differs from required operation/
+        .test(bindingRefused.diagnostic ?? '')
+      && bindingRefused.generation === bindingDefinition.generation
+      && isStack(bindingRefused, ['I64:7'])
+      && bindingRefused.guest_requests === 0 && bindingRefused.protected_operations === 0,
+    { replacement: 'module emit@1 [ require emit Text -- ! test.emit export send def send [ "x" emit ] ]',
+      binding: 'bind emit@1 test.emit adapter Bool -- ! test.emit allow',
+      stage: bindingRefused.stage, outcome: bindingRefused.outcome,
+      diagnostic: bindingRefused.diagnostic, generation: bindingRefused.generation,
+      stack: stackOf(bindingRefused), guest_requests: bindingRefused.guest_requests,
+      protected_operations: bindingRefused.protected_operations,
+      mapping: 'the manifest line is loaded once at startup and the replacement module requires a different adapter interface; the selected-file reload carries no binding change and refuses at admission' });
+  observe('LIVE-03', 'input.variants.host-binding-mismatch.old-definition',
+    bindingOldCall.outcome === 'normal' && isStack(bindingOldCall, ['I64:8']),
+    { submission: 'addone', stack: stackOf(bindingOldCall) });
+
+  // The five default-profile variants, the declared-module approximations and
+  // the host-binding lane all refuse at admission while the session survives.
   const refused03 = observations.filter(row => row.case === 'LIVE-03' && row.field.endsWith('.replacement')
     && row.detail?.stack !== undefined);
   observe('LIVE-03', 'expected.stage',
@@ -756,12 +929,9 @@ async function observeLive03() {
   observe('LIVE-03', 'expected.protected_operations', refused03.every(row => row.detail.protected_operations === 0),
     { protected_operations: refused03.map(row => row.detail.protected_operations) });
   observe('LIVE-03', 'expected.old_definition_next_call',
-    observations.filter(row => row.case === 'LIVE-03' && row.field.endsWith('.old-definition')).length === 5
+    observations.filter(row => row.case === 'LIVE-03' && row.field.endsWith('.old-definition')).length === 6
       && observations.filter(row => row.case === 'LIVE-03' && row.field.endsWith('.old-definition')).every(row => row.observed),
     { submission: 'addone', stacks: observations.filter(row => row.case === 'LIVE-03' && row.field.endsWith('.old-definition')).map(row => row.detail.stack) });
-  record('LIVE-03', 'input.variants.host-binding-mismatch.replacement', {
-    reason: 'bindings are read once at startup and the selected-file reload cannot carry a binding change; the mismatched `bind` line is refused at startup (pinned by mismatched_declared_binding_refuses_at_startup_with_one_report) but then no session exists to preserve, so the case reload variant is not exercisable',
-  });
 }
 
 // LIVE-04: the actual emitted binary is mutated section-by-section and must
@@ -816,6 +986,34 @@ async function observeLive04(feature) {
     'valid-wasm-from-different-source': true,
     'excess-module-bytes': true,
   };
+  // Each variant's expected stop class, asserted exactly. The four Noble
+  // policy variants must stop in the worker's own validator/V8 at stage
+  // `wasm`; a regression that lets the worker accept them is caught here even
+  // if the host's source/binding admission would later refuse them.
+  const expectedStops = {
+    'invalid-wasm-control-stack': { stage: 'wasm', outcome: 'compile-refused',
+      diagnostic: /CompileError|invalid|WebAssembly/ },
+    'unknown-opcode': { stage: 'wasm', outcome: 'compile-refused',
+      diagnostic: /CompileError|invalid|WebAssembly/ },
+    'wrong-bytecode-version': { stage: 'wasm', outcome: 'compile-refused',
+      diagnostic: /invalid bounded Wasm module/ },
+    'start-section': { stage: 'wasm', outcome: 'compile-refused',
+      diagnostic: /invalid or start Wasm section/ },
+    'active-imported-memory-initializer': { stage: 'wasm', outcome: 'compile-refused',
+      diagnostic: /active or unsupported Wasm data segment/ },
+    'active-imported-table-element-initializer': { stage: 'wasm', outcome: 'compile-refused',
+      diagnostic: /active or unsupported Wasm element segment/ },
+    'unauthorized-import': { stage: 'wasm', outcome: 'compile-refused',
+      diagnostic: /undeclared or mistyped live host effect/ },
+    'forged-source-digest': { stage: 'bytecode-admission', outcome: 'reload-refused',
+      diagnostic: /wasm_sha256/ },
+    'valid-wasm-from-different-source': { stage: 'bytecode-admission', outcome: 'reload-refused',
+      diagnostic: /wat_sha256/ },
+    'excess-module-bytes': { stage: 'bytecode-admission', outcome: 'reload-refused',
+      diagnostic: /4194304/ },
+  };
+  assert.deepEqual(Object.keys(expectedStops).sort(), variants.map(([name]) => name).sort(),
+    'every LIVE-04 variant needs an exact expected stop class');
   const rows = [];
   for (const [name, bytes] of variants) {
     assert.ok(Buffer.isBuffer(bytes) && bytes.length > 0, `${name}: bounded variant`);
@@ -824,37 +1022,85 @@ async function observeLive04(feature) {
     fs.writeFileSync(replacement, bytes, { flag: 'wx', mode: 0o600 });
     const validation = recordProcess(`LIVE-04-validate-${name}`, wasmTools, ['validate', replacement],
       { expected: standardValidity[name] ? 0 : 1 });
-    const live = start(`LIVE-04-${name}`, ['live', 'repl', '--source', files.source, '--engine', 'v8'], {
+    const environment = {
       NOBLE_LIVE_TEST_BINARY_REPLACE: replacement,
       NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE: hostSelected,
-    }, feature.binary);
+    };
+    // The forged variant presents the checked source's own digest with the
+    // different source's bytes; the different-source variant presents that
+    // source's independent digest. Two executions with distinct stop fields.
+    if (name === 'forged-source-digest') {
+      environment.NOBLE_LIVE_TEST_BINARY_REPLACE_WAT_SHA256 =
+        baseline.executed.module.wat_sha256;
+    }
+    if (name === 'valid-wasm-from-different-source') {
+      environment.NOBLE_LIVE_TEST_BINARY_REPLACE_WAT_SHA256 =
+        different.executed.module.wat_sha256;
+    }
+    const live = start(`LIVE-04-${name}`, ['live', 'repl', '--source', files.source, '--engine', 'v8'],
+      environment, feature.binary);
     const initial = await live.report();
-    const before = await live.submit(':generation');
+    const before = await live.submit(':arena');
     const refusal = await live.submit(hostSelected);
-    const after = await live.submit(':generation');
+    const after = await live.submit(':arena');
     const oldCall = await live.submit('base');
+    const final = await live.submit(':arena');
     await live.close(0);
-    keep('LIVE-04', name, { initial, before, refusal, after, oldCall });
+    keep('LIVE-04', name, { initial, before, refusal, after, oldCall, final });
     const refused = refusal.outcome === 'compile-refused' || refusal.outcome === 'reload-refused';
     const unchanged = refusal.generation === before.generation
       && after.generation === before.generation
       && isStack(before, []) && isStack(after, []) && isStack(refusal, []);
     const oldArena = oldCall.outcome === 'normal' && isStack(oldCall, ['I64:7']);
-    const zeroGuest = refusal.guest_requests === 0 && refusal.protected_operations === 0
-      && oldCall.guest_requests === 0 && oldCall.protected_operations === 0;
-    observe('LIVE-04', `input.variants.${name}.edit`, refused && unchanged && oldArena && zeroGuest
-      && refusal.session_state === 'retained',
+    const stop = expectedStops[name];
+    const exactStop = refusal.stage === stop.stage && refusal.outcome === stop.outcome
+      && stop.diagnostic.test(refusal.diagnostic ?? '');
+    // Measured, not reported: the worker's own arena witness must be
+    // identical across the refusal except for the one documented
+    // preparation the worker itself discards. The two variants whose bytes
+    // the worker accepts are compiled and instantiated by the worker before
+    // the host's source/binding admission discards them, so their monotone
+    // compilation counter advances by exactly one; the host refuses the
+    // oversized frame before it reaches the worker, and the seven
+    // worker-refused variants fail before `install`, so neither advances it.
+    // Memory, table, globals, guest executions, host requests, protected
+    // operations and the source generation must be identical in every case,
+    // and the later `base` call may add exactly its own compilation and
+    // execution and nothing else.
+    const preparedThenDiscarded = name === 'forged-source-digest'
+      || name === 'valid-wasm-from-different-source';
+    const installDelta = after.arena.compilations - before.arena.compilations;
+    const arenaUnchanged = after.arena.memory_sha256 === before.arena.memory_sha256
+      && after.arena.table_sha256 === before.arena.table_sha256
+      && JSON.stringify(after.arena.globals) === JSON.stringify(before.arena.globals)
+      && after.arena.guest_executions === before.arena.guest_executions
+      && after.arena.host_requests === before.arena.host_requests
+      && after.arena.protected_operations === before.arena.protected_operations
+      && after.arena.source_generation === before.arena.source_generation
+      && installDelta === (preparedThenDiscarded ? 1 : 0);
+    const finalSettled = final.arena.compilations === after.arena.compilations + 1
+      && final.arena.guest_executions === after.arena.guest_executions + 1
+      && final.arena.host_requests === after.arena.host_requests
+      && final.arena.protected_operations === after.arena.protected_operations;
+    observe('LIVE-04', `input.variants.${name}.edit`,
+      refused && unchanged && oldArena && exactStop && arenaUnchanged && finalSettled
+        && refusal.session_state === 'retained',
     {
       edit: name, variant_sha256: sha256(bytes), baseline_sha256: sha256(baseline.bytes),
       standard_validation: standardValidity[name] ? 'valid' : 'invalid',
       wasm_tools_exit: validation.status,
+      expected_stop: { stage: stop.stage, outcome: stop.outcome, diagnostic: String(stop.diagnostic) },
       report_stage: refusal.stage, report_outcome: refusal.outcome, diagnostic: refusal.diagnostic,
       generation: [before.generation, refusal.generation, after.generation],
       stacks: { before: stackOf(before), refusal: stackOf(refusal), after: stackOf(after) },
       old_base_call: stackOf(oldCall), guest_requests: refusal.guest_requests,
       protected_operations: refusal.protected_operations, session_state: refusal.session_state,
+      arena_unchanged: arenaUnchanged, final_settled: finalSettled,
+      compilation_delta: installDelta,
+      expected_compilation_delta: preparedThenDiscarded ? 1 : 0,
     });
-    rows.push({ name, refusal, before, after, oldCall, standardValid: standardValidity[name] });
+    rows.push({ name, refusal, before, after, oldCall, final, standardValid: standardValidity[name],
+      stop, exactStop, arenaUnchanged, finalSettled, installDelta, preparedThenDiscarded });
   }
 
   observe('LIVE-04', 'input.harness', true, {
@@ -876,28 +1122,35 @@ async function observeLive04(feature) {
       stack: stackOf(baseline.executed),
     });
   observe('LIVE-04', 'input.binary_mutation_protocol',
-    rows.length === 10 && rows.every(row => row.refusal.outcome !== 'normal'),
+    rows.length === 10 && rows.every(row => row.refusal.outcome !== 'normal' && row.exactStop),
     {
       editor: 'verification/live-cases/wasm-edit.mjs',
       canonical_lengths: 'every rewritten section and function body length is re-encoded as canonical unsigned LEB128',
       index_rule: 'appended types and functions keep existing indices; only the unauthorized-import variant adds one function import and shifts every defined function-index reference (exports, element entries, call/ref.func immediates) by exactly one',
       standard_validation: Object.fromEntries(rows.map(row =>
         [row.name, row.standardValid ? 'valid' : 'invalid'])),
+      expected_stop_classes: Object.fromEntries(rows.map(row =>
+        [row.name, `${row.stop.stage}/${row.stop.outcome} ${row.stop.diagnostic}`])),
       stop_classes: Object.fromEntries(rows.map(row => [row.name, row.refusal.diagnostic])),
+      observed: Object.fromEntries(rows.map(row =>
+        [row.name, `${row.refusal.stage}/${row.refusal.outcome} ${row.refusal.diagnostic}`])),
     });
   observe('LIVE-04', 'expected.stage',
-    rows.every(row => ['wasm', 'bytecode-admission'].includes(row.refusal.stage)),
+    rows.every(row => row.refusal.stage === row.stop.stage),
     {
-      mapping: 'the case stage `bytecode-admission` is the union of the worker report stage `wasm` (its own byte validator or V8 refused first) and the host report stage `bytecode-admission` (the worker accepted the bytes but the checked source/binding or the bounded frame disagreed)',
-      stages: Object.fromEntries(rows.map(row => [row.name, row.refusal.stage])),
+      mapping: 'the case stage `bytecode-admission` is the union of the worker report stage `wasm` (its own byte validator or V8 refused the four policy variants and the three invalid variants) and the host report stage `bytecode-admission` (a valid frame disagreed with the checked source/binding or exceeded the bounded frame); each variant has its exact expected stage',
+      expected: Object.fromEntries(rows.map(row => [row.name, row.stop.stage])),
+      observed: Object.fromEntries(rows.map(row => [row.name, row.refusal.stage])),
     });
   observe('LIVE-04', 'expected.outcome',
-    rows.every(row => row.refusal.outcome !== 'normal'
+    rows.every(row => row.exactStop
       && row.refusal.generation === row.before.generation
-      && isStack(row.after, []) && isStack(row.oldCall, ['I64:7'])),
+      && isStack(row.after, []) && isStack(row.oldCall, ['I64:7'])
+      && row.arenaUnchanged && row.finalSettled),
     {
       mapping: 'all-variants-reject-before-live-install: no variant reached a normal invocation, a committed generation or a new stack value; the installed old `base` still returned 7 in each session',
-      outcomes: Object.fromEntries(rows.map(row => [row.name, row.refusal.outcome])),
+      expected: Object.fromEntries(rows.map(row => [row.name, row.stop.outcome])),
+      observed: Object.fromEntries(rows.map(row => [row.name, row.refusal.outcome])),
     });
   observe('LIVE-04', 'expected.initial_stack_bottom_to_top',
     rows.every(row => isStack(row.before, [])),
@@ -907,25 +1160,43 @@ async function observeLive04(feature) {
     { stacks: Object.fromEntries(rows.map(row => [row.name, stackOf(row.after)])) });
   observe('LIVE-04', 'expected.old_memory_table_globals_unchanged',
     rows.every(row => row.oldCall.outcome === 'normal' && isStack(row.oldCall, ['I64:7'])
-      && row.oldCall.source_generation === row.before.generation),
+      && String(row.oldCall.source_generation) === row.before.arena.source_generation
+      && row.arenaUnchanged && row.finalSettled),
     {
-      observation: 'after each refusal the session executed the definition installed before the candidate; the same table slot, memory and mutable globals served `base` = 7 with the source generation unchanged',
+      observation: 'the worker reported its own memory digest, table-slot identity digest, ABI globals, guest-execution and host-request counters before and after each refusal; memory, table, globals, guest executions, host requests and the source generation are identical, only the documented discarded preparation advances the compilation counter, and the definition installed before the candidate still served `base` = 7 at the unchanged source generation',
       old_calls: Object.fromEntries(rows.map(row => [row.name, {
         stack: stackOf(row.oldCall), source_generation: row.oldCall.source_generation,
+        memory_sha256: row.before.arena.memory_sha256,
+        table_sha256: row.before.arena.table_sha256,
+        globals: row.before.arena.globals,
+        compilations: row.before.arena.compilations,
       }])),
+      arena_unchanged: Object.fromEntries(rows.map(row => [row.name, row.arenaUnchanged])),
+      compilation_deltas: Object.fromEntries(rows.map(row =>
+        [row.name, { observed: row.installDelta, expected: row.preparedThenDiscarded ? 1 : 0 }])),
     });
   observe('LIVE-04', 'expected.guest_requests',
-    rows.every(row => row.refusal.guest_requests === 0 && row.oldCall.guest_requests === 0),
-    { refusals: Object.fromEntries(rows.map(row => [row.name, row.refusal.guest_requests])) });
+    rows.every(row => row.refusal.guest_requests === 0 && row.oldCall.guest_requests === 0
+      && row.final.arena.host_requests === row.before.arena.host_requests),
+    { reported_refusals: Object.fromEntries(rows.map(row => [row.name, row.refusal.guest_requests])),
+      measured_host_request_deltas: Object.fromEntries(rows.map(row =>
+        [row.name, row.final.arena.host_requests - row.before.arena.host_requests])) });
   observe('LIVE-04', 'expected.protected_operations',
-    rows.every(row => row.refusal.protected_operations === 0 && row.oldCall.protected_operations === 0),
-    { refusals: Object.fromEntries(rows.map(row => [row.name, row.refusal.protected_operations])) });
+    rows.every(row => row.refusal.protected_operations === 0 && row.oldCall.protected_operations === 0
+      && row.final.arena.protected_operations === row.before.arena.protected_operations),
+    { reported_refusals: Object.fromEntries(rows.map(row => [row.name, row.refusal.protected_operations])),
+      measured_protected_deltas: Object.fromEntries(rows.map(row =>
+        [row.name, row.final.arena.protected_operations - row.before.arena.protected_operations])) });
   observe('LIVE-04', 'expected.wasm_validation_alone_proves_noble_typing',
     rows.filter(row => ['forged-source-digest', 'valid-wasm-from-different-source', 'excess-module-bytes']
-      .includes(row.name)).every(row => row.standardValid && row.refusal.stage === 'bytecode-admission'),
+      .includes(row.name)).every(row => row.standardValid && row.exactStop
+        && row.refusal.stage === 'bytecode-admission'),
     {
-      observation: 'the `2 2 +` module passes wasm-tools validation and its own capture child executed it normally, yet served under the checked `1 2 +` source it was refused at host bytecode admission; standard Wasm validity alone did not authorize the install',
+      observation: 'the `2 2 +` module passes wasm-tools validation and its own capture child executed it normally, yet served under the checked `1 2 +` source it was refused at host bytecode admission (forged digest: computed wasm digest; independent digest: presented WAT digest; oversized: bounded frame); standard Wasm validity alone did not authorize the install, and the shipped refusal kept the session and its arena',
       valid_but_refused: ['forged-source-digest', 'valid-wasm-from-different-source', 'excess-module-bytes'],
+      observed: rows.filter(row => ['forged-source-digest', 'valid-wasm-from-different-source',
+        'excess-module-bytes'].includes(row.name)).map(row =>
+        ({ variant: row.name, stage: row.refusal.stage, diagnostic: row.refusal.diagnostic })),
     });
 }
 
@@ -945,7 +1216,7 @@ async function observeLive09() {
     fs.writeFileSync(path.join(poison, 'bin', tool), `#!/bin/sh\necho ${tool} >> ${marker}\nexit 99\n`, { mode: 0o700 });
   }
   const child = async (label, input) => {
-    const files = fixture(label, 'evolve.noble', LIVE09_SOURCE);
+    const files = namedFixture(label, 'evolve.noble', LIVE09_SOURCE);
     const live = start(label, ['live', 'repl', '--source', files.source, '--engine', 'v8',
       '--self-edit', 'evolve', '--expect-generation', '1'], { PATH: path.join(poison, 'bin') });
     const initial = await live.report();
@@ -955,6 +1226,7 @@ async function observeLive09() {
     const committed = await live.report();
     const inspection = await live.submit(':generation');
     const next = await live.submit('20 evolve');
+    const arenaAfterCommit = await live.submit(':arena');
     const reload = await live.submit(`:reload ${files.source}`);
     const afterReload = await live.submit(':generation');
     await live.close(0);
@@ -965,9 +1237,11 @@ async function observeLive09() {
     keep('LIVE-09', `${label}/committed`, committed);
     keep('LIVE-09', `${label}/inspection`, inspection);
     keep('LIVE-09', `${label}/next`, next);
+    keep('LIVE-09', `${label}/arena-after-commit`, arenaAfterCommit);
     keep('LIVE-09', `${label}/reload`, reload);
     keep('LIVE-09', `${label}/after-reload`, afterReload);
-    return { files, live, initial, grant, executed, pending, committed, inspection, next, reload, afterReload };
+    return { files, live, initial, grant, executed, pending, committed, inspection, next,
+      arenaAfterCommit, reload, afterReload };
   };
   const first = await child('LIVE-09-a', '20');
   const second = await child('LIVE-09-b', '21');
@@ -976,7 +1250,7 @@ async function observeLive09() {
   // Grant retention: a dependent candidate refuses after a normal invocation
   // without changing the stack, namespace or grant; the same grant queues the
   // next proposal again.
-  const retainedFiles = fixture('LIVE-09-retained', 'evolve.noble', LIVE09_SOURCE);
+  const retainedFiles = namedFixture('LIVE-09-retained', 'evolve.noble', LIVE09_SOURCE);
   const retained = start('LIVE-09-retained', ['live', 'repl', '--source', retainedFiles.source,
     '--engine', 'v8', '--self-edit', 'evolve', '--expect-generation', '1']);
   const retainedInitial = await retained.report();
@@ -989,6 +1263,7 @@ async function observeLive09() {
   const retainedAgain = await retained.submit('20 evolve');
   const retainedPendingAgain = await retained.report();
   const retainedRefusedAgain = await retained.report();
+  const retainedArena = await retained.submit(':arena');
   await retained.close(0);
   keep('LIVE-09', 'retained/initial', retainedInitial);
   keep('LIVE-09', 'retained/grant', retainedGrant);
@@ -1000,6 +1275,7 @@ async function observeLive09() {
   keep('LIVE-09', 'retained/again', retainedAgain);
   keep('LIVE-09', 'retained/pending-again', retainedPendingAgain);
   keep('LIVE-09', 'retained/refused-again', retainedRefusedAgain);
+  keep('LIVE-09', 'retained/arena', retainedArena);
   const unchangedFile = fs.readFileSync(first.files.source).equals(Buffer.from(LIVE09_SOURCE));
   const unchangedFileB = fs.readFileSync(second.files.source).equals(Buffer.from(LIVE09_SOURCE));
 
@@ -1018,8 +1294,11 @@ async function observeLive09() {
   const derivation = report => `def evolve [ ${literal(report).join(' ')} ${addOperator(report) ? '+' : '?'} ]`;
 
   observe('LIVE-09', 'input.selected_file',
-    first.initial.source_sha256 === sha256(LIVE09_SOURCE) && unchangedFile && unchangedFileB,
-    { path: 'evolve.noble', sha256: sha256(LIVE09_SOURCE), bytes: LIVE09_SOURCE });
+    first.initial.source_sha256 === sha256(LIVE09_SOURCE) && unchangedFile && unchangedFileB
+      && path.basename(first.files.source) === 'evolve.noble'
+      && path.basename(second.files.source) === 'evolve.noble',
+    { path: 'evolve.noble', selected_path: first.files.source,
+      sha256: sha256(LIVE09_SOURCE), bytes: LIVE09_SOURCE });
   observe('LIVE-09', 'input.harness',
     first.initial.stage === 'wasm-live' && first.executed.stage === 'wasm'
       && first.live.argv.includes('--self-edit'),
@@ -1039,10 +1318,15 @@ async function observeLive09() {
       second: { input: '21', stack: stackOf(second.committed), next: stackOf(second.next) },
     });
   observe('LIVE-09', 'input.after_commit_host_reload',
-    first.reload.outcome === 'reload-refused' && /effects/.test(first.reload.diagnostic ?? '')
-      && first.reload.generation === first.committed.generation,
-    { command: ':reload evolve.noble', outcome: first.reload.outcome, diagnostic: first.reload.diagnostic,
-      generation: first.reload.generation });
+    [first, second].every(child => child.reload.outcome === 'reload-refused'
+      && /effects/.test(child.reload.diagnostic ?? '')
+      && child.reload.generation === child.committed.generation)
+      && path.basename(first.files.source) === 'evolve.noble',
+    { command: ':reload evolve.noble', selected_path: first.files.source,
+      first: { outcome: first.reload.outcome, diagnostic: first.reload.diagnostic,
+        generation: first.reload.generation },
+      second: { outcome: second.reload.outcome, diagnostic: second.reload.diagnostic,
+        generation: second.reload.generation } });
   observe('LIVE-09', 'input.engine', first.inspection.engine === 'v8' && second.inspection.engine === 'v8',
     { engine: first.inspection.engine });
   observe('LIVE-09', 'input.publication_boundary',
@@ -1070,8 +1354,9 @@ async function observeLive09() {
       origins: [first.committed.origin, second.committed.origin],
     });
   observe('LIVE-09', 'expected.child_stacks_bottom_to_top',
-    isStack(first.pending, ['I64:21']) && isStack(second.pending, ['I64:22']),
-    { first: stackOf(first.pending), second: stackOf(second.pending) });
+    isStack(first.next, ['I64:21', 'I64:22']) && isStack(second.next, ['I64:22', 'I64:23']),
+    { mapping: 'the declared per-child stacks are the post-commit `20 evolve` stacks: each child appends its published body result beside the committed one',
+      first: stackOf(first.next), second: stackOf(second.next) });
   observe('LIVE-09', 'expected.proposal_status_during_callback',
     first.pending.outcome === 'proposal-pending' && first.pending.generation === 1
       && first.pending.candidate_snapshot_sha256.length === 64,
@@ -1089,16 +1374,18 @@ async function observeLive09() {
       candidate_snapshot_sha256: first.pending.candidate_snapshot_sha256,
       proposal_recipe_sha256: first.pending.proposal_recipe_sha256 });
   observe('LIVE-09', 'expected.candidate_body_executions_before_publication',
-    first.pending.protected_operations === 0
-      && first.pending.candidate_prepare_requests === 0
-      && first.pending.guest_requests === first.executed.guest_requests
-      && first.committed.guest_requests === first.executed.guest_requests
-      && (first.committed.candidate_prepare_requests ?? 0) === 0,
+    Number.isInteger(first.executed.guest_executions)
+      && first.pending.guest_executions === first.executed.guest_executions
+      && first.committed.guest_executions === first.executed.guest_executions
+      && first.next.guest_executions === first.executed.guest_executions + 1
+      && second.pending.guest_executions === second.executed.guest_executions
+      && second.committed.guest_executions === second.executed.guest_executions,
     {
-      mapping: 'the pending receipt carries the invocation request prefix and reports no candidate request; the committed receipt carries the same prefix and no candidate prepare request, so no candidate body executed before publication',
-      pending_guest_requests: first.pending.guest_requests,
-      invocation_guest_requests: first.executed.guest_requests,
-      committed_guest_requests: first.committed.guest_requests,
+      mapping: 'the worker reports a cumulative guest-body execution counter. It is identical across the invocation, pending and committed receipts of one transaction, so no candidate body executed before publication; the next published-body call increments it by exactly one',
+      first: { executed: first.executed.guest_executions, pending: first.pending.guest_executions,
+        committed: first.committed.guest_executions, next: first.next.guest_executions },
+      second: { executed: second.executed.guest_executions, pending: second.pending.guest_executions,
+        committed: second.committed.guest_executions },
     });
   observe('LIVE-09', 'expected.new_generation_after_return_per_child',
     first.committed.generation === 2 && second.committed.generation === 2
@@ -1120,9 +1407,14 @@ async function observeLive09() {
       && retainedPendingAgain.outcome === 'proposal-pending'
       && retainedRefusedAgain.outcome === 'proposal-refused'
       && isStack(retainedRefusedAgain, ['I64:21', 'I64:21'])
-      && first.next.proposal_queued !== true,
+      && retainedArena.arena.live_grant !== null
+      && retainedArena.arena.live_grant.name === 'evolve'
+      && first.next.proposal_queued !== true
+      && first.arenaAfterCommit.arena.live_grant === null,
     {
-      observation: 'the refused dependent candidate left the grant usable: the next invocation queued a second proposal; the successful child consumed the grant and its next submission ran the published body without queuing',
+      observation: 'the worker arena inspection shows the grant still selected after two refused dependent candidates, and null after the successful publication; the next published-body call queued nothing',
+      retained_grant: retainedArena.arena.live_grant,
+      published_child_grant: first.arenaAfterCommit.arena.live_grant,
       refusals: [retainedRefused.outcome, retainedRefusedAgain.outcome],
       stacks: [stackOf(retainedRefused), stackOf(retainedRefusedAgain)],
     });
@@ -1131,18 +1423,40 @@ async function observeLive09() {
       && first.pending.candidate_program_interface.input === '[I64]'
       && first.pending.candidate_program_interface.output === '[I64]'
       && first.pending.candidate_program_interface.effects === 0
+      && Array.isArray(first.pending.signatures) && first.pending.signatures.length > 0
+      && first.pending.signatures.every(row => typeof row.descriptor === 'string'
+        && row.descriptor.length > 0)
       && Array.isArray(first.pending.candidate_recipe_events)
       && first.pending.candidate_recipe_events.length >= 4
-      && first.pending.candidate_prepare_requests === 0
+      // Kernel: the committed derived source digest is the digest of the
+      // derived definition text, i.e. the host re-accepted those exact bytes.
+      && first.committed.source_sha256 === sha256(LIVE09_EVOLVE)
+      && second.committed.source_sha256 === sha256(LIVE09_EVOLVE_THREE)
+      // Byte: the committed module carries the published emission digest, and
+      // the isolated shadow preflight instantiated that same record.
+      && /^[0-9a-f]{64}$/.test(first.committed.module?.wasm_sha256 ?? '')
+      && /^[0-9a-f]{64}$/.test(second.committed.module?.wasm_sha256 ?? '')
+      && first.committed.module.wasm_sha256 !== second.committed.module.wasm_sha256
+      && first.committed.shadow_preflight?.instantiated === true
+      && second.committed.shadow_preflight?.instantiated === true
+      && first.committed.shadow_preflight.candidate_source_sha256 === first.committed.source_sha256
+      && first.committed.shadow_preflight.candidate_wat_sha256 === first.committed.module.wat_sha256
+      && first.committed.shadow_preflight.candidate_wasm_sha256 === first.committed.module.wasm_sha256
+      && second.committed.shadow_preflight.candidate_source_sha256 === second.committed.source_sha256
+      && second.committed.shadow_preflight.candidate_wasm_sha256 === second.committed.module.wasm_sha256
       && retainedRefused.outcome === 'proposal-refused',
     {
       pending: {
         postreturn_snapshot_verified: first.pending.postreturn_snapshot_verified,
         candidate_program_interface: first.pending.candidate_program_interface,
         recipe_event_count: first.pending.candidate_recipe_events?.length,
-        candidate_prepare_requests: first.pending.candidate_prepare_requests,
+        signature_descriptors: first.pending.signatures?.length,
       },
-      mapping: 'the source/type/effect checks are observed on the checked candidate interface and bounded recipe receipt; the worker-internal signature descriptors are not repeated on the host receipt',
+      kernel: { first: first.committed.source_sha256, second: second.committed.source_sha256 },
+      byte: { first: first.committed.module.wasm_sha256,
+        second: second.committed.module.wasm_sha256 },
+      shadow: { first: first.committed.shadow_preflight, second: second.committed.shadow_preflight },
+      mapping: 'source: the committed derived-source digest equals the digest of the re-accepted derived definition text; type/effect: the checked candidate interface is [I64]->[I64] with 0 effects and the bounded signature receipt is nonempty; byte: the committed module records the published emission digest; shadow: the isolated worker preflight instantiated a module whose source/WAT/Wasm digests are exactly the committed candidate. The enqueue-to-publication generation-CAS interleaving remains unobservable from CLI input and is recorded under LIVE-10, not claimed here',
       refusal: retainedRefused.diagnostic,
     });
   observe('LIVE-09', 'expected.guest_source_origin',
@@ -1151,27 +1465,42 @@ async function observeLive09() {
     { origin: first.committed.origin, source_version: first.committed.source_version });
   observe('LIVE-09', 'expected.derived_source_digest_distinct_from_selected_file_digest',
     first.committed.source_sha256 !== first.committed.selected_file_sha256
-      && first.committed.selected_file_sha256 === sha256(LIVE09_SOURCE),
-    { derived: first.committed.source_sha256, selected: first.committed.selected_file_sha256 });
+      && first.committed.selected_file_sha256 === sha256(LIVE09_SOURCE)
+      && second.committed.source_sha256 !== second.committed.selected_file_sha256
+      && second.committed.selected_file_sha256 === sha256(LIVE09_SOURCE),
+    { first: { derived: first.committed.source_sha256,
+        selected: first.committed.selected_file_sha256 },
+      second: { derived: second.committed.source_sha256,
+        selected: second.committed.selected_file_sha256 } });
   observe('LIVE-09', 'expected.selected_file_bytes_unchanged_by_guest_publication',
-    unchangedFile && unchangedFileB,
-    { path: 'evolve.noble', sha256: [sha256(fs.readFileSync(first.files.source)), sha256(fs.readFileSync(second.files.source))] });
+    unchangedFile && unchangedFileB
+      && path.basename(first.files.source) === 'evolve.noble'
+      && path.basename(second.files.source) === 'evolve.noble',
+    { path: 'evolve.noble', first_sha256: sha256(fs.readFileSync(first.files.source)),
+      second_sha256: sha256(fs.readFileSync(second.files.source)) });
   observe('LIVE-09', 'expected.explicit_host_file_reload_is_separately_checked',
-    first.reload.outcome === 'reload-refused' && first.reload.stage === 'admission'
-      && first.reload.generation === 2,
-    { outcome: first.reload.outcome, stage: first.reload.stage,
-      diagnostic: first.reload.diagnostic, generation: first.reload.generation });
+    [first, second].every(child => child.reload.outcome === 'reload-refused'
+      && child.reload.stage === 'admission' && child.reload.generation === 2),
+    { first: { outcome: first.reload.outcome, stage: first.reload.stage,
+        diagnostic: first.reload.diagnostic, generation: first.reload.generation },
+      second: { outcome: second.reload.outcome, stage: second.reload.stage,
+        diagnostic: second.reload.diagnostic, generation: second.reload.generation } });
   observe('LIVE-09', 'expected.effectful_file_restoration_over_pure_guest_successor_refused',
-    first.reload.outcome === 'reload-refused' && /increases effects/.test(first.reload.diagnostic ?? ''),
-    { diagnostic: first.reload.diagnostic });
+    [first, second].every(child => child.reload.outcome === 'reload-refused'
+      && /increases effects/.test(child.reload.diagnostic ?? '')),
+    { first: first.reload.diagnostic, second: second.reload.diagnostic });
   observe('LIVE-09', 'expected.guest_generation_unchanged_on_refused_file_reload',
-    first.afterReload.generation === first.committed.generation
-      && JSON.stringify(stackOf(first.afterReload)) === JSON.stringify(stackOf(first.next)),
-    { generation: first.afterReload.generation, stack: stackOf(first.afterReload),
-      prior_stack: stackOf(first.next) });
+    [first, second].every(child => child.afterReload.generation === child.committed.generation
+      && JSON.stringify(stackOf(child.afterReload)) === JSON.stringify(stackOf(child.next))),
+    { first: { generation: first.afterReload.generation, stack: stackOf(first.afterReload),
+        prior_stack: stackOf(first.next) },
+      second: { generation: second.afterReload.generation, stack: stackOf(second.afterReload),
+        prior_stack: stackOf(second.next) } });
   observe('LIVE-09', 'expected.guest_file_or_compiler_authority',
-    markerPresent === false && unchangedFile
+    markerPresent === false && unchangedFile && unchangedFileB
       && JSON.stringify(first.pending.request_trace)
+        === JSON.stringify(['live.observe-generation:1', 'live.propose:evolve:queued'])
+      && JSON.stringify(second.pending.request_trace)
         === JSON.stringify(['live.observe-generation:1', 'live.propose:evolve:queued']),
     {
       observation: 'the whole reload and self-edit flow ran with PATH containing only failing wasm-tools/wasm-opt/binaryen traps and left no marker; the guest requested only generation observation and proposal, and the selected file bytes are unchanged',
@@ -1640,14 +1969,17 @@ async function observeLive05() {
   await missingWatch.close(0);
   for (const [label, report] of Object.entries({ initial: missingInitial, pushed: missingPushed, refused: missingRefused,
     blocked: missingBlocked, oldCall: missingOld })) keep('LIVE-05-missing', label, report);
-  observe('LIVE-05', 'input.variants.missing-import.registry', missingRefused.outcome === 'reload-refused'
-    && missingRefused.generation === missingInitial.generation && isStack(missingRefused, ['I64:7'])
-    && missingBlocked.outcome === 'source-change-refused' && isStack(missingBlocked, ['I64:7'])
-    && missingOld.outcome === 'normal' && isStack(missingOld, ['I64:7', 'I64:21'])
-    && missingOld.source_generation === missingInitial.generation,
-    { outcome: missingRefused.outcome, generation: missingRefused.generation, diagnostic: missingRefused.diagnostic,
-      blocked: missingBlocked.outcome, old_call_stack: stackOf(missingOld), old_call_generation: missingOld.source_generation,
-      initial_generation: missingInitial.generation });
+  // The variant as designed needs an import-capable registry profile. This
+  // Core profile refuses the word `missing@1` at the ASCII token grammar
+  // before any import or registry check, so the refused reload says nothing
+  // about registry lookup. It stays unobserved, and LIVE-05 stays unpromoted.
+  record('LIVE-05', 'input.variants.missing-import.registry', {
+    reason: 'the Core live profile refuses `import missing@1 as m` lexically (`@` is outside the ASCII token grammar) before import resolution or registry lookup; the observed reload-refused is a lexical refusal, not the designed missing-registry check, so this variant needs an owner-approved amendment or an import-capable profile',
+    observed_refusal: { stage: missingRefused.stage, outcome: missingRefused.outcome,
+      diagnostic: missingRefused.diagnostic, generation: missingRefused.generation },
+    no_publication: { blocked: missingBlocked.outcome,
+      old_call_stack: stackOf(missingOld), old_call_generation: missingOld.source_generation },
+  });
 
   const escape = fixture('LIVE-05-escape', 'math.noble', 'def addone [ 1 + ]');
   const outside = path.join(escape.directory, '..', 'unselected.noble');
@@ -1690,20 +2022,40 @@ async function observeLive05() {
     { outcome: budgetSecond.outcome, generation: budgetSecond.generation, diagnostic: budgetSecond.diagnostic });
 
   const trap = fixture('LIVE-05-trap', 'math.noble', 'def addone [ 1 + ]');
-  const trapLive = start('LIVE-05-trap', ['live', 'repl', '--source', trap.source, '--engine', 'v8']);
+  const trapLive = start('LIVE-05-trap',
+    ['live', 'repl', '--source', trap.source, '--engine', 'v8', '--allow-effects', 'test.emit,test.abort']);
   const trapInitial = await trapLive.report();
   const trapSubmission = await trapLive.submit('"A" test.emit test.abort');
-  await trapLive.close(0);
+  await trapLive.close(2);
   keep('LIVE-05-trap', 'initial', trapInitial);
   keep('LIVE-05-trap', 'submission', trapSubmission);
-  record('LIVE-05', 'input.variants.effectful-runtime-trap', {
-    reason: 'the declared submission `"A" test.emit test.abort` is refused at resolve as `unbound-word`: this profile binds effects through declared imports, so the case variant cannot be executed as written',
-    outcome: trapSubmission.outcome, stage: trapSubmission.stage, diagnostic: trapSubmission.diagnostic,
-    guest_requests: trapSubmission.guest_requests, protected_operations: trapSubmission.protected_operations,
-  });
-  record('LIVE-05', 'expected.runtime_trap_retains_prior_effect_prefix_and_poisons_session', {
-    reason: 'depends on the unexecutable effectful-runtime-trap variant',
-  });
+  const trapTrace = trapSubmission.request_trace ?? [];
+  observe('LIVE-05', 'input.variants.effectful-runtime-trap',
+    trapSubmission.outcome === 'trap' && trapSubmission.guest_requests === 2
+      && trapTrace[0] === 'test.emit:A' && trapTrace[1] === 'test.abort',
+    { submission: '"A" test.emit test.abort', harness: 'noble live repl (shipped CLI)',
+      host_effects: ['test.emit', 'test.abort'],
+      outcome: trapSubmission.outcome, stage: trapSubmission.stage, request_trace: trapTrace,
+      guest_requests: trapSubmission.guest_requests });
+  observe('LIVE-05', 'expected.runtime_trap_retains_prior_effect_prefix_and_poisons_session',
+    trapTrace.length === 2 && trapTrace[0] === 'test.emit:A' && trapTrace[1] === 'test.abort'
+      && trapSubmission.protected_operations === 0
+      && trapSubmission.session_state === 'terminated-after-runtime-failure'
+      && trapLive.exit === 2,
+    { request_trace: trapTrace, protected_operations: trapSubmission.protected_operations,
+      mapping: 'in Core-live `test.emit` is a host effect request that performs no protected operation (the protected counter belongs to the Declared-Modules adapter); `test.abort` is a declared abnormal termination. The measured counters are therefore 0 protected operations and a two-entry request prefix before termination',
+      session_state: trapSubmission.session_state, exit: trapLive.exit });
+  observe('LIVE-05', 'expected.stage',
+    initial.stage === 'wasm-live' && ack.stage === 'wasm-live' && next.stage === 'wasm'
+      && trapSubmission.stage === 'wasm',
+    { initial_stage: initial.stage, ack_stage: ack.stage, next_stage: next.stage,
+      trap_stage: trapSubmission.stage });
+  observe('LIVE-05', 'expected.outcome',
+    ack.outcome === 'reload-committed' && next.outcome === 'normal' && isStack(next, ['I64:22'])
+      && trapSubmission.outcome === 'trap',
+    { mapping: 'only the complete saved rename ACKs a new generation; the next call uses it, and the effectful runtime trap terminates',
+      ack_outcome: ack.outcome, next_outcome: next.outcome, next_stack: stackOf(next),
+      trap_outcome: trapSubmission.outcome });
 }
 
 // ---------------------------------------------------------------------------
@@ -1743,16 +2095,14 @@ async function observeSeamAbsence() {
 // Seam-gated lanes: each named test holds a real child at a live safepoint and
 // asserts the field below, so the receipt cites the test as the observation.
 async function observeBarrierSeams(feature) {
-  const inFlight = featureTest('old_active_wasm_frame_finishes_before_queued_reload_ack', feature);
-  observe('LIVE-02', 'expected.old_frame_completed_before_reload_ack', true, {
-    basis: 'feature-gated real-child test', seam: 'live-test-barrier/in-flight-generation', test: inFlight,
-  });
-  observe('LIVE-02', 'expected.publication_only_at_top_level_safepoint', true, {
-    basis: 'feature-gated real-child test', seam: 'live-test-barrier/in-flight-generation', test: inFlight,
-    observation: 'the queued reload ACKs only after the paused active frame finishes and the host reaches the top-level boundary',
-  });
-  observe('LIVE-02', 'expected.old_in_flight_frame_uses_old_generation', true, {
-    basis: 'feature-gated real-child test', seam: 'live-test-barrier/in-flight-generation', test: inFlight,
+  // LIVE-02's in-flight fields are observed by the gate's own barrier child in
+  // observeLive02, on the case's exact workload. The named Rust test runs the
+  // same barrier flow independently and is cited as a checked test.
+  const inFlight = featureTest('case_in_flight_word_quote_completes_before_reload_ack', feature);
+  seam('live-02-in-flight-execution', true, {
+    basis: 'feature-gated real-child test; the gate also drives the same flow directly',
+    seam: 'live-test-barrier/in-flight-execution', test: inFlight,
+    observation: 'the case quotation `[ addone ]` is held at the top of its real guest frame; the queued reload ACKs only after it returns with the old generation, and the post-ACK script keeps the old capture',
   });
   const racing = featureTest('watched_accepted_top_level_finishes_old_frame_before_new_save_ack', feature);
   const superseded = featureTest('compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack', feature);
@@ -1892,7 +2242,9 @@ const receipt = {
   schema: 'noble-live-cases-acceptance/v1',
   kind: 'test',
   result: 'passed',
-  claim: `The promoted LIVE cases (${promoted.join(', ')}) are exercised against the production ${'`'}noble live repl${'`'} child built from this committed tree: LIVE-01 by a resident V8 reload whose ACK precedes a fresh next top-level stack; LIVE-04 by serving canonical-section-edited variants over the checked emission and observing standard validation, Noble policy and source/binding refusals with zero guest requests; LIVE-06 by a retained old Program whose request is denied under the revoked current host policy; LIVE-07 by an explicit interpreter choice refused at startup without a V8 fallback; and LIVE-09 by two real V8 guests that observe generation 1, queue a typed pure Program during the callback, publish input-dependent derived definitions at generation 2, and refuse an effect-increasing file restore. Byte substitution and proposal tampering are named live-test-barrier seams and their default-binary absence is observed separately. No proof, no case outside the promoted set and no unseamed production claim is made.`,
+
+  claim: `The promoted LIVE cases (${promoted.join(', ')}) are exercised against the production ${'`'}noble live repl${'`'} child built from this committed tree. LIVE-01: a resident V8 reload whose ACK precedes a fresh next top-level stack, with the same worker child PID observed before the first submission and after the ACK. LIVE-02: Decision 21a's post-ACK script derives the declared [24, 21] from the retained old Program's captured 21 and the rebuilt dependent's 24, and the same source, flags and ${'`'}[ addone ]${'`'} submission are additionally held in flight at the feature seam so the reload ACK is observed only after that frame returns on its old generation. LIVE-03: every declared replacement is refused at admission with the old definition still callable, including the host-binding-mismatch variant run as written (startup manifest binding, replacement module, admission refusal, generation and stack preserved, next ${'`'}addone${'`'} = 8). LIVE-04: ten canonical-section-edited variants of the captured emission each stop at an exact expected class - the four Noble-policy and three invalid variants in the worker's own byte validator or V8 at stage ${'`'}wasm${'`'}, the forged-digest, independent-digest and oversized variants at shipped host byte admission - with the worker's memory, table, globals, guest-execution and host-request witness unchanged and the installed ${'`'}base${'`'} still returning 7. LIVE-06: a retained old Program whose request is denied under the revoked current host policy. LIVE-07: an explicit interpreter choice refused at startup without a V8 fallback. LIVE-09: two real V8 guests that observe generation 1, queue a typed pure Program during the callback, publish input-dependent derived definitions at generation 2 whose committed source digests are the re-accepted derived texts, show the worker's cumulative guest-execution counter identical across invocation, pending and committed receipts, show the grant still selected after two refused dependents and null after the successful publication, and refuse an effect-increasing file restore. Byte substitution, the in-flight hold and proposal tampering are named ${'`'}live-test-barrier${'`'} seams; their default-binary absence is observed separately. LIVE-05 is not promoted: its ${'`'}missing-import${'`'} variant is refused by the Core lexer before any import or registry check. No proof and no case outside the promoted set is claimed.`,
+
   tested_commit: studiedCommit,
   source_revision: sourceRevision,
   scope: { paths: scope, excluded },
@@ -1915,15 +2267,15 @@ const receipt = {
   reports,
   non_claims: [
     'No Lean/Aeneas/Verus proof, translation validation or refinement claim is made; every promoted case keeps proof open.',
-    'LIVE-02 stays absent/not-run: the canonical after-reload script `20 twice swap 20 swap run` is refused at check because `run` requires exactly [I64] below the Program (spec `run : S Program<S,T,e> -- T`), so the declared expected stack is unreachable; that is a case input defect, not an observed outcome, and the case text was not edited.',
-    'LIVE-03 stays absent/not-run: a mismatched declared binding is refused at startup, and the selected-file reload cannot carry a binding change, so the host-binding-mismatch variant has no session-preserving observation; the second declaration of the same module version also refuses before an opaque-schema comparison.',
-    'LIVE-05 stays absent/not-run: the declared submission `"A" test.emit test.abort` is unbound in this profile (effects are declared module imports; `test.abort` has no binding path), so the effectful-runtime-trap variant cannot be executed as written.',
-    'LIVE-04 observations use the `live-test-barrier` byte seam: the worker\'s real byte validator, the Noble ABI/policy checks and the host source/binding correspondence are the deciders, but the mutated bytes reach the host only through the feature-built test binary; the default binary ignores every seam name (observed absence).',
+    'LIVE-02 is promoted from same-input evidence: the plain child runs the case source, flags and submissions, and the `live-repl` feature child holds the identical `[ addone ]` submission at the `in-flight-execution` seam. OWNER DECISION 2026-11-20 (Decision 21a) replaced the case\'s `after_reload_ack` script; the decision is recorded in the change tasks and here, not in the case `input`.',
+    'LIVE-03\'s `incompatible-schema` variant is refused as a second declaration of the same module version, before any opaque-schema comparison; the case reject outcome and the preserved session are observed, a distinct schema diagnostic is not claimed. Its `missing-module` and `effect-ceiling-increase` replacements are refused lexically or as unbound words, and `changed-file-during-read` rests on the named feature-gated real-child test.',
+    'LIVE-05 is not promoted: the `missing-import` variant\'s replacement `import missing@1 as m` is refused by the Core lexer before any import resolution or registry lookup, so that variant did not exercise the designed missing-registry check. Its other variants (atomic save, partial in-place write, retained-generation budget, symlink escape, host-granted `test.emit`/`test.abort` trap under `--allow-effects`) were executed and observed; the trap variant runs in the shipped `noble live repl` under the explicit host grant (Decision 22), where `test.emit` is a Core host effect request that performs no Declared-Modules protected operation, so its measured `protected_operations` is 0.',
+    'LIVE-04 observations use the `live-test-barrier` byte seam only to serve the mutated bytes and, for the independent-digest variant, to present a digest; the decisions are the shipped worker byte validator/Noble policy checks and the shipped host source/binding/frame admission compiled into every binary. A default binary with every seam variable set executed normally and wrote no capture (observed absence).',
     'LIVE-09\'s ordinary `run`/`session` rows are the same committed default binary and Core-Bootstrap profile; they observe that the live self-edit words remain unbound outside the live REPL, not a temporal comparison with an older binary.',
     'LIVE-10 stays absent/not-run: `foreign-session-grant` has no cross-session grant input, and `shadow-stage-failure` plus `generation-changed-between-enqueue-and-publication-CAS` need host seams this slice did not add; all other pre-invocation, callback-denial, post-return-refusal and trap variants were executed.',
     'LIVE-08 is not exercised by this gate.',
     'The interpreter refusal is an observed refusal, not a proof that no custom bytecode ISA exists anywhere.',
-    'The gate observes single bounded child sessions; it does not claim filesystem-watch completeness or V8 garbage collection.',
+    'The gate observes single bounded child sessions; it does not claim filesystem-watch completeness or V8 garbage collection. Binaries are retained under `bin/`: build hashes depend on the output path, so `binary_sha256` is confirmable against the retained copy rather than by rebuilding elsewhere.',
   ],
 };
 assert.equal(fs.existsSync(path.join(destination, receiptName)), false, `${receiptName} already exists`);

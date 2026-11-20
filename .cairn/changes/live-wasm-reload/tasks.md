@@ -307,23 +307,37 @@ case's purpose (a new dependent's result beside the old Program's captured
 result) and its in-flight condition unchanged. The case text is not edited
 here; the amendment is for the owner.
 
-Case-design defect, LIVE-03 `host-binding-mismatch` (recorded 2026-11-20 by
-the live-seams slice; the case text is not edited and this is not an observed
-implementation refusal): `noble live repl` reads `--bindings` once into its
-declared `Manifest` at startup, and the reload entrypoint is the explicit
-`:reload PATH` command over a selected file snapshot. H-LIVE-01 defines that
-entrypoint as accepting "complete bounded source submissions and explicit
-`:reload PATH` commands"; H-LIVE-02 requires a reload to perform
-"interface/effect/host-contract checks" and to publish "an exact immutable
-source/import snapshot and checked stack/interface/effect signature", not to
-deliver a new host binding. The variant's `binding` field therefore has no
-reload delivery mechanism: the mismatched `bind` line is refused at startup
-before any session exists (pinned by
-`mismatched_declared_binding_refuses_at_startup_with_one_report`), and no
-session-preserving reload can carry it. Removing or replacing this variant is
-a case amendment and requires separate owner approval.
+LIVE-03 `host-binding-mismatch` runs as written on the shipped binary: the
+startup `--bindings` manifest carries the case's exact binding line, the case
+definition executes, the selected file is atomically replaced with the case's
+replacement module, and `:reload` refuses at admission (`bound adapter input,
+output or effect differs from required operation`) with the generation and
+typed stack unchanged, after which the old definition still returns `[8]`. The
+earlier record that called this a case-design defect was wrong (the binding
+need not travel with the reload) and is withdrawn; the gate executes the
+variant and records that observation.
 
 - [x] [serial] Implement and test in-process Wasm encoder/verifier with independently accepted source, exact selected ABI and isolated staging. r[BE-LIVE-01] r[S-LIVE-01] — LIVE-04 is promoted by `verification/live-cases/acceptance-2026-11-20-seams.json` SHA-256 `a503ddf2372e9ead8e0a3194e99785149268f758d32aad194d0b4f2e16170c85` (tested commit `20f32e269de1a9a86e93c7b9a343e6ba89589852`, source revision `sha256:c68d8b37d799caf38afdf379c404fc8a42368aee27ed66a04475e817a31cf647`). Ten canonical-LEB128 variants of the captured `1 2 +` emission were refused by standard validation, the worker's Noble ABI/policy validator or the host source/binding/frame admission, with generation 1, empty typed stack, zero guest requests/protected operations and the installed `base` still returning 7; a default binary with every seam variable set executed normally and wrote no capture. The gate records 94 commands and 115 live reports; 83 default and 95 feature `live_repl` tests passed. The byte substitution itself is a named `live-test-barrier` seam (receipt `seams`), and no proof is claimed.
+OWNER DECISION 2026-11-20 (Decision 21) accepted the replacement
+`["20 twice swap run"]` with "nothing else in the case changes". The case now
+carries decision 21a's reordered script instead. Applying decision 21's script is
+**not** promotion-valid: with the retained old Program on the stack,
+`20 twice swap run` goes `[Program]` → `[Program, 20]` → `[Program, 24]` (the
+rebuilt `twice`, new `addone` 2+) → `[24, Program]`; `run` consumes the 24 and
+returns 25, so the observed stack is `[25]`, not the declared `[24, 21]` (the
+decision's reference to a "[21, 22]" final stack also disagrees with the
+unchanged case). MEASURED on the production binary from this tree. A script
+that derives the declared stack while keeping the old Program is
+`20 swap run 20 twice swap` (`[Program]` → `[21]` → `[21, 20]` → `[21, 24]` →
+`[24, 21]`). OWNER DECISION 2026-11-20 (Decision 21a), delegated to the
+integrator, now replaces decision 21's script with exactly that reordering,
+`["20 swap run 20 twice swap"]`, and keeps everything else in the case
+unchanged. The decision is recorded here and in the gate's evidence
+assumptions, not in the case's `input`; LIVE-02 is executed and promoted only
+from a fresh receipt that observes [24, 21] and every other expected field,
+including the case's own `[ addone ]` submission held in flight at the
+`in-flight-execution` seam.
+
 - [ ] [serial] Implement resident live CLI/reload/watch, complete dependent rebuild, atomic safepoint publication, stable typed stack and bounded code retirement. r[K-LIVE-01] r[H-LIVE-01] r[H-LIVE-02] r[H-LIVE-03] r[DX-LIVE-01]
 - [ ] [serial] Exercise every LIVE case against actual source, selected VM and hostile controls with source-bound receipts and separately classify proof/assumptions before acceptance. r[V-LIVE-01] r[EV-LIVE-01]
 - [ ] [serial] Complete host-granted guest self-edit with compiler-bound originating identity, effectful generation observation, typed pure Program proposal during actual Wasm invocation, bounded enqueue, post-return independent admission and one-use generation CAS; exercise LIVE-09/10 including retained-old-Program denial, rearm, traps, effects and guest/file provenance. Keep both cases absent/not-run until executed. r[K-LIVE-02] r[H-LIVE-04]
