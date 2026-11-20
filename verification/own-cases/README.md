@@ -18,9 +18,9 @@ It promotes nothing by itself.
 
 [`acceptance.json`](acceptance.json) is the **first** run's receipt (`sha256 e873df58…`, tested
 commit `5c9e38f4`), kept byte-for-byte as the immutable path the first OWN promotions cite. Later
-runs live under [`runs/`](runs/) and are cited by their own paths; superseded receipts stay
-immutable and rework receipts are added beside them, never edited. The r2 facts in this file come
-from [`runs/20261120-r2/acceptance.json`](runs/20261120-r2/acceptance.json) (`sha256 ae533fdd…`,
+runs live under `runs/` and are cited by their own paths; superseded receipts stay immutable and
+rework receipts are added beside them, never edited. The r2 facts in this file come from
+[`runs/20261120-r2/acceptance.json`](runs/20261120-r2/acceptance.json) (`sha256 ae533fdd…`,
 `source_revision sha256:f09c0d…`, binary `8020eb86…`, tested commit `81139111`).
 
 ## Cases this gate executes
