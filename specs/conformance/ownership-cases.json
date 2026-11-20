@@ -262,7 +262,7 @@
         "saved_owner_tokens_issued": 0,
         "frame_pins_released": "exactly-once",
         "frame_pins_active_after": 0,
-        "guest_instance": "poisoned",
+        "guest_instance": "terminated-after-guest-failure",
         "session_state": {
           "observed_rule": "terminated-after-guest-failure",
           "owner_decision_6": "OWNER DECISION 2026-11-20 (decision 6): continue the host session when the pin ledger proves an exact release; poison otherwise",

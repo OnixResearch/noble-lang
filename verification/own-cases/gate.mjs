@@ -183,7 +183,7 @@ function observe(id, lane, body) {
 
 // OWN-CASE-01: the direct typed quote retains its boxed capture and runs after root exit. The lane
 // writes its own JSONL evidence; the gate reads the values the CLI actually returned.
-observe('OWN-CASE-01', 'crates/noble-cli/tests/live_slot_direct_quote.mjs', () => {
+observe('OWN-CASE-01', 'crates/noble-cli/tests/live_slot_direct_quote.mjs', expected => {
   const evidence = path.join(out, 'own-01.evidence.jsonl');
   const executed = run(out, 'own-01',
     node, [path.join(root, 'crates/noble-cli/tests/live_slot_direct_quote.mjs'),
@@ -245,7 +245,7 @@ observe('OWN-CASE-03', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', e
   const trees = parsed(executed.stdout).cases['OWN-CASE-03'];
   const treeOf = (name, row) => {
     const registered = expected.variants[name];
-    if (!row || row.refused !== false) {
+    if (!row || row.refused === true) {
       return { name, executed: false, refusal: row ?? null };
     }
     expectValue(`OWN-CASE-03 ${name} released`, row.released_before_root,
@@ -377,10 +377,12 @@ observe('OWN-CASE-07', 'crates/noble-cli/tests/live_repl.rs', expected => {
     'live_repl', 'retained_old_definition_yields_old_value_and_retires_after_release', '--',
     '--nocapture', '--test-threads=1']);
   runs.push(executed);
-  // The libtest progress prefix shares the line with the captured output.
+  // The libtest progress prefix shares the line with the captured output, and the object's keys
+  // are emitted in sorted order, so locate the id and parse from the enclosing brace.
   const observed = executed.stdout.split('\n').flatMap(line => {
-    const at = line.indexOf('{"id":"OWN-CASE-07"');
-    return at < 0 ? [] : [JSON.parse(line.slice(at))];
+    const at = line.indexOf('"id":"OWN-CASE-07"');
+    const open = at < 0 ? -1 : line.lastIndexOf('{', at);
+    return open < 0 ? [] : [JSON.parse(line.slice(open))];
   })[0];
   assert.ok(observed, 'the retained-definition test printed no observation');
   expectValue('OWN-CASE-07 saved result', observed.saved_result?.[0]?.value,
