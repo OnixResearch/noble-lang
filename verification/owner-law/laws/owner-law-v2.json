@@ -1,0 +1,47 @@
+{
+  "schema": "noble-owner-law/v1",
+  "revision": "owner-law-v2-owner-approved-revision",
+  "supersedes": "owner-law-v1-immutable-before-candidate-edit",
+  "case": "CONTRACT-16",
+  "variant": "owner-approves-new-law-revision-and-fresh-exact-proof",
+  "requirement": "VC-OWNER-01",
+  "frozen": "2026-11-20",
+  "frozen_by": "the repository owner's instruction of 2026-11-20 to freeze CONTRACT-16's v2 revision for the owner-approved-revision variant; recorded by the campaign integrator before any consumer or candidate edit",
+  "release_policy": "proof-required-release",
+  "fragment": "MC2-v1-resource-free-Core-Bootstrap",
+  "subject_interface": "I64 -- I64 ! {}",
+  "declaration": "OwnerLaw.addTwo",
+  "expected_statement": "for every I64 input x, each normal return of submitted add_two(x) equals wrap64(x+2)",
+  "contract_obligation": {
+    "language": "noble-contract/1 (MC1)",
+    "input": [["x", "I64"]],
+    "output": [["y", "I64"]],
+    "requires": "true",
+    "ensures": "(eq (out y) (add (in x) 2))",
+    "arithmetic": "I64 add is two's-complement wrapping (wrap64)"
+  },
+  "observations": {
+    "initial": "a stack holding exactly one I64 input x",
+    "final": "on normal return, a stack holding exactly one I64 y with y = wrap64(x + 2)"
+  },
+  "scope": "normal-return-only: partial correctness for each normal return; termination, totality, quota exhaustion and host availability are not claimed",
+  "preconditions": ["well-typed-I64-input"],
+  "assumptions": [
+    "well-typed-I64-input",
+    "wrapping-I64-semantics",
+    "normal-return-only",
+    "quota-and-host-availability-not-proved"
+  ],
+  "proof_library": {
+    "requirement": "independently-selected-MC2-pure-library",
+    "accepted": "the pinned MC1/MC2 Lean model and checker selected by the repository's tool-selection policy; the candidate may not supply or modify the library"
+  },
+  "consumer_policy": "proof-required-release",
+  "candidate_author_can_edit_owner_law": false,
+  "candidate_unknown_at_authoring": ["program body", "resolved recipe", "proof artifact", "emitted artifact"],
+  "non_claims": [
+    "A new law revision is a new review subject: nothing proved or admitted under v1 carries over.",
+    "No compiler, backend, loader or host correctness claim.",
+    "Ordinary well-typed execution without the proof-required policy is unaffected (VC-SCOPE-01)."
+  ]
+}
