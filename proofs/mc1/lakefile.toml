@@ -8,6 +8,13 @@ rev = "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
 
 [[lean_lib]]
 name = "NobleContracts"
+# `ContractGate.lean` and the MC1 implementation gate use Lake's build products,
+# and they import `NobleContracts.Refutation`, which is intentionally outside the
+# pinned `MODEL` import closure and therefore not reachable from the root module.
+# The CLI rule-library consumer does not read these oleans: it snapshots the same
+# `.lean` sources and rebuilds them in its sandbox. This glob only aligns the Lake
+# build set with the `NobleContracts/` module set both paths cover.
+globs = ["NobleContracts", "NobleContracts.+"]
 
 [[lean_lib]]
 name = "NobleContractImpl"

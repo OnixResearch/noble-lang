@@ -1,4 +1,5 @@
 import NobleContracts
+import NobleContracts.Refutation
 import NobleContracts.NamedV3
 import NobleContracts.SpecQuality
 import NobleContracts.Wire
@@ -81,7 +82,19 @@ elab "check_contract_library" : command => do
     ``NobleContracts.Wire.left_beta_inl, ``NobleContracts.Wire.left_beta_inr,
     ``NobleContracts.Wire.join_natural_inl, ``NobleContracts.Wire.join_natural_inr,
     ``NobleContracts.Wire.if_beta_true, ``NobleContracts.Wire.if_beta_false,
-    ``NobleContracts.Wire.recipes_run_alike, ``NobleContracts.Wire.recipe_distinct]
+    ``NobleContracts.Wire.recipes_run_alike, ``NobleContracts.Wire.recipe_distinct,
+    -- Tactic-free unary-I64 refutation template (PAUTO-FO-4), kept outside `MODEL`:
+    -- a concrete normal-return counterexample refutes the exported universal claim.
+    ``NobleContracts.value_bool_false_ne_true,
+    ``NobleContracts.some_value_bool_false_ne_true,
+    ``NobleContracts.not_holds_of_evaluate_false,
+    ``NobleContracts.exportedClaim_unaryI64_refutation,
+    ``NobleContracts.monotonic_counterexample_run,
+    ``NobleContracts.monotonic_postcondition_false,
+    ``NobleContracts.monotonic_refutation,
+    ``NobleContracts.wrap_constant_counterexample_run,
+    ``NobleContracts.wrap_constant_postcondition_false,
+    ``NobleContracts.wrap_constant_refutation]
   for name in required do
     match env.find? name with
     | some (.thmInfo _) => pure ()
