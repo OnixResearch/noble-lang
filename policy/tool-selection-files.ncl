@@ -162,7 +162,7 @@
   "crates/noble-cli/src/core/live_slot_returned_dag.rs" = "5452edfd0ff3fa45d4f970710fb6626c5552aca21fd0ea1bbe98ef77e5c6227c",
   "crates/noble-cli/src/core/output.rs" = "95e6c5530ab86448db67adc5707e0886bd7948cf0dbea1fae083bbb3792f1a90",
   "crates/noble-cli/src/core/worker.rs" = "cbbef9b242c4f86374604fa8e970a27cdf09f689ec87969bc124d1425484a9f8",
-  "crates/noble-cli/src/core/worker/assembly.rs" = "af13ae27d6584eccd24d31b7eebeb7433883078acd4bf1d449a7b4387cf6aaec",
+  "crates/noble-cli/src/core/worker/assembly.rs" = "ada590e9cd1da2a358a6f8165722b8a0a8b1a68b52364a6f7e3b3cc9edeb5987",
   "crates/noble-cli/tests/smoke.rs" = "aa84d34aa6ffef7293e07531264b3626390f704243686dcd19306700ff1ee1d4",
   "crates/noble-contracts/src/source.rs" = "d869ec06350c5fdc17e74bd490f6aa14d16b93fca0c4f410205f507822105899",
   "crates/noble-contracts/src/source/declared/state.rs" = "35c41abd8206a208a056c5f615b1697a581d2f30e19ef5b8149794bf795498bc",
