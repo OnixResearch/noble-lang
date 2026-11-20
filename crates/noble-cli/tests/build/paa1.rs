@@ -43,12 +43,12 @@ fn sha256(bytes: &[u8]) -> String {
         0x5be0cd19,
     ];
     let mut message = bytes.to_vec();
-    let bit_length = (bytes.len() as u64).wrapping_mul(BITS_PER_BYTE);
+    let length_bits = (bytes.len() as u64).wrapping_mul(BITS_PER_BYTE);
     message.push(0x80);
     while message.len() % 64 != 56 {
         message.push(0);
     }
-    message.extend_from_slice(&bit_length.to_be_bytes());
+    message.extend_from_slice(&length_bits.to_be_bytes());
     for block in message.chunks_exact(64) {
         let mut words = [0u32; 64];
         for (index, word) in block.chunks_exact(4).enumerate() {

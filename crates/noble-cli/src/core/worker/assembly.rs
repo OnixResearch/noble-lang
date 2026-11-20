@@ -5,10 +5,6 @@
 /// module bytes only after they re-hash to the identity the worker reported. A
 /// refusal returns the worker diagnostic unchanged: an assembled module is tool
 /// correspondence evidence, never a verified backend.
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; selected-worker startup, assembly, artifact reads and the re-read identity check return typed failures. External tool and I/O failures must not become assertion panics."
-)]
 pub(crate) fn assemble_wat(
     directory: &std::path::Path,
     wat: &[u8],

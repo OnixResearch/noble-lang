@@ -63,14 +63,14 @@ const OPT_ON: &str = "on";
 /// One PAA-1 refusal: a distinct code, the check that refused and a retained
 /// message. Every refusal path reports zero guest requests and protected
 /// operations.
-struct Refusal {
+struct AdmissionRefusal {
     code: &'static str,
     check: &'static str,
     message: std::string::String,
     exit: u8,
 }
 
-impl Refusal {
+impl AdmissionRefusal {
     fn new(code: &'static str, check: &'static str, message: std::string::String) -> Self {
         let exit = match code {
             "invalid-envelope" => 2,
@@ -127,23 +127,23 @@ impl Refusal {
 }
 
 /// Map one build-path failure code to the envelope's distinct refusal.
-fn failure_code(code: &str, message: std::string::String) -> Refusal {
+fn failure_code(code: &str, message: std::string::String) -> AdmissionRefusal {
     match code {
         "source" | "contract-source" | "proof-source" | "usage" | "invalid-timeout" => {
-            Refusal::invalid("submission", message)
+            AdmissionRefusal::invalid("submission", message)
         }
         "artifact-source" | "artifact-lowering" | "preparation-exhausted" => {
-            Refusal::unsupported("profile", message)
+            AdmissionRefusal::unsupported("profile", message)
         }
         "artifact-assembly"
         | "toolchain-binding"
         | "build-pin-selection"
-        | "build-pin-mismatch" => Refusal::pin("toolchain", message),
-        "stale-context" | "mismatched-context" => Refusal::stale("context", message),
+        | "build-pin-mismatch" => AdmissionRefusal::pin("toolchain", message),
+        "stale-context" | "mismatched-context" => AdmissionRefusal::stale("context", message),
         "mismatched-subject" | "correspondence-mismatch" | "artifact-correspondence" => {
-            Refusal::subject("subject-binding", message)
+            AdmissionRefusal::subject("subject-binding", message)
         }
-        _ => Refusal::proof("exact-check", message),
+        _ => AdmissionRefusal::proof("exact-check", message),
     }
 }
 
@@ -177,7 +177,7 @@ pub fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let mode = match arguments::parse(arguments) {
         Ok(mode) => mode,
         Err(failure) => {
-            return print_refusal(&Refusal::invalid("arguments", failure.message), 2);
+            return print_refusal(&AdmissionRefusal::invalid("arguments", failure.message), 2);
         }
     };
     match mode {
@@ -201,7 +201,7 @@ fn print_json(json: &Json, exit: u8) -> std::process::ExitCode {
     }
 }
 
-fn refusal_json(refusal: &Refusal) -> Json {
+fn refusal_json(refusal: &AdmissionRefusal) -> Json {
     object([
         ("schema", string("noble-proof-artifact-admission/v1")),
         ("profile", string("MC2-pure-quotation@1")),
@@ -229,7 +229,7 @@ fn refusal_json(refusal: &Refusal) -> Json {
     ])
 }
 
-fn print_refusal(refusal: &Refusal, exit: u8) -> std::process::ExitCode {
+fn print_refusal(refusal: &AdmissionRefusal, exit: u8) -> std::process::ExitCode {
     print_json(&refusal_json(refusal), exit)
 }
 
@@ -400,9 +400,9 @@ fn read(
     path: &std::path::Path,
     limit: usize,
     kind: &'static str,
-) -> Result<std::vec::Vec<u8>, Refusal> {
+) -> Result<std::vec::Vec<u8>, AdmissionRefusal> {
     crate::workflow::read_bounded(path, limit, kind).map_err(|failure| {
-        Refusal::invalid(
+        AdmissionRefusal::invalid(
             "submission",
             std::format!(
                 "cannot read {kind} at {}: {}",
@@ -422,7 +422,7 @@ fn read_submitted(
     path: &std::path::Path,
     limit: usize,
     kind: &'static str,
-) -> Result<Submitted, Refusal> {
+) -> Result<Submitted, AdmissionRefusal> {
     let bytes = read(path, limit, kind)?;
     let sha256 = crate::workflow::intrinsic::sha256(&bytes);
     Ok(Submitted { bytes, sha256 })
@@ -449,7 +449,7 @@ fn first_significant(bytes: &[u8]) -> Option<u8> {
         .find(|byte| !byte.is_ascii_whitespace())
 }
 
-fn map_law_refusal(refusal: super::owner_law::Refusal) -> Refusal {
+fn map_law_refusal(refusal: super::owner_law::Refusal) -> AdmissionRefusal {
     let code = match refusal.code {
         "owner-law-record-invalid" | "owner-law-unreadable" => "invalid-envelope",
         "owner-law-policy-mismatch" | "owner-law-fragment-unsupported" => "unsupported-profile",
@@ -458,18 +458,22 @@ fn map_law_refusal(refusal: super::owner_law::Refusal) -> Refusal {
         "owner-law-program-not-acceptable" => "subject-mismatch",
         _ => "law-mismatch",
     };
-    Refusal::new(code, refusal.check, refusal.message)
+    AdmissionRefusal::new(code, refusal.check, refusal.message)
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the owner-law comparison appends to the accumulating check record, which the consumer later reports whole, so it is borrowed mutably as the growable record owner_law::compare::compare takes"
+)]
 fn select_law(
     law_bytes: &[u8],
     law_digest: &str,
     contract_bytes: &[u8],
     checks: &mut std::vec::Vec<super::owner_law::compare::Check>,
-) -> Result<SelectedLaw, Refusal> {
+) -> Result<SelectedLaw, AdmissionRefusal> {
     let computed_sha256 = crate::workflow::intrinsic::sha256(law_bytes);
     if computed_sha256 != law_digest {
-        return Err(Refusal::law(
+        return Err(AdmissionRefusal::law(
             "law-digest",
             std::format!(
                 "the law bytes hash to {computed_sha256}, not the owner-supplied {law_digest}; a changed law byte is a different law identity"
@@ -481,14 +485,14 @@ fn select_law(
         // itself. The submitted contract must be those exact bytes, so the
         // candidate can never substitute a weaker law.
         if law_bytes != contract_bytes {
-            return Err(Refusal::law(
+            return Err(AdmissionRefusal::law(
                 "law-contract",
                 "the submitted contract bytes differ from the consumer-selected law contract",
             ));
         }
         let prepared = noble_contracts::prepare(contract_bytes, crate::core::SOURCE_LIMITS)
             .map_err(|error| {
-                Refusal::law(
+                AdmissionRefusal::law(
                     "law-preparation",
                     std::format!(
                         "the law contract is not accepted ordinary typing: {:?}: {}",
@@ -498,7 +502,7 @@ fn select_law(
                 )
             })?;
         if !prepared.definitions().is_empty() || !prepared.params().is_empty() {
-            return Err(Refusal::unsupported(
+            return Err(AdmissionRefusal::unsupported(
                 "profile",
                 "the law contract carries definitions or parameters outside the MC2 pure quotation profile",
             ));
@@ -538,9 +542,9 @@ fn select_law(
 /// v3 toolchain binding.
 fn exact(
     options: &arguments::Options,
-) -> Result<(super::report::Document, super::Products), Refusal> {
+) -> Result<(super::report::Document, super::Products), AdmissionRefusal> {
     let lean_binary = crate::sandbox::release_binary().map_err(|failure| {
-        Refusal::pin(
+        AdmissionRefusal::pin(
             "lean-release",
             std::format!(
                 "the configured Lean release is unavailable: {}",
@@ -549,7 +553,7 @@ fn exact(
         )
     })?;
     let library_tree = crate::workflow::contract_library_root().map_err(|failure| {
-        Refusal::pin(
+        AdmissionRefusal::pin(
             "contract-library",
             std::format!(
                 "the configured contract library root is unavailable: {}",
@@ -595,7 +599,7 @@ fn exact(
             0 => 1,
             exit => exit,
         };
-        return Err(Refusal {
+        return Err(AdmissionRefusal {
             code,
             check: "exact-check",
             message: std::format!(
@@ -634,12 +638,12 @@ struct Recompiled {
 
 /// Compile one consumer-selected source under the pure quotation profile. The
 /// profile is validated in step 1, before the law or any proof check.
-fn compile_profile(source: &[u8]) -> Result<std::vec::Vec<u8>, Refusal> {
+fn compile_profile(source: &[u8]) -> Result<std::vec::Vec<u8>, AdmissionRefusal> {
     let frontend = noble_contracts::source::Session::new();
     let prepared = frontend
         .prepare(source, &[], crate::core::SOURCE_LIMITS)
         .map_err(|error| {
-            Refusal::unsupported(
+            AdmissionRefusal::unsupported(
                 "profile",
                 std::format!(
                     "the consumer-selected source is not accepted ordinary typing: {:?}",
@@ -648,7 +652,7 @@ fn compile_profile(source: &[u8]) -> Result<std::vec::Vec<u8>, Refusal> {
             )
         })?;
     let submission = prepared.submission().ok_or_else(|| {
-        Refusal::unsupported(
+        AdmissionRefusal::unsupported(
             "profile",
             "the consumer-selected source is a definition, not the one closed quotation root PAA-1 admits",
         )
@@ -656,7 +660,7 @@ fn compile_profile(source: &[u8]) -> Result<std::vec::Vec<u8>, Refusal> {
     let module = noble_wasm::source::Compiler::new()
         .prepare(submission)
         .map_err(|diagnostic| {
-            Refusal::unsupported(
+            AdmissionRefusal::unsupported(
                 "profile",
                 match diagnostic {
                     noble_wasm::Diagnostic::Invalid => {
@@ -681,12 +685,12 @@ fn rebuild(
     wat: std::vec::Vec<u8>,
     source_sha256: &str,
     optimized: bool,
-) -> Result<Recompiled, Refusal> {
+) -> Result<Recompiled, AdmissionRefusal> {
     let directory = crate::workflow::artifacts::Temporary::create()
-        .map_err(|failure| Refusal::invalid("rebuild", failure.message))?;
+        .map_err(|failure| AdmissionRefusal::invalid("rebuild", failure.message))?;
     let assembly =
         crate::core::worker::assembly::assemble_wat_optimized(&directory.path, &wat, optimized)
-            .map_err(|message| Refusal::pin("rebuild", message))?;
+            .map_err(|message| AdmissionRefusal::pin("rebuild", message))?;
     Ok(Recompiled {
         source_sha256: source_sha256.into(),
         wat_sha256: crate::workflow::intrinsic::sha256(&wat),
@@ -703,11 +707,11 @@ fn verify_tools(
     selection: &super::report::pins::Selection,
     tools: &[u8],
     check: &'static str,
-) -> Result<(), Refusal> {
+) -> Result<(), AdmissionRefusal> {
     let observed = super::report::pins::observe_tools(tools)
-        .map_err(|failure| Refusal::pin(check, failure.message))?;
+        .map_err(|failure| AdmissionRefusal::pin(check, failure.message))?;
     super::report::pins::verify_tools(selection, &observed)
-        .map_err(|failure| Refusal::pin(check, failure.message))
+        .map_err(|failure| AdmissionRefusal::pin(check, failure.message))
 }
 
 fn mode_name(optimized: bool) -> &'static str {
@@ -849,18 +853,18 @@ struct Manifest {
     discarded: std::vec::Vec<&'static str>,
 }
 
-fn parse_manifest(bytes: &[u8]) -> Result<Manifest, Refusal> {
+fn parse_manifest(bytes: &[u8]) -> Result<Manifest, AdmissionRefusal> {
     let text = std::str::from_utf8(bytes)
-        .map_err(|_| Refusal::invalid("manifest", "candidate manifest is not UTF-8"))?;
+        .map_err(|_| AdmissionRefusal::invalid("manifest", "candidate manifest is not UTF-8"))?;
     let value: serde_json::Value = serde_json::from_str(text).map_err(|error| {
-        Refusal::invalid(
+        AdmissionRefusal::invalid(
             "manifest",
             std::format!("candidate manifest is not JSON: {error}"),
         )
     })?;
-    let object = value
-        .as_object()
-        .ok_or_else(|| Refusal::invalid("manifest", "candidate manifest must be an object"))?;
+    let object = value.as_object().ok_or_else(|| {
+        AdmissionRefusal::invalid("manifest", "candidate manifest must be an object")
+    })?;
     let mut claimed_effects: std::vec::Vec<std::string::String> = std::vec::Vec::new();
     let mut discarded: std::vec::Vec<&'static str> = std::vec::Vec::new();
     for (key, value) in object {
@@ -875,7 +879,7 @@ fn parse_manifest(bytes: &[u8]) -> Result<Manifest, Refusal> {
             _ => None,
         };
         let Some(name) = known else {
-            return Err(Refusal::invalid(
+            return Err(AdmissionRefusal::invalid(
                 "manifest",
                 std::format!("unknown candidate manifest field `{key}`"),
             ));
@@ -884,21 +888,27 @@ fn parse_manifest(bytes: &[u8]) -> Result<Manifest, Refusal> {
         match name {
             "claimed_effects" => {
                 let values = value.as_array().ok_or_else(|| {
-                    Refusal::invalid("manifest", "candidate claimed_effects must be an array")
+                    AdmissionRefusal::invalid(
+                        "manifest",
+                        "candidate claimed_effects must be an array",
+                    )
                 })?;
                 if values.len() > 3 {
-                    return Err(Refusal::invalid("manifest", "too many claimed effects"));
+                    return Err(AdmissionRefusal::invalid(
+                        "manifest",
+                        "too many claimed effects",
+                    ));
                 }
                 for value in values {
                     let effect = value.as_str().ok_or_else(|| {
-                        Refusal::invalid("manifest", "effect identity must be text")
+                        AdmissionRefusal::invalid("manifest", "effect identity must be text")
                     })?;
                     claimed_effects.push(effect.into());
                 }
             }
             "trusted_correspondence" | "allowed" => {
                 if !value.is_boolean() {
-                    return Err(Refusal::invalid(
+                    return Err(AdmissionRefusal::invalid(
                         "manifest",
                         "candidate manifest boolean has wrong type",
                     ));
@@ -906,7 +916,7 @@ fn parse_manifest(bytes: &[u8]) -> Result<Manifest, Refusal> {
             }
             _ => {
                 if !value.is_string() {
-                    return Err(Refusal::invalid(
+                    return Err(AdmissionRefusal::invalid(
                         "manifest",
                         "candidate manifest text has wrong type",
                     ));
@@ -943,7 +953,7 @@ fn no_manifest() -> Json {
 }
 
 /// One admission's decision. Every check precedes instantiation.
-fn decide(options: &arguments::Options) -> Result<Admitted, Refusal> {
+fn decide(options: &arguments::Options) -> Result<Admitted, AdmissionRefusal> {
     // 1. Envelope and submission.
     let candidate = read_submitted(
         &options.artifact,
@@ -989,7 +999,7 @@ fn decide(options: &arguments::Options) -> Result<Admitted, Refusal> {
     // 3-4. Proof recheck and subject binding, through the shared exact path.
     let (build, products) = exact(options)?;
     if !build.independent_recheck {
-        return Err(Refusal::proof(
+        return Err(AdmissionRefusal::proof(
             "proof-recheck",
             "the exact check reported no independent recheck observation",
         ));
@@ -999,33 +1009,33 @@ fn decide(options: &arguments::Options) -> Result<Admitted, Refusal> {
         .as_deref()
         .map(crate::workflow::intrinsic::sha256);
     if checked_proof.as_deref() != Some(proof.sha256.as_str()) {
-        return Err(Refusal::proof(
+        return Err(AdmissionRefusal::proof(
             "proof-artifact",
             "the proof bytes the exact check rechecked differ from the submitted proof",
         ));
     }
     let evaluated = noble_contracts::export_lean(&law.prepared);
     if evaluated != law.statement {
-        return Err(Refusal::law(
+        return Err(AdmissionRefusal::law(
             "law-statement",
             "the law statement the consumer regenerated is not stable across preparations",
         ));
     }
     if build.statement_digest != Some(super::statement_fold(law.statement.as_bytes())) {
-        return Err(Refusal::law(
+        return Err(AdmissionRefusal::law(
             "law-statement-binding",
             "the exact check bound a claim statement that differs from the consumer-selected law statement",
         ));
     }
     if build.candidate_digest != Some(noble_contracts::companion::statement_digest(&law.prepared)) {
-        return Err(Refusal::subject(
+        return Err(AdmissionRefusal::subject(
             "subject-recipe",
             "the exact check bound a recipe identity that differs from the compared contract",
         ));
     }
     let checked_contract = crate::workflow::intrinsic::sha256(&products.contract);
     if checked_contract != contract.sha256 {
-        return Err(Refusal::law(
+        return Err(AdmissionRefusal::law(
             "law-contract-binding",
             "the contract the exact check prepared differs from the compared contract bytes",
         ));
@@ -1033,19 +1043,19 @@ fn decide(options: &arguments::Options) -> Result<Admitted, Refusal> {
 
     // 5. Tool/helper pin checks before any rebuild or instantiation.
     let lean_binary = crate::sandbox::release_binary()
-        .map_err(|failure| Refusal::pin("lean-release", failure.message))?;
+        .map_err(|failure| AdmissionRefusal::pin("lean-release", failure.message))?;
     let library_tree = crate::workflow::contract_library_root()
-        .map_err(|failure| Refusal::pin("contract-library", failure.message))?;
+        .map_err(|failure| AdmissionRefusal::pin("contract-library", failure.message))?;
     let selected = super::report::toolchain::select(&lean_binary, &library_tree)
-        .map_err(|failure| Refusal::pin("toolchain-binding", failure.message))?;
+        .map_err(|failure| AdmissionRefusal::pin("toolchain-binding", failure.message))?;
     let selection = super::report::pins::select(&options.pins)
-        .map_err(|failure| Refusal::pin("pin-selection", failure.message))?;
+        .map_err(|failure| AdmissionRefusal::pin("pin-selection", failure.message))?;
     let observed = super::report::pins::observe(&selected)
-        .map_err(|failure| Refusal::pin("pin-observe", failure.message))?;
+        .map_err(|failure| AdmissionRefusal::pin("pin-observe", failure.message))?;
     super::report::pins::verify_static(&selection, &observed)
-        .map_err(|failure| Refusal::pin("pin-mismatch", failure.message))?;
+        .map_err(|failure| AdmissionRefusal::pin("pin-mismatch", failure.message))?;
     if selection.opt_mode != mode_name(options.optimized) {
-        return Err(Refusal::pin(
+        return Err(AdmissionRefusal::pin(
             "pin-opt-mode",
             std::format!(
                 "the pin document selects optimizer mode `{}` but the consumer selected `{}`",
@@ -1056,7 +1066,7 @@ fn decide(options: &arguments::Options) -> Result<Admitted, Refusal> {
     }
     let mut subject_worker = crate::core::worker::Engine::start_admission(options.optimized)
         .map_err(|failure| {
-            Refusal::unsupported(
+            AdmissionRefusal::unsupported(
                 "engine",
                 std::format!(
                     "the fresh admission worker did not start: {}",
@@ -1067,7 +1077,7 @@ fn decide(options: &arguments::Options) -> Result<Admitted, Refusal> {
     let worker_tools = subject_worker
         .tools_record()
         .ok_or_else(|| {
-            Refusal::pin(
+            AdmissionRefusal::pin(
                 "worker-tools",
                 "the admission worker reported no tool identity",
             )
@@ -1079,14 +1089,14 @@ fn decide(options: &arguments::Options) -> Result<Admitted, Refusal> {
     let subject = rebuild(subject_wat, &source.sha256, options.optimized)?;
     verify_tools(&selection, &subject.tools, "rebuild-tools")?;
     if options.optimized && !matches!(selection.opt_mode.as_str(), OPT_ON) {
-        return Err(Refusal::pin(
+        return Err(AdmissionRefusal::pin(
             "pin-opt-mode",
             "the optimizer was not selected",
         ));
     }
     if let Some(products_wasm) = products.artifact_wasm.as_deref() {
         if !options.optimized && products_wasm != subject.wasm.as_slice() {
-            return Err(Refusal::correspondence(
+            return Err(AdmissionRefusal::correspondence(
                 "rebuild-consistency",
                 "two consumer rebuilds of the same source disagree, so no exact artifact exists",
             ));
@@ -1113,7 +1123,7 @@ fn decide(options: &arguments::Options) -> Result<Admitted, Refusal> {
 
     // 7. Final-byte equality for the compared subject and call artifacts.
     if subject.wasm != candidate.bytes {
-        return Err(Refusal::correspondence(
+        return Err(AdmissionRefusal::correspondence(
             "subject-bytes",
             std::format!(
                 "the candidate subject bytes {} differ from the consumer rebuild {}",
@@ -1132,9 +1142,9 @@ fn decide(options: &arguments::Options) -> Result<Admitted, Refusal> {
             certified.wasm_sha256
         );
         return Err(if matches!(guard, Json::Null) {
-            Refusal::correspondence("call-bytes", message)
+            AdmissionRefusal::correspondence("call-bytes", message)
         } else {
-            Refusal::guard("call-bytes", message)
+            AdmissionRefusal::guard("call-bytes", message)
         });
     }
 
@@ -1143,7 +1153,7 @@ fn decide(options: &arguments::Options) -> Result<Admitted, Refusal> {
     reject_start_section(&subject.wasm)?;
     reject_start_section(&certified.wasm)?;
     if !required_effects_empty(&subject.wasm) || !required_effects_empty(&certified.wasm) {
-        return Err(Refusal::authorization(
+        return Err(AdmissionRefusal::authorization(
             "host-authorization",
             "the compared module imports an effect the resource-free profile never grants",
         ));
@@ -1155,14 +1165,16 @@ fn decide(options: &arguments::Options) -> Result<Admitted, Refusal> {
     let subject_report = admit(&mut subject_worker, &candidate, &subject, &source.bytes)?;
     let mut call_worker =
         crate::core::worker::Engine::start_admission(options.optimized).map_err(|failure| {
-            Refusal::unsupported(
+            AdmissionRefusal::unsupported(
                 "engine",
                 std::format!("the fresh call worker did not start: {}", failure.message),
             )
         })?;
     let call_tools = call_worker
         .tools_record()
-        .ok_or_else(|| Refusal::pin("worker-tools", "the call worker reported no tool identity"))?
+        .ok_or_else(|| {
+            AdmissionRefusal::pin("worker-tools", "the call worker reported no tool identity")
+        })?
         .to_vec();
     verify_tools(&selection, &call_tools, "call-worker-tools")?;
     let call_report = admit(&mut call_worker, &call, &certified, call_source.as_bytes())?;
@@ -1432,10 +1444,10 @@ fn guard_json(
     template: Option<noble_contracts::companion::GuardTemplate>,
     wrapper: Option<&str>,
     precondition_true: bool,
-) -> Result<Json, Refusal> {
+) -> Result<Json, AdmissionRefusal> {
     if precondition_true {
         if template.is_some() || wrapper.is_some() {
-            return Err(Refusal::guard(
+            return Err(AdmissionRefusal::guard(
                 "guard-presence",
                 "the contract precondition is `true`, so no guard wrapper may be bound",
             ));
@@ -1443,13 +1455,13 @@ fn guard_json(
         return Ok(Json::Null);
     }
     let Some(template) = template else {
-        return Err(Refusal::guard(
+        return Err(AdmissionRefusal::guard(
             "guard-template",
             "the contract precondition is not `true` and the selected registry entry has no recognized v1 guard template",
         ));
     };
     let Some(wrapper) = wrapper else {
-        return Err(Refusal::guard(
+        return Err(AdmissionRefusal::guard(
             "guard-wrapper",
             "the selected guard template produced no invocation wrapper",
         ));
@@ -1508,13 +1520,13 @@ fn admit(
     candidate: &Submitted,
     rebuilt: &Recompiled,
     source: &[u8],
-) -> Result<Instantiated, Refusal> {
+) -> Result<Instantiated, AdmissionRefusal> {
     let identity = worker.worker_id();
     let report = worker
         .admit(&candidate.bytes, &rebuilt.wat, source, &[], &[])
-        .map_err(|failure| Refusal::unsupported("instantiation", failure.message))?;
+        .map_err(|failure| AdmissionRefusal::unsupported("instantiation", failure.message))?;
     let value: serde_json::Value = serde_json::from_str(&report.json).map_err(|error| {
-        Refusal::invalid(
+        AdmissionRefusal::invalid(
             "instantiation",
             std::format!("worker report is not JSON: {error}"),
         )
@@ -1525,17 +1537,19 @@ fn admit(
         .unwrap_or("internal-failure");
     if code != "normal" {
         return Err(match code {
-            "correspondence-reject" => {
-                Refusal::correspondence("worker-comparison", serde_json::Value::to_string(&value))
-            }
-            "effect-manifest-reject" | "effect-policy-reject" => {
-                Refusal::authorization("worker-authorization", serde_json::Value::to_string(&value))
-            }
-            "stale-session-reject" => Refusal::stale("worker", "the worker was not fresh"),
+            "correspondence-reject" => AdmissionRefusal::correspondence(
+                "worker-comparison",
+                serde_json::Value::to_string(&value),
+            ),
+            "effect-manifest-reject" | "effect-policy-reject" => AdmissionRefusal::authorization(
+                "worker-authorization",
+                serde_json::Value::to_string(&value),
+            ),
+            "stale-session-reject" => AdmissionRefusal::stale("worker", "the worker was not fresh"),
             "invalid-artifact" => {
-                Refusal::invalid("worker-artifact", serde_json::Value::to_string(&value))
+                AdmissionRefusal::invalid("worker-artifact", serde_json::Value::to_string(&value))
             }
-            _ => Refusal::unsupported("worker", serde_json::Value::to_string(&value)),
+            _ => AdmissionRefusal::unsupported("worker", serde_json::Value::to_string(&value)),
         });
     }
     let module = value
@@ -1546,10 +1560,10 @@ fn admit(
         .get("wasm_sha256")
         .and_then(serde_json::Value::as_str)
         .ok_or_else(|| {
-            Refusal::invalid("load", "the admission report carries no module identity")
+            AdmissionRefusal::invalid("load", "the admission report carries no module identity")
         })?;
     if wasm != rebuilt.wasm_sha256 {
-        return Err(Refusal::correspondence(
+        return Err(AdmissionRefusal::correspondence(
             "load-buffer",
             std::format!(
                 "the instantiated buffer {wasm} is not the compared buffer {}",
@@ -1589,19 +1603,19 @@ fn stack_json(report: &serde_json::Value) -> Json {
     Json::String(stack.to_string())
 }
 
-fn reject_start_section(bytes: &[u8]) -> Result<(), Refusal> {
+fn reject_start_section(bytes: &[u8]) -> Result<(), AdmissionRefusal> {
     let parser = wasmparser::Parser::new(0);
     for payload in parser.parse_all(bytes) {
         match payload {
             Ok(wasmparser::Payload::StartSection { .. }) => {
-                return Err(Refusal::invalid(
+                return Err(AdmissionRefusal::invalid(
                     "start-section",
                     "a compared module has a start section",
                 ))
             }
             Ok(_) => {}
             Err(error) => {
-                return Err(Refusal::invalid(
+                return Err(AdmissionRefusal::invalid(
                     "wasm-format",
                     std::format!("a compared module is not valid Wasm: {error}"),
                 ))
@@ -1628,25 +1642,25 @@ fn required_effects_empty(bytes: &[u8]) -> bool {
 /// Observe the selected toolchain and write the pin document the release owner
 /// freezes. The document records what this process observed; the admission
 /// route still refuses unless its own observation equals it.
-fn emit_pins(options: &arguments::Pins) -> Result<PinsWritten, Refusal> {
+fn emit_pins(options: &arguments::Pins) -> Result<PinsWritten, AdmissionRefusal> {
     let lean_binary = crate::sandbox::release_binary()
-        .map_err(|failure| Refusal::pin("lean-release", failure.message))?;
+        .map_err(|failure| AdmissionRefusal::pin("lean-release", failure.message))?;
     let library_tree = crate::workflow::contract_library_root()
-        .map_err(|failure| Refusal::pin("contract-library", failure.message))?;
+        .map_err(|failure| AdmissionRefusal::pin("contract-library", failure.message))?;
     let selected = super::report::toolchain::select(&lean_binary, &library_tree)
-        .map_err(|failure| Refusal::pin("toolchain-binding", failure.message))?;
+        .map_err(|failure| AdmissionRefusal::pin("toolchain-binding", failure.message))?;
     let observed = super::report::pins::observe(&selected)
-        .map_err(|failure| Refusal::pin("pin-observe", failure.message))?;
+        .map_err(|failure| AdmissionRefusal::pin("pin-observe", failure.message))?;
     let worker = crate::core::worker::Engine::start_admission(options.optimized)
-        .map_err(|failure| Refusal::unsupported("engine", failure.message))?;
+        .map_err(|failure| AdmissionRefusal::unsupported("engine", failure.message))?;
     let record = worker.tools_record().ok_or_else(|| {
-        Refusal::pin(
+        AdmissionRefusal::pin(
             "worker-tools",
             "the admission worker reported no tool identity",
         )
     })?;
     let tools = super::report::pins::observe_tools(record)
-        .map_err(|failure| Refusal::pin("worker-tools", failure.message))?;
+        .map_err(|failure| AdmissionRefusal::pin("worker-tools", failure.message))?;
     let cli_sha256 = options
         .cli_sha256
         .clone()
@@ -1672,20 +1686,21 @@ fn emit_pins(options: &arguments::Pins) -> Result<PinsWritten, Refusal> {
             "wasm_opt": tool_pin(&tools.wasm_opt),
         },
     });
-    let bytes = serde_json::to_vec_pretty(&document)
-        .map_err(|error| Refusal::invalid("pins", std::format!("cannot encode pins: {error}")))?;
+    let bytes = serde_json::to_vec_pretty(&document).map_err(|error| {
+        AdmissionRefusal::invalid("pins", std::format!("cannot encode pins: {error}"))
+    })?;
     let mut file = std::fs::OpenOptions::new()
         .write(true)
         .create_new(true)
         .open(&options.output)
         .map_err(|error| {
-            Refusal::invalid(
+            AdmissionRefusal::invalid(
                 "pins",
                 std::format!("cannot create {}: {error}", options.output.display()),
             )
         })?;
     std::io::Write::write_all(&mut file, &bytes).map_err(|error| {
-        Refusal::invalid(
+        AdmissionRefusal::invalid(
             "pins",
             std::format!("cannot write {}: {error}", options.output.display()),
         )
