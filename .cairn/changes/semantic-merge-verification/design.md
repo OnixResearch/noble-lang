@@ -552,10 +552,15 @@ The decision is **NO-GO for integration at this revision**, with reasons:
 
 The evidence is `verification/semantic-merge-verification/receipt.json`
 (sha256 `d059a8153800b8982d080830618ab49465980d36860d049e4d64584a6bdef21b`,
-run on the clean tree at `9338c66d`): both regenerated claims
-(`SMERGE-CASE-04`, `SMERGE-CASE-01`) were kernel-checked by the pinned model
-with axioms `propext`/`Quot.sound`, the Phase 2 lane was re-run unchanged, and
-the wrong-proof and command-submission controls stayed `unknown`.
+clean tree at `9338c66d`) and its successor
+`verification/semantic-merge-verification/receipt-3beddcd9.json`
+(sha256 `e1382407a04bafec3f8e096b3b041d37d8f4976df4fe5f8c8904ff0947af367c`,
+clean tree at `3beddcd9`, after `e471a9e7` pinned the 34 Merge theorems in
+`proofs/mc1/ContractGate.lean` and removed the last two lint exemptions in
+code). Both regenerated claims (`SMERGE-CASE-04`, `SMERGE-CASE-01`) were
+kernel-checked by the pinned model with axioms `propext`/`Quot.sound`, the
+Phase 2 lane was re-run unchanged, and the wrong-proof and command-submission
+controls stayed `unknown`.
 
 No claim generator is wired into `prepare`, no admission path exists, no merge,
 branch, live slot, migration or release action follows, and the production
