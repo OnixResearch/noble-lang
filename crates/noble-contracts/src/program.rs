@@ -233,7 +233,36 @@ pub(crate) fn check_with_work(
     Result<noble_kernel::untrusted::Checked, crate::Diagnostic>,
     u32,
 ) {
-    check_with_owner(env, candidate, request, spans, span, None)
+    check_with_owner(env, candidate, request, spans, span, None, None)
+}
+
+/// Accept one body that applies a named definition. An eligibility refusal
+/// names the applied definition as well as the inner word, so a library
+/// specialization such as `wire@1.fanout` is attributable at its use.
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+pub(crate) fn check_with_application(
+    env: &noble_kernel::contracts::Env,
+    candidate: &noble_kernel::untrusted::Candidate,
+    request: &noble_kernel::untrusted::Request,
+    spans: &[crate::Span],
+    span: crate::Span,
+    application: &str,
+) -> (
+    Result<noble_kernel::untrusted::Checked, crate::Diagnostic>,
+    u32,
+) {
+    check_with_owner(
+        env,
+        candidate,
+        request,
+        spans,
+        span,
+        None,
+        Some(application),
+    )
 }
 
 #[expect(
@@ -259,6 +288,7 @@ pub(crate) fn check_signed_structure_with_work(
         spans,
         span,
         Some((owner, owner_inst)),
+        None,
     )
 }
 
@@ -281,6 +311,7 @@ fn check_with_owner(
         noble_kernel::contracts::Definition,
         &noble_kernel::words::Inst,
     )>,
+    application: Option<&str>,
 ) -> (
     Result<noble_kernel::untrusted::Checked, crate::Diagnostic>,
     u32,
@@ -289,7 +320,13 @@ fn check_with_owner(
     let result = match outcome {
         noble_kernel::untrusted::Outcome::Accepted(checked) => Ok(checked),
         noble_kernel::untrusted::Outcome::Invalid(diagnostic) => {
-            Err(invalid_rejection(&diagnostic, request, spans, span))
+            Err(invalid_rejection(
+                &diagnostic,
+                request,
+                spans,
+                span,
+                application,
+            ))
         }
         noble_kernel::untrusted::Outcome::Unsupported(_) => Err(crate::Diagnostic::new(
             crate::DiagnosticKind::Unsupported,
@@ -340,6 +377,7 @@ fn invalid_rejection(
     request: &noble_kernel::untrusted::Request,
     spans: &[crate::Span],
     span: crate::Span,
+    application: Option<&str>,
 ) -> crate::Diagnostic {
     let at = match rejection_span(diagnostic.node, spans, span) {
         Ok(at) => at,
@@ -348,7 +386,7 @@ fn invalid_rejection(
     let problem = crate::invalid(at, rejection_message(&diagnostic.constraint));
     if let Some(definition) = diagnostic.def {
         if let noble_kernel::untrusted::Constraint::Eligibility(ty) = &diagnostic.constraint {
-            return with_eligibility(problem, definition, ty);
+            return with_eligibility(problem, definition, ty, application);
         }
     }
     with_shapes(problem, diagnostic, request, at)
@@ -413,17 +451,29 @@ const fn rejection_message(constraint: &noble_kernel::untrusted::Constraint) -> 
 }
 
 /// Attach the word, required and actual stacks of a non-capturable value.
+/// When the body applies a named definition, the reported word is that
+/// application followed by the inner word it instantiated (`wire@1.fanout via
+/// dup`), so a library refusal is attributable to the library word.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; this total formatter appends the fixed eligibility detail to an already constructed diagnostic and has no precondition to assert."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; joining the applied and inner words grows owned Strings through non-const push and push_str."
 )]
 fn with_eligibility(
     mut problem: crate::Diagnostic,
     definition: noble_kernel::contracts::Definition,
     ty: &noble_kernel::types::Ty,
+    application: Option<&str>,
 ) -> crate::Diagnostic {
     let mut word = alloc::string::String::new();
     append_bootstrap_spelling(definition, &mut word);
+    let word = match application {
+        Some(application) => applied_word(application, &word),
+        None => word,
+    };
     let required = alloc::string::String::from("S Data");
     let mut actual = alloc::string::String::from("S ");
     debug_ty(&mut actual, ty);
@@ -441,6 +491,20 @@ fn with_eligibility(
         value_origin: None,
         difference: None,
     })
+}
+
+/// `application via inner`: the whole applied word first, so the diagnostic
+/// names the library word before the bootstrap word it instantiated.
+fn applied_word(application: &str, inner: &str) -> alloc::string::String {
+    let capacity = application
+        .len()
+        .saturating_add(inner.len())
+        .saturating_add(5);
+    let mut word = alloc::string::String::with_capacity(capacity);
+    word.push_str(application);
+    word.push_str(" via ");
+    word.push_str(inner);
+    word
 }
 
 /// Append `ty` exactly as its `{:?}` renders it: the kernel's constructor
@@ -781,9 +845,14 @@ mod tests {
         mut problem: crate::Diagnostic,
         definition: noble_kernel::contracts::Definition,
         ty: &noble_kernel::types::Ty,
+        application: Option<&str>,
     ) -> crate::Diagnostic {
         let mut word = alloc::string::String::new();
         super::append_bootstrap_spelling(definition, &mut word);
+        let word = match application {
+            Some(application) => alloc::format!("{application} via {word}"),
+            None => word,
+        };
         let required = alloc::string::String::from("S Data");
         let actual = alloc::format!("S {:?}", *ty);
         problem.message.push_str("; word ");
@@ -808,10 +877,13 @@ mod tests {
         for definition in [0, 1, 4, 999] {
             let definition = noble_kernel::contracts::Definition(definition);
             for ty in samples() {
-                let problem = || crate::invalid(span, "kernel rejected a non-capturable value");
-                let actual = super::with_eligibility(problem(), definition, &ty);
-                let expected = formatted_with_eligibility(problem(), definition, &ty);
-                assert_eq!(alloc::format!("{actual:?}"), alloc::format!("{expected:?}"));
+                for application in [None, Some("wire@1.fanout")] {
+                    let problem = || crate::invalid(span, "kernel rejected a non-capturable value");
+                    let actual = super::with_eligibility(problem(), definition, &ty, application);
+                    let expected =
+                        formatted_with_eligibility(problem(), definition, &ty, application);
+                    assert_eq!(alloc::format!("{actual:?}"), alloc::format!("{expected:?}"));
+                }
             }
         }
     }

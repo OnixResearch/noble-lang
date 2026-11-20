@@ -14,6 +14,10 @@ struct Admission<'a> {
     limits: noble_kernel::untrusted::Limits,
     environment: &'a noble_kernel::contracts::Env,
     linked_slots: &'a [u32],
+    /// The immutable namespace snapshot and its declaration order, so an
+    /// eligibility refusal can name the applied library word.
+    definitions: &'a [super::Named],
+    words: &'a [(alloc::string::String, super::Target)],
 }
 
 struct Assembly {
@@ -86,10 +90,15 @@ impl Assembly {
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the immutable namespace snapshot and declaration order are separate borrowed inputs from the checked definitions they qualify; an options struct would only rename the same borrowed fields."
+)]
 pub(super) fn emit(
     mut state: super::inference::State,
     mut environment: noble_kernel::contracts::Env,
     definitions: &[super::Named],
+    words: &[(alloc::string::String, super::Target)],
     input_bytes: usize,
     meter: &mut crate::Meter,
 ) -> Result<
@@ -187,6 +196,8 @@ pub(super) fn emit(
         limits,
         environment: &environment,
         linked_slots: &linked_slots,
+        definitions,
+        words,
     };
     let assembly = attempt!(assemble(state, expected, admission, meter));
     let (body, request, checked) = match assembly.root {
@@ -403,13 +414,25 @@ fn checked(
                 inst,
             )
         }
-        None => crate::program::check_with_work(
-            &caller_environment,
-            &body.candidate,
-            &request,
-            &spans,
-            span,
-        ),
+        None => match source_identity
+            .and_then(|identity| application_name(admission.definitions, admission.words, identity))
+        {
+            Some(application) => crate::program::check_with_application(
+                &caller_environment,
+                &body.candidate,
+                &request,
+                &spans,
+                span,
+                application,
+            ),
+            None => crate::program::check_with_work(
+                &caller_environment,
+                &body.candidate,
+                &request,
+                &spans,
+                span,
+            ),
+        },
     };
     if let Err(error) = meter.charge(work_used, span) {
         return Err(super::Error::at(crate::source::Stage::Acceptance, error));
@@ -428,4 +451,30 @@ fn checked(
         owner_inst,
         span,
     })
+}
+
+/// The library spelling bound to a definition identity when the immutable
+/// namespace snapshot declares one: `wire@1.fanout` for the body the `wire@1`
+/// module exports as `fanout`. Later snapshots cannot shadow the earliest
+/// declaration, so the first matching word is the published one.
+fn application_name<'a>(
+    definitions: &[super::Named],
+    words: &'a [(alloc::string::String, super::Target)],
+    identity: u64,
+) -> Option<&'a str> {
+    let (spelling, _) = crate::scan::find_first(words, |(_, target)| {
+        bound_identity(definitions, *target) == Some(identity)
+    })?;
+    Some(spelling.as_str())
+}
+
+/// The source identity the definition a namespace target names was installed
+/// with, if the target names one.
+fn bound_identity(definitions: &[super::Named], target: super::Target) -> Option<u64> {
+    let super::Target::Named(index) = target else {
+        return None;
+    };
+    let index = usize::try_from(index).ok()?;
+    let definition = definitions.get(index)?;
+    Some(definition.identity)
 }

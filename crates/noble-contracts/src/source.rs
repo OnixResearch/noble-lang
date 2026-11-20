@@ -54,6 +54,12 @@ pub const fn pure_builtin_spelling(identity: u32) -> Option<&'static str> {
 // close, while `as_bytes` yields the identical bytes.
 pub const RESULT_LIBRARY_SOURCE: &[u8] = include_str!("fixtures/result.noble").as_bytes();
 
+/// Immutable source authority for the versioned Wiring library. The same
+/// declaration bytes are checked through ordinary module registration; the
+/// exact text is the O11-4 sketch of design Decision 1 (SHA-256
+/// `96a5a269a5d227ac16f2e71b0d2aa7846576c4a11b2ff1bb2eefb49ceed9db28`).
+pub const WIRE_LIBRARY_SOURCE: &[u8] = include_str!("fixtures/wire.noble").as_bytes();
+
 /// Host-selected aggregate of original module bytes and outside definition history.
 /// This does not raise the per-submission `Limits::bytes` parser bound.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

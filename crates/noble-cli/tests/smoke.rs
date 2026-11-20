@@ -22,6 +22,8 @@ mod epoch;
 mod guardv2;
 #[path = "smoke/reports.rs"]
 mod reports;
+#[path = "smoke/wire_library.rs"]
+mod wire_library;
 
 // r[verify VT-M1-02]
 #[test]
