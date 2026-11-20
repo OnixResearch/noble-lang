@@ -1,0 +1,6 @@
+{"operation":"define","id":"definition-aliased","name":"aliased","source":"def aliased [ drop dup quote swap quote compose [ + + + ] compose ]","inputs":[]}
+{"operation":"install","id":"runner2","source":"run","inputs":["I64","I64","Program<I64+I64,I64,pure>"]}
+{"operation":"install","id":"aliased","source":"aliased","selected_name":"aliased","inputs":["I64","I64"]}
+{"operation":"invoke","id":"aliased","inputs":[{"kind":"i64","value":"2"},{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"publish","slot":"alias-target","owner":"program-1","expected_epoch":"0"}
+{"operation":"release-program","owner":"program-1"}

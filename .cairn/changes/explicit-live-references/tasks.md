@@ -56,11 +56,11 @@
   builds the selected CLI from a committed clean tree, requires one projection entry for every
   canonical leaf path and every variant, and refuses a case for each machine-expressible field
   whose canonical attempt did not run. Receipt: `verification/lslot-cases/acceptance.json`
-  (sha256 `3b743cef1c72a0f481407e1b2d08a856dffb2fe2d841e722c486cfd34222a1de`, source commit
-  `9cf2cdebe96f09fdd82679d04e55114a0ca36120`, source revision
-  `sha256:e94ef83ac94b5a5366919b15e107e73739a98aba6958d1b55a5d9a95022e8afe`, binary sha256
+  (sha256 `b62cf62b80c148add5e6126f06e854cad2ad44f0491573dc3d436cb96edf3cb7`, source commit
+  `ae972fd0cce81a4d82c0dc03b1e5fa1d0bbd7fac`, source revision
+  `sha256:9aa0b92c8314c6ba70f4d99e80cc0d6eb6780481677bb85366e4d3714a48fd2e`, binary sha256
   `422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb`); raw lane evidence and
-  command output are retained under `verification/lslot-cases/raw/r3e-151546/`. The receipt binds
+  command output are retained under `verification/lslot-cases/raw/r3f-151856/`. The receipt binds
   the runtime after merging `cairn/wave1`'s template identity (experimental local identities v4,
   `template_sha256` and template classes): no LSLOT expectation names the identity version or a
   descriptor field, and the companion origin-control lane now asserts the v4 identity directly.
