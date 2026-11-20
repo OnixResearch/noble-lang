@@ -721,18 +721,24 @@ async function observeLive05() {
   const missing = fixture('LIVE-05-missing', 'math.noble', 'def addone [ 1 + ]');
   const missingWatch = start('LIVE-05-missing', ['live', 'watch', '--source', missing.source, '--engine', 'v8']);
   const missingInitial = await missingWatch.report();
+  const missingPushed = await missingWatch.submit('7');
   replace(missing.source, 'import missing@1 as m');
   const missingRefused = await missingWatch.report();
-  replace(missing.source, 'def addone [ 1 + ]');
+  // A watch session executes again only on the last ACKed selected bytes.
+  const missingBlocked = await missingWatch.submit('20 addone');
+  fs.writeFileSync(missing.source, 'def addone [ 1 + ]');
   const missingOld = await missingWatch.submit('20 addone');
   await missingWatch.close(0);
-  keep('LIVE-05-missing', 'initial', missingInitial);
-  keep('LIVE-05-missing', 'refused', missingRefused);
-  keep('LIVE-05-missing', 'old-call', missingOld);
+  for (const [label, report] of Object.entries({ initial: missingInitial, pushed: missingPushed, refused: missingRefused,
+    blocked: missingBlocked, oldCall: missingOld })) keep('LIVE-05-missing', label, report);
   observe('LIVE-05', 'input.variants.missing-import.registry', missingRefused.outcome === 'reload-refused'
-    && missingRefused.generation === missingInitial.generation && missingOld.outcome === 'normal' && isStack(missingOld, ['I64:21']),
+    && missingRefused.generation === missingInitial.generation && isStack(missingRefused, ['I64:7'])
+    && missingBlocked.outcome === 'source-change-refused' && isStack(missingBlocked, ['I64:7'])
+    && missingOld.outcome === 'normal' && isStack(missingOld, ['I64:7', 'I64:21'])
+    && missingOld.source_generation === missingInitial.generation,
     { outcome: missingRefused.outcome, generation: missingRefused.generation, diagnostic: missingRefused.diagnostic,
-      old_call_stack: stackOf(missingOld) });
+      blocked: missingBlocked.outcome, old_call_stack: stackOf(missingOld), old_call_generation: missingOld.source_generation,
+      initial_generation: missingInitial.generation });
 
   const escape = fixture('LIVE-05-escape', 'math.noble', 'def addone [ 1 + ]');
   const outside = path.join(escape.directory, '..', 'unselected.noble');
