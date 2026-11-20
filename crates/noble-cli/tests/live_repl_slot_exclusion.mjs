@@ -117,8 +117,8 @@ try {
   summary = {
     case: 'LSLOT-09', gate: 'guarded-live-draft-refuses-checked-slot-caller',
     selected_binary_sha256: binarySha256, slot_source_sha256: slotSourceSha256,
-    refusal: { profile: 'guarded Live-Wasm-Draft', outcome: refused.outcome,
-      diagnostic: refused.diagnostic, generation: refused.generation,
+    refusal: { profile: 'guarded Live-Wasm-Draft', stage: refused.stage,
+      outcome: refused.outcome, diagnostic: refused.diagnostic, generation: refused.generation,
       exit: slotExit.code, guest_requests: refused.guest_requests,
       protected_operations: refused.protected_operations },
     control: { initial_generation: initial.generation, saved_generation: savedGeneration,

@@ -110,7 +110,9 @@ export function project01({ fixture, lane }) {
       effects: ['live.dispatch'],
     }, { instruction: site.instruction,
       borrowed_input: genericInstall.request.inputs.find(type => type.startsWith('LiveRef')),
-      effects: site.effects }),
+      effects: site.effects },
+    'structured projection of the canonical generic-caller prose: instruction, borrowed input'
+      + ' type and checked effects'),
     measured('input', 'slot', { id: 'increment', incarnation: 1, generation: 1,
       target: `n-v1:[ ${definitionBody} ]` },
     { id: firstPublish.request.slot,
@@ -216,10 +218,13 @@ export function project02({ fixture, lane }) {
     declared('input', 'transitive_variant.registry_epoch_1.B.body',
       fixture.input.transitive_variant.registry_epoch_1.B.body,
       'the selected B1 body is `slot.invoke` and dispatches only through its host-issued C ref'),
-    measured('input', 'base.interleaving', 4, 4,
-      'B before publication, publication ACK, same-root B after, and the next root'),
-    measured('input', 'transitive_variant.interleaving', 4, 4,
-      'root pins, C publishes, the pinned A/B chain selects C-v1, the next root selects C-v2'),
+    declared('input', 'base.interleaving', fixture.input.base.interleaving,
+      'prose steps bound by the observed B-v1/B-v1/A result, the epoch-2 publication and the'
+      + ' next-root B-v2 selection above'),
+    declared('input', 'transitive_variant.interleaving',
+      fixture.input.transitive_variant.interleaving,
+      'prose steps bound by the observed epoch-1 pin, the epoch-2 C publication and the old/new C'
+      + ' selections above'),
     stageEntry(lane.steps, { slot: 'live-slot-root', command: 'live-slot-root',
       source: 'live-slot-root', 'operator-control': 'live-slot-root' }, 'live-slot-root'),
     measured('expected', 'outcome', 'one-map-per-root-with-explicit-typed-ref-pass-through',
@@ -546,10 +551,13 @@ export function project09({ fixture, lane }) {
       { profile: draft, source: 'reload n then invoke saved [ n ]',
         expected: 'old-capture-not-slot' },
     ], 'control outcomes are the two `old_capture_semantics_changed` observations below'),
-    measured('expected', 'stage', 'profile-admission', 'profile-admission',
-      'Core reports `resolve`, the guarded REPL reports `admission` and the opt-in install reports'
-      + ' `slot`; each is the profile-admission phase of this case, whose attempt is the legacy'
-      + ' caller submission'),
+    { scope: 'expected', key: 'stage', canonical: 'profile-admission',
+      observed: [...new Set([...refusals.map(refusal => refusal.stage),
+        repl.refusal.stage])],
+      status: 'declared',
+      note: 'each selected report names its own phase (`resolve` for Core, `admission` for the'
+        + ' guarded REPL, `slot` for the opt-in caller install); the canonical single stage label'
+        + ' `profile-admission` is a design name, not a runtime field' },
     measured('expected', 'outcome', 'explicit-unsupported-in-all-legacy-profiles',
       refusals.every(refusal => refusal.outcome === 'unsupported')
         && repl.refusal.outcome === 'reload-refused'
@@ -558,7 +566,9 @@ export function project09({ fixture, lane }) {
     measured('expected', 'unsupported_produces_generic_run_or_empty_effect', false,
       !refusals.every(refusal => refusal.outcome === 'unsupported')
         || repl.refusal.outcome !== 'reload-refused'),
-    measured('expected', 'candidate_body_executions', 0, 0,
+    measured('expected', 'candidate_body_executions', 0,
+      refusals.reduce((total, refusal) => total + refusal.guest_requests,
+        repl.refusal.guest_requests),
       'every refusal reports zero guest requests, so no candidate body ran'),
     measured('expected', 'historical_LIVE_01_to_10_changed', false, !lane.liveUnchanged,
       'the live-wasm case packet is byte-identical to HEAD and no LIVE state changed'),
