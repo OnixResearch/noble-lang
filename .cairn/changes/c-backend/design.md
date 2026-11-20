@@ -2,7 +2,7 @@
 
 ## Context
 
-`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles checked, effect-free Core-Bootstrap I64/Bool/Unit/Text-result expressions plus internal Pair/Sum/List operations; it does not compile or execute native ELF. The held canonical CB-BUILD-01 does not describe the source-only route, so the reconciled delta's disclosure needs independent owner review and legal delta sync. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
+`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles checked, effect-free Core-Bootstrap expressions with one I64/Bool/Unit/Text/Pair/Sum/List result plus internal Pair/Sum/List operations; it does not compile or execute native ELF. The held canonical CB-BUILD-01 does not describe the source-only route, so the reconciled delta's disclosure needs independent owner review and legal delta sync. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
 
 The isolated source-only emitter now lowers checked pure `dip` and `if`
 as well as literal/stack/arithmetic/Unit/quotation/`quote`/`compose`/`run`.
@@ -28,7 +28,12 @@ iterative step-charged nested capture accounting. The maximum 255-element
 List ceiling now accepts an optional exact `limits.list_length` from 0 to 255;
 the effective bound is emitted as `LIST_LIMIT` and retained in the manifest,
 with `cons` checking it before List growth.
-Final aggregates remain unsupported. The complete CB-SCOPE/CB-VALUE/
+One checked `Pair`, `Sum` or `List` result over those supported element
+types is now also admitted: the runtime renders it as bounded JSON value
+text in the selected runtime's value encoding (`Pair` as an ordered
+two-element array, `Sum` with its `left`/`right` variant, `List` as an
+ordered array), with a depth bound and the output-byte quota covering the
+rendering. `Syntax` and `Program` results remain unsupported. The complete CB-SCOPE/CB-VALUE/
 CB-LIMIT contracts remain open: inert Syntax/`reflect`, native List quota
 outcomes, typed runtime input, definitions, `test.emit`
 and current host authority require distinct checked representations

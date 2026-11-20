@@ -59,6 +59,17 @@ complete CB-LIMIT-01 limits or CB-BUILD-01 native build contract; both remain
 open. This is not native compilation, execution, sandbox or artifact admission
 evidence.
 
+The preceding result-form sentence records the `e76d8469` state. The current
+nonselected source-only emitter additionally accepts exactly one checked
+`Pair`, `Sum` or `List` result whose complete element types are `I64`,
+`Bool`, `Unit`, `Text` or a nested `Pair`/`Sum`/`List` of those, and renders
+it as bounded JSON value text with the selected runtime's value encoding;
+`Syntax` and `Program` results, `reflect`, typed runtime inputs, named
+definitions and host effects still refuse. It emits that rendering into the
+inert C source only: the aggregate result has not been executed, compared to
+selected Wasm or admitted as native code, so no CB-GATE-01, quota or
+CB-ADMIT-01 evidence follows.
+
 
 
 ### Requirement: CB-IDENTITY-01
@@ -137,7 +148,7 @@ r[CB-SANDBOX-01]
 
 **CB-SANDBOX-01.**
 
-Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before candidate instructions it closes inherited file descriptors except explicitly enumerated private request/response protocol FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock, post-load process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and escape attempts MUST refuse or terminate with zero protected operations, with a benign authorized `test.emit` control under the same confinement. Hostile vDSO `__vdso_clock_gettime`, `__vdso_time`, `__vdso_gettimeofday`, coarse-clock, direct-vvar and x86 `rdtsc`/`rdtscp` attempts likewise MUST refuse or be demonstrably contained without host-time or elapsed-time disclosure; trapping or virtualizing only the TSC is insufficient, and a vDSO-only or coarse-clock-only mechanism is not equivalent. A native crash cannot become a successful Noble result.
+Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before candidate instructions it closes inherited file descriptors except explicitly enumerated private request/response protocol and output FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock, post-load process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and escape attempts MUST refuse or terminate with zero protected operations, with a benign authorized `test.emit` control under the same confinement. Hostile vDSO `__vdso_clock_gettime`, `__vdso_time`, `__vdso_gettimeofday`, coarse-clock, direct-vvar and x86 `rdtsc`/`rdtscp` attempts likewise MUST refuse or be demonstrably contained without host-time or elapsed-time disclosure; trapping or virtualizing only the TSC is insufficient, and a vDSO-only or coarse-clock-only mechanism is not equivalent. A native crash cannot become a successful Noble result.
 
 The native runner MUST select a reviewed immutable derivation and policy
 separate from the proof-only Lean runner and any package merely cached on
