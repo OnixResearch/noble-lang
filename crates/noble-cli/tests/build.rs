@@ -1,6 +1,29 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
+#![expect(
+    tigerstyle::excessive_file_length,
+    reason = "Owner: noble-maintainers; the owner-law release tests stay in the existing proof-required build target instead of a new test unit"
+)]
+#![expect(
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; the `#[path]` module retains the owner_law production module's name"
+)]
+#![expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-maintainers; the test helpers spell repository fixture paths verbatim"
+)]
+#![expect(
+    tigerstyle::no_unwrap,
+    reason = "Owner: noble-maintainers; test helpers unwrap their own freshly written fixtures and parsed reports"
+)]
+#![expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; each route test asserts the exact refusal fields it exists to pin"
+)]
 //! Real CLI checks for proof-required release refusal and argument decoding.
+
+#[path = "build/owner_law.rs"]
+mod owner_law;
 
 fn fixture(name: &str) -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
