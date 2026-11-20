@@ -119,6 +119,19 @@ structure EntryEmbedding (caller : NamedV1.Environment) (subject : NamedV1.Subje
   output : entry.output = subject.output
   origin : entry.origin = subject.provenance
 
+theorem Embedding.slot_fresh {callee caller : NamedV1.Environment} (e : Embedding callee caller)
+    (occurrence : Nat) : callee.lookup (e.rename occurrence) = none :=
+  e.fresh occurrence
+
+/-- A call occurrence's specialization slot is not a callee row, so installing
+the caller's occurrence row at it can neither shadow nor rewrite a snapshot row.
+Distinct occurrences also get distinct slots (`Embedding.injective`). -/
+theorem EntryEmbedding.slot_not_snapshot {caller : NamedV1.Environment}
+    {subject : NamedV1.Subject} {entry : NamedV1.Entry} {use : NamedV1.Use}
+    (e : EntryEmbedding caller subject entry use) : subject.env.lookup use.slot = none := by
+  rw [e.placement]
+  exact e.embedding.fresh use.occurrence
+
 theorem lookup_entries {env : NamedV1.Environment} {slot : Nat} {entry : NamedV1.Entry}
     (h : env.lookup slot = some entry) : entry ∈ env.entries :=
   List.mem_of_find?_eq_some h

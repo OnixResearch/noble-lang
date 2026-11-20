@@ -288,37 +288,5 @@ fn refuses_orphan_and_misbound_rows(
     Ok(())
 }
 
-#[test]
-fn reviewed_v3_rule_identities_are_exact() {
-    // The revision-3 reviewed rule set is a fixed list of exact Lean
-    // declarations. A silent addition, removal or rename changes the reviewed
-    // rule set under V-INTRINSIC-01, so the table is pinned here and the
-    // declarations themselves are pinned by `proofs/mc1/ContractGate.lean`
-    // under the strict axiom list.
-    assert_eq!(
-        noble_contracts::intrinsic::REVIEWED_RULES_V3,
-        &[
-            ("bv-add-assoc", "BitVec.add_assoc"),
-            ("bv-add-comm", "BitVec.add_comm"),
-            ("bv-mul-add", "BitVec.mul_add"),
-            ("list-append-assoc", "List.append_assoc"),
-            ("list-append-nil", "List.append_nil"),
-            ("list-nil-append", "List.nil_append"),
-        ],
-        "reviewed rule identities changed"
-    );
-    for (identifier, declaration) in noble_contracts::intrinsic::REVIEWED_RULES_V3 {
-        assert!(!identifier.is_empty(), "empty rule identifier");
-        assert!(
-            declaration.contains('.'),
-            "rule {identifier} does not name a qualified Lean declaration"
-        );
-        assert!(
-            !declaration.contains("axiom") && !declaration.contains("sorry"),
-            "rule {identifier} names an axiom or a hole"
-        );
-    }
-}
-
 #[path = "named_v2/proofs.rs"]
 mod proofs;

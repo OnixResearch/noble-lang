@@ -42,6 +42,7 @@ elab "check_contract_library" : command => do
     ``NobleContracts.NamedV3.holds₂_env_free, ``NobleContracts.NamedV3.evaluate₂_env_free,
     ``NobleContracts.NamedV3.Subject.resolves, ``NobleContracts.NamedV3.Subject.root_resolves,
     ``NobleContracts.NamedV3.callsResolve_of_resolves, ``NobleContracts.NamedV3.run_nil_iff,
+    ``NobleContracts.NamedV3.EntryEmbedding.slot_not_snapshot, ``NobleContracts.NamedV3.Embedding.slot_fresh,
     ``List.nil_append, ``List.append_nil,
     ``BitVec.add_assoc, ``BitVec.add_comm, ``BitVec.mul_add,
     ``NobleContracts.SpecQuality.increment_inhabited,

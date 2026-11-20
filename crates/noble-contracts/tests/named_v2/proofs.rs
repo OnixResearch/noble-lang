@@ -74,3 +74,36 @@ fn quoted_named_call_cannot_use_two_direct_call_rule() -> Result<(), String> {
     );
     Ok(())
 }
+
+#[test]
+fn reviewed_v3_rule_identities_are_exact() {
+    // The revision-3 reviewed rule set is a fixed list of exact Lean
+    // declarations, pinned here and by `proofs/mc1/ContractGate.lean` under the
+    // strict axiom list; any change is a reviewed `V-INTRINSIC-01` rule-set edit.
+    assert_eq!(
+        noble_contracts::intrinsic::REVIEWED_RULES_V3,
+        &[
+            ("bv-add-assoc", "BitVec.add_assoc"),
+            ("bv-add-comm", "BitVec.add_comm"),
+            ("bv-mul-add", "BitVec.mul_add"),
+            ("list-append-assoc", "List.append_assoc"),
+            ("list-append-nil", "List.append_nil"),
+            ("list-nil-append", "List.nil_append"),
+        ],
+        "reviewed rule identities changed"
+    );
+    for (identifier, declaration) in noble_contracts::intrinsic::REVIEWED_RULES_V3 {
+        assert!(
+            declaration.contains('.'),
+            "rule {identifier} is not qualified"
+        );
+        assert!(
+            !declaration.contains("axiom"),
+            "rule {identifier} names an axiom"
+        );
+        assert!(
+            !declaration.contains("sorry"),
+            "rule {identifier} contains a hole"
+        );
+    }
+}
