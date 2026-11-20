@@ -826,8 +826,9 @@ const acceptance = {
   integrity_issues: issues,
   limitations: [
     'This receipt executes behavior; it is not a proof. Every promoted case keeps `proof: open`.',
-    'LSLOT-05 and LSLOT-08 are not executed here: their positive selected-target and exact replay'
-      + ' outcomes wait on runtime template identity (P-ID-03/P-ID-04).',
+    'LSLOT-05 and LSLOT-08 are not executed by this gate: it carries no projector for the'
+      + ' positive selected-target proof or the exact replay case, so it neither observes nor'
+      + ' refuses them.',
     'LSLOT-04 and LSLOT-07 remain refused on evidence-carrying publication, the same capability'
       + ' LSLOT-05 waits for; their other fields are recorded.',
     '`verification/live-slot-current-source/gate.mjs` and `verification/live-update-corpus` are'
