@@ -493,7 +493,7 @@ static void emit_value(Value value, size_t depth) {
         else if (value.bits == 1) APPEND_LITERAL("{\"type\":\"Bool\",\"value\":true}");
         else fail("invalid Bool output");
     } else if (value.tag == TAG_UNIT) {
-        APPEND_LITERAL("{\"type\":\"Unit\"}");
+        APPEND_LITERAL("{\"type\":\"Unit\",\"value\":null}");
     } else if (value.tag == TAG_TEXT) {
         emit_text(value.bits);
     } else if (value.tag == TAG_PAIR) {
