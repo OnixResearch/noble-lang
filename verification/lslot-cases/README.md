@@ -3,7 +3,7 @@
 `gate.mjs` executes the live-slot cases registered in
 `specs/conformance/live-reference-cases.json` and projects the runtime evidence onto every
 machine-expressible `input`, `expected` and variant field. It promotes nothing by itself: it writes
-one immutable `acceptance.json` and reports which cases are promotable.
+a new immutable receipt file and reports which cases are promotable.
 
 ## Running it
 
@@ -20,8 +20,13 @@ env -i HOME="$HOME" USER="$USER" LOGNAME="$USER" LANG=C.UTF-8 TMPDIR=/some/priva
 ```
 
 `ABSOLUTE_NEW_OUTPUT_DIRECTORY` must not exist. The gate writes `source.json`,
-`canonical-fixture.json`, every command's raw stdout/stderr and `acceptance.json` there; lane
-evidence directories are created under `TMPDIR` and hashed into the receipt.
+`canonical-fixture.json`, every command's raw stdout/stderr and a new `receipt-<UTC>.json` (with its
+`.sha256`) there; lane evidence directories are created under `TMPDIR` and hashed into the receipt.
+
+Retained receipts live beside the gate: `acceptance.json` is the round-1 receipt and
+`acceptance-2026-11-20-r3.json` is the receipt the round-3 promotions cite. A run never writes,
+overwrites or binds a retained receipt — every retained receipt file is excluded from the receipt's
+manifest, and promoting copies a run's new receipt to a new retained name.
 
 ## What a promotion means
 

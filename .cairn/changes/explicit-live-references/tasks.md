@@ -55,7 +55,8 @@
   Progress 2026-11-20 (round 3): executed, not yet complete. `verification/lslot-cases/gate.mjs`
   builds the selected CLI from a committed clean tree, requires one projection entry for every
   canonical leaf path and every variant, and refuses a case for each machine-expressible field
-  whose canonical attempt did not run. Receipt: `verification/lslot-cases/acceptance.json`
+  whose canonical attempt did not run. Receipt:
+  `verification/lslot-cases/acceptance-2026-11-20-r3.json`
   (sha256 `b62cf62b80c148add5e6126f06e854cad2ad44f0491573dc3d436cb96edf3cb7`, source commit
   `ae972fd0cce81a4d82c0dc03b1e5fa1d0bbd7fac`, source revision
   `sha256:9aa0b92c8314c6ba70f4d99e80cc0d6eb6780481677bb85366e4d3714a48fd2e`, binary sha256

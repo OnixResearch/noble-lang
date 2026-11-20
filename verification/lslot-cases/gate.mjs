@@ -5,7 +5,8 @@
 // and refuse any variant the lanes did not reach. A case is promotable only
 // when every machine-expressible field is observed and equals the canonical
 // value; one mismatch always fails, and a leaf with no projection entry fails
-// the completeness check.
+// the completeness check. A run writes a new immutable receipt file; it never
+// writes, overwrites or binds a retained receipt.
 //
 // Usage: node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY
 // Environment: TMPDIR (lane evidence parents), NOBLE_LSLOT_TARGET_DIR
@@ -44,6 +45,9 @@ const save = (name, content) =>
 
 const fixtureFile = 'specs/conformance/live-reference-cases.json';
 const liveWasmFile = 'specs/conformance/live-wasm-cases.json';
+// The retained receipt the committed promotions cite. A run writes a new file
+// and never rewrites this one.
+const promotedReceiptPath = '../../verification/lslot-cases/acceptance-2026-11-20-r3.json';
 const fixtureBytes = fs.readFileSync(path.join(root, fixtureFile));
 const fixture = JSON.parse(fixtureBytes);
 assert.deepEqual(fixture.cases.map(row => row.id),
@@ -183,7 +187,23 @@ const dependencies = depInfo.replace(/\\\n/g, ' ').split(/\s+/)
   .filter(file => !file.startsWith('target/'));
 const missingDependencies = dependencies.filter(file => !fs.existsSync(path.join(root, file)));
 assert.deepEqual(missingDependencies, [], `dep-info paths missing: ${missingDependencies}`);
-const inputs = [...new Set([...explicitInputs, ...dependencies])];
+// Every retained receipt beside the gate is excluded from the manifest, so no
+// receipt binds itself or an earlier receipt. A new receipt file must be added
+// here (and never replaces a retained one).
+const retainedReceipts = [
+  'verification/lslot-cases/acceptance.json',
+  'verification/lslot-cases/acceptance.sha256',
+  'verification/lslot-cases/acceptance-2026-11-20-r3.json',
+  'verification/lslot-cases/acceptance-2026-11-20-r3.sha256',
+];
+const presentReceipts = fs.readdirSync(path.join(root, 'verification/lslot-cases'))
+  .filter(name => name.startsWith('acceptance'))
+  .map(name => `verification/lslot-cases/${name}`)
+  .sort();
+assert.deepEqual(presentReceipts, [...retainedReceipts].sort(),
+  'every retained receipt file is listed in retainedReceipts');
+const inputs = [...new Set([...explicitInputs, ...dependencies])]
+  .filter(file => !retainedReceipts.includes(file));
 const source = sourceInventory(inputs, selectedTrees);
 const sourceRevision = revision(source);
 save('source.json', JSON.stringify({ revision: sourceRevision, sha256: source }, null, 2) + '\n');
@@ -722,7 +742,7 @@ for (const row of cases) {
   assert.equal(record.subject, row.id);
   assert.equal(record.revision, fixture.revision);
   assert.equal(record.configuration.gate, 'verification/lslot-cases/gate.mjs');
-  assert.equal(record.configuration.receipt, '../../verification/lslot-cases/acceptance.json');
+  assert.equal(record.configuration.receipt, promotedReceiptPath);
   assert.equal(record.configuration.case, row.id);
   assert.equal(record.configuration.prepromotion_case_sha256, designSha(row.id),
     `${row.id} canonical design drifted after promotion`);
@@ -839,9 +859,15 @@ const acceptance = {
   version_control: { before: beforeGit, after: afterGit },
 };
 const text = JSON.stringify(acceptance, null, 2) + '\n';
-save('acceptance.json', text);
-save('acceptance.sha256', `${sha(text)}  acceptance.json\n`);
-console.log(JSON.stringify({ result, receipt: path.join(output, 'acceptance.json'),
+// A run writes a new receipt file. The retained receipts (above) are never
+// written: promoting copies this file to a new retained name.
+const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+const receiptName = `receipt-${stamp}.json`;
+assert.ok(!retainedReceipts.some(file => file.endsWith(`/${receiptName}`)),
+  `a gate run never writes a retained receipt name: ${receiptName}`);
+save(receiptName, text);
+save(`${receiptName.replace(/\.json$/, '')}.sha256`, `${sha(text)}  ${receiptName}\n`);
+console.log(JSON.stringify({ result, receipt: path.join(output, receiptName),
   receipt_sha256: sha(text), source_revision: sourceRevision,
   binary_sha256: binarySha256, ...summary, integrity_issues: issues.length }));
 process.exitCode = result === 'passed' ? 0 : 1;

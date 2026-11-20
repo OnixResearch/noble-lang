@@ -19,7 +19,7 @@
           "configuration": {
             "profile": "Live-Slot-Design",
             "harness": "saved-capture-versus-opt-in-generic-root",
-            "receipt": "../../verification/lslot-cases/acceptance.json",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r3.json",
             "receipt_sha256": "b62cf62b80c148add5e6126f06e854cad2ad44f0491573dc3d436cb96edf3cb7",
             "gate": "verification/lslot-cases/gate.mjs",
             "case": "LSLOT-01",
@@ -53,7 +53,7 @@
           "configuration": {
             "profile": "Live-Slot-Design",
             "harness": "parent-child-transitive-snapshot-and-new-root",
-            "receipt": "../../verification/lslot-cases/acceptance.json",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r3.json",
             "receipt_sha256": "b62cf62b80c148add5e6126f06e854cad2ad44f0491573dc3d436cb96edf3cb7",
             "gate": "verification/lslot-cases/gate.mjs",
             "case": "LSLOT-02",
@@ -89,7 +89,7 @@
           "configuration": {
             "profile": "Live-Slot-Design",
             "harness": "independent-exact-ordered-candidate-admission",
-            "receipt": "../../verification/lslot-cases/acceptance.json",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r3.json",
             "receipt_sha256": "b62cf62b80c148add5e6126f06e854cad2ad44f0491573dc3d436cb96edf3cb7",
             "gate": "verification/lslot-cases/gate.mjs",
             "case": "LSLOT-03",
@@ -135,7 +135,7 @@
           "configuration": {
             "profile": "Live-Slot-Design",
             "harness": "host-issued-input-ref-noncapture-and-lifetime",
-            "receipt": "../../verification/lslot-cases/acceptance.json",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r3.json",
             "receipt_sha256": "b62cf62b80c148add5e6126f06e854cad2ad44f0491573dc3d436cb96edf3cb7",
             "gate": "verification/lslot-cases/gate.mjs",
             "case": "LSLOT-06",
@@ -183,7 +183,7 @@
           "configuration": {
             "profile": "Live-Slot-Design",
             "harness": "legacy-profile-exclusion",
-            "receipt": "../../verification/lslot-cases/acceptance.json",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r3.json",
             "receipt_sha256": "b62cf62b80c148add5e6126f06e854cad2ad44f0491573dc3d436cb96edf3cb7",
             "gate": "verification/lslot-cases/gate.mjs",
             "case": "LSLOT-09",
