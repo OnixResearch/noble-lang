@@ -30,6 +30,8 @@
   },
   "CALC-09-later-features": {
     "note": "CALC-09's `later_features` are outside the Calculator-v1 line grammar and must be refused explicitly (`exact-display-or-explicit-unsupported-feature`, `silent_approximation: false`, `truncated_decimal_labeled_exact: false`). Each probe's category follows from the grammar: an out-of-grammar construct reaches name resolution or trailing input, and a fractional power reaches the numeric domain. No probe's span is stated, so the runner compares the category only.",
+    "reading": "The probes meet `explicit-unsupported-feature` only under the derived reading \"refused under any named category, never approximated\". That reading is not registered by the case and needs an explicit owner or reviewer acceptance, or a case wording amendment, before CALC-09 is promoted.",
+    "caveat": "The categories are generic grammar and name categories, so an unsupported feature is indistinguishable from a typo: `sin(1)` reports the same `UnknownName [0,3)` as `sni(1)`, `1 m` reports the same `TrailingInput` as `1 2`, and a user definition `fn sin(x) = x` makes `sin(1)` evaluate. The shell's `Unsupported` category is an internal pending/stage-failure fallback with a zero span, not a feature refusal, so the probes are never mapped to it. These vectors therefore observe explicit refusal and the absence of silent approximation, not a distinct unsupported-feature category.",
     "derived_from": "specs/conformance/calculator-cases.json CALC-09 `input.later_features` and `expected.outcome`; .cairn/specs/calculator/spec.md CALC-PARSE-02 ('Builtin scientific functions are not implicitly available names')",
     "approximation": {
       "probe": "2^0.5",
