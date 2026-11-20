@@ -2,6 +2,9 @@
 #![register_tool(tigerstyle)]
 //! Real CLI checks for proof-required release refusal and argument decoding.
 
+#[path = "build/runtime_assets.rs"]
+mod runtime_assets;
+
 fn fixture(name: &str) -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../verification/mc1")
