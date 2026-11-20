@@ -307,6 +307,20 @@ case's purpose (a new dependent's result beside the old Program's captured
 result) and its in-flight condition unchanged. The case text is not edited
 here; the amendment is for the owner.
 
+OWNER DECISION 2026-11-20 (Decision 21) accepted the replacement
+`["20 twice swap run"]` with "nothing else in the case changes". The case now
+carries that exact script plus an `input.owner_decision` record. Applying it is
+**not** promotion-valid: with the retained old Program on the stack,
+`20 twice swap run` goes `[Program]` → `[Program, 20]` → `[Program, 24]` (the
+rebuilt `twice`, new `addone` 2+) → `[24, Program]`; `run` consumes the 24 and
+returns 25, so the observed stack is `[25]`, not the declared `[24, 21]` (the
+decision's reference to a "[21, 22]" final stack also disagrees with the
+unchanged case). MEASURED on the production binary from this tree. A script
+that derives the declared stack while keeping the old Program is
+`20 swap run 20 twice swap` (`[Program]` → `[21]` → `[21, 20]` → `[21, 24]` →
+`[24, 21]`); it needs a corrected owner decision. LIVE-02 remains
+absent/not-run and unpromoted until then.
+
 - [ ] [serial] Implement and test in-process Wasm encoder/verifier with independently accepted source, exact selected ABI and isolated staging. r[BE-LIVE-01] r[S-LIVE-01]
 - [ ] [serial] Implement resident live CLI/reload/watch, complete dependent rebuild, atomic safepoint publication, stable typed stack and bounded code retirement. r[K-LIVE-01] r[H-LIVE-01] r[H-LIVE-02] r[H-LIVE-03] r[DX-LIVE-01]
 - [ ] [serial] Exercise every LIVE case against actual source, selected VM and hostile controls with source-bound receipts and separately classify proof/assumptions before acceptance. r[V-LIVE-01] r[EV-LIVE-01]

@@ -201,9 +201,7 @@ fn check_import(
                 ImportProfile::CoreLive | ImportProfile::CoreLiveTestHosts,
                 "noble",
                 "live_propose",
-            ) => {
-                Some((&[ValType::I64, ValType::I64, ValType::I32], &[ValType::I32]))
-            }
+            ) => Some((&[ValType::I64, ValType::I64, ValType::I32], &[ValType::I32])),
             (
                 ImportProfile::CoreLive | ImportProfile::CoreLiveTestHosts,
                 "noble",

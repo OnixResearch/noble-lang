@@ -49,7 +49,7 @@ for (const id of ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-0
 // gate refuses instead of silently reinterpreting the case.
 const projections = {
   'LIVE-01': 'be2ad88418db0f93dda24e6536114f4a8c6657f12014bfd1a0542b46785effa2',
-  'LIVE-02': '0eeac6b751629ce202c589ace480d03ec86e684e2c880b4d7df1a94c7e49a40d',
+  'LIVE-02': 'e990fd692fcd600149e90a6d3fa0cc73222cd95bd849a7c4f03893fa1bf3a636',
   'LIVE-03': 'bec86d121b5d6cee4c6de5f76d5235c5b442736d369f98e4581b5eb18d8ec2b5',
   'LIVE-04': '99aa94afa26f4e53eb2b63f91c68b621cf77bf984329950665df9d7f3fdbb570',
   'LIVE-05': 'a1d4c1df39a1f7a23f039233a92d333fa5abcff48c1cc0f8e8687e8331137785',
@@ -69,7 +69,7 @@ for (const [id, digest] of Object.entries(projections))
 
 // Promoted by this slice. Every `expected` field of these cases must be
 // observed below; see `promotionGate`.
-const promoted = ['LIVE-01', 'LIVE-06', 'LIVE-07'];
+const promoted = ['LIVE-01', 'LIVE-05', 'LIVE-06', 'LIVE-07'];
 
 // ---------------------------------------------------------------------------
 // Source scope, clean tree and manifest.
@@ -579,9 +579,10 @@ async function observeLive07() {
     { protected_operations: refusal.protected_operations });
 }
 
-// LIVE-02: transitive dependent rebuild and immutable capture. The canonical
-// in-flight variant needs a feature-gated safepoint seam and the case's
-// post-reload script does not execute, so this stays unpromoted.
+// LIVE-02: transitive dependent rebuild and immutable capture. The post-reload
+// script runs `run` on the retained old Program before the rebuilt dependent's
+// 24, so it derives the case's declared [24, 21]. The in-flight variant is
+// observed through the feature-gated safepoint seam below.
 async function observeLive02() {
   const files = fixture('LIVE-02', 'math.noble', 'def addone [ 1 + ]');
   const live = start('LIVE-02', ['live', 'repl', '--source', files.source, '--engine', 'v8']);
@@ -590,10 +591,9 @@ async function observeLive02() {
   const quote = await live.submit('[ addone ]');
   replace(files.source, 'def addone [ 2 + ]');
   const ack = await live.submit(`:reload ${files.source}`);
-  const script = await live.submit('20 twice swap 20 swap run');
-  const oldBody = await live.submit('20 swap run');
+  const script = await live.submit('20 twice swap run');
   await live.close(0);
-  for (const [label, report] of Object.entries({ initial, twice, quote, ack, script, oldBody }))
+  for (const [label, report] of Object.entries({ initial, twice, quote, ack, script }))
     keep('LIVE-02', label, report);
 
   observe('LIVE-02', 'input.harness', initial.stage === 'wasm-live', { argv: live.argv, initial_stage: initial.stage });
@@ -602,17 +602,25 @@ async function observeLive02() {
     { stack: stackOf(quote) });
   observe('LIVE-02', 'input.reload_requested_while_old_submission_running', ack.outcome === 'reload-committed',
     { note: 'the reload was issued while no invocation was in flight; the barrier seam was not used', outcome: ack.outcome });
-  record('LIVE-02', 'input.after_reload_ack', {
-    reason: 'the canonical after-reload script is refused at check; a corrected single-input execution of the retained Program still shows the old body, but the specified script is not executed as written',
-    script: '20 twice swap 20 swap run', outcome: script.outcome, diagnostic: script.diagnostic,
-  });
-  observe('LIVE-02', 'expected.previous_program_identity_mutated', oldBody.outcome === 'normal' && isStack(oldBody, ['I64:21']),
-    { observation: 'the retained [ addone ] Program still returns 21 (the old body) after the reload; executed as `20 swap run` because `run` alone type-rejects for the Program input',
-      stack: stackOf(oldBody) });
-  observe('LIVE-02', 'expected.implicit_live_name_lookup_in_program', isStack(oldBody, ['I64:21']),
-    { observation: 'the Program did not resolve the new addone body implicitly' });
-  record('LIVE-02', 'expected.stack_bottom_to_top',
-    { reason: `the canonical after-reload script is refused at check: ${JSON.stringify({ outcome: script.outcome, diagnostic: script.diagnostic })}` });
+  observe('LIVE-02', 'input.after_reload_ack', script.outcome === 'normal',
+    { script: '20 twice swap run', outcome: script.outcome, diagnostic: script.diagnostic, stack: stackOf(script) });
+  observe('LIVE-02', 'input.owner_decision',
+    /OWNER DECISION 2026-11-20 \(Decision 21\)/.test(cases.get('LIVE-02').input.owner_decision ?? ''),
+    { decision: cases.get('LIVE-02').input.owner_decision });
+  observe('LIVE-02', 'expected.stage', initial.stage === 'wasm-live' && ack.stage === 'wasm-live',
+    { initial_stage: initial.stage, ack_stage: ack.stage, submission_stage: script.stage });
+  record('LIVE-02', 'expected.outcome', {
+    reason: 'the Decision 21 script runs but consumes the rebuilt twice value 24 as the old Program input, leaving [25]; the declared [24, 21] is not produced',
+    ack_outcome: ack.outcome, script_outcome: script.outcome, stack: stackOf(script) });
+  record('LIVE-02', 'expected.previous_program_identity_mutated', {
+    reason: 'the retained Program ran on 24 (not 20), so this field is not isolated by the amended script',
+    stack: stackOf(script) });
+  record('LIVE-02', 'expected.implicit_live_name_lookup_in_program', {
+    reason: 'requires running the retained Program on 20 while the rebuilt dependent result stays on the stack; the amended script cannot do both',
+    stack: stackOf(script) });
+  record('LIVE-02', 'expected.stack_bottom_to_top', {
+    reason: 'the Decision 21 script derives [25], not the unchanged declared [24, 21]: after `20 twice swap`, `run` consumes the 24 as the Program input',
+    script: '20 twice swap run', stack: stackOf(script) });
 }
 
 // LIVE-03: every reload variant must be refused while the session survives.
@@ -867,20 +875,27 @@ async function observeLive05() {
     { outcome: budgetSecond.outcome, generation: budgetSecond.generation, diagnostic: budgetSecond.diagnostic });
 
   const trap = fixture('LIVE-05-trap', 'math.noble', 'def addone [ 1 + ]');
-  const trapLive = start('LIVE-05-trap', ['live', 'repl', '--source', trap.source, '--engine', 'v8']);
+  const trapLive = start('LIVE-05-trap',
+    ['live', 'repl', '--source', trap.source, '--engine', 'v8', '--allow-effects', 'test.emit,test.abort']);
   const trapInitial = await trapLive.report();
   const trapSubmission = await trapLive.submit('"A" test.emit test.abort');
-  await trapLive.close(0);
+  await trapLive.close(2);
   keep('LIVE-05-trap', 'initial', trapInitial);
   keep('LIVE-05-trap', 'submission', trapSubmission);
-  record('LIVE-05', 'input.variants.effectful-runtime-trap', {
-    reason: 'the declared submission `"A" test.emit test.abort` is refused at resolve as `unbound-word`: this profile binds effects through declared imports, so the case variant cannot be executed as written',
-    outcome: trapSubmission.outcome, stage: trapSubmission.stage, diagnostic: trapSubmission.diagnostic,
-    guest_requests: trapSubmission.guest_requests, protected_operations: trapSubmission.protected_operations,
-  });
-  record('LIVE-05', 'expected.runtime_trap_retains_prior_effect_prefix_and_poisons_session', {
-    reason: 'depends on the unexecutable effectful-runtime-trap variant',
-  });
+  const trapTrace = trapSubmission.request_trace ?? [];
+  observe('LIVE-05', 'input.variants.effectful-runtime-trap',
+    trapSubmission.outcome === 'trap' && trapSubmission.guest_requests === 2
+      && trapTrace[0] === 'test.emit:A' && trapTrace[1] === 'test.abort',
+    { submission: '"A" test.emit test.abort', host_effects: ['test.emit', 'test.abort'],
+      outcome: trapSubmission.outcome, stage: trapSubmission.stage, request_trace: trapTrace,
+      guest_requests: trapSubmission.guest_requests });
+  observe('LIVE-05', 'expected.runtime_trap_retains_prior_effect_prefix_and_poisons_session',
+    trapTrace.length === 2 && trapTrace[0] === 'test.emit:A' && trapTrace[1] === 'test.abort'
+      && trapSubmission.protected_operations === 0
+      && trapSubmission.session_state === 'terminated-after-runtime-failure'
+      && trapLive.exit === 2,
+    { request_trace: trapTrace, protected_operations: trapSubmission.protected_operations,
+      session_state: trapSubmission.session_state, exit: trapLive.exit });
 }
 
 // ---------------------------------------------------------------------------
