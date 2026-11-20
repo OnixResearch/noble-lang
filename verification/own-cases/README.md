@@ -16,10 +16,12 @@ It promotes nothing by itself.
 | [`runs/20261120-failed`](runs/20261120-failed) | superseded gate before its row parser was fixed | `failed`; OWN-CASE-04 rows were misparsed after the test harness prefix |
 | [`runs/20261120-r2`](runs/20261120-r2) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `81139111` | `completed` / `unmet-cases`; OWN-CASE-01, 02, 04, 05, 06, 07 promoted; OWN-CASE-03 is an executed failure (deep chains refused at compose 5) |
 
-[`acceptance.json`](acceptance.json) is the same bytes as the latest run's receipt
-(`sha256 ae533fdd…`, `source_revision sha256:f09c0d…`, binary `8020eb86…`, tested commit
-`81139111`), retained as the stable path. Superseded receipts stay immutable; rework receipts are
-added beside them, never edited.
+[`acceptance.json`](acceptance.json) is the **first** run's receipt (`sha256 e873df58…`, tested
+commit `5c9e38f4`), kept byte-for-byte as the immutable path the first OWN promotions cite. Later
+runs live under [`runs/`](runs/) and are cited by their own paths; superseded receipts stay
+immutable and rework receipts are added beside them, never edited. The r2 facts in this file come
+from [`runs/20261120-r2/acceptance.json`](runs/20261120-r2/acceptance.json) (`sha256 ae533fdd…`,
+`source_revision sha256:f09c0d…`, binary `8020eb86…`, tested commit `81139111`).
 
 ## Cases this gate executes
 
