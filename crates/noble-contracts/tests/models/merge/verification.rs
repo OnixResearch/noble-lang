@@ -732,13 +732,13 @@ fn semantic_merge_lean_check() {
     let io_proof = replay_write(&io_path.display().to_string());
     let writing = lean::check(&case03_claim, &io_proof, bounds);
     assert!(!writing.submission.accepted);
-    let io_side_effect = io_path.exists();
-    if io_side_effect {
+    let is_io_side_effect = io_path.exists();
+    if is_io_side_effect {
         let _ = std::fs::remove_file(&io_path);
     }
     if isolation == lean::Isolation::Bubblewrap {
         assert!(
-            !io_side_effect,
+            !is_io_side_effect,
             "a sandboxed producer wrote outside its workspace"
         );
     }
@@ -785,7 +785,7 @@ fn semantic_merge_lean_check() {
         skip07.submission.accepted,
         consumer07.name(),
         writing.submission.accepted,
-        io_side_effect,
+        is_io_side_effect,
         wrong.name(),
         exhausted.name(),
         failed.name(),

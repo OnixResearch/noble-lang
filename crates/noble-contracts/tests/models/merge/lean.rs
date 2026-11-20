@@ -4,6 +4,7 @@
     tigerstyle::assertion_density,
     tigerstyle::ambiguous_params,
     tigerstyle::foreign_enum_catch_all,
+    tigerstyle::fragile_exhaustive_enum_match,
     tigerstyle::function_length,
     tigerstyle::ignored_result,
     tigerstyle::path_segment_repetition,
@@ -552,7 +553,7 @@ fn transcript(path: &Path) -> String {
 /// One child process's observation.
 struct Step {
     status: Option<std::process::ExitStatus>,
-    timed_out: bool,
+    is_timed_out: bool,
     start_error: Option<String>,
     stdout: String,
     stderr: String,
@@ -568,6 +569,10 @@ impl Step {
 
 /// Run one pinned Lean process in `cwd`, writing its output files, under
 /// bubblewrap when selected.
+#[expect(
+    tigerstyle::contradictory_time,
+    reason = "Owner: noble-maintainers; timeout_ms is a per-child duration budget, not an injected timestamp; the monotonic clock is sampled once to set that child's deadline"
+)]
 fn run_step(
     binary: &Path,
     source: &Path,
@@ -584,7 +589,7 @@ fn run_step(
     else {
         return Step {
             status: None,
-            timed_out: false,
+            is_timed_out: false,
             start_error: Some("cannot create the process transcript".into()),
             stdout: String::new(),
             stderr: String::new(),
@@ -665,7 +670,7 @@ fn run_step(
         Err(error) => {
             return Step {
                 status: None,
-                timed_out: false,
+                is_timed_out: false,
                 start_error: Some(format!("cannot start the pinned process: {error}")),
                 stdout: String::new(),
                 stderr: String::new(),
@@ -673,12 +678,12 @@ fn run_step(
         }
     };
     let deadline = Instant::now() + Duration::from_millis(timeout_ms);
-    let mut timed_out = false;
+    let mut is_timed_out = false;
     let status = loop {
         match child.try_wait() {
             Ok(Some(status)) => break Some(status),
             Ok(None) if Instant::now() >= deadline => {
-                timed_out = true;
+                is_timed_out = true;
                 let _ = child.kill();
                 let _ = child.wait();
                 break None;
@@ -693,7 +698,7 @@ fn run_step(
     };
     Step {
         status,
-        timed_out,
+        is_timed_out,
         start_error: None,
         stdout: transcript(&stdout_path),
         stderr: transcript(&stderr_path),
@@ -837,7 +842,7 @@ pub(super) fn check_at(root: &Path, claim: &str, proof: &str, bounds: Bounds) ->
         bounds.timeout_ms,
     );
     identity.producer = producer.output();
-    if producer.timed_out {
+    if producer.is_timed_out {
         let _ = std::fs::remove_dir_all(&workspace);
         return failed(
             CheckFailure::Exhausted,
@@ -885,7 +890,7 @@ pub(super) fn check_at(root: &Path, claim: &str, proof: &str, bounds: Bounds) ->
         bounds.timeout_ms,
     );
     let _ = std::fs::remove_dir_all(&workspace);
-    if checker.timed_out {
+    if checker.is_timed_out {
         return failed(
             CheckFailure::Exhausted,
             format!("checker deadline {}ms reached", bounds.timeout_ms),
@@ -895,8 +900,8 @@ pub(super) fn check_at(root: &Path, claim: &str, proof: &str, bounds: Bounds) ->
     if let Some(error) = checker.start_error {
         return failed(CheckFailure::InternalFailure, error, identity);
     }
-    let success = matches!(checker.status, Some(status) if status.success());
-    if !success {
+    let is_success = matches!(checker.status, Some(status) if status.success());
+    if !is_success {
         let mut text = checker.output();
         if text.is_empty() {
             text = "the replay checker failed".into();

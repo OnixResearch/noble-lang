@@ -744,9 +744,9 @@ surfaces are unchanged.
 | SM-1 | `MergeRel` is the per-observable three-way relation over the full ordered output stack, with structural wrapping-`I64` equality | VC-REWRITE-02, issue #30 |
 | SM-2 | Every `SMERGE/1` subject terminates normally on every well-typed input; purity is not the premise | VC-LOGIC-03 slice |
 | SM-3 | Claim elaboration from the four exact preparations yields exactly `MergeRel` with the selected observables and capture/dependency identities | VC-ID-02, VC-EVIDENCE-02 |
-| SM-4 | The Lean checker is sound for the reference semantics and the isolated consumer accepts only the regenerated claim under the selected policy | PO-09/PO-16 slices |
+| SM-4 | The Lean checker is sound for the reference semantics and the replay checker accepts only a replayed theorem whose type is the regenerated claim under the selected policy | PO-09/PO-16 slices |
 | SM-5 | Evidence binding rejects any changed subject, capture, dependency, interface, observable or revision | VC-EVIDENCE-01/02 |
-| SM-6 | Outcome discipline is total: every run produces one of the listed states, and only Lean acceptance yields `verified` | V-CHECK-04 |
+| SM-6 | Outcome discipline is total: every run produces one of the listed states, and only the isolated replay checker's kernel acceptance yields `verified` | V-CHECK-04 |
 | SM-7 | Source-model proof and installed Wasm correspondence remain separate | #10, PO-18 slice |
 | SM-8 | No automatic merge, publication, live-slot admission, source-control migration or release permission follows | issue #30 |
 
