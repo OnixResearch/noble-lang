@@ -34,8 +34,8 @@
   `wire::library_refuses_any_other_declaration_bytes`,
   `wire::library_words_link_at_their_published_signatures`,
   `wire::fanout_at_a_resource_names_the_library_word`); `cargo test -p noble-cli --test smoke
-  wire_library::` — 2 passed (`wire_library::runs_in_a_fresh_declared_session`,
-  `wire_library::split_refusal_is_the_session_cumulative_budget`).
+  wire::` — 2 passed (`wire::runs_in_a_fresh_declared_session`,
+  `wire::split_refusal_is_the_session_cumulative_budget`).
 - [ ] [serial] Prove `Wire.*` theorems for L1-L8 and L10-L14 in the pure MC1 fragment. This includes the general frame lemma and whitelisting `List.nil_append`/`List.append_nil`. Package `wire@1.seq-laws` only after #7 bundle support exists. r[WIRE-LAW-01] r[WIRE-EVID-01]
   Progress (2026-11-09): the Lean half is proved in the pure MC1 model, outside the source-proof
   vocabulary. `proofs/mc1/NobleContracts/Wire.lean` inlines the `wire@1` bodies (route (a)) and
