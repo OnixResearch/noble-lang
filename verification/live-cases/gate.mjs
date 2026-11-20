@@ -633,8 +633,10 @@ async function observeLive03() {
       guest_requests: refused.guest_requests, protected_operations: refused.protected_operations, diagnostic: refused.diagnostic,
     });
   }
-  const refused03 = observations.filter(row => row.case === 'LIVE-03' && row.field.endsWith('.replacement'))
-    .filter(row => row.detail?.outcome === 'reload-refused' || row.detail?.case_input_exact === false);
+  // Only the five default-profile variants run on the case's exact initial
+  // state; the declared-module approximations are separate, unobserved rows.
+  const refused03 = observations.filter(row => row.case === 'LIVE-03' && row.field.endsWith('.replacement')
+    && row.detail?.stack !== undefined);
   observe('LIVE-03', 'expected.stage',
     refused03.length >= 5 && refused03.every(row => row.detail.stage === 'admission'),
     { stages: refused03.map(row => row.detail.stage) });
