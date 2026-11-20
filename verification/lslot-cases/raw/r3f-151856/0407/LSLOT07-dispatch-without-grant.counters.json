@@ -1,0 +1,66 @@
+{
+  "name": "LSLOT07-dispatch-without-grant",
+  "expected_exit": 2,
+  "raw": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-stSJma/LSLOT07-dispatch-without-grant.jsonl",
+  "counters": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-stSJma/LSLOT07-dispatch-without-grant.counters.json",
+  "refusal": {
+    "outcome": "execution-failed",
+    "guest_requests": 1,
+    "protected_operations": 0
+  },
+  "denied": {
+    "control_events": [],
+    "diagnostic": "Error: checked guest execution returned status 4; control lane poisoned=false",
+    "guest_requests": 1,
+    "outcome": "execution-failed",
+    "protected_operations": 0,
+    "request_trace": [
+      {
+        "artifactSha256": "70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff",
+        "captures": [],
+        "definitionId": null,
+        "generation": "1",
+        "incarnation": "1",
+        "operation": "dispatch",
+        "outcome": "policy-denied",
+        "policyAllowed": false,
+        "policyInput": {
+          "operation": "dispatch",
+          "rootEpoch": "1",
+          "slotId": "emit",
+          "version": {
+            "artifactSha256": "70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff",
+            "assumptions": "unverified",
+            "captures": [],
+            "claim": "unverified",
+            "definitionId": null,
+            "effects": [
+              "test.emit"
+            ],
+            "handle": 4108,
+            "input": [
+              "I64"
+            ],
+            "output": [
+              "I64"
+            ],
+            "programValueId": "artifact:70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff:cell:4108",
+            "recipeSha256": "647e08e55c190108b09ae24f3af603f73b8df3525862f37112f5ba55d3914ad1",
+            "semanticContext": "definition-source:unavailable:selection-source:93f23ba96afe9ac0216dea74280f143bef9a54f2e7167e61415e22f7c01239d5:artifact:70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff:occurrence:0:recipe:647e08e55c190108b09ae24f3af603f73b8df3525862f37112f5ba55d3914ad1"
+          }
+        },
+        "programValueId": "artifact:70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff:cell:4108",
+        "recipeSha256": "647e08e55c190108b09ae24f3af603f73b8df3525862f37112f5ba55d3914ad1",
+        "rootEpoch": "1",
+        "semanticContext": "definition-source:unavailable:selection-source:93f23ba96afe9ac0216dea74280f143bef9a54f2e7167e61415e22f7c01239d5:artifact:70da1887c8991eb76d72f676f54cf03de7a45da0b7ebe3519751884c3f0c34ff:occurrence:0:recipe:647e08e55c190108b09ae24f3af603f73b8df3525862f37112f5ba55d3914ad1",
+        "slotId": "emit"
+      }
+    ],
+    "retire_code_spans": [],
+    "schema": "noble-live-slot-report/v1",
+    "session_state": "terminated-after-guest-failure",
+    "stage": "slot"
+  },
+  "result": "pass",
+  "exit": 2
+}

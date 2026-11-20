@@ -1,0 +1,4 @@
+{"operation":"trace"}
+{"operation":"install","id":"candidate","source":"\"admit\" test.emit drop","inputs":["Account@1","I64"]}
+{"operation":"publish","slot":"account","id":"candidate","expected_epoch":"0"}
+{"operation":"trace"}

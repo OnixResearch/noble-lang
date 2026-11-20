@@ -1,0 +1,82 @@
+{
+  "name": "LSLOT04-authorized-rollback",
+  "expected_exit": 0,
+  "raw": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-stSJma/LSLOT04-authorized-rollback.jsonl",
+  "counters": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-stSJma/LSLOT04-authorized-rollback.counters.json",
+  "commits": [
+    {
+      "epoch": "19",
+      "generation": "4",
+      "guest_requests": 0,
+      "incarnation": "7",
+      "outcome": "published",
+      "protected_operations": 0,
+      "retire_code_spans": [
+        {
+          "generation": 13,
+          "length": 2,
+          "start": 5
+        }
+      ],
+      "schema": "noble-live-slot-report/v1",
+      "stage": "slot"
+    },
+    {
+      "epoch": "20",
+      "generation": "5",
+      "guest_requests": 0,
+      "incarnation": "7",
+      "outcome": "published",
+      "protected_operations": 0,
+      "retire_code_spans": [
+        {
+          "generation": 3,
+          "length": 2,
+          "start": 7
+        }
+      ],
+      "schema": "noble-live-slot-report/v1",
+      "stage": "slot"
+    }
+  ],
+  "after": {
+    "artifactSha256": "d5e7417568d7be1ac80ee1180ab54128b2dbfbd089725767eeaab5fa70478feb",
+    "captures": [],
+    "definitionId": null,
+    "generation": "5",
+    "incarnation": "7",
+    "operation": "dispatch",
+    "outcome": "allowed",
+    "policyAllowed": true,
+    "policyInput": {
+      "operation": "dispatch",
+      "rootEpoch": "20",
+      "slotId": "A",
+      "version": {
+        "artifactSha256": "d5e7417568d7be1ac80ee1180ab54128b2dbfbd089725767eeaab5fa70478feb",
+        "assumptions": "unverified",
+        "captures": [],
+        "claim": "unverified",
+        "definitionId": null,
+        "effects": [],
+        "handle": 32773,
+        "input": [
+          "I64"
+        ],
+        "output": [
+          "I64"
+        ],
+        "programValueId": "artifact:d5e7417568d7be1ac80ee1180ab54128b2dbfbd089725767eeaab5fa70478feb:cell:32773",
+        "recipeSha256": "38eff622361cb524043aa49f9209a34f03dfd82b615f43ce25acc99b1d3a261f",
+        "semanticContext": "definition-source:unavailable:selection-source:354d594a12b59e5b397387eccfe0168f5ef0d306c14ca64632d6ce6213bc81ed:artifact:d5e7417568d7be1ac80ee1180ab54128b2dbfbd089725767eeaab5fa70478feb:occurrence:0:recipe:38eff622361cb524043aa49f9209a34f03dfd82b615f43ce25acc99b1d3a261f"
+      }
+    },
+    "programValueId": "artifact:d5e7417568d7be1ac80ee1180ab54128b2dbfbd089725767eeaab5fa70478feb:cell:32773",
+    "recipeSha256": "38eff622361cb524043aa49f9209a34f03dfd82b615f43ce25acc99b1d3a261f",
+    "rootEpoch": "20",
+    "semanticContext": "definition-source:unavailable:selection-source:354d594a12b59e5b397387eccfe0168f5ef0d306c14ca64632d6ce6213bc81ed:artifact:d5e7417568d7be1ac80ee1180ab54128b2dbfbd089725767eeaab5fa70478feb:occurrence:0:recipe:38eff622361cb524043aa49f9209a34f03dfd82b615f43ce25acc99b1d3a261f",
+    "slotId": "A"
+  },
+  "result": "pass",
+  "exit": 0
+}

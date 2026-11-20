@@ -1,0 +1,15 @@
+{"operation":"define","id":"definition-aliased","name":"aliased","source":"def aliased [ drop dup quote swap quote compose [ + + + ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-renamed-alias","name":"otheralias","source":"def otheralias [ swap swap drop dup quote swap quote compose [ + + + ] compose ]","inputs":[]}
+{"operation":"install","id":"aliased","source":"aliased","selected_name":"aliased","inputs":["I64","I64"]}
+{"operation":"install","id":"renamed-alias","source":"otheralias","selected_name":"otheralias","inputs":["I64","I64"]}
+{"operation":"install","id":"runner2","source":"run","inputs":["I64","I64","Program<I64+I64,I64,pure>"]}
+{"operation":"invoke","id":"aliased","inputs":[{"kind":"i64","value":"2"},{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"invoke","id":"renamed-alias","inputs":[{"kind":"i64","value":"2"},{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"publish","slot":"alias-target","owner":"program-1","expected_epoch":"0"}
+{"operation":"publish","slot":"alias-target","owner":"program-2","expected_epoch":"1","expected_incarnation":"1","expected_generation":"1"}
+{"operation":"invoke","id":"runner2","inputs":[{"kind":"i64","value":"1"},{"kind":"i64","value":"4"},{"kind":"program","owner":"program-1"}],"refs":[]}
+{"operation":"invoke","id":"runner2","inputs":[{"kind":"i64","value":"1"},{"kind":"i64","value":"4"},{"kind":"program","owner":"program-2"}],"refs":[]}
+{"operation":"discard","id":"aliased"}
+{"operation":"release-program","owner":"program-1"}
+{"operation":"release-program","owner":"program-2"}
+{"operation":"invoke","id":"runner2","inputs":[{"kind":"i64","value":"1"},{"kind":"i64","value":"4"},{"kind":"program","owner":"program-1"}],"refs":[]}

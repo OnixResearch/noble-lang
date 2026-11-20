@@ -1,0 +1,38 @@
+{
+  "name": "LSLOT07-static-dispatch-without-grant",
+  "expected_exit": 0,
+  "raw": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-static-dispatch-without-grant.jsonl",
+  "counters": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-0407-cmgzV1/LSLOT07-static-dispatch-without-grant.counters.json",
+  "refusal": {
+    "outcome": "refused",
+    "guest_requests": 0,
+    "protected_operations": 0
+  },
+  "denied": {
+    "diagnostic": "selected host authority denies operation",
+    "guest_requests": 0,
+    "outcome": "refused",
+    "protected_operations": 0,
+    "schema": "noble-live-slot-report/v1",
+    "stage": "command"
+  },
+  "mapUnchangedBeforeNextCAS": {
+    "epoch": "2",
+    "generation": "2",
+    "guest_requests": 0,
+    "incarnation": "1",
+    "outcome": "published",
+    "protected_operations": 0,
+    "retire_code_spans": [
+      {
+        "generation": 2,
+        "length": 5,
+        "start": 5
+      }
+    ],
+    "schema": "noble-live-slot-report/v1",
+    "stage": "slot"
+  },
+  "result": "pass",
+  "exit": 0
+}

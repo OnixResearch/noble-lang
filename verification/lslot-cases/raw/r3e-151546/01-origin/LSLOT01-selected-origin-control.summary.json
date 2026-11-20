@@ -1,0 +1,30 @@
+{
+  "selected_binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+  "owner_count": 27,
+  "installed_artifacts": {
+    "variable": "8a89540dd0368865116f77bde5df2e13877f5ac86b0453b1c5999fd38427e50b",
+    "subtract": "1ae3f3533d8e2acca4994ce8dea0bad3811517a33880b8ddb01b73a1c443320a",
+    "renamed": "37fce4d9df5a8786da39603099da6755ac4157aa634ecbaba19af028de734952",
+    "fixed": "6c4f4df2e699738fee2ea102f72e9d9ce9df1f64a2603a13d006a809f826a052",
+    "fixed3": "513b9a65c9c5f5496a14fae3712b3b5c02dfd7662c9a33e1a232d317f6763d8e",
+    "computed": "6856d47914f7979f0fe7f24d47753044a841c1316eb25209dc1bb4a6e3d843de",
+    "computed3": "afbc226ba5394e2210542aeea3ad9637f129990b699ab66549c1343dba20eb0c",
+    "ambiguous": "aa4852533e25bfc2754b505664765a2f51a6682f4b4d2f3c00b37d012594af28",
+    "dual": "4365b21ca8e13e828677ccd19d05bcc43d1db9c6e92213656ae1b9a1b3c19869",
+    "copy": "7839cb4e85bc650016e3b8835cc80eec884c09fdb82f32bbf55a99660f577d2a",
+    "aliased": "7a4e41b8c0de4f8b06dea99e055b737f1e07e28729ee55a084c9ff6f63104fb2",
+    "renamed-alias": "a61e1f738d5685a6370ecdc474a905403f41c00facdbdbf638449fc50d4596d2",
+    "independent": "ba43105380bbffacccc2bd16eafa26fa8da1965b6bd62c54cb86789bd47d21e2",
+    "fixed-pair": "48b7f73050e01e47ec68053579bc0d805cf0686d1a238599c517373e7a8eec24",
+    "shared-program": "36d32e962f11c4d434bc331b7b2e0524f2b99a165f9805d4dd40deda6d30b82a",
+    "repeat-root": "b47d91a1363133792de45e81a0b3ceb49c9a6abca543d6dbb76cafc2c6a0fd50",
+    "nested-program": "87f15906988cdfec55a873435dffe5cdfea56f3f6aeb2906efe105a6c9676ba0",
+    "runner": "b4c5087b52e8c63940c0fb817912fb419686875ea1833035bef00a75115074b6",
+    "runner2": "e57cb6e63058efbf4a93757080e464141b1994a33eeba67f9b068e53e7b4dbd3",
+    "generic": "9a31e6fe0c8d0b9bc1d4f26e06d6c4ac9a60388eac57f66dcea3e2a2f84ab363"
+  },
+  "returned_target_manifest_sha256": "d109beac468fdeff853b83e237da6208eae36a7f9c29a154d1707ec5c5b06d85",
+  "published_epoch": "3",
+  "guest_requests": 3,
+  "protected_operations": 0
+}

@@ -1,0 +1,222 @@
+{
+  "selected_binary": "/home/brittonr/.cache/noble-cairn/target/lslot-cases/debug/noble",
+  "canonical": "specs/conformance/live-reference-cases.json#LSLOT-06",
+  "results": [
+    {
+      "name": "direct-quotation-capture",
+      "status": "pass",
+      "negative_outcome": "refused",
+      "negative_diagnostic": "slot.invoke cannot capture a borrowed reference in a quotation or definition",
+      "source_attempt_outcome": "refused",
+      "scalar_control_outcome": "not applicable",
+      "limitation": null,
+      "epoch_before": "0",
+      "epoch_after": "1 (separate valid target publication)",
+      "negative_guest_requests": 0,
+      "negative_protected_operations": 0,
+      "valid_guest_requests": 1,
+      "valid_protected_operations": 0,
+      "valid_stack": [
+        {
+          "kind": 1,
+          "value": "21"
+        }
+      ],
+      "site": {
+        "effects": [
+          "live.dispatch"
+        ],
+        "input": [
+          "I64"
+        ],
+        "instruction": "slot.invoke",
+        "output": [
+          "I64"
+        ],
+        "siteId": 0
+      },
+      "selected_binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+      "raw": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-NSTFso/LSLOT06-direct-quotation-capture.jsonl"
+    },
+    {
+      "name": "aggregate-capture",
+      "status": "partial",
+      "negative_outcome": "refused",
+      "negative_diagnostic": "LiveRef is only an invocation-input borrow or forwarded input",
+      "source_attempt_outcome": "refused",
+      "scalar_control_outcome": "not applicable",
+      "limitation": "nested Pair<LiveRef> root type is refused before quotation-capture can be checked",
+      "epoch_before": "0",
+      "epoch_after": "1 (separate valid target publication)",
+      "negative_guest_requests": 0,
+      "negative_protected_operations": 0,
+      "valid_guest_requests": 1,
+      "valid_protected_operations": 0,
+      "valid_stack": [
+        {
+          "kind": 1,
+          "value": "21"
+        }
+      ],
+      "site": {
+        "effects": [
+          "live.dispatch"
+        ],
+        "input": [
+          "I64"
+        ],
+        "instruction": "slot.invoke",
+        "output": [
+          "I64"
+        ],
+        "siteId": 0
+      },
+      "selected_binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+      "raw": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-NSTFso/LSLOT06-aggregate-capture.jsonl"
+    },
+    {
+      "name": "aggregate-storage",
+      "status": "pass",
+      "negative_outcome": "refused",
+      "negative_diagnostic": "stack/program join: expected ?stack ?value I64; actual [] I64; word pair; program type or stack witness cannot be resolved",
+      "source_attempt_outcome": "refused",
+      "scalar_control_outcome": "installed",
+      "limitation": null,
+      "epoch_before": "0",
+      "epoch_after": "1 (separate valid target publication)",
+      "negative_guest_requests": 0,
+      "negative_protected_operations": 0,
+      "valid_guest_requests": 1,
+      "valid_protected_operations": 0,
+      "valid_stack": [
+        {
+          "kind": 1,
+          "value": "21"
+        }
+      ],
+      "site": {
+        "effects": [
+          "live.dispatch"
+        ],
+        "input": [
+          "I64"
+        ],
+        "instruction": "slot.invoke",
+        "output": [
+          "I64"
+        ],
+        "siteId": 0
+      },
+      "selected_binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+      "raw": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-NSTFso/LSLOT06-aggregate-storage.jsonl"
+    },
+    {
+      "name": "export-or-return",
+      "status": "partial",
+      "negative_outcome": "refused",
+      "negative_diagnostic": "LiveRef is only an invocation-input borrow or forwarded input",
+      "source_attempt_outcome": "refused",
+      "scalar_control_outcome": "not applicable",
+      "limitation": "target output of LiveRef is refused at static type boundary; no source form returns the original root borrow",
+      "epoch_before": "0",
+      "epoch_after": "1 (separate valid target publication)",
+      "negative_guest_requests": 0,
+      "negative_protected_operations": 0,
+      "valid_guest_requests": 1,
+      "valid_protected_operations": 0,
+      "valid_stack": [
+        {
+          "kind": 1,
+          "value": "21"
+        }
+      ],
+      "site": {
+        "effects": [
+          "live.dispatch"
+        ],
+        "input": [
+          "I64"
+        ],
+        "instruction": "slot.invoke",
+        "output": [
+          "I64"
+        ],
+        "siteId": 0
+      },
+      "selected_binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+      "raw": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-NSTFso/LSLOT06-export-or-return.jsonl"
+    },
+    {
+      "name": "retain",
+      "status": "partial",
+      "negative_outcome": "refused",
+      "negative_diagnostic": "unknown slot command or authority field",
+      "source_attempt_outcome": "not applicable",
+      "scalar_control_outcome": "not applicable",
+      "limitation": "prior-root owner claim refused; CLI never exposes a ref credential to actually retain/reuse",
+      "epoch_before": "0",
+      "epoch_after": "1 (separate valid target publication)",
+      "negative_guest_requests": 0,
+      "negative_protected_operations": 0,
+      "valid_guest_requests": 1,
+      "valid_protected_operations": 0,
+      "valid_stack": [
+        {
+          "kind": 1,
+          "value": "21"
+        }
+      ],
+      "site": {
+        "effects": [
+          "live.dispatch"
+        ],
+        "input": [
+          "I64"
+        ],
+        "instruction": "slot.invoke",
+        "output": [
+          "I64"
+        ],
+        "siteId": 0
+      },
+      "selected_binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+      "raw": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-NSTFso/LSLOT06-retain.jsonl"
+    },
+    {
+      "name": "valid-borrow",
+      "status": "pass",
+      "negative_outcome": "not applicable",
+      "negative_diagnostic": null,
+      "source_attempt_outcome": "not applicable",
+      "scalar_control_outcome": "not applicable",
+      "limitation": null,
+      "epoch_before": "0",
+      "epoch_after": "1 (separate valid target publication)",
+      "negative_guest_requests": null,
+      "negative_protected_operations": null,
+      "valid_guest_requests": 1,
+      "valid_protected_operations": 0,
+      "valid_stack": [
+        {
+          "kind": 1,
+          "value": "21"
+        }
+      ],
+      "site": {
+        "effects": [
+          "live.dispatch"
+        ],
+        "input": [
+          "I64"
+        ],
+        "instruction": "slot.invoke",
+        "output": [
+          "I64"
+        ],
+        "siteId": 0
+      },
+      "selected_binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+      "raw": "/home/brittonr/.cache/noble-cairn/tmp/noble-lslot-resource-06-NSTFso/LSLOT06-valid-borrow.jsonl"
+    }
+  ]
+}
