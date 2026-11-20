@@ -22,12 +22,28 @@ compiler correspondence or C/Wasm acceptance. The requirements below
 remain open; no CB case is promoted.
 Text payloads bind exactly to checked source-body node identities; recursive
 contract/policy duplicate member names refuse before source-only emission.
-All eleven active MODIFIED delta bodies retain the planned first-parent
-canonical obligations and linked scenario designs. Seven bodies match its
-normative text; CB-BUILD-01, CB-LIMIT-01, CB-SANDBOX-01 and CB-ADMIT-01
-add scoped source-only disclosures or hostile controls without relaxing
-the first-parent bound, clock or descriptor requirements. This is not owner
-approval or legal sync while the eight remaining gates are undone.
+All eleven active MODIFIED delta bodies are reconciled against the current
+canonical text and its 25 generated scenario designs in `reconciliation.md`:
+seven bodies are byte-identical to canonical, while CB-BUILD-01,
+CB-LIMIT-01, CB-SANDBOX-01 and CB-ADMIT-01 are canonical text plus only
+reviewed insertions, without relaxing the first-parent bound, clock or
+descriptor requirements. The delta omits the generated scenario-link
+regions; regeneration restores them on the canonical document. This is not
+owner approval or legal sync while the eight remaining gates are undone.
+
+OWNER DECISION 2026-11-20: c-backend: do the source-only slices (input
+integrity, emitter coverage, reconciliation of the eleven MODIFIED blocks,
+a review packet). The owner also authorizes a pinned QEMU TCG VM lane from
+nixpkgs (icount, fixed clock) and sealed hostile native test execution
+inside it. The canonical-edit review ("explicit independent owner review
+... before integration") still gets an owner yes/no on the prepared packet
+after an independent reviewer agent pass.
+
+This authorizes building and sealed testing of that lane. It does not select
+the QEMU release, guest kernel, image, machine model or clock pins (task 4),
+does not admit a runner (task 7), and is not native GO: `--native` and
+`execute --target c` continue to refuse, and canonical C text and every CB
+case remain on HOLD.
 
 CB-CASE-01 still supplies `limits.list_length: 2`; the current exact
 I64/Bool/Unit/Text-result source-only policy now accepts and preserves that
@@ -37,7 +53,9 @@ cannot count as native runtime or CB-CASE-01 evidence. The supplied bound
 cannot be silently dropped or advertised as an unenforced no-op.
 
 - [ ] [serial] Obtain explicit independent owner review of all direct canonical CB-BUILD-01/CB-LIMIT-01/CB-SANDBOX-01/CB-ADMIT-01 edits and the aligned CB-CASE-06/08 designs **before integration**; document the reviewed safety obligations and any rejection. This source-only corrective commit is not owner acceptance, native GO or permission for `cairn sync --execute`. r[CB-BUILD-01] r[CB-LIMIT-01] r[CB-SANDBOX-01] r[CB-ADMIT-01]
+  Packet prepared 2026-11-20 in `review-packet.md` (canonical edit diffs, case designs, obligations, risks, Accept/Reject/Revise checklist); the box stays unchecked until the owner answers after the independent reviewer pass.
 - [ ] [serial] Reconcile each of the eleven active MODIFIED delta blocks against the current canonical requirement and scenario links before any `cairn sync --execute` or archive; a passing structural preview alone does not authorize replacing stronger canonical prose. Review CB-LIMIT-01's exact supplied limit and CB-SANDBOX-01/CB-ADMIT-01's sealed loader, clock and path obligations individually. r[CB-LIMIT-01] r[CB-SANDBOX-01] r[CB-ADMIT-01]
+  Reconciliation completed 2026-11-20 in `reconciliation.md`: eleven blocks (seven identical, four canonical plus reviewed insertions), exact differing sentences, CB-LIMIT-01 supplied-bound code facts, CB-SANDBOX-01 clock/vvar/TSC and loader obligations, CB-ADMIT-01 descriptor/sealed-byte obligations, and dry-run preview hashes. The box stays unchecked pending the owner's yes/no on `review-packet.md`; the integrator records it after that.
 - [ ] [serial] Bring the restricted source-only build into full input-integrity conformance before counting CB-BUILD-01/CB-LIMIT-01/CB-ADMIT-01: recursive duplicate JSON member rejection and exact supplied `limits.list_length` retention/source-only C enforcement are present, but native admission still needs trusted ancestor-anchored sealed input/output binding and independently verified execution. Until then this emitter remains nonadmitted and `--native`/`execute --target c` refuse. r[CB-BUILD-01] r[CB-LIMIT-01] r[CB-ADMIT-01]
 - [ ] [serial] Obtain owner-reviewed opt-in C compiler/runtime/runner/filter/mediator pins from the selected `octet/nixpkgs`, a feasible no-clock/no-exec loader boundary (VM or demonstrated equivalent), deterministic complete-ELF correspondence and explicit authorization for sealed native test execution. Cached host bubblewrap and the Lean proof sandbox do not satisfy this prerequisite. r[CB-SANDBOX-01] r[CB-ADMIT-01]
 - [ ] [serial] Extend the existing restricted inert C11 source emitter to the complete independently accepted Core-Bootstrap contract, pinned x86_64 Linux compilation, exact C-source and native-ELF admission, with no ordinary CLI/session fallback or source evaluator. r[CB-BUILD-01] r[CB-ADMIT-01]
