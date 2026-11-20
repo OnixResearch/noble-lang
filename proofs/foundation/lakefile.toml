@@ -20,6 +20,10 @@ name = "NobleFoundation"
 [[lean_lib]]
 name = "NobleContracts"
 srcDir = "../mc1"
+# The intrinsic source-proof witness (`IntrinsicTypeWitness.lean`) is a root module of the
+# MC1 tree, not a `NobleContracts.*` submodule, so the foundation's intrinsic-calculus model
+# names it as a second root instead of copying its `PureTyCode`/`El` definitions.
+roots = ["NobleContracts", "IntrinsicTypeWitness"]
 
 [[lean_lib]]
 name = "MathlibI64"

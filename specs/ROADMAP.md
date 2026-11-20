@@ -715,7 +715,7 @@ omitted from PATH; retrying with that pinned linker passed without a source
 change. Environment-gated `named_v2` and MC2 paths do not become new Lean
 or MC2 proof evidence. The already reported full boundary-controls/Octet
 failure was not rerun or promoted; M3 Aeneas SCC and VC-OWNER-01/CONTRACT-16
-owner-law prerequisites remain open.
+owner-law prerequisites remained open at that receipt.
 
 The separate [S-CASE-02 bounded-region change](../.cairn/archive/2026-11-20-safety-bounded-region-adapter/proposal.md)
 uses a new versioned WIT resource and the production
@@ -1431,9 +1431,10 @@ owner-frozen expected pure MC2 theorem/interface/assumptions *before*
 candidate edits, then independently binds the actual submitted
 program/recipe, generated statement, checked proof and release artifact.
 Proof-required policy rejects changes to any binding, while normal
-well-typed execution remains proof-optional. No owner-approved immutable
-pre-edit law or independent host selection exists yet, so CONTRACT-16 remains
-open. The qcue-inspired optional
+well-typed execution remains proof-optional. The owner-frozen pre-edit laws
+(owner decision 11) and the separate release consumer now exist: CONTRACT-16
+passed its [owner-law release gate](../verification/owner-law/acceptance.json)
+with proof open. The qcue-inspired optional
 [DX-13 review](../verification/dx13/acceptance.json) passed only its
 pinned-source methodology review: ten finite-model/negative/replay/preservation
 controls and five exclusions. No actual Noble oracle or model comparison ran;
@@ -1450,7 +1451,8 @@ Resource capture refusal and four independent hostile Env controls, including
 Program/Syntax first-class payload positives. Selected-arm callbacks retain
 conservative effects and complete owner accounting; resource-bearing payload
 positives and first-class universals remain unimplemented. MC2 proof admission
-and the VC-OWNER-01 owner law remain separate and OPEN. This is not an IO monad
+and the VC-OWNER-01 owner-law release (CONTRACT-16, separately passed with proof
+open) remain separate from DX-04. This is not an IO monad
 or implicit propagation syntax.
 
 Post-M3 [ADAPT-17](conformance/adaptation-cases.json) compares finite ADT
@@ -1462,6 +1464,10 @@ retained/engine memory. Any future resource/component-positive trial must
 add independent WIT ownership/ABI/retirement evidence. M3's completed
 WasmGC-versus-managed-memory result is unchanged.
 
+The frozen [finite trial](../verification/adapt17/decision.md) executed with all
+2,562 checks passing and a NO-GO decision (one cell regressed 20.00%, above the
+5% ceiling); the default backend is unchanged.
+
 Only **after** the required branch/schema/interface gates, ADAPT-18 may
 study explicitly independent finite resource-free pure fork/join with
 precharged bounds, left-then-right results and deterministic abnormal-outcome
@@ -1471,6 +1477,9 @@ GPU backend, changes no M6 sequential import behavior and cannot count
 unsettled work as cleaned up. The independent study has no new milestone
 edge or release deadline; each case needs its own execution evidence before
 any measured-result claim.
+
+By owner decision (2026-11-20) ADAPT-18 is not selected and remains deferred
+and unexecuted.
 
 ## Octet contract delivery
 
@@ -1530,16 +1539,22 @@ Only restricted inert checked I64/Bool/Unit/Text-result C11 source emission
 is present in this isolated source-only integration, including internal
 Pair/Sum/List construction/elimination, exact checked value-shape preflights
 and bounded immutable aggregate/Program captures. Pair/Sum/List/Syntax/Program
-final results, supplied list-length policies, reflect, runtime inputs and host
-mediation remain unsupported. The fixed internal List ceiling is 255, not
-CB-CASE-01/06 admission. The held canonical CB-BUILD-01 still describes a
-narrower route; the reconciled active delta cannot replace it before
-independent owner review and legal sync. `--native` and `execute --target c`
-refuse. CB-CASE-01 supplies `limits.list_length` and remains open because the
-exact source-only policy rejects it. Recursive duplicate JSON members refuse
-before policy interpretation, but this is not native admission or case
-evidence. The current source-only path does not satisfy CB-ADMIT-01's sealed,
-ancestor-anchored native build contract.
+final results, reflect, runtime inputs and host mediation remain unsupported.
+An optional exact supplied `limits.list_length` from 0 to 255 (default 255)
+is accepted, retained in the manifest and emitted as the effective
+`LIST_LIMIT` with a pre-`cons` check that has not been executed, so the field
+cannot be silently dropped or advertised as an unenforced no-op; the internal
+List ceiling stays 255. This is not CB-CASE-01/06 admission. The held
+canonical CB-BUILD-01 does not describe the source-only route; the reconciled
+delta's disclosure needs independent owner review and legal sync, and the
+eleven-block reconciliation is recorded in the change's `reconciliation.md`.
+`--native` and `execute --target c` refuse. CB-CASE-01
+supplies `limits.list_length` and remains open because no native runtime or
+selected-Wasm comparison has run, not because the exact source-only policy
+rejects it. Recursive duplicate JSON members refuse before policy
+interpretation, but this is not native admission or case evidence. The current
+source-only path does not satisfy CB-ADMIT-01's sealed, ancestor-anchored
+native build contract.
 Full watch-case acceptance and complete source-bound LIVE-02 remain open
 despite the guarded partial runtime. Integrated real guests observed only
 the historical exact queued proposal root released after a terminal trap

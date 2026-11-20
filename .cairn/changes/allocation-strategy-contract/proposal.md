@@ -24,3 +24,11 @@ Each strategy is selected per compiler profile. No requirement states which oper
 - **Files**: only this active change: `proposal.md`, `design.md`, `tasks.md`, and ADDED deltas under `specs/backend-experiments`, `specs/safety` and `specs/evidence`. No canonical spec, conformance JSON, view, ledger, roadmap or status file is edited.
 - **Coordination**: lifetime preconditions come from `ownership-lifetime-contract` (#3). Native-route columns defer to #4. The calculator snapshot/restore proposal (#17) is a whole-instance checkpoint candidate. Retained-version budgets for live slots (#1) are host-ledger quotas, not guest-cell allocation.
 - **Testing**: document validation and the proposal/design/tasks gates only. No benchmark, allocator, conformance case or proof is executed or claimed. No default allocator changes.
+
+**Scope amendment (owner decision, 2026-11-20).** The repository owner directed
+that this change's Phase 2 be carried out here: the W1–W8 baselines for A1–A7
+with retained samples, the F1–F4 failure classification and per-strategy
+accounting revisions in runtimes and hosts, registration and execution of the
+ALLOC cases, and the native-route comparison of task 4, which closes with its
+recorded outcome if no native route is selected. The default allocator still
+does not change.

@@ -24,13 +24,25 @@ must report `UnknownName`, observing `rejected_definition_installed: false`.
 Expected values and categories come from the cases file; where a case states
 no span (CALC-03, CALC-06, CALC-07) the observed span is recorded but not
 judged.
+
+CALC-09's `input.later_features` are outside the Calculator-v1 line
+grammar, so the table adds one refusal probe per feature (`2^0.5`, `x + 1`,
+`sin(1)`, `1 m`, `sqrt(2)`, `1 + 2i`) with the category its line syntax
+produces. They are ordinary diagnostic vectors
+(`CALC-09/later-features/01` to `06`) judged on the category only, because
+the case states no span for them. A probe that printed a value, printed
+nothing, or named another category fails; that is what makes the case's
+`silent_approximation: false` and `truncated_decimal_labeled_exact: false`
+observable.
+
 A successful `let` prints its bound value, and a successful `fn` prints
 nothing. The cases file states no value for a definition. The runner
 therefore requires the echoed value to equal the expression only when the
 expression is a canonical integer literal (both CALC-06 `let`s are). Any
 other echo only has to be an exact display.
 
-Ids are `CALC-01/01`…, `CALC-06/session` and `CALC-07/<variant>`.
+Ids are `CALC-01/01`…, `CALC-06/session`, `CALC-07/<variant>`, `CALC-09/01`
+to `CALC-09/04` and `CALC-09/later-features/01` to `06`.
 `--emit-vectors NEW_FILE` writes the generated list without running anything;
 an edited copy can be passed back with `--vectors FILE`.
 

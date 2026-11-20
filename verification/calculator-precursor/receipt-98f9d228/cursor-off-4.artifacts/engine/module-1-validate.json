@@ -1,0 +1,12 @@
+{
+  "binary": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+  "args": [
+    "validate",
+    "/home/brittonr/.cache/noble-cairn/scratch/signed-epoch/gate3/cursor-off-4.artifacts/engine/module-1.wasm"
+  ],
+  "status": 0,
+  "signal": null,
+  "stdout": "",
+  "stderr": "",
+  "error": null
+}

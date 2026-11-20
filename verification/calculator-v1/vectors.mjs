@@ -133,6 +133,26 @@ export const generate = (cases, mapping) => {
     vectors.push(single(`CALC-09/${pad(index)}`, 'CALC-09', vector.fraction,
       { value: vector.display }, flags));
   });
+
+  // CALC-09's `later_features` must each be refused explicitly. The probes and
+  // their categories come from the mapping table; the case supplies the
+  // feature list and the outcome the probes make observable.
+  const later = named('CALC-09');
+  assert.equal(later.expected.outcome, 'exact-display-or-explicit-unsupported-feature');
+  assert.equal(later.expected.silent_approximation, false);
+  assert.equal(later.expected.truncated_decimal_labeled_exact, false);
+  const probes = mapping['CALC-09-later-features'];
+  assert.ok(probes, 'CALC-09 later_features lack a CLI mapping');
+  assert.deepEqual(later.input.later_features.slice().sort(),
+    Object.keys(probes).filter(key => !['note', 'derived_from'].includes(key)).sort(),
+    'CALC-09 later_features mapping must list every feature');
+  later.input.later_features.forEach((feature, index) => {
+    const entry = probes[feature];
+    assert.ok(entry.probe && entry.expect?.diagnostic && entry.reason,
+      `CALC-09 later_features ${feature}: probe, diagnostic category and reason`);
+    vectors.push(single(`CALC-09/later-features/${pad(index)}`, 'CALC-09', entry.probe,
+      diagnostic(entry.expect.diagnostic)));
+  });
   return { schema: VECTOR_SCHEMA, vectors, unsupported };
 };
 

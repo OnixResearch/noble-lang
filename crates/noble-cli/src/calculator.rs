@@ -164,19 +164,15 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             }
         };
         match session.submit(&line, finite_decimal, budget) {
-            Ok(Outcome::Value(value)) => println!("{value}"),
-            Ok(Outcome::Defined) => (),
-            Ok(Outcome::Diagnostic(diagnostic)) => {
-                eprintln!("{diagnostic}");
-                failed = true;
-            }
-            Ok(Outcome::NativeFailure(message)) => {
-                eprintln!("NativeFailure: {message}");
-                failed = true;
-            }
-            Ok(Outcome::InfrastructureFailure(message)) => {
-                eprintln!("InfrastructureFailure: {message}");
-                failed = true;
+            Ok(outcome) => {
+                let (value, error, refused) = report(outcome);
+                if let Some(value) = value {
+                    println!("{value}");
+                }
+                if let Some(error) = error {
+                    eprintln!("{error}");
+                }
+                failed |= refused;
             }
             Err(message) => {
                 eprintln!("noble calculator: {message}");
@@ -192,6 +188,26 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         std::process::ExitCode::from(1)
     } else {
         std::process::ExitCode::SUCCESS
+    }
+}
+
+/// The terminal effects of one submitted line: its stdout line, its stderr
+/// line, and whether it makes the process exit with status 1. A value and a
+/// `let` echo are the only stdout lines, a `fn` definition prints nothing,
+/// and every refusal prints exactly one line on stderr. A fatal condition
+/// (usage, transport, restore, terminal write) is not an outcome here: it
+/// ends the process with status 2.
+fn report(outcome: Outcome) -> (Option<String>, Option<String>, bool) {
+    match outcome {
+        Outcome::Value(value) => (Some(value), None, false),
+        Outcome::Defined => (None, None, false),
+        Outcome::Diagnostic(diagnostic) => (None, Some(diagnostic), true),
+        Outcome::NativeFailure(message) => (None, Some(format!("NativeFailure: {message}")), true),
+        Outcome::InfrastructureFailure(message) => (
+            None,
+            Some(format!("InfrastructureFailure: {message}")),
+            true,
+        ),
     }
 }
 
@@ -5968,11 +5984,151 @@ fn numeric_category(value: &serde_json::Value) -> Result<String, String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{cache, Outcome, Session, DEFAULT_BUDGET, NAMESPACE};
+    use super::{
+        cache, diagnostic, parse_options, report, Outcome, Session, DEFAULT_BUDGET, INPUT_LIMIT,
+        NAMESPACE, USAGE,
+    };
     use noble_kernel::types::Ty;
 
     /// One calculator line run through `Session::transact`.
     type Line = fn(&mut Session) -> Result<Outcome, String>;
+
+    #[test]
+    fn line_outcomes_map_to_the_public_streams_and_exit_status() {
+        // The public contract: values and `let` echoes are the only stdout
+        // lines, a `fn` definition is silent, and every refusal prints one
+        // stderr line and makes the process exit with status 1. A fatal
+        // condition (usage, transport, restore, terminal write) is not an
+        // outcome: `run` reports it with status 2 instead.
+        assert_eq!(
+            report(Outcome::Value("7".into())),
+            (Some("7".to_owned()), None, false)
+        );
+        assert_eq!(report(Outcome::Defined), (None, None, false));
+        let refused = "ResourceLimit OutputSize [14,14) provenance=unavailable";
+        assert_eq!(
+            report(Outcome::Diagnostic(refused.into())),
+            (None, Some(refused.to_owned()), true)
+        );
+        assert_eq!(
+            report(Outcome::NativeFailure("quota".into())),
+            (None, Some("NativeFailure: quota".to_owned()), true)
+        );
+        assert_eq!(
+            report(Outcome::InfrastructureFailure("closed".into())),
+            (None, Some("InfrastructureFailure: closed".to_owned()), true)
+        );
+    }
+
+    #[test]
+    fn options_select_the_documented_budgets_and_refuse_a_bad_command() {
+        let options = |words: &[&str]| {
+            parse_options(
+                &words
+                    .iter()
+                    .map(std::ffi::OsString::from)
+                    .collect::<Vec<_>>(),
+            )
+        };
+        // The seven slots are positional in this documented order; the budgets
+        // lane and the design's Guest budget units section both rely on it.
+        assert_eq!(options(&[][..]).unwrap(), (false, false, DEFAULT_BUDGET));
+        assert_eq!(
+            options(&[
+                "--framed",
+                "--finite-decimal",
+                "--input-bytes",
+                "0",
+                "--numeric-digits",
+                "1",
+                "--intermediate-bits",
+                "2",
+                "--syntax-depth",
+                "3",
+                "--call-depth",
+                "4",
+                "--evaluation-work",
+                "5",
+                "--output-size",
+                "6",
+            ])
+            .unwrap(),
+            (true, true, [0, 1, 2, 3, 4, 5, 6])
+        );
+        let bad: [&[&str]; 5] = [
+            &["--input-bytes"],
+            &["--input-bytes", "-1"],
+            &["--input-bytes", "1", "--input-bytes", "2"],
+            &["--framed", "--framed"],
+            &["--unknown"],
+        ];
+        for words in bad {
+            assert!(options(words).is_err(), "{words:?}");
+        }
+        assert_eq!(
+            USAGE,
+            "usage: noble calculator [--framed] [--finite-decimal] [--input-bytes N] \
+             [--numeric-digits N] [--intermediate-bits N] [--syntax-depth N] \
+             [--call-depth N] [--evaluation-work N] [--output-size N]"
+        );
+    }
+
+    /// The guest's checked nominal encoding: one variant arm and its payload,
+    /// exactly as `variant` decodes it.
+    fn arm(name: &str, value: serde_json::Value) -> serde_json::Value {
+        serde_json::json!({"type": "Nominal", "shape": "variant", "variant": name, "value": value})
+    }
+
+    fn unit() -> serde_json::Value {
+        serde_json::json!({"type": "Unit"})
+    }
+
+    /// A checked `Pair<I64,I64>` byte span, in the guest's value encoding.
+    fn bytes(start: &str, end: &str) -> serde_json::Value {
+        serde_json::json!({"type": "Pair", "value": [
+            {"type": "I64", "value": start}, {"type": "I64", "value": end}]})
+    }
+
+    #[test]
+    fn diagnostics_print_the_public_line_and_refuse_invented_spans() {
+        // Diagnostic = left(ParseFailure) | right(OtherFailure); every printed
+        // category comes from the guest schema, never from host text.
+        let syntax = arm("left", arm("left", bytes("0", "1")));
+        assert_eq!(
+            diagnostic(&syntax).unwrap(),
+            "SyntaxError [0,1) provenance=unavailable"
+        );
+        let unknown = arm(
+            "right",
+            arm("left", arm("left", arm("left", bytes("2", "3")))),
+        );
+        assert_eq!(
+            diagnostic(&unknown).unwrap(),
+            "UnknownName [2,3) provenance=unavailable"
+        );
+        // RuntimeFailure = left(Pair<NumericError,Span>) | right(Span);
+        // NumericError = left(LimitCategory) | right(DomainError).
+        let limited = arm("left", arm("left", arm("left", arm("left", unit()))));
+        let pair = serde_json::json!({"type": "Pair", "value": [limited, bytes("14", "14")]});
+        let resource = arm("right", arm("right", arm("left", pair)));
+        assert_eq!(
+            diagnostic(&resource).unwrap(),
+            "ResourceLimit InputBytes [14,14) provenance=unavailable"
+        );
+        let unsupported = arm("right", arm("right", arm("right", bytes("4", "6"))));
+        assert_eq!(
+            diagnostic(&unsupported).unwrap(),
+            "Unsupported [4,6) provenance=unavailable"
+        );
+        // A span the shell cannot hold is refused instead of printed.
+        let beyond = arm(
+            "left",
+            arm("left", bytes("0", &(INPUT_LIMIT + 1).to_string())),
+        );
+        assert!(diagnostic(&beyond).is_err(), "a span past the frame bound");
+        let reversed = arm("left", arm("left", bytes("5", "4")));
+        assert!(diagnostic(&reversed).is_err(), "a reversed span");
+    }
 
     // These tests drive real worker modules, so they need a `noble` binary as
     // the calculator WAT assembler. `cargo test` builds it beside this unit

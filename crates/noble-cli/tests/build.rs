@@ -1,6 +1,27 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
+#![expect(
+    tigerstyle::ambiguous_params,
+    tigerstyle::assertion_density,
+    tigerstyle::excessive_file_length,
+    tigerstyle::function_length,
+    tigerstyle::missing_const_fn,
+    tigerstyle::no_unwrap,
+    tigerstyle::path_segment_repetition,
+    tigerstyle::platform_dependent_cast,
+    tigerstyle::raw_arithmetic_overflow,
+    tigerstyle::unbounded_collection_growth,
+    tigerstyle::underscore_in_module_filename,
+    reason = "Owner: noble-maintainers; this integration target drives the real CLI and its pinned toolchain, so fixtures, refusal walks and their assertions are the readable form and its longest legs are end-to-end lanes rather than units of retained logic; the owner-law and pin lanes stay in this existing target instead of new test units."
+)]
 //! Real CLI checks for proof-required release refusal and argument decoding.
+
+#[path = "build/owner_law.rs"]
+mod owner_law;
+#[path = "build/report_pins.rs"]
+mod report_pins;
+#[path = "build/runtime_assets.rs"]
+mod runtime_assets;
 
 fn fixture(name: &str) -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR"))

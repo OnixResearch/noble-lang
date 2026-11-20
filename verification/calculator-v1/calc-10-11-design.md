@@ -1,8 +1,12 @@
 # CALC-10 and CALC-11: authoring-tool boundary and benchmark integrity (design note)
 
-Status: **design only.** Nothing in this note has run. CALC-10 and CALC-11
-remain `implementation: absent`, `execution: not-run`, `proof: open`,
-`trust: unassessed` with `evidence: []`
+Status: **design only, and not applicable to Calculator-v1.** `OWNER DECISION
+2026-11-20:` "CALC-10/11 move to MA3 and do not apply to Calculator-v1."
+Both cases are `MA3` `calculator-AI-authoring-evaluation` obligations (MA3
+depends on MA2), so this note selects no tool surface and builds no harness;
+it stays the reference for what MA3 must supply. Nothing in this note has run.
+CALC-10 and CALC-11 remain `implementation: absent`, `execution: not-run`,
+`proof: open`, `trust: unassessed` with `evidence: []`
 ([cases L133-L159](https://github.com/OnixResearch/noble-lang/blob/44329dcbe0c0d3c0e83d4d154aab8a357a06f9a2/specs/conformance/calculator-cases.json#L133-L159)).
 The note does not promote either case and runs no AI benchmark. It identifies
 which tool surfaces apply to calculator edits, which routes are unsupported,

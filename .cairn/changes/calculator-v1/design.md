@@ -176,7 +176,36 @@ After the splits every traced compile of `f(3)` and `1+2` is at least 143.3M bel
 
 ### Evidence and lifecycle
 
-**Choice:** Exercise full compiled guest paths and negative controls separately from document validation. Preserve canonical CALC-01 through CALC-13 states and older M1–M4 evidence. Do not infer an accepted case from one arithmetic vector, a source typecheck, successful WAT assembly, a local native delta or proof about wrapping `I64`. This package remains active/unselected until its source and actual guest observations meet their gates. Pinned Cairn lifecycle gates are unrun under the current explicit no-Nix/low-space directive; offline local specification checks, if run, cannot substitute for them. r[CALC-GATE-01]
+**Choice:** Exercise full compiled guest paths and negative controls separately from document validation. Preserve canonical CALC-01 through CALC-13 states and older M1–M4 evidence. Do not infer an accepted case from one arithmetic vector, a source typecheck, successful WAT assembly, a local native delta or proof about wrapping `I64`. This package remains active/unselected until its source and actual guest observations meet their gates. The pinned `tools/cairn.mjs` proposal/design/tasks gates and `validate` were run for this change (issue #22, pinned Cairn `15f00875562025e7ea7e0d1f4af24d1a2e2ac06f`); the `cairn` flake check passes at `bc10df84` and its log is recorded in `verification/main-gates/receipt.json`. They ran again for these edits, and any later source change needs a fresh run. No sync or archive was performed. r[CALC-GATE-01]
+
+### Public command and diagnostic contract
+
+**Choice:** The selected entry is `noble calculator`. It reads stdin and runs one submission per line. An unframed line is delimited by `\n` and counts that terminator; `--framed` reads each line as a counted byte frame. Both are bounded by the same 65,536-byte input frame, and a frame over it is a `TransportLimit InputFrameBytes` refusal with exit status 2 before any guest runs. A line is exactly one of:
+
+- `EXPR` — evaluate the expression over exact rationals. A successful value prints on stdout.
+- `let NAME = EXPR` — evaluate `EXPR`, produce its exact display, commit the binding and print that display on stdout. The display charge runs before the new State is published, so a refused display commits nothing and prints nothing: the earlier binding, or its absence, is unchanged.
+- `fn NAME(P, ...) = EXPR` — check and install the definition, printing nothing on stdout. A definition never evaluates its body, and the zero-parameter form is `fn NAME() = EXPR`.
+
+Whitespace between tokens is insignificant, so `let x=7` and `let x = 7` are the same line and `fn f(y)=y*2` is the README spelling; `,` separates parameters and no other separator exists. `NAME` is an identifier token. The host never classifies source bytes: the guest lexer produces the tokens and the definition route, and the shell only schedules checked guest modules.
+
+`OWNER DECISION 2026-11-20:` "Definition grammar: `let NAME = EXPR` (echoes the value) and `fn NAME(P, ...) = EXPR` (silent)."
+
+Every refusal prints exactly one line on stderr: `Category [start,end) provenance=unavailable`. `start` and `end` are zero-based half-open UTF-8 byte offsets into the submitted line, including its terminator when unframed, and the guest supplies both; the shell never invents a span, and provenance is always the explicit `unavailable`. `Category` is `SyntaxError`, `TrailingInput`, `UnknownName`, `WrongArity`, `DefinitionError`, `InvalidCall`, `Unsupported`, a guest limit `ResourceLimit <slot>` for the seven budget slots (`InputBytes`, `NumericDigits`, `IntermediateIntegerBits`, `SyntaxDepth`, `CallDepth`, `EvaluationWork`, `OutputSize`), or a numeric domain category (`NonIntegral`, `OutOfRange`, `NonIntegerExponent`, `ZeroDenominator`, `DivisionByZero`). Values and `let` echoes are the only stdout lines.
+
+Exit status is 0 when every line was accepted, 1 when at least one line ended in a diagnostic, a `NativeFailure` or an `InfrastructureFailure` while the session survived to end of input (later lines still run), and 2 for a usage error, a frame/transport refusal, a failed session construction, a failed restore or a failed terminal write. A failure never counts as a value, and the shell never prints a `ResourceLimit` it did not receive from the guest.
+
+The six CALC-09 `later_features` (approximation, symbolic expressions, trigonometry, units, real arithmetic, complex arithmetic) are outside this grammar. Each one MUST be refused explicitly, never approximated, silently dropped, or displayed as an exact value: `2^0.5` is `NonIntegerExponent`, `x + 1` with `x` unbound is `UnknownName`, `sin(1)` and `sqrt(2)` are `UnknownName`, and `1 m` and `1 + 2i` are `TrailingInput`. The CLI mapping table records one probe per feature with its derived category, and the acceptance runner runs each as an ordinary vector whose expectation is a diagnostic; no canonical CALC-09 state changes from them.
+
+**Rationale:** The application contract is the terminal surface a user and an acceptance harness both see, and the CLI is also the calculator's only entry. Leaving the definition spelling, the echo/silence split, the exact diagnostic line and the exit codes implicit in source let a host change alter the public contract without a failing test. The `later_features` rows make the case's own `exact-display-or-explicit-unsupported-feature` outcome observable instead of an unexercised field. The command spelling is an owner decision, not a grammar extension: it selects the existing `let`/`fn` route rather than adding syntax. The line's diagnostic format and categories restate the unchanged CALC-PARSE-02 rule that a category, its span and an explicit unavailable provenance are always named; this delta adds no parser behaviour to it. r[CALC-STATE-02]
+
+### Profile applicability: CALC-07 variants, CALC-10 and CALC-11
+
+**Choice:** `OWNER DECISION 2026-11-20:` "CALC-07's import and resource variants do not apply to the calculator CLI; CALC-10/11 move to MA3 and do not apply to Calculator-v1".
+
+- **CALC-07 `cyclic-imported-definition-graph` and `resource-capability-capture`.** The selected line grammar has no import/module form and names no resources or capabilities, so neither variant has a CLI spelling. `verification/calculator-v1/cli-mapping.json` records both as `unsupported-on-cli` with that reason, and the acceptance runner lists them as unsupported instead of running or passing them. They stay unexercised. The five runnable variants are unchanged.
+- **CALC-10 and CALC-11.** Authoring-tool variants and benchmark integrity are `MA3` `calculator-AI-authoring-evaluation` obligations; MA3 depends on MA2, whose entry gates this change does not claim. `verification/calculator-v1/calc-10-11-design.md` stays a design note: it selects no tool surface, builds no benchmark harness and produces no case evidence. Neither case applies to the Calculator-v1 entry, and neither state moves.
+
+**Rationale:** An inapplicable variant must be recorded as inapplicable, not left as a permanent hole in a matrix that then cannot close. The record keeps each variant's reason next to the runner that skips it, so a later reader can tell "not run" from "cannot apply", and it moves the two authoring obligations to the milestone that owns authoring tools without promoting them. r[CALC-GATE-01]
 
 ## Risks and boundaries
 

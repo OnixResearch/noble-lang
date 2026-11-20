@@ -94,6 +94,7 @@ import NobleFoundation.Slice
 import NobleFoundation.Preservation
 import NobleFoundation.Laws
 import NobleFoundation.Effects
+import NobleFoundation.OwnershipModel
 import NobleFoundation.LinkBoundary
 import NobleFoundation.TaskInterleaving
 import NobleFoundation.TaskScope
@@ -133,6 +134,8 @@ import NobleFoundation.RegionProtocol
 import NobleFoundation.ImplicitUnification
 import NobleFoundation.ImplicitScope
 import NobleFoundation.ImplicitPropositions
+import NobleFoundation.IntrinsicCalculus
+import NobleFoundation.IntrinsicErasure
 import NobleFoundation.UsePermissions
 import NobleFoundation.GuardedRewrite
 import NobleFoundation.GuardedRewriteCorpus

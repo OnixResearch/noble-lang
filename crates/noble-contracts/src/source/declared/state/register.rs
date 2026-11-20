@@ -24,14 +24,10 @@ impl super::ModuleSession {
         mut self,
         mut request: Registration<'_>,
     ) -> Result<(Self, Option<crate::intrinsic::ProofBatch>), crate::source::Error> {
-        if request.name == "result"
-            && request.version == 1
-            && request.source != crate::source::RESULT_LIBRARY_SOURCE
-        {
-            return Err(super::super::error(
-                crate::source::Stage::Link,
-                "result@1 requires the exact checked library source",
-            ));
+        if let Some((required, refusal)) = published_library(&request) {
+            if request.source != required {
+                return Err(super::super::error(crate::source::Stage::Link, refusal));
+            }
         }
         if !request.inputs.is_empty() {
             return Err(super::super::error(
@@ -124,6 +120,27 @@ impl super::ModuleSession {
         });
         next.next_module_identity = next_module_identity;
         Ok((attempt!(next.outside_words()), staged.pending))
+    }
+}
+
+/// The pinned declaration bytes of a published library version, with the
+/// refusal text that names it. A published name registers only the exact
+/// source the host publishes for it, as `result@1` established.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the library name is compared through the non-const String::as_str, so this table cannot be a constant expression."
+)]
+fn published_library(request: &Registration<'_>) -> Option<(&'static [u8], &'static str)> {
+    match (request.name.as_str(), request.version) {
+        ("result", 1) => Some((
+            crate::source::RESULT_LIBRARY_SOURCE,
+            "result@1 requires the exact checked library source",
+        )),
+        ("wire", 1) => Some((
+            crate::source::WIRE_LIBRARY_SOURCE,
+            "wire@1 requires the exact checked library source",
+        )),
+        _ => None,
     }
 }
 

@@ -2833,6 +2833,70 @@ fn dependent_rebuild_is_transitive_and_preserves_saved_old_program(
 }
 
 #[test]
+fn retained_old_definition_yields_old_value_and_retires_after_release(
+) -> Result<(), Box<dyn std::error::Error>> {
+    // OWN-CASE-07: `def n [ 1 ]`, `[ n ]` saved on the session stack, `def n [ 2 ]` reloaded. The
+    // saved Program must run the old definition (1), the old code span must stay while that owner
+    // lives, and retirement of the old span must succeed once the owner is released.
+    let fixture = Fixture::new("def n [ 1 ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    let saved = live.submit("[ n ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program", "{saved}");
+    let saved_span = saved["installed_code_span"].clone();
+    assert!(number_field(&saved_span, "length") > 0, "{saved}");
+    fixture.replace("def n [ 2 ]")?;
+    let committed = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&committed, "outcome"),
+        "reload-committed",
+        "{committed}"
+    );
+    assert_eq!(number_field(&committed, "guest_requests"), 0, "{committed}");
+    assert_eq!(
+        number_field(&committed, "protected_operations"),
+        0,
+        "{committed}"
+    );
+    assert!(
+        !committed["retired_code_spans"]
+            .as_array()
+            .ok_or("reload omitted checked retirement receipts")?
+            .iter()
+            .any(|row| row["code_span"] == saved_span),
+        "old definition code must stay while the saved owner lives: {committed}"
+    );
+    let ran = live.submit("run")?;
+    normal(&ran, &["1"]);
+    assert_eq!(number_field(&ran, "guest_requests"), 0, "{ran}");
+    let released = live.submit(":release-observed-roots")?;
+    assert_eq!(
+        text_field(&released, "outcome"),
+        "observed-roots-released",
+        "{released}"
+    );
+    assert!(
+        number_field(&released, "released_observed_roots") > 0,
+        "{released}"
+    );
+    assert_eq!(number_field(&released, "guest_requests"), 0, "{released}");
+    assert_eq!(
+        number_field(&released, "protected_operations"),
+        0,
+        "{released}"
+    );
+    assert!(
+        released["retired_code_spans"]
+            .as_array()
+            .ok_or("release omitted checked retirement receipts")?
+            .iter()
+            .any(|row| released_guest_instance(row, &saved_span, &saved["module"])),
+        "releasing the saved owner must retire the old definition span: {released}"
+    );
+    live.finish()
+}
+
+#[test]
 fn dependent_inside_nested_quotation_resolves_new_identity(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def addone [ 1 + ]")?;
@@ -4848,6 +4912,67 @@ fn preview_measures_installed_state_and_preserves_an_active_grant(
     let committed = live.report()?;
     assert_eq!(text_field(&committed, "outcome"), "proposal-committed");
     live.finish()
+}
+
+#[test]
+fn mixed_definition_and_module_source_refuses_at_startup_with_one_report(
+) -> Result<(), Box<dyn std::error::Error>> {
+    // A default-profile selected file cannot carry a declared `module` word: the
+    // token grammar excludes its `@`. The refusal must be one typed startup
+    // report delivered before EOF, not a silent wait for a submission.
+    let fixture = Fixture::new(
+        "def addone [ 1 + ]\nmodule count@1 [ opaque Count I64 public export Count ]",
+    )?;
+    let live = LiveChild::start(&fixture.source)?;
+    let refusal = live.report()?;
+    assert_eq!(text_field(&refusal, "schema"), "noble-live-report/v1");
+    assert_eq!(text_field(&refusal, "stage"), "admission");
+    assert_eq!(text_field(&refusal, "outcome"), "reload-refused");
+    assert!(!text_field(&refusal, "diagnostic").is_empty());
+    assert_eq!(number_field(&refusal, "generation"), 0);
+    assert_eq!(number_field(&refusal, "guest_requests"), 0);
+    assert_eq!(number_field(&refusal, "protected_operations"), 0);
+    assert_eq!(refusal["stack"], serde_json::json!([]));
+    live.finish_with_status(2)
+}
+
+#[test]
+fn mismatched_declared_binding_refuses_at_startup_with_one_report(
+) -> Result<(), Box<dyn std::error::Error>> {
+    // The binding names a Bool input where the module requires Text. The host
+    // refuses the typed slot at startup instead of holding a half-built session.
+    let fixture = Fixture::new(
+        "module ledger@1 [ require emit Text -- ! test.emit export send def send [ \"A\" emit ] ]",
+    )?;
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(
+        &bindings,
+        "bind ledger@1 test.emit emit-a Bool -- ! test.emit allow\n",
+    )?;
+    let live = LiveChild::start_declared(&fixture.source, &bindings)?;
+    let refusal = live.report()?;
+    assert_eq!(text_field(&refusal, "schema"), "noble-live-report/v1");
+    assert_eq!(text_field(&refusal, "stage"), "admission");
+    assert_eq!(text_field(&refusal, "outcome"), "reload-refused");
+    assert!(
+        text_field(&refusal, "diagnostic").contains("bound adapter"),
+        "{refusal}"
+    );
+    assert_eq!(number_field(&refusal, "generation"), 0);
+    assert_eq!(number_field(&refusal, "guest_requests"), 0);
+    assert_eq!(number_field(&refusal, "protected_operations"), 0);
+    live.finish_with_status(2)?;
+
+    // Control: the exact declared signature starts and publishes generation 1.
+    let control = fixture.directory.join("control.txt");
+    fs::write(
+        &control,
+        "bind ledger@1 test.emit emit-a Text -- ! test.emit allow\n",
+    )?;
+    let accepted = LiveChild::start_declared(&fixture.source, &control)?;
+    let (generation, _) = live_ack(&accepted.report()?, &[]);
+    assert_eq!(generation, 1);
+    accepted.finish()
 }
 
 /// The pinned Node/V8 selected by `crates/noble-cli/src/core/runtime/config.json`;

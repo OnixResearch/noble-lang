@@ -1,0 +1,7 @@
+47
+module m@1 [ export addone def addone [ 1 + ] ]53
+module m@2 [ export addone def addone [ drop true ] ]15
+import m@1 as m21
+def once [ m.addone ]15
+import m@2 as m7
+20 once
