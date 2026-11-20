@@ -104,7 +104,7 @@ pub(crate) struct Observed {
 }
 
 #[derive(serde::Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct Document {
     schema: std::string::String,
     opt_mode: std::string::String,
@@ -115,13 +115,13 @@ struct Document {
 }
 
 #[derive(serde::Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct CliPin {
     sha256: std::string::String,
 }
 
 #[derive(serde::Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct HelperPin {
     root: std::string::String,
     count: u64,
@@ -129,7 +129,7 @@ struct HelperPin {
 }
 
 #[derive(serde::Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct LeanPin {
     binary_sha256: std::string::String,
     toolchain: std::string::String,
@@ -138,7 +138,7 @@ struct LeanPin {
 }
 
 #[derive(serde::Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct ToolPins {
     node: ToolPin,
     wasm_tools: ToolPin,
@@ -146,7 +146,7 @@ struct ToolPins {
 }
 
 #[derive(serde::Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct ToolPin {
     path: std::string::String,
     version: std::string::String,
@@ -154,7 +154,7 @@ struct ToolPin {
 }
 
 #[derive(serde::Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct WorkerTools {
     node: WorkerTool,
     wasm_tools: WorkerTool,
@@ -162,7 +162,7 @@ struct WorkerTools {
 }
 
 #[derive(serde::Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct WorkerTool {
     path: std::string::String,
     version: std::string::String,

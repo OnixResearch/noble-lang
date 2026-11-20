@@ -74,7 +74,7 @@ pub(super) struct ProofLibrary {
 }
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct Record {
     schema: std::string::String,
     revision: std::string::String,
@@ -104,7 +104,7 @@ struct Record {
 }
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct RecordObligation {
     language: std::string::String,
     input: std::vec::Vec<(std::string::String, std::string::String)>,
@@ -115,7 +115,7 @@ struct RecordObligation {
 }
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct RecordObservations {
     initial: std::string::String,
     #[serde(rename = "final")]
@@ -123,7 +123,7 @@ struct RecordObservations {
 }
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct RecordProofLibrary {
     requirement: std::string::String,
     accepted: std::string::String,
