@@ -22,7 +22,7 @@
 
 use super::model::{Op, Precondition, Program};
 
-/// RegeneratedClaim/relation revision.
+/// Proposition/relation revision.
 pub(super) const RELATION_REVISION: &str = "noble-merge-claim/v1";
 
 /// Evidence schema revision.
@@ -183,7 +183,7 @@ impl Selection {
 
 /// The exact regenerated claim and everything the consumer derived itself.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct RegeneratedClaim {
+pub(super) struct Proposition {
     pub(super) relation: &'static str,
     pub(super) semantic_revision: &'static str,
     pub(super) claim_text: String,
@@ -191,7 +191,7 @@ pub(super) struct RegeneratedClaim {
     pub(super) proof_digest: String,
 }
 
-impl RegeneratedClaim {
+impl Proposition {
     pub(super) fn digest(&self) -> String {
         let mut digest = Sha256::new();
         digest.update(RELATION_REVISION.as_bytes());
@@ -309,7 +309,7 @@ impl Outcome {
 /// observable list itself, requires exact `Ty` equality across the four
 /// preparations, an observable-only output stack, `true` preconditions and a
 /// nonempty input domain, then renders the exact `MergeRel` proposition.
-pub(super) fn regenerate(selection: &Selection) -> Result<RegeneratedClaim, Refusal> {
+pub(super) fn regenerate(selection: &Selection) -> Result<Proposition, Refusal> {
     if selection.precondition != Precondition::True {
         return Err(Refusal::VacuousPrecondition);
     }
@@ -333,7 +333,7 @@ pub(super) fn regenerate(selection: &Selection) -> Result<RegeneratedClaim, Refu
         selection.second.lean_subject(),
         selection.candidate.lean_subject(),
     );
-    Ok(RegeneratedClaim {
+    Ok(Proposition {
         relation: RELATION_REVISION,
         semantic_revision: SEMANTIC_REVISION,
         claim_text,
@@ -345,10 +345,7 @@ pub(super) fn regenerate(selection: &Selection) -> Result<RegeneratedClaim, Refu
 /// The consumer's admission rule: regenerate, then refuse every producer
 /// field that differs.  On success the returned claim is the consumer's own
 /// and the proof bytes are bound to it.
-pub(super) fn admit(
-    selection: &Selection,
-    evidence: &Evidence,
-) -> Result<RegeneratedClaim, Refusal> {
+pub(super) fn admit(selection: &Selection, evidence: &Evidence) -> Result<Proposition, Refusal> {
     let mut claim = regenerate(selection)?;
     if evidence.schema != EVIDENCE_SCHEMA {
         return Err(Refusal::WrongSchema);
@@ -380,7 +377,7 @@ pub(super) fn admit(
 
 /// The only path to `Verified`: the isolated pinned Lean consumer accepted the
 /// exact regenerated claim for the bound proof bytes.
-pub(super) fn checked(claim: &RegeneratedClaim, accepted: bool, axioms: &[String]) -> Outcome {
+pub(super) fn checked(claim: &Proposition, accepted: bool, axioms: &[String]) -> Outcome {
     let allowed = ["propext", "Classical.choice", "Quot.sound"];
     let mut is_allowed = true;
     let mut at = 0usize;
