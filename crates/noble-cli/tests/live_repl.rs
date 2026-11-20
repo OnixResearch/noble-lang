@@ -3761,8 +3761,7 @@ fn capture_definition_bytes(
 fn live_test_binary_seam_captures_exact_bytes_and_refuses_substitution(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def base [ 7 ]")?;
-    let (baseline, baseline_module) =
-        capture_submission_emission(&fixture, "1 2 +", &["3"])?;
+    let (baseline, baseline_module) = capture_submission_emission(&fixture, "1 2 +", &["3"])?;
     let baseline_module_wat = text_field(&baseline_module["module"], "wat_sha256").to_owned();
     assert_eq!(&baseline[..8], b"\0asm\x01\0\0\0");
     let other_fixture = Fixture::new("def base [ 7 ]")?;
@@ -3838,8 +3837,21 @@ fn live_test_binary_seam_captures_exact_bytes_and_refuses_substitution(
     );
     let after = live.submit(":arena")?;
     assert_eq!(text_field(&after, "outcome"), "arena-observed");
+    // The worker compiles and instantiates the prepared candidate before the
+    // host's source/binding admission can discard it, so the monotone
+    // compilation counter advances by exactly one; every other witness must
+    // be identical.
     assert_eq!(
-        before["arena"], after["arena"],
+        number_field(&after["arena"], "compilations"),
+        number_field(&before["arena"], "compilations") + 1,
+        "{before} {after}"
+    );
+    let mut before_witness = before["arena"].clone();
+    let mut after_witness = after["arena"].clone();
+    before_witness["compilations"] = serde_json::json!(0);
+    after_witness["compilations"] = serde_json::json!(0);
+    assert_eq!(
+        before_witness, after_witness,
         "a refused substitution changed the live arena: {before} {after}"
     );
     normal(&live.submit("base")?, &["7"]);
@@ -3855,10 +3867,7 @@ fn live_test_binary_seam_captures_exact_bytes_and_refuses_substitution(
         &[
             ("NOBLE_LIVE_TEST_BINARY_REPLACE", other),
             ("NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE", "1 2 +"),
-            (
-                "NOBLE_LIVE_TEST_BINARY_REPLACE_WAT_SHA256",
-                &different_wat,
-            ),
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE_WAT_SHA256", &different_wat),
         ],
     )?;
     live_ack(&live.report()?, &[]);
@@ -3923,21 +3932,20 @@ fn live_test_binary_seam_captures_exact_bytes_and_refuses_substitution(
 }
 
 #[test]
-fn live_test_hosts_require_an_explicit_host_effect_grant(
-) -> Result<(), Box<dyn std::error::Error>> {
+fn live_test_hosts_require_an_explicit_host_effect_grant() -> Result<(), Box<dyn std::error::Error>>
+{
     let fixture = Fixture::new("def addone [ 1 + ]")?;
     // Without the flag both Core test hosts stay unbound: the host admits no
     // effectful submission and the session survives with its prior state.
+    // The two words do not even resolve in a session whose host selected no
+    // test host (the flag is the only selection), so the refusal happens at
+    // resolution with zero guest and protected operations.
     let mut live = LiveChild::start(&fixture.source)?;
     live_ack(&live.report()?, &[]);
     for submission in ["\"A\" test.emit", "\"A\" test.abort"] {
         let refused = live.submit(submission)?;
-        assert_eq!(text_field(&refused, "stage"), "admission", "{refused}");
-        assert_eq!(
-            text_field(&refused, "outcome"),
-            "effect-refused",
-            "{refused}"
-        );
+        assert_eq!(text_field(&refused, "stage"), "resolve", "{refused}");
+        assert_eq!(text_field(&refused, "outcome"), "unbound-word", "{refused}");
         assert_eq!(number_field(&refused, "guest_requests"), 0, "{refused}");
         assert_eq!(
             number_field(&refused, "protected_operations"),
@@ -3996,8 +4004,8 @@ fn live_test_hosts_require_an_explicit_host_effect_grant(
 
 #[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
 #[test]
-fn ungranted_live_worker_refuses_core_test_host_imports(
-) -> Result<(), Box<dyn std::error::Error>> {
+fn ungranted_live_worker_refuses_core_test_host_imports() -> Result<(), Box<dyn std::error::Error>>
+{
     // Capture the real emitted bytes of a granted effectful submission.
     let granted_fixture = Fixture::new("def base [ 7 ]")?;
     let capture = granted_fixture.directory.join("effect.wasm");
@@ -4143,7 +4151,8 @@ fn tampered_candidate_bytes_refuse_after_completed_invocation(
             "{refused}"
         );
         assert!(
-            text_field(&refused, "diagnostic").contains("checked source binding"),
+            text_field(&refused, "diagnostic")
+                .contains("Core worker did not bind checked source and wasm_sha256"),
             "{refused}"
         );
         assert_eq!(number_field(&refused, "generation"), 1);
@@ -4157,8 +4166,8 @@ fn tampered_candidate_bytes_refuse_after_completed_invocation(
 
 #[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
 #[test]
-fn case_in_flight_word_quote_completes_before_reload_ack(
-) -> Result<(), Box<dyn std::error::Error>> {
+fn case_in_flight_word_quote_completes_before_reload_ack() -> Result<(), Box<dyn std::error::Error>>
+{
     // LIVE-02's own workload: the in-flight submission is the quotation
     // `[ addone ]`, the selected file is replaced with `def addone [ 2 + ]`
     // while that guest frame is active, and the queued reload must ACK only
@@ -4187,8 +4196,7 @@ fn case_in_flight_word_quote_completes_before_reload_ack(
     probe.finish()?;
 
     let fixture = Fixture::new(BEFORE)?;
-    let mut barrier =
-        LiveBarrier::new(&fixture.directory, "in-flight-execution", &quote_sha256)?;
+    let mut barrier = LiveBarrier::new(&fixture.directory, "in-flight-execution", &quote_sha256)?;
     let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
     command
         .args(["live", "repl", "--source"])
@@ -4252,7 +4260,11 @@ fn case_in_flight_word_quote_completes_before_reload_ack(
     // old body) while the rebuilt `twice` added 4: [24, 21].
     let script = live.submit("20 swap run 20 twice swap")?;
     normal(&script, &["24", "21"]);
-    assert_generation_inspection(&live.submit(":generation")?, new_generation, &script["stack"]);
+    assert_generation_inspection(
+        &live.submit(":generation")?,
+        new_generation,
+        &script["stack"],
+    );
     println!(
         "{}",
         serde_json::json!({

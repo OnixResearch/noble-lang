@@ -1322,7 +1322,7 @@ async function observeLive09() {
       && /effects/.test(child.reload.diagnostic ?? '')
       && child.reload.generation === child.committed.generation)
       && path.basename(first.files.source) === 'evolve.noble',
-    { command: ':reload evolve.noble', selected_path: first.files.source,
+    { command: `:reload ${first.files.source}`, selected_basename: path.basename(first.files.source),
       first: { outcome: first.reload.outcome, diagnostic: first.reload.diagnostic,
         generation: first.reload.generation },
       second: { outcome: second.reload.outcome, diagnostic: second.reload.diagnostic,
