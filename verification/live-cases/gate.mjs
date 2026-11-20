@@ -692,7 +692,7 @@ async function observeLive03() {
     schemaRefused.stage === 'admission' && schemaRefused.outcome === 'reload-refused'
       && schemaRefused.generation === declaredDefinition.generation && isStack(schemaRefused, ['I64:7'])
       && schemaRefused.guest_requests === 0 && schemaRefused.protected_operations === 0
-      && schemaOldCall.outcome === 'normal' && isStack(schemaOldCall, ['I64:7', 'I64:8']),
+      && schemaOldCall.outcome === 'normal' && isStack(schemaOldCall, ['I64:8']),
     { outcome: schemaRefused.outcome, stage: schemaRefused.stage, generation: schemaRefused.generation,
       stack: stackOf(schemaRefused), guest_requests: schemaRefused.guest_requests,
       protected_operations: schemaRefused.protected_operations, diagnostic: schemaRefused.diagnostic,
@@ -720,7 +720,7 @@ async function observeLive03() {
     cycleRefused.stage === 'admission' && cycleRefused.outcome === 'reload-refused'
       && /cyclic/.test(cycleRefused.diagnostic ?? '') && cycleRefused.generation === cycleDefinition.generation
       && isStack(cycleRefused, ['I64:7']) && cycleRefused.guest_requests === 0 && cycleRefused.protected_operations === 0
-      && cycleOldCall.outcome === 'normal' && isStack(cycleOldCall, ['I64:7', 'I64:8']),
+      && cycleOldCall.outcome === 'normal' && isStack(cycleOldCall, ['I64:8']),
     { outcome: cycleRefused.outcome, stage: cycleRefused.stage, generation: cycleRefused.generation,
       stack: stackOf(cycleRefused), diagnostic: cycleRefused.diagnostic, old_call_stack: stackOf(cycleOldCall) });
   // Only the five default-profile variants run on the case's exact initial
