@@ -150,10 +150,17 @@ impl super::Session {
         let (state, signed_relation) = attempt!(inferred);
         let Some(name) = name else {
             let environment = attempt!(emission_environment(environment, tree.span, meter));
+            // The immutable namespace snapshot names the library word an
+            // eligibility refusal instantiates; an undeclared session has none.
+            let words = match &self.declared {
+                Some(context) => context.words.as_slice(),
+                None => &[],
+            };
             let (submission, checked, output) = attempt!(super::emission::emit(
                 state,
                 environment,
                 &self.definitions,
+                words,
                 source_bytes.len(),
                 meter
             ));

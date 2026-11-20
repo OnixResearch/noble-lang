@@ -1,0 +1,75 @@
+module wire@1 [
+    signature rot forall<S:stack,A:value,B:value,C:value>
+        [ S A B C -- S B C A ! pure ]
+    def rot [ [ swap ] dip swap ]
+
+    signature identity forall<S:stack,R:stack> [ S -- S Program<R,R,pure> ! pure ]
+    export identity
+    def identity [ [ ] ]
+
+    signature then forall<S:stack,A:stack,B:stack,C:stack,eps:effect>
+        [ S Program<A,B,eps> Program<B,C,eps> -- S Program<A,C,eps> ! pure ]
+    export then
+    def then [ compose ]
+
+    signature apply forall<S:stack,T:stack,eps:effect> [ S Program<S,T,eps> -- T ! eps ]
+    export apply
+    def apply [ run ]
+
+    signature under forall<S:stack,T:stack,A:value,eps:effect> [ S A Program<S,T,eps> -- T A ! eps ]
+    export under
+    def under [ dip ]
+
+    signature first forall<S:stack,A:value,B:value,C:value,eps:effect>
+        [ S Pair<A,B> Program<S+A,S+C,eps> -- S Pair<C,B> ! eps ]
+    export first
+    def first [ swap unpair rot dip pair ]
+
+    signature second forall<S:stack,A:value,B:value,D:value,eps:effect>
+        [ S Pair<A,B> Program<S+B,S+D,eps> -- S Pair<A,D> ! eps ]
+    export second
+    def second [ swap unpair swap rot dip swap pair ]
+
+    signature split forall<S:stack,A:value,B:value,C:value,D:value,eps:effect>
+        [ S Pair<A,B> Program<S+A,S+C,eps> Program<S+B,S+D,eps> -- S Pair<C,D> ! eps ]
+    export split
+    def split [ [ first ] dip second ]
+
+    signature fanout forall<S:stack,A:value,C:value,D:value,eps:effect>
+        [ S A Program<S+A,S+C,eps> Program<S+A,S+D,eps> -- S Pair<C,D> ! eps ]
+    export fanout
+    def fanout [ [ [ dup pair ] dip ] dip split ]
+
+    signature left forall<S:stack,A:value,B:value,C:value,eps:effect>
+        [ S Sum<A,B> Program<S+A,S+C,eps> -- S Sum<C,B> ! eps ]
+    export left
+    def left [ [ inl ] compose [ inr ] case ]
+
+    signature right forall<S:stack,A:value,B:value,D:value,eps:effect>
+        [ S Sum<A,B> Program<S+B,S+D,eps> -- S Sum<A,D> ! eps ]
+    export right
+    def right [ [ inr ] compose [ inl ] swap case ]
+
+    signature choose forall<S:stack,A:value,B:value,C:value,D:value,eps:effect>
+        [ S Sum<A,B> Program<S+A,S+C,eps> Program<S+B,S+D,eps> -- S Sum<C,D> ! eps ]
+    export choose
+    def choose [ [ inr ] compose [ [ inl ] compose ] dip case ]
+
+    signature join forall<S:stack,A:value,B:value,T:stack,eps:effect>
+        [ S Sum<A,B> Program<S+A,T,eps> Program<S+B,T,eps> -- T ! eps ]
+    export join
+    def join [ case ]
+
+    signature swap_pair forall<S:stack,A:value,B:value> [ S Pair<A,B> -- S Pair<B,A> ! pure ]
+    export swap_pair
+    def swap_pair [ unpair swap pair ]
+
+    signature assoc_pair forall<S:stack,A:value,B:value,C:value>
+        [ S Pair<Pair<A,B>,C> -- S Pair<A,Pair<B,C>> ! pure ]
+    export assoc_pair
+    def assoc_pair [ unpair [ unpair ] dip pair pair ]
+
+    signature project_first forall<S:stack,A:value,B:value> [ S Pair<A,B> -- S A ! pure ]
+    export project_first
+    def project_first [ unpair drop ]
+]
