@@ -148,7 +148,7 @@
           },
           "assumptions": [
             "The pinned selected Rust toolchain and compiled `noble` CLI are trusted only at the recorded source revision and binary sha256; this receipt executes behavior and is not a proof.",
-            "Owner decision 2026-11-20 (decision 19) drops `serialize` and `forge` as unexpressible by design, and owner decision 2026-11-20 (decision 25) drops `retain` as impossible by design: the protocol has no well-formed retain request, so the only spelling is a malformed-request refusal. `aggregate-capture` and `export-or-return` are kept and accept their earliest static refusal.",
+            "Owner decision 2026-11-20 (decision 19) drops `serialize` and `forge` as unexpressible by design, and integrator decision 2026-11-20 under the owner's delegation (decision 25, veto retained) drops `retain` as impossible by design: the protocol has no well-formed retain request, so the only spelling is a malformed-request refusal. `aggregate-capture` and `export-or-return` are kept and accept their earliest static refusal.",
             "`guest_requests` and `invalid_variants_guest_requests` count the refused attempts (the `attempt` install) from each variant's own raw reply; `accepted_variant_guest_requests` is the accepted variant's executed invoke.",
             "`ref_authority` is observed from the LSLOT-07 lane's raw policy-denied dispatch reply for a host-issued ref whose dispatch grant is revoked.",
             "`issued_ref` is prose; the entry records the install input types and the reflected site that carry it."
@@ -256,7 +256,7 @@
     },
     {
       "date": "2026-11-20",
-      "authority": "OWNER DECISION 2026-11-20 (decision 25, verbatim): \"The live-slot protocol has no well-formed request that retains a LiveRef beyond its call; the only spelling is an unknown `owner` field, refused as a malformed request (\\\"unknown slot command or authority field\\\"), not at the scope boundary. Like decision 19's serialize/forge variants, `retain` is recorded as an owner-approved amendment: dropped as impossible by design, with this reason. LSLOT-06 may be promoted from its remaining variants' real boundary refusals.\"",
+      "authority": "INTEGRATOR DECISION UNDER THE OWNER'S DELEGATION, 2026-11-20 (decision 25; the decisions file records it as an integrator decision under the owner's delegation with the owner's veto, not as an owner decision; verbatim): \"The live-slot protocol has no well-formed request that retains a LiveRef beyond its call; the only spelling is an unknown `owner` field, refused as a malformed request (\\\"unknown slot command or authority field\\\"), not at the scope boundary. Like decision 19's serialize/forge variants, `retain` is recorded as an owner-approved amendment: dropped as impossible by design, with this reason. LSLOT-06 may be promoted from its remaining variants' real boundary refusals.\"",
       "review": "lslot-cases-review-2026-11-20 (independent reviewer, round 3, N3-02)",
       "cases": [
         {

@@ -324,6 +324,27 @@ const lane03 = lane('03', 'live_slot_resource_ref_admission.mjs');
 const summary03 = summaryFile(lane03.directory, 'LSLOT03-summary.json');
 const steps03 = summary03.results.flatMap(result =>
   pairedRecords(jsonLines(path.join(lane03.directory, `LSLOT03-${result.name}.jsonl`))));
+// LSLOT-03's `generic_dispatch_effect` witness is the raw caller-reflection
+// reply; the lane summary must agree with it.
+const callerReflectionSteps = pairedRecords(jsonLines(path.join(lane03.directory,
+  'LSLOT03-caller-reflection.jsonl')));
+const callerInstallSteps = callerReflectionSteps.filter(step =>
+  step.request?.operation === 'install' && step.request.id === 'caller');
+const callerReflectSteps = callerReflectionSteps.filter(step =>
+  step.request?.operation === 'reflect' && step.request.id === 'caller');
+assert.equal(callerInstallSteps.length, 1, 'LSLOT-03 caller install step');
+assert.equal(callerReflectSteps.length, 1, 'LSLOT-03 caller reflect step');
+assert.equal(callerInstallSteps[0].row.outcome, 'installed');
+const callerSiteRaw = callerReflectSteps[0].row.site;
+assert.equal(callerSiteRaw?.instruction, 'slot.invoke');
+assert.deepEqual(summary03.caller_reflection.site, callerSiteRaw,
+  'LSLOT-03 caller reflection summary equals the raw reply');
+assert.deepEqual(summary03.caller_reflection.install_inputs,
+  callerInstallSteps[0].request.inputs,
+  'LSLOT-03 caller install inputs equal the raw request');
+assert.equal(summary03.caller_reflection.install_source,
+  callerInstallSteps[0].request.source,
+  'LSLOT-03 caller install source equals the raw request');
 const lane06 = lane('06', 'live_slot_resource_ref_static.mjs');
 const summary06 = summaryFile(lane06.directory, 'LSLOT06-summary.json');
 const steps06 = summary06.results.flatMap(result =>
@@ -549,14 +570,10 @@ const lanes = {
     authority: authorityOf(path.join(lane03.directory, 'LSLOT03-same-exact-interface.jsonl')),
     variants: summary03.results.flatMap(result => variantFacts(pairedRecords(
       jsonLines(path.join(lane03.directory, `LSLOT03-${result.name}.jsonl`))))),
-    callerSite: (() => {
-      const reflection = summary03.caller_reflection;
-      assert.ok(reflection?.site, 'LSLOT-03 caller reflection control ran');
-      return reflection.site;
-    })(),
-    callerInstall: { outcome: summary03.caller_reflection.install,
-      source: summary03.caller_reflection.install_source,
-      inputs: summary03.caller_reflection.install_inputs },
+    callerSite: callerSiteRaw,
+    callerInstall: { outcome: callerInstallSteps[0].row.outcome,
+      source: callerInstallSteps[0].request.source,
+      inputs: callerInstallSteps[0].request.inputs },
     stageSteps: steps03.map(step => step.row.stage) },
   'LSLOT-04': { cases: cas, baseline: casBaseline,
     stageSteps: casSteps.map(step => step.row.stage) },

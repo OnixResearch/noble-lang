@@ -51,13 +51,14 @@
 > dropped variant and its reviewer reason, are recorded in the `amendments` block of
 > `specs/conformance/live-reference-cases.json` dated 2026-11-20.
 
-> OWNER DECISION 2026-11-20 (decision 25, verbatim): "The live-slot protocol has no well-formed
-> request that retains a LiveRef beyond its call; the only spelling is an unknown `owner` field,
-> refused as a malformed request (\"unknown slot command or authority field\"), not at the scope
-> boundary. Like decision 19's serialize/forge variants, `retain` is recorded as an
-> owner-approved amendment: dropped as impossible by design, with this reason. LSLOT-06 may be
-> promoted from its remaining variants' real boundary refusals." The drop is recorded as the
-> second `amendments` entry dated 2026-11-20.
+> INTEGRATOR DECISION UNDER THE OWNER'S DELEGATION 2026-11-20 (decision 25; the decisions file
+> records it as an integrator decision under the owner's delegation with the owner's veto, not as
+> an owner decision; verbatim): "The live-slot protocol has no well-formed request that retains a
+> LiveRef beyond its call; the only spelling is an unknown `owner` field, refused as a malformed
+> request (\"unknown slot command or authority field\"), not at the scope boundary. Like decision
+> 19's serialize/forge variants, `retain` is recorded as an owner-approved amendment: dropped as
+> impossible by design, with this reason. LSLOT-06 may be promoted from its remaining variants'
+> real boundary refusals." The drop is recorded as the second `amendments` entry dated 2026-11-20.
 
 - [ ] [serial] Implement independently checked `Live-Slot-Design` admission, root-issued typed ref inputs/pass-through, root pinning and nested dispatch with current host authorization. r[K-LSLOT-02] r[S-LSLOT-01] r[B-LSLOT-01]
   Progress 2026-11-20 (round 4): executed, not yet complete. `verification/lslot-cases/gate.mjs`
