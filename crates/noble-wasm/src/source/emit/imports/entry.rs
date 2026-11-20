@@ -166,7 +166,7 @@ fn core_text_output(
   (then (global.set $failure (i32.const 0))))
 "
     ));
-    if plan.live_test_hosts {
+    if plan.live_slots && plan.live_test_hosts {
         // The kernel's live-slot bootstrap emits Unit; Core source keeps
         // its historical no-result effect. Do not materialize a response
         // when the independently authorized host call denied the effect.

@@ -247,7 +247,9 @@ impl super::Session {
                 noble_kernel::contracts::text_cursor_environment()
                     .map_err(|_| crate::internal(crate::Span { start: 0, end: 0 })),
             ),
-            None if self.live_selected.is_some() => owned_environment(super::live_environment()),
+            None if self.live_selected.is_some() => {
+                owned_environment(super::live_environment(self.hosts))
+            }
             None => owned_environment(super::environment()),
         }
     }

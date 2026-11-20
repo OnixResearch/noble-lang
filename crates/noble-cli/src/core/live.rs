@@ -33,6 +33,9 @@ struct LiveOptions {
     initial_grant: Option<GrantSelection>,
     verify_source_before_execute: bool,
     manifest: Option<super::arguments::bindings::Manifest>,
+    /// Host-selected resource-free Core test hosts (`test.emit` bit 0,
+    /// `test.abort` bit 1). Empty for every ordinary live session.
+    allow_effects: u8,
     watch: bool,
     retained_generation_limit: Option<u64>,
     guest_step_budget: Option<u32>,
@@ -141,6 +144,7 @@ struct Live {
     selected_file_identity: Option<(FileIdentity, (u64, u64))>,
     grant_scope: Option<std::string::String>,
     grant: Option<GrantSelection>,
+    allow_effects: u8,
     last_stack: serde_json::Value,
     invocation_prior_stack: Option<serde_json::Value>,
     // Source/namespace publication generation, not the Wasm submission count.
@@ -167,6 +171,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         initial_grant,
         verify_source_before_execute,
         manifest,
+        allow_effects,
         watch,
         retained_generation_limit,
         guest_step_budget,
@@ -232,7 +237,13 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         session: super::Session {
             // An empty selected spelling is not a source identifier: it keeps
             // the Core-live ABI while granting no body self-edit authority.
-            frontend: noble_contracts::source::Session::new_live(selected_grant_name.unwrap_or("")),
+            frontend: if allow_effects == 0 {
+                noble_contracts::source::Session::new_live(selected_grant_name.unwrap_or(""))
+            } else {
+                noble_contracts::source::Session::new_live_with_test_hosts(
+                    selected_grant_name.unwrap_or(""),
+                )
+            },
             declared,
             compiler: if manifest.is_some() {
                 noble_wasm::source::Compiler::new_declared_live()
@@ -254,6 +265,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             name: grant.name.clone(),
             expected_generation: grant.expected_generation,
         }),
+        allow_effects,
         last_stack: serde_json::json!([]),
         invocation_prior_stack: None,
         generation: 0,
@@ -531,6 +543,7 @@ fn parse(arguments: &[std::ffi::OsString]) -> Result<LiveOptions, std::string::S
     let mut verify_source_before_execute = false;
     let mut declared_modules = false;
     let mut bindings = None;
+    let mut allow_effects = None;
     let mut retained_generation_limit = None;
     let mut guest_step_budget = None;
     let mut at = 2;
@@ -567,6 +580,9 @@ fn parse(arguments: &[std::ffi::OsString]) -> Result<LiveOptions, std::string::S
         match flag {
             "--source" if source.is_none() => source = Some(std::path::PathBuf::from(value)),
             "--bindings" if bindings.is_none() => bindings = Some(std::path::PathBuf::from(value)),
+            "--allow-effects" if allow_effects.is_none() => {
+                allow_effects = Some(parse_allow_effects(value)?)
+            }
             "--max-retained-generations" if retained_generation_limit.is_none() => {
                 let limit = value
                     .parse::<u64>()
@@ -613,6 +629,11 @@ fn parse(arguments: &[std::ffi::OsString]) -> Result<LiveOptions, std::string::S
     if declared_modules != bindings.is_some() || declared_modules && source.is_none() {
         return Err("declared live modules require --source ABS_PATH --declared-modules --bindings MANIFEST".into());
     }
+    if allow_effects.is_some_and(|mask| mask != 0) && declared_modules {
+        return Err(
+            "host-selected test effects require a Core live source, not declared modules".into(),
+        );
+    }
     if declared_modules && (grant_name.is_some() || grant_generation.is_some()) {
         return Err("declared live modules do not support guest self-edit grants".into());
     }
@@ -642,10 +663,33 @@ fn parse(arguments: &[std::ffi::OsString]) -> Result<LiveOptions, std::string::S
         initial_grant: grant,
         verify_source_before_execute,
         manifest,
+        allow_effects: allow_effects.unwrap_or(0),
         watch,
         retained_generation_limit,
         guest_step_budget,
     })
+}
+
+/// The host's explicit Core test-environment selection for `noble live
+/// repl`/`watch`: an exact, nonempty subset of the two resource-free test
+/// hosts. It is never read from source text and never selected implicitly.
+fn parse_allow_effects(value: &str) -> Result<u8, std::string::String> {
+    let mut mask = 0u8;
+    for name in value.split(',') {
+        let bit = match name {
+            "test.emit" => 0b01u8,
+            "test.abort" => 0b10u8,
+            _ => return Err("unsupported live host effect".into()),
+        };
+        if mask & bit != 0 {
+            return Err("duplicate live host effect".into());
+        }
+        mask |= bit;
+    }
+    if mask == 0 {
+        return Err("live host effect selection is empty".into());
+    }
+    Ok(mask)
 }
 
 fn source_identity(metadata: &std::fs::Metadata) -> FileIdentity {
@@ -1536,7 +1580,15 @@ impl Live {
             .submission()
             .ok_or_else(|| fatal_failure("missing accepted live source submission"))?;
         let effects = submission.request.expected.allowed_effects.as_slice();
-        if effects.iter().any(|effect| !matches!(effect.0, 3 | 4)) {
+        // The two self-edit identities are always scoped to this profile. The
+        // two resource-free Core test hosts are admitted only when the host
+        // selected them by flag; the runtime still authorizes each request.
+        let allow_effects = self.allow_effects;
+        if effects.iter().any(|effect| match effect.0 {
+            3 | 4 => false,
+            0 | 1 => allow_effects & (1u8 << effect.0) == 0,
+            _ => true,
+        }) {
             return Ok(self.admission_refusal(
                 "live profile has no grant for this host effect",
                 "effect-refused",
@@ -1567,7 +1619,11 @@ impl Live {
                 ));
             }
         };
-        let encoded = encoding::encode_live_checked(compiled.wat());
+        let encoded = if allow_effects == 0 {
+            encoding::encode_live_checked(compiled.wat())
+        } else {
+            encoding::encode_live_test_hosts_checked(compiled.wat())
+        };
         let binary = match encoded {
             Ok(binary) => binary,
             Err(encoding::EncodeError::HostEffect(error)) => {

@@ -877,6 +877,17 @@ impl Session {
             ..Self::without_test_hosts()
         }
     }
+    /// A host-selected guarded live session that also admits the resource-free
+    /// Core test hosts `test.emit` and `test.abort`. The CLI selects it only
+    /// from an explicit host grant, never from source text; each requested
+    /// effect is still authorized independently at the execution boundary.
+    pub fn new_live_with_test_hosts(selected_name: &str) -> Self {
+        Self {
+            live_selected: Some(alloc::string::String::from(selected_name)),
+            hosts: true,
+            ..Self::without_test_hosts()
+        }
+    }
     /// A separate, host-selected profile. The environment must already have
     /// been enabled and its versioned resource schemas registered by the host.
     /// Core and guarded Live-Wasm-Draft environments cannot gain slot syntax.
@@ -1643,14 +1654,25 @@ impl Session {
         let mut needs_host_effects = false;
         let mut at = 0;
         while !needs_host_effects && at < scheme.effects.len() {
-            needs_host_effects = !matches!(&scheme.effects[at],
-                noble_kernel::shapes::EffectSlot::Effect(
-                    noble_kernel::types::EffId(3 | 4)
-                ) | noble_kernel::shapes::EffectSlot::Var(_)
-                    if self.live_selected.is_some());
+            needs_host_effects = !self.scoped_live_effect(&scheme.effects[at]);
             at += 1;
         }
         needs_host_effects
+    }
+
+    /// Whether one effect slot is inside this live session's own scope: the
+    /// two self-edit identities always, and the two resource-free Core test
+    /// hosts only when the host selected them.
+    fn scoped_live_effect(&self, effect: &noble_kernel::shapes::EffectSlot) -> bool {
+        if self.live_selected.is_none() {
+            return false;
+        }
+        match effect {
+            noble_kernel::shapes::EffectSlot::Var(_) => true,
+            noble_kernel::shapes::EffectSlot::Effect(id) => {
+                matches!(id.0, 3 | 4) || (self.hosts && matches!(id.0, 0 | 1))
+            }
+        }
     }
 
     pub(crate) fn with_bindings(bindings: crate::component::Bindings) -> Self {
@@ -1676,7 +1698,10 @@ impl Session {
             Some(bindings) => bindings.effects,
             None => {
                 if self.live_selected.is_some() {
-                    (1 << 3) | (1 << 4)
+                    // The host-selected Core test environment adds exactly the
+                    // two resource-free test hosts, at Core's identities.
+                    let test_hosts = if self.hosts { (1 << 0) | (1 << 1) } else { 0 };
+                    test_hosts | (1 << 3) | (1 << 4)
                 } else if self.hosts {
                     3
                 } else {
@@ -1863,18 +1888,11 @@ fn adapt_environment(
         None => return Err(crate::internal(span)),
     }
     if source_abort {
-        env.defs.push(noble_kernel::words::Scheme {
-            var_kinds: alloc::vec![noble_kernel::words::VariableKind::Stack],
-            stack_in: alloc::vec![tail.clone()],
-            stack_out: alloc::vec![tail],
-            effects: alloc::vec![noble_kernel::shapes::EffectSlot::Effect(
-                noble_kernel::types::EffId(1)
-            )],
-        });
+        env.defs.push(noble_kernel::contracts::test_abort_scheme());
         env.kinds.push(noble_kernel::contracts::Behavior::Named);
         env.deps.push(alloc::vec::Vec::new());
         env.definition_owners.push(None);
-        env.effects.push(noble_kernel::types::EffId(1));
+        env.effects.push(noble_kernel::contracts::TEST_ABORT);
     }
     Ok(env)
 }
@@ -1891,7 +1909,7 @@ fn adapt_environment(
     tigerstyle::non_trait_imports,
     reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
 )]
-fn live_environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
+fn live_environment(test_hosts: bool) -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
     use noble_kernel::shapes::{EffectSlot, Pattern};
     #[expect(
         tigerstyle::non_trait_imports,
@@ -1904,6 +1922,10 @@ fn live_environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic>
     )]
     use noble_kernel::words::{Scheme, Variable, VariableKind};
     let mut env = environment()?;
+    // The host's explicit test-environment selection travels in the
+    // environment, so emission of the two ambient test hosts cannot be
+    // inferred from source text alone.
+    env.live_test_hosts = test_hosts;
     let stack = Pattern::StackVar(Variable(0));
     let propose = Scheme {
         var_kinds: alloc::vec![VariableKind::Stack],
@@ -2886,5 +2908,35 @@ mod tests {
         assert!(requires(&session, b"1 2 +"));
         let live = Session::new_live("evolve");
         assert!(!requires(&live, b"def evolve [ self.generation drop 1 + ]"));
+    }
+
+    /// LIVE-05's effectful runtime trap: the guarded live profile admits the
+    /// two resource-free Core test hosts only when the host selects them, at
+    /// Core's exact identities; `test.abort` remains a declared abnormal
+    /// termination rather than a protected operation. The negative controls
+    /// keep both the ordinary live session and an undeclared effect refusing.
+    #[test]
+    fn live_session_admits_core_test_hosts_only_under_the_host_grant() {
+        let limits = live_limits();
+        let ordinary = Session::new_live("");
+        let refused = ordinary
+            .prepare(b"\"A\" test.emit test.abort", &[], limits)
+            .err()
+            .expect("an ungranted live session cannot resolve the Core test hosts");
+        assert!(refused.diagnostic().message.contains("unbound word"));
+        let granted = Session::new_live_with_test_hosts("");
+        let prepared = granted
+            .prepare(b"\"A\" test.emit test.abort", &[], limits)
+            .expect("the host-selected live session admits the Core test hosts");
+        let submission = prepared.submission().expect("checked submission");
+        assert_eq!(
+            submission.request.expected.allowed_effects.as_slice(),
+            [
+                noble_kernel::contracts::TEST_EMIT,
+                noble_kernel::contracts::TEST_ABORT
+            ]
+        );
+        // An operation outside the host-selected environment stays unbound.
+        assert!(granted.prepare(b"test.clock", &[], limits).is_err());
     }
 }

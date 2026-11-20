@@ -20,19 +20,11 @@ fn same_kind(
     left == right
 }
 
+/// The fixed terminal `test.abort` row. Core and the host-selected live test
+/// environment share the kernel's single constructor, so the identity cannot
+/// drift between profiles.
 fn abort_scheme() -> noble_kernel::words::Scheme {
-    noble_kernel::words::Scheme {
-        var_kinds: alloc::vec![noble_kernel::words::VariableKind::Stack],
-        stack_in: alloc::vec![noble_kernel::shapes::Pattern::StackVar(
-            noble_kernel::words::Variable(0)
-        )],
-        stack_out: alloc::vec![noble_kernel::shapes::Pattern::StackVar(
-            noble_kernel::words::Variable(0)
-        )],
-        effects: alloc::vec![noble_kernel::shapes::EffectSlot::Effect(
-            noble_kernel::types::EffId(1)
-        )],
-    }
+    noble_kernel::contracts::test_abort_scheme()
 }
 
 fn live_schemes() -> [noble_kernel::words::Scheme; 2] {
@@ -205,7 +197,7 @@ fn has_live_slot_mismatch(
     text_cursor: bool,
 ) -> bool {
     env.live_slots != live_slots
-        || (env.live_test_hosts && !live_slots)
+        || (env.live_test_hosts && !live_slots && !live)
         || (live_slots && (live || text_cursor || !env.declared_modules))
 }
 
