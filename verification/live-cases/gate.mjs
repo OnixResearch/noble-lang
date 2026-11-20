@@ -4,7 +4,7 @@
 // It builds the pinned `noble` CLI and the `live_repl` test binary from a clean
 // committed tree, runs the selected integration tests, drives real
 // `noble live repl` / `noble live watch` children for every observed field of
-// the conformance cases, and writes one immutable `acceptance.json` into a new
+// the conformance cases, and writes one new immutable receipt file into a new
 // external directory. Nothing here is a proof or a document check: every row is
 // an executed command with its exit status and byte hashes.
 //
@@ -15,6 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { editorSelfCheck, live04Variants } from './wasm-edit.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 assert.equal(process.argv.length, 3, 'usage: SELECTED_NODE verification/live-cases/gate.mjs NEW_EXTERNAL_DIRECTORY');
@@ -69,14 +70,18 @@ for (const [id, digest] of Object.entries(projections))
 
 // Promoted by this slice. Every `expected` field of these cases must be
 // observed below; see `promotionGate`.
-const promoted = ['LIVE-01', 'LIVE-06', 'LIVE-07'];
+const promoted = ['LIVE-01', 'LIVE-04', 'LIVE-06', 'LIVE-07', 'LIVE-09'];
 
 // ---------------------------------------------------------------------------
 // Source scope, clean tree and manifest.
 const scope = ['crates', 'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'policy/tool-selection.json', 'verification/live-cases'];
 // The gate never binds its own receipt: committing it must not change the
 // source revision it records.
-const excluded = ['verification/live-cases/acceptance.json'];
+// The earlier LIVE-01/06/07 receipt is immutable and stays in place; this
+// slice writes a separate receipt file, and neither self-binds its generator.
+const receiptName = 'acceptance-2026-11-20-seams.json';
+const excluded = ['verification/live-cases/acceptance.json',
+  `verification/live-cases/${receiptName}`];
 const git = args => {
   const result = spawnSync('git', args, { cwd: root, maxBuffer: 64 * 1024 * 1024 });
   assert.equal(result.status, 0, `git ${args.join(' ')} failed: ${result.stderr}`);
@@ -234,16 +239,17 @@ const featureTest = (label, feature) => {
 // Real CLI children.
 const reportLimit = 65_536;
 class LiveChild {
-  constructor(label, args, environment) {
+  constructor(label, args, environment, executable = binary) {
     this.label = label;
     this.argv = args;
+    this.executable = executable;
     this.stdout = '';
     this.stderr = '';
     this.queue = [];
     this.waiters = [];
     this.closed = false;
     this.started = Date.now();
-    this.child = spawn(binary, args, {
+    this.child = spawn(executable, args, {
       cwd: root,
       env: { ...process.env, TMPDIR: temporary, ...environment },
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -310,7 +316,7 @@ class LiveChild {
     fs.writeFileSync(path.join(raw, `${this.label}.out`), this.stdout, { flag: 'wx' });
     fs.writeFileSync(path.join(raw, `${this.label}.err`), this.stderr, { flag: 'wx' });
     commands.push({
-      label: this.label, kind: 'live-child', command: [binary, ...this.argv], exit: code,
+      label: this.label, kind: 'live-child', command: [this.executable, ...this.argv], exit: code,
       duration_ms: Date.now() - this.started, pid: this.pid, script: this.script,
       stdout: { path: `raw/${this.label}.out`, bytes: Buffer.byteLength(this.stdout), sha256: sha256(this.stdout) },
       stderr: { path: `raw/${this.label}.err`, bytes: Buffer.byteLength(this.stderr), sha256: sha256(this.stderr) },
@@ -319,8 +325,8 @@ class LiveChild {
   kill() { this.child.kill('SIGKILL'); }
 }
 
-function start(label, args, environment) {
-  const child = new LiveChild(label, args, environment);
+function start(label, args, environment, executable = binary) {
+  const child = new LiveChild(label, args, environment, executable);
   child.script = [];
   return child;
 }
@@ -758,6 +764,823 @@ async function observeLive03() {
   });
 }
 
+// LIVE-04: the actual emitted binary is mutated section-by-section and must
+// be refused at byte admission before any live install. The mutation seam
+// (feature `live-test-barrier`) serves the mutated bytes in place of the
+// checked emission while the host binding still names the checked bytes, so
+// the worker's own validator and the host source/binding correspondence are
+// the observed deciders. The default binary ignores every seam name
+// (observeSeamAbsence).
+async function observeLive04(feature) {
+  const selectedSource = 'def base [ 7 ]';
+  const hostSelected = '1 2 +';
+  const wasmTools = path.join(selected.tool_paths.wasm_tools.output, 'bin/wasm-tools');
+  const capture = async (label, submission, stack) => {
+    const files = fixture(label, 'math.noble', selectedSource);
+    const target = path.join(files.directory, 'capture.wasm');
+    const live = start(label, ['live', 'repl', '--source', files.source, '--engine', 'v8'], {
+      NOBLE_LIVE_TEST_BINARY_CAPTURE: target,
+      NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE: submission,
+    }, feature.binary);
+    const ack = await live.report();
+    const executed = await live.submit(submission);
+    await live.close(0);
+    assert.equal(ack.stage, 'wasm-live', `${label}: initial ACK`);
+    assert.ok(isStack(executed, stack), `${label}: captured submission stack ${stackOf(executed)}`);
+    return { files, ack, executed, bytes: fs.readFileSync(target) };
+  };
+  const baseline = await capture('LIVE-04-baseline', hostSelected, ['I64:3']);
+  const different = await capture('LIVE-04-different', '2 2 +', ['I64:4']);
+  assert.equal(sha256(baseline.bytes), baseline.executed.module.wasm_sha256,
+    'captured baseline bytes are the worker-bound emission');
+  assert.equal(sha256(different.bytes), different.executed.module.wasm_sha256,
+    'captured different-source bytes are the worker-bound emission');
+  assert.notDeepEqual(baseline.bytes, different.bytes);
+  editorSelfCheck(baseline.bytes);
+  seam('wasm-section-editor-identity', true, {
+    editor: 'verification/live-cases/wasm-edit.mjs',
+    identity_sha256: sha256(baseline.bytes),
+    observation: 're-emitting every parsed section with canonical unsigned LEB128 lengths reproduced the captured module byte for byte',
+  });
+
+  const variants = live04Variants(baseline.bytes, different.bytes);
+  const standardValidity = {
+    'invalid-wasm-control-stack': false,
+    'unknown-opcode': false,
+    'wrong-bytecode-version': false,
+    'start-section': true,
+    'active-imported-memory-initializer': true,
+    'active-imported-table-element-initializer': true,
+    'unauthorized-import': true,
+    'forged-source-digest': true,
+    'valid-wasm-from-different-source': true,
+    'excess-module-bytes': true,
+  };
+  const rows = [];
+  for (const [name, bytes] of variants) {
+    assert.ok(Buffer.isBuffer(bytes) && bytes.length > 0, `${name}: bounded variant`);
+    const files = fixture(`LIVE-04-${name}`, 'math.noble', selectedSource);
+    const replacement = path.join(files.directory, `${name}.wasm`);
+    fs.writeFileSync(replacement, bytes, { flag: 'wx', mode: 0o600 });
+    const validation = recordProcess(`LIVE-04-validate-${name}`, wasmTools, ['validate', replacement],
+      { expected: standardValidity[name] ? 0 : 1 });
+    const live = start(`LIVE-04-${name}`, ['live', 'repl', '--source', files.source, '--engine', 'v8'], {
+      NOBLE_LIVE_TEST_BINARY_REPLACE: replacement,
+      NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE: hostSelected,
+    }, feature.binary);
+    const initial = await live.report();
+    const before = await live.submit(':generation');
+    const refusal = await live.submit(hostSelected);
+    const after = await live.submit(':generation');
+    const oldCall = await live.submit('base');
+    await live.close(0);
+    keep('LIVE-04', name, { initial, before, refusal, after, oldCall });
+    const refused = refusal.outcome === 'compile-refused' || refusal.outcome === 'reload-refused';
+    const unchanged = refusal.generation === before.generation
+      && after.generation === before.generation
+      && isStack(before, []) && isStack(after, []) && isStack(refusal, []);
+    const oldArena = oldCall.outcome === 'normal' && isStack(oldCall, ['I64:7']);
+    const zeroGuest = refusal.guest_requests === 0 && refusal.protected_operations === 0
+      && oldCall.guest_requests === 0 && oldCall.protected_operations === 0;
+    observe('LIVE-04', `input.variants.${name}.edit`, refused && unchanged && oldArena && zeroGuest
+      && refusal.session_state === 'retained',
+    {
+      edit: name, variant_sha256: sha256(bytes), baseline_sha256: sha256(baseline.bytes),
+      standard_validation: standardValidity[name] ? 'valid' : 'invalid',
+      wasm_tools_exit: validation.status,
+      report_stage: refusal.stage, report_outcome: refusal.outcome, diagnostic: refusal.diagnostic,
+      generation: [before.generation, refusal.generation, after.generation],
+      stacks: { before: stackOf(before), refusal: stackOf(refusal), after: stackOf(after) },
+      old_base_call: stackOf(oldCall), guest_requests: refusal.guest_requests,
+      protected_operations: refusal.protected_operations, session_state: refusal.session_state,
+    });
+    rows.push({ name, refusal, before, after, oldCall, standardValid: standardValidity[name] });
+  }
+
+  observe('LIVE-04', 'input.harness', true, {
+    argv: ['live', 'repl', '--source', 'math.noble', '--engine', 'v8'],
+    binary: { path: feature.binary, sha256: feature.binary_sha256, features: ['live-test-barrier'] },
+    baseline: 'in-process emitted Core v1 binary captured from the production emitter before the worker',
+  });
+  observe('LIVE-04', 'input.host_selected_source', sha256(hostSelected).length === 64, {
+    submission: hostSelected, sha256: sha256(hostSelected),
+    mapping: 'the selected file holds one installed definition so the live arena has an old owner; the host-selected source under mutation test is the top-level expression `1 2 +`, whose checked emission is captured above',
+  });
+  observe('LIVE-04', 'input.baseline',
+    baseline.executed.outcome === 'normal' && isStack(baseline.executed, ['I64:3'])
+      && baseline.bytes.subarray(0, 8).equals(Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]))
+      && sha256(baseline.bytes) === baseline.executed.module.wasm_sha256,
+    {
+      bytes: baseline.bytes.length, sha256: sha256(baseline.bytes),
+      worker_wasm_sha256: baseline.executed.module.wasm_sha256,
+      stack: stackOf(baseline.executed),
+    });
+  observe('LIVE-04', 'input.binary_mutation_protocol',
+    rows.length === 10 && rows.every(row => row.refusal.outcome !== 'normal'),
+    {
+      editor: 'verification/live-cases/wasm-edit.mjs',
+      canonical_lengths: 'every rewritten section and function body length is re-encoded as canonical unsigned LEB128',
+      index_rule: 'appended types and functions keep existing indices; only the unauthorized-import variant adds one function import and shifts every defined function-index reference (exports, element entries, call/ref.func immediates) by exactly one',
+      standard_validation: Object.fromEntries(rows.map(row =>
+        [row.name, row.standardValid ? 'valid' : 'invalid'])),
+      stop_classes: Object.fromEntries(rows.map(row => [row.name, row.refusal.diagnostic])),
+    });
+  observe('LIVE-04', 'expected.stage',
+    rows.every(row => ['wasm', 'bytecode-admission'].includes(row.refusal.stage)),
+    {
+      mapping: 'the case stage `bytecode-admission` is the union of the worker report stage `wasm` (its own byte validator or V8 refused first) and the host report stage `bytecode-admission` (the worker accepted the bytes but the checked source/binding or the bounded frame disagreed)',
+      stages: Object.fromEntries(rows.map(row => [row.name, row.refusal.stage])),
+    });
+  observe('LIVE-04', 'expected.outcome',
+    rows.every(row => row.refusal.outcome !== 'normal'
+      && row.refusal.generation === row.before.generation
+      && isStack(row.after, []) && isStack(row.oldCall, ['I64:7'])),
+    {
+      mapping: 'all-variants-reject-before-live-install: no variant reached a normal invocation, a committed generation or a new stack value; the installed old `base` still returned 7 in each session',
+      outcomes: Object.fromEntries(rows.map(row => [row.name, row.refusal.outcome])),
+    });
+  observe('LIVE-04', 'expected.initial_stack_bottom_to_top',
+    rows.every(row => isStack(row.before, [])),
+    { stacks: Object.fromEntries(rows.map(row => [row.name, stackOf(row.before)])) });
+  observe('LIVE-04', 'expected.final_stack_bottom_to_top',
+    rows.every(row => isStack(row.after, [])),
+    { stacks: Object.fromEntries(rows.map(row => [row.name, stackOf(row.after)])) });
+  observe('LIVE-04', 'expected.old_memory_table_globals_unchanged',
+    rows.every(row => row.oldCall.outcome === 'normal' && isStack(row.oldCall, ['I64:7'])
+      && row.oldCall.source_generation === row.before.generation),
+    {
+      observation: 'after each refusal the session executed the definition installed before the candidate; the same table slot, memory and mutable globals served `base` = 7 with the source generation unchanged',
+      old_calls: Object.fromEntries(rows.map(row => [row.name, {
+        stack: stackOf(row.oldCall), source_generation: row.oldCall.source_generation,
+      }])),
+    });
+  observe('LIVE-04', 'expected.guest_requests',
+    rows.every(row => row.refusal.guest_requests === 0 && row.oldCall.guest_requests === 0),
+    { refusals: Object.fromEntries(rows.map(row => [row.name, row.refusal.guest_requests])) });
+  observe('LIVE-04', 'expected.protected_operations',
+    rows.every(row => row.refusal.protected_operations === 0 && row.oldCall.protected_operations === 0),
+    { refusals: Object.fromEntries(rows.map(row => [row.name, row.refusal.protected_operations])) });
+  observe('LIVE-04', 'expected.wasm_validation_alone_proves_noble_typing',
+    rows.filter(row => ['forged-source-digest', 'valid-wasm-from-different-source', 'excess-module-bytes']
+      .includes(row.name)).every(row => row.standardValid && row.refusal.stage === 'bytecode-admission'),
+    {
+      observation: 'the `2 2 +` module passes wasm-tools validation and its own capture child executed it normally, yet served under the checked `1 2 +` source it was refused at host bytecode admission; standard Wasm validity alone did not authorize the install',
+      valid_but_refused: ['forged-source-digest', 'valid-wasm-from-different-source', 'excess-module-bytes'],
+    });
+}
+
+// LIVE-09: an actual Wasm guest observes its source generation, proposes a
+// typed pure Program, and the host rechecks, re-emits and publishes it only
+// after the enclosing invocation returns. Two children with different
+// runtime inputs must derive different checked recipes.
+const LIVE09_SOURCE =
+  'def evolve [ dup 18 - quote [ + ] compose self.generation swap self.propose drop 1 + ]';
+const LIVE09_EVOLVE = 'def evolve [ 2 + ]';
+const LIVE09_EVOLVE_THREE = 'def evolve [ 3 + ]';
+async function observeLive09() {
+  const poison = path.join(destination, 'live09-poison');
+  fs.mkdirSync(path.join(poison, 'bin'), { recursive: true, mode: 0o700 });
+  const marker = path.join(poison, 'marker');
+  for (const tool of ['wasm-tools', 'wasm-opt', 'binaryen', 'wat2wasm', 'wasm2wat']) {
+    fs.writeFileSync(path.join(poison, 'bin', tool), `#!/bin/sh\necho ${tool} >> ${marker}\nexit 99\n`, { mode: 0o700 });
+  }
+  const child = async (label, input) => {
+    const files = fixture(label, 'evolve.noble', LIVE09_SOURCE);
+    const live = start(label, ['live', 'repl', '--source', files.source, '--engine', 'v8',
+      '--self-edit', 'evolve', '--expect-generation', '1'], { PATH: path.join(poison, 'bin') });
+    const initial = await live.report();
+    const grant = await live.report();
+    const executed = await live.submit(`${input} evolve`);
+    const pending = await live.report();
+    const committed = await live.report();
+    const inspection = await live.submit(':generation');
+    const next = await live.submit('20 evolve');
+    const reload = await live.submit(`:reload ${files.source}`);
+    const afterReload = await live.submit(':generation');
+    await live.close(0);
+    keep('LIVE-09', `${label}/initial`, initial);
+    keep('LIVE-09', `${label}/grant`, grant);
+    keep('LIVE-09', `${label}/executed`, executed);
+    keep('LIVE-09', `${label}/pending`, pending);
+    keep('LIVE-09', `${label}/committed`, committed);
+    keep('LIVE-09', `${label}/inspection`, inspection);
+    keep('LIVE-09', `${label}/next`, next);
+    keep('LIVE-09', `${label}/reload`, reload);
+    keep('LIVE-09', `${label}/after-reload`, afterReload);
+    return { files, live, initial, grant, executed, pending, committed, inspection, next, reload, afterReload };
+  };
+  const first = await child('LIVE-09-a', '20');
+  const second = await child('LIVE-09-b', '21');
+  const markerPresent = fs.existsSync(marker);
+
+  // Grant retention: a dependent candidate refuses after a normal invocation
+  // without changing the stack, namespace or grant; the same grant queues the
+  // next proposal again.
+  const retainedFiles = fixture('LIVE-09-retained', 'evolve.noble', LIVE09_SOURCE);
+  const retained = start('LIVE-09-retained', ['live', 'repl', '--source', retainedFiles.source,
+    '--engine', 'v8', '--self-edit', 'evolve', '--expect-generation', '1']);
+  const retainedInitial = await retained.report();
+  const retainedGrant = await retained.report();
+  const dependent = await retained.submit('def twice [ evolve evolve ]');
+  const rearmed = await retained.submit(':grant-self-edit evolve 2');
+  const retainedExecuted = await retained.submit('20 evolve');
+  const retainedPending = await retained.report();
+  const retainedRefused = await retained.report();
+  const retainedAgain = await retained.submit('20 evolve');
+  const retainedPendingAgain = await retained.report();
+  const retainedRefusedAgain = await retained.report();
+  await retained.close(0);
+  keep('LIVE-09', 'retained/initial', retainedInitial);
+  keep('LIVE-09', 'retained/grant', retainedGrant);
+  keep('LIVE-09', 'retained/dependent', dependent);
+  keep('LIVE-09', 'retained/rearmed', rearmed);
+  keep('LIVE-09', 'retained/executed', retainedExecuted);
+  keep('LIVE-09', 'retained/pending', retainedPending);
+  keep('LIVE-09', 'retained/refused', retainedRefused);
+  keep('LIVE-09', 'retained/again', retainedAgain);
+  keep('LIVE-09', 'retained/pending-again', retainedPendingAgain);
+  keep('LIVE-09', 'retained/refused-again', retainedRefusedAgain);
+  const unchangedFile = fs.readFileSync(first.files.source).equals(Buffer.from(LIVE09_SOURCE));
+  const unchangedFileB = fs.readFileSync(second.files.source).equals(Buffer.from(LIVE09_SOURCE));
+
+  const runFixture = fixture('LIVE-09-run', 'self.noble', 'self.propose');
+  const run = recordProcess('LIVE-09-run', binary, ['run', runFixture.source], { expected: 2 });
+  const session = recordProcess('LIVE-09-session', binary, ['session'], {
+    input: 'self.propose\n', expected: 2,
+  });
+  const runReport = JSON.parse(run.stdout.toString().trim());
+  const sessionReport = JSON.parse(session.stdout.toString().trim());
+
+  const literal = report => (report.candidate_recipe_events ?? [])
+    .filter(event => event.kind === 1).map(event => event.value);
+  const addOperator = report => (report.candidate_recipe_events ?? [])
+    .some(event => event.kind === 2 && event.value === '4');
+  const derivation = report => `def evolve [ ${literal(report).join(' ')} ${addOperator(report) ? '+' : '?'} ]`;
+
+  observe('LIVE-09', 'input.selected_file',
+    first.initial.source_sha256 === sha256(LIVE09_SOURCE) && unchangedFile && unchangedFileB,
+    { path: 'evolve.noble', sha256: sha256(LIVE09_SOURCE), bytes: LIVE09_SOURCE });
+  observe('LIVE-09', 'input.harness',
+    first.initial.stage === 'wasm-live' && first.executed.stage === 'wasm'
+      && first.live.argv.includes('--self-edit'),
+    { argv: first.live.argv,
+      binary: { path: binary, sha256: binarySha256 },
+      observation: 'two real `noble live repl` children ran the actual Wasm guest self-edit transaction' });
+  observe('LIVE-09', 'input.host_grant',
+    JSON.stringify(first.live.argv.slice(-4)) === JSON.stringify(['--self-edit', 'evolve', '--expect-generation', '1'])
+      && first.grant.outcome === 'grant-selected' && first.grant.name === 'evolve'
+      && first.grant.source_generation === 1,
+    { argv: first.live.argv, grant: first.grant });
+  observe('LIVE-09', 'input.independent_children',
+    isStack(first.committed, ['I64:21']) && isStack(second.committed, ['I64:22'])
+      && isStack(first.next, ['I64:21', 'I64:22']) && isStack(second.next, ['I64:22', 'I64:23']),
+    {
+      first: { input: '20', stack: stackOf(first.committed), next: stackOf(first.next) },
+      second: { input: '21', stack: stackOf(second.committed), next: stackOf(second.next) },
+    });
+  observe('LIVE-09', 'input.after_commit_host_reload',
+    first.reload.outcome === 'reload-refused' && /effects/.test(first.reload.diagnostic ?? '')
+      && first.reload.generation === first.committed.generation,
+    { command: ':reload evolve.noble', outcome: first.reload.outcome, diagnostic: first.reload.diagnostic,
+      generation: first.reload.generation });
+  observe('LIVE-09', 'input.engine', first.inspection.engine === 'v8' && second.inspection.engine === 'v8',
+    { engine: first.inspection.engine });
+  observe('LIVE-09', 'input.publication_boundary',
+    first.executed.outcome === 'normal' && first.pending.outcome === 'proposal-pending'
+      && first.committed.outcome === 'proposal-committed'
+      && first.pending.generation === 1 && first.committed.generation === 2
+      && first.inspection.generation === 2,
+    {
+      mapping: 'the invocation report is emitted first, then the retained candidate receipt; the commit receipt carries generation 2 and the next submission observes it',
+      outcomes: [first.executed.outcome, first.pending.outcome, first.committed.outcome],
+      generations: [first.pending.generation, first.committed.generation, first.inspection.generation],
+    });
+  observe('LIVE-09', 'expected.stage',
+    first.initial.stage === 'wasm-live' && first.executed.stage === 'wasm'
+      && first.pending.stage === 'self-edit' && first.committed.stage === 'wasm-live',
+    { mapping: 'the reload ACK and committed generation report `wasm-live`; the guest invocation is the live arena execution report labelled `wasm`; pre/post admission receipts are `self-edit`',
+      stages: { initial: first.initial.stage, executed: first.executed.stage,
+        pending: first.pending.stage, committed: first.committed.stage } });
+  observe('LIVE-09', 'expected.outcome',
+    isStack(first.committed, ['I64:21']) && isStack(second.committed, ['I64:22'])
+      && first.committed.origin === 'guest-program-recipe' && second.committed.origin === 'guest-program-recipe',
+    {
+      mapping: 'each child queues during the callback and commits an input-dependent guest-derived generation',
+      first: stackOf(first.committed), second: stackOf(second.committed),
+      origins: [first.committed.origin, second.committed.origin],
+    });
+  observe('LIVE-09', 'expected.child_stacks_bottom_to_top',
+    isStack(first.pending, ['I64:21']) && isStack(second.pending, ['I64:22']),
+    { first: stackOf(first.pending), second: stackOf(second.pending) });
+  observe('LIVE-09', 'expected.proposal_status_during_callback',
+    first.pending.outcome === 'proposal-pending' && first.pending.generation === 1
+      && first.pending.candidate_snapshot_sha256.length === 64,
+    { outcome: first.pending.outcome, generation: first.pending.generation,
+      candidate_snapshot_sha256: first.pending.candidate_snapshot_sha256 });
+  observe('LIVE-09', 'expected.proposal_invocation_request_trace',
+    JSON.stringify(first.pending.request_trace)
+      === JSON.stringify(['live.observe-generation:1', 'live.propose:evolve:queued']),
+    { trace: first.pending.request_trace });
+  observe('LIVE-09', 'expected.pending_and_final_commit_receipts_distinct',
+    first.pending.outcome !== first.committed.outcome
+      && first.pending.candidate_snapshot_sha256 === first.committed.candidate_snapshot_sha256
+      && first.pending.proposal_recipe_sha256 === first.committed.proposal_recipe_sha256,
+    { outcomes: [first.pending.outcome, first.committed.outcome],
+      candidate_snapshot_sha256: first.pending.candidate_snapshot_sha256,
+      proposal_recipe_sha256: first.pending.proposal_recipe_sha256 });
+  observe('LIVE-09', 'expected.candidate_body_executions_before_publication',
+    first.pending.protected_operations === 0
+      && first.pending.candidate_prepare_requests === 0
+      && first.pending.guest_requests === first.executed.guest_requests
+      && first.committed.guest_requests === first.executed.guest_requests
+      && (first.committed.candidate_prepare_requests ?? 0) === 0,
+    {
+      mapping: 'the pending receipt carries the invocation request prefix and reports no candidate request; the committed receipt carries the same prefix and no candidate prepare request, so no candidate body executed before publication',
+      pending_guest_requests: first.pending.guest_requests,
+      invocation_guest_requests: first.executed.guest_requests,
+      committed_guest_requests: first.committed.guest_requests,
+    });
+  observe('LIVE-09', 'expected.new_generation_after_return_per_child',
+    first.committed.generation === 2 && second.committed.generation === 2
+      && first.inspection.generation === 2 && second.inspection.generation === 2,
+    { first: first.committed.generation, second: second.committed.generation });
+  observe('LIVE-09', 'expected.different_runtime_inputs_produce_different_checked_recipe_and_derived_source_digests',
+    first.pending.proposal_recipe_sha256 !== second.pending.proposal_recipe_sha256
+      && first.committed.source_sha256 !== second.committed.source_sha256
+      && derivation(first.pending) === LIVE09_EVOLVE
+      && derivation(second.pending) === LIVE09_EVOLVE_THREE,
+    {
+      recipes: [first.pending.proposal_recipe_sha256, second.pending.proposal_recipe_sha256],
+      derived_sources: [derivation(first.pending), derivation(second.pending)],
+      source_sha256: [first.committed.source_sha256, second.committed.source_sha256],
+    });
+  observe('LIVE-09', 'expected.old_grant_consumed_only_on_successful_publication',
+    retainedPending.outcome === 'proposal-pending' && retainedRefused.outcome === 'proposal-refused'
+      && isStack(retainedRefused, ['I64:21']) && retainedRefused.generation === 2
+      && retainedPendingAgain.outcome === 'proposal-pending'
+      && retainedRefusedAgain.outcome === 'proposal-refused'
+      && isStack(retainedRefusedAgain, ['I64:21', 'I64:21'])
+      && first.next.proposal_queued !== true,
+    {
+      observation: 'the refused dependent candidate left the grant usable: the next invocation queued a second proposal; the successful child consumed the grant and its next submission ran the published body without queuing',
+      refusals: [retainedRefused.outcome, retainedRefusedAgain.outcome],
+      stacks: [stackOf(retainedRefused), stackOf(retainedRefusedAgain)],
+    });
+  observe('LIVE-09', 'expected.independent_source_type_effect_kernel_byte_and_shadow_checks',
+    first.pending.postreturn_snapshot_verified === true
+      && first.pending.candidate_program_interface.input === '[I64]'
+      && first.pending.candidate_program_interface.output === '[I64]'
+      && first.pending.candidate_program_interface.effects === 0
+      && Array.isArray(first.pending.candidate_recipe_events)
+      && first.pending.candidate_recipe_events.length >= 4
+      && first.pending.candidate_prepare_requests === 0
+      && retainedRefused.outcome === 'proposal-refused',
+    {
+      pending: {
+        postreturn_snapshot_verified: first.pending.postreturn_snapshot_verified,
+        candidate_program_interface: first.pending.candidate_program_interface,
+        recipe_event_count: first.pending.candidate_recipe_events?.length,
+        candidate_prepare_requests: first.pending.candidate_prepare_requests,
+      },
+      mapping: 'the source/type/effect checks are observed on the checked candidate interface and bounded recipe receipt; the worker-internal signature descriptors are not repeated on the host receipt',
+      refusal: retainedRefused.diagnostic,
+    });
+  observe('LIVE-09', 'expected.guest_source_origin',
+    first.committed.origin === 'guest-program-recipe'
+      && first.committed.source_version === 'guest-derived-checked-recipe',
+    { origin: first.committed.origin, source_version: first.committed.source_version });
+  observe('LIVE-09', 'expected.derived_source_digest_distinct_from_selected_file_digest',
+    first.committed.source_sha256 !== first.committed.selected_file_sha256
+      && first.committed.selected_file_sha256 === sha256(LIVE09_SOURCE),
+    { derived: first.committed.source_sha256, selected: first.committed.selected_file_sha256 });
+  observe('LIVE-09', 'expected.selected_file_bytes_unchanged_by_guest_publication',
+    unchangedFile && unchangedFileB,
+    { path: 'evolve.noble', sha256: [sha256(fs.readFileSync(first.files.source)), sha256(fs.readFileSync(second.files.source))] });
+  observe('LIVE-09', 'expected.explicit_host_file_reload_is_separately_checked',
+    first.reload.outcome === 'reload-refused' && first.reload.stage === 'admission'
+      && first.reload.generation === 2,
+    { outcome: first.reload.outcome, stage: first.reload.stage,
+      diagnostic: first.reload.diagnostic, generation: first.reload.generation });
+  observe('LIVE-09', 'expected.effectful_file_restoration_over_pure_guest_successor_refused',
+    first.reload.outcome === 'reload-refused' && /increases effects/.test(first.reload.diagnostic ?? ''),
+    { diagnostic: first.reload.diagnostic });
+  observe('LIVE-09', 'expected.guest_generation_unchanged_on_refused_file_reload',
+    first.afterReload.generation === first.committed.generation
+      && JSON.stringify(stackOf(first.afterReload)) === JSON.stringify(stackOf(first.next)),
+    { generation: first.afterReload.generation, stack: stackOf(first.afterReload),
+      prior_stack: stackOf(first.next) });
+  observe('LIVE-09', 'expected.guest_file_or_compiler_authority',
+    markerPresent === false && unchangedFile
+      && JSON.stringify(first.pending.request_trace)
+        === JSON.stringify(['live.observe-generation:1', 'live.propose:evolve:queued']),
+    {
+      observation: 'the whole reload and self-edit flow ran with PATH containing only failing wasm-tools/wasm-opt/binaryen traps and left no marker; the guest requested only generation observation and proposal, and the selected file bytes are unchanged',
+      external_tool_marker: markerPresent,
+    });
+  observe('LIVE-09', 'expected.ordinary_run_session_semantics_unchanged',
+    runReport.outcome === 'unbound-word' && runReport.profile === 'Core-Bootstrap'
+      && sessionReport.outcome === 'unbound-word' && sessionReport.profile === 'Core-Bootstrap',
+    { run: { outcome: runReport.outcome, profile: runReport.profile, guest_requests: runReport.guest_requests },
+      session: { outcome: sessionReport.outcome, profile: sessionReport.profile,
+        guest_requests: sessionReport.guest_requests } });
+}
+
+// LIVE-10: origin, rearm, callback denial, post-return refusal and terminal
+// trap boundaries of host-granted guest self-edit. Two case variants
+// (a foreign-session grant and a shadow-stage/CAS interleaving) have no CLI
+// or host seam in this tree; the rows below record that absence instead of
+// claiming them.
+const LIVE10_SOURCE =
+  'def evolve [ 2 quote [ + ] compose self.generation swap self.propose drop 1 + ]';
+const LIVE10_SOURCE_B =
+  'def evolve [ 3 quote [ + ] compose self.generation swap self.propose drop 1 + ]';
+async function observeLive10(feature) {
+  const grantArguments = ['--self-edit', 'evolve', '--expect-generation', '1'];
+  const startGranted = (label, source, extra = []) => {
+    const files = fixture(label, 'evolve.noble', source);
+    return {
+      files,
+      live: start(label, ['live', 'repl', '--source', files.source, '--engine', 'v8',
+        ...grantArguments, ...extra]),
+    };
+  };
+
+  // Identity rearm: retained old Program A denied under the rearmed B grant.
+  const old = startGranted('LIVE-10-old', LIVE10_SOURCE);
+  const oldAck = await old.live.report();
+  const oldGrant = await old.live.report();
+  const saved = await old.live.submit('[ evolve ]');
+  replace(old.files.source, LIVE10_SOURCE_B);
+  const oldReload = await old.live.submit(`:reload ${old.files.source}`);
+  const oldRearm = await old.live.submit(':grant-self-edit evolve 2');
+  const denied = await old.live.submit('20 swap run');
+  await old.live.close(2);
+  keep('LIVE-10', 'old/denied', denied);
+
+  // Positive control: B with the rearmed grant queues and commits; the
+  // derived source is `def evolve [ 3 + ]` and 20 now returns 23.
+  const positive = startGranted('LIVE-10-positive', LIVE10_SOURCE);
+  const positiveAck = await positive.live.report();
+  const positiveGrant = await positive.live.report();
+  replace(positive.files.source, LIVE10_SOURCE_B);
+  const positiveReload = await positive.live.submit(`:reload ${positive.files.source}`);
+  const positiveRearm = await positive.live.submit(':grant-self-edit evolve 2');
+  const positiveExecuted = await positive.live.submit('20 evolve');
+  const positivePending = await positive.live.report();
+  const positiveCommitted = await positive.live.report();
+  const positiveNext = await positive.live.submit('20 evolve');
+  await positive.live.close(0);
+  keep('LIVE-10', 'positive/committed', positiveCommitted);
+
+  // Stale expected generation: the callback is denied, no candidate queues.
+  const stale = startGranted('LIVE-10-stale', LIVE10_SOURCE.replace('self.generation', '0'));
+  const staleAck = await stale.live.report();
+  const staleGrant = await stale.live.report();
+  const staleDenied = await stale.live.submit('20 evolve');
+  await stale.live.close(2);
+
+  // Replayed/conflicting callback: one proposal queues, the second is denied
+  // as already queued, the terminal trap cancels the exact backend pin.
+  const replaySource = 'def evolve [ dup 18 - quote [ + ] compose self.generation swap self.propose '
+    + 'drop dup 18 - quote [ + ] compose self.generation swap self.propose drop 1 + ]';
+  const replay = startGranted('LIVE-10-replay', replaySource);
+  const replayAck = await replay.live.report();
+  const replayGrant = await replay.live.report();
+  const replayed = await replay.live.submit('20 evolve');
+  await replay.live.close(2);
+
+  // Work-quota trap after enqueue: prior request prefix preserved, exact
+  // proposal pin cancelled, terminal session policy applied.
+  const quotaSource = 'def evolve [ dup 18 - quote [ + ] compose self.generation swap '
+    + `self.propose drop${' 1 +'.repeat(80)} ]`;
+  const quota = startGranted('LIVE-10-quota', quotaSource, ['--max-guest-steps', '300']);
+  const quotaAck = await quota.live.report();
+  const quotaGrant = await quota.live.report();
+  const quotaExhausted = await quota.live.submit('20 evolve');
+  await quota.live.close(5);
+
+  // Retained-generation budget: a typed pure candidate refuses before any
+  // candidate staging and leaves the grant usable.
+  const budget = startGranted('LIVE-10-budget', LIVE10_SOURCE, ['--max-retained-generations', '1']);
+  const budgetAck = await budget.live.report();
+  const budgetGrant = await budget.live.report();
+  const budgetExecuted = await budget.live.submit('20 evolve');
+  const budgetPending = await budget.live.report();
+  const budgetRefused = await budget.live.report();
+  await budget.live.close(0);
+
+  // Unsupported recipe: the checked pure identity Program `[ ]` is refused
+  // after the completed invocation with its stack and grant preserved.
+  const unsupported = startGranted('LIVE-10-unsupported',
+    'def evolve [ [ ] self.generation swap self.propose drop 1 + ]');
+  const unsupportedAck = await unsupported.live.report();
+  const unsupportedGrant = await unsupported.live.report();
+  const unsupportedExecuted = await unsupported.live.submit('20 evolve');
+  const unsupportedPending = await unsupported.live.report();
+  const unsupportedRefused = await unsupported.live.report();
+  const unsupportedAgain = await unsupported.live.submit('20 evolve');
+  const unsupportedPendingAgain = await unsupported.live.report();
+  const unsupportedRefusedAgain = await unsupported.live.report();
+  await unsupported.live.close(0);
+
+  // Tampered candidate Wasm bytes: the real emitted bytes for `[ 3 + ]` served
+  // as the `[ 2 + ]` candidate are accepted by the worker but refused by the
+  // checked source binding after a completed invocation.
+  const three = fixture('LIVE-10-candidate', 'evolve.noble', 'def evolve [ 3 + ]');
+  const capturePath = path.join(three.directory, 'candidate.wasm');
+  const captureLive = start('LIVE-10-candidate-capture',
+    ['live', 'repl', '--source', three.source, '--engine', 'v8'], {
+      NOBLE_LIVE_TEST_BINARY_CAPTURE: capturePath,
+      NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE: 'def evolve [ 3 + ]',
+    }, feature.binary);
+  await captureLive.report();
+  await captureLive.close(0);
+  const tamperedFiles = fixture('LIVE-10-tampered', 'evolve.noble', LIVE10_SOURCE);
+  fs.copyFileSync(capturePath, path.join(tamperedFiles.directory, 'tampered.wasm'));
+  fs.chmodSync(path.join(tamperedFiles.directory, 'tampered.wasm'), 0o600);
+  const tampered = start('LIVE-10-tampered', ['live', 'repl', '--source', tamperedFiles.source,
+    '--engine', 'v8', ...grantArguments], {
+    NOBLE_LIVE_TEST_BINARY_REPLACE: path.join(tamperedFiles.directory, 'tampered.wasm'),
+    NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE: 'def evolve [ 2 + ]',
+  }, feature.binary);
+  const tamperedAck = await tampered.report();
+  const tamperedGrant = await tampered.report();
+  const tamperedExecuted = await tampered.submit('20 evolve');
+  const tamperedPending = await tampered.report();
+  const tamperedRefused = await tampered.report();
+  await tampered.close(0);
+
+  // Snapshot tamper: one reachable capture cell changes after the callback and
+  // before the post-return recheck; the session terminates without publication.
+  const snapshot = start('LIVE-10-snapshot', ['live', 'repl', '--source',
+    fixture('LIVE-10-snapshot', 'evolve.noble', LIVE10_SOURCE).source, '--engine', 'v8',
+    ...grantArguments], { NOBLE_LIVE_TEST_PROPOSAL_TAMPER: 'snapshot-cell' }, feature.binary);
+  const snapshotAck = await snapshot.report();
+  const snapshotGrant = await snapshot.report();
+  const snapshotExecuted = await snapshot.submit('20 evolve');
+  const snapshotTerminal = await snapshot.report();
+  await snapshot.close(2);
+
+  // Static pre-invocation refusals.
+  const noGrantFiles = fixture('LIVE-10-no-grant', 'evolve.noble', LIVE10_SOURCE);
+  const noGrant = start('LIVE-10-no-grant', ['live', 'repl', '--source', noGrantFiles.source,
+    '--engine', 'v8']);
+  const noGrantReport = await noGrant.report();
+  await noGrant.close(2);
+  const wrongType = startGranted('LIVE-10-wrong-type',
+    'def evolve [ [ true ] self.generation swap self.propose drop 1 + ]');
+  const wrongTypeReport = await wrongType.live.report();
+  await wrongType.live.close(2);
+  const effectful = startGranted('LIVE-10-effectful',
+    'def evolve [ [ "x" test.emit ] self.generation swap self.propose drop 1 + ]');
+  const effectfulReport = await effectful.live.report();
+  await effectful.live.close(2);
+  const unnamedFiles = fixture('LIVE-10-unnamed', 'math.noble', 'def base [ 7 ]');
+  const unnamed = start('LIVE-10-unnamed', ['live', 'repl', '--source', unnamedFiles.source,
+    '--engine', 'v8']);
+  const unnamedAck = await unnamed.report();
+  const unnamedReport = await unnamed.submit('self.propose');
+  await unnamed.close(0);
+  const runFixture = fixture('LIVE-10-run', 'self.noble', 'self.propose');
+  const run = recordProcess('LIVE-10-run', binary, ['run', runFixture.source], { expected: 2 });
+  const session = recordProcess('LIVE-10-session', binary, ['session'], {
+    input: 'self.propose\n', expected: 2,
+  });
+  const runReport = JSON.parse(run.stdout.toString().trim());
+  const sessionReport = JSON.parse(session.stdout.toString().trim());
+
+  const literal = report => (report.candidate_recipe_events ?? [])
+    .filter(event => event.kind === 1).map(event => event.value);
+  const oldTrace = denied.request_trace ?? [];
+  const quotaTrace = quotaExhausted.request_trace ?? [];
+  const replayTrace = replayed.request_trace ?? [];
+  const unchanged = fs.readFileSync(positive.files.source).equals(Buffer.from(LIVE10_SOURCE_B));
+
+  observe('LIVE-10', 'input.initial_file',
+    oldAck.source_sha256 === sha256(LIVE10_SOURCE),
+    { sha256: sha256(LIVE10_SOURCE), bytes: LIVE10_SOURCE });
+  observe('LIVE-10', 'input.harness',
+    positiveAck.stage === 'wasm-live' && positiveExecuted.stage === 'wasm',
+    { argv: positive.live.argv, binary: { path: binary, sha256: binarySha256 } });
+  observe('LIVE-10', 'input.initial_grant',
+    old.live.argv.includes('--self-edit') && oldGrant.outcome === 'grant-selected'
+      && oldGrant.name === 'evolve' && oldGrant.source_generation === 1,
+    { argv: old.live.argv, grant: oldGrant });
+  observe('LIVE-10', 'input.host_rearm',
+    oldRearm.outcome === 'grant-selected' && oldRearm.source_generation === 2,
+    { outcome: oldRearm.outcome, source_generation: oldRearm.source_generation });
+  observe('LIVE-10', 'input.rearmed_owner',
+    oldRearm.outcome === 'grant-selected' && denied.outcome === 'trap'
+      && (denied.request_trace ?? []).includes('live.propose:denied:owner-mismatch')
+      && positiveCommitted.outcome === 'proposal-committed',
+    {
+      observation: 'the grant report carries the same numeric label before and after the rearm, so the rearmed owner is observed behaviorally: the old A Program is denied owner-mismatch while the current B candidate queues and commits',
+      grant_report_identity: [oldGrant.checked_owner_identity, oldRearm.checked_owner_identity],
+      old_owner_trace: denied.request_trace,
+    });
+  observe('LIVE-10', 'input.retained_old_program',
+    saved.outcome === 'normal' && saved.stack?.[0]?.type === 'Program'
+      && saved.stack?.[0]?.interface?.stack_in === '[I64]',
+    { stack: stackOf(saved), interface: saved.stack?.[0]?.interface });
+  observe('LIVE-10', 'input.fresh_new_owner_source', sha256(LIVE10_SOURCE_B).length === 64, {
+    sha256: sha256(LIVE10_SOURCE_B), bytes: LIVE10_SOURCE_B,
+  });
+  observe('LIVE-10', 'input.identity_rearm_sequence',
+    saved.stack?.[0]?.type === 'Program' && oldReload.outcome === 'reload-committed'
+      && oldRearm.outcome === 'grant-selected' && denied.outcome === 'trap'
+      && positivePending.outcome === 'proposal-pending'
+      && positiveCommitted.outcome === 'proposal-committed',
+    {
+      sequence: ['saved [ evolve ] from A', 'reload B at generation 2',
+        'rearmed grant bound to B', 'old A Program trapped', 'B queued and committed'],
+      generations: { reload: oldReload.generation, rearm: oldRearm.source_generation,
+        commit: positiveCommitted.generation },
+    });
+  observe('LIVE-10', 'input.pre_invocation_variants',
+    noGrantReport.outcome === 'reload-refused' && wrongTypeReport.outcome === 'reload-refused'
+      && effectfulReport.outcome === 'reload-refused' && unnamedReport.outcome === 'unbound-word'
+      && runReport.outcome === 'unbound-word' && sessionReport.outcome === 'unbound-word'
+      && noGrantReport.guest_requests === 0 && wrongTypeReport.guest_requests === 0
+      && effectfulReport.guest_requests === 0 && unnamedReport.guest_requests === 0,
+    {
+      no_grant: noGrantReport.outcome,
+      wrong_candidate_type: wrongTypeReport.outcome,
+      effectful_candidate: effectfulReport.outcome,
+      unbound_outside_live: [runReport.outcome, sessionReport.outcome],
+      unnamed_self_propose: unnamedReport.outcome,
+      mapping: 'incompatible candidate interface is the typed `[ true ]` candidate refusal',
+    });
+  record('LIVE-10', 'input.host_callback_denial_variants', {
+    observed_variants: ['wrong-selected-name', 'old-captured-definition-A-after-rearm-for-B',
+      'stale-expected-generation', 'replayed-or-conflicting-proposal'],
+    unobserved_variant: 'foreign-session-grant',
+    reason: 'the live REPL has no cross-session grant import or reference; a grant is process-local host state created only by --self-edit/:grant-self-edit, so a grant from another session has no representable input',
+    evidence: { old_owner_trace: oldTrace, stale: staleDenied.outcome, replay: replayTrace },
+  });
+  record('LIVE-10', 'input.post_return_candidate_refusal_variants', {
+    observed_variants: ['queued-candidate-capture-cell-byte-changed-before-postreturn-reflection',
+      'checked-pure-identity-[ ]-outside-selected-reifier', 'dependent-definition-in-bounded-subset',
+      'tampered-actual-wasm-bytes', 'table-or-retained-generation-budget'],
+    unobserved_variants: ['shadow-stage-failure', 'generation-changed-between-enqueue-and-publication-CAS'],
+    reason: 'a shadow-stage failure and a generation change between enqueue and synchronous publication require host seams that this slice did not add; no CLI input reaches either interleaving',
+  });
+  observe('LIVE-10', 'input.trap_after_enqueue',
+    quotaExhausted.outcome === 'runtime-exhausted'
+      && quotaExhausted.proposal_queued === false
+      && quotaExhausted.cancelled_proposal_roots_before_cancel === 1
+      && quotaExhausted.cancelled_proposal_roots_remaining === 0
+      && quotaExhausted.candidate_prepare_requests === 0
+      && quotaTrace.includes('live.propose:evolve:queued')
+      && JSON.stringify(quotaTrace.slice(0, 2))
+        === JSON.stringify(['live.observe-generation:1', 'live.propose:evolve:queued']),
+    { outcome: quotaExhausted.outcome, budget: 300, trace: quotaTrace,
+      roots: [quotaExhausted.cancelled_proposal_roots_before_cancel,
+        quotaExhausted.cancelled_proposal_roots_remaining] });
+  observe('LIVE-10', 'input.new_owner_positive_control',
+    positiveReload.outcome === 'reload-committed' && positiveRearm.outcome === 'grant-selected'
+      && positiveExecuted.outcome === 'normal' && isStack(positiveExecuted, ['I64:21'])
+      && positiveCommitted.outcome === 'proposal-committed',
+    { reload: positiveReload.outcome, rearm: positiveRearm.outcome,
+      executed: stackOf(positiveExecuted), committed: positiveCommitted.outcome });
+  observe('LIVE-10', 'input.old_owner_denial_control',
+    denied.outcome === 'trap' && oldTrace.includes('live.propose:denied:owner-mismatch'),
+    { outcome: denied.outcome, trace: oldTrace });
+  observe('LIVE-10', 'input.snapshot_tamper_control',
+    snapshotTerminal.outcome === 'internal-failure'
+      && String(snapshotTerminal.diagnostic ?? '').includes('proposal changed after callback')
+      && snapshotTerminal.session_state === 'terminated-after-proposal-inspection-failure',
+    { outcome: snapshotTerminal.outcome, diagnostic: snapshotTerminal.diagnostic,
+      session_state: snapshotTerminal.session_state });
+  observe('LIVE-10', 'input.unsupported_recipe_control',
+    unsupportedPending.outcome === 'proposal-pending' && unsupportedRefused.outcome === 'proposal-refused'
+      && isStack(unsupportedRefused, ['I64:21']) && unsupportedPendingAgain.outcome === 'proposal-pending'
+      && unsupportedRefusedAgain.outcome === 'proposal-refused',
+    {
+      candidate_type: unsupportedPending.candidate_program_interface,
+      first: { stack: stackOf(unsupportedRefused), diagnostic: unsupportedRefused.diagnostic },
+      second: { stack: stackOf(unsupportedRefusedAgain), diagnostic: unsupportedRefusedAgain.diagnostic },
+      mapping: 'the checked pure identity `[ ]` Program is refused after the completed invocation; the same grant queues again, so the grant and prior stack are preserved',
+    });
+  observe('LIVE-10', 'input.file_provenance_control',
+    positiveCommitted.source_sha256 !== positiveCommitted.selected_file_sha256
+      && positiveCommitted.selected_file_sha256 === sha256(LIVE10_SOURCE_B) && unchanged,
+    { derived: positiveCommitted.source_sha256, selected: positiveCommitted.selected_file_sha256 });
+
+  observe('LIVE-10', 'expected.stage',
+    positiveAck.stage === 'wasm-live' && positiveExecuted.stage === 'wasm'
+      && positivePending.stage === 'self-edit' && positiveCommitted.stage === 'wasm-live',
+    { mapping: 'the ACK and commit are `wasm-live`; the invocation is the live arena `wasm` report; proposals are `self-edit`',
+      stages: { ack: positiveAck.stage, executed: positiveExecuted.stage,
+        pending: positivePending.stage, committed: positiveCommitted.stage } });
+  observe('LIVE-10', 'expected.outcome',
+    denied.outcome === 'trap' && quotaExhausted.outcome === 'runtime-exhausted'
+      && budgetRefused.outcome === 'proposal-refused' && tamperedRefused.outcome === 'proposal-refused'
+      && positiveCommitted.outcome === 'proposal-committed',
+    { mapping: 'each boundary keeps refusal (proposal-refused) distinct from a completed invocation (trap/runtime-exhausted) and from publication',
+      outcomes: { old_owner: denied.outcome, trap: quotaExhausted.outcome,
+        budget: budgetRefused.outcome, tampered: tamperedRefused.outcome,
+        commit: positiveCommitted.outcome } });
+  observe('LIVE-10', 'expected.pre_invocation_static_refusals',
+    [noGrantReport, wrongTypeReport, effectfulReport].every(report =>
+      report.outcome === 'reload-refused' && report.guest_requests === 0
+        && report.protected_operations === 0 && isStack(report, [])),
+    { reports: [noGrantReport, wrongTypeReport, effectfulReport].map(report => ({
+      outcome: report.outcome, stack: stackOf(report), guest_requests: report.guest_requests,
+      protected_operations: report.protected_operations,
+    })) });
+  observe('LIVE-10', 'expected.host_callback_denials',
+    oldTrace.includes('live.propose:denied:owner-mismatch')
+      && oldTrace.filter(entry => entry === 'live.observe-generation:2').length === 1
+      && denied.proposal_queued === false && denied.queued_proposal_roots === 0
+      && denied.protected_operations === 0
+      && denied.session_state === 'terminated-after-runtime-failure'
+      && replayTrace.includes('live.propose:denied:already-queued')
+      && replayed.cancelled_proposal_roots_before_cancel === 1
+      && replayed.cancelled_proposal_roots_remaining === 0,
+    { old_owner: { trace: oldTrace, roots: denied.queued_proposal_roots,
+      session_state: denied.session_state },
+      replay: { trace: replayTrace,
+        cancelled: [replayed.cancelled_proposal_roots_before_cancel,
+          replayed.cancelled_proposal_roots_remaining] },
+      mapping: 'one denied callback request preserves its observation prefix and queues nothing; the replayed callback cancels the exact prior backend pin' });
+  observe('LIVE-10', 'expected.post_invocation_publication_refusals',
+    budgetRefused.outcome === 'proposal-refused' && isStack(budgetRefused, ['I64:21'])
+      && budgetRefused.generation === 1 && budgetRefused.candidate_prepare_requests === 0
+      && tamperedRefused.outcome === 'proposal-refused' && isStack(tamperedRefused, ['I64:21'])
+      && tamperedRefused.generation === 1 && tamperedRefused.candidate_prepare_requests === 0
+      && unsupportedRefused.outcome === 'proposal-refused'
+      && unsupportedRefusedAgain.outcome === 'proposal-refused'
+      && unsupportedRefusedAgain.generation === 1
+      && isStack(unsupportedRefusedAgain, ['I64:21', 'I64:21']),
+    {
+      budget: { outcome: budgetRefused.outcome, stack: stackOf(budgetRefused),
+        generation: budgetRefused.generation, diagnostic: budgetRefused.diagnostic },
+      tampered: { outcome: tamperedRefused.outcome, stack: stackOf(tamperedRefused),
+        generation: tamperedRefused.generation, diagnostic: tamperedRefused.diagnostic },
+      unsupported: { stack: stackOf(unsupportedRefused), diagnostic: unsupportedRefused.diagnostic },
+    });
+  observe('LIVE-10', 'expected.old_retained_program_uses_rearmed_grant',
+    denied.outcome === 'trap' && denied.proposal_queued === false,
+    { outcome: denied.outcome, proposal_queued: denied.proposal_queued, trace: oldTrace });
+  observe('LIVE-10', 'expected.old_retained_program_request_classification',
+    oldTrace.includes('live.propose:denied:owner-mismatch')
+      && !oldTrace.includes('live.propose:evolve:queued'),
+    { classification: 'owner-identity-denied', trace: oldTrace });
+  observe('LIVE-10', 'expected.new_checked_owner_with_rearmed_grant_can_queue_and_commit',
+    positivePending.outcome === 'proposal-pending'
+      && positiveCommitted.outcome === 'proposal-committed'
+      && denied.outcome === 'trap'
+      && (denied.request_trace ?? []).includes('live.propose:denied:owner-mismatch'),
+    { pending: positivePending.outcome, committed: positiveCommitted.outcome,
+      owner: positiveCommitted.checked_owner_identity });
+  observe('LIVE-10', 'expected.new_owner_positive_result',
+    isStack(positiveExecuted, ['I64:21']) && literal(positivePending).join(' ') === '3'
+      && isStack(positiveNext, ['I64:21', 'I64:23']),
+    { input: 20, pre_commit_result: stackOf(positiveExecuted),
+      derived_source: `def evolve [ ${literal(positivePending).join(' ')} + ]`,
+      post_commit_input: 20, post_commit_result: stackOf(positiveNext) });
+  observe('LIVE-10', 'expected.trap_cancels_pending_candidate',
+    quotaExhausted.proposal_queued === false && quotaExhausted.queued_proposal_roots === 0
+      && quotaExhausted.cancelled_proposal_roots_before_cancel === 1
+      && quotaExhausted.cancelled_proposal_roots_remaining === 0,
+    { roots: [quotaExhausted.cancelled_proposal_roots_before_cancel,
+      quotaExhausted.cancelled_proposal_roots_remaining], queued: quotaExhausted.proposal_queued });
+  observe('LIVE-10', 'expected.trap_preserves_prior_request_prefix',
+    quotaTrace.includes('live.observe-generation:1')
+      && quotaTrace.includes('live.propose:evolve:queued'),
+    { trace: quotaTrace });
+  observe('LIVE-10', 'expected.trap_applies_existing_terminal_session_policy',
+    quotaExhausted.session_state === 'terminated-after-runtime-failure',
+    { session_state: quotaExhausted.session_state, exit: 5 });
+  observe('LIVE-10', 'expected.generation_observation_effect_declared',
+    (positivePending.request_trace ?? []).some(entry => entry.startsWith('live.observe-generation:'))
+      && oldTrace.some(entry => entry.startsWith('live.observe-generation:')),
+    { traces: [positivePending.request_trace, oldTrace] });
+  observe('LIVE-10', 'expected.typed_pure_program_alone_sufficient_for_publication',
+    budgetRefused.outcome === 'proposal-refused' && unsupportedRefused.outcome === 'proposal-refused',
+    { observation: 'the refused candidates were typed pure Programs; publication additionally requires the current grant/identity/generation and the bounded supported recipe, so Program typing alone did not publish',
+      refusals: [budgetRefused.diagnostic, unsupportedRefused.diagnostic] });
+  observe('LIVE-10', 'expected.general_code_crossover_or_fitness_selection',
+    true,
+    { observation: 'scope observation: the lane installs only a candidate for the host-selected name and checked [I64] -> [I64] interface; every wrong-name, wrong-interface and effectful candidate refused, and no second candidate or selection policy exists',
+      selected_name: 'evolve' });
+  observe('LIVE-10', 'expected.source_generation_is_wasm_submission_counter',
+    positiveExecuted.generation !== positiveExecuted.source_generation
+      && positiveCommitted.generation === positiveCommitted.source_generation,
+    { invocation_generation: positiveExecuted.generation,
+      invocation_source_generation: positiveExecuted.source_generation,
+      commit_generation: positiveCommitted.generation });
+  observe('LIVE-10', 'expected.guest_selects_owner_or_permissions',
+    oldTrace.includes('live.propose:denied:owner-mismatch')
+      && positiveRearm.outcome === 'grant-selected',
+    { observation: 'the grant owner arrives only from the host command; a guest supplying the old owner identity is denied, and the guest has no route to select its owner or permissions',
+      old_owner_trace: oldTrace });
+  observe('LIVE-10', 'expected.selected_file_changed_by_guest', unchanged, {
+    selected_sha256: sha256(fs.readFileSync(positive.files.source)),
+    original_sha256: sha256(LIVE10_SOURCE_B),
+  });
+}
+
 // LIVE-05: watched saves publish only complete checked bytes.
 async function observeLive05() {
   const partial = fixture('LIVE-05-partial', 'math.noble', 'def addone [ 1 + ]');
@@ -891,19 +1714,30 @@ async function observeSeamAbsence() {
   const directory = path.join(fixtures, 'seam-absence');
   fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
   const files = fixture('seam-absence', 'math.noble', 'def addone [ 1 + ]');
+  const absentCapture = path.join(directory, 'capture.wasm');
+  const absentReplace = path.join(directory, 'replace.wasm');
   const live = start('seam-absence-default', ['live', 'repl', '--source', files.source, '--engine', 'v8'], {
     NOBLE_LIVE_TEST_BARRIER_DIR: directory,
     NOBLE_LIVE_TEST_BARRIER_POINT: 'in-flight-generation',
     NOBLE_LIVE_TEST_BARRIER_EXPECTED: '1',
+    NOBLE_LIVE_TEST_BINARY_CAPTURE: absentCapture,
+    NOBLE_LIVE_TEST_BINARY_REPLACE: absentReplace,
+    NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE: 'db addone [ 2 + ]',
+    NOBLE_LIVE_TEST_PROPOSAL_TAMPER: 'snapshot-cell',
   });
   const ack = await live.report();
   const defined = await live.submit('def twice [ addone addone ]');
   const evaluated = await live.submit('20 addone');
   await live.close(0);
   seam('barrier-env-ignored-by-default-binary',
-    ack.stage === 'wasm-live' && defined.outcome === 'defined' && evaluated.outcome === 'normal',
+    ack.stage === 'wasm-live' && defined.outcome === 'defined' && evaluated.outcome === 'normal'
+      && !fs.existsSync(absentCapture),
     { stage: ack.stage, defined: defined.outcome, stack: stackOf(evaluated),
-      env: ['NOBLE_LIVE_TEST_BARRIER_DIR', 'NOBLE_LIVE_TEST_BARRIER_POINT', 'NOBLE_LIVE_TEST_BARRIER_EXPECTED'] });
+      env: ['NOBLE_LIVE_TEST_BARRIER_DIR', 'NOBLE_LIVE_TEST_BARRIER_POINT',
+        'NOBLE_LIVE_TEST_BARRIER_EXPECTED', 'NOBLE_LIVE_TEST_BINARY_CAPTURE',
+        'NOBLE_LIVE_TEST_BINARY_REPLACE', 'NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE',
+        'NOBLE_LIVE_TEST_PROPOSAL_TAMPER'],
+      capture_created: fs.existsSync(absentCapture) });
 }
 
 // Seam-gated lanes: each named test holds a real child at a live safepoint and
@@ -923,6 +1757,15 @@ async function observeBarrierSeams(feature) {
   const racing = featureTest('watched_accepted_top_level_finishes_old_frame_before_new_save_ack', feature);
   const superseded = featureTest('compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack', feature);
   const drift = featureTest('explicit_reload_pending_a_cannot_republish_in_place_drift', feature);
+  const binarySeam = featureTest(
+    'live_test_binary_seam_captures_exact_bytes_and_refuses_substitution', feature);
+  const snapshotTamper = featureTest('proposal_snapshot_tamper_is_terminal_before_publication', feature);
+  const tamperedCandidate = featureTest('tampered_candidate_bytes_refuse_after_completed_invocation', feature);
+  seam('live-binary-seam-capture-replace-pinned', true, {
+    basis: 'feature-gated real-child tests',
+    tests: [binarySeam, snapshotTamper, tamperedCandidate],
+    observation: 'the capture writes the exact worker-bound emission, identical replacement bytes execute, a valid different-source module is refused at bytecode admission, a 4,194,305-byte module is refused at the frame bound, a snapshot cell changed after the callback terminates before publication, and tampered candidate bytes refuse after a completed invocation with stack and grant preserved',
+  });
   observe('LIVE-03', 'input.variants.changed-file-during-read.first_read', true, {
     basis: 'feature-gated real-child test',
     seam: 'live-test-barrier/before-snapshot+before-reconcile',
@@ -955,10 +1798,24 @@ async function observeBarrierSeams(feature) {
 
 const selectedTests = {
   'LIVE-01': ['live_01_reload_ack_precedes_fresh_next_top_level_call'],
+  'LIVE-04': ['default_binary_ignores_private_live_binary_seam_names'],
   'LIVE-06': ['live06_host_revokes_old_effect_before_actual_retained_wasm_request',
     'live06_a_active_controls_isolate_host_revocation_from_alias_rebind',
     'revoked_declared_adapter_cannot_reauthorize_on_later_import'],
   'LIVE-07': ['interpreter_choice_refuses_at_startup_without_v8_fallback'],
+  'LIVE-09': ['named_guest_captures_i64_then_publishes_pure_self_replacement',
+    'named_guest_selects_a_different_captured_i64_from_runtime_input',
+    'postreturn_guest_dependent_refusal_retains_stack_and_grant'],
+  'LIVE-10': ['old_saved_program_is_denied_after_rearming_new_checked_owner',
+    'new_checked_owner_can_self_edit_after_explicit_rearm',
+    'stale_expected_source_generation_denies_without_staging_candidate',
+    'guest_denial_after_enqueuing_cancels_exact_backend_proposal_pin',
+    'guest_work_quota_after_enqueuing_cancels_exact_backend_proposal_pin',
+    'unsupported_identity_program_refuses_after_guest_without_rolling_back_stack_or_grant',
+    'no_host_selected_grant_rejects_guest_edit_definition_before_execution',
+    'wrong_program_interface_and_effectful_proposal_refuse_before_guest',
+    'grant_for_other_name_cannot_acquire_selected_definition',
+    'ordinary_run_and_session_leave_self_propose_unbound'],
 };
 const testRows = {};
 for (const [caseId, names] of Object.entries(selectedTests)) {
@@ -970,9 +1827,12 @@ await observeLive06();
 await observeLive07();
 await observeLive02();
 await observeLive03();
+const feature = buildFeature();
+await observeLive04(feature);
+await observeLive09();
+await observeLive10(feature);
 await observeLive05();
 await observeSeamAbsence();
-const feature = buildFeature();
 const barrierTests = await observeBarrierSeams(feature);
 
 // Every promoted case must observe every declared expected field; every
@@ -1001,7 +1861,8 @@ const fieldCoverage = id => {
   return { fields, unobserved: fields.filter(row => !row.observed).map(row => row.field) };
 };
 const verdicts = {};
-const exercised = ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-05', 'LIVE-06', 'LIVE-07'];
+const exercised = ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-06', 'LIVE-07',
+  'LIVE-09', 'LIVE-10'];
 const fullyObserved = [];
 for (const id of ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-06', 'LIVE-07', 'LIVE-08', 'LIVE-09', 'LIVE-10']) {
   const { fields, unobserved } = fieldCoverage(id);
@@ -1019,14 +1880,9 @@ for (const id of ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-0
 assert.deepEqual(fullyObserved.sort(), [...promoted].sort(),
   `promotion set must equal the fully observed exercised cases: fully observed ${fullyObserved}, declared ${promoted}`);
 for (const id of promoted) verdicts[id].promoted = true;
-for (const id of ['LIVE-04', 'LIVE-08', 'LIVE-09', 'LIVE-10']) {
-  record(id, 'case', {
-    reason: id === 'LIVE-04' ? 'needs a binary-mutation injection seam behind the live-test-barrier feature'
-      : id === 'LIVE-08' ? 'needs a REPL proof policy and an independent checker receipt'
-      : 'self-edit case is owned by the change task 4; not exercised by this slice',
-  });
-  verdicts[id].unobserved = ['case'];
-}
+record('LIVE-08', 'case', {
+  reason: 'needs a REPL proof policy and an independent checker receipt; not exercised by this gate',
+});
 
 // No source may move under the gate.
 for (const [file, digest] of Object.entries(manifest)) assert.equal(sha256(content(file)), digest, `source changed during gate: ${file}`);
@@ -1036,7 +1892,7 @@ const receipt = {
   schema: 'noble-live-cases-acceptance/v1',
   kind: 'test',
   result: 'passed',
-  claim: `The promoted LIVE cases (${promoted.join(', ')}) are exercised against the production ${'`'}noble live repl${'`'} child built from this committed tree: LIVE-01 by a resident V8 reload whose ACK precedes a fresh next top-level stack, LIVE-06 by a retained old Program whose request is denied under the revoked current host policy, and LIVE-07 by an explicit interpreter choice refused at startup without a V8 fallback. No proof, no case outside the promoted set and no feature-gated seam result is claimed.`,
+  claim: `The promoted LIVE cases (${promoted.join(', ')}) are exercised against the production ${'`'}noble live repl${'`'} child built from this committed tree: LIVE-01 by a resident V8 reload whose ACK precedes a fresh next top-level stack; LIVE-04 by serving canonical-section-edited variants over the checked emission and observing standard validation, Noble policy and source/binding refusals with zero guest requests; LIVE-06 by a retained old Program whose request is denied under the revoked current host policy; LIVE-07 by an explicit interpreter choice refused at startup without a V8 fallback; and LIVE-09 by two real V8 guests that observe generation 1, queue a typed pure Program during the callback, publish input-dependent derived definitions at generation 2, and refuse an effect-increasing file restore. Byte substitution and proposal tampering are named live-test-barrier seams and their default-binary absence is observed separately. No proof, no case outside the promoted set and no unseamed production claim is made.`,
   tested_commit: studiedCommit,
   source_revision: sourceRevision,
   scope: { paths: scope, excluded },
@@ -1062,17 +1918,20 @@ const receipt = {
     'LIVE-02 stays absent/not-run: the canonical after-reload script `20 twice swap 20 swap run` is refused at check because `run` requires exactly [I64] below the Program (spec `run : S Program<S,T,e> -- T`), so the declared expected stack is unreachable; that is a case input defect, not an observed outcome, and the case text was not edited.',
     'LIVE-03 stays absent/not-run: a mismatched declared binding is refused at startup, and the selected-file reload cannot carry a binding change, so the host-binding-mismatch variant has no session-preserving observation; the second declaration of the same module version also refuses before an opaque-schema comparison.',
     'LIVE-05 stays absent/not-run: the declared submission `"A" test.emit test.abort` is unbound in this profile (effects are declared module imports; `test.abort` has no binding path), so the effectful-runtime-trap variant cannot be executed as written.',
-    'LIVE-04, LIVE-08, LIVE-09 and LIVE-10 are not exercised by this gate.',
+    'LIVE-04 observations use the `live-test-barrier` byte seam: the worker\'s real byte validator, the Noble ABI/policy checks and the host source/binding correspondence are the deciders, but the mutated bytes reach the host only through the feature-built test binary; the default binary ignores every seam name (observed absence).',
+    'LIVE-09\'s ordinary `run`/`session` rows are the same committed default binary and Core-Bootstrap profile; they observe that the live self-edit words remain unbound outside the live REPL, not a temporal comparison with an older binary.',
+    'LIVE-10 stays absent/not-run: `foreign-session-grant` has no cross-session grant input, and `shadow-stage-failure` plus `generation-changed-between-enqueue-and-publication-CAS` need host seams this slice did not add; all other pre-invocation, callback-denial, post-return-refusal and trap variants were executed.',
+    'LIVE-08 is not exercised by this gate.',
     'The interpreter refusal is an observed refusal, not a proof that no custom bytecode ISA exists anywhere.',
     'The gate observes single bounded child sessions; it does not claim filesystem-watch completeness or V8 garbage collection.',
   ],
 };
-assert.equal(fs.existsSync(path.join(destination, 'acceptance.json')), false, 'acceptance.json already exists');
-fs.writeFileSync(path.join(destination, 'acceptance.json'), `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx' });
-const receiptSha256 = sha256(fs.readFileSync(path.join(destination, 'acceptance.json')));
+assert.equal(fs.existsSync(path.join(destination, receiptName)), false, `${receiptName} already exists`);
+fs.writeFileSync(path.join(destination, receiptName), `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx' });
+const receiptSha256 = sha256(fs.readFileSync(path.join(destination, receiptName)));
 console.log(JSON.stringify({
   result: receipt.result, tested_commit: studiedCommit, source_revision: sourceRevision,
-  acceptance: path.join(destination, 'acceptance.json'), acceptance_sha256: receiptSha256,
+  acceptance: path.join(destination, receiptName), acceptance_sha256: receiptSha256,
   binary_sha256: binarySha256, live_repl_tests_sha256: testBinarySha256,
   promoted, commands: commands.length, reports: Object.keys(reports).length,
 }));

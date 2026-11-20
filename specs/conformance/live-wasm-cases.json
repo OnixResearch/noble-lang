@@ -56,7 +56,37 @@
       "id": "LIVE-04", "profile": "Live-Wasm-Draft", "kind": "admission", "requirements": ["BE-LIVE-01", "S-LIVE-01", "V-LIVE-01"],
       "input": {"harness": "actual-binary-verifier-and-source-bound-admission", "host_selected_source": "1 2 +", "baseline": "accepted-in-process-emitted-core-v1-binary-for-host-selected-source", "binary_mutation_protocol": "recompute-section-payload-lengths-as-canonical-unsigned-LEB128; alter-only-named-section; invalid-core variants stop at standard byte validation and valid-but-unsupported variants stop at Noble policy/source correspondence", "variants": [{"name": "invalid-wasm-control-stack", "edit": "insert i32.add into new empty-stack void function body"}, {"name": "unknown-opcode", "edit": "replace first opcode of new void function with 0xff"}, {"name": "wrong-bytecode-version", "edit": "replace header bytes 01 00 00 00 with 02 00 00 00"}, {"name": "start-section", "edit": "add start section selecting new void function"}, {"name": "active-imported-memory-initializer", "edit": "add active data segment at offset zero in imported memory"}, {"name": "active-imported-table-element-initializer", "edit": "add active element segment at offset zero in imported funcref table"}, {"name": "unauthorized-import", "edit": "add env.open import with signature (i32)->i32"}, {"name": "forged-source-digest", "edit": "attach digest of 1 2 + to valid bytes independently emitted from 2 2 +"}, {"name": "valid-wasm-from-different-source", "edit": "substitute independently emitted valid bytes from 2 2 +"}, {"name": "excess-module-bytes", "edit": "add bounded custom section padding to total size 4194305 bytes"}]},
       "expected": {"stage": "bytecode-admission", "outcome": "all-variants-reject-before-live-install", "initial_stack_bottom_to_top": [], "final_stack_bottom_to_top": [], "old_memory_table_globals_unchanged": true, "guest_requests": 0, "protected_operations": 0, "wasm_validation_alone_proves_noble_typing": false},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "The actual in-process emitted Core v1 module for the host-selected `1 2 +` (12,839 bytes) was captured at the checked-emission/worker boundary and served back in ten canonical-unsigned-LEB128-edited variants through the `live-test-barrier` byte seam. wasm-tools classified three variants as invalid and seven as valid. The worker's own byte validator or V8 refused the invalid and Noble-policy variants at report stage `wasm` with outcome `compile-refused`; a valid independently emitted `2 2 +` module, its forged-digest presentation, and a 4,194,305-byte module were refused at host stage `bytecode-admission` with outcome `reload-refused`. Every variant left generation 1, an empty typed stack, zero guest requests and zero protected operations, and the previously installed `base` still returned 7. A default binary with every seam name set executed normally and wrote no capture. No proof is claimed.",
+        "subject": "LIVE-04",
+        "revision": "0.1.0-draft.5",
+        "kind": "test",
+        "result": "passed",
+        "source_revision": "sha256:c68d8b37d799caf38afdf379c404fc8a42368aee27ed66a04475e817a31cf647",
+        "configuration": {
+          "profile": "Live-Wasm-Draft",
+          "harness": "actual-binary-verifier-and-source-bound-admission",
+          "case": "LIVE-04",
+          "receipt": "../../verification/live-cases/acceptance-2026-11-20-seams.json",
+          "receipt_sha256": "a503ddf2372e9ead8e0a3194e99785149268f758d32aad194d0b4f2e16170c85",
+          "gate": "verification/live-cases/gate.mjs",
+          "editor": "verification/live-cases/wasm-edit.mjs",
+          "tested_commit": "20f32e269de1a9a86e93c7b9a343e6ba89589852",
+          "binary_sha256": "0a6c7c3f6159d371c44990b689cdd64199dd80e48d3c93198297bc29736960f0",
+          "live_repl_tests_sha256": "200f0139448423c05b3441435da189c6a11a0ddd212244d50dae95180f8da616",
+          "command": "noble live repl --source math.noble --engine v8",
+          "tests": ["default_binary_ignores_private_live_binary_seam_names", "live_test_binary_seam_captures_exact_bytes_and_refuses_substitution"],
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 99aa94afa26f4e53eb2b63f91c68b621cf77bf984329950665df9d7f3fdbb570); the receipt holds every observed field, its raw stdout/stderr hash, the captured and variant byte hashes, and the source manifest."
+        },
+        "assumptions": [
+          "The live `--source` file holds one installed definition (`def base [ 7 ]`) so the arena has an old owner; the host-selected source under mutation test is the top-level `1 2 +` submission, whose checked emission is captured before the worker.",
+          "Byte substitution is a `live-test-barrier` seam: the worker's real validator, the Noble ABI/policy checks and the host source/binding correspondence are the observed deciders; the default binary ignores every seam name and wrote no capture.",
+          "`forged-source-digest` and `valid-wasm-from-different-source` execute the same source/binding refusal because emitted Wasm carries no digest field; the digest is host metadata, and both serve the independently emitted `2 2 +` bytes.",
+          "`old_memory_table_globals_unchanged` is observed by calling the installed `base` after each refusal, not by dumping raw memory.",
+          "The case stage `bytecode-admission` maps to worker report stage `wasm` for validator/V8 refusals and to host stage `bytecode-admission` for source/binding or frame-bound refusals."
+        ]
+      }]
     },
     {
       "id": "LIVE-05", "profile": "Live-Wasm-Draft", "kind": "runtime", "requirements": ["H-LIVE-01", "H-LIVE-02", "H-LIVE-03", "S-LIVE-01"],
@@ -182,7 +212,36 @@
         "guest_file_or_compiler_authority": false,
         "ordinary_run_session_semantics_unchanged": true
       },
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "Two real V8 `noble live repl` children ran the case's actual Wasm guest self-edit. Child `20 evolve` returned 21, queued a pure Program with request trace `live.observe-generation:1`, then `live.propose:evolve:queued`, and committed generation 2 with derived source `def evolve [ 2 + ]`; the next `20 evolve` returned [21,22]. Child `21 evolve` returned 22, derived `def evolve [ 3 + ]`, and the next submission returned [22,23]. The post-commit `:reload evolve.noble` of the effectful file was refused (`live replacement increases effects beyond the installed bound`) at generation 2 with the stack unchanged. A dependent candidate refusal left the grant usable for a second queue, while a successful commit consumed it. The selected file bytes were unchanged, the whole flow ran with a PATH containing only failing wasm-tools/wasm-opt/binaryen traps and left no marker, and ordinary `run`/`session` kept `self.propose` unbound. No proof is claimed.",
+        "subject": "LIVE-09",
+        "revision": "0.1.0-draft.5",
+        "kind": "test",
+        "result": "passed",
+        "source_revision": "sha256:c68d8b37d799caf38afdf379c404fc8a42368aee27ed66a04475e817a31cf647",
+        "configuration": {
+          "profile": "Live-Wasm-Draft",
+          "harness": "actual-wasm-guest-structured-self-edit",
+          "case": "LIVE-09",
+          "receipt": "../../verification/live-cases/acceptance-2026-11-20-seams.json",
+          "receipt_sha256": "a503ddf2372e9ead8e0a3194e99785149268f758d32aad194d0b4f2e16170c85",
+          "gate": "verification/live-cases/gate.mjs",
+          "tested_commit": "20f32e269de1a9a86e93c7b9a343e6ba89589852",
+          "binary_sha256": "e0411c53600b3f5c757873e733522df7c1feb93d409c0e617abf592926bec5cb",
+          "live_repl_tests_sha256": "7dbbc3df654e4b76ce83a24abe8065b0154b60a4b8485164923570c13feb79f3",
+          "command": "noble live repl --source evolve.noble --engine v8 --self-edit evolve --expect-generation 1",
+          "tests": ["named_guest_captures_i64_then_publishes_pure_self_replacement", "named_guest_selects_a_different_captured_i64_from_runtime_input", "postreturn_guest_dependent_refusal_retains_stack_and_grant"],
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 0787a4357513531b03a2eb02f85878d39f14e7de71d137503a5425857b968ce9); the receipt holds every observed field, its raw stdout/stderr hash, the derived-source recipe events and the source manifest."
+        },
+        "assumptions": [
+          "The case stage `wasm-live` maps to the reload ACK and commit receipts; the invocation itself is the live arena execution report labelled `wasm`, and the pending/refused rows are `self-edit`.",
+          "`candidate_body_executions_before_publication` is observed on the pending receipt's zero candidate prepare request plus the unchanged invocation request prefix; the host receipt does not dump the worker's internal candidate instruction counter.",
+          "`independent_source_type_effect_kernel_byte_and_shadow_checks` is observed on the checked candidate interface, bounded recipe events, post-return snapshot verification and the dependent-candidate refusal; the worker-internal signature descriptors are not repeated on the host receipt.",
+          "`guest_file_or_compiler_authority` is observed by a poisoned PATH with no trap marker and by the unchanged selected-file bytes, not by inspecting the binary's code.",
+          "`ordinary_run_session_semantics_unchanged` is the same committed default binary and Core-Bootstrap profile; it observes that the live self-edit words remain unbound outside the live REPL."
+        ]
+      }]
     },
     {
       "id": "LIVE-10", "profile": "Live-Wasm-Draft", "kind": "runtime",
