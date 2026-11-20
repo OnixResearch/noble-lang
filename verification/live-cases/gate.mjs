@@ -162,8 +162,16 @@ const build = run('production-build', cargo,
 const artifacts = build.stdout.toString().split('\n').filter(Boolean).flatMap(line => {
   try { return [JSON.parse(line)]; } catch { return []; }
 });
-const binary = artifacts.find(row => row.reason === 'compiler-artifact' && row.target?.name === 'noble' && row.target?.kind?.includes('bin'))?.executable;
-assert.ok(binary && fs.existsSync(binary), 'production build omitted the noble executable');
+// Cargo reuses one output path per feature set, so each build is copied out
+// before the next build can replace it. The default build is exercised first;
+// the feature build only runs the seam-gated lanes and never serves the
+// default-profile observations.
+const binariesDirectory = path.join(destination, 'bin');
+fs.mkdirSync(binariesDirectory, { recursive: true, mode: 0o700 });
+const builtBinary = artifacts.find(row => row.reason === 'compiler-artifact' && row.target?.name === 'noble' && row.target?.kind?.includes('bin'))?.executable;
+assert.ok(builtBinary && fs.existsSync(builtBinary), 'production build omitted the noble executable');
+const binary = path.join(binariesDirectory, 'noble-default');
+fs.copyFileSync(builtBinary, binary);
 const binarySha256 = sha256(fs.readFileSync(binary));
 
 const testBuild = run('test-build', cargo,
@@ -172,14 +180,54 @@ const testBuild = run('test-build', cargo,
 const testArtifacts = testBuild.stdout.toString().split('\n').filter(Boolean).flatMap(line => {
   try { return [JSON.parse(line)]; } catch { return []; }
 });
-const testBinary = testArtifacts.find(row => row.reason === 'compiler-artifact' && row.target?.name === 'live_repl')?.executable;
-assert.ok(testBinary && fs.existsSync(testBinary), 'live_repl test build omitted its executable');
+const builtTestBinary = testArtifacts.find(row => row.reason === 'compiler-artifact' && row.target?.name === 'live_repl')?.executable;
+assert.ok(builtTestBinary && fs.existsSync(builtTestBinary), 'live_repl test build omitted its executable');
+const testBinary = path.join(binariesDirectory, 'live_repl-default');
+fs.copyFileSync(builtTestBinary, testBinary);
 const testBinarySha256 = sha256(fs.readFileSync(testBinary));
 
 const runTest = label => {
   const result = run(`test-${label}`, testBinary, ['--exact', label, '--test-threads=1', '--nocapture']);
   assert.match(result.stdout.toString(), /test result: ok\. 1 passed/, `selected test did not pass once: ${label}`);
   return `test-${label}`;
+};
+
+// The feature build exists only for seam-gated lanes. Its binaries are copied
+// out like the default ones, and no default-profile observation may use them.
+const buildFeature = () => {
+  const featureBuild = run('feature-build', cargo,
+    ['build', '-p', 'noble-cli', '--bin', 'noble', '--features', 'live-test-barrier', '--locked', '--offline', '-j', '4',
+      '--message-format=json-render-diagnostics'],
+    buildEnvironment);
+  const rows = featureBuild.stdout.toString().split('\n').filter(Boolean).flatMap(line => {
+    try { return [JSON.parse(line)]; } catch { return []; }
+  });
+  const executable = rows.find(row => row.reason === 'compiler-artifact' && row.target?.name === 'noble' && row.target?.kind?.includes('bin'))?.executable;
+  assert.ok(executable && fs.existsSync(executable), 'feature build omitted the noble executable');
+  const featureBinary = path.join(binariesDirectory, 'noble-feature');
+  fs.copyFileSync(executable, featureBinary);
+  const featureTestBuild = run('feature-test-build', cargo,
+    ['test', '-p', 'noble-cli', '--test', 'live_repl', '--features', 'live-test-barrier', '--no-run', '--locked', '--offline', '-j', '4',
+      '--message-format=json-render-diagnostics'],
+    buildEnvironment);
+  const testRows = featureTestBuild.stdout.toString().split('\n').filter(Boolean).flatMap(line => {
+    try { return [JSON.parse(line)]; } catch { return []; }
+  });
+  const testExecutable = testRows.find(row => row.reason === 'compiler-artifact' && row.target?.name === 'live_repl')?.executable;
+  assert.ok(testExecutable && fs.existsSync(testExecutable), 'feature live_repl test build omitted its executable');
+  const featureTestBinary = path.join(binariesDirectory, 'live_repl-feature');
+  fs.copyFileSync(testExecutable, featureTestBinary);
+  return {
+    binary: featureBinary,
+    binary_sha256: sha256(fs.readFileSync(featureBinary)),
+    test_binary: featureTestBinary,
+    test_binary_sha256: sha256(fs.readFileSync(featureTestBinary)),
+  };
+};
+const featureTest = (label, feature) => {
+  const result = run(`feature-test-${label}`, feature.test_binary, ['--exact', label, '--test-threads=1', '--nocapture']);
+  assert.match(result.stdout.toString(), /test result: ok\. 1 passed/, `selected feature test did not pass once: ${label}`);
+  return `feature-test-${label}`;
 };
 
 // ---------------------------------------------------------------------------
@@ -307,6 +355,12 @@ function observe(caseId, field, condition, detail) {
 }
 function record(caseId, field, detail) {
   observations.push({ case: caseId, field, observed: false, detail });
+}
+
+const seams = [];
+function seam(label, condition, detail) {
+  seams.push({ label, observed: Boolean(condition), detail });
+  assert.ok(condition, `seam ${label} not observed: ${JSON.stringify(detail)}`);
 }
 
 const reports = {};
@@ -559,12 +613,6 @@ async function observeLive02() {
     { observation: 'the Program did not resolve the new addone body implicitly' });
   record('LIVE-02', 'expected.stack_bottom_to_top',
     { reason: `the canonical after-reload script is refused at check: ${JSON.stringify({ outcome: script.outcome, diagnostic: script.diagnostic })}` });
-  record('LIVE-02', 'expected.old_frame_completed_before_reload_ack',
-    { reason: 'requires the live-test-barrier feature seam to hold a real guest frame across the ACK; only a feature-gated test with a different submission exercises it' });
-  record('LIVE-02', 'expected.publication_only_at_top_level_safepoint',
-    { reason: 'the ACK here occurred with no in-flight invocation; the safepoint condition is only reachable through the barrier seam' });
-  record('LIVE-02', 'expected.old_in_flight_frame_uses_old_generation',
-    { reason: 'no in-flight frame existed at this ACK' });
 }
 
 // LIVE-03: every reload variant must be refused while the session survives.
@@ -803,21 +851,65 @@ async function observeLive05() {
   record('LIVE-05', 'expected.runtime_trap_retains_prior_effect_prefix_and_poisons_session', {
     reason: 'depends on the unexecutable effectful-runtime-trap variant',
   });
-  record('LIVE-05', 'input.variants.watch-ack-races-new-top-level-submission.event', {
-    reason: 'requires the live-test-barrier feature seam to hold a real guest frame across a watched save ACK',
-  });
-  record('LIVE-05', 'input.variants.superseded-during-compile.second_rename_before_publication', {
-    reason: 'requires the live-test-barrier feature seam between candidate compilation and staging',
-  });
-  record('LIVE-05', 'expected.racing_before_commit_reports_pinned_old_generation', {
-    reason: 'depends on the barrier-gated racing variant',
-  });
-  record('LIVE-05', 'expected.superseded_candidate_acknowledged_as_current', {
-    reason: 'depends on the barrier-gated superseded variant',
-  });
 }
 
 // ---------------------------------------------------------------------------
+// The default binary must ignore every seam environment variable. The barrier
+// point names the one the feature tests use; a compiled-out seam changes
+// nothing, so the same submission succeeds.
+async function observeSeamAbsence() {
+  const directory = path.join(fixtures, 'seam-absence');
+  fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+  const files = fixture('seam-absence', 'math.noble', 'def addone [ 1 + ]');
+  const live = start('seam-absence-default', ['live', 'repl', '--source', files.source, '--engine', 'v8'], {
+    NOBLE_LIVE_TEST_BARRIER_DIR: directory,
+    NOBLE_LIVE_TEST_BARRIER_POINT: 'in-flight-generation',
+    NOBLE_LIVE_TEST_BARRIER_EXPECTED: '1',
+  });
+  const ack = await live.report();
+  const defined = await live.submit('def twice [ addone addone ]');
+  const evaluated = await live.submit('20 addone');
+  await live.close(0);
+  seam('barrier-env-ignored-by-default-binary',
+    ack.stage === 'wasm-live' && defined.outcome === 'defined' && evaluated.outcome === 'normal',
+    { stage: ack.stage, defined: defined.outcome, stack: stackOf(evaluated),
+      env: ['NOBLE_LIVE_TEST_BARRIER_DIR', 'NOBLE_LIVE_TEST_BARRIER_POINT', 'NOBLE_LIVE_TEST_BARRIER_EXPECTED'] });
+}
+
+// Seam-gated lanes: each named test holds a real child at a live safepoint and
+// asserts the field below, so the receipt cites the test as the observation.
+async function observeBarrierSeams(feature) {
+  const inFlight = featureTest('old_active_wasm_frame_finishes_before_queued_reload_ack', feature);
+  observe('LIVE-02', 'expected.old_frame_completed_before_reload_ack', true, {
+    basis: 'feature-gated real-child test', seam: 'live-test-barrier/in-flight-generation', test: inFlight,
+  });
+  observe('LIVE-02', 'expected.publication_only_at_top_level_safepoint', true, {
+    basis: 'feature-gated real-child test', seam: 'live-test-barrier/in-flight-generation', test: inFlight,
+    observation: 'the queued reload ACKs only after the paused active frame finishes and the host reaches the top-level boundary',
+  });
+  observe('LIVE-02', 'expected.old_in_flight_frame_uses_old_generation', true, {
+    basis: 'feature-gated real-child test', seam: 'live-test-barrier/in-flight-generation', test: inFlight,
+  });
+  const racing = featureTest('watched_accepted_top_level_finishes_old_frame_before_new_save_ack', feature);
+  const superseded = featureTest('compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack', feature);
+  observe('LIVE-05', 'input.variants.watch-ack-races-new-top-level-submission.event', true, {
+    basis: 'feature-gated real-child test', seam: 'live-test-barrier/accepted-watch-submission', test: racing,
+    observation: 'an accepted top-level submission is held across the watched save; its old frame finishes before the new save ACK',
+  });
+  observe('LIVE-05', 'input.variants.superseded-during-compile.second_rename_before_publication', true, {
+    basis: 'feature-gated real-child test', seam: 'live-test-barrier/host-seal', test: superseded,
+    observation: 'candidate A is held after compilation while a second fsynced rename B supersedes it; A is never ACKed as current',
+  });
+  observe('LIVE-05', 'expected.racing_before_commit_reports_pinned_old_generation', true, {
+    basis: 'feature-gated real-child test', seam: 'live-test-barrier/accepted-watch-submission', test: racing,
+  });
+  observe('LIVE-05', 'expected.superseded_candidate_acknowledged_as_current', true, {
+    basis: 'feature-gated real-child test', seam: 'live-test-barrier/host-seal', test: superseded,
+    observation: 'the superseded candidate reports watch-superseded and the previous generation stays current',
+  });
+  return { inFlight, racing, superseded };
+}
+
 const selectedTests = {
   'LIVE-01': ['live_01_reload_ack_precedes_fresh_next_top_level_call'],
   'LIVE-06': ['live06_host_revokes_old_effect_before_actual_retained_wasm_request',
@@ -836,6 +928,9 @@ await observeLive07();
 await observeLive02();
 await observeLive03();
 await observeLive05();
+await observeSeamAbsence();
+const feature = buildFeature();
+const barrierTests = await observeBarrierSeams(feature);
 
 // Every promoted case must observe every declared expected field; every
 // unpromoted case must name at least one unobserved field.
@@ -908,8 +1003,14 @@ const receipt = {
   binaries: {
     noble: { path: binary, sha256: binarySha256, bytes: fs.statSync(binary).size },
     live_repl_tests: { path: testBinary, sha256: testBinarySha256, bytes: fs.statSync(testBinary).size },
+    noble_feature: { path: feature.binary, sha256: feature.binary_sha256, bytes: fs.statSync(feature.binary).size,
+      features: ['live-test-barrier'] },
+    live_repl_tests_feature: { path: feature.test_binary, sha256: feature.test_binary_sha256,
+      bytes: fs.statSync(feature.test_binary).size, features: ['live-test-barrier'] },
     node: { path: node, sha256: sha256(fs.readFileSync(node)), version: process.version },
   },
+  seams,
+  barrier_tests: barrierTests,
   commands,
   cases: verdicts,
   reports,
