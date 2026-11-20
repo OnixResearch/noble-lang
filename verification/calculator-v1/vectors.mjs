@@ -143,8 +143,9 @@ export const generate = (cases, mapping) => {
   assert.equal(later.expected.truncated_decimal_labeled_exact, false);
   const probes = mapping['CALC-09-later-features'];
   assert.ok(probes, 'CALC-09 later_features lack a CLI mapping');
+  const documentation = ['note', 'reading', 'caveat', 'derived_from'];
   assert.deepEqual(later.input.later_features.slice().sort(),
-    Object.keys(probes).filter(key => !['note', 'derived_from'].includes(key)).sort(),
+    Object.keys(probes).filter(key => !documentation.includes(key)).sort(),
     'CALC-09 later_features mapping must list every feature');
   later.input.later_features.forEach((feature, index) => {
     const entry = probes[feature];

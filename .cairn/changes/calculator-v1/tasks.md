@@ -52,14 +52,21 @@
   `control/memory-cap` now expect the selected failure labels (`calculator restore failed` and
   `engine worker closed its reply stream`, exit status 2, no `ResourceLimit`) instead of the
   `44329dc` silent recovery and external kill. The lane records retired rows without running them
-  and refuses a retired row that still carries an expectation. The revised plan then ran: a release
-  binary of `cb5e9f71` (sha256 `b4b2931a…2d1736`) ran 20 sessions at concurrency 2 in 1,660 s and
-  all 20 matched; all seven categories kept their boundaries (N−1 refused with its category named,
-  N accepted, the follow-up line saw the prior state), and the four controls printed no
-  `ResourceLimit`. The compact observations are `budgets/summary-2026-11-20.json` (the `44329dc`
+  and refuses a retired row that still carries an expectation. The lane also sets
+  `-p OOMPolicy=continue` on its memory-capped scopes so a cgroup OOM kill cannot race a
+  user-manager scope stop. The revised plan then ran: a release binary of `cb5e9f71` (sha256
+  `b4b2931a…2d1736`) ran 20 sessions at concurrency 2 in 1,660 s and all 20 matched; all seven
+  categories kept their boundaries (N−1 refused with its category named, N accepted, the
+  follow-up line saw the prior state), and the four controls printed no `ResourceLimit`. The
+  compact observations are `budgets/summary-2026-11-20.json` (the `53c89e0d`, 2026-11-10
   `summary.json` is kept), and the raw receipt (sha256 `b1d66e0d…62034`) is outside the
-  repository. This task stays open: the plan revision still needs its independent review under
-  decision 1, and the CALC case gates are a separate step.
+  repository. Erratum: the plan's `revision.reason` says the two changed rows expected "silent
+  recovery"; they did not. v1 `control/worker-killed` expected exactly stdout `7` and no stderr,
+  with the next line failing, and v1 `control/memory-cap` expected no output; `44329dc` recovered
+  silently (exit 0) and was killed by the scope (SIGTERM), which is why those rows did not match.
+  `plan.json` keeps that sentence because its hash is bound to the receipt; the correction is here
+  and in `budgets/README.md`. This task stays open: the plan revision still needs its independent
+  review under decision 1, and the CALC case gates are a separate step.
 - [ ] [serial] Exercise applicable full CALC-01 through CALC-13 inputs, expected fields, hostile controls and independent-oracle requirements before proposing any canonical case state or implementation-status change. Leave unexercised scenarios absent/not-run with no invented evidence. The CLI runtime vectors of CALC-01/02/03/06/07/09 run through the [acceptance runner](../../../verification/calculator-v1/README.md), whose receipts are implementation observations only. Its [44329dc release receipt](../../../verification/calculator-v1/receipt-44329dc-release.json) and [integrated eccbc02 release receipt](../../../verification/calculator-v1/receipt-eccbc02-release.json) each observed 34/34 CLI vectors passing (CALC-07's two import/resource variants are unsupported on the CLI); no case state changes from them. r[CALC-GATE-01]
 
 ## Native lifecycle and closeout

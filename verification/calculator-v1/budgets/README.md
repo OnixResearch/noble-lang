@@ -125,6 +125,31 @@ No category bracket, budget value or predicted boundary N changed.
   status 2. The `44329dc` row expected the scope to kill the process with no
   output at all.
 
+The run also sets `-p OOMPolicy=continue` on every memory-capped
+`systemd-run` scope. The user manager's default policy is `stop`, so without it
+the manager could stop the scope right after the kernel OOM-killed the worker
+and send SIGTERM to the host, racing the `control/memory-cap` expectation. With
+`continue` the host reports its own failure and exits 2. The installed systemd
+accepts the property (`systemd-run --user --scope -q -p OOMPolicy=continue -p
+MemoryMax=48M -p MemorySwapMax=0 -- true` exits 0).
+
+### Erratum: what the v1 rows expected
+
+The v2 plan's `revision.reason` says the two changed rows expected "silent
+recovery". That sentence is wrong. `plan.json` is left as it is because its
+SHA-256 is bound to the run's receipt; this note is the correction.
+
+- v1 `control/worker-killed` expected exactly stdout `7` and no stderr, and the
+  plan's premise was that the next line fails. `44329dc` instead recovered
+  silently and exited 0, which is why the row did not match (see "Killed-worker
+  control" above).
+- v1 `control/memory-cap` expected no stdout, no stderr and no explicit status.
+  `44329dc` ended in SIGTERM with no output.
+
+The revised rows keep that intent and add the label and status the selected
+committed-session host produces. The tasks.md L14 progress block carries the
+same correction.
+
 ## Run of the revised plan (`cb5e9f71`, 2026-11-20)
 
 A release binary of `cb5e9f71` (sha256
@@ -135,7 +160,9 @@ other 20 all matched. Concurrency was 2 under `MemoryMax=2G` and
 [`summary-2026-11-20.json`](summary-2026-11-20.json); the raw receipt
 (sha256 `b1d66e0d31aa1821cc4c5266c345aa8acc54d154a6188d5a105effe355762034`)
 and per-session I/O are external to the repository. The old
-[`summary.json`](summary.json) is kept as the `44329dc` record.
+[`summary.json`](summary.json) is kept as the record of the 2026-11-10 rerun
+(binary `479b4c97…df84` at source/repository head `53c89e0d`), not as the
+`44329dc` record.
 
 | Category | Budget N−1 / N | N−1 stderr (stdout) | N stdout | Wall N−1 / N |
 |---|---|---|---|---|
@@ -150,16 +177,18 @@ and per-session I/O are external to the repository. The old
 Every N−1 refusal names its category, N accepts, and the follow-up line still
 sees the prior state. `input-bytes 7` (N−2) refuses the 8-byte setup line as
 well. `evaluation-work 38,051` (N−2) refuses too, so the boundary is exactly
-38,053. Peak RSS over the bracket sessions was 218–380 MiB.
+38,053. Peak RSS over the bracket sessions was 218,632–379,828 KiB
+(213–371 MiB); GNU `time` reports peak RSS in KiB and the MiB figures here are
+KiB/1024.
 
 The four non-retired controls matched and printed no `ResourceLimit` line:
 
 | Control | Observed | Status | Wall | Peak RSS |
 |---|---|---|---|---|
-| `control/worker-killed` | `7`, then `noble calculator: calculator restore failed` | 2 | 112 s | 303 MiB |
+| `control/worker-killed` | `7`, then `noble calculator: calculator restore failed` | 2 | 112 s | 296 MiB |
 | `control/host-timeout` | no output, `SIGKILL` after the 20 s timeout | signal | 20 s | – |
-| `control/transport-limit` | `TransportLimit InputFrameBytes: source byte limit exceeded` | 2 | 1.7 s | 146 MiB |
-| `control/memory-cap` (48M) | `noble calculator: engine worker closed its reply stream` | 2 | 0.1 s | 75 MiB |
+| `control/transport-limit` | `TransportLimit InputFrameBytes: source byte limit exceeded` | 2 | 1.7 s | 142 MiB |
+| `control/memory-cap` (48M) | `noble calculator: engine worker closed its reply stream` | 2 | 0.1 s | 73 MiB |
 
 ## Slow numeric-path tier on the integrated tree
 
