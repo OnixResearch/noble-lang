@@ -156,23 +156,23 @@ try {
   const contracts = extract('contracts', 'crates/noble-contracts/Cargo.toml', 'noble_contract_impl',
     'proofs/mc1/NobleContractImpl', reviewedContractsOpaque.map(entry => entry.rust));
   const proofRoot = path.join(root, 'proofs/mc1');
-  // Build every MC1 library module, including the named-model examples and
-  // conservative-extension proofs outside the root import closure. Neither
-  // verdict may depend on pre-existing object files.
+  // Build the `NobleContracts` library and the extracted `NobleContractImpl`
+  // modules; neither verdict may depend on pre-existing object files. The
+  // library's globs (`lakefile.toml`) cover every `NobleContracts` submodule,
+  // including `NobleContracts.Refutation`, which is outside the root import
+  // closure, so no explicit submodule targets are needed here.
   run('lean-build', tool('lean', 'lake'), ['build', 'NobleContracts',
-    'NobleContracts.NamedSubjectConservative', 'NobleContracts.NamedSubjectTests',
-    'NobleContracts.NamedV2Examples',
-    'NobleContracts.NamedV3', 'NobleContracts.SpecQuality', 'NobleContracts.Wire',
     'NobleContractImpl', 'NobleContractImpl.Projection', 'NobleContractImpl.Statement'], proofRoot);
   // This CLI-embedded witness is a standalone file, not a lake library target.
   run('intrinsic-type-witness', tool('lean', 'lake'), ['env', 'lean', 'IntrinsicTypeWitness.lean'], proofRoot);
   const library = run('contract-library', tool('lean', 'lake'), ['env', 'lean', 'ContractGate.lean'], proofRoot);
   // The contract library grew with NamedV3 (T1/T6), the specification-quality module
   // (#65), the submission-refusal witnesses for #65 and the recheck-during-shrinking lane
-  // for #65's residual, then with the 23 `wire@1` law theorems of the Wire module, so the
-  // strict verdict now pins 90 required theorems; the exact string keeps the verdict
-  // non-substitutable.
-  if (!library.includes('MC1-CONTRACT-LIBRARY: 90 required theorems; strict axioms accepted')) {
+  // for #65's residual, then with the 23 `wire@1` law theorems of the Wire module, and the
+  // ten PAUTO-FO-4 refutation-template theorems (the template, its two instances, and their
+  // evaluation and counterexample lemmas), so the strict verdict now pins 100 required
+  // theorems; the exact string keeps the verdict non-substitutable.
+  if (!library.includes('MC1-CONTRACT-LIBRARY: 100 required theorems; strict axioms accepted')) {
     throw Error('missing strict contract-library verdict');
   }
   const audit = run('implementation-audit', tool('lean', 'lake'), ['env', 'lean', 'ImplementationGate.lean'], proofRoot);
