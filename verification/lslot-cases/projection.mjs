@@ -614,12 +614,26 @@ export function project04({ fixture, lane }) {
     measured('input.initial', 'global_epoch', 18, numberValue(lane.baseline.a.rootEpoch)),
     measured('input.initial.slot_A', 'incarnation', 7, numberValue(lane.baseline.a.incarnation)),
     measured('input.initial.slot_A', 'generation', 3, numberValue(lane.baseline.a.generation)),
-    measured('input.initial.slot_A', 'target', 'A-v1', lane.baseline.a_published,
-      'the baseline A selection dispatched the installed A1 artifact'),
+    measured('input.initial.slot_A', 'target', 'A-v1',
+      lane.baseline.a.artifactSha256 === lane.baseline.a_published.artifactSha256
+        && lane.baseline.a.generation === lane.baseline.a_published.generation
+        ? 'A-v1'
+        : { failed: { dispatch: lane.baseline.a.artifactSha256,
+          published: lane.baseline.a_published.artifactSha256,
+          generation: [lane.baseline.a.generation, lane.baseline.a_published.generation] } },
+      'the baseline A dispatch selected exactly the artifact the A-v1 publication installed at'
+      + ' incarnation 7 generation 3', { publication: lane.baseline.a_published }),
     measured('input.initial.slot_B', 'incarnation', 2, numberValue(lane.baseline.b.incarnation)),
     measured('input.initial.slot_B', 'generation', 1, numberValue(lane.baseline.b.generation)),
-    measured('input.initial.slot_B', 'target', 'B-v1', lane.baseline.b_published,
-      'the baseline B selection dispatched the installed B1 artifact'),
+    measured('input.initial.slot_B', 'target', 'B-v1',
+      lane.baseline.b.artifactSha256 === lane.baseline.b_published.artifactSha256
+        && lane.baseline.b.generation === lane.baseline.b_published.generation
+        ? 'B-v1'
+        : { failed: { dispatch: lane.baseline.b.artifactSha256,
+          published: lane.baseline.b_published.artifactSha256,
+          generation: [lane.baseline.b.generation, lane.baseline.b_published.generation] } },
+      'the baseline B dispatch selected exactly the artifact the B-v1 publication installed at'
+      + ' incarnation 2 generation 1', { publication: lane.baseline.b_published }),
     measured('input', 'variants', fixture.input.variants.map(variant => variant.name),
       fixture.input.variants.map(variant => every
         .some(item => item.name === `LSLOT04-${variant.name}`) ? variant.name : 'missing')),

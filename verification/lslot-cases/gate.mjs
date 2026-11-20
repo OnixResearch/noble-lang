@@ -392,18 +392,28 @@ const earliest = (name, slot) => {
   assert.ok(match, `${name} ${slot} baseline select`);
   return match.row.request_trace[0];
 };
-const publishedLabel = (name, slot) => {
+// The baseline target the case names is the artifact the matching publication
+// installed for that incarnation/generation; the dispatch must select exactly
+// it.
+const publishedAt = (name, slot, incarnation, generation) => {
   const steps = pairedFiles(path.join(lane0407.directory, `${name}.requests.jsonl`),
     path.join(lane0407.directory, `${name}.jsonl`));
   const published = steps.find(step => step.request?.operation === 'publish'
-    && step.request.slot === slot && step.row.outcome === 'published');
-  assert.ok(published, `${name} ${slot} baseline publication`);
-  return `${slot}-v${published.request.id.replace(/^[A-Za-z]+/, '')}`;
+    && step.request.slot === slot && step.row.outcome === 'published'
+    && step.row.incarnation === String(incarnation)
+    && step.row.generation === String(generation));
+  assert.ok(published, `${name} ${slot} ${incarnation}/${generation} baseline publication`);
+  const installed = steps.find(step => step.request?.operation === 'install'
+    && step.request.id === published.request.id && step.row.outcome === 'installed');
+  assert.ok(installed, `${name} ${published.request.id} baseline install`);
+  return { id: published.request.id, epoch: published.row.epoch,
+    incarnation: published.row.incarnation, generation: published.row.generation,
+    source: installed.request.source, artifactSha256: installed.row.artifact_sha256 };
 };
 const casBaseline = { a: earliest('LSLOT04-same-slot-writers', 'A'),
   b: earliest('LSLOT04-unrelated-slot-race', 'B'),
-  a_published: publishedLabel('LSLOT04-same-slot-writers', 'A'),
-  b_published: publishedLabel('LSLOT04-unrelated-slot-race', 'B') };
+  a_published: publishedAt('LSLOT04-same-slot-writers', 'A', 7, 3),
+  b_published: publishedAt('LSLOT04-unrelated-slot-race', 'B', 2, 1) };
 const pinnedEpoch = pairedFiles(
   path.join(lane0407.directory, 'LSLOT07-publication-without-grant.requests.jsonl'),
   path.join(lane0407.directory, 'LSLOT07-publication-without-grant.jsonl'))
