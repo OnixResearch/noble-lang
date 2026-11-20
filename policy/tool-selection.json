@@ -130,6 +130,7 @@
     "word_bits": 64,
     "workspace_features": [
       "live-test-barrier",
+      "paa1-test-barrier",
       "safety-observe"
     ]
   },
@@ -348,8 +349,8 @@
     "nix/tool-selection-app.nix": "ecce946f78bc030d179ffb7f16d4ca15bcfb19c682af49d49b7611a734be2f05",
     "nix/tool-selection-files.nix": "109e721fc0510974140e5543c4353ab6faa53330367bbaa39c103b8c26f44185",
     "nix/tool-selection-observation.nix": "1913777df366e807602e9c6879d9a3dc1167584007e62ebacd601d07fac678b8",
-    "nix/tool-selection-tests.nix": "e054566d1a0e4dd1df1c612d57ea3a131e6ecd21d1f0816b5a6426217e58a92d",
-    "nix/tool-selection.nix": "b18a7d7d7dcd0e74eca21acea0123814f1008ad04595a059c773ad44da9d9e16",
+    "nix/tool-selection-tests.nix": "b8cafabfebc1ced9d3b37fa33a165311919e016fb34b9b56555d8e4dcce12648",
+    "nix/tool-selection.nix": "2ceb0c072d20f89185c1d0b4a4799b8ef059780c3ddd9f961d6a390b1b8bd44e",
     "nix/vendor-only.nix": "d7743c80ac4fc913be61aa54629c75fd7182eaa6b7d0a9b289c08a210dde1546",
     "policy/architecture-export-spec.ncl": "e32a2c75f975e768b292702500ca902bb944f07a5ce156bcbfa00bff576681bd",
     "policy/architecture.contracts.ncl": "9cbbe9437d789e2ed7cdf1cfda992616fd3de18af169e23e1e8e9652a8c1571e",
