@@ -210,6 +210,11 @@ Every layer assumes the following:
 1. Run OWN-CASE-06 and decide whether code→global edges are counted or module lifetime is extended. Accepted evidence needs a source-bound execution receipt.
 2. Select or reject the borrow profile, with concrete syntax (out of scope here) and checker refinement evidence for OWN-PO-2.
 3. Choose a promotion form for any scratch-arena profile, with measured costs (#5 benchmark plan).
+
+   Decisions 2 and 3 (owner, 2026-11-20): neither a borrow profile nor a
+   scratch-arena profile is selected. OWN-CASE-04's borrow variants and OWN-CASE-08
+   are inapplicable, and OWN-PO-2 is not applicable. Either profile can be
+   reopened later in a new change with its own syntax, measurements and evidence.
 4. Mechanize OWN-PO-1/3 in the abstract model, then obtain correspondence evidence per layer. Abstract proofs never imply runtime correctness.
 5. Register OWN-CASE designs in `specs/conformance` only through a separate reviewed change.
 

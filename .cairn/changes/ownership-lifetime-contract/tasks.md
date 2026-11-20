@@ -36,7 +36,7 @@
   - OWN-CASE-04's borrow variants, which need a `borrow` word;
   - OWN-CASE-05, which needs a root that traps after saving;
   - OWN-CASE-07, which needs a runtime that rebinds a retained name.
-- [ ] [serial] If a borrow profile is selected, specify syntax separately, implement the checker escape test and obtain checker-refinement evidence for OWN-PO-2. r[OWN-BORROW-01]
+- [x] [serial] If a borrow profile is selected, specify syntax separately, implement the checker escape test and obtain checker-refinement evidence for OWN-PO-2. r[OWN-BORROW-01] OWNER DECISION 2026-11-20: no borrow profile is selected, so the condition does not hold and the task closes with that recorded outcome (owner rule: a recorded negative outcome completes a conditional task). Noble keeps only the WIT `own`/`borrow` adapter forms; it has no `borrow` word. OWN-CASE-04's borrow variants are therefore inapplicable, OWN-PO-2 is not applicable, and no checker escape test or refinement evidence is claimed. Selecting a borrow profile later needs a new change carrying its syntax, escape test and OWN-PO-2 evidence.
 - [ ] [serial] Mechanize OWN-PO-1/3 in the abstract model, then obtain separate lowering, runtime and host-ledger correspondence for OWN-PO-4..7. r[OWN-EV-01]
   Progress (2026-10-30): in the small-step model `proofs/foundation/NobleFoundation/Effects.lean`,
   OWN-PO-1 holds for composition, branches (`ifte`), `dip` with a frame-held value, `run` and
@@ -48,4 +48,4 @@
   The task stays open:
   - the model has no aggregates, named definitions, case forms, borrows or heap;
   - no lowering, runtime or host-ledger correspondence exists for OWN-PO-4..7.
-- [ ] [serial] Select any scratch-arena promotion form only after measured comparison under the allocation benchmark plan, and verify reset safety with OWN-CASE-08. r[OWN-SCRATCH-01]
+- [x] [serial] Select any scratch-arena promotion form only after measured comparison under the allocation benchmark plan, and verify reset safety with OWN-CASE-08. r[OWN-SCRATCH-01] OWNER DECISION 2026-11-20: no scratch-arena profile is selected, so no promotion form is chosen and OWN-CASE-08 is inapplicable. The task closes on that recorded outcome (owner rule for conditional tasks). Scratch arenas stay a design option. Selecting one later needs the allocation benchmark measurements and an executed OWN-CASE-08 reset-safety receipt in a new change.
