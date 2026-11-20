@@ -69,6 +69,10 @@ const CLAIM_SHAPE: &str = "def claim : Prop := exportedClaim program inputTypes 
 /// # Errors
 /// `owner-law-contract-invalid` when the contract is not accepted ordinary
 /// typing, and one law mismatch code per compared field otherwise.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the compared law, the consumer's independently regenerated preparation and the accumulating check record are borrowed exactly as read; copying them would duplicate owner-law and typed-IR state"
+)]
 pub(super) fn compare(
     law: &super::law::Law,
     contract_bytes: &[u8],
@@ -160,6 +164,10 @@ fn stack_spellings(
         .collect()
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the compared law, the consumer's independently regenerated preparation and the accumulating check record are borrowed exactly as read; copying them would duplicate owner-law and typed-IR state"
+)]
 fn interface(
     law: &super::law::Law,
     prepared: &noble_contracts::Prepared,
@@ -221,6 +229,10 @@ fn normalized(text: &str) -> std::string::String {
     out
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the compared law, the consumer's independently regenerated preparation and the accumulating check record are borrowed exactly as read; copying them would duplicate owner-law and typed-IR state"
+)]
 fn declarations(
     law: &super::law::Law,
     prepared: &noble_contracts::Prepared,
@@ -300,6 +312,10 @@ fn law_binding_text(
     out
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the compared law, the consumer's independently regenerated preparation and the accumulating check record are borrowed exactly as read; copying them would duplicate owner-law and typed-IR state"
+)]
 fn obligation(
     law: &super::law::Law,
     prepared: &noble_contracts::Prepared,
@@ -391,6 +407,10 @@ fn obligation(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the compared law, the consumer's independently regenerated preparation and the accumulating check record are borrowed exactly as read; copying them would duplicate owner-law and typed-IR state"
+)]
 fn preconditions(
     law: &super::law::Law,
     checks: &mut std::vec::Vec<Check>,
@@ -419,6 +439,10 @@ fn preconditions(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the compared law, the consumer's independently regenerated preparation and the accumulating check record are borrowed exactly as read; copying them would duplicate owner-law and typed-IR state"
+)]
 fn assumptions(
     law: &super::law::Law,
     prepared: &noble_contracts::Prepared,
@@ -518,6 +542,10 @@ fn resource_free_observation(
     ))
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the compared law, the consumer's independently regenerated preparation and the accumulating check record are borrowed exactly as read; copying them would duplicate owner-law and typed-IR state"
+)]
 fn scope(
     law: &super::law::Law,
     statement: &str,
@@ -559,6 +587,10 @@ fn scope(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the compared law, the consumer's independently regenerated preparation and the accumulating check record are borrowed exactly as read; copying them would duplicate owner-law and typed-IR state"
+)]
 fn resource_free(
     prepared: &noble_contracts::Prepared,
     checks: &mut std::vec::Vec<Check>,

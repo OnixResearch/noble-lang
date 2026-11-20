@@ -136,10 +136,6 @@ pub(super) fn parse(text: &str, names: &Names<'_>) -> Result<Term, std::string::
 
 const MAX_DEPTH: u32 = 64;
 
-#[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-maintainers; the law predicate surface syntax is nested s-expressions, so the parser follows the term's own structure and refuses beyond MAX_DEPTH before the stack can grow unbounded"
-)]
 fn form(
     tokens: &mut Tokens<'_>,
     names: &Names<'_>,
