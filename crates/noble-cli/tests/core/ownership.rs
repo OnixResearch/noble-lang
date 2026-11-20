@@ -107,7 +107,7 @@ fn own_case_04_non_borrow_variants_reject_before_emission() -> Result<(), String
     ];
     assert_eq!(variants.len(), 6, "six non-borrow variants are declared");
     // Bounded growth: at most one violation per declared variant and per data control.
-    let mut violations = Vec::with_capacity(variants.len() + 3);
+    let mut violations = Vec::with_capacity(variants.len().saturating_add(3));
     for (name, input, word) in variants {
         let (request, candidate) = invocation(&input, word)?;
         let is_eligible = matches!(
