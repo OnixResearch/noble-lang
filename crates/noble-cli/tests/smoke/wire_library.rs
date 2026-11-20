@@ -44,8 +44,8 @@ struct DeclaredSession {
 impl DeclaredSession {
     /// A framed declared session bound to the scripted `fx@1` emitter.
     fn start() -> Result<Self, Box<dyn std::error::Error>> {
-        let bindings = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"))
-            .join("wire-library-bindings.txt");
+        let bindings =
+            std::path::Path::new(env!("CARGO_TARGET_TMPDIR")).join("wire-library-bindings.txt");
         std::fs::write(&bindings, BINDING)?;
         let mut child = std::process::Command::new(env!("CARGO_BIN_EXE_noble"))
             .args(["session", "--framed", "--declared-modules", "--bindings"])
@@ -111,7 +111,9 @@ fn wire_library_runs_in_a_fresh_declared_session() -> Result<(), Box<dyn std::er
     // host requests in order, so an effectful `split` does execute.
     let effectful = session.submit(EFFECT_SPLIT)?;
     assert_eq!(effectful["outcome"], "normal", "{effectful}");
-    let trace = effectful["request_trace"].as_array().ok_or("missing trace")?;
+    let trace = effectful["request_trace"]
+        .as_array()
+        .ok_or("missing trace")?;
     assert_eq!(trace.len(), 2, "both operands emit: {effectful}");
     for request in trace {
         assert_eq!(request["effect"], "test.emit");
