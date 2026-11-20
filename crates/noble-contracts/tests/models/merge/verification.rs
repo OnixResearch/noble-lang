@@ -682,6 +682,19 @@ fn semantic_merge_lean_check() {
     let wrong = consumer(&case04(), HONEST_CASE01, bounds);
     assert_eq!(wrong, Outcome::Unknown);
 
+    // The F1 IO channel is refused and leaves no file.
+    let write_path =
+        std::env::temp_dir().join(format!("noble-merge-lane-forge-{}", std::process::id()));
+    let _ = std::fs::remove_file(&write_path);
+    let writing = lean::check(
+        &regenerate(&case04()).expect("claim").claim_text,
+        &forged_write(&write_path.display().to_string()),
+        bounds,
+    );
+    assert!(!writing.submission.accepted);
+    assert_eq!(writing.submission.failure, None);
+    assert!(!write_path.exists(), "a refused proof wrote a file");
+
     // The bound and tool-failure states are observed with real controls.
     let oversized = "x".repeat(bounds.proof_bytes.saturating_add(1));
     let exhausted = consumer(&case04(), &oversized, bounds);
@@ -710,10 +723,11 @@ fn semantic_merge_lean_check() {
         bounds.timeout_ms, bounds.proof_bytes
     );
     std::println!(
-        "NOBLE_SEMANTIC_MERGE_LEAN {{\"case04\":\"{}\",\"case01\":\"{}\",\"case07_forgery_accepted\":{},\"case03_consumer_forgery\":\"{}\",\"wrong_proof\":\"{}\",\"exhausted\":\"{}\",\"internal_failure\":\"{}\",\"axioms\":{},\"proof_case04\":{},\"proof_case04_sha256\":\"{}\",\"proof_case01\":{},\"proof_case01_sha256\":\"{}\",\"forge_commands_sha256\":\"{}\",\"forge_commands_refusal\":{},\"forge_write_refusal\":{},\"library_source_digest\":\"{}\",\"library_object_digest\":\"{}\",\"library_root\":{},\"lean\":{},\"bounds\":{}}}",
+        "NOBLE_SEMANTIC_MERGE_LEAN {{\"case04\":\"{}\",\"case01\":\"{}\",\"case07_forgery_accepted\":{},\"case07_consumer\":\"{}\",\"case03_consumer_forgery\":\"{}\",\"wrong_proof\":\"{}\",\"exhausted\":\"{}\",\"internal_failure\":\"{}\",\"axioms\":{},\"proof_case04\":{},\"proof_case04_sha256\":\"{}\",\"proof_case01\":{},\"proof_case01_sha256\":\"{}\",\"forge_commands_sha256\":\"{}\",\"case07_forgery_refusal\":{},\"case03_forgery_refusal\":{},\"file_write_refusal\":{},\"library_source_digest\":\"{}\",\"library_object_digest\":\"{}\",\"library_root\":{},\"lean\":{},\"bounds\":{}}}",
         verified04.name(),
         verified01.name(),
         forged07.submission.accepted,
+        consumer07.name(),
         forged03.name(),
         wrong.name(),
         exhausted.name(),
@@ -724,8 +738,9 @@ fn semantic_merge_lean_check() {
         json_string(proof01),
         sha256(proof01.as_bytes()),
         sha256(FORGED_COMMANDS.as_bytes()),
-        json_string(&refused.diagnostic),
         json_string(&forged07.diagnostic),
+        json_string(&refused.diagnostic),
+        json_string(&writing.diagnostic),
         honest.source_digest,
         honest.object_digest,
         json_string(&honest.library),

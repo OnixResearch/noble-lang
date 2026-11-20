@@ -168,31 +168,33 @@ const controls = {
     submission: "sorry + run_cmd marker + #exit",
     submission_sha256: acceptance.forge_commands_sha256,
     accepted: acceptance.case07_forgery_accepted,
-    refusal: acceptance.forge_commands_refusal,
+    refusal: acceptance.case07_forgery_refusal,
   },
   case07_consumer_path: {
     case: "SMERGE-CASE-07",
-    outcome: "conflict",
+    outcome: acceptance.case07_consumer,
   },
   case03_consumer_path: {
     case: "SMERGE-CASE-03",
     submission: "sorry + run_cmd marker + #exit",
     outcome: acceptance.case03_consumer_forgery,
+    refusal: acceptance.case03_forgery_refusal,
   },
   file_write_submission: {
     submission: "sorry + run_cmd IO.FS.writeFile + #exit",
-    refusal: acceptance.forge_write_refusal,
+    refusal: acceptance.file_write_refusal,
   },
   wrong_proof: { case: "SMERGE-CASE-04", proof: "NobleContracts.mergeRel_independent_changes", outcome: acceptance.wrong_proof },
   exhausted: { control: "proof body above the declared byte bound", outcome: acceptance.exhausted },
   internal_failure: { control: "library root without a toolchain pin", outcome: acceptance.internal_failure },
 };
 if (controls.case07_direct_forgery.accepted !== false) fail("the CASE-07 forgery was accepted");
+if (controls.case07_consumer_path.outcome !== "conflict") fail("the CASE-07 consumer path did not report conflict");
 if (controls.case03_consumer_path.outcome === "verified") fail("the CASE-03 forgery verified through the consumer path");
 if (controls.wrong_proof.outcome === "verified") fail("a wrong proof verified");
 if (controls.exhausted.outcome !== "exhausted") fail("the bound control did not report exhausted");
 if (controls.internal_failure.outcome !== "internal-failure") fail("the tool control did not report internal failure");
-if (!acceptance.forge_write_refusal.includes("closed term")) fail("the file-writing submission was not refused");
+if (!acceptance.file_write_refusal.includes("closed term")) fail("the file-writing submission was not refused");
 
 const rust = run(["rustc", "--version"]);
 const cargo = run(["cargo", "--version"]);
