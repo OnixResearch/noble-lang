@@ -1,0 +1,1 @@
+module countdown@1 [ signature go forall<S:stack> [ S I64 -- S I64 ! pure ] export go def go [ dup [ let n n 0 = ] dip swap [ ] [ 1 - go ] if ] ]
