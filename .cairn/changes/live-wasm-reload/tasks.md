@@ -194,6 +194,58 @@ The `passed` in `specs/VALIDATION.json` is the donor's historical input set
 and is **not** current for these edited documents. Canonical LIVE/LSLOT
 cases remain absent/not-run/open, with no Octet/Lean proof claim.
 
+A later isolated acceptance slice added `verification/live-cases/gate.mjs`
+and its retained receipt `verification/live-cases/acceptance.json` (SHA-256
+`d660f82575856bda946d4ad34d4ca2cfa6e61beeaa6a7f7befd3dd6a36ba9a9f`). The gate
+refuses a dirty source scope, pins each LIVE case's exact
+id/profile/kind/requirements/input/expected projection, builds the pinned CLI
+and the `live_repl` integration binary from the committed tree, runs the
+selected `live_repl` tests, drives real `noble live repl` and
+`noble live watch` children for every observed field, and writes one
+immutable `acceptance.json` outside the repository before it is copied in.
+It was measured on commit `ac878aa6` with source revision
+`sha256:99ac83c628a6eac7a6d9f3a8ae67ec69be8473323d16866f7ce0c40e6369cc47`,
+CLI SHA-256
+`3b48316d096f755ff43fd990fa0088376d433b78ac2a8b695ff4ed2b7214146b` and
+`live_repl` test-binary SHA-256
+`0ab763c31288abc836778cbda908f75d29a12a3769a8c478102a418facdf9c5f`, over 27
+recorded commands and 69 retained JSON reports. LIVE-01 is promoted
+(`implemented`/`passed`/`open`/`explicit`): `20 addone` returned 21 on the old
+bytes, a fsynced paired rename to the case's after bytes was followed by a
+`reload-committed` ACK at the next generation with zero guest requests and zero
+protected operations, and the first post-ACK submission produced the stack
+`[21, 22]`; no external assembler or optimizer ran because the reload committed
+with PATH holding only failing wasm-tools/wasm-opt/binaryen traps and no trap
+marker appeared, and the same build's `noble run` and `noble session` kept
+Core-Bootstrap reports with `self.propose` unbound. LIVE-06 is promoted: after
+`import ledger@1 as l`, `[ l.send ]`, a committed reload to the case's
+`ledger@2` bytes and `import ledger@2 as n`, the host-only
+`:revoke-effect ledger@1 emit-a test.emit` changed that exact slot from
+allowed/active to denied/inactive with zero guest requests; `n.send` still ran
+through `emit-b` with one guest request and one protected operation, the case's
+`import ledger@2 as l` rebound the original alias while the retained stack kept
+its exact A handle, and `run` on the retained Program trapped with request
+identity `ledger@1:test.emit` through `emit-a`, one guest request, zero
+protected operations, decision deny/policy-denied and a terminal session.
+LIVE-07 is promoted:
+`--engine interpreter` produced exactly one `engine-selection` report with
+outcome `interpreter-unavailable`, exit 2 and no second report within 300 ms,
+while `--engine v8` still reported engine `v8`. The selected real-child tests
+`live_01_reload_ack_precedes_fresh_next_top_level_call`, three LIVE-06 tests and
+`interpreter_choice_refuses_at_startup_without_v8_fallback` passed in the same
+build. LIVE-02, LIVE-03 and LIVE-05 remain absent/not-run: the LIVE-02 canonical
+after-reload script `20 twice swap 20 swap run` is refused at check and its
+in-flight frame needs the feature-gated safepoint seam; LIVE-03's
+`initial_module` cannot coexist with the initial definition in one selected
+file, `changed-file-during-read` needs a read-race seam, `host-binding-mismatch`
+produced no startup report, and the two declared-module variants ran only in a
+module-only session; LIVE-05's `"A" test.emit test.abort` submission is refused
+as an unbound word and its racing and superseded variants need the
+feature-gated `live-test-barrier` seam. LIVE-04, LIVE-08, LIVE-09 and LIVE-10
+are untouched. No proof, Octet or Lean claim is made; every promoted case keeps
+`proof: open`, and task 3 below stays unchecked because not every LIVE case is
+exercised.
+
 - [ ] [serial] Implement and test in-process Wasm encoder/verifier with independently accepted source, exact selected ABI and isolated staging. r[BE-LIVE-01] r[S-LIVE-01]
 - [ ] [serial] Implement resident live CLI/reload/watch, complete dependent rebuild, atomic safepoint publication, stable typed stack and bounded code retirement. r[K-LIVE-01] r[H-LIVE-01] r[H-LIVE-02] r[H-LIVE-03] r[DX-LIVE-01]
 - [ ] [serial] Exercise every LIVE case against actual source, selected VM and hostile controls with source-bound receipts and separately classify proof/assumptions before acceptance. r[V-LIVE-01] r[EV-LIVE-01]
