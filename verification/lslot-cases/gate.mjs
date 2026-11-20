@@ -23,15 +23,9 @@ import {
 import {
   jsonLines, leaves, projectors, pending, declaredAllowlist,
 } from './projection.mjs';
-
-// The change's base commit: the LIVE-01..10 contract fields this case must not
-// change are compared with the records at this pinned revision, so a later
-// state/evidence transition by another change is recorded, not mistaken for a
-// design change.
-const LIVE_BASELINE_COMMIT = '8075d3c083474884f9a7c72b5b1a483f73eec314';
-// Owner decision 21 (2026-11-20) legitimately changes one LIVE-02 field.
-const APPROVED_LIVE_CHANGES = { 'LIVE-02': { path: ['input', 'after_reload_ack'],
-  from: ['20 twice swap 20 swap run'], to: ['20 twice swap run'] } };
+import {
+  LIVE_BASELINE_COMMIT, APPROVED_LIVE_CHANGES, liveDesign, liveContractDiffs,
+} from './live-baseline.mjs';
 
 const unsafeStartup = Object.keys(process.env).filter(name =>
   /^(?:NODE_OPTIONS|NODE_PATH|BASH_ENV|ENV|LD_.*|DYLD_.*|NIX_LD(?:_.*)?|GLIBC_TUNABLES|GCONV_PATH|SHLIB_PATH)$/.test(name));
@@ -71,6 +65,7 @@ const explicitInputs = [fixtureFile, liveWasmFile, 'Cargo.toml', 'Cargo.lock',
   'crates/noble-contracts/Cargo.toml', 'crates/noble-kernel/Cargo.toml',
   'crates/noble-wasm/Cargo.toml', 'crates/noble-cli/src/core/runtime/config.json',
   'verification/lslot-cases/gate.mjs', 'verification/lslot-cases/projection.mjs',
+  'verification/lslot-cases/live-baseline.mjs',
   'verification/dx06-current-source/source.mjs',
   'crates/noble-wasm/tests/live_slot_admission.rs',
   'crates/noble-contracts/tests/source_proof.rs',
@@ -320,7 +315,11 @@ for (const [label, summary, directory] of [['LSLOT-03', summary03, lane03.direct
 }
 const installInputs06 = steps06.filter(step => step.request?.operation === 'install')
   .flatMap(step => step.request.inputs);
-// Raw CLI replies, not lane-written strings, carry each variant's outcome and epoch.
+// Raw CLI replies, not lane-written strings, carry each variant's outcome and
+// epoch. One file per variant: the seed chain, the candidate attempt, the
+// post-refusal trace and the independent exact control are all attributed to
+// that variant only.
+const epochOf = reply => (reply.epoch == null ? null : Number(reply.epoch));
 const variantFacts = steps => {
   const facts = new Map();
   const touch = name => {
@@ -328,21 +327,30 @@ const variantFacts = steps => {
       protected_operations: 0 });
     return facts.get(name);
   };
-  let controlEpoch = null;
+  let seedEpoch = null, control = null;
+  const traces = [];
   for (const step of steps) {
     const request = step.request, reply = step.row;
     if (!request) continue;
+    if (request.operation === 'trace') traces.push(reply.trace ?? null);
+    if (request.operation === 'publish' && request.id === 'seed') {
+      seedEpoch = epochOf(reply);
+    }
+    if (request.operation === 'publish' && request.id === 'exact') {
+      control = { expected_epoch: request.expected_epoch, outcome: reply.outcome,
+        epoch: epochOf(reply) };
+    }
     if (['install', 'invoke', 'publish'].includes(request.operation) && request.id
       && !['seed', 'exact', 'target', 'caller'].includes(request.id)) {
       const found = touch(request.id);
       if (request.operation === 'install') {
         found.install_outcome = reply.outcome;
         found.attempt_outcome = reply.outcome;
-        found.install_epoch = reply.epoch;
       }
       if (request.operation === 'publish') {
         found.publication_outcome = reply.outcome;
-        found.attempt_epoch = reply.epoch;
+        found.attempt_epoch = epochOf(reply);
+        found.publish_expected_epoch = request.expected_epoch;
       }
       if (request.operation === 'invoke') found.invoke_outcome = reply.outcome;
       found.guest_requests = Math.max(found.guest_requests, reply.guest_requests ?? 0);
@@ -350,12 +358,12 @@ const variantFacts = steps => {
         reply.protected_operations ?? 0);
     }
     if (request.operation === 'reflect' && request.id) touch(request.id).site = reply.site;
-    if (request.operation === 'publish' && request.id === 'exact') controlEpoch = reply.epoch;
   }
   for (const found of facts.values()) {
-    if (found.publication_outcome !== 'published' && found.control_epoch == null) {
-      found.control_epoch = controlEpoch;
-    }
+    found.seed_epoch = seedEpoch;
+    found.traces = traces;
+    if (control) Object.assign(found, { control_expected_epoch: control.expected_epoch,
+      control_outcome: control.outcome, control_epoch: control.epoch });
   }
   return [...facts.values()];
 };
@@ -425,48 +433,35 @@ const replCli = replRaw.filter(row => row.kind === 'cli').map(row => row.report)
 assert.equal(replCli[0].outcome, summary09Repl.refusal.outcome);
 assert.equal(replCli[0].generation, summary09Repl.refusal.generation);
 assert.equal(replCli[0].stage, summary09Repl.refusal.stage);
+// The REPL and Core control records are lane summaries; every value the
+// projection reads is checked against the raw CLI rows they were built from.
+assert.deepEqual(replCli.map(report => report.outcome),
+  ['reload-refused', 'reload-committed', 'normal', 'reload-committed', 'normal'],
+  'LSLOT-09 REPL raw report sequence');
+assert.equal(replCli[1].generation, summary09Repl.control.initial_generation);
+assert.equal(replCli[2].generation, summary09Repl.control.saved_generation);
+assert.equal(replCli[3].generation, summary09Repl.control.reload.generation);
+assert.equal(replCli[3].installed_code_span?.generation,
+  summary09Repl.control.reload.installed_generation);
+assert.deepEqual(replCli[4].stack, summary09Repl.control.stack);
+assert.equal(replCli[4].stack[0].value, '21');
+const legacyControl = legacyCommands.find(row => row.reports.map(report => report.outcome)
+  .join(',') === 'defined,normal,defined,normal');
+assert.ok(legacyControl, 'LSLOT-09 legacy Core control raw command');
+assert.deepEqual(summary09Legacy.control.stack, legacyControl.reports.at(-1).stack);
+assert.equal(summary09Legacy.control.guest_requests,
+  legacyControl.reports.at(-1).guest_requests);
+assert.equal(summary09Legacy.control.protected_operations,
+  legacyControl.reports.at(-1).protected_operations);
 
 // B-LSLOT-01: the LIVE-01..10 contract fields must not change from the change's
 // base commit. State/evidence transitions by other changes are recorded, not
 // treated as design changes.
 const liveBaselineBytes = Buffer.from(git(['show', `${LIVE_BASELINE_COMMIT}:${liveWasmFile}`]));
 const liveCurrentBytes = fs.readFileSync(path.join(root, liveWasmFile));
-const liveDesign = bytes => JSON.parse(bytes).cases
-  .filter(row => row.id.startsWith('LIVE-'))
-  .map(row => ({ id: row.id, profile: row.profile, kind: row.kind,
-    requirements: row.requirements, input: row.input, expected: row.expected }));
-const liveBaselineDesign = liveDesign(liveBaselineBytes);
-const liveCurrentDesign = liveDesign(liveCurrentBytes);
-assert.equal(liveBaselineDesign.length, 10, 'ten baseline LIVE cases');
-const baselineByCase = Object.fromEntries(liveBaselineDesign.map(row => [row.id, row]));
-const currentByCase = Object.fromEntries(liveCurrentDesign.map(row => [row.id, row]));
-const liveDiffs = Object.keys(baselineByCase).filter(id => {
-  const before = baselineByCase[id], after = currentByCase[id];
-  const approved = APPROVED_LIVE_CHANGES[id];
-  const strip = record => {
-    const copy = JSON.parse(JSON.stringify(record));
-    if (!approved) return copy;
-    let node = copy;
-    for (const key of approved.path.slice(0, -1)) node = node[key];
-    delete node[approved.path.at(-1)];
-    return copy;
-  };
-  if (JSON.stringify(strip(before)) !== JSON.stringify(strip(after))) return true;
-  if (approved) {
-    const beforeField = before.input?.after_reload_ack;
-    const afterField = after.input?.after_reload_ack;
-    if (JSON.stringify(beforeField) === JSON.stringify(approved.from)
-      && JSON.stringify(afterField) === JSON.stringify(approved.to)) return false;
-  }
-  if (!approved) return false;
-  let beforeNode = before, afterNode = after;
-  for (const key of approved.path) {
-    beforeNode = beforeNode?.[key];
-    afterNode = afterNode?.[key];
-  }
-  return JSON.stringify(beforeNode) !== JSON.stringify(approved.from)
-    || JSON.stringify(afterNode) !== JSON.stringify(approved.to);
-});
+assert.equal(liveDesign(liveBaselineBytes).length, 10, 'ten baseline LIVE cases');
+const liveDiffs = liveContractDiffs({ baselineBytes: liveBaselineBytes,
+  currentBytes: liveCurrentBytes });
 const liveContractsChanged = liveDiffs.length > 0;
 const liveStateChanges = liveDesign(liveCurrentBytes).map((row, index) => {
   const current = JSON.parse(liveCurrentBytes).cases.find(entry => entry.id === row.id);
@@ -492,6 +487,12 @@ function walk(directory) {
 for (const directory of evidenceDirectories) walk(directory);
 
 const stagesOf = entries => [...new Set(entries.flatMap(entry => entry.stages ?? []))];
+// LSLOT-06 `ref_authority`: a host-issued ref dispatched with its grant
+// revoked is denied by current host policy (raw LSLOT-07 reply).
+const ungrantedDispatchDenial = jsonLines(path.join(lane0407.directory,
+  'LSLOT07-dispatch-without-grant.jsonl'))
+  .flatMap(reply => reply.request_trace ?? [])
+  .find(entry => entry.outcome === 'policy-denied') ?? null;
 const lanes = {
   'LSLOT-01': { records: jsonLines(path.join(lane01.directory, 'LSLOT01.jsonl')) },
   'LSLOT-02': { results: results02, stages: stagesOf(results02),
@@ -505,7 +506,8 @@ const lanes = {
     } },
   'LSLOT-03': { summary: summary03,
     authority: authorityOf(path.join(lane03.directory, 'LSLOT03-same-exact-interface.jsonl')),
-    variants: variantFacts(steps03),
+    variants: summary03.results.flatMap(result => variantFacts(pairedRecords(
+      jsonLines(path.join(lane03.directory, `LSLOT03-${result.name}.jsonl`))))),
     stageSteps: steps03.map(step => step.row.stage) },
   'LSLOT-04': { cases: cas, baseline: casBaseline,
     stageSteps: casSteps.map(step => step.row.stage) },
@@ -514,26 +516,47 @@ const lanes = {
     variants: summary06.results.map(result => {
       const steps = pairedRecords(jsonLines(path.join(lane06.directory,
         `LSLOT06-${result.name}.jsonl`)));
-      const found = { name: result.name, guest_requests: 0, protected_operations: 0 };
+      const found = { name: result.name, install_inputs: [], executed_invokes: 0 };
       for (const step of steps) {
         const request = step.request, reply = step.row;
         if (!request) continue;
-        if (request.operation === 'install') {
+        if (request.operation === 'install' && request.id === 'attempt') {
           found.install_outcome = reply.outcome;
-          found.attempt_outcome = reply.outcome;
+          found.negative = { kind: 'install', outcome: reply.outcome,
+            guest_requests: reply.guest_requests ?? 0,
+            protected_operations: reply.protected_operations ?? 0,
+            diagnostic: reply.diagnostic ?? null };
         }
-        if (request.operation === 'invoke') {
-          found.invoke_outcome = reply.outcome;
-          found.guest_requests = reply.guest_requests ?? 0;
+        if (request.operation === 'install' && request.id === 'caller') {
+          found.install_inputs = request.inputs ?? [];
         }
-        if (request.operation === 'reflect') found.site = reply.site;
+        if (request.operation === 'invoke' && request.id === 'caller') {
+          if (reply.outcome === 'refused' && found.refused_invoke === undefined) {
+            found.refused_invoke = { kind: 'invoke', outcome: reply.outcome,
+              guest_requests: reply.guest_requests ?? 0,
+              protected_operations: reply.protected_operations ?? 0,
+              diagnostic: reply.diagnostic ?? null };
+          }
+          if (reply.outcome === 'executed') {
+            found.executed_invokes += 1;
+            found.valid_guest_requests = reply.guest_requests ?? 0;
+            found.valid_protected_operations = reply.protected_operations ?? 0;
+          }
+        }
+        if (request.operation === 'reflect' && request.id === 'caller') found.site = reply.site;
       }
+      // The negative attempt is the refused install, or the refused re-invoke
+      // where the case has no installable negative source (retain).
+      found.negative = found.negative ?? found.refused_invoke ?? null;
+      found.attempt_outcome = found.negative?.outcome ?? null;
+      found.guest_requests = found.negative ? found.negative.guest_requests
+        : found.valid_guest_requests ?? 0;
+      found.protected_operations = found.negative ? found.negative.protected_operations
+        : found.valid_protected_operations ?? 0;
       return found;
     }),
-    authorityRefused: jsonLines(path.join(lane0407.directory,
-      'LSLOT07-dispatch-without-grant.jsonl'))
-      .some(reply => (reply.request_trace ?? [])
-        .some(entry => entry.outcome === 'policy-denied')),
+    authorityRefusal: ungrantedDispatchDenial,
+    authorityRefused: ungrantedDispatchDenial !== null,
     stageSteps: steps06.map(step => step.row.stage), installInputs06 },
   'LSLOT-07': { cases: cas, slot: 'emit', pinnedEpoch,
     emit_v1_source: pairedFiles(
@@ -549,10 +572,67 @@ const lanes = {
       baseline_sha256: sha(liveBaselineBytes), current_sha256: sha(liveCurrentBytes),
       design_changed: liveContractsChanged, state_changes: liveStateChanges,
       approved_changes: APPROVED_LIVE_CHANGES,
-      decision: 'OWNER DECISION 2026-11-20 (decision 21): LIVE-02 input.after_reload_ack'
-        + ' ["20 twice swap 20 swap run"] becomes ["20 twice swap run"]; nothing else changes',
+      decision: APPROVED_LIVE_CHANGES['LIVE-02'].decision,
       changed_cases: liveDiffs } },
 };
+
+// Two failures the review demanded be demonstrable rather than asserted:
+// N2-05, removing the in-root publication must turn the LSLOT-02 interleaving
+// projection into a mismatch; and R4, the LIVE comparison must accept the
+// original field and the owner-approved decision-21a field, and reject any
+// other LIVE-01..10 contract change.
+const regressions = {};
+{
+  const fixture02Case = caseById('LSLOT-02');
+  const laneState = { results: lanes['LSLOT-02'].results, stages: lanes['LSLOT-02'].stages,
+    crossProfile: lanes['LSLOT-02'].crossProfile };
+  const interleaving = entries => entries.find(entry => entry.scope === 'input.base'
+    && entry.key === 'interleaving');
+  const intact = interleaving(projectors['LSLOT-02']({ fixture: fixture02Case, lane: laneState }));
+  const mutated = structuredClone(laneState);
+  mutated.results = mutated.results.map(item => ({ ...item,
+    old_root: { ...item.old_root,
+      control_events: (item.old_root.control_events ?? []).filter(event =>
+        event.operation !== 'publish') } }));
+  const removed = interleaving(projectors['LSLOT-02']({ fixture: fixture02Case, lane: mutated }));
+  regressions.lslot02_in_root_publication = { intact: intact.status,
+    publication_removed: removed.status, publication_removed_observed: removed.observed };
+  if (intact.status !== 'observed') {
+    issues.push(`regression: LSLOT-02 interleaving is ${intact.status} on the real evidence`);
+  }
+  if (removed.status !== 'mismatch') {
+    issues.push('regression: removing the in-root publication did not fail the LSLOT-02'
+      + ` interleaving (status ${removed.status})`);
+  }
+}
+{
+  const withField = (id, field, value) => {
+    const document = JSON.parse(liveCurrentBytes);
+    let node = document.cases.find(row => row.id === id);
+    for (const key of field.slice(0, -1)) node = node[key];
+    node[field.at(-1)] = value;
+    return Buffer.from(JSON.stringify(document, null, 2) + '\n');
+  };
+  const diffs = bytes => liveContractDiffs({ baselineBytes: liveBaselineBytes,
+    currentBytes: bytes });
+  const amendment = APPROVED_LIVE_CHANGES['LIVE-02'];
+  const observed = {
+    original: diffs(liveCurrentBytes),
+    amended: diffs(withField('LIVE-02', amendment.path, amendment.amended)),
+    superseded_decision_21: diffs(withField('LIVE-02', amendment.path,
+      ['20 twice swap run'])),
+    other_case: diffs(withField('LIVE-03', ['expected', 'outcome'], 'other')),
+  };
+  regressions.live_contract_baseline = observed;
+  const expected = { original: [], amended: [], superseded_decision_21: ['LIVE-02'],
+    other_case: ['LIVE-03'] };
+  for (const [label, value] of Object.entries(observed)) {
+    if (JSON.stringify(value) !== JSON.stringify(expected[label])) {
+      issues.push(`regression: LIVE baseline ${label} changed=${JSON.stringify(value)}`
+        + ` expected=${JSON.stringify(expected[label])}`);
+    }
+  }
+}
 
 // Completeness: every canonical leaf and every variant has exactly one entry.
 const cases = [];
@@ -728,6 +808,7 @@ const acceptance = {
     { lane: 'live_slot_late_control.mjs', summary: control01Late },
     { lane: 'live_slot_selected_origin.mjs', summary: control01Origin },
   ],
+  regressions,
   cross_profile: lanes['LSLOT-02'].crossProfile,
   live_cases: lanes['LSLOT-09'].liveBaseline,
   commands,

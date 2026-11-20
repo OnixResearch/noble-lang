@@ -95,6 +95,72 @@ function splitTop(text, separator) {
   parts.push(current);
   return parts;
 }
+// `LiveRef<IN,OUT,EFF>` split into normalized parts, for the typed ordered
+// host-input comparison below.
+function refParts(type) {
+  const text = String(type).trim().replace(/^borrow /, '');
+  assert.ok(text.startsWith('LiveRef<') && text.endsWith('>'), `LiveRef type: ${type}`);
+  const parts = splitTop(text.slice('LiveRef<'.length, -1), ',');
+  assert.equal(parts.length, 3, `three LiveRef components: ${type}`);
+  const list = text_ => {
+    const trimmed = text_.trim();
+    const bracketed = trimmed.startsWith('[');
+    const inner = bracketed ? trimmed.slice(1, -1) : trimmed;
+    return splitTop(inner, bracketed ? ',' : '+').map(part => part.trim())
+      .filter(Boolean).map(normalizeType);
+  };
+  const effects = splitTop(parts[2].trim().replace(/^\{/, '').replace(/\}$/, ''), '+')
+    .map(part => part.trim()).filter(effect => effect && effect !== 'pure').sort();
+  return { input: list(parts[0]), output: list(parts[1]), effects };
+}
+// The canonical ordered host-input prose is re-rendered from the raw invoke
+// refs and the caller install request in the case's own convention, so a wrong
+// slot, a wrong type or a wrong order produces a different list.
+function orderedHostInputs(request, caller, canonical) {
+  const value = request.inputs?.[0]?.value;
+  const refs = request.refs ?? [];
+  const types = caller.inputs.slice(1);
+  const observed = [`I64:${value}`];
+  if (refs.length !== canonical.length - 1) observed.push(`refs:${refs.length}`);
+  const bySlot = new Map();
+  refs.forEach((ref, index) => { bySlot.set(ref.slot, types[index]); });
+  canonical.slice(1).forEach((claim, index) => {
+    const slot = refs[index]?.slot;
+    const type = types[index];
+    assert.ok(slot && type, `host-issued ref ${index + 1} of the canonical input list`);
+    const full = /^borrow (LiveRef<.*>) issued for (\w+)$/.exec(claim);
+    if (full) {
+      observed.push(`${normalizeType(type)} issued for ${slot}`);
+      return;
+    }
+    const typed = /^borrow (\w+) ref typed for (.+) to (.+)$/.exec(claim);
+    if (typed) {
+      const parts = refParts(type);
+      const dependencies = parts.input.map(part => {
+        if (part === 'I64') return 'I64';
+        const earlier = [...bySlot.entries()].find(([name, earlierType]) =>
+          name !== slot && normalizeType(earlierType) === part);
+        return earlier ? `${earlier[0]}-ref` : part;
+      });
+      observed.push(`borrow ${slot} ref typed for ${dependencies.join('+')}`
+        + ` to ${parts.output.join('+')}`);
+      return;
+    }
+    const plain = /^borrow (\w+) ref$/.exec(claim);
+    assert.ok(plain, `canonical ordered host input: ${claim}`);
+    observed.push(`borrow ${slot} ref`);
+  });
+  return observed;
+}
+// The full-type ordered entries compare under the same normalization as every
+// other interface entry; the prose shorthand entries compare verbatim.
+function canonicalOrdered(canonical) {
+  return canonical.map((claim, index) => {
+    if (index === 0) return claim;
+    const full = /^borrow (LiveRef<.*>) issued for (\w+)$/.exec(claim);
+    return full ? `${normalizeType(full[1])} issued for ${full[2]}` : claim;
+  });
+}
 const spellTypes = list => list.map(normalizeType);
 function interfaceEntries(prefix, canonical, observed, third = 'effects') {
   return [['input', spellTypes(canonical.input), observed.input],
@@ -272,17 +338,17 @@ export function project02({ fixture, lane }) {
     caller: item.install_requests.find(entry => entry.id === 'callerA'),
     site: item.reflected_sites.find(entry => entry.id === 'callerA').site,
   });
-  const orderedRefs = item => {
-    const request = refs(item);
-    const caller = callerOf(item).caller;
-    return [`I64:${request.inputs[0].value}`,
-      ...caller.inputs.slice(1).map((type, index) =>
-        `${normalizeType(type)} issued for ${request.refs[index].slot}`)];
-  };
-  const baseOrdered = orderedRefs(base), transitiveOrdered = orderedRefs(transitive);
   const baseCanonicalOrdered = fixture.input.base.root_A_entry.ordered_host_issued_inputs;
   const transitiveCanonicalOrdered =
     fixture.input.transitive_variant.root_A_entry.ordered_host_issued_inputs;
+  const orderedEntry = (item, canonical, scope) => {
+    const observed = orderedHostInputs(refs(item), callerOf(item).caller, canonical);
+    const expected = canonicalOrdered(canonical);
+    return measured(scope, 'ordered_host_issued_inputs', canonical,
+      same(observed, expected) ? canonical : { failed: observed, expected },
+      'typed, ordered host-issued inputs rendered from the invoke refs and the caller'
+      + ' install request in the case\'s own convention', { observed, expected });
+  };
   const state = item => ({
     configured_epoch: item.configured_epoch, bootstrap_epoch: item.bootstrap.epoch,
     session: item.session_log, request: refs(item), caller: callerOf(item).caller,
@@ -290,18 +356,6 @@ export function project02({ fixture, lane }) {
       entry.id === id)).map(id => installSource(item, id)),
   });
   const baseState = state(base), transitiveState = state(transitive);
-  const orderedMatch = (item, canonical, observed) => {
-    if (observed.length !== canonical.length || observed[0] !== 'I64:20') return false;
-    if (refs(item).refs.map(ref => ref.slot).join(',')
-      !== canonical.slice(1).map((_, index) => refs(item).refs[index].slot).join(',')) return false;
-    return observed.slice(1).every((text, index) => {
-      const slot = refs(item).refs[index].slot;
-      const canonicalText = canonical[index + 1];
-      if (canonicalText === `borrow ${slot} ref` || canonicalText.startsWith('borrow')
-        && canonicalText.endsWith(`ref issued for ${slot}`)) return text.includes(slot);
-      return text === canonicalText;
-    });
-  };
   const noSlotIdentity = item => {
     const bound = refs(item).refs.map(ref => ref.slot);
     const sources = [callerOf(item).caller.source, ...state(item).targets];
@@ -347,9 +401,7 @@ export function project02({ fixture, lane }) {
       version(base, 'B', 'B1', true)),
     ...interfaceEntries('input.base.registry_epoch_1.B.interface',
       fixture.input.base.registry_epoch_1.B.interface, contract(base, 'B')),
-    measured('input.base.root_A_entry', 'ordered_host_issued_inputs', baseCanonicalOrdered,
-      orderedMatch(base, baseCanonicalOrdered, baseOrdered) ? baseOrdered
-        : { failed: baseOrdered }),
+    orderedEntry(base, baseCanonicalOrdered, 'input.base.root_A_entry'),
     measured('input.base.root_A_entry', 'pin_epoch', 1, numberValue(base.old_root.epoch)),
     declared('input.base.root_A_entry', 'pin_operation',
       fixture.input.base.root_A_entry.pin_operation,
@@ -397,11 +449,8 @@ export function project02({ fixture, lane }) {
       version(transitive, 'C', 'C1', true)),
     ...interfaceEntries('input.transitive_variant.registry_epoch_1.C.interface',
       fixture.input.transitive_variant.registry_epoch_1.C.interface, contract(transitive, 'C')),
-    measured('input.transitive_variant.root_A_entry', 'ordered_host_issued_inputs',
-      transitiveCanonicalOrdered,
-      orderedMatch(transitive, transitiveCanonicalOrdered, transitiveOrdered)
-        ? transitiveCanonicalOrdered : { failed: transitiveOrdered },
-      null, { observed: transitiveOrdered }),
+    orderedEntry(transitive, transitiveCanonicalOrdered,
+      'input.transitive_variant.root_A_entry'),
     measured('input.transitive_variant.root_A_entry', 'pin_epoch', 1,
       numberValue(transitive.old_root.epoch)),
     declared('input.transitive_variant.root_A_entry', 'borrow_pass_through',
@@ -477,7 +526,11 @@ export function project03({ fixture, lane }) {
   const refused = fixture.input.variants.filter(variant =>
     variant.name !== 'same-exact-interface').map(variant => item(variant.name));
   const slot = lane.authority.slots.find(entry => entry.slotId === 'account');
-  const current = numberValue(accepted.install_epoch);
+  // The accepted install reply carries no epoch; the registry epoch the
+  // candidate ran at is the last seed publication reply, and every variant's
+  // own file records it.
+  const current = accepted.seed_epoch;
+  assert.ok(Number.isInteger(current), 'the accepted variant seed chain reports its epoch');
   return entries.concat([
     declared('input', 'harness', fixture.input.harness,
       'the gate runs the exact-admission lane against the selected CLI'),
@@ -488,7 +541,7 @@ export function project03({ fixture, lane }) {
       { input: slot.input, output: slot.output, effect_ceiling: slot.effectCeiling },
       'effect_ceiling'),
     measured('input', 'current_epoch', fixture.input.current_epoch, current,
-      'the epoch field of the accepted candidate install reply'),
+      'the epoch of the last seed publication reply the accepted candidate was admitted at'),
     declared('input', 'variant_protocol', fixture.input.variant_protocol,
       'each variant re-runs from an exact epoch-4 registry with only its named field changed'),
     measured('input', 'variants', fixture.input.variants.map(variant => variant.name),
@@ -503,10 +556,18 @@ export function project03({ fixture, lane }) {
     measured('expected', 'success_epoch', fixture.expected.success_epoch,
       numberValue(accepted.attempt_epoch)),
     measured('expected', 'rejected_variants_leave_epoch_and_map_unchanged', true,
-      refused.every(found => numberValue(found.attempt_epoch) === current
-        && numberValue(found.control_epoch) === current + 1),
-      'every refused candidate reply reported the unchanged epoch and the independent exact'
-      + ' control then published at the next epoch'),
+      refused.every(found => found.seed_epoch === current
+        && found.attempt_outcome !== 'published'
+        && (found.publish_expected_epoch == null
+          || numberValue(found.publish_expected_epoch) === current)
+        && found.control_outcome === 'published'
+        && numberValue(found.control_expected_epoch) === current
+        && numberValue(found.control_epoch) === current + 1
+        && found.traces.every(trace => Array.isArray(trace) && trace.length === 0))
+        && numberValue(accepted.attempt_epoch) === current + 1,
+      'every refused variant\'s seed chain ends at the unchanged epoch, its post-refusal trace'
+      + ' carries no entry, and the independent exact control then publishes at the next'
+      + ' epoch; only the accepted candidate advances the epoch'),
     measured('expected', 'candidate_body_executions_during_admission', 0,
       lane.variants.reduce((total, found) => total + (found.guest_requests ?? 0), 0)),
     measured('expected', 'candidate_host_requests_during_admission', 0,
@@ -610,16 +671,18 @@ export function project06({ fixture, lane }) {
     return found;
   };
   const entries = [];
-  const refusedSomehow = found => found.install_outcome === 'refused'
-    || ['refused', 'install-refused'].includes(found.attempt_outcome)
-    || found.invoke_outcome === 'refused';
+  // The negative attempt is either the refused `attempt` install or, where the
+  // case has no installable negative source (retain), the refused re-invoke.
+  const refusedSomehow = found => ['refused', 'install-refused']
+    .includes(found.negative?.outcome);
   for (const variant of fixture.input.variants) {
     const found = item(variant.name);
     const accepted = variant.result === 'accept';
     const observed = accepted ? 'accept' : 'reject';
     entries.push(measured('variant', variant.name, variant.result,
       accepted ? (found.guest_requests === 1 ? observed : { failed: found.guest_requests })
-        : (refusedSomehow(found) ? observed : { failed: found.install_outcome })));
+        : (refusedSomehow(found) ? observed
+          : { failed: found.negative ?? { attempt: 'not-refused' } })));
   }
   const valid = item('valid-borrow');
   const negatives = lane.variants.filter(found => found.name !== 'valid-borrow');
@@ -648,7 +711,9 @@ export function project06({ fixture, lane }) {
     measured('expected', 'ref_capture', false,
       !refusedSomehow(item('direct-quotation-capture'))),
     measured('expected', 'ref_authority', false, lane.authorityRefused !== true,
-      'a host-issued ref with no dispatch grant is refused by current host policy'),
+      'a host-issued ref with no dispatch grant is refused by current host policy, observed'
+      + ' from the raw policy-denied dispatch reply',
+      { refusal: lane.authorityRefusal }),
     measured('expected', 'generic_recipe_contains_slot_or_credential', false,
       JSON.stringify(valid.site ?? {}).includes('increment')),
     measured('expected', 'invalid_variants_guest_requests', 0, sum('guest_requests')),

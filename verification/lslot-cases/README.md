@@ -41,14 +41,28 @@ executes behavior, it does not prove it.
 |---|---|---|
 | LSLOT-01 | `live_slot_capture_legacy.mjs`, plus `live_slot_late_control.mjs` and `live_slot_selected_origin.mjs` as controls | yes |
 | LSLOT-02 | `live_slot_nested_roots.mjs` | yes |
-| LSLOT-03 | `live_slot_resource_ref_admission.mjs` | no: four variants did not reach their canonical attempt |
+| LSLOT-03 | `live_slot_resource_ref_admission.mjs` | yes, under the owner decision 19 amendment: the unselectable `fs.write` variant is the only drop, the input-only variant is replaced by the both-sides `Account@2` candidate, the under-declare variant stays and is refused, and `generic_dispatch_effect` is observed from the reflected site |
 | LSLOT-04 | `live_slot_cas_policy.mjs` | no: the rollback `evidence` conjunct has no runtime representation |
 | LSLOT-05 | not run | no: waits on runtime template identity |
-| LSLOT-06 | `live_slot_resource_ref_static.mjs` | no: `serialize`/`forge` have no selected source word, and three more variants are partial |
+| LSLOT-06 | `live_slot_resource_ref_static.mjs` | yes, under the owner decision 19 amendment: `serialize`/`forge` are dropped by design, `guest_requests` counts the rejected attempts only, and `aggregate-capture`, `export-or-return` and `retain` accept their earliest refusal |
 | LSLOT-07 | `live_slot_cas_policy.mjs` | no: `publication-without-grant` needs an admitted proof to be present |
 | LSLOT-08 | not run | no: waits on runtime template identity |
 | LSLOT-09 | `live_slot_legacy_refusal.mjs`, `live_repl_slot_exclusion.mjs` | yes |
 
+## Regressions the gate runs before projecting
+
+Every run re-checks that the checks can fail, and a failed expectation sets the receipt result to
+`failed`:
+
+- **In-root publication.** A copy of this run's LSLOT-02 evidence with the old root's publication
+  event removed must project `input.base.interleaving` as `mismatch`; the unmodified evidence must
+  project it as `observed`.
+- **LIVE contract baseline.** The LIVE-01..10 contract fields are compared with the full baseline
+  commit `8075d3c083474884f9a7c72b5b1a483f73eec314`. The comparison must accept the original
+  LIVE-02 `input.after_reload_ack`, accept exactly the owner-approved decision-21a value
+  (`["20 swap run 20 twice swap"]`), reject decision 21's superseded script, and reject any change
+  to another LIVE case.
+
 `verification/live-slot-current-source/gate.mjs` and `verification/live-update-corpus` assert the
-pre-promotion states. They are historical receipts for the source they ran on; this gate does not
-edit or regenerate them.
+earlier case states. They are historical receipts for the source they ran on (owner decisions 4 and
+20); this gate does not edit or regenerate them.
