@@ -15836,6 +15836,90 @@
       "phase": 1,
       "role": "intrinsic-calculus",
       "claim": "typing soundness: every proposition the checker establishes is true at every interpretation of its context"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.definitions_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the definition list a module projects is the same before and after erasure"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.exportedNames_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the exported names are the same before and after erasure"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.erase_idempotent",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "erasing twice changes nothing more than erasing once"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.erase_name",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "erasure keeps the module name"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.erase_version",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "erasure keeps the module version"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.definitionIds_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the DefinitionIds a module binds are unchanged by erasure"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.recipeInputs_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the body recipe inputs (node arena and entry references) are unchanged by erasure"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.dependencies_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the dependency references are unchanged by erasure"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.expandedNodes_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the expanded node counts are unchanged by erasure, so erasure adds no emitted node"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.specializations_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the specialization identities of the definitions are unchanged by erasure"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.observed_erase",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "the ordinary runtime observations are unchanged by erasure"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.erase_cons_contract",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "dropping one contract member matches erasing the whole module"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.erase_cons_proof",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "dropping one proof member matches erasing the whole module"
+    },
+    {
+      "name": "NobleFoundation.IntrinsicErasure.Module.erase_cons_definition",
+      "phase": 1,
+      "role": "intrinsic-erasure",
+      "claim": "a definition member is kept by erasure"
     }
   ],
   "private_theorems": [
