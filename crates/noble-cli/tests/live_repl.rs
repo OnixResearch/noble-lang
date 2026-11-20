@@ -167,6 +167,14 @@ impl LiveChild {
         source: &Path,
         grant: Option<(&str, u64)>,
     ) -> Result<Self, Box<dyn std::error::Error>> {
+        Self::start_with_environment(source, grant, &[])
+    }
+
+    fn start_with_environment(
+        source: &Path,
+        grant: Option<(&str, u64)>,
+        environment: &[(&str, &str)],
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
         command
             .args(["live", "repl", "--source"])
@@ -179,6 +187,9 @@ impl LiveChild {
                 "--expect-generation",
                 &generation.to_string(),
             ]);
+        }
+        for (key, value) in environment {
+            command.env(key, value);
         }
         Self::spawn(command)
     }
@@ -3650,6 +3661,275 @@ fn interpreter_choice_refuses_at_startup_without_v8_fallback(
         }
         std::thread::sleep(Duration::from_millis(20));
     }
+}
+
+#[cfg(not(feature = "live-test-barrier"))]
+#[test]
+fn default_binary_ignores_private_live_binary_seam_names() -> Result<(), Box<dyn std::error::Error>>
+{
+    let fixture = Fixture::new("def base [ 7 ]")?;
+    let absent = fixture.directory.join("absent").join("bytes.wasm");
+    let absent = absent.to_str().ok_or("non-UTF-8 seam path")?;
+    let mut live = LiveChild::start_with_environment(
+        &fixture.source,
+        None,
+        &[
+            ("NOBLE_LIVE_TEST_BINARY_CAPTURE", absent),
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE", absent),
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE", "1 2 +"),
+        ],
+    )?;
+    live_ack(&live.report()?, &[]);
+    normal(&live.submit("1 2 +")?, &["3"]);
+    assert!(
+        !Path::new(absent).exists(),
+        "default binary wrote a seam capture"
+    );
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+fn write_private_test_bytes(path: &Path, bytes: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
+    use std::os::unix::fs::OpenOptionsExt;
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(path)?;
+    file.write_all(bytes)?;
+    file.sync_all()?;
+    Ok(())
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+fn capture_submission_bytes(
+    fixture: &Fixture,
+    submission: &str,
+    stack: &[&str],
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let capture = fixture.directory.join("capture.wasm");
+    let capture = capture.to_str().ok_or("non-UTF-8 capture path")?;
+    let mut live = LiveChild::start_with_environment(
+        &fixture.source,
+        None,
+        &[
+            ("NOBLE_LIVE_TEST_BINARY_CAPTURE", capture),
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE", submission),
+        ],
+    )?;
+    live_ack(&live.report()?, &[]);
+    normal(&live.submit(submission)?, stack);
+    live.finish()?;
+    Ok(fs::read(capture)?)
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+fn capture_definition_bytes(
+    fixture: &Fixture,
+    source: &str,
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let capture = fixture.directory.join("capture.wasm");
+    let capture = capture.to_str().ok_or("non-UTF-8 capture path")?;
+    let live = LiveChild::start_with_environment(
+        &fixture.source,
+        None,
+        &[
+            ("NOBLE_LIVE_TEST_BINARY_CAPTURE", capture),
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE", source),
+        ],
+    )?;
+    live_ack(&live.report()?, &[]);
+    live.finish()?;
+    Ok(fs::read(capture)?)
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn live_test_binary_seam_captures_exact_bytes_and_refuses_substitution(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def base [ 7 ]")?;
+    let baseline = capture_submission_bytes(&fixture, "1 2 +", &["3"])?;
+    assert_eq!(&baseline[..8], b"\0asm\x01\0\0\0");
+    let other_fixture = Fixture::new("def base [ 7 ]")?;
+    let different = capture_submission_bytes(&other_fixture, "2 2 +", &["4"])?;
+    assert_ne!(
+        baseline, different,
+        "sources must emit distinct checked bytes"
+    );
+
+    // Serving the captured bytes back is byte-identical emission: the worker
+    // binds them and the submission executes.
+    let identity = fixture.directory.join("identity.wasm");
+    write_private_test_bytes(&identity, &baseline)?;
+    let identity = identity.to_str().ok_or("non-UTF-8 replacement path")?;
+    let mut live = LiveChild::start_with_environment(
+        &fixture.source,
+        None,
+        &[
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE", identity),
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE", "1 2 +"),
+        ],
+    )?;
+    live_ack(&live.report()?, &[]);
+    normal(&live.submit("1 2 +")?, &["3"]);
+    live.finish()?;
+
+    // Valid bytes from another source reach the worker's real verifier, pass
+    // standard and Noble ABI validation, and are still refused because they
+    // disagree with the checked source binding.
+    let other = fixture.directory.join("different.wasm");
+    write_private_test_bytes(&other, &different)?;
+    let other = other.to_str().ok_or("non-UTF-8 replacement path")?;
+    let mut live = LiveChild::start_with_environment(
+        &fixture.source,
+        None,
+        &[
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE", other),
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE", "1 2 +"),
+        ],
+    )?;
+    let initial = live.report()?;
+    live_ack(&initial, &[]);
+    let refusal = live.submit("1 2 +")?;
+    assert_eq!(
+        text_field(&refusal, "stage"),
+        "bytecode-admission",
+        "{refusal}"
+    );
+    assert_eq!(
+        text_field(&refusal, "outcome"),
+        "reload-refused",
+        "{refusal}"
+    );
+    assert_eq!(number_field(&refusal, "generation"), 1);
+    assert_eq!(number_field(&refusal, "guest_requests"), 0);
+    assert_eq!(number_field(&refusal, "protected_operations"), 0);
+    assert_eq!(text_field(&refusal, "session_state"), "retained");
+    assert_stack(&refusal, &[]);
+    normal(&live.submit("base")?, &["7"]);
+    live.finish()?;
+
+    // A module over the byte-admission bound is refused and the session
+    // survives; it is never framed to the worker.
+    let oversize = fixture.directory.join("oversize.wasm");
+    let mut bytes = std::vec![0u8; 4_194_305];
+    bytes[..8].copy_from_slice(b"\0asm\x01\0\0\0");
+    write_private_test_bytes(&oversize, &bytes)?;
+    drop(bytes);
+    let oversize = oversize.to_str().ok_or("non-UTF-8 replacement path")?;
+    let mut live = LiveChild::start_with_environment(
+        &fixture.source,
+        None,
+        &[
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE", oversize),
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE", "1 2 +"),
+        ],
+    )?;
+    live_ack(&live.report()?, &[]);
+    let refusal = live.submit("1 2 +")?;
+    assert_eq!(
+        text_field(&refusal, "stage"),
+        "bytecode-admission",
+        "{refusal}"
+    );
+    assert_eq!(
+        text_field(&refusal, "outcome"),
+        "reload-refused",
+        "{refusal}"
+    );
+    assert_eq!(number_field(&refusal, "generation"), 1);
+    assert_eq!(text_field(&refusal, "session_state"), "retained");
+    assert!(
+        text_field(&refusal, "diagnostic").contains("4194304"),
+        "{refusal}"
+    );
+    normal(&live.submit("base")?, &["7"]);
+    live.finish()
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn proposal_snapshot_tamper_is_terminal_before_publication(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(EVOLVE)?;
+    let mut live = LiveChild::start_with_environment(
+        &fixture.source,
+        Some(("evolve", 1)),
+        &[("NOBLE_LIVE_TEST_PROPOSAL_TAMPER", "snapshot-cell")],
+    )?;
+    live_ack(&live.report()?, &[]);
+    assert_grant(&live, 1)?;
+    let executed = live.submit("20 evolve")?;
+    normal(&executed, &["21"]);
+    assert_eq!(executed["proposal_queued"], true, "{executed}");
+    let terminal = live.report()?;
+    assert_eq!(
+        text_field(&terminal, "outcome"),
+        "internal-failure",
+        "{terminal}"
+    );
+    assert!(
+        text_field(&terminal, "session_state").starts_with("terminated"),
+        "{terminal}"
+    );
+    assert!(
+        text_field(&terminal, "diagnostic").contains("proposal changed after callback"),
+        "{terminal}"
+    );
+    assert_eq!(terminal["completed_invocation_stack"][0]["value"], "21");
+    assert_eq!(number_field(&terminal, "source_generation"), 1);
+    assert_eq!(live.child.wait()?.code(), Some(2));
+    assert_eq!(fs::read_to_string(&fixture.source)?, EVOLVE);
+    Ok(())
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn tampered_candidate_bytes_refuse_after_completed_invocation(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let different = "def evolve [ 3 + ]";
+    let different_fixture = Fixture::new(different)?;
+    let replacement = capture_definition_bytes(&different_fixture, different)?;
+    let fixture = Fixture::new(EVOLVE)?;
+    let replacement_path = fixture.directory.join("candidate.wasm");
+    write_private_test_bytes(&replacement_path, &replacement)?;
+    drop(replacement);
+    let replacement_path = replacement_path
+        .to_str()
+        .ok_or("non-UTF-8 replacement path")?;
+    let mut live = LiveChild::start_with_environment(
+        &fixture.source,
+        Some(("evolve", 1)),
+        &[
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE", replacement_path),
+            (
+                "NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE",
+                "def evolve [ 2 + ]",
+            ),
+        ],
+    )?;
+    live_ack(&live.report()?, &[]);
+    assert_grant(&live, 1)?;
+    for (stack, submission) in [(vec!["21"], 20u64), (vec!["21", "21"], 20u64)] {
+        normal(&live.submit(&format!("{submission} evolve"))?, &stack);
+        assert_eq!(text_field(&live.report()?, "outcome"), "proposal-pending");
+        let refused = live.report()?;
+        assert_eq!(
+            text_field(&refused, "outcome"),
+            "proposal-refused",
+            "{refused}"
+        );
+        assert!(
+            text_field(&refused, "diagnostic").contains("checked source binding"),
+            "{refused}"
+        );
+        assert_eq!(number_field(&refused, "generation"), 1);
+        assert_stack(&refused, &stack);
+        assert!(number_field(&refused, "guest_requests") >= 2);
+        assert_eq!(number_field(&refused, "candidate_prepare_requests"), 0);
+    }
+    assert_eq!(fs::read_to_string(&fixture.source)?, EVOLVE);
+    live.finish()
 }
 
 #[cfg(all(target_os = "linux", feature = "live-test-barrier"))]

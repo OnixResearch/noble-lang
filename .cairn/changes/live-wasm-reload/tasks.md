@@ -307,6 +307,22 @@ case's purpose (a new dependent's result beside the old Program's captured
 result) and its in-flight condition unchanged. The case text is not edited
 here; the amendment is for the owner.
 
+Case-design defect, LIVE-03 `host-binding-mismatch` (recorded 2026-11-20 by
+the live-seams slice; the case text is not edited and this is not an observed
+implementation refusal): `noble live repl` reads `--bindings` once into its
+declared `Manifest` at startup, and the reload entrypoint is the explicit
+`:reload PATH` command over a selected file snapshot. H-LIVE-01 defines that
+entrypoint as accepting "complete bounded source submissions and explicit
+`:reload PATH` commands"; H-LIVE-02 requires a reload to perform
+"interface/effect/host-contract checks" and to publish "an exact immutable
+source/import snapshot and checked stack/interface/effect signature", not to
+deliver a new host binding. The variant's `binding` field therefore has no
+reload delivery mechanism: the mismatched `bind` line is refused at startup
+before any session exists (pinned by
+`mismatched_declared_binding_refuses_at_startup_with_one_report`), and no
+session-preserving reload can carry it. Removing or replacing this variant is
+a case amendment and requires separate owner approval.
+
 - [ ] [serial] Implement and test in-process Wasm encoder/verifier with independently accepted source, exact selected ABI and isolated staging. r[BE-LIVE-01] r[S-LIVE-01]
 - [ ] [serial] Implement resident live CLI/reload/watch, complete dependent rebuild, atomic safepoint publication, stable typed stack and bounded code retirement. r[K-LIVE-01] r[H-LIVE-01] r[H-LIVE-02] r[H-LIVE-03] r[DX-LIVE-01]
 - [ ] [serial] Exercise every LIVE case against actual source, selected VM and hostile controls with source-bound receipts and separately classify proof/assumptions before acceptance. r[V-LIVE-01] r[EV-LIVE-01]

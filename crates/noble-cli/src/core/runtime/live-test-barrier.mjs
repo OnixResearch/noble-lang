@@ -5,8 +5,28 @@
   const directory = process.env.NOBLE_LIVE_TEST_BARRIER_DIR;
   const point = process.env.NOBLE_LIVE_TEST_BARRIER_POINT;
   const expected = process.env.NOBLE_LIVE_TEST_BARRIER_EXPECTED;
+  const tamper = process.env.NOBLE_LIVE_TEST_PROPOSAL_TAMPER;
   for (const key of ['NOBLE_LIVE_TEST_BARRIER_DIR', 'NOBLE_LIVE_TEST_BARRIER_POINT',
-    'NOBLE_LIVE_TEST_BARRIER_EXPECTED']) delete process.env[key];
+    'NOBLE_LIVE_TEST_BARRIER_EXPECTED', 'NOBLE_LIVE_TEST_PROPOSAL_TAMPER']) delete process.env[key];
+  if (tamper !== undefined) {
+    if (tamper !== 'snapshot-cell') fail('invalid private live proposal tamper selection');
+    // Hostile-harness control: change one byte of a reachable capture cell
+    // after the guest callback accepted its snapshot and before the host
+    // rechecks those exact callback-time bytes. It is not a guest write and
+    // grants no source-level mutation route.
+    const original = CoreEngine.prototype.takeLiveProposal;
+    CoreEngine.prototype.takeLiveProposal = function (...args) {
+      const queued = this.liveProposal;
+      const entry = queued?.snapshot?.cells?.[0];
+      if (entry !== undefined) {
+        const memory = new Uint8Array(this.memory.buffer);
+        if (!Number.isInteger(entry.address) || entry.address < 0
+          || entry.address >= memory.length) fail('invalid private proposal tamper address');
+        memory[entry.address] ^= 0x01;
+      }
+      return original.apply(this, args);
+    };
+  }
   if (directory || point || expected) {
     if (typeof directory !== 'string' || !path.isAbsolute(directory)
       || !['in-flight-generation', 'candidate-compiled', 'in-flight-declared-emit'].includes(point)

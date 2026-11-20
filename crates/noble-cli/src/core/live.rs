@@ -1449,6 +1449,29 @@ impl Live {
         }
     }
 
+    // Feature-only lane: the substituted bytes reached no guest, but the
+    // worker's own byte admission refused them (or compiled bytes disagreed
+    // with the checked source binding). The session survives with its prior
+    // generation, typed stack and authorizations unchanged.
+    #[cfg(feature = "live-test-barrier")]
+    fn bytecode_admission_refusal(&self, diagnostic: &str) -> super::output::Report {
+        super::output::Report {
+            outcome: "reload-refused".into(),
+            json: serde_json::json!({
+                "schema": "noble-live-report/v1",
+                "stage": "bytecode-admission",
+                "outcome": "reload-refused",
+                "diagnostic": diagnostic,
+                "generation": self.generation,
+                "stack": self.last_stack,
+                "guest_requests": 0,
+                "protected_operations": 0,
+                "session_state": "retained",
+            })
+            .to_string(),
+        }
+    }
+
     fn worker(&mut self) -> Result<&mut super::worker::Engine, super::output::Failure> {
         if self.session.worker.is_none() {
             self.session.worker = Some(match &self.declared {
@@ -1587,8 +1610,22 @@ impl Live {
             &signatures,
             source,
         );
+        // Feature-only failure injection at the exact boundary between checked
+        // emission and the worker's own byte verifier. The binding above still
+        // names the host-checked bytes, so bytes served in their place are
+        // detected as source/binding disagreement, never trusted as current.
+        #[cfg(feature = "live-test-barrier")]
+        let served = match live_test_binary(&binary, source)? {
+            LiveTestBinary::Unchanged => std::borrow::Cow::Borrowed(binary.as_slice()),
+            LiveTestBinary::Replaced(bytes) => std::borrow::Cow::Owned(bytes),
+            LiveTestBinary::Refused(problem) => {
+                return Ok(self.bytecode_admission_refusal(&problem));
+            }
+        };
+        #[cfg(not(feature = "live-test-barrier"))]
+        let served = std::borrow::Cow::Borrowed(binary.as_slice());
         let ready = self.worker()?.prepare_binary(
-            &binary,
+            served.as_ref(),
             &bridge,
             &signatures,
             &binding.wat_sha256,
@@ -1599,6 +1636,20 @@ impl Live {
         )?;
         if ready.outcome != "ready" {
             return Ok(ready);
+        }
+        #[cfg(feature = "live-test-barrier")]
+        if matches!(&served, std::borrow::Cow::Owned(_))
+            && Self::check_live_binary_binding(&ready, &binding).is_err()
+        {
+            let discarded = self.worker()?.discard_prepared_live()?;
+            if discarded.outcome != "discarded" {
+                return Err(fatal_failure(
+                    "live worker failed to discard a substituted prepared submission",
+                ));
+            }
+            return Ok(self.bytecode_admission_refusal(
+                "served Wasm bytes differ from the checked source binding",
+            ));
         }
         Self::check_live_binary_binding(&ready, &binding)?;
         if self.verify_source_before_execute {
@@ -2422,8 +2473,18 @@ impl Live {
             &signatures,
             source,
         );
+        #[cfg(feature = "live-test-barrier")]
+        let served = match live_test_binary(&binary, source)? {
+            LiveTestBinary::Unchanged => std::borrow::Cow::Borrowed(binary.as_slice()),
+            LiveTestBinary::Replaced(bytes) => std::borrow::Cow::Owned(bytes),
+            LiveTestBinary::Refused(problem) => {
+                return Ok(ReloadDecision::Refused(problem));
+            }
+        };
+        #[cfg(not(feature = "live-test-barrier"))]
+        let served = std::borrow::Cow::Borrowed(binary.as_slice());
         let staged = self.worker()?.stage_binary(
-            &binary,
+            served.as_ref(),
             &bridge,
             &signatures,
             &binding.wat_sha256,
@@ -2440,6 +2501,20 @@ impl Live {
                 "live binary staging failed: {}",
                 staged.json
             )));
+        }
+        #[cfg(feature = "live-test-barrier")]
+        if matches!(&served, std::borrow::Cow::Owned(_))
+            && Self::check_live_binary_binding(&staged, &binding).is_err()
+        {
+            let discarded = self.worker()?.discard_binary()?;
+            if discarded.outcome != "discarded" {
+                return Err(fatal_failure(
+                    "live worker did not discard a substituted staged binary",
+                ));
+            }
+            return Ok(ReloadDecision::Refused(
+                "served Wasm bytes differ from the checked source binding".into(),
+            ));
         }
         Self::check_live_binary_binding(&staged, &binding)?;
         if let Some((selected, candidate)) = file {
@@ -2857,6 +2932,155 @@ fn emit(value: &serde_json::Value) {
     if let Err(error) = super::output::print(&report) {
         eprintln!("noble: live reply transport failed: {}", error.message);
     }
+}
+
+// The two names below exist only in a deliberately feature-built test binary.
+// The default binary compiles every reader out: the env names do not exist
+// there, so no source, byte, digest or authority can be substituted by them.
+#[cfg(feature = "live-test-barrier")]
+enum LiveTestBinary {
+    Unchanged,
+    Replaced(std::vec::Vec<u8>),
+    Refused(std::string::String),
+}
+
+// One-shot failure injection at the checked-emission/worker boundary. The
+// capture writes the exact bytes an ordinary build would serve; the replace
+// file is served in their place to the worker's real byte verifier. The
+// optional source digest scopes both to one checked source so a gate can
+// observe an old, already installed session before injecting a candidate.
+#[cfg(feature = "live-test-barrier")]
+fn live_test_binary(
+    encoded: &[u8],
+    source: &[u8],
+) -> Result<LiveTestBinary, super::output::Failure> {
+    const REPLACE: &str = "NOBLE_LIVE_TEST_BINARY_REPLACE";
+    const CAPTURE: &str = "NOBLE_LIVE_TEST_BINARY_CAPTURE";
+    const SCOPE_SHA256: &str = "NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE_SHA256";
+    const SCOPE_SOURCE: &str = "NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE";
+    let replace = std::env::var_os(REPLACE);
+    let capture = std::env::var_os(CAPTURE);
+    if replace.is_none() && capture.is_none() {
+        return Ok(LiveTestBinary::Unchanged);
+    }
+    let digest = std::env::var_os(SCOPE_SHA256);
+    let literal = std::env::var_os(SCOPE_SOURCE);
+    let scoped = match (digest, literal) {
+        (Some(_), Some(_)) => {
+            return Err(fatal_failure(
+                "private live binary seam names two checked source scopes",
+            ));
+        }
+        (Some(expected), None) => {
+            expected.to_str() == Some(crate::workflow::intrinsic::sha256(source).as_str())
+        }
+        (None, Some(expected)) => {
+            use std::os::unix::ffi::OsStrExt as _;
+            expected.as_bytes() == source
+        }
+        (None, None) => {
+            return Err(fatal_failure(
+                "private live binary seam lacks its checked source scope",
+            ));
+        }
+    };
+    if !scoped {
+        return Ok(LiveTestBinary::Unchanged);
+    }
+    if let Some(path) = capture {
+        capture_live_test_binary(&path, encoded)?;
+    }
+    let Some(path) = replace else {
+        return Ok(LiveTestBinary::Unchanged);
+    };
+    let bytes = replace_live_test_binary(&path)?;
+    // The frame bound is a Noble byte-admission limit. An oversized
+    // replacement is therefore a refusal the live session reports and
+    // survives, not an internal failure.
+    if bytes.len() > 4_194_304 {
+        return Ok(LiveTestBinary::Refused(std::format!(
+            "served live binary is {} bytes, over the 4194304-byte byte-admission bound",
+            bytes.len()
+        )));
+    }
+    Ok(LiveTestBinary::Replaced(bytes))
+}
+
+#[cfg(feature = "live-test-barrier")]
+fn private_live_test_path(
+    value: &std::ffi::OsStr,
+    role: &str,
+) -> Result<std::path::PathBuf, super::output::Failure> {
+    let path = std::path::PathBuf::from(value);
+    if !path.is_absolute() {
+        return Err(fatal_failure(std::format!(
+            "private live binary {role} path is not absolute"
+        )));
+    }
+    let parent = path.parent().ok_or_else(|| {
+        fatal_failure(std::format!(
+            "private live binary {role} path has no parent"
+        ))
+    })?;
+    let directory = std::fs::symlink_metadata(parent).map_err(|error| {
+        fatal_failure(std::format!(
+            "private live binary {role} directory cannot be inspected: {error}"
+        ))
+    })?;
+    if !directory.file_type().is_dir() || directory.mode() & 0o077 != 0 {
+        return Err(fatal_failure(std::format!(
+            "private live binary {role} directory is not a private directory"
+        )));
+    }
+    Ok(path)
+}
+
+#[cfg(feature = "live-test-barrier")]
+fn capture_live_test_binary(
+    value: &std::ffi::OsStr,
+    encoded: &[u8],
+) -> Result<(), super::output::Failure> {
+    use std::io::Write as _;
+    use std::os::unix::fs::OpenOptionsExt as _;
+    let path = private_live_test_path(value, "capture")?;
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(&path)
+        .map_err(|error| {
+            fatal_failure(std::format!(
+                "private live binary capture cannot be created: {error}"
+            ))
+        })?;
+    file.write_all(encoded).map_err(|error| {
+        fatal_failure(std::format!(
+            "private live binary capture cannot be written: {error}"
+        ))
+    })
+}
+
+#[cfg(feature = "live-test-barrier")]
+fn replace_live_test_binary(
+    value: &std::ffi::OsStr,
+) -> Result<std::vec::Vec<u8>, super::output::Failure> {
+    let path = private_live_test_path(value, "replacement")?;
+    let metadata = std::fs::symlink_metadata(&path).map_err(|error| {
+        fatal_failure(std::format!(
+            "private live binary replacement cannot be inspected: {error}"
+        ))
+    })?;
+    if !metadata.file_type().is_file() || metadata.mode() & 0o077 != 0 || metadata.len() > 8_388_608
+    {
+        return Err(fatal_failure(
+            "private live binary replacement is not a bounded private regular file",
+        ));
+    }
+    std::fs::read(&path).map_err(|error| {
+        fatal_failure(std::format!(
+            "private live binary replacement cannot be read: {error}"
+        ))
+    })
 }
 
 #[cfg(test)]

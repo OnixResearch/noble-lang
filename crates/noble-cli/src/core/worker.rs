@@ -1116,6 +1116,7 @@ await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString
             "NOBLE_LIVE_TEST_BARRIER_DIR",
             "NOBLE_LIVE_TEST_BARRIER_POINT",
             "NOBLE_LIVE_TEST_BARRIER_EXPECTED",
+            "NOBLE_LIVE_TEST_PROPOSAL_TAMPER",
         ] {
             if let Some(value) = std::env::var_os(key) {
                 command.env(key, value);
