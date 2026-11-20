@@ -912,7 +912,10 @@ fn accepted_report(
             ),
         ),
     ]);
-    super::diagnostics::classification_fields(&mut fields, schema, super::diagnostics::CHECKED);
+    fields.extend(super::diagnostics::classification_fields(
+        schema,
+        super::diagnostics::CHECKED,
+    ));
     encoding::Json::Object(fields)
 }
 

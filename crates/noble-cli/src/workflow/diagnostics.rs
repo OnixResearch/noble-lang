@@ -164,17 +164,19 @@ pub(crate) fn classify(outcome: output::Outcome, code: &str) -> Category {
     }
 }
 
-/// Append `category` and `remediation` for the current revision. Revision `v1`
-/// reports keep their exact field set, so nothing is appended there.
+/// The `category` and `remediation` fields of the current revision. Revision
+/// `v1` reports keep their exact field set, so it contributes none.
 pub(crate) fn classification_fields(
-    fields: &mut std::vec::Vec<(&'static str, encoding::Json)>,
     schema: Schema,
     classified: Category,
-) {
-    if schema == Schema::V2 {
-        fields.push(("category", encoding::string(classified.category)));
-        fields.push(("remediation", encoding::string(classified.remediation)));
+) -> std::vec::Vec<(&'static str, encoding::Json)> {
+    if schema != Schema::V2 {
+        return std::vec::Vec::new();
     }
+    std::vec::Vec::from([
+        ("category", encoding::string(classified.category)),
+        ("remediation", encoding::string(classified.remediation)),
+    ])
 }
 
 /// The leading fields `verify-module` reports have always published.
@@ -232,7 +234,7 @@ pub(crate) fn no_evidence_report(
     fields.extend(source_fields(source_path, submitted));
     fields.extend(counters());
     fields.push(("independent_recheck", encoding::Json::Bool(false)));
-    classification_fields(&mut fields, schema, NO_EVIDENCE);
+    fields.extend(classification_fields(schema, NO_EVIDENCE));
     encoding::Json::Object(fields)
 }
 
@@ -266,7 +268,10 @@ pub(crate) fn failure_report(
     fields.extend(counters());
     fields.push(("independent_recheck", encoding::Json::Bool(false)));
     fields.push(("diagnostic", error.json()));
-    classification_fields(&mut fields, schema, classify(error.outcome, error.code));
+    fields.extend(classification_fields(
+        schema,
+        classify(error.outcome, error.code),
+    ));
     encoding::Json::Object(fields)
 }
 

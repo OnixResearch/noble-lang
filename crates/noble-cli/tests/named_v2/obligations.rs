@@ -6,6 +6,17 @@
 //! read-only projections only. The commands are run with the consumer
 //! environment removed to prove that property.
 
+// Justification: this harness reads JSON reports with panic-on-shape
+// assertions, so unwraps, long setup legs and the repeated fixture path
+// segment are the readable form, exactly as the enclosing target states.
+#![allow(
+    tigerstyle::no_unwrap,
+    tigerstyle::function_length,
+    tigerstyle::path_segment_repetition,
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so unwraps and long setup legs are the readable form."
+)]
+
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
