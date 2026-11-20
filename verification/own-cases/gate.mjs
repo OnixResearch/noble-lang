@@ -246,7 +246,8 @@ observe('OWN-CASE-03', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', e
   const treeOf = (name, row) => {
     const registered = expected.variants[name];
     if (!row || row.refused === true) {
-      return { name, executed: false, refusal: row ?? null };
+      // The design's tree did not execute; record the refusal rather than narrowing the variant.
+      throw new Mismatch(`OWN-CASE-03 ${name} did not execute: ${JSON.stringify(row ?? null)}`);
     }
     expectValue(`OWN-CASE-03 ${name} released`, row.released_before_root,
       registered.released_before_root);
@@ -269,11 +270,6 @@ observe('OWN-CASE-03', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', e
   expectValue('OWN-CASE-03 control session', control?.session_state,
     expected.bounded_control.session_state);
   expectValue('OWN-CASE-03 control exit', control?.exit, 2);
-  // Every variant must have executed with the registered values; any refusal is the case's
-  // recorded failure, never a narrowed variant.
-  for (const row of [balanced, left, right]) {
-    assert.ok(row.executed, `OWN-CASE-03 ${row.name} did not execute: ${JSON.stringify(row.refusal)}`);
-  }
   return {
     case: 'passed',
     balanced, left_deep: left, right_deep: right, bounded_control: control,
