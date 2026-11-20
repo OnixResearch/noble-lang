@@ -480,6 +480,44 @@ A bundle never grants `Data` or `Capture`: a fanout-law instance at a resource i
 - an ownership-model theorem (PO-05);
 - resource-admitting execution evidence.
 
+## Implementation gates (W1, executed 2026-11-20)
+
+### Library home
+
+**Choice:** the library is a pinned fixture with an exact-bytes check, the `result@1` precedent. r[WIRE-API-01]
+
+OWNER DECISION 2026-11-20: "wire@1 library home: a pinned fixture with an exact-bytes check (result@1 precedent)."
+
+`crates/noble-contracts/src/fixtures/wire.noble` is byte-for-byte the O11-4 sketch above (2,933 bytes, SHA-256 `96a5a269a5d227ac16f2e71b0d2aa7846576c4a11b2ff1bb2eefb49ceed9db28`). `WIRE_LIBRARY_SOURCE` publishes it in `source.rs`, and registration refuses any other bytes at link with `wire@1 requires the exact checked library source`, exactly as `result@1` does. A published-library table now holds both entries so a third library adds a row, not a branch.
+
+### Effect-union signatures
+
+**Choice:** explicit K-EFFECT-05 adaptation helpers, not `e|f` signature syntax. r[WIRE-API-01]
+
+Reasons:
+
+- The sketch links and runs with one shared effect slot: every word it publishes, including the worked examples, is typable at a single `eps`. Union syntax would widen the trusted checker (`parse_effect` returns one slot today) for expressiveness the library does not yet need.
+- K-EFFECT-05 already defines the needed widening: an explicit checked adaptation that keeps the stacks and the recipe, establishes inclusion of the source bound in the destination bound, and is not a proof search. A library-level adaptation is therefore an explicit host/consumer step, not new grammar.
+- The builtins keep the full union: `compose`, `case` and `if` already connect differently-bounded Programs. Only a library word's *published* signature is narrower, and a consumer that needs the wider form composes the builtin or adapts the operand first.
+
+MEASURED consequence: with the sketch as published, operands of different bounds do not unify at a library word. `"L" [ fx@1.say ] [ 1 + ] wire@1.fanout` is a `type-reject` ("program type or stack witness cannot be resolved"), not a preparation refusal. `wire_library_runs_in_a_fresh_declared_session` pins it.
+
+### Eligibility diagnostics
+
+Every eligibility refusal now names the applied definition before the inner word: a `wire@1` specialization met a non-capturable value reports `kernel rejected a non-capturable value; word wire@1.fanout via dup; required S Data; actual S ...`. A bare `dup` keeps its unqualified message, so existing refusals are unchanged. MEASURED by `wire_fanout_at_a_resource_names_the_library_word` in `crates/noble-contracts/tests/declared/wire.rs`.
+
+The applied word is the immutable namespace snapshot's spelling for the failing body's definition identity, threaded from the session's declared context into the per-body acceptance. The snapshot is not re-read after the fact, so the diagnostic cannot name a definition the refused preparation did not instantiate.
+
+### O11-4 and O11-5: the refusal reproduced and explained
+
+MEASURED with the prebuilt development CLI on 2026-11-20:
+
+- Both observed refusals reproduce, and both are one session-cumulative budget, not a type error and not the shape of `split`/`fanout`.
+- The published source compiler interns every *new* named specialization of a session in one identity table capped at `DEFINITION_LIMIT` (256); a new identity beyond the cap returns `Exhausted`, which the CLI reports as `independent source compilation refused` (`noble-wasm` `source/admission/identity/records.rs`). Its sibling environment-row cap is the same `DEFINITION_LIMIT` plus the fixed profile prefix (282 for a declared session).
+- Each library word costs the specializations it instantiates at one concrete type: `project_first` 1; `first` and `second` 2 (each also instantiates `rot`); `split` 4 (`split`, `first`, `second`, `rot`); `fanout` 5. An effectful operand adds its own named use, so O11-5's `split` costs 5.
+- Boundary measurements: with 254 identities consumed, `split` (4 more) is refused while `project_first` (1 more, 255 of 256) is admitted and a program that instantiates nothing still runs. With 252 consumed, the effectful `split` (5 more) is refused; with 251 it runs and its trace records both `test.emit` requests in order. A fresh session admits both forms.
+- No default budget changed. `wire_split_refusal_is_the_session_cumulative_budget` in `crates/noble-cli/tests/smoke.rs` pins the refusal, its diagnostic, the absence of any guest or host request, and the admitted neighbours, so the budget cannot move silently.
+
 ## Coordination
 
 - **#2 (GPU) and #14 (numeric graph):** the Decision 6 analysis is only an input to their separate eligibility and cost models.
@@ -493,8 +531,8 @@ A bundle never grants `Data` or `Capture`: a fanout-law instance at a resource i
 
 ## Risks / Trade-offs
 
-- The one-effect-slot signature syntax makes `then`, `split`, `fanout`, `choose` and `join` less general than the builtins. Adding union syntax touches the checker and needs its own acceptance work.
-- Effectful `split` was refused at preparation in this build (O11-5), and long sessions refused `split`/`fanout` (O11-4). The cause is unconfirmed. [INFERENCE] It is a preparation budget; it must be investigated before the library is adopted.
+- The one-effect-slot signature syntax makes `then`, `split`, `fanout`, `choose` and `join` less general than the builtins. Adding union syntax touches the checker and needs its own acceptance work. W1 chose the explicit K-EFFECT-05 adaptation route and recorded why (Implementation gates).
+- Effectful `split` was refused at preparation in this build (O11-5), and long sessions refused `split`/`fanout` (O11-4). The cause is now measured (Implementation gates): one session-cumulative identity budget of 256 new specializations, refused as a whole with no partial commit and no type error. The larger combinators cost four (`split`) or five (`fanout`) identities each, so a long session must budget for the specializations it instantiates; no default budget changed, and a regression test pins the boundary.
 - The resource frame example is not executable on the selected backend. Its laws stay spec-only.
 - Laws stated modulo quota leave Q-sensitive users without guarantees. That is deliberate (K-EVAL-04), but it limits optimization.
 

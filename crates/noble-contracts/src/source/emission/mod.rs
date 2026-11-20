@@ -455,8 +455,8 @@ fn checked(
 
 /// The library spelling bound to a definition identity when the immutable
 /// namespace snapshot declares one: `wire@1.fanout` for the body the `wire@1`
-/// module exports as `fanout`. Later snapshots cannot shadow the earliest
-/// declaration, so the first matching word is the published one.
+/// module exports as `fanout`. The first spelling the snapshot attaches to
+/// that definition's identity is the published one.
 fn application_name<'a>(
     definitions: &[super::Named],
     words: &'a [(alloc::string::String, super::Target)],
@@ -468,8 +468,8 @@ fn application_name<'a>(
     Some(spelling.as_str())
 }
 
-/// The source identity the definition a namespace target names was installed
-/// with, if the target names one.
+/// The source identity of the definition a namespace target names, if it
+/// names one.
 fn bound_identity(definitions: &[super::Named], target: super::Target) -> Option<u64> {
     let super::Target::Named(index) = target else {
         return None;
