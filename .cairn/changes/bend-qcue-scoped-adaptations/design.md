@@ -44,10 +44,17 @@ the open change; archive preview cannot complete while implementation and
 evidence tasks remain unchecked. Future reviewed spec changes must use genuinely new deltas
 against the then-current canonical text rather than reapply this snapshot.
 
-- CONTRACT-16: implement an owner-controlled law snapshot before candidate
-  edits and an independent pure-MC2 release consumer comparing submitted
-  source/recipe, exact generated claim, checked theorem, assumptions and
-  emitted artifact. Keep ordinary proof-free execution unchanged.
+- CONTRACT-16: implemented/passed, proof open. The owner-law records were
+  frozen on the owner's instruction (decision 11; commit 12b52f9a; digests
+  `9a8eda12…`/`51f2a315…`) before the release consumer (e77c87e5).
+  `verification/owner-law/gate.mjs` passed at f1b8ae87
+  ([receipt](../../../verification/owner-law/acceptance.json), sha256
+  `61378e56…`): it refuses the four hostile variants with distinct codes,
+  admits the law-conforming v1 release and the owner-approved v2 revision after
+  independent recheck, and leaves ordinary compile/verify unchanged. Owner-law
+  independence rests on that custody, not on an observation; the release route
+  starts no guest, so its request counters are constant zeros. Ordinary
+  proof-free execution is unchanged.
 - DX-04: the separately completed Result library gate covers generic
   schema/versioned signatures and ordinary checked selected-arm callbacks,
   including compiled bypassed effectful callbacks with zero requests.
@@ -60,10 +67,12 @@ against the then-current canonical text rather than reapply this snapshot.
   prepromotion source inputs. No actual Noble finite oracle ran; no model
   agreement, owner-approved law, Lean theorem or release admission follows.
   A later selected model execution requires its own source-bound evidence.
-- ADAPT-17: if the optional post-M3 layout trial is selected, run both
-  managed-memory candidates with actual post-compilation inputs, quota/trap
-  and recipe observations, pinned limits and honest unsupported
-  instrumentation. Separate WIT/resource-positive evidence remains open.
+- ADAPT-17: selected and executed; implemented/passed, proof open. The frozen
+  paired trial at clean commit 6b1b1936 recorded 16 workload cells and 52
+  controls (2,562 checks passed). The frozen decision is NO-GO:
+  runtime-captured-quote-and-composition/opt-off regressed 20.00%, above the 5%
+  ceiling. The default backend is unchanged, process memory is reported
+  unsupported, and separate WIT/resource-positive evidence remains open.
 - ADAPT-18: defer any optional pure join run until branch/schema interfaces,
   DX-04 Result-error prerequisites, independent pure admissibility, exact
   precharged bounds, and deterministic settlement are available. It cannot
@@ -104,4 +113,18 @@ promoted none. The separately recorded DX-13 methodology review is now passed;
 at that refresh CONTRACT-16, ADAPT-17 and ADAPT-18 were `absent`/`not-run`.
 ADAPT-17 has since executed and passed with a frozen NO-GO result
 (`verification/adapt17/receipts/2026-11-13-full.json`); ADAPT-18 is deferred
-(above). The review has not executed a Noble oracle.
+(above). CONTRACT-16 has since passed its owner-law release gate
+(`verification/owner-law/acceptance.json`), proof open. The review has not
+executed a Noble oracle.
+
+`verification/dx13/review.mjs` and `verification/result-library/plan.mjs` read
+this change's documents as live inputs, so under owner decision 4 they replay
+only at their recorded source state. `verification/dx13/postpromotion.mjs` does
+not pass at any committed state: its receipt's native-spec (`6301b19e…`) and
+design (`27ea7df7…`) inputs were never committed, `specs/DECISIONS.md` changed
+at 912aedf9, and STATUS `unexecuted_cases` no longer lists CONTRACT-16 after
+62a24094; it is historical-only (integrator decision 23 under the owner's
+delegation, 2026-11-20). The DX-04 receipt's `build.git_head` a46f588a is the
+base of an uncommitted worktree, not the built source (its source identity is
+only the content hash `sha256:16f9d850…`), and its external raw-artifact
+directory is no longer retained.

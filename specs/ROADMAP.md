@@ -1431,9 +1431,10 @@ owner-frozen expected pure MC2 theorem/interface/assumptions *before*
 candidate edits, then independently binds the actual submitted
 program/recipe, generated statement, checked proof and release artifact.
 Proof-required policy rejects changes to any binding, while normal
-well-typed execution remains proof-optional. No owner-approved immutable
-pre-edit law or independent host selection exists yet, so CONTRACT-16 remains
-open. The qcue-inspired optional
+well-typed execution remains proof-optional. The owner-frozen pre-edit laws
+(owner decision 11) and the separate release consumer now exist: CONTRACT-16
+passed its [owner-law release gate](../verification/owner-law/acceptance.json)
+with proof open. The qcue-inspired optional
 [DX-13 review](../verification/dx13/acceptance.json) passed only its
 pinned-source methodology review: ten finite-model/negative/replay/preservation
 controls and five exclusions. No actual Noble oracle or model comparison ran;
@@ -1450,7 +1451,8 @@ Resource capture refusal and four independent hostile Env controls, including
 Program/Syntax first-class payload positives. Selected-arm callbacks retain
 conservative effects and complete owner accounting; resource-bearing payload
 positives and first-class universals remain unimplemented. MC2 proof admission
-and the VC-OWNER-01 owner law remain separate and OPEN. This is not an IO monad
+and the VC-OWNER-01 owner-law release (CONTRACT-16, separately passed with proof
+open) remain separate from DX-04. This is not an IO monad
 or implicit propagation syntax.
 
 Post-M3 [ADAPT-17](conformance/adaptation-cases.json) compares finite ADT
