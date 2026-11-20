@@ -647,7 +647,7 @@ general host/backend proof remain open.
 
 ### S-CASE-16 compiled artifact admission and subsequent renewals
 
-The active [safety Wasm manifest admission Cairn change](../.cairn/changes/safety-wasm-manifest-admission/proposal.md)
+The archived [safety Wasm manifest admission Cairn change](../.cairn/archive/2026-11-20-safety-wasm-manifest-admission/proposal.md)
 has a separate finite [S-CASE-16 receipt](../verification/scase16/acceptance.json)
 (SHA-256 `7534cfc6501b223e80e04ed0042fdf21fead5ffe246e4528b1358e8d605457d5`,
 source tree `sha256:320bed079b5cd8564637164fe7dfdfc22b2124b6c14f15e9c6a46ec56a3805f2`).
@@ -717,7 +717,7 @@ or MC2 proof evidence. The already reported full boundary-controls/Octet
 failure was not rerun or promoted; M3 Aeneas SCC and VC-OWNER-01/CONTRACT-16
 owner-law prerequisites remain open.
 
-The separate [S-CASE-02 bounded-region change](../.cairn/changes/safety-bounded-region-adapter/proposal.md)
+The separate [S-CASE-02 bounded-region change](../.cairn/archive/2026-11-20-safety-bounded-region-adapter/proposal.md)
 uses a new versioned WIT resource and the production
 `noble component read-region COMPONENT HOST_BUFFER_HEX OFFSET LENGTH` ingress,
 not Core's 16-page `values.mjs` memory. The initial
@@ -803,7 +803,7 @@ These slices retain separate acceptance evidence. They do not add general handle
 
 ### S-CASE-07 artifact correspondence admission
 
-The [safety artifact correspondence Cairn change](../.cairn/changes/safety-artifact-correspondence/proposal.md)
+The [safety artifact correspondence Cairn change](../.cairn/archive/2026-11-20-safety-artifact-correspondence/proposal.md)
 has a separate finite [S-CASE-07 receipt](../verification/scase07/acceptance.json)
 (SHA-256 `6bb9ee9bf3d9ed1077818426d29a1bb9895fe1733e1d8bbb3041e3d7fa2013d5`,
 source tree `sha256:9bdba3deb1e1d9550404ee7fc6328449143fe4302fe7d8fb8e090b33de44dda5`)
@@ -862,7 +862,7 @@ cross-host provenance remain open.
 
 ### S-CASE-13 independent Wasmtime fuel and generated-heap quotas
 
-The [runtime quota Cairn change](../.cairn/changes/safety-runtime-quotas/proposal.md)
+The [runtime quota Cairn change](../.cairn/archive/2026-11-20-safety-runtime-quotas/proposal.md)
 and [corrected source-bound acceptance receipt](../verification/scase13/corrected-acceptance.json)
 (SHA-256 `e8211d6d2b0c77ac540874a24dc5f8dedf3bd3773c60b1105975ad9b485fcf28`,
 source `sha256:62358a638f39085fb62f3934507ef8a1278fd6df84c9aefed09b92eb29c9da1d`)
