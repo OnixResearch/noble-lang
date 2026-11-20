@@ -414,25 +414,26 @@ fn checked(
                 inst,
             )
         }
-        None => match source_identity
-            .and_then(|identity| application_name(admission.definitions, admission.words, identity))
-        {
-            Some(application) => crate::program::check_with_application(
+        None => {
+            // A plain match and one call instead of `Option::and_then` with a
+            // closure and a match on its result: the pinned extraction cannot
+            // end the region abstraction of the borrowed spelling at either
+            // join.
+            let application = match source_identity {
+                Some(identity) => {
+                    application_name(admission.definitions, admission.words, identity)
+                }
+                None => None,
+            };
+            crate::program::check_with_application(
                 &caller_environment,
                 &body.candidate,
                 &request,
                 &spans,
                 span,
                 application,
-            ),
-            None => crate::program::check_with_work(
-                &caller_environment,
-                &body.candidate,
-                &request,
-                &spans,
-                span,
-            ),
-        },
+            )
+        }
     };
     if let Err(error) = meter.charge(work_used, span) {
         return Err(super::Error::at(crate::source::Stage::Acceptance, error));

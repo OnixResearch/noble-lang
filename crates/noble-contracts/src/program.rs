@@ -236,9 +236,10 @@ pub(crate) fn check_with_work(
     check_with_owner(env, candidate, request, spans, span, None, None)
 }
 
-/// Accept one body that applies a named definition. An eligibility refusal
-/// names the applied definition as well as the inner word, so a library
-/// specialization such as `wire@1.fanout` is attributable at its use.
+/// Accept one body. When the body applies a named definition, an eligibility
+/// refusal names that definition as well as the inner word, so a library
+/// specialization such as `wire@1.fanout` is attributable at its use; with no
+/// application this is `check_with_work`.
 #[expect(
     tigerstyle::too_many_parameters,
     reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
@@ -249,20 +250,12 @@ pub(crate) fn check_with_application(
     request: &noble_kernel::untrusted::Request,
     spans: &[crate::Span],
     span: crate::Span,
-    application: &str,
+    application: Option<&str>,
 ) -> (
     Result<noble_kernel::untrusted::Checked, crate::Diagnostic>,
     u32,
 ) {
-    check_with_owner(
-        env,
-        candidate,
-        request,
-        spans,
-        span,
-        None,
-        Some(application),
-    )
+    check_with_owner(env, candidate, request, spans, span, None, application)
 }
 
 #[expect(

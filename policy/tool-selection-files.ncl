@@ -25,7 +25,7 @@
   "crates/noble-ngraph/Cargo.toml" = "9fdaf8bf88be311b40962fbedf4af3349ff1f1768c89785a1ea21ff39202138d",
   "crates/noble-wasm/Cargo.toml" = "7f369eb31795dc375df3d752cf1f63f64efcdde89d6614832d0d4aeece41a666",
   "crates/noble-wasm/src/source/mod.rs" = "6160aef8cac6e90a3c5dd2f04e6afe270e5b037df59053ca6b0e528f9beb22f8",
-  "crates/noble-wasm/src/source/origin.rs" = "3182e911688f51d273ba787753ff4dac59cb27ed284783e1180191073fcbed09",
+  "crates/noble-wasm/src/source/origin.rs" = "98fbaf3649f03c7ee77ed503e41bc006f64b5343f96e38fae3d626fd93223019",
   "crates/noble-wasm/runtime/accounting.wat" = "e23e4fad5985ca7a6e62c3825827be4b87032c4cc31b7cbaf35966ecbc945b4a",
   "crates/noble-wasm/runtime/common.wat" = "4645cd1a9fe249627a757311c04c9f105831e304dd766a27b12993ee6216dd96",
   "crates/noble-wasm/runtime/data.wat" = "72baabb36852306f177211920bfd6af318d5c8dffa880db2f3de826cecd1377e",
