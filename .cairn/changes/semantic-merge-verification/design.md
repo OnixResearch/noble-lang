@@ -455,7 +455,7 @@ The axiom audit of every public theorem in the module reports only `propext`,
 the mc1 allowlist. No `sorry`, `admit`, custom `axiom`, `native_decide`,
 `opaque`, `partial`, `#eval` or `run_cmd` occurs in the module.
 
-### Claim lane (commits `5c2d19d3`, `0a387027`, F1 redesign `a5354d52`, `0b63bc0d`)
+### Claim lane (commits `5c2d19d3`, `0a387027`, F1 redesign `a5354d52`, `0b63bc0d`, `f1ac8409`)
 
 The Phase 3 lane lives beside the model, as `#[path]` modules of the existing
 `source` test target: `merge/claim.rs`, `merge/consumer.rs`, `merge/lean.rs`
@@ -683,10 +683,13 @@ clean tree at `4a2bb986`), and its final successor
 `verification/semantic-merge-verification/receipt-d515869b.json`
 (sha256 `ad17ee14a7d4e675a5157b6b67cdfd2da150a86e630f811424e0f3c07e3dba81`,
 clean tree at `d515869b`, after `e471a9e7` pinned 31 Merge theorems — the gate
-prints 121 required theorems against the earlier 90), and the F1-redesign
-successor `verification/semantic-merge-verification/receipt-0b63bc0d3379.json`
+prints 121 required theorems against the earlier 90), the F1-redesign
+receipt `verification/semantic-merge-verification/receipt-0b63bc0d3379.json`
 (sha256 `9e7206509d803135eeeeead493532845b0a222679cadc20f74c2ef7d3fd8a043`,
-clean tree at `0b63bc0d3379`). In the successor, both regenerated claims
+clean tree at `0b63bc0d3379`) and its Octet-clean successor
+`verification/semantic-merge-verification/receipt-f1ac840999f4.json`
+(sha256 `55193e408ac3f7c63b64ec4b9d719d0279483abfde15b8f0a05834b213aec855`,
+clean tree at `f1ac840999f4`). In the final successor, both regenerated claims
 (`SMERGE-CASE-04`, `SMERGE-CASE-01`) are verified through `evaluate` with
 axioms `propext`/`Quot.sound`, the Phase 2 lane is re-run unchanged, the
 CASE-07/CASE-03 forgeries and the file-writing and wrong-proof submissions
