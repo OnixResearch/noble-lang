@@ -1098,7 +1098,14 @@
         ]
       },
       "expected": {"stage": "proof-required-release-admission", "outcome": "each-variant-matches", "owner_law_independent": true, "theorem_statement_and_assumptions_compared": true, "exact_checked_proof_and_artifact_binding_required": true, "proof_author_status_is_authority": false, "pure_fragment_only": true, "compiler_backend_host_proof_claimed": false, "guest_requests": 0, "protected_operations": 0},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "CONTRACT-16 executes its independent owner-law proof-required release workload and every declared variant through the actual frozen implementation: the law-conforming v1 increment release is eligible after the exact check and all six canonical variants match, with zero guest requests and zero protected operations.",
+        "subject": "CONTRACT-16", "revision": "0.1.0-draft.5", "kind": "test", "result": "passed",
+        "source_revision": "sha256:ab52ef0e4f928977dbd7e830ca3ad40c4416a82b152a58c41b755f7426a5cff8",
+        "configuration": {"fragment": "MC2-v1-resource-free-Core-Bootstrap", "case_id": "CONTRACT-16", "receipt": "../../verification/owner-law/acceptance.json", "receipt_sha256": "61378e56ec948f3dd7f5f6bb8f44c378607d3a884f6e8c63e2fb31a95131201d", "raw_outputs": "/home/brittonr/.cache/noble-cairn/scratch/owner-law/gate-20261120T120718", "implementation_commit": "f1b8ae87d81d15e57c58b731ced232eb3569e07b", "binary_sha256": "cf64416b7940939949562ab332a4868af30074e26a0f949cd9cdcb0fd03556cd", "gate_sha256": "521ab42fbd5e42cf5c754c6341d9bfb4ad04c22c03ec7c80022ea87445cb7b6e", "owner_law_sha256": ["9a8eda12c74356ca0d312be840411d4445c6f377c16ee7b96a680581b2e91eac", "51f2a3158155077dcb29c8f354d356d31df3282b3c76f60c2bc8534c7932ee80"], "variants": 6, "proof": "open"},
+        "assumptions": ["Selected Rust, Lean, bubblewrap, prlimit, systemd-run, wasm-tools and Node executables and the host kernel/user systemd manager remain trusted execution mechanisms.", "The gate binds source, binary, law, proof and artifact bytes through its retained commands; it does not prove the compiler, backend, loader or host and establishes no claim outside the pure MC2 fragment.", "CONTRACT-16's proof field stays open; ordinary well-typed execution without the proof policy is unchanged (VC-SCOPE-01)."]
+      }]
     },
     {
       "id": "CONTRACT-17", "profile": "Intrinsic-Proofs-Draft", "kind": "static",

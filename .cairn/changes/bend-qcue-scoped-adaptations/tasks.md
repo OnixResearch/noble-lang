@@ -6,7 +6,7 @@
 
 ## Phase 2: Scoped policy and library implementation pending
 
-- [ ] [serial] Implement the owner-frozen law and independent pure-MC2 release consumer; execute CONTRACT-16's adversarial, applicability and ordinary-proof-free controls with separate proof/admission evidence. r[VC-OWNER-01]
+- [x] [serial] Implement the owner-frozen law and independent pure-MC2 release consumer; execute CONTRACT-16's adversarial, applicability and ordinary-proof-free controls with separate proof/admission evidence. r[VC-OWNER-01] Executed by `verification/owner-law/gate.mjs` at `f1b8ae87d81d15e57c58b731ced232eb3569e07b`; the source-bound receipt `verification/owner-law/acceptance.json` (`sha256:61378e56ec948f3dd7f5f6bb8f44c378607d3a884f6e8c63e2fb31a95131201d`) records the eligible v1 law-conforming increment control and all six canonical variants matching at `guest_requests: 0` and `protected_operations: 0` (source revision `sha256:ab52ef0e…`, binary `sha256:cf64416b…`, gate `sha256:521ab42f…`, frozen law digests `9a8eda12…`/`51f2a315…`, raw outputs retained outside the repository). CONTRACT-16 is promoted to implemented/passed with `proof: open`.
 - [x] [serial] Close the generic Result schema/versioned library-signature gate and implement all four ordinary variant combinators; execute DX-04 including an accepted bypassed effectful callback with zero requests, ownership negatives and conservative effects. r[DX-RESULT-01] r[DX-RESULT-02]
 
 ## Phase 3: Optional research, not a milestone dependency
@@ -17,5 +17,5 @@
 
 ## Phase 4: Evidence and closeout pending
 
-- [ ] [serial] For each selected slice, retain actual case-specific runtime/admission or review receipts and source-bound assurance inventory, then update only justified case/status/proof fields; keep unsupported, unselected and resource-positive obligations open. r[VC-OWNER-01] r[DX-PURE-PAR-01]
+- [ ] [serial] For each selected slice, retain actual case-specific runtime/admission or review receipts and source-bound assurance inventory, then update only justified case/status/proof fields; keep unsupported, unselected and resource-positive obligations open. r[VC-OWNER-01] r[DX-PURE-PAR-01] CONTRACT-16 accounting is added from its receipt (case promoted implemented/passed with proof open; `specs/STATUS.json` `scoped_bend_qcue_research.owner_law_release_receipt` set and `unexecuted_cases` reduced to `ADAPT-18`). DX-04, DX-13 and ADAPT-17 receipts were already registered; the Octet source-inventory renewal, the remaining lane accounting and the five-lane reviewed closeout remain open.
 - [ ] [serial] Revalidate the native Cairn family, generated views/ledger and document gates against final inputs; review all five lane dispositions and only then consider archive, without promoting the change solely for completed spec tasks. r[BE-LAYOUT-01]
