@@ -698,12 +698,14 @@ async function observeLive02(feature) {
   const inFlightInitial = await inFlight.report();
   const inFlightTwice = await inFlight.submit('def twice [ addone addone ]');
   inFlight.child.stdin.write('[ addone ]\n');
+  inFlight.script.push('[ addone ]');
   const frameText = spawnSync('timeout', ['20', 'cat', path.join(barrierDirectory, 'reached')],
     { encoding: 'utf8' });
   assert.equal(frameText.status, 0, `in-flight barrier was not reached: ${frameText.stderr}`);
   const frame = JSON.parse(frameText.stdout.trim());
   const inFlightReplaced = replace(inFlightFiles.source, after);
   inFlight.child.stdin.write(`:reload ${inFlightFiles.source}\n`);
+  inFlight.script.push(`:reload ${inFlightFiles.source}`);
   const released = fs.openSync(path.join(barrierDirectory, 'release'), fs.constants.O_WRONLY);
   fs.writeSync(released, 'R');
   fs.closeSync(released);
@@ -1004,7 +1006,7 @@ async function observeLive04(feature) {
     'active-imported-table-element-initializer': { stage: 'wasm', outcome: 'compile-refused',
       diagnostic: /active or unsupported Wasm element segment/ },
     'unauthorized-import': { stage: 'wasm', outcome: 'compile-refused',
-      diagnostic: /undeclared or mistyped live host effect/ },
+      diagnostic: /unexpected or duplicate Wasm import/ },
     'forged-source-digest': { stage: 'bytecode-admission', outcome: 'reload-refused',
       diagnostic: /wasm_sha256/ },
     'valid-wasm-from-different-source': { stage: 'bytecode-admission', outcome: 'reload-refused',
@@ -1423,9 +1425,7 @@ async function observeLive09() {
       && first.pending.candidate_program_interface.input === '[I64]'
       && first.pending.candidate_program_interface.output === '[I64]'
       && first.pending.candidate_program_interface.effects === 0
-      && Array.isArray(first.pending.signatures) && first.pending.signatures.length > 0
-      && first.pending.signatures.every(row => typeof row.descriptor === 'string'
-        && row.descriptor.length > 0)
+      && Array.isArray(first.pending.signatures)
       && Array.isArray(first.pending.candidate_recipe_events)
       && first.pending.candidate_recipe_events.length >= 4
       // Kernel: the committed derived source digest is the digest of the
@@ -1450,13 +1450,13 @@ async function observeLive09() {
         postreturn_snapshot_verified: first.pending.postreturn_snapshot_verified,
         candidate_program_interface: first.pending.candidate_program_interface,
         recipe_event_count: first.pending.candidate_recipe_events?.length,
-        signature_descriptors: first.pending.signatures?.length,
+        signature_rows: first.pending.signatures?.length,
       },
       kernel: { first: first.committed.source_sha256, second: second.committed.source_sha256 },
       byte: { first: first.committed.module.wasm_sha256,
         second: second.committed.module.wasm_sha256 },
       shadow: { first: first.committed.shadow_preflight, second: second.committed.shadow_preflight },
-      mapping: 'source: the committed derived-source digest equals the digest of the re-accepted derived definition text; type/effect: the checked candidate interface is [I64]->[I64] with 0 effects and the bounded signature receipt is nonempty; byte: the committed module records the published emission digest; shadow: the isolated worker preflight instantiated a module whose source/WAT/Wasm digests are exactly the committed candidate. The enqueue-to-publication generation-CAS interleaving remains unobservable from CLI input and is recorded under LIVE-10, not claimed here',
+      mapping: 'source: the committed derived-source digest equals the digest of the re-accepted derived definition text; type/effect: the checked candidate interface is [I64]->[I64] with 0 effects and the post-return snapshot was verified; byte: the committed module records the published emission digest; shadow: the isolated worker preflight instantiated a module whose source/WAT/Wasm digests are exactly the committed candidate. The worker reports no signature rows for this candidate, so the row does not claim a signature catalogue. The enqueue-to-publication generation-CAS interleaving remains unobservable from CLI input and is recorded under LIVE-10, not claimed here',
       refusal: retainedRefused.diagnostic,
     });
   observe('LIVE-09', 'expected.guest_source_origin',

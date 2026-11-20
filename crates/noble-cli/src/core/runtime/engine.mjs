@@ -927,7 +927,7 @@ export class CoreEngine {
       live_grant: this.liveGrant === null ? null : {
         name: this.liveGrant.name,
         source_generation: this.liveGrant.sourceGeneration.toString(),
-        expected_generation: this.liveGrant.expected.toString(),
+        owner: this.liveGrant.owner.toString(),
       },
       pending: this.pending !== null, staged: this.staged !== null,
       pending_proposal: this.liveProposal !== null, poisoned: this.poisoned };

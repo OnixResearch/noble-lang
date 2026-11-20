@@ -3098,6 +3098,18 @@ fn named_guest_captures_i64_then_publishes_pure_self_replacement(
     let (initial_generation, file_hash) = live_ack(&live.report()?, &[]);
     assert_eq!(initial_generation, 1);
     assert_grant(&live, initial_generation)?;
+    // The arena inspection reports the worker's own retained grant fields. A
+    // grant selected by flag or rearm is process-local state with a name, an
+    // owner and its source generation; a report that assumed another shape
+    // terminated the session here.
+    let arena = live.submit(":arena")?;
+    assert_eq!(text_field(&arena, "outcome"), "arena-observed", "{arena}");
+    assert_eq!(arena["arena"]["live_grant"]["name"], "evolve", "{arena}");
+    assert_eq!(arena["arena"]["live_grant"]["owner"], "1", "{arena}");
+    assert_eq!(
+        arena["arena"]["live_grant"]["source_generation"], "1",
+        "{arena}"
+    );
 
     let executed = live.submit("20 evolve")?;
     normal(&executed, &["21"]);
@@ -3952,7 +3964,18 @@ fn live_test_hosts_require_an_explicit_host_effect_grant() -> Result<(), Box<dyn
             0,
             "{refused}"
         );
-        assert_stack(&refused, &[]);
+        // A resolution refusal reports no stack array; it states that the
+        // prior stack, namespace and session are unchanged.
+        assert_eq!(
+            text_field(&refused, "prior_stack"),
+            "unchanged",
+            "{refused}"
+        );
+        assert_eq!(
+            text_field(&refused, "prior_session"),
+            "unchanged",
+            "{refused}"
+        );
     }
     normal(&live.submit("7")?, &["7"]);
     live.finish()?;
@@ -3994,10 +4017,14 @@ fn live_test_hosts_require_an_explicit_host_effect_grant() -> Result<(), Box<dyn
         .args(["--allow-effects", "test.emit"])
         .output()?;
     assert_eq!(output.status.code(), Some(2), "{output:?}");
-    let diagnostic = String::from_utf8(output.stderr)?;
+    // The refusal is a bounded live report on stdout, not a bare diagnostic.
+    let report: Value = serde_json::from_slice(&output.stdout)?;
+    assert_eq!(text_field(&report, "stage"), "admission");
+    assert_eq!(text_field(&report, "outcome"), "reload-refused");
     assert!(
-        diagnostic.contains("host-selected test effects require a Core live source"),
-        "{diagnostic}"
+        text_field(&report, "diagnostic")
+            .contains("host-selected test effects require a Core live source"),
+        "{report}"
     );
     Ok(())
 }
