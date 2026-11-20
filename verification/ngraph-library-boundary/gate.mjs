@@ -42,8 +42,11 @@ const identityTraits = [
   'noble_ngraph::identity::IdentityScheme',
 ];
 const forbiddenHasherNeedles = ['DefaultHasher', 'RandomState', 'SipHasher', 'std::collections::hash_map', 'std::hash::'];
-const octetArgs = [
-  'check', '--workspace', '--output-format', 'json',
+// `--artifact-dir` is an Octet option and must precede the `--` separator;
+// everything after it is passed through to Cargo.
+const octetArgv = (binary, artifactDirectory) => [
+  binary, 'check', '--workspace', '--output-format', 'json',
+  '--artifact-dir', artifactDirectory,
   '--', '--all-targets', '--features', 'live-test-barrier,safety-observe', '--offline',
 ];
 const controlMutation = [
@@ -215,7 +218,7 @@ function setupEnvironment(output, octetBinary, rustOutput, ccDirectory, vendor, 
 function runOctet({ source, artifactDirectory, output, octetBinary, environment }) {
   fs.mkdirSync(output, { recursive: true });
   fs.mkdirSync(artifactDirectory, { recursive: true });
-  const argv = [octetBinary, ...octetArgs, ...['--artifact-dir', artifactDirectory]];
+  const argv = octetArgv(octetBinary, artifactDirectory);
   const result = spawn(argv, { cwd: source, env: environment });
   fs.writeFileSync(path.join(output, 'octet.stdout.json'), result.stdout);
   fs.writeFileSync(path.join(output, 'octet.stderr.log'), result.stderr);
@@ -676,7 +679,7 @@ function main() {
       'policy/tool-selection.json': fileSha256(policyPath(root)),
     },
     command: {
-      argv: [octetBinary, ...octetArgs, '--artifact-dir', positiveDirectory],
+      argv: octetArgv(octetBinary, positiveDirectory),
       cwd: root,
       environment,
       exit: positiveRun.result.status,
@@ -702,7 +705,7 @@ function main() {
       commit: source.commit,
       source_directory: controlSource,
       mutation: { file: `crates/${packageName}/src/lib.rs`, appended: controlMutation, sha256: controlLibSha256 },
-      command: { argv: [octetBinary, ...octetArgs, '--artifact-dir', controlDirectory],
+      command: { argv: octetArgv(octetBinary, controlDirectory),
         exit: controlRun.result.status, signal: controlRun.result.signal,
         duration_ms: controlRun.result.duration_ms,
         stdout_sha256: sha256(controlRun.result.stdout),
