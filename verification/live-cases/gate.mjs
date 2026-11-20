@@ -722,7 +722,9 @@ async function observeLive03() {
       && isStack(cycleRefused, ['I64:7']) && cycleRefused.guest_requests === 0 && cycleRefused.protected_operations === 0
       && cycleOldCall.outcome === 'normal' && isStack(cycleOldCall, ['I64:8']),
     { outcome: cycleRefused.outcome, stage: cycleRefused.stage, generation: cycleRefused.generation,
-      stack: stackOf(cycleRefused), diagnostic: cycleRefused.diagnostic, old_call_stack: stackOf(cycleOldCall) });
+      stack: stackOf(cycleRefused), guest_requests: cycleRefused.guest_requests,
+      protected_operations: cycleRefused.protected_operations,
+      diagnostic: cycleRefused.diagnostic, old_call_stack: stackOf(cycleOldCall) });
   // Only the five default-profile variants run on the case's exact initial
   // state; the declared-module approximations are separate, unobserved rows.
   const refused03 = observations.filter(row => row.case === 'LIVE-03' && row.field.endsWith('.replacement')
