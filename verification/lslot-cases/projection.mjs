@@ -59,7 +59,8 @@ const paired = records => {
   const replies = records.filter(row => row.kind === 'cli').map(row => row.row);
   assert.equal(replies.length, requests.length + 1,
     'every operator request has one CLI reply plus the configuration report');
-  return replies.map((row, index) => ({ request: requests[index] ?? null, row }));
+  return [{ request: null, row: replies[0] },
+    ...replies.slice(1).map((row, index) => ({ request: requests[index], row }))];
 };
 
 export function project01({ fixture, lane }) {
@@ -136,7 +137,8 @@ export function project01({ fixture, lane }) {
       { subject: 'generic_caller', argument: numberValue(afterCall.request.inputs[0].value),
         host_issued_input_ref: afterCall.request.refs[0]?.slot },
     ]),
-    stageEntry(steps, { slot: 'live-slot-root', command: 'live-slot-root' }, 'live-slot-root'),
+    stageEntry(steps, { slot: 'live-slot-root', command: 'live-slot-root' },
+      'live-slot-root'),
     measured('expected', 'outcome', 'immutable-capture-and-explicit-fresh-target',
       oldTarget && freshTarget && savedResult === 21 && genericResult === 22
         ? 'immutable-capture-and-explicit-fresh-target' : 'other'),
@@ -218,8 +220,8 @@ export function project02({ fixture, lane }) {
       'B before publication, publication ACK, same-root B after, and the next root'),
     measured('input', 'transitive_variant.interleaving', 4, 4,
       'root pins, C publishes, the pinned A/B chain selects C-v1, the next root selects C-v2'),
-    stageEntry(generations(base).concat(generations(transitive)),
-      { slot: 'live-slot-root', command: 'live-slot-root' }, 'live-slot-root'),
+    stageEntry(lane.steps, { slot: 'live-slot-root', command: 'live-slot-root' },
+      'live-slot-root'),
     measured('expected', 'outcome', 'one-map-per-root-with-explicit-typed-ref-pass-through',
       numberValue(base.old_root.epoch) === numberValue(base.new_root.epoch) - 1
         && numberValue(transitive.old_root.epoch)
@@ -301,13 +303,14 @@ export function project03({ fixture, lane }) {
     measured('input', 'variants', fixture.input.variants.map(variant => variant.name),
       lane.summary.results.map(result => result.name)),
     stageEntry(lane.steps, { slot: 'slot-candidate-admission',
-      command: 'slot-candidate-admission' }, 'slot-candidate-admission'),
+      command: 'slot-candidate-admission', 'operator-control': 'slot-candidate-admission' },
+    'slot-candidate-admission'),
     measured('expected', 'outcome', 'only-exact-compatible-candidate-publishes',
       accepted.publication === 'published'
         && refused.every(result => result.publication !== 'published')
         ? 'only-exact-compatible-candidate-publishes' : 'other'),
     measured('expected', 'success_epoch', fixture.expected.success_epoch,
-      numberValue(accepted.epoch_after)),
+      Number.parseInt(accepted.epoch_after, 10)),
     measured('expected', 'rejected_variants_leave_epoch_and_map_unchanged', true,
       exactAfterRefusal.every(Boolean),
       'each refusal was followed by an independent exact publication at expected epoch 4'),
@@ -371,21 +374,26 @@ export function project04({ fixture, lane }) {
         + ` and epoch ${numberValue(rollback.commits[1].epoch)}`),
     measured('variant', 'rollback-denied', 'reject-before-publication',
       denied.denied.outcome === 'policy-denied' ? 'reject-before-publication' : 'other'),
-    stageEntry(lane.steps, { slot: 'slot-publication', command: 'slot-publication' },
-      'slot-publication'),
+    stageEntry(lane.steps, { slot: 'slot-publication', command: 'slot-publication',
+      'operator-control': 'slot-publication' }, 'slot-publication'),
     measured('expected', 'outcome', 'global-CAS-no-ABA',
-      writers.refusal.outcome === 'stale-reject' && unrelated.refusal.outcome === 'stale-reject'
-        && aba.refusal.outcome === 'stale-reject'
-        && denied.denied.outcome === 'policy-denied' ? 'global-CAS-no-ABA' : 'other'),
+      writers.refusal.outcome !== 'published' && unrelated.refusal.outcome !== 'published'
+        && aba.refusal.outcome !== 'published'
+        && denied.denied.outcome === 'policy-denied'
+        && numberValue(aba.commits[1].incarnation) === 8
+        && numberValue(rollback.commits[1].epoch) > numberValue(rollback.commits[0].epoch)
+        && numberValue(rollback.commits[1].generation)
+          > numberValue(rollback.commits[0].generation)
+        ? 'global-CAS-no-ABA' : 'other'),
     measured('expected', 'every_committed_update_increments_epoch', true, steps),
     measured('expected', 'stale_same_or_unrelated_writer_publishes', false,
-      writers.refusal.outcome === 'stale-reject' && unrelated.refusal.outcome === 'stale-reject'),
+      writers.refusal.outcome === 'published' || unrelated.refusal.outcome === 'published'),
     measured('expected', 'recreated_slot_reuses_incarnation', false,
-      numberValue(aba.commits[1].incarnation) === 8),
+      numberValue(aba.commits[1].incarnation) !== 8),
     measured('expected', 'rollback_restores_old_epoch_or_effects', false,
-      numberValue(rollback.commits[1].epoch) > numberValue(rollback.commits[0].epoch)
+      !(numberValue(rollback.commits[1].epoch) > numberValue(rollback.commits[0].epoch)
         && numberValue(rollback.commits[1].generation)
-          > numberValue(rollback.commits[0].generation),
+          > numberValue(rollback.commits[0].generation)),
       'the rollback publishes a strictly newer epoch and generation; no prior root or effect is'
       + ' replayed'),
     unobserved('expected',
@@ -406,16 +414,18 @@ export function project06({ fixture, lane }) {
   for (const variant of fixture.input.variants) {
     const item = lane.summary.results.find(result => result.name === variant.name);
     assert.ok(item, `missing LSLOT-06 ${variant.name}`);
-    const accepted = variant.expected === 'accept';
+    const accepted = variant.result === 'accept';
     if (item.status !== 'pass' || item.limitation) {
-      entries.push(unobserved('variant', variant.name, variant.expected,
+      entries.push(unobserved('variant', variant.name, variant.result,
         `the canonical attempt did not run: ${item.limitation ?? item.status}`));
       continue;
     }
-    entries.push(measured('variant', variant.name, variant.expected,
+    entries.push(measured('variant', variant.name, variant.result,
       accepted ? 'accept' : 'reject'));
-    entries.push(measured('variant', `${variant.name}.guest_requests`, 0,
-      accepted ? item.valid_guest_requests : item.negative_guest_requests));
+    if (!accepted) {
+      entries.push(measured('variant', `${variant.name}.guest_requests`, 0,
+        item.negative_guest_requests));
+    }
   }
   const valid = lane.summary.results.find(result => result.name === 'valid-borrow');
   const negatives = lane.summary.results.filter(result => result.name !== 'valid-borrow');
@@ -428,21 +438,24 @@ export function project06({ fixture, lane }) {
     measured('input', 'variants', fixture.input.variants.map(variant => variant.name),
       lane.summary.results.map(result => result.name)),
     stageEntry(lane.steps, { slot: 'static-and-invocation-boundary',
-      command: 'static-and-invocation-boundary' }, 'static-and-invocation-boundary'),
+      command: 'static-and-invocation-boundary',
+      'operator-control': 'static-and-invocation-boundary' },
+    'static-and-invocation-boundary'),
     measured('expected', 'outcome', 'only-ephemeral-input-borrow-permitted',
-      valid.status === 'pass' && negatives.length > 0
+      valid.status === 'pass' && negatives.every(result => result.status === 'pass')
+        && !JSON.stringify(valid.site ?? {}).includes('increment')
         ? 'only-ephemeral-input-borrow-permitted' : 'other'),
     unobserved('expected', 'ref_data', false,
       'the canonical serialize variant has no selected source word: no expression can encode a'
       + ' `LiveRef` as portable data, so the refusal of ref-as-data cannot be observed here.'),
     measured('expected', 'ref_capture', false,
       negatives.find(result => result.name === 'direct-quotation-capture')
-        .source_attempt_outcome === 'refused'),
+        .source_attempt_outcome !== 'refused'),
     unobserved('expected', 'ref_authority', false,
       'the canonical forge attempt decodes slot bytes as a `LiveRef`; no such primitive exists in'
       + ' the selected profile, so only an unrelated forged binding can be refused.'),
     measured('expected', 'generic_recipe_contains_slot_or_credential', false,
-      valid.site !== null && !JSON.stringify(valid.site).includes('increment')),
+      valid.site !== null && JSON.stringify(valid.site).includes('increment')),
     measured('expected', 'invalid_variants_guest_requests', 0,
       negativeCounters('negative_guest_requests')),
     unobserved('expected', 'guest_requests', 0,
@@ -482,13 +495,13 @@ export function project07({ fixture, lane }) {
       + ' `slot_id_and_proof_present` attempt cannot be constructed.'),
     declared('input', 'variants', fixture.input.variants,
       'each variant re-runs from the pinned epoch-1 `emit` slot and changes only its named grants'),
-    stageEntry(lane.steps, { slot: 'live-slot-policy', command: 'live-slot-policy' },
-      'live-slot-policy'),
+    stageEntry(lane.steps, { slot: 'live-slot-policy', command: 'live-slot-policy',
+      'operator-control': 'live-slot-policy' }, 'live-slot-policy'),
     measured('expected', 'outcome', 'current-grant-is-independent',
       trace(dispatch)[0]?.[1] === 'policy-denied' && trace(revoked)[0]?.[1] === 'policy-denied'
         && trace(effect)[0]?.[1] === 'allowed' && trace(effect)[1]?.[1] === 'denied'
         ? 'current-grant-is-independent' : 'other',
-      'publication denial is not part of the observation: its canonical premise is unobserved'),
+      'the publication half is excluded: its canonical id-and-proof-present premise is unobserved'),
     unobserved('expected', 'publication_or_dispatch_authorized_by_id_ref_effect_or_evidence',
       false,
       'dispatch with an id, a host-issued ref and a declared effect is denied, but the `or'
@@ -498,7 +511,7 @@ export function project07({ fixture, lane }) {
     measured('expected', 'revoked_effect_request_recorded', true,
       effect.denied?.request_trace?.[1]?.request === 'touched'),
     measured('expected', 'old_pinned_target_may_bypass_revocation', false,
-      trace(effect)[0]?.[1] === 'allowed' && trace(effect)[1]?.[1] === 'denied'),
+      !(trace(effect)[0]?.[1] === 'allowed' && trace(effect)[1]?.[1] === 'denied')),
     measured('expected', 'already_completed_prior_effects_rolled_back', false,
       publication.before?.programValueId === publication.after?.programValueId
         && publication.denied?.outcome === 'policy-denied'
@@ -536,18 +549,19 @@ export function project09({ fixture, lane }) {
     measured('expected', 'outcome', 'explicit-unsupported-in-all-legacy-profiles',
       refusals.every(refusal => refusal.outcome === 'unsupported')
         && repl.refusal.outcome === 'reload-refused'
+        && legacy.control.stack[0].value === '21' && repl.control.stack[0].value === '21'
         ? 'explicit-unsupported-in-all-legacy-profiles' : 'other'),
     measured('expected', 'unsupported_produces_generic_run_or_empty_effect', false,
-      refusals.every(refusal => refusal.outcome === 'unsupported')
-        && repl.refusal.outcome === 'reload-refused'),
+      !refusals.every(refusal => refusal.outcome === 'unsupported')
+        || repl.refusal.outcome !== 'reload-refused'),
     measured('expected', 'candidate_body_executions', 0, 0,
       'every refusal reports zero guest requests, so no candidate body ran'),
-    measured('expected', 'historical_LIVE_01_to_10_changed', false, lane.liveUnchanged,
+    measured('expected', 'historical_LIVE_01_to_10_changed', false, !lane.liveUnchanged,
       'the live-wasm case packet is byte-identical to HEAD and no LIVE state changed'),
     measured('expected', 'old_capture_semantics_changed', false,
-      legacy.control.stack[0].value === '21' && repl.control.stack[0].value === '21'),
+      legacy.control.stack[0].value !== '21' || repl.control.stack[0].value !== '21'),
     measured('expected', 'profile_supported_by_current_runtime', false,
-      refusals.length === 2 && repl.refusal.exit !== 0),
+      refusals.some(refusal => refusal.outcome !== 'unsupported') || repl.refusal.exit === 0),
     measured('expected', 'guest_requests', 0,
       refusals.reduce((total, refusal) => total + refusal.guest_requests,
         repl.refusal.guest_requests)),

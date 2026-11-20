@@ -195,15 +195,18 @@ function lane(label, script, name) {
 const pairedRecords = records => {
   const requests = records.filter(row => row.kind === 'operator').map(row => row.request);
   const replies = records.filter(row => row.kind === 'cli').map(row => row.row);
-  assert.equal(replies.length, requests.length + 1);
-  return replies.map((row, index) => ({ request: requests[index] ?? null, row }));
+  assert.equal(replies.length, requests.length + 1,
+    'one configuration report plus one reply per operator request');
+  return [{ request: null, row: replies[0] },
+    ...replies.slice(1).map((row, index) => ({ request: requests[index], row }))];
 };
 const pairedFiles = (requestsFile, repliesFile) => {
   const requests = jsonLines(requestsFile);
   const replies = jsonLines(repliesFile);
   assert.equal(replies.length, requests.length + 1,
     `${relative(requestsFile)} request/reply pairing`);
-  return replies.map((row, index) => ({ request: requests[index] ?? null, row }));
+  return [{ request: null, row: replies[0] },
+    ...replies.slice(1).map((row, index) => ({ request: requests[index], row }))];
 };
 const authorityOf = file => {
   const records = jsonLines(file);
@@ -314,7 +317,9 @@ const caseSteps = (directory, prefix, names) => names.flatMap(name =>
 const lanes = {
   'LSLOT-01': { records: jsonLines(path.join(lane01.directory, 'LSLOT01.jsonl')) },
   'LSLOT-02': { results: summary02.results, crossProfile,
-    authority: authorityOf(path.join(lane02.directory, 'LSLOT02-base-parent-child.jsonl')) },
+    authority: authorityOf(path.join(lane02.directory, 'LSLOT02-base-parent-child.jsonl')),
+    steps: ['base-parent-child', 'transitive-A-B-C'].flatMap(name =>
+      pairedRecords(jsonLines(path.join(lane02.directory, `LSLOT02-${name}.jsonl`)))) },
   'LSLOT-03': { summary: summary03,
     authority: authorityOf(path.join(lane03.directory, 'LSLOT03-same-exact-interface.jsonl')),
     steps: caseSteps(lane03.directory, 'LSLOT03',
