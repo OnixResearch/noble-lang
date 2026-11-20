@@ -53,6 +53,10 @@ const SELECTION: &str = include_str!("runtime/config.json");
 const ABI: &str = include_str!("runtime/abi.json");
 const DECLARED_ABI: &str = include_str!("runtime/declared-abi.json");
 
+/// The bounded live-module frame limit. The host applies it as byte admission
+/// before any frame is written, and the worker protocol refuses a larger frame.
+pub(super) const MAX_LIVE_BINARY: usize = 4_194_304;
+
 pub(crate) struct Engine {
     child: std::process::Child,
     scratch: Option<crate::workflow::artifacts::Temporary>,
@@ -136,8 +140,11 @@ impl Engine {
         Self::start_with_config(&config, options.emit.is_none())
     }
 
-    pub fn start_live() -> Result<Self, super::output::Failure> {
-        Self::start_with_config(&configuration::live(), true)
+    /// `allow_effects` is the host's explicit Core test-host selection. The
+    /// worker admits the matching import types and callbacks only for a
+    /// session whose host selected them.
+    pub fn start_live(allow_effects: u8) -> Result<Self, super::output::Failure> {
+        Self::start_with_config(&configuration::live(allow_effects), true)
     }
 
     pub(in crate::core) fn start_live_declared(
@@ -492,9 +499,9 @@ impl Engine {
         source: &[u8],
         submission: u64,
     ) -> Result<super::output::Report, super::output::Failure> {
-        if binary.len() > 4_194_304
-            || bridge.len() > 4_194_304
-            || signatures.len() > 4_194_304
+        if binary.len() > MAX_LIVE_BINARY
+            || bridge.len() > MAX_LIVE_BINARY
+            || signatures.len() > MAX_LIVE_BINARY
             || source.len() > 65_536
             || binary.len() + bridge.len() + signatures.len() + source.len() > 8_454_144
             || [wat_sha256, bridge_wat_sha256].iter().any(|digest| {
@@ -526,6 +533,14 @@ impl Engine {
 
     pub fn publish_binary(&mut self) -> Result<super::output::Report, super::output::Failure> {
         attempt!(self.write(b"publish-bin\n"));
+        self.reply()
+    }
+
+    /// A bounded, nonpublishing digest of the live arena the worker holds:
+    /// memory, table identities, ABI globals, host counters and the grant
+    /// state. It executes no guest code and issues no host request.
+    pub fn live_arena(&mut self) -> Result<super::output::Report, super::output::Failure> {
+        attempt!(self.write(b"arena-digest\n"));
         self.reply()
     }
 

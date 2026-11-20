@@ -12,10 +12,13 @@ nonempty subset of the two resource-free Core test hosts, refused together with
 `--declared-modules`. It is a host selection, never read from source text: an
 ungranted live session still refuses both words as unbound. Checked admission
 retains Core's effect identities (0 and 1); emission is limited to the selected
-subset; every actual request is still authorized at execution. `test.emit` is a
-protected test operation. `test.abort` is a declared abnormal termination: it
-performs no protected operation, retains the prior effect prefix and poisons the
-session. OWNER DECISION 2026-11-20 (Decision 22): "The live REPL grants
+subset; the worker admits the matching import types only for that selection and
+each actual request is checked again at execution against the same selection.
+`test.emit` is a resource-free Core host request: it is recorded in the request
+trace, performs no Declared-Modules protected operation, and the session's
+`protected_operations` count stays 0. `test.abort` is a declared abnormal
+termination: it performs no protected operation, retains the prior effect
+prefix and poisons the session. OWNER DECISION 2026-11-20 (Decision 22): "The live REPL grants
 `test.emit`/`test.abort` only through an explicit flag `--allow-effects
 test.emit,test.abort` (exact non-empty subset; refused together with declared
 modules); DX-LIVE-01's usage line is amended to include it. LIVE-05 runs on the

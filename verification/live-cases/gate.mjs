@@ -1740,10 +1740,11 @@ async function observeLive10(feature) {
       mapping: 'incompatible candidate interface is the typed `[ true ]` candidate refusal',
     });
   record('LIVE-10', 'input.host_callback_denial_variants', {
-    observed_variants: ['wrong-selected-name', 'old-captured-definition-A-after-rearm-for-B',
+    observed_variants: ['old-captured-definition-A-after-rearm-for-B',
       'stale-expected-generation', 'replayed-or-conflicting-proposal'],
+    named_test_variants: ['wrong-selected-name'],
     unobserved_variant: 'foreign-session-grant',
-    reason: 'the live REPL has no cross-session grant import or reference; a grant is process-local host state created only by --self-edit/:grant-self-edit, so a grant from another session has no representable input',
+    reason: 'the live REPL has no cross-session grant import or reference; a grant is process-local host state created only by --self-edit/:grant-self-edit, so a grant from another session has no representable input. `wrong-selected-name` is exercised only by the named real-child test `grant_for_other_name_cannot_acquire_selected_definition`, not by a CLI lane in this gate',
     evidence: { old_owner_trace: oldTrace, stale: staleDenied.outcome, replay: replayTrace },
   });
   record('LIVE-10', 'input.post_return_candidate_refusal_variants', {
@@ -2175,9 +2176,9 @@ for (const [caseId, names] of Object.entries(selectedTests)) {
 await observeLive01();
 await observeLive06();
 await observeLive07();
-await observeLive02();
 await observeLive03();
 const feature = buildFeature();
+await observeLive02(feature);
 await observeLive04(feature);
 await observeLive09();
 await observeLive10(feature);

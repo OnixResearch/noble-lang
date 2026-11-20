@@ -400,6 +400,20 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             }));
             continue;
         }
+        // A bounded, nonpublishing digest of the worker's live arena. It
+        // executes no guest code and issues no host request; the gate uses it
+        // to observe that a refused candidate left memory, table, globals,
+        // installs and host counters unchanged.
+        if line == ":arena" {
+            match live.arena_inspection() {
+                Ok(report) => emit(&report),
+                Err(error) => {
+                    emit(&fatal(&error.message));
+                    return std::process::ExitCode::from(2);
+                }
+            }
+            continue;
+        }
         // A bounded, inert inspection of the observation this REPL already captured. It reads
         // `last_stack` only: no guest, no install, no re-check, and no namespace mutation.
         if let Some(path) = line.strip_prefix(":inspect ") {
@@ -1308,6 +1322,7 @@ impl Live {
             "invocation_source_sha256": invocation["module"]["source_sha256"],
             "invocation_wasm_sha256": invocation["module"]["wasm_sha256"],
             "candidate_prepare_requests": 0,
+            "guest_executions": proposal.map(|value| &value["guest_executions"]),
             "diagnostic": diagnostic,
         })
     }
@@ -1476,6 +1491,29 @@ impl Live {
         }))
     }
 
+    /// Read the worker's bounded live-arena digest without executing anything.
+    /// The host generation and retained stack are reported beside it so an
+    /// observer can require both the worker arena and the published namespace
+    /// to be unchanged.
+    fn arena_inspection(&mut self) -> Result<serde_json::Value, super::output::Failure> {
+        let worker = self.worker()?.live_arena()?;
+        if worker.outcome != "arena-observed" {
+            return Err(fatal_failure("live worker did not inspect its arena"));
+        }
+        let arena: serde_json::Value = serde_json::from_str(&worker.json)
+            .map_err(|_| fatal_failure("invalid live arena digest"))?;
+        Ok(serde_json::json!({
+            "schema": "noble-live-report/v1",
+            "stage": "inspection",
+            "outcome": "arena-observed",
+            "generation": self.generation,
+            "stack": self.last_stack,
+            "guest_requests": 0,
+            "protected_operations": 0,
+            "arena": arena,
+        }))
+    }
+
     fn admission_refusal(&self, diagnostic: &str, outcome: &'static str) -> super::output::Report {
         super::output::Report {
             outcome: outcome.into(),
@@ -1493,11 +1531,11 @@ impl Live {
         }
     }
 
-    // Feature-only lane: the substituted bytes reached no guest, but the
-    // worker's own byte admission refused them (or compiled bytes disagreed
-    // with the checked source binding). The session survives with its prior
-    // generation, typed stack and authorizations unchanged.
-    #[cfg(feature = "live-test-barrier")]
+    // Shipped byte admission: candidate bytes over the bounded frame limit or
+    // disagreeing with the checked source binding reach no guest. The session
+    // survives with its prior generation, typed stack and authorizations
+    // unchanged. Substituting the served bytes is a feature-only test seam;
+    // this decision path is compiled into every binary.
     fn bytecode_admission_refusal(&self, diagnostic: &str) -> super::output::Report {
         super::output::Report {
             outcome: "reload-refused".into(),
@@ -1517,10 +1555,11 @@ impl Live {
     }
 
     fn worker(&mut self) -> Result<&mut super::worker::Engine, super::output::Failure> {
+        let allow_effects = self.allow_effects;
         if self.session.worker.is_none() {
             self.session.worker = Some(match &self.declared {
                 Some(state) => super::worker::Engine::start_live_declared(&state.manifest)?,
-                None => super::worker::Engine::start_live()?,
+                None => super::worker::Engine::start_live(allow_effects)?,
             });
         }
         self.session.worker.as_mut().ok_or_else(|| {
@@ -1670,21 +1709,38 @@ impl Live {
         // emission and the worker's own byte verifier. The binding above still
         // names the host-checked bytes, so bytes served in their place are
         // detected as source/binding disagreement, never trusted as current.
+        // The presented source digest is the checked one unless the seam names
+        // an independent digest, which models a forged source attribution.
         #[cfg(feature = "live-test-barrier")]
-        let served = match live_test_binary(&binary, source)? {
-            LiveTestBinary::Unchanged => std::borrow::Cow::Borrowed(binary.as_slice()),
-            LiveTestBinary::Replaced(bytes) => std::borrow::Cow::Owned(bytes),
-            LiveTestBinary::Refused(problem) => {
-                return Ok(self.bytecode_admission_refusal(&problem));
-            }
+        let (served, presented_wat) = match live_test_binary(&binary, source)? {
+            LiveTestBinary::Unchanged => (
+                std::borrow::Cow::Borrowed(binary.as_slice()),
+                binding.wat_sha256.clone(),
+            ),
+            LiveTestBinary::Replaced { bytes, wat_sha256 } => (
+                std::borrow::Cow::Owned(bytes),
+                wat_sha256.unwrap_or_else(|| binding.wat_sha256.clone()),
+            ),
         };
         #[cfg(not(feature = "live-test-barrier"))]
-        let served = std::borrow::Cow::Borrowed(binary.as_slice());
+        let (served, presented_wat) = (
+            std::borrow::Cow::Borrowed(binary.as_slice()),
+            binding.wat_sha256.clone(),
+        );
+        // Shipped byte admission: a frame over the bounded limit is refused
+        // before it is written to the worker, so the session survives.
+        if served.len() > super::worker::MAX_LIVE_BINARY {
+            return Ok(self.bytecode_admission_refusal(&std::format!(
+                "served live binary is {} bytes, over the {} byte-admission bound",
+                served.len(),
+                super::worker::MAX_LIVE_BINARY
+            )));
+        }
         let ready = self.worker()?.prepare_binary(
             served.as_ref(),
             &bridge,
             &signatures,
-            &binding.wat_sha256,
+            &presented_wat,
             &binding.bridge_wat_sha256,
             compiled.code_span(),
             source,
@@ -1693,21 +1749,17 @@ impl Live {
         if ready.outcome != "ready" {
             return Ok(ready);
         }
-        #[cfg(feature = "live-test-barrier")]
-        if matches!(&served, std::borrow::Cow::Owned(_))
-            && Self::check_live_binary_binding(&ready, &binding).is_err()
-        {
+        // Shipped source/binding admission: bytes the worker accepted but that
+        // do not bind to the checked emission are discarded, never installed.
+        if let Err(problem) = Self::check_live_binary_binding(&ready, &binding) {
             let discarded = self.worker()?.discard_prepared_live()?;
             if discarded.outcome != "discarded" {
                 return Err(fatal_failure(
                     "live worker failed to discard a substituted prepared submission",
                 ));
             }
-            return Ok(self.bytecode_admission_refusal(
-                "served Wasm bytes differ from the checked source binding",
-            ));
+            return Ok(self.bytecode_admission_refusal(&problem.message));
         }
-        Self::check_live_binary_binding(&ready, &binding)?;
         if self.verify_source_before_execute {
             if let Some(refusal) = self.source_change_refusal() {
                 let discarded = self.worker()?.discard_prepared_live()?;
@@ -2530,20 +2582,35 @@ impl Live {
             source,
         );
         #[cfg(feature = "live-test-barrier")]
-        let served = match live_test_binary(&binary, source)? {
-            LiveTestBinary::Unchanged => std::borrow::Cow::Borrowed(binary.as_slice()),
-            LiveTestBinary::Replaced(bytes) => std::borrow::Cow::Owned(bytes),
-            LiveTestBinary::Refused(problem) => {
-                return Ok(ReloadDecision::Refused(problem));
-            }
+        let (served, presented_wat) = match live_test_binary(&binary, source)? {
+            LiveTestBinary::Unchanged => (
+                std::borrow::Cow::Borrowed(binary.as_slice()),
+                binding.wat_sha256.clone(),
+            ),
+            LiveTestBinary::Replaced { bytes, wat_sha256 } => (
+                std::borrow::Cow::Owned(bytes),
+                wat_sha256.unwrap_or_else(|| binding.wat_sha256.clone()),
+            ),
         };
         #[cfg(not(feature = "live-test-barrier"))]
-        let served = std::borrow::Cow::Borrowed(binary.as_slice());
+        let (served, presented_wat) = (
+            std::borrow::Cow::Borrowed(binary.as_slice()),
+            binding.wat_sha256.clone(),
+        );
+        // Shipped byte admission: an over-limit reload candidate is refused
+        // before it is written to the worker, and the prior generation stays.
+        if served.len() > super::worker::MAX_LIVE_BINARY {
+            return Ok(ReloadDecision::Refused(std::format!(
+                "served live binary is {} bytes, over the {} byte-admission bound",
+                served.len(),
+                super::worker::MAX_LIVE_BINARY
+            )));
+        }
         let staged = self.worker()?.stage_binary(
             served.as_ref(),
             &bridge,
             &signatures,
-            &binding.wat_sha256,
+            &presented_wat,
             &binding.bridge_wat_sha256,
             compiled.code_span(),
             source,
@@ -2558,21 +2625,17 @@ impl Live {
                 staged.json
             )));
         }
-        #[cfg(feature = "live-test-barrier")]
-        if matches!(&served, std::borrow::Cow::Owned(_))
-            && Self::check_live_binary_binding(&staged, &binding).is_err()
-        {
+        // Shipped source/binding admission: staged bytes that do not bind to
+        // the checked emission are discarded, never published.
+        if let Err(problem) = Self::check_live_binary_binding(&staged, &binding) {
             let discarded = self.worker()?.discard_binary()?;
             if discarded.outcome != "discarded" {
                 return Err(fatal_failure(
                     "live worker did not discard a substituted staged binary",
                 ));
             }
-            return Ok(ReloadDecision::Refused(
-                "served Wasm bytes differ from the checked source binding".into(),
-            ));
+            return Ok(ReloadDecision::Refused(problem.message));
         }
-        Self::check_live_binary_binding(&staged, &binding)?;
         if let Some((selected, candidate)) = file {
             if !self.candidate_is_current(selected, candidate, watch_sequence)? {
                 let discarded = self.worker()?.discard_binary()?;
@@ -2667,6 +2730,8 @@ impl Live {
                 "generation": code_span.generation,
             },
             "retired_code_spans": retired_code_spans,
+            "guest_executions": publication["guest_executions"].clone(),
+            "shadow_preflight": publication["shadow_preflight"].clone(),
             "guest_requests": 0, "protected_operations": 0,
         })))
     }
@@ -2996,8 +3061,10 @@ fn emit(value: &serde_json::Value) {
 #[cfg(feature = "live-test-barrier")]
 enum LiveTestBinary {
     Unchanged,
-    Replaced(std::vec::Vec<u8>),
-    Refused(std::string::String),
+    Replaced {
+        bytes: std::vec::Vec<u8>,
+        wat_sha256: Option<std::string::String>,
+    },
 }
 
 // One-shot failure injection at the checked-emission/worker boundary. The
@@ -3012,13 +3079,38 @@ fn live_test_binary(
 ) -> Result<LiveTestBinary, super::output::Failure> {
     const REPLACE: &str = "NOBLE_LIVE_TEST_BINARY_REPLACE";
     const CAPTURE: &str = "NOBLE_LIVE_TEST_BINARY_CAPTURE";
+    const PRESENTED_SHA256: &str = "NOBLE_LIVE_TEST_BINARY_REPLACE_WAT_SHA256";
     const SCOPE_SHA256: &str = "NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE_SHA256";
     const SCOPE_SOURCE: &str = "NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE";
     let replace = std::env::var_os(REPLACE);
     let capture = std::env::var_os(CAPTURE);
-    if replace.is_none() && capture.is_none() {
+    let presented = std::env::var_os(PRESENTED_SHA256);
+    if replace.is_none() && capture.is_none() && presented.is_none() {
         return Ok(LiveTestBinary::Unchanged);
     }
+    if presented.is_some() && replace.is_none() {
+        return Err(fatal_failure(
+            "private live binary digest seam requires a replacement",
+        ));
+    }
+    let presented = match presented {
+        Some(value) => {
+            let digest = value
+                .to_str()
+                .filter(|digest| {
+                    digest.len() == 64
+                        && digest
+                            .bytes()
+                            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+                })
+                .ok_or_else(|| {
+                    fatal_failure("private live binary digest seam is not one sha256 digest")
+                })?
+                .to_owned();
+            Some(digest)
+        }
+        None => None,
+    };
     let digest = std::env::var_os(SCOPE_SHA256);
     let literal = std::env::var_os(SCOPE_SOURCE);
     let scoped = match (digest, literal) {
@@ -3050,16 +3142,10 @@ fn live_test_binary(
         return Ok(LiveTestBinary::Unchanged);
     };
     let bytes = replace_live_test_binary(&path)?;
-    // The frame bound is a Noble byte-admission limit. An oversized
-    // replacement is therefore a refusal the live session reports and
-    // survives, not an internal failure.
-    if bytes.len() > 4_194_304 {
-        return Ok(LiveTestBinary::Refused(std::format!(
-            "served live binary is {} bytes, over the 4194304-byte byte-admission bound",
-            bytes.len()
-        )));
-    }
-    Ok(LiveTestBinary::Replaced(bytes))
+    Ok(LiveTestBinary::Replaced {
+        bytes,
+        wat_sha256: presented,
+    })
 }
 
 #[cfg(feature = "live-test-barrier")]
@@ -3225,7 +3311,7 @@ mod tests {
         let (bridge, signatures, bridge_wat_sha256) = super::Live::runtime_bridge(&compiled)
             .unwrap_or_else(|_| panic!("checked source-free Core bridge"));
         let wat_sha256 = crate::workflow::intrinsic::sha256(compiled.wat());
-        let mut worker = super::super::worker::Engine::start_live()
+        let mut worker = super::super::worker::Engine::start_live(0)
             .unwrap_or_else(|_| panic!("resident live worker"));
         let first = worker
             .prepare_binary(
@@ -3285,7 +3371,7 @@ mod tests {
         let (bridge, signatures, bridge_wat_sha256) = super::Live::runtime_bridge(&compiled)
             .unwrap_or_else(|_| panic!("checked source-free Core bridge"));
         let wat_sha256 = crate::workflow::intrinsic::sha256(compiled.wat());
-        let mut worker = super::super::worker::Engine::start_live()
+        let mut worker = super::super::worker::Engine::start_live(0)
             .unwrap_or_else(|_| panic!("resident live worker"));
         let mut malformed = binary.clone();
         malformed[0] ^= 1;

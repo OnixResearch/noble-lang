@@ -29,10 +29,12 @@
   }
   if (directory || point || expected) {
     if (typeof directory !== 'string' || !path.isAbsolute(directory)
-      || !['in-flight-generation', 'candidate-compiled', 'in-flight-declared-emit'].includes(point)
+      || !['in-flight-generation', 'in-flight-execution', 'candidate-compiled',
+        'in-flight-declared-emit'].includes(point)
       || typeof expected !== 'string'
       || point === 'candidate-compiled' && !/^[a-f0-9]{64}$/.test(expected)
       || point === 'in-flight-generation' && !/^[1-9][0-9]*$/.test(expected)
+      || point === 'in-flight-execution' && !/^[a-f0-9]{64}$/.test(expected)
       || point === 'in-flight-declared-emit' && expected !== 'emit-a') {
       fail('invalid private live test barrier selection');
     }
@@ -94,6 +96,24 @@
           }
           return emit(offset, count, slot);
         };
+      };
+    } else if (point === 'in-flight-execution') {
+      // Hold the worker at the top of one real guest frame whose checked
+      // source matches. The host already accepted the submission and is
+      // blocked on this reply, so a reload line written now is queued behind
+      // the active frame, exactly the case's in-flight condition.
+      const original = CoreEngine.prototype.execute;
+      CoreEngine.prototype.execute = function (...args) {
+        const record = this.pending?.record;
+        if (this.inProcessLive && !this.declaredLive && record
+          && record.source_sha256 === expected) {
+          this.liveTestPause = (owner, current) => {
+            if (current.source_sha256 === expected) {
+              pause(owner, point, current.source_sha256);
+            }
+          };
+        }
+        return original.apply(this, args);
       };
     } else if (point === 'candidate-compiled') {
       const original = CoreEngine.prototype.liveModule;

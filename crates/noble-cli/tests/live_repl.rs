@@ -170,6 +170,18 @@ impl LiveChild {
         Self::start_with_environment(source, grant, &[])
     }
 
+    fn start_with_effect_grant(
+        source: &Path,
+        effects: &str,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+        command
+            .args(["live", "repl", "--source"])
+            .arg(source)
+            .args(["--engine", "v8", "--allow-effects", effects]);
+        Self::spawn(command)
+    }
+
     fn start_with_environment(
         source: &Path,
         grant: Option<(&str, u64)>,
@@ -3702,11 +3714,11 @@ fn write_private_test_bytes(path: &Path, bytes: &[u8]) -> Result<(), Box<dyn std
 }
 
 #[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
-fn capture_submission_bytes(
+fn capture_submission_emission(
     fixture: &Fixture,
     submission: &str,
     stack: &[&str],
-) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+) -> Result<(Vec<u8>, Value), Box<dyn std::error::Error>> {
     let capture = fixture.directory.join("capture.wasm");
     let capture = capture.to_str().ok_or("non-UTF-8 capture path")?;
     let mut live = LiveChild::start_with_environment(
@@ -3718,9 +3730,10 @@ fn capture_submission_bytes(
         ],
     )?;
     live_ack(&live.report()?, &[]);
-    normal(&live.submit(submission)?, stack);
+    let executed = live.submit(submission)?;
+    normal(&executed, stack);
     live.finish()?;
-    Ok(fs::read(capture)?)
+    Ok((fs::read(capture)?, executed))
 }
 
 #[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
@@ -3748,13 +3761,21 @@ fn capture_definition_bytes(
 fn live_test_binary_seam_captures_exact_bytes_and_refuses_substitution(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::new("def base [ 7 ]")?;
-    let baseline = capture_submission_bytes(&fixture, "1 2 +", &["3"])?;
+    let (baseline, baseline_module) =
+        capture_submission_emission(&fixture, "1 2 +", &["3"])?;
+    let baseline_module_wat = text_field(&baseline_module["module"], "wat_sha256").to_owned();
     assert_eq!(&baseline[..8], b"\0asm\x01\0\0\0");
     let other_fixture = Fixture::new("def base [ 7 ]")?;
-    let different = capture_submission_bytes(&other_fixture, "2 2 +", &["4"])?;
+    let (different, different_module) =
+        capture_submission_emission(&other_fixture, "2 2 +", &["4"])?;
+    let different_wat = text_field(&different_module["module"], "wat_sha256").to_owned();
     assert_ne!(
         baseline, different,
         "sources must emit distinct checked bytes"
+    );
+    assert_ne!(
+        baseline_module_wat, different_wat,
+        "sources must emit distinct checked WAT digests"
     );
 
     // Serving the captured bytes back is byte-identical emission: the worker
@@ -3774,9 +3795,9 @@ fn live_test_binary_seam_captures_exact_bytes_and_refuses_substitution(
     normal(&live.submit("1 2 +")?, &["3"]);
     live.finish()?;
 
-    // Valid bytes from another source reach the worker's real verifier, pass
-    // standard and Noble ABI validation, and are still refused because they
-    // disagree with the checked source binding.
+    // `forged-source-digest`: the different source's valid bytes are presented
+    // with the checked source's digest, so the first binding disagreement is
+    // the computed Wasm digest.
     let other = fixture.directory.join("different.wasm");
     write_private_test_bytes(&other, &different)?;
     let other = other.to_str().ok_or("non-UTF-8 replacement path")?;
@@ -3786,10 +3807,15 @@ fn live_test_binary_seam_captures_exact_bytes_and_refuses_substitution(
         &[
             ("NOBLE_LIVE_TEST_BINARY_REPLACE", other),
             ("NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE", "1 2 +"),
+            (
+                "NOBLE_LIVE_TEST_BINARY_REPLACE_WAT_SHA256",
+                &baseline_module_wat,
+            ),
         ],
     )?;
     let initial = live.report()?;
     live_ack(&initial, &[]);
+    let before = live.submit(":arena")?;
     let refusal = live.submit("1 2 +")?;
     assert_eq!(
         text_field(&refusal, "stage"),
@@ -3806,6 +3832,55 @@ fn live_test_binary_seam_captures_exact_bytes_and_refuses_substitution(
     assert_eq!(number_field(&refusal, "protected_operations"), 0);
     assert_eq!(text_field(&refusal, "session_state"), "retained");
     assert_stack(&refusal, &[]);
+    assert!(
+        text_field(&refusal, "diagnostic").contains("wasm_sha256"),
+        "{refusal}"
+    );
+    let after = live.submit(":arena")?;
+    assert_eq!(text_field(&after, "outcome"), "arena-observed");
+    assert_eq!(
+        before["arena"], after["arena"],
+        "a refused substitution changed the live arena: {before} {after}"
+    );
+    normal(&live.submit("base")?, &["7"]);
+    live.finish()?;
+
+    // `valid-wasm-from-different-source`: the same valid bytes carry their own
+    // independent source digest, so the first binding disagreement is that
+    // presented digest, not the computed Wasm digest. It is a distinct
+    // execution with a distinct stop class.
+    let mut live = LiveChild::start_with_environment(
+        &fixture.source,
+        None,
+        &[
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE", other),
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE", "1 2 +"),
+            (
+                "NOBLE_LIVE_TEST_BINARY_REPLACE_WAT_SHA256",
+                &different_wat,
+            ),
+        ],
+    )?;
+    live_ack(&live.report()?, &[]);
+    let independent = live.submit("1 2 +")?;
+    assert_eq!(
+        text_field(&independent, "stage"),
+        "bytecode-admission",
+        "{independent}"
+    );
+    assert_eq!(
+        text_field(&independent, "outcome"),
+        "reload-refused",
+        "{independent}"
+    );
+    assert!(
+        text_field(&independent, "diagnostic").contains("wat_sha256"),
+        "{independent}"
+    );
+    assert!(
+        !text_field(&independent, "diagnostic").contains("wasm_sha256"),
+        "{independent}"
+    );
     normal(&live.submit("base")?, &["7"]);
     live.finish()?;
 
@@ -3845,6 +3920,154 @@ fn live_test_binary_seam_captures_exact_bytes_and_refuses_substitution(
     );
     normal(&live.submit("base")?, &["7"]);
     live.finish()
+}
+
+#[test]
+fn live_test_hosts_require_an_explicit_host_effect_grant(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    // Without the flag both Core test hosts stay unbound: the host admits no
+    // effectful submission and the session survives with its prior state.
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    for submission in ["\"A\" test.emit", "\"A\" test.abort"] {
+        let refused = live.submit(submission)?;
+        assert_eq!(text_field(&refused, "stage"), "admission", "{refused}");
+        assert_eq!(
+            text_field(&refused, "outcome"),
+            "effect-refused",
+            "{refused}"
+        );
+        assert_eq!(number_field(&refused, "guest_requests"), 0, "{refused}");
+        assert_eq!(
+            number_field(&refused, "protected_operations"),
+            0,
+            "{refused}"
+        );
+        assert_stack(&refused, &[]);
+    }
+    normal(&live.submit("7")?, &["7"]);
+    live.finish()?;
+
+    // The flag admits exactly the selected host. `test.emit` is a host effect
+    // request, not a protected operation, so `protected_operations` stays 0.
+    let mut granted = LiveChild::start_with_effect_grant(&fixture.source, "test.emit")?;
+    live_ack(&granted.report()?, &[]);
+    let emitted = granted.submit("\"A\" test.emit")?;
+    normal(&emitted, &[]);
+    assert_eq!(number_field(&emitted, "guest_requests"), 1, "{emitted}");
+    assert_eq!(
+        number_field(&emitted, "protected_operations"),
+        0,
+        "{emitted}"
+    );
+    assert_eq!(
+        emitted["request_trace"],
+        serde_json::json!(["test.emit:A"]),
+        "{emitted}"
+    );
+    // Selecting only `test.emit` does not admit `test.abort`.
+    let unselected = granted.submit("\"B\" test.emit test.abort")?;
+    assert_eq!(
+        text_field(&unselected, "outcome"),
+        "effect-refused",
+        "{unselected}"
+    );
+    granted.finish()?;
+
+    // The grant is refused together with declared modules.
+    let bindings = fixture.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let output = Command::new(env!("CARGO_BIN_EXE_noble"))
+        .args(["live", "repl", "--source"])
+        .arg(&fixture.source)
+        .args(["--engine", "v8", "--declared-modules", "--bindings"])
+        .arg(&bindings)
+        .args(["--allow-effects", "test.emit"])
+        .output()?;
+    assert_eq!(output.status.code(), Some(2), "{output:?}");
+    let diagnostic = String::from_utf8(output.stderr)?;
+    assert!(
+        diagnostic.contains("host-selected test effects require a Core live source"),
+        "{diagnostic}"
+    );
+    Ok(())
+}
+
+#[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
+#[test]
+fn ungranted_live_worker_refuses_core_test_host_imports(
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Capture the real emitted bytes of a granted effectful submission.
+    let granted_fixture = Fixture::new("def base [ 7 ]")?;
+    let capture = granted_fixture.directory.join("effect.wasm");
+    let capture = capture.to_str().ok_or("non-UTF-8 capture path")?;
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command
+        .args(["live", "repl", "--source"])
+        .arg(&granted_fixture.source)
+        .args(["--engine", "v8", "--allow-effects", "test.emit"]);
+    command
+        .env("NOBLE_LIVE_TEST_BINARY_CAPTURE", capture)
+        .env("NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE", "\"A\" test.emit");
+    let mut granted = LiveChild::spawn(command)?;
+    live_ack(&granted.report()?, &[]);
+    normal(&granted.submit("\"A\" test.emit")?, &[]);
+    granted.finish()?;
+
+    // The same bytes in an ungranted session are refused by the worker's own
+    // import policy, before any source/binding comparison.
+    let fixture = Fixture::new("def base [ 7 ]")?;
+    let mut live = LiveChild::start_with_environment(
+        &fixture.source,
+        None,
+        &[
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE", capture),
+            ("NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE", "1 2 +"),
+        ],
+    )?;
+    live_ack(&live.report()?, &[]);
+    let refused = live.submit("1 2 +")?;
+    assert_eq!(text_field(&refused, "stage"), "wasm", "{refused}");
+    assert_eq!(
+        text_field(&refused, "outcome"),
+        "compile-refused",
+        "{refused}"
+    );
+    assert!(
+        text_field(&refused, "diagnostic").contains("undeclared or mistyped live host effect"),
+        "{refused}"
+    );
+    assert_eq!(text_field(&refused, "session_state"), "retained");
+    normal(&live.submit("base")?, &["7"]);
+    live.finish()?;
+
+    // With the matching grant the worker admits the imports; the same served
+    // bytes now stop at the host's source/binding admission instead, which
+    // proves the import policy was the deciding difference.
+    let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
+    command
+        .args(["live", "repl", "--source"])
+        .arg(&fixture.source)
+        .args(["--engine", "v8", "--allow-effects", "test.emit"])
+        .env("NOBLE_LIVE_TEST_BINARY_REPLACE", capture)
+        .env("NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE", "1 2 +");
+    let mut granted = LiveChild::spawn(command)?;
+    live_ack(&granted.report()?, &[]);
+    let admitted = granted.submit("1 2 +")?;
+    assert_eq!(
+        text_field(&admitted, "stage"),
+        "bytecode-admission",
+        "{admitted}"
+    );
+    assert_eq!(
+        text_field(&admitted, "outcome"),
+        "reload-refused",
+        "{admitted}"
+    );
+    normal(&granted.submit("base")?, &["7"]);
+    granted.finish()?;
+    Ok(())
 }
 
 #[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
@@ -3934,88 +4157,114 @@ fn tampered_candidate_bytes_refuse_after_completed_invocation(
 
 #[cfg(all(target_os = "linux", feature = "live-test-barrier"))]
 #[test]
-fn old_active_wasm_frame_finishes_before_queued_reload_ack(
+fn case_in_flight_word_quote_completes_before_reload_ack(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let fixture = Fixture::new("def addone [ self.generation drop 1 + ]")?;
-    let mut barrier = LiveBarrier::new(&fixture.directory, "in-flight-generation", "1")?;
+    // LIVE-02's own workload: the in-flight submission is the quotation
+    // `[ addone ]`, the selected file is replaced with `def addone [ 2 + ]`
+    // while that guest frame is active, and the queued reload must ACK only
+    // after the frame returns. No grant, no self-edit, no source change.
+    const BEFORE: &str = "def addone [ 1 + ]";
+    const AFTER: &str = "def addone [ 2 + ]";
+    // The barrier matches the checked source digest of `[ addone ]`. An
+    // ordinary probe child reports that digest, so the harness needs no
+    // second hasher and the barrier child runs the identical submission.
+    let probe_fixture = Fixture::new(BEFORE)?;
+    let mut probe = LiveChild::start(&probe_fixture.source)?;
+    live_ack(&probe.report()?, &[]);
+    assert_eq!(
+        text_field(&probe.submit("def twice [ addone addone ]")?, "outcome"),
+        "defined"
+    );
+    let quote = probe.submit("[ addone ]")?;
+    assert_eq!(text_field(&quote, "outcome"), "normal", "{quote}");
+    assert_eq!(quote["stack"][0]["type"], "Program", "{quote}");
+    let quote_sha256 = text_field(&quote["module"], "source_sha256").to_owned();
+    // The checked source generation the quotation's own execution reports.
+    // `def twice` commits a frontend-private definition and does not publish a
+    // worker source generation, so the barrier event for the identical
+    // submission must name exactly this generation.
+    let quote_generation = number_field(&quote, "source_generation");
+    probe.finish()?;
+
+    let fixture = Fixture::new(BEFORE)?;
+    let mut barrier =
+        LiveBarrier::new(&fixture.directory, "in-flight-execution", &quote_sha256)?;
     let mut command = Command::new(env!("CARGO_BIN_EXE_noble"));
     command
         .args(["live", "repl", "--source"])
         .arg(&fixture.source)
-        .args([
-            "--engine",
-            "v8",
-            "--self-edit",
-            "addone",
-            "--expect-generation",
-            "1",
-        ]);
+        .args(["--engine", "v8"]);
     barrier.configure(&mut command);
     let mut live = LiveChild::spawn(command)?;
     let (old_generation, old_sha256) = live_ack(&live.report()?, &[]);
-    assert_eq!(old_generation, 1);
-    let grant = live.report()?;
-    assert_eq!(text_field(&grant, "outcome"), "grant-selected", "{grant}");
-    assert_eq!(text_field(&grant, "name"), "addone");
+    let starting_generation = number_field(&live.submit(":generation")?, "generation");
+    assert_eq!(starting_generation, old_generation);
+    assert_eq!(
+        text_field(&live.submit("def twice [ addone addone ]")?, "outcome"),
+        "defined"
+    );
 
-    // No source mutation or queued reload before the actual Wasm frame
-    // reaches its host import. The child cannot finish this invocation until
-    // the test explicitly releases the private FIFO.
+    // The child cannot finish `[ addone ]` until the test releases the private
+    // FIFO. The reload line is written while that frame is active.
     let stdin = live.stdin.as_mut().ok_or("missing live stdin")?;
-    stdin.write_all(b"20 addone\n")?;
+    stdin.write_all(b"[ addone ]\n")?;
     stdin.flush()?;
     let frame = barrier.wait()?;
-    assert_eq!(text_field(&frame, "source_generation"), "1");
+    assert_eq!(
+        text_field(&frame, "source_generation"),
+        quote_generation.to_string()
+    );
     assert_eq!(frame["guest_frame_active"], true, "{frame}");
-    fixture.replace("def addone [ self.generation drop 2 + ]")?;
+    assert_eq!(text_field(&frame, "matched"), quote_sha256, "{frame}");
+    fixture.replace(AFTER)?;
     stdin.write_all(format!(":reload {}\n", fixture.source.display()).as_bytes())?;
     stdin.flush()?;
     barrier.release()?;
 
+    // The old frame returns first, on its old generation; the reload ACK is
+    // emitted only after it, with the retained Program unchanged.
     let old = live.report()?;
-    normal(&old, &["21"]);
-    assert_eq!(number_field(&old, "source_generation"), old_generation);
-    assert!(number_field(&old, "guest_requests") >= 1, "{old}");
-    assert!(
-        old["request_trace"]
-            .as_array()
-            .ok_or("old frame omitted guest request trace")?
-            .iter()
-            .any(|entry| entry == "live.observe-generation:1"),
+    assert_eq!(text_field(&old, "outcome"), "normal", "{old}");
+    assert_eq!(old["stack"][0]["type"], "Program", "{old}");
+    assert_eq!(number_field(&old, "source_generation"), quote_generation);
+    assert_eq!(
+        text_field(&old["module"], "source_sha256"),
+        quote_sha256,
         "{old}"
     );
     let ack = live.report()?;
-    let (new_generation, new_sha256) = live_ack(&ack, &["21"]);
-    assert_eq!(new_generation, old_generation + 1);
-    assert_ne!(new_sha256, old_sha256);
+    assert_eq!(text_field(&ack, "stage"), "wasm-live", "{ack}");
+    assert_eq!(text_field(&ack, "outcome"), "reload-committed", "{ack}");
+    // The ACK names the worker's new checked source generation: exactly one
+    // publication after the generation the held frame executed.
+    let new_generation = number_field(&ack, "generation");
+    assert_eq!(new_generation, quote_generation + 1);
     assert_eq!(number_field(&ack, "guest_requests"), 0);
-    let old_guest_wasm = text_field(&old["module"], "wasm_sha256");
-    assert_eq!(old_guest_wasm.len(), 64);
-    let regrant = live.submit(":grant-self-edit addone 2")?;
+    assert_eq!(ack["stack"], old["stack"], "{ack}");
+    let new_sha256 = text_field(&ack, "source_sha256").to_owned();
+    assert_ne!(new_sha256, old_sha256);
     assert_eq!(
-        text_field(&regrant, "outcome"),
-        "grant-selected",
-        "{regrant}"
+        number_field(&live.submit(":generation")?, "generation"),
+        new_generation
     );
-    assert_eq!(number_field(&regrant, "source_generation"), new_generation);
-    let new = live.submit("20 addone")?;
-    normal(&new, &["21", "22"]);
-    assert_eq!(number_field(&new, "source_generation"), new_generation);
-    let new_guest_wasm = text_field(&new["module"], "wasm_sha256");
-    assert_eq!(new_guest_wasm.len(), 64);
+
+    // The case's post-ACK script. The retained old Program captured 21 (the
+    // old body) while the rebuilt `twice` added 4: [24, 21].
+    let script = live.submit("20 swap run 20 twice swap")?;
+    normal(&script, &["24", "21"]);
+    assert_generation_inspection(&live.submit(":generation")?, new_generation, &script["stack"]);
     println!(
         "{}",
         serde_json::json!({
-            "case": "old-active-frame-queued-reload",
+            "case": "case-in-flight-quote-queued-reload",
             "barrier_guest_frame_active": frame["guest_frame_active"],
+            "quote_source_sha256": quote_sha256,
+            "starting_generation": starting_generation,
+            "quote_source_generation": quote_generation,
             "old_source_sha256": old_sha256,
-            "old_source_generation": old_generation,
             "new_source_sha256": new_sha256,
             "ack_generation": new_generation,
-            "old_guest_wasm_sha256": old_guest_wasm,
-            "new_guest_wasm_sha256": new_guest_wasm,
-            "old_guest_value": old["stack"][0]["value"],
-            "new_guest_value": new["stack"][1]["value"],
+            "post_ack_stack": ["24", "21"],
         })
     );
     live.finish()

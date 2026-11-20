@@ -67,7 +67,7 @@ const declaredLiveImportTypes = {
   test_clock_bound: 'i32->i32,i64',
   test_abort: '->i32',
 };
-function checkLiveBytes(bytes, abi, declaredLive, ownerAware, bridge = false) {
+function checkLiveBytes(bytes, abi, declaredLive, ownerAware, liveEffects, bridge = false) {
   if (!Buffer.isBuffer(bytes) || bytes.length < 8 || bytes.length > MAX_FRAME
     || bytes.readUInt32LE(0) !== 0x6d736100 || bytes.readUInt32LE(4) !== 1) {
     fail('invalid bounded Wasm module');
@@ -120,7 +120,15 @@ function checkLiveBytes(bytes, abi, declaredLive, ownerAware, bridge = false) {
     if (byte() !== 1 || uint() !== initial || uint() !== maximum) fail('incompatible Wasm arena limits');
   };
   const expectedGlobals = new Map(abi.globals.map(global => [global.name, global.type]));
-  const hostImports = bridge ? {} : declaredLive ? declaredLiveImportTypes : liveImportTypes;
+  // The two Core test hosts are importable only in a session whose host
+  // selected them by --allow-effects. Without the grant the module is refused
+  // as importing an undeclared host effect, exactly as before they existed.
+  const hostImports = bridge ? {} : declaredLive ? declaredLiveImportTypes : {
+    live_propose: liveImportTypes.live_propose,
+    live_generation: liveImportTypes.live_generation,
+    ...(liveEffects & 1 ? { test_emit: liveImportTypes.test_emit } : {}),
+    ...(liveEffects & 2 ? { test_abort: liveImportTypes.test_abort } : {}),
+  };
   const expectedExports = bridge ? bridgeExportTypes
     : ownerAware ? liveOwnerExportTypes : liveExportTypes;
   const types = [], functionTypes = [], imports = [], exports = [];
@@ -286,7 +294,7 @@ export class CoreEngine {
     text_byte_cursor = false, checked_i64 = false, calculator = false, calculator_shell_state = false,
     calculator_assembler = null, calculator_trace = false,
     calculator_module_cache = false, signed_self_recursion = false,
-    worker_interruption = false } = {}) {
+    worker_interruption = false, live_effects = 0 } = {}) {
     this.selection = selection;
     // This larger bounded cell arena belongs only to Calculator-v1. Do not
     // mutate the parsed ABI shared with the ordinary and cursor profiles.
@@ -309,6 +317,13 @@ export class CoreEngine {
     }
     this.workerInterruption = worker_interruption;
     this.interruption = null;
+    // The host's exact Core test-host selection. These imports are admitted,
+    // and their callbacks authorize, only when this session was granted them.
+    if (!Number.isInteger(live_effects) || live_effects < 0 || live_effects > 3
+      || live_effects !== 0 && !in_process_live) {
+      fail('invalid live test-host selection');
+    }
+    this.liveEffects = live_effects;
     if (calculator_shell_state && !calculator) fail('opaque calculator state requires the calculator profile');
     if (calculator_trace !== false && (calculator_trace !== true || !calculator))
       fail('calculator timings require the calculator profile');
@@ -364,6 +379,19 @@ export class CoreEngine {
     this.calculatorModules = new Map();
     this.calculatorModuleBytes = 0;
     this.compilations = 0;
+    // Cumulative guest-body invocations. A published candidate is never
+    // executed before publication, so this counter is identical across the
+    // invocation, pending and committed receipts of one self-edit transaction.
+    this.executions = 0;
+    // Stable identities for the functions held in the live table, so an
+    // inspection digest can detect a replaced slot, not just an occupied one.
+    this.functionIdentities = new WeakMap();
+    this.nextFunctionIdentity = 1;
+    // Bounded feature-only pause at the top of one guest frame; the seam
+    // module sets it for the in-flight-execution point and it is `null` in
+    // every ordinary session.
+    this.liveTestPause = null;
+    this.lastShadowPreflight = null;
     this.lastTraceStart = 0;
     this.staged = null;
     this.liveInstalling = false;
@@ -623,7 +651,7 @@ export class CoreEngine {
         ((this.shared.generation.value + 1) >>> 0)) fail('unbound live code span');
     const sourceSha256 = sha256(source);
     const policy = checkLiveBytes(bytes, this.abi, this.declaredLive,
-      this.liveCodeOwners);
+      this.liveCodeOwners, this.liveEffects);
     const module = new WebAssembly.Module(bytes);
     for (const [actual, expected] of [
       [WebAssembly.Module.imports(module), policy.imports],
@@ -634,7 +662,8 @@ export class CoreEngine {
         fail('V8 disagrees with bounded Wasm ABI');
       }
     }
-    const bridgePolicy = checkLiveBytes(bridgeBytes, this.abi, this.declaredLive, true, true);
+    const bridgePolicy = checkLiveBytes(bridgeBytes, this.abi, this.declaredLive, true,
+      this.liveEffects, true);
     const bridgeModule = new WebAssembly.Module(bridgeBytes);
     for (const [actual, expected] of [
       [WebAssembly.Module.imports(bridgeModule), bridgePolicy.imports],
@@ -718,6 +747,7 @@ export class CoreEngine {
         diagnostic: String(diagnostic), generation: this.shared.generation.value,
         stack: this.guestInstalled ? readStack(this, this.runtime()) : [],
         guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0,
+        guest_executions: this.executions,
         session_state: 'retained' };
     } finally {
       this.observationWork = previousWork;
@@ -846,6 +876,63 @@ export class CoreEngine {
     this.coreBridge = bridge;
   }
 
+  // A stable identity per function held in the live table, so the inspection
+  // digest detects a replaced slot and not merely an occupied one.
+  functionIdentity(entry) {
+    if (!this.functionIdentities.has(entry)) {
+      this.functionIdentities.set(entry, this.nextFunctionIdentity);
+      this.nextFunctionIdentity += 1;
+    }
+    return this.functionIdentities.get(entry);
+  }
+
+  // The bounded arena observation shared by staging, publication and the
+  // `:arena` inspection. It reads memory, table identities, ABI globals and
+  // cumulative counters; it executes no guest code and issues no request.
+  arenaWitness() {
+    if (!this.inProcessLive) fail('live arena witness requires the live profile');
+    const table = crypto.createHash('sha256');
+    const occupied = [];
+    for (let index = 0; index < this.table.length; index += 1) {
+      const entry = this.table.get(index);
+      if (entry === null) { table.update('-;'); continue; }
+      occupied.push(index);
+      table.update(`${this.functionIdentity(entry)};`);
+    }
+    return {
+      memory_bytes: this.memory.buffer.byteLength,
+      memory_sha256: sha256(new Uint8Array(this.memory.buffer)),
+      table_length: this.table.length,
+      table_sha256: table.digest('hex'),
+      table_occupied: occupied,
+      globals: Object.fromEntries(this.abi.globals.map(global =>
+        [global.name, String(this.shared[global.name].value)])),
+      compilations: this.compilations,
+      trace: this.trace.length,
+      host_requests: this.hostRequestsTotal,
+      protected_operations: this.protectedOperations,
+      guest_executions: this.executions,
+      source_generation: this.liveSourceGeneration.toString(),
+    };
+  }
+
+  // The `:arena` inspection report. `arenaWitness` is measured; the grant and
+  // pending-state fields report the worker's own retained state.
+  liveArena() {
+    if (!this.inProcessLive) fail('live arena inspection requires the live profile');
+    if (this.poisoned) fail('cannot inspect a poisoned live arena');
+    return { schema: 'noble-core-report/v1', profile: this.profile,
+      backend: 'managed-linear-memory', stage: 'wasm', outcome: 'arena-observed',
+      generation: this.shared.generation.value, ...this.arenaWitness(),
+      live_grant: this.liveGrant === null ? null : {
+        name: this.liveGrant.name,
+        source_generation: this.liveGrant.sourceGeneration.toString(),
+        expected_generation: this.liveGrant.expected.toString(),
+      },
+      pending: this.pending !== null, staged: this.staged !== null,
+      pending_proposal: this.liveProposal !== null, poisoned: this.poisoned };
+  }
+
   stageBinary(bytes, source, submission, bridgeBytes, signatureBytes, span,
     watSha256, bridgeWatSha256) {
     try {
@@ -856,7 +943,9 @@ export class CoreEngine {
         fail('live staging requires an idle arena');
       }
       const original = this.liveStackSnapshot(this.memory, this.shared);
+      const liveBefore = this.arenaWitness();
       const arena = this.stageArena();
+      const executedEmptyRoot = !this.guestInstalled;
       this.liveInstalling = true;
       try {
         const instance = new WebAssembly.Instance(module, { [this.abi.module]: arena.shared });
@@ -870,12 +959,34 @@ export class CoreEngine {
       } finally {
         this.liveInstalling = false;
       }
+      const liveAfter = this.arenaWitness();
+      if (liveAfter.memory_sha256 !== liveBefore.memory_sha256
+        || liveAfter.table_sha256 !== liveBefore.table_sha256
+        || JSON.stringify(liveAfter.globals) !== JSON.stringify(liveBefore.globals)
+        || liveAfter.compilations !== liveBefore.compilations
+        || liveAfter.trace !== liveBefore.trace
+        || liveAfter.host_requests !== liveBefore.host_requests
+        || liveAfter.protected_operations !== liveBefore.protected_operations
+        || liveAfter.guest_executions !== liveBefore.guest_executions) {
+        this.poisoned = true;
+        fail('isolated live preflight changed the live arena');
+      }
       // No Wasm bytes or staging arena need survive the preflight.
       this.staged = { module, record, bridge, signatures, span: { ...span },
         generation: this.shared.generation.value };
+      this.lastShadowPreflight = {
+        instantiated: true, executed_empty_root: executedEmptyRoot,
+        live_memory_sha256: liveAfter.memory_sha256,
+        live_table_sha256: liveAfter.table_sha256,
+        live_globals: liveAfter.globals,
+        candidate_source_sha256: record.source_sha256,
+        candidate_wat_sha256: record.wat_sha256,
+        candidate_wasm_sha256: record.wasm_sha256,
+      };
       return { schema: 'noble-core-report/v1', profile: this.profile,
         backend: 'managed-linear-memory', stage: 'wasm', outcome: 'ready',
         staged: true, module: record, generation: this.shared.generation.value,
+        shadow_preflight: this.lastShadowPreflight,
         guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0 };
     } catch (error) {
       if (this.poisoned) throw error;
@@ -886,6 +997,7 @@ export class CoreEngine {
   discardBinary() {
     if (!this.inProcessLive || !this.staged) fail('no staged live module to discard');
     this.staged = null;
+    this.lastShadowPreflight = null;
     return { outcome: 'discarded', generation: this.shared.generation.value };
   }
 
@@ -1464,7 +1576,8 @@ export class CoreEngine {
       inspected_source_generation: this.liveSourceGeneration.toString(),
       candidate_snapshot_sha256: queued.snapshot.sha256,
       postreturn_snapshot_verified: snapshotVerified,
-      guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0 });
+      guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0,
+      guest_executions: this.executions });
     if (queued.grant !== this.liveGrant
       || queued.grant.sourceGeneration !== this.liveSourceGeneration) {
       return refused('proposal grant or selected-source generation changed');
@@ -1559,7 +1672,8 @@ export class CoreEngine {
         candidate_snapshot_sha256: queued.snapshot.sha256,
         postreturn_snapshot_verified: true,
         signatures: Array.from(signatures, ([id, descriptor]) => ({ id, descriptor })),
-        events, guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0 };
+        events, guest_requests: 0, protected_operations: 0, candidate_prepare_requests: 0,
+        guest_executions: this.executions };
       restore();
       return report;
     } catch (error) {
@@ -1740,6 +1854,8 @@ export class CoreEngine {
         status: 0, submission: record.submission, generation: this.shared.generation.value,
         source_generation: this.liveSourceGeneration.toString(),
         stack, request_trace: [], guest_requests: 0, protected_operations: 0,
+        guest_executions: this.executions,
+        shadow_preflight: this.lastShadowPreflight,
         candidate_prepare_requests: 0, runtime_prover_calls: 0,
         session_state: 'retained', metrics, module: record };
     } catch (error) {
@@ -2034,6 +2150,12 @@ export class CoreEngine {
         this.liveExecuting = this.inProcessLive;
         this.activeGuest = this.inProcessLive ? instance : null;
         try {
+          this.executions += 1;
+          if (this.liveTestPause !== null) {
+            const pause = this.liveTestPause;
+            this.liveTestPause = null;
+            pause(this, record);
+          }
           status = runtime.submit();
         } finally {
           this.liveExecuting = false;
@@ -2190,6 +2312,7 @@ export class CoreEngine {
         acquired_authority: false,
       } : {}),
       protected_operations: this.protectedOperations - protectedStart,
+      guest_executions: this.executions,
       candidate_prepare_requests: 0, runtime_prover_calls: 0, native_trap: nativeTrap,
       session_state: !this.poisoned ? 'retained'
         : this.calculatorRestorable() ? 'restore-required' : 'terminated-after-runtime-failure',

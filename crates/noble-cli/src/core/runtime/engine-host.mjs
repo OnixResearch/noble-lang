@@ -130,6 +130,14 @@ function installSharedGlobals(engine, abi) {
 function installTestHosts(engine, declared_modules) {
     engine.shared.test_emit = (offset, count) => {
       globalThis.nobleSafetyObserve?.('guest-request');
+      // A Core live session executes this effect only when its host selected
+      // it by --allow-effects. The import policy already refuses the module
+      // otherwise; this is the execution-time check the grant names.
+      if (engine.inProcessLive && !engine.declaredLive && (engine.liveEffects & 1) === 0) {
+        engine.hostRequestsTotal += 1;
+        if (engine.trace.length < 4096) engine.trace.push('test.emit:denied:ungranted');
+        return 1;
+      }
       if (declared_modules) {
         engine.hostRequestsTotal += 1;
         engine.ambientFallbackCalls += 1;
@@ -214,6 +222,11 @@ function installTestHosts(engine, declared_modules) {
     };
     engine.shared.test_abort = () => {
       globalThis.nobleSafetyObserve?.('guest-request');
+      if (engine.inProcessLive && !engine.declaredLive && (engine.liveEffects & 2) === 0) {
+        engine.hostRequestsTotal += 1;
+        if (engine.trace.length < 4096) engine.trace.push('test.abort:denied:ungranted');
+        return 1;
+      }
       if (declared_modules) engine.hostRequestsTotal += 1;
       if (engine.trace.length < 4096) engine.trace.push('test.abort');
       return 0;

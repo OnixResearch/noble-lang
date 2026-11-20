@@ -172,6 +172,37 @@ function requirements(bundle, family) {
     .map(id => ({ id, document: doc.path, document_id: doc.id })));
 }
 
+// Every evidence record that claims a receipt digest must cite a receipt file
+// whose bytes hash to that digest. A citation is either repository-relative
+// (`verification/...`) or relative to the scenario file (`../../verification/...`).
+// This is a document binding check: it proves the cited bytes are the ones in
+// the tree, not that the receipt's own run happened.
+function validateReceiptBindings(bundle, family, check) {
+  for (const file of family.scenario_files) {
+    const packet = parse(bundle, `specs/${file}`);
+    for (const c of packet.cases ?? []) {
+      for (const record of c.evidence ?? []) {
+        const configuration = record?.configuration ?? {};
+        const digest = configuration.receipt_sha256;
+        if (digest === undefined) continue;
+        const receipt = configuration.receipt;
+        check(typeof digest === 'string' && /^[a-f0-9]{64}$/.test(digest), `receipt digest form: ${c.id}`);
+        check(typeof receipt === 'string' && receipt.length > 0, `receipt path: ${c.id}`);
+        if (typeof receipt !== 'string' || receipt.length === 0) continue;
+        const resolved = receipt.startsWith('../')
+          ? path.posix.normalize(path.posix.join(path.posix.dirname(`specs/${file}`), receipt))
+          : path.posix.normalize(receipt);
+        check(!resolved.startsWith('..') && !path.posix.isAbsolute(resolved), `receipt path outside the repository: ${c.id}`);
+        const text = bundle.texts.get(resolved);
+        check(text !== undefined, `receipt missing: ${c.id} -> ${resolved}`);
+        if (text === undefined) continue;
+        check(createHash('sha256').update(text).digest('hex') === digest,
+          `receipt digest: ${c.id} -> ${resolved}`);
+      }
+    }
+  }
+}
+
 function allCases(bundle, family) {
   return family.scenario_files.flatMap(file => parse(bundle, `specs/${file}`).cases);
 }
@@ -878,6 +909,7 @@ export function validate(bundle, { ignoreLedger = false } = {}) {
       }
       checkGreenfield(c.state, c.id, { compiler: c.kind !== 'review', runtime: c.kind === 'runtime' });
     }
+    validateReceiptBindings(bundle, family, check);
     const runtimeComponents = new Set(['wasm-runtime', 'component-adapters', 'syndicate-profile', 'exact-calculator']);
     for (const component of status.components) {
       requireEvidence(component, component.evidence, component.id);
@@ -1202,6 +1234,21 @@ function selfTest(base) {
       c.evidence = [{ kind: 'test', subject: c.id, claim: `Declared checks for ${c.id}`, revision: REVISION, source_revision: 'synthetic', configuration: { toolchain: 'synthetic' }, result: 'failed', assumptions: [] }];
     });
   }, 'execution evidence mismatch');
+  // Receipt bindings: a claimed digest must match the cited file's bytes.
+  const mutateReceipt = (b, change) => changeJson(b, 'specs/conformance/live-wasm-cases.json', p => {
+    change(p.cases.find(c => c.id === 'LIVE-01').evidence
+      .find(e => typeof e.configuration?.receipt_sha256 === 'string').configuration);
+  });
+  run('receipt-digest-mismatch', b => mutateReceipt(b, configuration => {
+    const digest = configuration.receipt_sha256;
+    configuration.receipt_sha256 = `${digest[0] === '0' ? '1' : '0'}${digest.slice(1)}`;
+  }), 'receipt digest: LIVE-01');
+  run('receipt-missing-file', b => mutateReceipt(b, configuration => {
+    configuration.receipt = '../../verification/live-cases/absent-receipt.json';
+  }), 'receipt missing: LIVE-01');
+  run('receipt-path-outside-repository', b => mutateReceipt(b, configuration => {
+    configuration.receipt = '../../../outside-receipt.json';
+  }), 'receipt path outside the repository: LIVE-01');
   const componentEvidence = (id, kind, result) => ({ kind, subject: id, claim: `Declared checks for ${id}`, revision: REVISION,
     source_revision: 'synthetic-self-test-only', configuration: { toolchain: 'synthetic' }, result, assumptions: [] });
   for (const execution of EXECUTED) {

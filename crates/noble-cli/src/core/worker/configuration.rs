@@ -50,7 +50,10 @@ fn worker(optimized: bool, declared: bool) -> std::string::String {
 
 /// The opt-in live worker uses the same selected ABI and resident Node/V8,
 /// but receives already checked binary modules instead of WAT tool requests.
-pub(super) fn live() -> std::string::String {
+/// `allow_effects` is the explicit, exact Core test-host mask the host parsed
+/// from `--allow-effects`; the worker admits those import types only for this
+/// value.
+pub(super) fn live(allow_effects: u8) -> std::string::String {
     crate::workflow::encoding::object([
         (
             "selection",
@@ -71,6 +74,10 @@ pub(super) fn live() -> std::string::String {
         (
             "in_process_live",
             crate::workflow::encoding::Json::Bool(true),
+        ),
+        (
+            "live_effects",
+            crate::workflow::encoding::Json::Number(u64::from(allow_effects)),
         ),
     ])
     .encode()
