@@ -338,6 +338,7 @@ const variantFacts = steps => {
       if (request.operation === 'install') {
         found.install_outcome = reply.outcome;
         found.attempt_outcome = reply.outcome;
+        found.install_epoch = reply.epoch;
       }
       if (request.operation === 'publish') {
         found.publication_outcome = reply.outcome;
@@ -383,19 +384,18 @@ const earliest = (name, slot) => {
   assert.ok(match, `${name} ${slot} baseline select`);
   return match.row.request_trace[0];
 };
-const installedLabel = (name, slot, id) => {
+const publishedLabel = (name, slot) => {
   const steps = pairedFiles(path.join(lane0407.directory, `${name}.requests.jsonl`),
     path.join(lane0407.directory, `${name}.jsonl`));
-  const installed = steps.find(step => step.request?.operation === 'install'
-    && step.request.id === id).row.artifact_sha256;
-  const trace = steps.find(step => step.row.outcome === 'executed'
-    && step.row.request_trace?.[0]?.slotId === slot).row.request_trace[0];
-  return trace.artifactSha256 === installed ? `${slot}-v1` : 'mismatch';
+  const published = steps.find(step => step.request?.operation === 'publish'
+    && step.request.slot === slot && step.row.outcome === 'published');
+  assert.ok(published, `${name} ${slot} baseline publication`);
+  return `${slot}-v${published.request.id.replace(/^[A-Za-z]+/, '')}`;
 };
 const casBaseline = { a: earliest('LSLOT04-same-slot-writers', 'A'),
   b: earliest('LSLOT04-unrelated-slot-race', 'B'),
-  a_installed: installedLabel('LSLOT04-same-slot-writers', 'A', 'A1'),
-  b_installed: installedLabel('LSLOT04-unrelated-slot-race', 'B', 'B1') };
+  a_published: publishedLabel('LSLOT04-same-slot-writers', 'A'),
+  b_published: publishedLabel('LSLOT04-unrelated-slot-race', 'B') };
 const pinnedEpoch = pairedFiles(
   path.join(lane0407.directory, 'LSLOT07-publication-without-grant.requests.jsonl'),
   path.join(lane0407.directory, 'LSLOT07-publication-without-grant.jsonl'))
@@ -452,6 +452,12 @@ const liveDiffs = Object.keys(baselineByCase).filter(id => {
     return copy;
   };
   if (JSON.stringify(strip(before)) !== JSON.stringify(strip(after))) return true;
+  if (approved) {
+    const beforeField = before.input?.after_reload_ack;
+    const afterField = after.input?.after_reload_ack;
+    if (JSON.stringify(beforeField) === JSON.stringify(approved.from)
+      && JSON.stringify(afterField) === JSON.stringify(approved.to)) return false;
+  }
   if (!approved) return false;
   let beforeNode = before, afterNode = after;
   for (const key of approved.path) {
@@ -505,7 +511,25 @@ const lanes = {
     stageSteps: casSteps.map(step => step.row.stage) },
   'LSLOT-06': { summary: summary06,
     authority: authorityOf(path.join(lane06.directory, 'LSLOT06-valid-borrow.jsonl')),
-    variants: variantFacts(steps06),
+    variants: summary06.results.map(result => {
+      const steps = pairedRecords(jsonLines(path.join(lane06.directory,
+        `LSLOT06-${result.name}.jsonl`)));
+      const found = { name: result.name, guest_requests: 0, protected_operations: 0 };
+      for (const step of steps) {
+        const request = step.request, reply = step.row;
+        if (!request) continue;
+        if (request.operation === 'install') {
+          found.install_outcome = reply.outcome;
+          found.attempt_outcome = reply.outcome;
+        }
+        if (request.operation === 'invoke') {
+          found.invoke_outcome = reply.outcome;
+          found.guest_requests = reply.guest_requests ?? 0;
+        }
+        if (request.operation === 'reflect') found.site = reply.site;
+      }
+      return found;
+    }),
     authorityRefused: jsonLines(path.join(lane0407.directory,
       'LSLOT07-dispatch-without-grant.jsonl'))
       .some(reply => (reply.request_trace ?? [])

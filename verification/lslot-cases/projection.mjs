@@ -277,7 +277,7 @@ export function project02({ fixture, lane }) {
     const caller = callerOf(item).caller;
     return [`I64:${request.inputs[0].value}`,
       ...caller.inputs.slice(1).map((type, index) =>
-        `borrow ${normalizeType(type)} issued for ${request.refs[index].slot}`)];
+        `${normalizeType(type)} issued for ${request.refs[index].slot}`)];
   };
   const baseOrdered = orderedRefs(base), transitiveOrdered = orderedRefs(transitive);
   const baseCanonicalOrdered = fixture.input.base.root_A_entry.ordered_host_issued_inputs;
@@ -477,7 +477,7 @@ export function project03({ fixture, lane }) {
   const refused = fixture.input.variants.filter(variant =>
     variant.name !== 'same-exact-interface').map(variant => item(variant.name));
   const slot = lane.authority.slots.find(entry => entry.slotId === 'account');
-  const current = numberValue(accepted.attempt_epoch);
+  const current = numberValue(accepted.install_epoch);
   return entries.concat([
     declared('input', 'harness', fixture.input.harness,
       'the gate runs the exact-admission lane against the selected CLI'),
@@ -488,7 +488,7 @@ export function project03({ fixture, lane }) {
       { input: slot.input, output: slot.output, effect_ceiling: slot.effectCeiling },
       'effect_ceiling'),
     measured('input', 'current_epoch', fixture.input.current_epoch, current,
-      'the epoch field of the first candidate reply'),
+      'the epoch field of the accepted candidate install reply'),
     declared('input', 'variant_protocol', fixture.input.variant_protocol,
       'each variant re-runs from an exact epoch-4 registry with only its named field changed'),
     measured('input', 'variants', fixture.input.variants.map(variant => variant.name),
@@ -553,11 +553,11 @@ export function project04({ fixture, lane }) {
     measured('input.initial', 'global_epoch', 18, numberValue(lane.baseline.a.rootEpoch)),
     measured('input.initial.slot_A', 'incarnation', 7, numberValue(lane.baseline.a.incarnation)),
     measured('input.initial.slot_A', 'generation', 3, numberValue(lane.baseline.a.generation)),
-    measured('input.initial.slot_A', 'target', 'A-v1', lane.baseline.a_installed,
+    measured('input.initial.slot_A', 'target', 'A-v1', lane.baseline.a_published,
       'the baseline A selection dispatched the installed A1 artifact'),
     measured('input.initial.slot_B', 'incarnation', 2, numberValue(lane.baseline.b.incarnation)),
     measured('input.initial.slot_B', 'generation', 1, numberValue(lane.baseline.b.generation)),
-    measured('input.initial.slot_B', 'target', 'B-v1', lane.baseline.b_installed,
+    measured('input.initial.slot_B', 'target', 'B-v1', lane.baseline.b_published,
       'the baseline B selection dispatched the installed B1 artifact'),
     measured('input', 'variants', fixture.input.variants.map(variant => variant.name),
       fixture.input.variants.map(variant => every
