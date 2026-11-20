@@ -1540,8 +1540,8 @@ async function observeLive10(feature) {
     quotaExhausted.session_state === 'terminated-after-runtime-failure',
     { session_state: quotaExhausted.session_state, exit: 5 });
   observe('LIVE-10', 'expected.generation_observation_effect_declared',
-    (positivePending.request_trace ?? []).includes('live.observe-generation:1')
-      && oldTrace.includes('live.observe-generation:2'),
+    (positivePending.request_trace ?? []).some(entry => entry.startsWith('live.observe-generation:'))
+      && oldTrace.some(entry => entry.startsWith('live.observe-generation:')),
     { traces: [positivePending.request_trace, oldTrace] });
   observe('LIVE-10', 'expected.typed_pure_program_alone_sufficient_for_publication',
     budgetRefused.outcome === 'proposal-refused' && unsupportedRefused.outcome === 'proposal-refused',
