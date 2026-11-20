@@ -96,7 +96,7 @@ fn shared_and_composed_owners_outlive_each_other() {
 }
 
 #[test]
-fn a_failed_root_issues_no_saved_owner_and_releases_its_frame_pins_once() {
+fn a_failed_root_issues_no_saved_owner_and_poisons_the_session() {
     let output = std::process::Command::new(
         "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
     )

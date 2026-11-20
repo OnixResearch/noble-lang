@@ -2347,9 +2347,10 @@ class SlotEngine {
       this.active = null;
       this.poisoned = true;
       this.appendRootTrace(trace, traceSize);
-      this.retainFramePins({ root: this.rootSequence,
-        entered: framePins?.entered ?? 0, released: framePins?.released ?? 0,
-        active: framePins?.active ?? 0 });
+      // Never fabricate a zero row for a failed ledger: record that the counts are unavailable.
+      this.retainFramePins(framePins === null
+        ? { root: this.rootSequence, error: 'frame-pin ledger unavailable: abortRoot failed' }
+        : { root: this.rootSequence, ...framePins });
       return slotReply('execution-failed', { diagnostic: String(error)
         + (this.checkpointFailure === null ? '' : `; checkpoint: ${this.checkpointFailure}`),
         request_trace: trace, control_events: this.controlEvents.splice(0),

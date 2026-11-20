@@ -815,9 +815,10 @@ export class SlotRegistry {
     return 0;
   }
 
-  // Operator-observable per-root frame-pin count. `active` is zero for a root that finished
-  // normally; `abortRoot` closes every abandoned pin and reports the same triple, so an abnormal
-  // exit is observed as exactly-once release instead of silence.
+  // Operator-observable per-root frame-pin count: pins the root entered, pins it released through
+  // `leaveFrame`, and the difference. A root that finished normally reports `active: 0`;
+  // `abortRoot` reports the pins the failed root still held (it forgets its frame records and the
+  // poisoned instance is discarded, so it does NOT release or count them as released).
   framePinCounts(token) {
     const root = this.#root(token);
     return { entered: root.framePins.entered, released: root.framePins.released,
@@ -975,10 +976,16 @@ export class SlotRegistry {
 
   // Only the trusted worker calls this after a trapped submit has unwound.
   // A failed guest is not permitted to keep refs or a pinned old map alive.
+  //
+  // Frame pins are NOT released here. The host forgets the failed root's frame records and the
+  // poisoned instance is discarded, so the returned `active` count is the number of frame pins the
+  // root still held when it was aborted. Reporting them as released would be an assignment, not a
+  // measurement; per-frame release accounting on the abnormal path belongs to
+  // live-reference-lifetimes (decision 6, r[LREF-EXIT-01]).
   abortRoot(token) {
     const root = this.#root(token);
-    const counts = { entered: root.framePins.entered, released: root.framePins.entered, active: 0 };
-    root.framePins.released = root.framePins.entered;
+    const counts = { entered: root.framePins.entered, released: root.framePins.released,
+      active: root.framePins.entered - root.framePins.released };
     root.pending = null;
     root.frames.length = 0;
     this.#roots.delete(token);

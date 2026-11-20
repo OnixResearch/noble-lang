@@ -213,9 +213,10 @@ const frame = (address, parent, handle, pairs) => {
   assert.throws(() => registry.rootEpoch(trapped), /inactive/);
 }
 
-// The per-root frame-pin ledger is observable and an abnormal exit closes every abandoned pin
-// exactly once. Before this ledger existed, `abortRoot` cleared the frame stack silently and no
-// operator request could see how many pins the failed root still held (OWN-CASE-05, LREF-EXIT-01).
+// The per-root frame-pin ledger is observable: normal frames are counted as they are left, and an
+// abnormal exit reports the pins the failed root still held instead of silently clearing its frame
+// stack. The abort path does not release those pins (the instance is discarded); per-frame release
+// accounting belongs to live-reference-lifetimes (decision 6, r[LREF-EXIT-01]).
 {
   const registry = host(4);
   const b = admit(registry, 'pins-B', 701);
@@ -238,10 +239,10 @@ const frame = (address, parent, handle, pairs) => {
   assert.deepEqual(registry.framePinCounts(root), { entered: 2, released: 1, active: 1 });
   assert.throws(() => registry.finishRoot(root), /active frame/,
     'a root with a live frame cannot finish normally');
-  assert.deepEqual(registry.abortRoot(root), { entered: 2, released: 2, active: 0 },
-    'an abnormal exit releases every abandoned frame pin exactly once and reports it');
+  assert.deepEqual(registry.abortRoot(root), { entered: 2, released: 1, active: 1 },
+    'an abnormal exit reports the pins it still held instead of assigning a release');
   assert.throws(() => registry.framePinCounts(root), /inactive/,
-    'the aborted root has no live pin ledger left to release twice');
+    'the aborted root has no live pin ledger left');
 }
 
 // A→B→C forwards independently issued root borrows through checked frame

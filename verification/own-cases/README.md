@@ -38,13 +38,17 @@ rework receipts are added beside them, never edited. The r2 facts in this file c
   guest requests, zero protected operations and no emitted artifact. Two controls (an I64 program
   and a resource pass-through) install and emit an artifact, so the harness is observed to emit
   whenever the checker accepts.
-- **OWN-CASE-05** uses a policy-denied effect inside a dispatched frame after the target produced a
-  captured Program. The failing root's reply carries the request trace (`dispatch allowed`,
-  `effect denied`), no stack (no saved-owner token), the session state and the per-root frame-pin
-  ledger: every frame pin the root held is released by `abortRoot` exactly once (`entered ==
-  released`, `active == 0`). `test.abort` is still not installable in this profile; its internal
-  `inconsistent frontend arena` refusal is recorded as a frontend-defect witness, never as the
-  case's success condition.
+- **OWN-CASE-05 is withheld.** Its lane records an abnormal exit (a policy-denied effect inside a
+  dispatched frame after the target produced a captured Program): no stack (no saved-owner token),
+  the request trace (`dispatch allowed`, `effect denied`) and the poisoned session. The design's
+  "frame pins are released exactly once" is **not observable**: on the abnormal path the host
+  forgets the failed root's frame records and neither releases nor counts the backend frame pins
+  (the instance is discarded). The per-root ledger reports the pins the root still held
+  (`entered 2 / released 0 / active 2`, `released_by_host: false`), never a release. Real
+  per-frame release accounting belongs to `live-reference-lifetimes` (decision 6,
+  r[LREF-EXIT-01]). `test.abort` is still not installable in this profile; its internal
+  `inconsistent frontend arena` refusal is a frontend-defect witness tracked by the integrator,
+  never the case's success condition.
 - **OWN-CASE-01, 02, 06, 07** run the lanes already described in the change's `tasks.md`; their
   observations are read from the lanes' JSONL evidence and printed values, not declared by the gate.
   Every observed field is compared with the case's registered `expected` values; a mismatch is

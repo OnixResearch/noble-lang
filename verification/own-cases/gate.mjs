@@ -243,19 +243,26 @@ observe('OWN-CASE-03', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', e
       binary.executable]);
   runs.push(executed);
   const trees = parsed(executed.stdout).cases['OWN-CASE-03'];
+  const mismatches = [];
+  const check = (label, actual, registered) => {
+    if (JSON.stringify(actual) !== JSON.stringify(registered)) {
+      mismatches.push(`${label}: observed ${JSON.stringify(actual)}, `
+        + `registered ${JSON.stringify(registered)}`);
+    }
+  };
   const treeOf = (name, row) => {
     const registered = expected.variants[name];
     if (!row || row.refused === true) {
-      // The design's tree did not execute; record the refusal rather than narrowing the variant.
-      throw new Mismatch(`OWN-CASE-03 ${name} did not execute: ${JSON.stringify(row ?? null)}`);
+      mismatches.push(`OWN-CASE-03 ${name} did not execute: ${JSON.stringify(row ?? null)}`);
+      return { name, executed: false, refusal: row ?? null };
     }
-    expectValue(`OWN-CASE-03 ${name} released`, row.released_before_root,
+    check(`OWN-CASE-03 ${name} released`, row.released_before_root,
       registered.released_before_root);
-    expectValue(`OWN-CASE-03 ${name} before`, row.before,
+    check(`OWN-CASE-03 ${name} before`, row.before,
       [{ kind: 1, value: String(registered.result_before) }]);
-    expectValue(`OWN-CASE-03 ${name} after`, row.after,
+    check(`OWN-CASE-03 ${name} after`, row.after,
       [{ kind: 1, value: String(registered.result_after) }]);
-    expectValue(`OWN-CASE-03 ${name} exit`, row.exit, 0);
+    check(`OWN-CASE-03 ${name} exit`, row.exit, 0);
     return { name, executed: true, released_before_root: row.released_before_root,
       before: row.before, after: row.after };
   };
@@ -263,18 +270,19 @@ observe('OWN-CASE-03', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', e
   const left = treeOf('left-deep', trees.left_deep);
   const right = treeOf('right-deep', trees.right_deep);
   const control = trees.bounded_control;
-  expectValue('OWN-CASE-03 control refusal point', control?.refused_at_compose,
+  check('OWN-CASE-03 control refusal point', control?.refused_at_compose,
     expected.bounded_control.refused_at_compose);
-  expectValue('OWN-CASE-03 control diagnostic', control?.diagnostic,
+  check('OWN-CASE-03 control diagnostic', control?.diagnostic,
     expected.bounded_control.diagnostic);
-  expectValue('OWN-CASE-03 control session', control?.session_state,
+  check('OWN-CASE-03 control session', control?.session_state,
     expected.bounded_control.session_state);
-  expectValue('OWN-CASE-03 control exit', control?.exit, 2);
-  return {
-    case: 'passed',
-    balanced, left_deep: left, right_deep: right, bounded_control: control,
-    declared_bound: expected.summary_bound,
-  };
+  check('OWN-CASE-03 control exit', control?.exit, 2);
+  const results = { balanced, left_deep: left, right_deep: right, bounded_control: control };
+  if (mismatches.length) {
+    // Every observed variant travels with the mismatch list, so the receipt carries them all.
+    throw new Mismatch(`${mismatches.join('; ')} :: ${JSON.stringify(results)}`);
+  }
+  return { case: 'passed', ...results, declared_bound: expected.summary_bound };
 });
 
 // OWN-CASE-04: the registered `Account@1` nominal and source programs, through the real CLI.
@@ -292,7 +300,8 @@ observe('OWN-CASE-04', 'crates/noble-cli/tests/live_slot_own_resource_rejection.
   expectValue('OWN-CASE-04 executed variants', names, rejecting);
   for (const row of observed.variants) {
     expectValue(`OWN-CASE-04 ${row.variant} outcome`, row.outcome, 'refused');
-    expectValue(`OWN-CASE-04 ${row.variant} stage`, row.stage, 'command');
+    expectValue(`OWN-CASE-04 ${row.variant} stage`, row.stage, expected.stage);
+    expectValue(`OWN-CASE-04 ${row.variant} checker stage`, expected.checker_stage, 'check');
     expectValue(`OWN-CASE-04 ${row.variant} guest requests`, row.guest_requests,
       expected.guest_requests);
     expectValue(`OWN-CASE-04 ${row.variant} protected operations`, row.protected_operations,
@@ -316,7 +325,9 @@ observe('OWN-CASE-04', 'crates/noble-cli/tests/live_slot_own_resource_rejection.
   };
 });
 
-// OWN-CASE-05: an abnormal exit that produces a Program, with the per-root frame-pin ledger.
+// OWN-CASE-05: WITHHELD. The lane records the abnormal exit (no saved owner, request trace,
+// poisoned session) and the pins the failed root still held; the design's "frame pins are released
+// exactly once" is not observable here and belongs to live-reference-lifetimes (LREF-EXIT-01).
 observe('OWN-CASE-05', 'crates/noble-cli/tests/live_slot_own_trap.mjs', expected => {
   const executed = run(out, 'own-05',
     node, [path.join(root, 'crates/noble-cli/tests/live_slot_own_trap.mjs'), binary.executable]);
@@ -327,26 +338,29 @@ observe('OWN-CASE-05', 'crates/noble-cli/tests/live_slot_own_trap.mjs', expected
   const ledger = observed.host_ledger;
   expectValue('OWN-CASE-05 saved owners', exit.saved_owner_tokens_issued,
     expected.saved_owner_tokens_issued);
-  expectValue('OWN-CASE-05 frame pins released', exit.frame_pins.released, exit.frame_pins.entered);
-  expectValue('OWN-CASE-05 frame pins active', exit.frame_pins.active,
-    expected.frame_pins_active_after);
-  expectValue('OWN-CASE-05 guest instance', exit.guest_instance, expected.guest_instance);
+  expectValue('OWN-CASE-05 guest instance', exit.guest_instance,
+    expected.session_state.observed_rule);
   expectValue('OWN-CASE-05 session state', exit.session_state,
     expected.session_state.observed_rule);
-  assert.equal(expected.retained_owner_reaches_failed_root_cell, false,
-    'the registered case forbids a retained owner reaching the failed root cell');
   expectValue('OWN-CASE-05 dispatch trace', exit.target_trace,
     [['dispatch', 'allowed'], ['effect', 'denied']]);
+  expectValue('OWN-CASE-05 exit', exit.exit, 2);
+  assert.equal(exit.frame_pins.released + exit.frame_pins.active, exit.frame_pins.entered,
+    `the reply's ledger must balance: ${JSON.stringify(exit.frame_pins)}`);
+  assert.ok(typeof exit.frame_pins.measurement === 'string',
+    'the reply must label the count as host entry/exit calls, not a release proof');
   expectValue('OWN-CASE-05 abort witness', witness.outcome, 'refused');
   expectValue('OWN-CASE-05 abort witness guest requests', witness.guest_requests, 0);
-  expectValue('OWN-CASE-05 ledger pins', ledger.frame_pins.released, ledger.frame_pins.entered);
   expectValue('OWN-CASE-05 normal finish', ledger.normal_finish_refused, true);
-  expectValue('OWN-CASE-05 exit', exit.exit, 2);
+  assert.ok(ledger.frame_pins.released < ledger.frame_pins.entered
+    && ledger.frame_pins.active > 0,
+    `the abandoned-pin abort must report the pins it still held, not assign a release: ${JSON.stringify(ledger.frame_pins)}`);
   return {
-    case: 'passed',
+    case: 'withheld',
     abnormal_exit: exit, abort_refusal_witness: witness, host_ledger: ledger,
-    unobserved: ['the backend frame-pin counter itself (the exposed count is the host ledger of '
-      + 'frame entries and exits)', 'a trap produced by `test.abort` (not installable)'],
+    withheld_reason: 'frame pins are not released or counted on the abnormal path; real '
+      + 'per-frame release accounting belongs to live-reference-lifetimes (decision 6, LREF-EXIT-01)',
+    unobserved: [expected.frame_pins_released, expected.retained_owner_reaches_failed_root_cell],
   };
 });
 
@@ -395,13 +409,14 @@ observe('OWN-CASE-07', 'crates/noble-cli/tests/live_repl.rs', expected => {
     released_observed_roots: observed.released_observed_roots };
 });
 
-const { receipts, promotable, unmet, withheld } = deriveVerdicts(observations);
-const failed = deriveVerdicts(observations).failed;
+const derived = deriveVerdicts(observations);
+const { receipts, unmet, withheld } = derived;
 const binaryAfter = hash(binary.executable);
-if (binaryAfter !== binary.executable_sha256) {
-  failed.push('binary changed during the run');
-  receipts.binary = { case: 'failed' };
-}
+const binaryChanged = binaryAfter !== binary.executable_sha256;
+if (binaryChanged) receipts.binary = { case: 'failed' };
+// A binary that changed under the run invalidates every observation: nothing stays promotable.
+const promotable = binaryChanged ? [] : derived.promotable;
+const failed = binaryChanged ? [...derived.failed, 'binary-changed'] : derived.failed;
 const failedCases = [...unmet, ...failed];
 const verdict = failedCases.length === 0 ? 'all-passed'
   : failed.length ? 'lane-failure' : 'unmet-cases';
@@ -413,7 +428,9 @@ const acceptance = {
   result: failed.length ? 'failed' : 'completed',
   verdict,
   failures: [...unmet.map(id => `${id}: observed values differ from the registered expectation`),
-    ...failed.map(id => `${id}: lane or run failed`)],
+    ...failed.map(id => id === 'binary-changed'
+      ? 'the built binary changed during the run; no observation is promotable'
+      : `${id}: lane or run failed`)],
   tested_commit: testedCommit,
   source_revision: sourceRevision,
   scope: SCOPE,
@@ -431,7 +448,7 @@ const acceptance = {
   withheld,
   non_claims: [
     'OWN-CASE-03 executes the design\'s captured-I64 leaves (`quote [ + ] compose`, one dynamic I64 capture each). The balanced tree runs (36 before and after 14 releases); the left- and right-deep 8-leaf chains are refused at compose 5 by the anonymous summary\'s 32-node bound. The design\'s deep trees are therefore not executed, and the case is not promoted on this receipt.',
-    'OWN-CASE-05 uses a policy-denied effect inside a dispatched frame after the root produced a Program. The exposed per-root frame-pin count is the host ledger of frame entries and exits; the backend\'s own pin counter is still not exposed. `test.abort` is not installable in this profile and its internal-diagnostic refusal is recorded as a frontend-defect witness, not as success.',
+    'OWN-CASE-05 is withheld. The lane records the abnormal exit of a root that produced a Program (no saved owner, request trace [dispatch allowed, effect denied], poisoned session) and the frame pins the failed root still held; the host neither releases nor counts them, so "frame pins are released exactly once" is not observed. Per-frame release accounting belongs to live-reference-lifetimes (decision 6, LREF-EXIT-01). `test.abort` is not installable in this profile and its internal-diagnostic refusal is a frontend-defect witness, not success.',
     'OWN-CASE-02 observes shared-owner order independence through the surviving owner running and released owners being refused; the runtime exposes no live-cell count, so reclamation timing is not directly observed.',
     'OWN-CASE-04 registers and executes the design\'s `Account@1` opaque nominal and source programs through the real CLI. The borrow variants are inapplicable (owner decision 2026-11-20, decision 7: no borrow profile is selected).',
     'No proof is claimed: every promoted case keeps proof open, and no lowering, runtime or host-ledger correspondence proof is supplied here.',

@@ -17,7 +17,7 @@
         "harness": "live-slot-saved-capture",
         "definition": "def q [ quote ]",
         "argument": 5,
-        "saved": "the Program returned by invoking k at 5, retained by the host",
+        "saved": "the Program returned by invoking q at 5, retained by the host",
         "second_root": "swap [ run ] dip +",
         "second_root_argument": 20
       },
@@ -57,8 +57,8 @@
             "lane": "crates/noble-cli/tests/live_slot_direct_quote.mjs"
           },
           "assumptions": [
-            "Finite behavioral evidence for this run on the binary built from the recorded clean commit; it does not prove lifetime, reclamation, lowering or compiler correctness.",
-            "Reclamation is observable only through owner refusal and the retired span; the runtime exposes no live-cell count."
+            "Executed through `noble live slot` on the binary built from the recorded clean commit; the receipt binds the source snapshot and binary digest.",
+            "Finite behavioral evidence for this run; it does not prove capture lifetime, reclamation or compiler correctness."
           ]
         }
       ]
@@ -139,7 +139,7 @@
       "input": {
         "harness": "live-slot-composed-tree",
         "leaves": 8,
-        "leaf": "def tree [ drop [ 1 + ] ] is not used: each leaf is `quote [ + ] compose`, which captures the factory input I64 in `quote` and adds it to the running value in `[ + ]`",
+        "leaf": "each leaf is `quote [ + ] compose`: the leaf factory is invoked with the I64 captures 1..8, `quote` captures that input and `[ + ]` adds it to the running value, so the root returns 36",
         "composer": "compose",
         "variants": [
           "balanced",
@@ -207,7 +207,7 @@
             "lane": "crates/noble-cli/tests/live_slot_ownership_cases.mjs"
           },
           "assumptions": [
-            "Finite behavioral evidence for this run on the binary built from the recorded clean commit; it does not prove lifetime, reclamation, lowering or compiler correctness.",
+            "Executed through `noble live slot` on the binary built from the recorded clean commit.",
             "The refusal is a representation bound on the anonymous capture summary, not a reclamation failure; the 40-leaf control is refused at the same compose 5.",
             "Reclamation is observable only through owner refusal; the runtime exposes no live-cell count."
           ]
@@ -227,12 +227,12 @@
         "harness": "live-slot-source-resource-rejection",
         "resource": "Account@1, a registered opaque nominal with one ownership obligation (module 110, ordinal 0, resource kind 41)",
         "variants": {
-          "dup": "dup admitted with the root input `Account@1`",
-          "drop": "drop admitted with the root input `Account@1`",
-          "quote": "quote admitted with the root input `Account@1`",
-          "pair-then-quote": "quote admitted with the root input `Pair<I64,Account@1>`",
-          "sum-then-drop": "drop admitted with the root input `Sum<Account@1,I64>`",
-          "list-then-drop": "drop admitted with the root input `List<Account@1>`",
+          "dup": "install of `dup` with the root input `Account@1`",
+          "drop": "install of `drop` with the root input `Account@1`",
+          "quote": "install of `quote` with the root input `Account@1`",
+          "pair-then-quote": "install of `quote` with the root input `Pair<I64,Account@1>`",
+          "sum-then-drop": "install of `drop` with the root input `Sum<Account@1,I64>`",
+          "list-then-drop": "install of `drop` with the root input `List<Account@1>`",
           "borrow-escape-direct": "dir [ ] borrow (inapplicable)",
           "borrow-escape-aggregate": "dir [ borrow.dup pair ] borrow (inapplicable)",
           "borrow-escape-quote": "dir [ quote ] borrow (inapplicable)",
@@ -240,10 +240,11 @@
           "borrow-escape-save-program": "dir [ save-program ] borrow (inapplicable)",
           "borrow-escape-release": "dir [ swap release ] borrow (inapplicable)"
         },
-        "owner_decision": "OWNER DECISION 2026-11-20 (decision 7): no borrow profile is selected, so the six borrow escape variants of Decision 1 are inapplicable and OWN-PO-2 is not applicable"
+        "owner_decision": "OWNER DECISION 2026-11-20 (decision 7): no borrow profile is selected, so the six borrow escape variants of Decision 1 are inapplicable and OWN-PO-2 is not applicable",
+        "fidelity_note": "the design constructs `Pair`, `Sum` and `List` in source; the lane feeds those aggregate types as typed root inputs and observes the exact aggregate type in each refusal diagnostic. The refusal is the checker's eligibility rule at check time; the host reports it at its command stage."
       },
       "expected": {
-        "stage": "check",
+        "stage": "command",
         "outcome": "static-reject-each-variant-before-emission",
         "guest_requests": 0,
         "protected_operations": 0,
@@ -262,7 +263,8 @@
           "borrow-escape-release": "inapplicable-no-borrow-profile"
         },
         "controls": "an I64 program and a resource pass-through both install and emit an artifact",
-        "diagnostic_rule": "kernel rejected a non-capturable value; required S Data; actual S <canonical input type containing Resource(ResourceKind(41))>"
+        "diagnostic_rule": "kernel rejected a non-capturable value; required S Data; actual S <canonical input type containing Resource(ResourceKind(41))>",
+        "checker_stage": "check"
       },
       "state": {
         "implementation": "implemented",
@@ -293,7 +295,7 @@
             "lane": "crates/noble-cli/tests/live_slot_own_resource_rejection.mjs"
           },
           "assumptions": [
-            "Finite behavioral evidence for this run on the binary built from the recorded clean commit; it does not prove lifetime, reclamation, lowering or compiler correctness.",
+            "Executed through `noble live slot` on the binary built from the recorded clean commit; each row is read from the refusal reply.",
             "The six borrow escape variants of the design are inapplicable under OWNER DECISION 2026-11-20 (decision 7: no borrow profile is selected).",
             "The harness runs the source checker and compiler at the install boundary; it does not execute a guest, so \"zero guest requests\" is the reply's own observation of no dispatch."
           ]
@@ -312,61 +314,34 @@
       ],
       "input": {
         "harness": "live-slot-abnormal-exit-with-a-produced-program",
-        "root": "a root that produces a Program, then fails before returning",
-        "mechanism": "a policy-denied effect inside a dispatched frame after the Program is produced; the target source `quote \"x\" test.emit drop` captures an I64 Program and then has its `test.emit` grant revoked before the invocation",
-        "unavailable_mechanism": "`test.abort` is not installable in this profile (the kernel bootstrap table has no abort row for declared-module profiles); its refusal is recorded as a frontend-defect witness, not as this case's success condition",
-        "owner_decision": "OWNER DECISION 2026-11-20 (decision 6): continue the host session when the pin ledger proves an exact release; poison otherwise"
+        "root": "a root that saves a Program, then traps before return",
+        "mechanism": "a policy-denied effect inside a dispatched frame after the Program is produced (the target source `quote \"x\" test.emit drop` captures an I64 Program and then has its `test.emit` grant revoked before the invocation)",
+        "unavailable_mechanism": "`test.abort` is not installable in this profile (the kernel bootstrap table has no abort row for declared-module profiles); its refusal is recorded as a frontend-defect witness, tracked by the integrator",
+        "owner_decision": "OWNER DECISION 2026-11-20 (decision 6): continue the host session when the pin ledger proves an exact release; poison otherwise. This runtime selects the poison branch because the host does not release or count backend frame pins on an abnormal exit.",
+        "withheld_reason": "independent review N-01: on the abnormal path the host forgets the failed root's frame records and neither releases nor counts the backend frame pins, so \"frame pins are released exactly once\" is not observable; real per-frame release accounting belongs to `live-reference-lifetimes` (decision 6, r[LREF-EXIT-01])"
       },
       "expected": {
         "stage": "live-slot-root",
         "outcome": "abnormal-exit-without-a-saved-owner",
         "saved_owner_tokens_issued": 0,
-        "frame_pins_released": "exactly-once",
-        "frame_pins_active_after": 0,
+        "frame_pins_released": "not-directly-observable: the host abandons the failed root's frame pins without releasing or counting them (live-reference-lifetimes, r[LREF-EXIT-01])",
+        "frame_pins_reported": "the pins the root still held when aborted (entered 2, released 0, active 2 in the observed run)",
         "guest_instance": "terminated-after-guest-failure",
         "session_state": {
           "observed_rule": "terminated-after-guest-failure",
           "owner_decision_6": "OWNER DECISION 2026-11-20 (decision 6): continue the host session when the pin ledger proves an exact release; poison otherwise",
           "branch": "poison",
-          "reason": "the exposed count is the host ledger of frame entries and exits; the backend's own frame-pin counter is not exposed"
+          "reason": "the host ledger does not prove an exact release: it neither releases nor counts the backend frame pins on an abnormal exit"
         },
-        "retained_owner_reaches_failed_root_cell": false
+        "retained_owner_reaches_failed_root_cell": "not-directly-observable: no saved owner is issued for the failed root, but reachability of its cells is not exposed"
       },
       "state": {
-        "implementation": "implemented",
-        "execution": "passed",
+        "implementation": "absent",
+        "execution": "not-run",
         "proof": "open",
-        "trust": "explicit"
+        "trust": "unassessed"
       },
-      "evidence": [
-        {
-          "kind": "test",
-          "subject": "OWN-CASE-05",
-          "claim": "A dispatched target produces a captured I64 Program and then has its `test.emit` grant revoked: the root fails before returning with no stack (no saved-owner token), the request trace `[dispatch allowed, effect denied]`, the poisoned guest instance (`terminated-after-guest-failure`) and a per-root frame-pin ledger of entered 2 / released 2 / active 0. The in-process ledger half releases the map pin and both frame pins exactly once and refuses a normal finish while frames are entered. OWNER DECISION 2026-11-20 (decision 6) selects the poison branch: the exposed count is the host ledger of frame entries and exits and the backend's own pin counter is not exposed.",
-          "revision": "0.1.0-draft.5",
-          "result": "passed",
-          "source_revision": "sha256:f09c0ded63f5cb099d9e1fc0392035f81e2581c841f5edea6f43dfa600a1cb50",
-          "configuration": {
-            "profile": "Ownership-Lifetime-Design",
-            "receipt": "../../verification/own-cases/runs/20261120-r2/acceptance.json",
-            "receipt_sha256": "ae533fdd4c886f88f094ea1d6a7befdb9c16159b43902c4d4aa6470d34612e84",
-            "gate": "../../verification/own-cases/gate.mjs",
-            "gate_sha256": "e924780a817ff8d0795a949f3b86930928c5331db05e210f039e3dedc1b84e78",
-            "tested_commit": "81139111d0e851bdd4dc42fbbfbad30846c0412a",
-            "binary_sha256": "8020eb8611adae0bc1fa21e22d89706b89c5ddc46586dfee14a364a0d0bb45c5",
-            "binary_sha256_after": "8020eb8611adae0bc1fa21e22d89706b89c5ddc46586dfee14a364a0d0bb45c5",
-            "source_revision": "sha256:f09c0ded63f5cb099d9e1fc0392035f81e2581c841f5edea6f43dfa600a1cb50",
-            "projection_sha256": "aff156745bbd2e1b0f8553a12f014674164e82c313c75b9d9aac4244a1b87e87",
-            "case_id": "OWN-CASE-05",
-            "lane": "crates/noble-cli/tests/live_slot_own_trap.mjs"
-          },
-          "assumptions": [
-            "Finite behavioral evidence for this run on the binary built from the recorded clean commit; it does not prove lifetime, reclamation, lowering or compiler correctness.",
-            "The exposed per-root frame-pin count is the host ledger of frame entries and exits; the backend frame-pin counter itself is not exposed.",
-            "`test.abort` is not installable in this profile; its internal-diagnostic refusal is recorded as a frontend-defect witness and is not this case's success condition."
-          ]
-        }
-      ]
+      "evidence": []
     },
     {
       "id": "OWN-CASE-06",

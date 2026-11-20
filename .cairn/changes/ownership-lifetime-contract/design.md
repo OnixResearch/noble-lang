@@ -181,15 +181,15 @@ Every layer assumes the following:
 
 ### Decision: Conformance scenario designs
 
-**Choice:** The following **Planned tests** were designed here. OWNER DECISION 2026-11-20 (decision 1, plus the campaign scope amendment recorded in `proposal.md`) allowed the campaign to register them in `specs/conformance/ownership-cases.json` and execute those with a lane inside this change; the case file is authoritative for each case's `state` and `evidence`, and `verification/own-cases/` retains the gate receipt. Two cases change their observed outcome versus the text below and are recorded as such rather than amended here: OWN-CASE-03's design trees cannot all run (the deep chains are refused at compose 5 by the anonymous summary's node bound), and OWN-CASE-05's session state follows decision 6. The table's expectations remain the design's original statement.
+**Choice:** The following **Planned tests** were designed here. OWNER DECISION 2026-11-20 (decision 1, plus the campaign scope amendment recorded in `proposal.md`) allowed the campaign to register them in `specs/conformance/ownership-cases.json` and execute those with a lane inside this change; the case file is authoritative for each case's `state` and `evidence`, and `verification/own-cases/` retains the gate receipts. The table below is the design as written; execution status, fidelity notes and any deviation are recorded in the registration and the change's `tasks.md`, not by editing this table.
 
 | ID | Input | Expected observation |
 |---|---|---|
 | OWN-CASE-01 saved capture after invocation exit | root R1: `def k [ quote ]`, input `5`, save the returned Program; R1 exits; root R2 runs the owner with `20` via `swap [ run ] dip +` | `25`; the capture cell is still live after R1; zero stale-handle traps |
 | OWN-CASE-02 shared duplicates released in both orders | `[ 1 + ] dup` saved as two owners A, B; variant 1 releases A then B, variant 2 B then A, with a run between releases | the remaining owner runs successfully after the first release; storage reclaims only after the second; identical final live count |
 | OWN-CASE-03 nested composition | left, right and balanced 8-leaf `compose` trees of captured I64 Programs, each saved, then intermediate owners dropped | results equal; every intermediate is reclaimed only when unreferenced; no leaf freed while the root lives |
-| OWN-CASE-04 resource rejection | `dup`, `drop`, `quote`, `Pair` then `quote`, `Sum<R,I64>` then `drop`, `List<R>` then `drop`, `borrow` escape variants of Decision 1 (the borrow variants are inapplicable under decision 7) | each non-borrow variant is statically rejected, with zero emission and zero guest requests |
-| OWN-CASE-05 trap during escape | a root that produces a Program, then fails before return (the profile has no `test.abort` row; a policy-denied effect inside a dispatched frame is the executable mechanism) | no saved-owner token is issued; frame pins are released exactly once; the guest instance is poisoned; the host session follows decision 6; no cell from the failed root is reachable from a retained owner |
+| OWN-CASE-04 resource rejection | `dup`, `drop`, `quote`, `Pair` then `quote`, `Sum<R,I64>` then `drop`, `List<R>` then `drop`, `borrow` escape variants of Decision 1 | each is statically rejected, with zero emission and zero guest requests |
+| OWN-CASE-05 trap during escape | a root that saves a Program, then traps before return | no saved-owner token is issued; frame pins are released exactly once; the instance is poisoned; no cell from the failed root is reachable from a retained owner |
 | OWN-CASE-06 module-root retirement with a saved named caller | module M defines `def h [ 1 + ]` and `def g [ h ]`; a returned saved Program from M's compiled code calls `g`; M's version and replay owners are released and `release_module_roots` runs; the saved owner is then invoked | either the invocation returns the correct value, or retirement is refused while the owner lives. A stale-handle trap is a failure. This is the reproducer for the issue's correspondence question. |
 | OWN-CASE-07 retained old definition | session `def n [ 1 ]`, `[ n ]` saved, `def n [ 2 ]`, old module retirement requested | saved Program yields `1`; the old code span is not cleared while the saved owner lives; retirement succeeds after release |
 | OWN-CASE-08 arena reset with escaping capture | profile with scratch reset: a root returns a Program capturing a scratch-built Text | promotion happens before reset; the returned Program reads identical Text afterward |
@@ -197,6 +197,23 @@ Every layer assumes the following:
 | OWN-CASE-10 counter saturation | 65,535 incoming references to one cell, then one more | refusal or specified trap; never wrap; existing owners stay valid |
 | OWN-CASE-11 self-recursive package reclamation | self-recursive definition saved, then released | package reclaimed; self reference not counted as an owner |
 | OWN-CASE-12 data drop never releases a resource | `Pair<I64,Text>` dropped while a resource is held by `dip` | storage claim ends; the resource stays live and is returned exactly once |
+
+Annotations on the table (owner decisions and execution notes):
+
+- **OWN-CASE-04 fidelity.** The campaign's lane installs the design's source programs and feeds
+  `Pair<I64,Account@1>`, `Sum<Account@1,I64>` and `List<Account@1>` as typed root inputs instead of
+  constructing them with `pair`, `inl` or `cons`. The design's "`Pair` then `quote`" asks for the
+  eligibility of an aggregate that contains a resource; the receipt observes that exact aggregate
+  type in each refusal diagnostic. The borrow escape variants are inapplicable under OWNER
+  DECISION 2026-11-20 (decision 7: no borrow profile is selected).
+- **OWN-CASE-05 not executed here.** The live-slot profile has no `test.abort` row, and on an
+  abnormal exit the host neither releases nor counts the backend frame pins, so "frame pins are
+  released exactly once" is not observable. Real per-frame release accounting on the abnormal path
+  belongs to `live-reference-lifetimes` (OWNER DECISION 2026-11-20 decision 6, r[LREF-EXIT-01]),
+  which will execute OWN-CASE-05 later.
+- **OWN-CASE-03 execution outcome.** The design's balanced tree runs; the left- and right-deep
+  8-leaf chains are refused at compose 5 by the anonymous summary's node bound. The case is
+  recorded as an executed failure in the registration; the table keeps the design's expectation.
 
 ## Risks / Trade-offs
 
