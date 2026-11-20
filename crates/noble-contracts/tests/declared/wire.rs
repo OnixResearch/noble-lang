@@ -80,7 +80,11 @@ fn wire_library_words_link_at_their_published_signatures() -> Result<(), String>
         "split and the first/second route publish the same interface"
     );
     let fanout = session
-        .prepare(b"7 [ 1 + ] [ 2 * ] wire@1.fanout unpair", &[], super::LIMITS)
+        .prepare(
+            b"7 [ 1 + ] [ 2 * ] wire@1.fanout unpair",
+            &[],
+            super::LIMITS,
+        )
         .map_err(|error| format!("{error:?}"))?;
     assert_eq!(fanout.output(), split.output());
     for program in [
