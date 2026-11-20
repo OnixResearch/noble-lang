@@ -14,7 +14,6 @@ It promotes nothing by itself.
 |---|---|---|
 | [`runs/20261120c`](runs/20261120c) | superseded gate at commit `5c9e38f4` | `completed`; OWN-CASE-03 misregistered (review F-01), OWN-CASE-04 rows constant (F-03) |
 | [`runs/20261120-failed`](runs/20261120-failed) | superseded gate before its row parser was fixed | `failed`; OWN-CASE-04 rows were misparsed after the test harness prefix |
-| [`runs/20261120-r2`](runs/20261120-r2) | `node verification/own-cases/gate.mjs --out <new dir>` at the rework commit recorded in the receipt | see the receipt's `result` |
 
 [`acceptance.json`](acceptance.json) is the latest receipt. Superseded receipts stay immutable;
 the rework receipts are added beside them, never edited.

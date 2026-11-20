@@ -134,7 +134,7 @@
       "input": {
         "harness": "live-slot-composed-tree",
         "leaves": 8,
-        "leaf": "def tree [ drop [ 1 + ] ]: a leaf that drops the input I64 and returns a Program capturing that I64",
+        "leaf": "def tree [ drop [ 1 + ] ] is not used: each leaf is `quote [ + ] compose`, which captures the factory input I64 in `quote` and adds it to the running value in `[ + ]`",
         "composer": "compose",
         "variants": [
           "balanced",
@@ -148,20 +148,28 @@
         "outcome": "equal-results-for-all-three-trees",
         "variants": {
           "balanced": {
-            "result_before": 8,
-            "result_after": 8,
+            "result_before": 36,
+            "result_after": 36,
             "released_before_root": 14
           },
           "left-deep": {
-            "result_before": 8,
-            "result_after": 8,
+            "result_before": 36,
+            "result_after": 36,
             "released_before_root": 14
           },
           "right-deep": {
-            "result_before": 8,
-            "result_after": 8,
+            "result_before": 36,
+            "result_after": 36,
             "released_before_root": 14
           }
+        },
+        "summary_bound": "32 nodes / 4096 bytes per anonymous summary child",
+        "deep_chain_refusal": "the left-deep and right-deep 8-leaf chains are refused at compose 5 by the summary node bound (checked captured value exceeds host observation bound) and the session ends terminated-after-guest-failure",
+        "bounded_control": {
+          "leaves": 40,
+          "refused_at_compose": 5,
+          "diagnostic": "Error: checked captured value exceeds host observation bound",
+          "session_state": "terminated-after-guest-failure"
         },
         "reclamation": "every intermediate is reclaimed only when unreferenced; no leaf is reclaimed while the root lives (not-directly-observable: the runtime exposes no live-cell count)"
       },
@@ -220,7 +228,8 @@
           "borrow-escape-save-program": "inapplicable-no-borrow-profile",
           "borrow-escape-release": "inapplicable-no-borrow-profile"
         },
-        "controls": "an I64 program and a resource pass-through both install and emit an artifact"
+        "controls": "an I64 program and a resource pass-through both install and emit an artifact",
+        "diagnostic_rule": "kernel rejected a non-capturable value; required S Data; actual S <canonical input type containing Resource(ResourceKind(41))>"
       },
       "state": {
         "implementation": "absent",
@@ -251,9 +260,15 @@
         "stage": "live-slot-root",
         "outcome": "abnormal-exit-without-a-saved-owner",
         "saved_owner_tokens_issued": 0,
-        "frame_pins_released": "exactly-once (entered equals released, active zero)",
+        "frame_pins_released": "exactly-once",
+        "frame_pins_active_after": 0,
         "guest_instance": "poisoned",
-        "session_state": "OWNER DECISION 2026-11-20 (decision 6): the host continues only when the pin ledger proves an exact release; the exposed per-root count is the host ledger of frame entries and exits and the backend's own pin counter is not exposed, so the poison branch applies: terminated-after-guest-failure",
+        "session_state": {
+          "observed_rule": "terminated-after-guest-failure",
+          "owner_decision_6": "OWNER DECISION 2026-11-20 (decision 6): continue the host session when the pin ledger proves an exact release; poison otherwise",
+          "branch": "poison",
+          "reason": "the exposed count is the host ledger of frame entries and exits; the backend's own frame-pin counter is not exposed"
+        },
         "retained_owner_reaches_failed_root_cell": false
       },
       "state": {
@@ -343,7 +358,8 @@
         "outcome": "retained-old-definition",
         "saved_result": 1,
         "old_code_span_retained_while_saved_owner_lives": true,
-        "old_code_span_retired_after_release": true
+        "old_code_span_retired_after_release": true,
+        "guest_requests": 0
       },
       "state": {
         "implementation": "implemented",

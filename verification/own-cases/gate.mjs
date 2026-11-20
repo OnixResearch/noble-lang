@@ -159,13 +159,25 @@ const binary = buildNoble(out);
 const observations = {};
 const runs = [];
 
+// A registered expectation that the lane did not observe is `unmet`; a lane that fails to run, or
+// that cannot report a field at all, is `failed`.
+class Mismatch extends Error {}
+
+function expectValue(label, actual, expected) {
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    throw new Mismatch(`${label}: observed ${JSON.stringify(actual)}, `
+      + `registered ${JSON.stringify(expected)}`);
+  }
+}
+
 function observe(id, lane, body) {
   try {
-    const observation = body();
+    const observation = body(byId.get(id).expected);
     assert.equal(typeof observation.case, 'string', `${id}: observation has no verdict`);
     observations[id] = { ...observation, lane: observation.lane ?? lane };
   } catch (error) {
-    observations[id] = { case: 'failed', lane, diagnostic: String(error?.message ?? error) };
+    observations[id] = { case: error instanceof Mismatch ? 'unmet' : 'failed', lane,
+      diagnostic: String(error?.message ?? error) };
   }
 }
 
@@ -188,12 +200,14 @@ observe('OWN-CASE-01', 'crates/noble-cli/tests/live_slot_direct_quote.mjs', () =
   const exit = rows.find(row => row.kind === 'exit');
   assert.equal(executed.status, 0, executed.stderr);
   assert.ok(quoted && ran && discarded && exit, 'the lane evidence lacks a reply');
+  expectValue('OWN-CASE-01 capture', quoted.stack[0].capture_values?.[0]?.value, '5');
+  expectValue('OWN-CASE-01 result', ran.stack, [{ kind: 1, value: String(expected.result) }]);
+  expectValue('OWN-CASE-01 guest_requests', ran.guest_requests, expected.guest_requests);
+  expectValue('OWN-CASE-01 stale_handle_traps', exit.code, 0);
+  assert.ok(stale.length >= 1, 'a released owner must be refused');
+  expectValue('OWN-CASE-01 retired spans', discarded.retire_code_spans?.length, 1);
   return {
-    case: quoted.stack[0].capture_values?.[0]?.value === '5'
-      && JSON.stringify(ran.stack) === JSON.stringify([{ kind: 1, value: '25' }])
-      && quoted.guest_requests === 0 && ran.guest_requests === 0
-      && stale.length >= 1
-      && discarded.retire_code_spans?.length === 1 && exit.code === 0 ? 'passed' : 'unmet',
+    case: 'passed',
     lane: 'crates/noble-cli/tests/live_slot_direct_quote.mjs',
     capture: quoted.stack[0].capture_values,
     result: ran.stack,
@@ -207,7 +221,7 @@ observe('OWN-CASE-01', 'crates/noble-cli/tests/live_slot_direct_quote.mjs', () =
 // OWN-CASE-02 and OWN-CASE-03: shared duplicates in both orders and the design's captured-I64
 // trees. A deep chain refused by the summary node bound makes OWN-CASE-03 unmet, with the refusal
 // recorded exactly as observed.
-observe('OWN-CASE-02', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', () => {
+observe('OWN-CASE-02', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', expected => {
   const executed = run(out, 'own-02-03',
     node, [path.join(root, 'crates/noble-cli/tests/live_slot_ownership_cases.mjs'),
       binary.executable]);
@@ -216,73 +230,98 @@ observe('OWN-CASE-02', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', (
   const shared = packet.cases['OWN-CASE-02'];
   const orders = shared.map(row => row.order);
   const survivors = shared.map(row => row.survivor);
-  return {
-    case: executed.status === 0
-      && JSON.stringify(orders) === JSON.stringify(['A-then-B', 'B-then-A'])
-      && survivors.every(stack => JSON.stringify(stack) === JSON.stringify([{ kind: 1, value: '42' }]))
-      && shared.every(row => row.exit === 0) ? 'passed' : 'unmet',
-    orders, survivor_results: survivors,
-    released_owner_refused: shared.every(row => row.exit === 0),
-  };
+  expectValue('OWN-CASE-02 orders', orders, ['A-then-B', 'B-then-A']);
+  expectValue('OWN-CASE-02 survivor results', survivors,
+    shared.map(() => [{ kind: 1, value: String(expected.remaining_owner_result_after_first_release) }]));
+  expectValue('OWN-CASE-02 exits', shared.map(row => row.exit), [0, 0]);
+  return { case: 'passed', orders, survivor_results: survivors };
 });
 
-observe('OWN-CASE-03', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', () => {
+observe('OWN-CASE-03', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', expected => {
   const executed = run(out, 'own-03',
     node, [path.join(root, 'crates/noble-cli/tests/live_slot_ownership_cases.mjs'),
       binary.executable]);
   runs.push(executed);
   const trees = parsed(executed.stdout).cases['OWN-CASE-03'];
-  const executedTree = (row, value) => row && row.refused === false && row.exit === 0
-    && row.released_before_root === 14
-    && JSON.stringify(row.before) === JSON.stringify([{ kind: 1, value }])
-    && JSON.stringify(row.after) === JSON.stringify(row.before);
-  const balanced = executedTree(trees.balanced, '36');
-  const left = executedTree(trees.left_deep, '36');
-  const right = executedTree(trees.right_deep, '36');
+  const treeOf = (name, row) => {
+    const registered = expected.variants[name];
+    if (!row || row.refused !== false) {
+      return { name, executed: false, refusal: row ?? null };
+    }
+    expectValue(`OWN-CASE-03 ${name} released`, row.released_before_root,
+      registered.released_before_root);
+    expectValue(`OWN-CASE-03 ${name} before`, row.before,
+      [{ kind: 1, value: String(registered.result_before) }]);
+    expectValue(`OWN-CASE-03 ${name} after`, row.after,
+      [{ kind: 1, value: String(registered.result_after) }]);
+    expectValue(`OWN-CASE-03 ${name} exit`, row.exit, 0);
+    return { name, executed: true, released_before_root: row.released_before_root,
+      before: row.before, after: row.after };
+  };
+  const balanced = treeOf('balanced', trees.balanced);
+  const left = treeOf('left-deep', trees.left_deep);
+  const right = treeOf('right-deep', trees.right_deep);
   const control = trees.bounded_control;
-  const controlPinned = control && control.refused_at_compose === 5 && control.exit === 2
-    && control.diagnostic === 'Error: checked captured value exceeds host observation bound'
-    && control.session_state === 'terminated-after-guest-failure';
-  const verdict = balanced && left && right ? 'passed' : 'unmet';
+  expectValue('OWN-CASE-03 control refusal point', control?.refused_at_compose,
+    expected.bounded_control.refused_at_compose);
+  expectValue('OWN-CASE-03 control diagnostic', control?.diagnostic,
+    expected.bounded_control.diagnostic);
+  expectValue('OWN-CASE-03 control session', control?.session_state,
+    expected.bounded_control.session_state);
+  expectValue('OWN-CASE-03 control exit', control?.exit, 2);
+  // Every variant must have executed with the registered values; any refusal is the case's
+  // recorded failure, never a narrowed variant.
+  for (const row of [balanced, left, right]) {
+    assert.ok(row.executed, `OWN-CASE-03 ${row.name} did not execute: ${JSON.stringify(row.refusal)}`);
+  }
   return {
-    case: verdict,
-    balanced: trees.balanced, left_deep: trees.left_deep, right_deep: trees.right_deep,
-    bounded_control: control,
-    control_pinned: controlPinned,
-    declared_bound: 'captureValue: 32 nodes / 4096 bytes per anonymous summary child',
+    case: 'passed',
+    balanced, left_deep: left, right_deep: right, bounded_control: control,
+    declared_bound: expected.summary_bound,
   };
 });
 
 // OWN-CASE-04: the registered `Account@1` nominal and source programs, through the real CLI.
-observe('OWN-CASE-04', 'crates/noble-cli/tests/live_slot_own_resource_rejection.mjs', () => {
+observe('OWN-CASE-04', 'crates/noble-cli/tests/live_slot_own_resource_rejection.mjs', expected => {
   const executed = run(out, 'own-04',
     node, [path.join(root, 'crates/noble-cli/tests/live_slot_own_resource_rejection.mjs'),
       binary.executable]);
   runs.push(executed);
   const observed = parsed(executed.stdout);
-  const expectedInputs = ['Account@1', 'Account@1', 'Account@1', 'Pair<I64,Account@1>',
-    'Sum<Account@1,I64>', 'List<Account@1>'];
   const names = observed.variants.map(row => row.variant);
-  const eligible = observed.variants.every((row, index) => row.outcome === 'refused'
-    && row.stage === 'command'
-    && row.diagnostic.includes('kernel rejected a non-capturable value')
-    && row.diagnostic.includes(row.input)
-    && row.input === expectedInputs[index]
-    && row.guest_requests === 0 && row.protected_operations === 0 && row.emitted === false);
-  const emitted = observed.controls.length === 2
-    && observed.controls.every(row => row.outcome === 'installed' && row.emitted === true
-      && typeof row.artifact_sha256 === 'string');
+  const rejecting = Object.entries(expected.variants)
+    .filter(([, value]) => value === 'reject').map(([name]) => name);
+  const inapplicable = Object.entries(expected.variants)
+    .filter(([, value]) => value === 'inapplicable-no-borrow-profile').map(([name]) => name);
+  expectValue('OWN-CASE-04 executed variants', names, rejecting);
+  for (const row of observed.variants) {
+    expectValue(`OWN-CASE-04 ${row.variant} outcome`, row.outcome, 'refused');
+    expectValue(`OWN-CASE-04 ${row.variant} stage`, row.stage, 'command');
+    expectValue(`OWN-CASE-04 ${row.variant} guest requests`, row.guest_requests,
+      expected.guest_requests);
+    expectValue(`OWN-CASE-04 ${row.variant} protected operations`, row.protected_operations,
+      expected.protected_operations);
+    expectValue(`OWN-CASE-04 ${row.variant} emission`, row.emitted, false);
+    assert.match(row.diagnostic, /kernel rejected a non-capturable value/,
+      `${row.variant} was not refused by the eligibility rule: ${row.diagnostic}`);
+    assert.match(row.diagnostic, /required S Data/, `${row.variant}: ${row.diagnostic}`);
+    assert.match(row.diagnostic, /Resource\(ResourceKind\(41\)\)/,
+      `${row.variant} refusal does not name the registered resource: ${row.diagnostic}`);
+  }
+  expectValue('OWN-CASE-04 controls', observed.controls.map(row => row.outcome),
+    ['installed', 'installed']);
+  for (const row of observed.controls) {
+    expectValue(`OWN-CASE-04 control ${row.control} emission`, row.emitted, true);
+    assert.equal(typeof row.artifact_sha256, 'string', JSON.stringify(row));
+  }
   return {
-    case: executed.status === 0 && observed.exit === 0
-      && JSON.stringify(names) === JSON.stringify(['dup', 'drop', 'quote', 'pair-then-quote',
-        'sum-then-drop', 'list-then-drop']) && eligible && emitted ? 'passed' : 'unmet',
-    variants: observed.variants, controls: observed.controls,
-    binary_sha256: observed.selected_binary_sha256,
+    case: 'passed', variants: observed.variants, controls: observed.controls,
+    inapplicable_variants: inapplicable, binary_sha256: observed.selected_binary_sha256,
   };
 });
 
 // OWN-CASE-05: an abnormal exit that produces a Program, with the per-root frame-pin ledger.
-observe('OWN-CASE-05', 'crates/noble-cli/tests/live_slot_own_trap.mjs', () => {
+observe('OWN-CASE-05', 'crates/noble-cli/tests/live_slot_own_trap.mjs', expected => {
   const executed = run(out, 'own-05',
     node, [path.join(root, 'crates/noble-cli/tests/live_slot_own_trap.mjs'), binary.executable]);
   runs.push(executed);
@@ -290,18 +329,25 @@ observe('OWN-CASE-05', 'crates/noble-cli/tests/live_slot_own_trap.mjs', () => {
   const exit = observed.abnormal_exit;
   const witness = observed.abort_refusal_witness;
   const ledger = observed.host_ledger;
-  const exact = exit.frame_pins.entered === exit.frame_pins.released
-    && exit.frame_pins.active === 0 && exit.frame_pins.entered > 0;
+  expectValue('OWN-CASE-05 saved owners', exit.saved_owner_tokens_issued,
+    expected.saved_owner_tokens_issued);
+  expectValue('OWN-CASE-05 frame pins released', exit.frame_pins.released, exit.frame_pins.entered);
+  expectValue('OWN-CASE-05 frame pins active', exit.frame_pins.active,
+    expected.frame_pins_active_after);
+  expectValue('OWN-CASE-05 guest instance', exit.guest_instance, expected.guest_instance);
+  expectValue('OWN-CASE-05 session state', exit.session_state,
+    expected.session_state.observed_rule);
+  assert.equal(expected.retained_owner_reaches_failed_root_cell, false,
+    'the registered case forbids a retained owner reaching the failed root cell');
+  expectValue('OWN-CASE-05 dispatch trace', exit.target_trace,
+    [['dispatch', 'allowed'], ['effect', 'denied']]);
+  expectValue('OWN-CASE-05 abort witness', witness.outcome, 'refused');
+  expectValue('OWN-CASE-05 abort witness guest requests', witness.guest_requests, 0);
+  expectValue('OWN-CASE-05 ledger pins', ledger.frame_pins.released, ledger.frame_pins.entered);
+  expectValue('OWN-CASE-05 normal finish', ledger.normal_finish_refused, true);
+  expectValue('OWN-CASE-05 exit', exit.exit, 2);
   return {
-    case: executed.status === 0
-      && exit.saved_owner_tokens_issued === 0 && exact
-      && exit.guest_instance === 'terminated-after-guest-failure'
-      && JSON.stringify(exit.target_trace) === JSON.stringify([['dispatch', 'allowed'],
-        ['effect', 'denied']])
-      && witness.outcome === 'refused' && witness.guest_requests === 0
-      && ledger.frame_pins.entered === ledger.frame_pins.released
-      && ledger.normal_finish_refused === true
-      && exit.exit === 2 ? 'passed' : 'unmet',
+    case: 'passed',
     abnormal_exit: exit, abort_refusal_witness: witness, host_ledger: ledger,
     unobserved: ['the backend frame-pin counter itself (the exposed count is the host ledger of '
       + 'frame entries and exits)', 'a trap produced by `test.abort` (not installable)'],
@@ -309,44 +355,46 @@ observe('OWN-CASE-05', 'crates/noble-cli/tests/live_slot_own_trap.mjs', () => {
 });
 
 // OWN-CASE-06: the saved named caller survives module-root retirement and code retires on release.
-observe('OWN-CASE-06', 'crates/noble-cli/tests/live_slot_module_root_retention.mjs', () => {
+observe('OWN-CASE-06', 'crates/noble-cli/tests/live_slot_module_root_retention.mjs', expected => {
   const executed = run(out, 'own-06',
     node, [path.join(root, 'crates/noble-cli/tests/live_slot_module_root_retention.mjs'),
       binary.executable]);
   runs.push(executed);
   const observed = lines(executed.stdout, '{"case":"OWN-CASE-06"')[0];
-  return {
-    case: executed.status === 0 && observed && observed.case === 'OWN-CASE-06'
-      && JSON.stringify(observed.before) === JSON.stringify([{ kind: 1, value: '42' }])
-      && JSON.stringify(observed.after_supersession) === JSON.stringify(observed.before)
-      && Boolean(observed.retired_span) ? 'passed' : 'unmet',
-    before: observed?.before ?? null, after_supersession: observed?.after_supersession ?? null,
-    retired_span: observed?.retired_span ?? null,
-  };
+  assert.ok(observed, 'the module-root lane printed no observation');
+  expectValue('OWN-CASE-06 before', observed.before,
+    [{ kind: 1, value: String(expected.saved_result) }]);
+  expectValue('OWN-CASE-06 after supersession', observed.after_supersession, observed.before);
+  assert.ok(observed.retired_span, 'the module code span must retire after the owner release');
+  return { case: 'passed', before: observed.before,
+    after_supersession: observed.after_supersession, retired_span: observed.retired_span };
 });
 
 // OWN-CASE-07: the retained old definition still yields 1, stays pinned, and retires on release.
-// The test prints its observed values; the gate reads them instead of declaring them.
-observe('OWN-CASE-07', 'crates/noble-cli/tests/live_repl.rs', () => {
+// The test prints its observed values; they are read from the line, not declared here.
+observe('OWN-CASE-07', 'crates/noble-cli/tests/live_repl.rs', expected => {
   const executed = run(out, 'own-07', 'cargo', ['test', '--locked', '-p', 'noble-cli', '--test',
     'live_repl', 'retained_old_definition_yields_old_value_and_retires_after_release', '--',
     '--nocapture', '--test-threads=1']);
   runs.push(executed);
-  const observed = lines(executed.stdout, '{"id":"OWN-CASE-07"')[0];
-  const value = observed?.saved_result?.[0]?.value;
-  return {
-    case: executed.status === 0
-      && executed.stdout.includes('test retained_old_definition_yields_old_value_and_retires_after_release ... ok')
-      && observed && value === '1'
-      && observed.old_span_retained_while_owner_lives === true
-      && observed.old_span_retired_after_release === true
-      && observed.guest_requests === 0 ? 'passed' : 'unmet',
-    saved_result: observed?.saved_result ?? null,
-    old_span_retained_while_owner_lives:
-      observed?.old_span_retained_while_owner_lives ?? null,
-    old_span_retired_after_release: observed?.old_span_retired_after_release ?? null,
-    released_observed_roots: observed?.released_observed_roots ?? null,
-  };
+  // The libtest progress prefix shares the line with the captured output.
+  const observed = executed.stdout.split('\n').flatMap(line => {
+    const at = line.indexOf('{"id":"OWN-CASE-07"');
+    return at < 0 ? [] : [JSON.parse(line.slice(at))];
+  })[0];
+  assert.ok(observed, 'the retained-definition test printed no observation');
+  expectValue('OWN-CASE-07 saved result', observed.saved_result?.[0]?.value,
+    String(expected.saved_result));
+  expectValue('OWN-CASE-07 retained span', observed.old_span_retained_while_owner_lives,
+    expected.old_code_span_retained_while_saved_owner_lives);
+  expectValue('OWN-CASE-07 retired span', observed.old_span_retired_after_release,
+    expected.old_code_span_retired_after_release);
+  expectValue('OWN-CASE-07 guest requests', observed.guest_requests, expected.guest_requests);
+  expectValue('OWN-CASE-07 exit', executed.status, 0);
+  return { case: 'passed', saved_result: observed.saved_result,
+    old_span_retained_while_owner_lives: observed.old_span_retained_while_owner_lives,
+    old_span_retired_after_release: observed.old_span_retired_after_release,
+    released_observed_roots: observed.released_observed_roots };
 });
 
 const { receipts, promotable, unmet, withheld } = deriveVerdicts(observations);
@@ -356,12 +404,16 @@ if (binaryAfter !== binary.executable_sha256) {
   failed.push('binary changed during the run');
   receipts.binary = { case: 'failed' };
 }
+const failedCases = [...unmet, ...failed];
+const verdict = failedCases.length === 0 ? 'all-passed'
+  : failed.length ? 'lane-failure' : 'unmet-cases';
 
 const acceptance = {
   schema: 'noble-own-cases-acceptance/v1',
   claim: 'selected host executions of OWN-CASE-01..07 on one CLI built from the recorded clean '
     + 'commit; promotion verdicts are derived from the observations, not declared here',
   result: failed.length ? 'failed' : 'completed',
+  verdict,
   failures: [...unmet.map(id => `${id}: observed values differ from the registered expectation`),
     ...failed.map(id => `${id}: lane or run failed`)],
   tested_commit: testedCommit,
@@ -377,7 +429,7 @@ const acceptance = {
   observations,
   receipts,
   promotable,
-  failed_cases: [...unmet, ...failed],
+  failed_cases: failedCases,
   withheld,
   non_claims: [
     'OWN-CASE-03 executes the design\'s captured-I64 leaves (`quote [ + ] compose`, one dynamic I64 capture each). The balanced tree runs (36 before and after 14 releases); the left- and right-deep 8-leaf chains are refused at compose 5 by the anonymous summary\'s 32-node bound. The design\'s deep trees are therefore not executed, and the case is not promoted on this receipt.',
@@ -390,6 +442,7 @@ const acceptance = {
 const receiptPath = path.join(out, 'acceptance.json');
 fs.writeFileSync(receiptPath, `${JSON.stringify(acceptance, null, 2)}\n`);
 console.log(JSON.stringify({ receipt: receiptPath, receipt_sha256: hash(receiptPath),
-  result: acceptance.result, failures: acceptance.failures, tested_commit: testedCommit,
+  result: acceptance.result, verdict, failures: acceptance.failures, tested_commit: testedCommit,
   source_revision: sourceRevision, promotable, observations }, null, 1));
+// An unmet case is a recorded outcome, not a gate crash; a lane failure is.
 if (failed.length) process.exitCode = 1;
