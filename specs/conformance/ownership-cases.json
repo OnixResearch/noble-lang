@@ -101,7 +101,7 @@
       "input": {
         "harness": "live-slot-composed-tree",
         "leaves": 8,
-        "leaf": "drop [ 1 + ] with one captured I64",
+        "leaf": "def tree [ drop [ 1 + ] ]: a leaf that drops the input I64 and returns a Program capturing that I64",
         "composer": "compose",
         "variants": ["balanced", "left-deep", "right-deep"],
         "release": "every leaf and intermediate owner except the root"
@@ -113,33 +113,11 @@
           "balanced": {"result_before": 8, "result_after": 8, "released_before_root": 14},
           "left-deep": {"result_before": 8, "result_after": 8, "released_before_root": 14},
           "right-deep": {"result_before": 8, "result_after": 8, "released_before_root": 14}
-        }
+        },
+        "reclamation": "every intermediate is reclaimed only when unreferenced; no leaf is reclaimed while the root lives (not-directly-observable: the runtime exposes no live-cell count)"
       },
-      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
-      "evidence": [{
-      "kind": "test",
-      "subject": "OWN-CASE-03",
-      "claim": "Balanced, left-deep and right-deep 8-leaf `compose` trees each return 8 before and after every other owner is released. The capture summary now uses the same 32-node/4096-byte exact bound as the selected-origin and retained-graph paths; a 40-leaf control is still refused at compose 16 by the 32-node bound, so the representation budget remains charged.",
-      "revision": "0.1.0-draft.5",
-      "result": "passed",
-      "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
-      "configuration": {
-            "profile": "Ownership-Lifetime-Design",
-            "receipt": "../../verification/own-cases/acceptance.json",
-            "receipt_sha256": "e873df587c72f0d741ccf746a55bb5baff40b2816b9d08ca6f29e3a99d5e4b38",
-            "gate": "../../verification/own-cases/gate.mjs",
-            "tested_commit": "5c9e38f499da9091636257a0ff1aff4afcecfc26",
-            "binary_sha256": "d1e084df7a484c828fe2c5594ddf240fa1102dc6d25d6a07b7626effba193c29",
-            "source_revision": "sha256:3d243f9834c58a692dcb11fb593b1af819c87802daf7258dd0ec8cc9e8daa510",
-            "case_id": "OWN-CASE-03",
-            "lane": "crates/noble-cli/tests/live_slot_ownership_cases.mjs"
-      },
-      "assumptions": [
-            "The former 1000-byte/64-node budget applied only to anonymous capture summaries; retention already walks up to 4096 nodes and the selected-origin summary already used 4096 bytes.",
-            "The bounded control shows the representation limit still refuses deeper chains after the change.",
-            "Reclamation is observed through owner refusal, not a live-cell count."
-      ]
-}]
+      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "evidence": []
     },
     {
       "id": "OWN-CASE-04",
