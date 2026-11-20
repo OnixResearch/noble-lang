@@ -16,7 +16,7 @@ fn session() -> Result<noble_contracts::source::ModuleSession, String> {
 }
 
 #[test]
-fn wire_library_registers_only_its_exact_source_bytes() -> Result<(), String> {
+fn library_registers_only_its_exact_source_bytes() -> Result<(), String> {
     let mut session = session()?;
     assert_eq!(
         noble_contracts::source::WIRE_LIBRARY_SOURCE.len(),
@@ -31,7 +31,7 @@ fn wire_library_registers_only_its_exact_source_bytes() -> Result<(), String> {
 }
 
 #[test]
-fn wire_library_refuses_any_other_declaration_bytes() -> Result<(), String> {
+fn library_refuses_any_other_declaration_bytes() -> Result<(), String> {
     let session = session()?;
     let mut altered = noble_contracts::source::WIRE_LIBRARY_SOURCE.to_vec();
     // A comment keeps the altered text a well-formed module declaration, so
@@ -57,7 +57,7 @@ fn wire_library_refuses_any_other_declaration_bytes() -> Result<(), String> {
 }
 
 #[test]
-fn wire_library_words_link_at_their_published_signatures() -> Result<(), String> {
+fn library_words_link_at_their_published_signatures() -> Result<(), String> {
     let mut session = session()?;
     session = super::commit(session, noble_contracts::source::WIRE_LIBRARY_SOURCE)?;
     let split = session
@@ -126,7 +126,7 @@ fn wire_library_words_link_at_their_published_signatures() -> Result<(), String>
 }
 
 #[test]
-fn wire_fanout_at_a_resource_names_the_library_word() -> Result<(), String> {
+fn fanout_at_a_resource_names_the_library_word() -> Result<(), String> {
     let mut session = session()?;
     session = super::commit(
         session,
