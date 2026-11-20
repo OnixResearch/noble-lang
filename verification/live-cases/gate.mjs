@@ -1876,14 +1876,9 @@ for (const id of ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-0
 assert.deepEqual(fullyObserved.sort(), [...promoted].sort(),
   `promotion set must equal the fully observed exercised cases: fully observed ${fullyObserved}, declared ${promoted}`);
 for (const id of promoted) verdicts[id].promoted = true;
-for (const id of ['LIVE-04', 'LIVE-08', 'LIVE-09', 'LIVE-10']) {
-  record(id, 'case', {
-    reason: id === 'LIVE-04' ? 'needs a binary-mutation injection seam behind the live-test-barrier feature'
-      : id === 'LIVE-08' ? 'needs a REPL proof policy and an independent checker receipt'
-      : 'self-edit case is owned by the change task 4; not exercised by this slice',
-  });
-  verdicts[id].unobserved = ['case'];
-}
+record('LIVE-08', 'case', {
+  reason: 'needs a REPL proof policy and an independent checker receipt; not exercised by this gate',
+});
 
 // No source may move under the gate.
 for (const [file, digest] of Object.entries(manifest)) assert.equal(sha256(content(file)), digest, `source changed during gate: ${file}`);
