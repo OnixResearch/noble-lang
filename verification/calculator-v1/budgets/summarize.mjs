@@ -29,6 +29,11 @@ const stdinOf = session => Buffer.concat(session.lines.map(line => Buffer.from(
 const flagsOf = argv => JSON.stringify(argv.slice(argv.indexOf('calculator') + 1));
 const line = text => (text.length > 80 ? { bytes: Buffer.byteLength(text), prefix: text.slice(0, 40) } : text);
 const sessions = plan.sessions.map(session => {
+  // A retired row is part of the plan's reviewed revision, not of the run.
+  if (session.retired) {
+    return { id: session.id, category: session.category, retired: true,
+      retired_reason: session.retired_reason };
+  }
   const stdin = sha256(stdinOf(session));
   const found = receipts.flatMap(({ receipt }, index) => receipt.sessions.map(result => ({ result, index })))
     .filter(({ result }) => result.stdin_sha256 === stdin && flagsOf(result.argv) === JSON.stringify(session.flags)
@@ -58,11 +63,12 @@ const sessions = plan.sessions.map(session => {
   };
 });
 const summary = {
-  schema: 'noble-calculator-budget-summary/v1',
+  schema: 'noble-calculator-budget-summary/v2',
   status: 'implementation-observation-not-case-evidence',
   case: 'CALC-08',
   binary: { sha256: [...binaries][0], source_id: receipts[0].receipt.binary.source_id },
   plan_sha256: sha256(planBytes),
+  revision: plan.revision ?? null,
   receipts: receipts.map(({ bytes, receipt }) => ({ sha256: sha256(bytes), plan_sha256: receipt.plan_sha256,
     runner_sha256: receipt.runner_sha256, node: receipt.node, repository_head: receipt.repository.head,
     configuration: receipt.configuration })),
@@ -70,5 +76,6 @@ const summary = {
   sessions,
 };
 fs.writeFileSync(outPath, `${JSON.stringify(summary, null, 1)}\n`);
-const unmatched = sessions.filter(session => session.observed !== false && !session.matched_plan).map(session => session.id);
+const unmatched = sessions.filter(session => !session.retired && session.observed !== false && !session.matched_plan)
+  .map(session => session.id);
 if (unmatched.length > 0) console.error(`not matching plan: ${unmatched.join(', ')}`);

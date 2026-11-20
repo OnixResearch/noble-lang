@@ -1,0 +1,925 @@
+{
+ "schema": "noble-calculator-budget-summary/v2",
+ "status": "implementation-observation-not-case-evidence",
+ "case": "CALC-08",
+ "binary": {
+  "sha256": "b4b2931a27e7de1bc932a69c2c2a47e52b36fd6aac940e02ef811e3acb2d1736",
+  "source_id": "cb5e9f71e36b8940d3a28be51b194001ee68b57f"
+ },
+ "plan_sha256": "3f2d1bf3918edf3372752f78a0b0a10ed34dba229bad21a300ac85a383977934",
+ "revision": {
+  "date": "2026-11-20",
+  "decision": "OWNER DECISION 2026-11-20: \"... the reviewed revision of the four drifted CALC-08 control rows is authorized ...\"",
+  "reason": "The four control rows below were written for the 44329dc replay design. CALC-STATE-02's selected committed-session route removed the host replay preflight and made a dead or memory-capped worker end the session, so two rows asserted a refusal that cannot fire and two expected silent recovery. Each change is recorded here and on its row; no category bracket or its predicted boundary N was changed, and no row was re-pointed at an observation.",
+  "changes": [
+   {
+    "row": "control/history-bytes",
+    "change": "retired",
+    "explanation": "The `HostLimit HistoryBytes` replay preflight no longer exists; the 65,536-byte input frame is the surviving host bound and control/transport-limit exercises it."
+   },
+   {
+    "row": "control/replay-work",
+    "change": "retired",
+    "explanation": "The `HostLimit ReplayWork` replay preflight no longer exists for the same reason."
+   },
+   {
+    "row": "control/worker-killed",
+    "change": "expectation replaced",
+    "explanation": "CALC-STATE-02 requires a restore verification failure to end the session, so a killed worker now ends it with `noble calculator: calculator restore failed` and exit 2 instead of the 44329dc silent recovery with exit 0."
+   },
+   {
+    "row": "control/memory-cap",
+    "change": "expectation replaced",
+    "explanation": "A scope too small for the worker now closes the reply stream, which the host reports as `noble calculator: engine worker closed its reply stream` with exit 2, instead of an externally killed process with no output."
+   }
+  ]
+ },
+ "receipts": [
+  {
+   "sha256": "b1d66e0d31aa1821cc4c5266c345aa8acc54d154a6188d5a105effe355762034",
+   "plan_sha256": "3f2d1bf3918edf3372752f78a0b0a10ed34dba229bad21a300ac85a383977934",
+   "runner_sha256": "e258a622264be0b4dd518ff96713cb8e05c5a83f98e7d6636f98b0727a0c6537",
+   "node": "v24.13.0",
+   "repository_head": "cb5e9f71e36b8940d3a28be51b194001ee68b57f",
+   "configuration": {
+    "concurrency": 2,
+    "memory_max": "2G",
+    "timeout_s": 7200
+   }
+  }
+ ],
+ "non_claims": [
+  "No canonical CALC case state, evidence or implementation status is changed.",
+  "Observations hold for the recorded binary only; the runner cannot prove which source built it.",
+  "A bracket shows one deterministic boundary per category, not that every charge site or every input is bounded.",
+  "Controls show distinct labels for a host timeout, a killed worker, a memory-capped scope and the input transport bound; they do not enumerate every native failure, and the two retired replay rows are not observations.",
+  "No proof of the accounting, of exact arithmetic or of conversions is claimed."
+ ],
+ "sessions": [
+  {
+   "id": "output-size/N-1",
+   "category": "OutputSize",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--output-size",
+    "6"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "let x=1234567",
+    "x",
+    "let y=1234567",
+    "y"
+   ],
+   "stdin_sha256": "5d08599ff21c7abd127a0ca116ce5205c72d13c728fbba1ce526f644df9c06bb",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit OutputSize"
+    },
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit OutputSize"
+    },
+    {
+     "stderr": "UnknownName"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "ResourceLimit OutputSize [14,14) provenance=unavailable",
+    "ResourceLimit OutputSize [14,14) provenance=unavailable",
+    "UnknownName [0,1) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 148.9,
+   "max_rss_kib": 328824,
+   "resource_limit_lines": 2,
+   "matched_plan": true
+  },
+  {
+   "id": "output-size/N",
+   "category": "OutputSize",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--output-size",
+    "7"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "let x=1234567",
+    "x",
+    "let y=1234567",
+    "y"
+   ],
+   "stdin_sha256": "5d08599ff21c7abd127a0ca116ce5205c72d13c728fbba1ce526f644df9c06bb",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "1234567"
+    },
+    {
+     "stdout": "1234567"
+    },
+    {
+     "stdout": "1234567"
+    },
+    {
+     "stdout": "1234567"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "1234567",
+    "1234567",
+    "1234567",
+    "1234567"
+   ],
+   "stderr_lines": [],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 145.7,
+   "max_rss_kib": 301452,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "call-depth/N-1",
+   "category": "CallDepth",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--call-depth",
+    "1"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "fn g(y)=y+1",
+    "fn f(y)=g(y)+1",
+    "f(1)",
+    "g(1)"
+   ],
+   "stdin_sha256": "91b0098fbeaa0f8056d13ae8b6b56087bf69d01f44b9b7477d2903fc67347462",
+   "expected": [
+    {
+     "silent": true
+    },
+    {
+     "silent": true
+    },
+    {
+     "stderr": "ResourceLimit CallDepth"
+    },
+    {
+     "stdout": "2"
+    }
+   ],
+   "stdout_lines": [
+    "2"
+   ],
+   "stderr_lines": [
+    "ResourceLimit CallDepth [8,9) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 249.6,
+   "max_rss_kib": 335496,
+   "resource_limit_lines": 1,
+   "matched_plan": true
+  },
+  {
+   "id": "call-depth/N",
+   "category": "CallDepth",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--call-depth",
+    "2"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "fn g(y)=y+1",
+    "fn f(y)=g(y)+1",
+    "f(1)",
+    "g(1)"
+   ],
+   "stdin_sha256": "91b0098fbeaa0f8056d13ae8b6b56087bf69d01f44b9b7477d2903fc67347462",
+   "expected": [
+    {
+     "silent": true
+    },
+    {
+     "silent": true
+    },
+    {
+     "stdout": "3"
+    },
+    {
+     "stdout": "2"
+    }
+   ],
+   "stdout_lines": [
+    "3",
+    "2"
+   ],
+   "stderr_lines": [],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 269,
+   "max_rss_kib": 379828,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "input-bytes/N-2",
+   "category": "InputBytes",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--input-bytes",
+    "7"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "x+100000",
+    "x"
+   ],
+   "stdin_sha256": "5baeb4bf050f650bb5dfbcc54d70930b8b8878714aab5ed4fe8c5a84d44b26e9",
+   "expected": [
+    {
+     "stderr": "ResourceLimit InputBytes"
+    },
+    {
+     "stderr": "ResourceLimit InputBytes"
+    },
+    {
+     "stderr": "UnknownName"
+    }
+   ],
+   "stdout_lines": [],
+   "stderr_lines": [
+    "ResourceLimit InputBytes [0,8) provenance=unavailable",
+    "ResourceLimit InputBytes [0,9) provenance=unavailable",
+    "UnknownName [0,1) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 58.4,
+   "max_rss_kib": 218632,
+   "resource_limit_lines": 2,
+   "matched_plan": true
+  },
+  {
+   "id": "input-bytes/N-1",
+   "category": "InputBytes",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--input-bytes",
+    "8"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "x+100000",
+    "x"
+   ],
+   "stdin_sha256": "5baeb4bf050f650bb5dfbcc54d70930b8b8878714aab5ed4fe8c5a84d44b26e9",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit InputBytes"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "ResourceLimit InputBytes [0,9) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 161.6,
+   "max_rss_kib": 305756,
+   "resource_limit_lines": 1,
+   "matched_plan": true
+  },
+  {
+   "id": "input-bytes/N",
+   "category": "InputBytes",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--input-bytes",
+    "9"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "x+100000",
+    "x"
+   ],
+   "stdin_sha256": "5baeb4bf050f650bb5dfbcc54d70930b8b8878714aab5ed4fe8c5a84d44b26e9",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "100007"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "100007",
+    "7"
+   ],
+   "stderr_lines": [],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 271.7,
+   "max_rss_kib": 332756,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "numeric-digits/N-1",
+   "category": "NumericDigits",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--numeric-digits",
+    "2"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "x+123",
+    "x"
+   ],
+   "stdin_sha256": "81da6db63a29183811aaf76ebe674e6acf7dea1bdcddc1a33020323f09c860f3",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit NumericDigits"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "ResourceLimit NumericDigits [2,5) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 195.7,
+   "max_rss_kib": 331828,
+   "resource_limit_lines": 1,
+   "matched_plan": true
+  },
+  {
+   "id": "numeric-digits/N",
+   "category": "NumericDigits",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--numeric-digits",
+    "3"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "x+123",
+    "x"
+   ],
+   "stdin_sha256": "81da6db63a29183811aaf76ebe674e6acf7dea1bdcddc1a33020323f09c860f3",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "130"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "130",
+    "7"
+   ],
+   "stderr_lines": [],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 311.6,
+   "max_rss_kib": 331580,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "intermediate-bits/N-1",
+   "category": "IntermediateIntegerBits",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--intermediate-bits",
+    "25"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "1234567",
+    "x"
+   ],
+   "stdin_sha256": "bc83c133ab583ba6c01322e163656d4e43812c0f53819ab299bfa9a2ee058cde",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit IntermediateIntegerBits"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "ResourceLimit IntermediateIntegerBits [0,7) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 210,
+   "max_rss_kib": 314524,
+   "resource_limit_lines": 1,
+   "matched_plan": true
+  },
+  {
+   "id": "intermediate-bits/N",
+   "category": "IntermediateIntegerBits",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--intermediate-bits",
+    "26"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "1234567",
+    "x"
+   ],
+   "stdin_sha256": "bc83c133ab583ba6c01322e163656d4e43812c0f53819ab299bfa9a2ee058cde",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "1234567"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "1234567",
+    "7"
+   ],
+   "stderr_lines": [],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 208.9,
+   "max_rss_kib": 327276,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "syntax-depth/N-1",
+   "category": "SyntaxDepth",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--syntax-depth",
+    "2"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "(((x)))",
+    "x"
+   ],
+   "stdin_sha256": "4714c342b89068b65928f031d26d6aa97a6c888d4faa615c9c9bf46b5771cdd7",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit SyntaxDepth"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "ResourceLimit SyntaxDepth [2,3) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 151.4,
+   "max_rss_kib": 320112,
+   "resource_limit_lines": 1,
+   "matched_plan": true
+  },
+  {
+   "id": "syntax-depth/N",
+   "category": "SyntaxDepth",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--syntax-depth",
+    "3"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "(((x)))",
+    "x"
+   ],
+   "stdin_sha256": "4714c342b89068b65928f031d26d6aa97a6c888d4faa615c9c9bf46b5771cdd7",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7",
+    "7"
+   ],
+   "stderr_lines": [],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 169.9,
+   "max_rss_kib": 299764,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "evaluation-work/N-2",
+   "category": "EvaluationWork",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--evaluation-work",
+    "38051"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "77",
+    "x"
+   ],
+   "stdin_sha256": "4cd9dea4194439856483ea8826de5aea095e30ac74500db56b248ea21eb7fdbc",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit EvaluationWork"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "ResourceLimit EvaluationWork [3,3) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 210.3,
+   "max_rss_kib": 330812,
+   "resource_limit_lines": 1,
+   "matched_plan": true
+  },
+  {
+   "id": "evaluation-work/N-1",
+   "category": "EvaluationWork",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--evaluation-work",
+    "38052"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "77",
+    "x"
+   ],
+   "stdin_sha256": "4cd9dea4194439856483ea8826de5aea095e30ac74500db56b248ea21eb7fdbc",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "ResourceLimit EvaluationWork"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "7"
+   ],
+   "stderr_lines": [
+    "ResourceLimit EvaluationWork [3,3) provenance=unavailable"
+   ],
+   "status": 1,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 188.3,
+   "max_rss_kib": 334184,
+   "resource_limit_lines": 1,
+   "matched_plan": true
+  },
+  {
+   "id": "evaluation-work/N",
+   "category": "EvaluationWork",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator",
+    "--evaluation-work",
+    "38053"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "77",
+    "x"
+   ],
+   "stdin_sha256": "4cd9dea4194439856483ea8826de5aea095e30ac74500db56b248ea21eb7fdbc",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stdout": "77"
+    },
+    {
+     "stdout": "7"
+    }
+   ],
+   "stdout_lines": [
+    "7",
+    "77",
+    "7"
+   ],
+   "stderr_lines": [],
+   "status": 0,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 190.5,
+   "max_rss_kib": 337708,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "control/history-bytes",
+   "category": "host-limit",
+   "retired": true,
+   "retired_reason": "This row asserted `HostLimit HistoryBytes [0,65531) provenance=host-replay-preflight`, a host replay-preflight bound of the 44329dc design. CALC-STATE-02's selected committed-session route runs every line directly on the committed session and restores it on failure, so no host history or replay bound exists and this refusal cannot fire. The surviving host bound is the 65,536-byte input frame, exercised by control/transport-limit, and the design's post-format output assertion is a defensive infrastructure failure with no reachable input. The row is retired rather than re-pointed at a guest category: a guest `ResourceLimit` would no longer be a host-bound control."
+  },
+  {
+   "id": "control/replay-work",
+   "category": "host-limit",
+   "retired": true,
+   "retired_reason": "This row asserted `HostLimit ReplayWork [0,65401) provenance=host-replay-preflight`, the second 44329dc replay-preflight bound. It is retired for the same reason as control/history-bytes: the committed-session route removed replay, so the bound no longer exists and the row would otherwise assert a refusal the design cannot produce. The host-failure controls that remain are control/transport-limit, control/host-timeout, control/memory-cap and control/worker-killed, none of which may print a `ResourceLimit`."
+  },
+  {
+   "id": "control/worker-killed",
+   "category": "native-failure",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "let x=7",
+    "1+2",
+    "x"
+   ],
+   "stdin_sha256": "1205ca3fc5c578f9e64ba845e8c9acb8fb77316232c8f0dee7e1417ff42eff23",
+   "expected": [
+    {
+     "stdout": "7"
+    },
+    {
+     "stderr": "noble calculator: calculator restore failed"
+    }
+   ],
+   "stdout_lines": [
+    "7"
+   ],
+   "stderr_lines": [
+    {
+     "bytes": 83,
+     "prefix": "noble calculator: calculator restore fai"
+    }
+   ],
+   "status": 2,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 112.1,
+   "max_rss_kib": 303156,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "control/host-timeout",
+   "category": "host-timeout",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 20,
+   "stdin_lines": [
+    "1+2"
+   ],
+   "stdin_sha256": "37f671841d9da909c96d5e754e2277fc4c0435b209972f21350ecc9281c6e63e",
+   "expected": [],
+   "stdout_lines": [],
+   "stderr_lines": [],
+   "status": null,
+   "signal": "SIGKILL",
+   "timed_out": true,
+   "wall_s": 20,
+   "max_rss_kib": null,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "control/transport-limit",
+   "category": "transport-limit",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator"
+   ],
+   "memory_max": "2G",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    {
+     "repeat": "1",
+     "count": 65537
+    }
+   ],
+   "stdin_sha256": "9bd477dc2721a8fd0e48b0f75fab5b41e824686d8888cbc7ddccd2eed9e12556",
+   "expected": [
+    {
+     "stderr": "TransportLimit InputFrameBytes"
+    }
+   ],
+   "stdout_lines": [],
+   "stderr_lines": [
+    "TransportLimit InputFrameBytes: source byte limit exceeded"
+   ],
+   "status": 2,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 1.7,
+   "max_rss_kib": 145584,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  },
+  {
+   "id": "control/memory-cap",
+   "category": "host-memory-limit",
+   "receipt": 0,
+   "argv": [
+    "noble",
+    "calculator"
+   ],
+   "memory_max": "48M",
+   "timeout_s": 7200,
+   "stdin_lines": [
+    "1+2"
+   ],
+   "stdin_sha256": "37f671841d9da909c96d5e754e2277fc4c0435b209972f21350ecc9281c6e63e",
+   "expected": [
+    {
+     "stderr": "noble calculator: engine worker closed its reply stream"
+    }
+   ],
+   "stdout_lines": [],
+   "stderr_lines": [
+    "noble calculator: engine worker closed its reply stream"
+   ],
+   "status": 2,
+   "signal": null,
+   "timed_out": false,
+   "wall_s": 0.1,
+   "max_rss_kib": 74668,
+   "resource_limit_lines": 0,
+   "matched_plan": true
+  }
+ ]
+}
