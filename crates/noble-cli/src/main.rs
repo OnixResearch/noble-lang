@@ -299,6 +299,12 @@ fn main() -> std::process::ExitCode {
     }
     if arguments
         .first()
+        .is_some_and(|argument| argument == "release")
+    {
+        return build::owner_law::run(&arguments);
+    }
+    if arguments
+        .first()
         .is_some_and(|argument| argument == "execute")
         && arguments.iter().any(|argument| argument == "--target")
     {
@@ -318,10 +324,11 @@ fn main() -> std::process::ExitCode {
         .is_some_and(|argument| argument == "--help")
     {
         println!(
-            "{}\n\n{}\n\n{}\n\n{}\n\n{}\n\n{}\n\n{}\n\n{}",
+            "{}\n\n{}\n\n{}\n\n{}\n\n{}\n\n{}\n\n{}\n\n{}\n\n{}",
             core::USAGE,
             workflow::USAGE,
             build::USAGE,
+            build::owner_law::USAGE,
             core::companions::USAGE,
             backend::USAGE,
             component::USAGE,
