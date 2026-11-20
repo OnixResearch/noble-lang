@@ -137,6 +137,13 @@ theorems are checked again against the selected new subject and trusted models.
 
 ## Retained runs
 
+### `0287ea06`: [receipt-0287ea06.json](receipt-0287ea06.json)
+
+The #137 metadata changed `Cargo.toml` and `flake.nix`, so the lock and receipt
+were renewed with no extracted subject changed. This clean run at `0287ea06` on
+the renewed binding has the same 61 theorems and the same refusals of all
+eleven mutation controls.
+
 ### `b9e04f32`: [receipt-b9e04f32.json](receipt-b9e04f32.json)
 
 Batch 17 then merged `main` at `2677ec88`, and the lock and receipt were renewed
