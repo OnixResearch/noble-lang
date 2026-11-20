@@ -36,9 +36,13 @@ from any delta.
 | CB-ADMIT-01 | 2345 | 2808 | delta stronger (canonical verbatim + 1 paragraph) | unchanged prose; generated region removed |
 | CB-GATE-01 | 1510 | 1510 | identical | identical; generated region removed |
 
-After the fix, seven blocks are byte-identical to the canonical block and the
-other four differ only by inserted sentences; a sentence-level diff reports
-no deleted or replaced canonical sentence in any block.
+Character counts and "identical" compare requirement prose only: the
+canonical document also carries generated scenario regions (and, for
+CB-IDENTITY-01 and CB-ORDER-01, a trailing section heading inside the parsed
+block), which the delta intentionally omits. After the fix, seven blocks are
+byte-identical to the canonical requirement prose and the other four differ
+only by inserted sentences; a sentence-level diff reports no deleted or
+replaced canonical sentence in any block.
 
 ## Exact differences before the fix
 

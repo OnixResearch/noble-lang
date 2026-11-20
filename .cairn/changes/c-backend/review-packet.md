@@ -218,7 +218,8 @@ or manifest digests makes its output native evidence.
 
 ## 4. Reconciliation outcome
 
-Seven of eleven delta blocks are byte-identical to canonical. The other four
+Seven of eleven delta blocks are byte-identical to the canonical requirement
+prose (the canonical also carries generated scenario regions). The other four
 contain every canonical sentence verbatim plus inserted reviewed text:
 CB-BUILD-01 one paragraph, CB-LIMIT-01 two sentences, CB-SANDBOX-01 two
 sentences, CB-ADMIT-01 one paragraph. No canonical sentence is deleted or
