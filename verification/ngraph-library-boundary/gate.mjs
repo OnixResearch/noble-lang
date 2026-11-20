@@ -42,6 +42,11 @@ const identityTraits = [
   'noble_ngraph::identity::IdentityScheme',
 ];
 const forbiddenHasherNeedles = ['DefaultHasher', 'RandomState', 'SipHasher', 'std::collections::hash_map', 'std::hash::'];
+// One workspace row takes about 35 minutes on an idle host: collection is a
+// bounded Cargo check, then the architecture phase evaluates the whole 400 MB
+// IR single-threaded. Under shared-host contention it can exceed an hour, so
+// the lane gives each run and the artifact replay four hours before refusing.
+const octetTimeoutMs = 4 * 60 * 60 * 1000;
 // `--artifact-dir` is an Octet option and must precede the `--` separator;
 // everything after it is passed through to Cargo.
 const octetArgv = (binary, artifactDirectory) => [
@@ -219,13 +224,13 @@ function runOctet({ source, artifactDirectory, output, octetBinary, environment 
   fs.mkdirSync(output, { recursive: true });
   fs.mkdirSync(artifactDirectory, { recursive: true });
   const argv = octetArgv(octetBinary, artifactDirectory);
-  const result = spawn(argv, { cwd: source, env: environment });
+  const result = spawn(argv, { cwd: source, env: environment, timeout: octetTimeoutMs });
   fs.writeFileSync(path.join(output, 'octet.stdout.json'), result.stdout);
   fs.writeFileSync(path.join(output, 'octet.stderr.log'), result.stderr);
   let parsed = null;
   try { parsed = JSON.parse(result.stdout.toString()); } catch { parsed = null; }
   const verification = spawn([octetBinary, 'artifact', 'verify', '--artifact-dir', artifactDirectory,
-    '--output-format', 'json'], { cwd: source, env: environment });
+    '--output-format', 'json'], { cwd: source, env: environment, timeout: octetTimeoutMs });
   fs.writeFileSync(path.join(output, 'artifact-verify.stdout.json'), verification.stdout);
   fs.writeFileSync(path.join(output, 'artifact-verify.stderr.log'), verification.stderr);
   let verificationReport = null;
