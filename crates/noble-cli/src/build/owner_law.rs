@@ -446,16 +446,17 @@ fn exact(
         is_refutation: false,
         out: None,
         timeout_ms: options.timeout_ms,
-        schema_v3: true,
+        schema: super::report::Schema::V3,
         lean_binary: Some(lean_binary),
         library_tree: Some(library_tree),
+        pins: None,
     };
     let mut build = super::report::Document::new();
     build.require_proof = true;
     build.source_path = options.source.to_string_lossy().into_owned();
     build.contract_path = options.contract.to_string_lossy().into_owned();
     build.timeout_ms = options.timeout_ms;
-    build.schema_v3 = true;
+    build.schema = super::report::Schema::V3;
     let products = match super::checked(&exact, &mut build) {
         Ok(products) => products,
         Err(failure) => {

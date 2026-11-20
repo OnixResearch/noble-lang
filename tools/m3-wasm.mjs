@@ -7,7 +7,8 @@ import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { REPRESENTATIONS, OPTIMIZATIONS, CANONICAL_IDS, sha256, digest, equal, unknown,
-  validateConfig, canonicalProjection, runtimeCases, aggregate, evaluateReport, runPolicyControls } from './m3-wasm-policy.mjs';
+  validateConfig, validateRuntimeAssets, canonicalProjection, runtimeCases, aggregate, evaluateReport,
+  runPolicyControls } from './m3-wasm-policy.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CONFIG = 'crates/noble-cli/src/core/runtime/config.json';
@@ -47,8 +48,9 @@ function sourceSnapshot(config) {
   }
   for (const directory of config.source_trees) visit(directory);
   const actualAssets = fs.readdirSync(path.join(ROOT, 'crates/noble-wasm/runtime'))
-    .filter(file => file.endsWith('.wat')).map(file => `crates/noble-wasm/runtime/${file}`).sort();
-  if (!equal(actualAssets, [...config.runtime_assets].sort())) throw Error('owned runtime WAT asset declarations are incomplete');
+    .filter(file => file.endsWith('.wat')).map(file => `crates/noble-wasm/runtime/${file}`);
+  // One owner for the declaration check: the policy module refuses a stale list.
+  validateRuntimeAssets(config, actualAssets);
   const files = Object.fromEntries([...names].sort().map(name => {
     const absolute = path.join(ROOT, name);
     if (fs.lstatSync(absolute).isSymbolicLink()) throw Error(`source identity must not be a symlink: ${name}`);

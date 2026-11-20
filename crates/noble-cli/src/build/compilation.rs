@@ -40,7 +40,7 @@ pub(super) fn prepare(source: &[u8]) -> Result<super::Artifact, crate::workflow:
             return Err(failure);
         }
     };
-    let wasm =
+    let assembly =
         attempt!(
             assemble(&wat).map_err(|message| crate::workflow::output::Failure::unsupported(
                 "artifact-assembly",
@@ -50,14 +50,15 @@ pub(super) fn prepare(source: &[u8]) -> Result<super::Artifact, crate::workflow:
     Ok(super::Artifact {
         prepared,
         wat,
-        wasm,
+        wasm: assembly.bytes,
+        tools: assembly.tools,
     })
 }
 
 /// Assemble WAT with the selected worker in a private disposable directory.
 /// The module bytes outlive the directory; a cleanup failure never invalidates
 /// the returned bytes.
-fn assemble(wat: &[u8]) -> Result<std::vec::Vec<u8>, std::string::String> {
+fn assemble(wat: &[u8]) -> Result<crate::core::worker::assembly::Assembly, std::string::String> {
     let directory = attempt!(
         crate::workflow::artifacts::Temporary::create().map_err(|failure| failure.message)
     );

@@ -38,6 +38,34 @@ const finite = value => typeof value === 'number' && Number.isFinite(value) && v
 const integer = value => Number.isSafeInteger(value) && value >= 0;
 function requireCondition(condition, message) { if (!condition) throw Error(message); }
 
+/// The declared owned-runtime list, checked for the form every consumer reads.
+export function declaredRuntimeAssets(config) {
+  const declared = config.runtime_assets;
+  requireCondition(Array.isArray(declared) && declared.length > 0
+    && new Set(declared).size === declared.length
+    && declared.every(file => typeof file === 'string'
+      && /^crates\/noble-wasm\/runtime\/[a-z0-9-]+\.wat$/.test(file)),
+  'runtime assets must be declared explicitly');
+  return [...declared].sort();
+}
+
+/// Cross-check the declaration against the runtime directory that is actually
+/// emitted. A helper that is added (or renamed) without the declaration would
+/// otherwise leave the source manifest and every pin derived from it incomplete.
+export function validateRuntimeAssets(config, observed) {
+  const declared = declaredRuntimeAssets(config);
+  requireCondition(Array.isArray(observed) && observed.every(file => typeof file === 'string')
+    && new Set(observed).size === observed.length, 'observed runtime assets must be a path list');
+  const observedFiles = [...observed].sort();
+  for (const file of declared) {
+    requireCondition(observedFiles.includes(file), `declared runtime asset is missing from the tree: ${file}`);
+  }
+  for (const file of observedFiles) {
+    requireCondition(declared.includes(file), `owned runtime asset is not declared: ${file}`);
+  }
+  return declared;
+}
+
 export function validateConfig(config) {
   requireCondition(config.schema_version === 1, 'unsupported configuration schema');
   requireCondition(equal(config.representations, REPRESENTATIONS)
@@ -59,10 +87,7 @@ export function validateConfig(config) {
   }
   requireCondition(config.tools.node.v8 && config.nixpkgs?.revision && config.nixpkgs?.nar_hash,
     'missing engine or nixpkgs revision');
-  requireCondition(config.runtime_assets?.length > 0
-    && new Set(config.runtime_assets).size === config.runtime_assets.length
-    && config.runtime_assets.every(file => /^crates\/noble-wasm\/runtime\/[a-z0-9-]+\.wat$/.test(file)),
-  'runtime assets must be declared explicitly');
+  declaredRuntimeAssets(config);
   requireCondition(config.proof_status === 'open', 'the harness cannot claim a backend proof');
   return config;
 }

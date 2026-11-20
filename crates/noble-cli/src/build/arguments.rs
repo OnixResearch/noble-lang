@@ -15,10 +15,13 @@ pub(super) struct Options {
     pub(super) is_refutation: bool,
     pub(super) out: Option<std::path::PathBuf>,
     pub(super) timeout_ms: u64,
-    /// `--report-schema v3` binds the selected Lean binary and library tree.
-    pub(super) schema_v3: bool,
+    /// The revision `--report-schema` selected; `V3` binds the selected Lean
+    /// binary and library tree and `V4` adds the policy pin record.
+    pub(super) schema: super::report::Schema,
     pub(super) lean_binary: Option<std::path::PathBuf>,
     pub(super) library_tree: Option<std::path::PathBuf>,
+    /// `--report-schema v4` compares every observed identity to this document.
+    pub(super) pins: Option<std::path::PathBuf>,
 }
 
 fn usage() -> crate::workflow::output::Failure {
@@ -68,10 +71,11 @@ pub(super) fn parse(
     let mut out: Option<std::path::PathBuf> = None;
     let mut timeout_ms = crate::workflow::DEFAULT_TIMEOUT;
     let mut has_timeout = false;
-    let mut schema_v3 = false;
+    let mut schema = super::report::Schema::V1;
     let mut has_schema = false;
     let mut lean_binary: Option<std::path::PathBuf> = None;
     let mut library_tree: Option<std::path::PathBuf> = None;
+    let mut pins: Option<std::path::PathBuf> = None;
     let mut index = 1;
     while index < arguments.len() {
         let name = arguments[index]
@@ -97,12 +101,15 @@ pub(super) fn parse(
             }
             Some("--report-schema") if !has_schema => {
                 let value = attempt!(option_value(arguments, index));
-                schema_v3 = match value.to_str() {
-                    Some("v1") => false,
-                    Some("v3") => true,
-                    _ => return Err(usage()),
-                };
+                schema = attempt!(value
+                    .to_str()
+                    .and_then(super::report::Schema::parse)
+                    .ok_or_else(usage));
                 has_schema = true;
+                index += 2;
+            }
+            Some("--pins") if pins.is_none() => {
+                pins = Some(attempt!(option_value(arguments, index)).into());
                 index += 2;
             }
             Some("--lean-binary") if lean_binary.is_none() => {
@@ -129,9 +136,18 @@ pub(super) fn parse(
             },
         }
     }
-    // v3 exists to bind both selections; asking for it without them, or passing them for v1,
-    // would report a schema whose extra fields either lie or are silently dropped.
-    if schema_v3 != (lean_binary.is_some() && library_tree.is_some()) {
+    // v3 exists to bind both selections and v4 to bind a pin document on top;
+    // asking for a revision without its selections, or passing any selection for
+    // v1, would report a schema whose extra fields either lie or are dropped.
+    if schema == super::report::Schema::V1
+        && (lean_binary.is_some() || library_tree.is_some() || pins.is_some())
+    {
+        return Err(usage());
+    }
+    if schema != super::report::Schema::V1 && !(lean_binary.is_some() && library_tree.is_some()) {
+        return Err(usage());
+    }
+    if (schema == super::report::Schema::V4) != pins.is_some() {
         return Err(usage());
     }
     // The usage grammar shows `--require-proof` without brackets and the docs
@@ -147,9 +163,10 @@ pub(super) fn parse(
         is_refutation,
         out,
         timeout_ms,
-        schema_v3,
+        schema,
         lean_binary,
         library_tree,
+        pins,
     })
 }
 
@@ -173,9 +190,10 @@ mod tests {
         ]));
         assert!(parsed.is_ok(), "v1 parses");
         let Ok(options) = parsed else { return };
-        assert!(!options.schema_v3);
+        assert_eq!(options.schema, super::super::report::Schema::V1);
         assert!(options.lean_binary.is_none());
         assert!(options.library_tree.is_none());
+        assert!(options.pins.is_none());
     }
 
     #[test]
@@ -225,7 +243,8 @@ mod tests {
         ]));
         assert!(parsed.is_ok(), "v3 parses");
         let Ok(both) = parsed else { return };
-        assert!(both.schema_v3);
+        assert_eq!(both.schema, super::super::report::Schema::V3);
+        assert!(both.pins.is_none());
         assert_eq!(
             both.lean_binary.as_deref(),
             Some(std::path::Path::new("/l"))
@@ -234,6 +253,87 @@ mod tests {
             both.library_tree.as_deref(),
             Some(std::path::Path::new("/t"))
         );
+    }
+
+    #[test]
+    fn v4_requires_the_toolchain_and_a_pin_document_where_v3_refuses_it() {
+        for arguments in [
+            vec![
+                "--require-proof",
+                "x.noble",
+                "--contract",
+                "c.json",
+                "--report-schema",
+                "v4",
+                "--lean-binary",
+                "/l",
+                "--library-tree",
+                "/t",
+            ],
+            vec![
+                "--require-proof",
+                "x.noble",
+                "--contract",
+                "c.json",
+                "--report-schema",
+                "v4",
+                "--pins",
+                "/p",
+            ],
+            vec![
+                "--require-proof",
+                "x.noble",
+                "--contract",
+                "c.json",
+                "--pins",
+                "/p",
+            ],
+            vec![
+                "--require-proof",
+                "x.noble",
+                "--contract",
+                "c.json",
+                "--report-schema",
+                "v3",
+                "--lean-binary",
+                "/l",
+                "--library-tree",
+                "/t",
+                "--pins",
+                "/p",
+            ],
+            vec![
+                "--require-proof",
+                "x.noble",
+                "--contract",
+                "c.json",
+                "--report-schema",
+                "v2",
+            ],
+        ] {
+            assert!(
+                parse(&argv(&arguments)).is_err(),
+                "{arguments:?} is refused"
+            );
+        }
+        let parsed = parse(&argv(&[
+            "--require-proof",
+            "x.noble",
+            "--contract",
+            "c.json",
+            "--report-schema",
+            "v4",
+            "--lean-binary",
+            "/l",
+            "--library-tree",
+            "/t",
+            "--pins",
+            "/p",
+        ]));
+        assert!(parsed.is_ok(), "v4 parses");
+        let Ok(options) = parsed else { return };
+        assert_eq!(options.schema, super::super::report::Schema::V4);
+        assert_eq!(options.pins.as_deref(), Some(std::path::Path::new("/p")));
     }
 
     #[test]

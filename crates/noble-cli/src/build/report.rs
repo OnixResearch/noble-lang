@@ -2,12 +2,47 @@
 //!
 //! One JSON document is written to stdout; the shared outcome enum owns the
 //! exit mapping and the shared `Failure` carrier owns diagnostic rendering.
+//! `--report-schema v3` appends the caller-selected Lean toolchain binding and
+//! `v4` replaces it with the complete policy pin record; neither revision
+//! changes a `v1` field, and `v1` never carries the extra records.
 
+pub(super) mod pins;
 mod release;
 pub(super) mod toolchain;
 
 /// The consumer-selected policy revision this build checks evidence against.
 pub(super) const POLICY_REVISION: u32 = 1;
+
+/// The report revision the caller selected. `V1` is the default and its exact
+/// field set never changes; `V3` adds the caller-selected Lean toolchain;
+/// `V4` adds the complete policy pin record and refuses unless every observed
+/// identity equals the selection.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Schema {
+    V1,
+    V3,
+    V4,
+}
+
+impl Schema {
+    pub(super) const fn name(self) -> &'static str {
+        match self {
+            Self::V1 => "noble-mc2-build/v1",
+            Self::V3 => "noble-mc2-build/v3",
+            Self::V4 => "noble-mc2-build/v4",
+        }
+    }
+
+    /// The schema a caller selection names, or `None` for an unknown spelling.
+    pub(super) fn parse(value: &str) -> Option<Self> {
+        match value {
+            "v1" => Some(Self::V1),
+            "v3" => Some(Self::V3),
+            "v4" => Some(Self::V4),
+            _ => None,
+        }
+    }
+}
 
 pub(super) struct ReleaseDecision {
     pub(super) allowed: bool,
@@ -78,10 +113,18 @@ pub(super) fn artifact_correspondence(
 }
 
 pub(super) struct Document {
-    /// Set only by `--report-schema v3`; v1 output keeps its exact field set.
-    pub(super) schema_v3: bool,
-    /// Present exactly when `schema_v3` is set.
+    /// The revision `--report-schema` selected; v1 output keeps its exact field
+    /// set, v3 keeps v1 plus [`toolchain::Selected`], and v4 keeps v1 plus
+    /// [`pins::Observed`].
+    pub(super) schema: Schema,
+    /// Present exactly when `schema` is [`Schema::V3`].
     pub(super) selected_toolchain: Option<toolchain::Selected>,
+    /// Present exactly when `schema` is [`Schema::V4`] and the static pin
+    /// identities matched the selection.
+    pub(super) pins: Option<pins::Observed>,
+    /// The digest of the exact `--pins` document the v4 record was verified
+    /// against, retained so a receipt names the selection it was bound to.
+    pub(super) pin_selection_sha256: Option<std::string::String>,
     pub(super) outcome: crate::workflow::output::Outcome,
     pub(super) require_proof: bool,
     pub(super) source_path: std::string::String,
@@ -123,8 +166,10 @@ impl Document {
 
     pub(super) fn new() -> Self {
         Self {
-            schema_v3: false,
+            schema: Schema::V1,
             selected_toolchain: None,
+            pins: None,
+            pin_selection_sha256: None,
             outcome: crate::workflow::output::Outcome::NotRun,
             require_proof: false,
             source_path: std::string::String::new(),
@@ -156,11 +201,7 @@ impl Document {
         let base = crate::workflow::encoding::object([
             (
                 "schema",
-                crate::workflow::encoding::string(if self.schema_v3 {
-                    "noble-mc2-build/v3"
-                } else {
-                    "noble-mc2-build/v1"
-                }),
+                crate::workflow::encoding::string(self.schema.name()),
             ),
             ("command", crate::workflow::encoding::string("build")),
             // Assembly loads the inert module; no guest body or host import
@@ -287,11 +328,18 @@ impl Document {
                 crate::workflow::encoding::optional_string(self.emitted.as_deref()),
             ),
         ]);
-        // A v1 report keeps its exact field set; v2 appends the caller-selected binding.
+        // A v1 report keeps its exact field set; v3 appends the caller-selected
+        // toolchain and v4 appends the policy pin record instead.
         match base {
             crate::workflow::encoding::Json::Object(mut entries) => {
                 if let Some(selected) = &self.selected_toolchain {
                     entries.push(("selected_toolchain", selected.json()));
+                }
+                if let Some(pins) = &self.pins {
+                    entries.push((
+                        "pins",
+                        pins.json(self.pin_selection_sha256.as_deref().unwrap_or_default()),
+                    ));
                 }
                 crate::workflow::encoding::Json::Object(entries)
             }
@@ -313,7 +361,7 @@ const NON_CLAIMS: [&str; 8] = [
 
 #[cfg(test)]
 mod tests {
-    use super::{toolchain::Selected, Document};
+    use super::{toolchain::Selected, Document, Schema};
 
     fn selected() -> Selected {
         Selected {
@@ -327,17 +375,32 @@ mod tests {
     }
 
     #[test]
-    fn v1_omits_the_binding_and_v2_appends_it() {
+    fn v1_omits_the_bindings_and_v3_appends_the_toolchain() {
         let v1 = Document::new().json().encode();
         assert!(v1.contains("\"noble-mc2-build/v1\""));
         assert!(!v1.contains("selected_toolchain"));
+        assert!(!v1.contains("\"pins\""));
         let mut v3 = Document::new();
-        v3.schema_v3 = true;
+        v3.schema = Schema::V3;
         v3.selected_toolchain = Some(selected());
         let text = v3.json().encode();
         assert!(text.contains("\"noble-mc2-build/v3\""));
         assert!(text.contains("\"selected_toolchain\""));
         assert!(text.contains("\"library_tree\""));
         assert!(text.contains("\"files\":2"));
+        assert!(!text.contains("\"pins\""));
+    }
+
+    #[test]
+    fn v4_names_its_revision_and_never_reuses_a_v3_record() {
+        let mut v4 = Document::new();
+        v4.schema = Schema::V4;
+        let text = v4.json().encode();
+        assert!(text.contains("\"noble-mc2-build/v4\""));
+        // Without an observed, verified pin record the revision alone must not
+        // invent one: the field appears exactly when `pins` is present.
+        assert!(!text.contains("\"pins\""));
+        assert_eq!(Schema::parse("v4"), Some(Schema::V4));
+        assert_eq!(Schema::parse("v2"), None);
     }
 }

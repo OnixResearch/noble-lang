@@ -99,6 +99,7 @@ pub(crate) mod scan {
 }
 
 mod admission;
+pub mod assets;
 pub mod component;
 mod emit;
 mod lowering;
