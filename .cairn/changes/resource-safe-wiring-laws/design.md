@@ -500,7 +500,7 @@ Reasons:
 - K-EFFECT-05 already defines the needed widening: an explicit checked adaptation that keeps the stacks and the recipe, establishes inclusion of the source bound in the destination bound, and is not a proof search. A library-level adaptation is therefore an explicit host/consumer step, not new grammar.
 - The builtins keep the full union: `compose`, `case` and `if` already connect differently-bounded Programs. Only a library word's *published* signature is narrower, and a consumer that needs the wider form composes the builtin or adapts the operand first.
 
-MEASURED consequence: with the sketch as published, operands of different bounds do not unify at a library word. `"L" [ fx@1.say ] [ 1 + ] wire@1.fanout` is a `type-reject` ("program type or stack witness cannot be resolved"), not a preparation refusal. `wire_library::runs_in_a_fresh_declared_session` pins it.
+MEASURED consequence: with the sketch as published, operands of different bounds do not unify at a library word. `"L" [ fx@1.say ] [ 1 + ] wire@1.fanout` is a `type-reject` ("program type or stack witness cannot be resolved"), not a preparation refusal. `wire::runs_in_a_fresh_declared_session` pins it.
 
 ### Eligibility diagnostics
 
@@ -516,7 +516,7 @@ MEASURED with the prebuilt development CLI on 2026-11-20:
 - The published source compiler interns every *new* named specialization of a session in one identity table capped at `DEFINITION_LIMIT` (256); a new identity beyond the cap returns `Exhausted`, which the CLI reports as `independent source compilation refused` (`noble-wasm` `source/admission/identity/records.rs`). Its sibling environment-row cap is the same `DEFINITION_LIMIT` plus the fixed profile prefix (282 for a declared session).
 - Each library word costs the specializations it instantiates at one concrete type: `project_first` 1; `first` and `second` 2 (each also instantiates `rot`); `split` 4 (`split`, `first`, `second`, `rot`); `fanout` 5. An effectful operand adds its own named use, so O11-5's `split` costs 5.
 - Boundary measurements: with 254 identities consumed, `split` (4 more) is refused while `project_first` (1 more, 255 of 256) is admitted and a program that instantiates nothing still runs. With 252 consumed, the effectful `split` (5 more) is refused; with 251 it runs and its trace records both `test.emit` requests in order. A fresh session admits both forms.
-- No default budget changed. `wire_library::split_refusal_is_the_session_cumulative_budget` in `crates/noble-cli/tests/smoke.rs` pins the refusal, its diagnostic, the absence of any guest or host request, and the admitted neighbours, so the budget cannot move silently.
+- No default budget changed. `wire::split_refusal_is_the_session_cumulative_budget` in `crates/noble-cli/tests/smoke.rs` pins the refusal, its diagnostic, the absence of any guest or host request, and the admitted neighbours, so the budget cannot move silently.
 
 ## Coordination
 
