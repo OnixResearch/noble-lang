@@ -1079,12 +1079,13 @@ async function observeLive09() {
       candidate_snapshot_sha256: first.pending.candidate_snapshot_sha256,
       proposal_recipe_sha256: first.pending.proposal_recipe_sha256 });
   observe('LIVE-09', 'expected.candidate_body_executions_before_publication',
-    first.pending.guest_requests === 0 && first.pending.protected_operations === 0
+    first.pending.protected_operations === 0
       && first.pending.candidate_prepare_requests === 0
+      && first.pending.guest_requests === first.executed.guest_requests
       && first.committed.guest_requests === first.executed.guest_requests
       && first.committed.candidate_prepare_requests === 0,
     {
-      mapping: 'the pending receipt reports no candidate request; the only guest requests are the invocation prefix already present on the executed report',
+      mapping: 'the pending receipt carries the invocation request prefix and reports no candidate request; the committed receipt carries the same prefix and no candidate prepare request, so no candidate body executed before publication',
       pending_guest_requests: first.pending.guest_requests,
       invocation_guest_requests: first.executed.guest_requests,
       committed_guest_requests: first.committed.guest_requests,
