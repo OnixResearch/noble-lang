@@ -1,0 +1,79 @@
+1123
+module result@1 [
+    variant Result<A,E> Ok A public Err E public
+    export Result
+    export Result.Ok
+    export Result.Err
+    export Result.match
+
+    signature map_ok forall<S:stack,A:value,E:value,B:value,eps:effect> [ S Result<A,E> Program<S+A,S+B,eps> -- S Result<B,E> ! eps ]
+    export map_ok
+    def map_ok [ swap [ swap run Result.Ok ] [ swap drop Result.Err ] Result.match ]
+
+    signature map_error forall<S:stack,A:value,E:value,F:value,eps:effect> [ S Result<A,E> Program<S+E,S+F,eps> -- S Result<A,F> ! eps ]
+    export map_error
+    def map_error [ swap [ swap drop Result.Ok ] [ swap run Result.Err ] Result.match ]
+
+    signature and_then forall<S:stack,A:value,E:value,B:value,eps:effect> [ S Result<A,E> Program<S+A,S+Result<B,E>,eps> -- S Result<B,E> ! eps ]
+    export and_then
+    def and_then [ swap [ swap run ] [ swap drop Result.Err ] Result.match ]
+
+    signature or_else forall<S:stack,A:value,E:value,F:value,eps:effect> [ S Result<A,E> Program<S+E,S+Result<A,F>,eps> -- S Result<A,F> ! eps ]
+    export or_else
+    def or_else [ swap [ swap drop Result.Ok ] [ swap run ] Result.match ]
+]
+450
+module decimal_digit@1 [
+    signature digit forall<S:stack> [ S I64 -- S I64 Bool ! pure ]
+    export digit
+    def digit [
+        48 -
+        dup 0 = [ true ] [
+        dup 1 = [ true ] [
+        dup 2 = [ true ] [
+        dup 3 = [ true ] [
+        dup 4 = [ true ] [
+        dup 5 = [ true ] [
+        dup 6 = [ true ] [
+        dup 7 = [ true ] [
+        dup 8 = [ true ] [ dup 9 = ] if
+        ] if ] if ] if ] if ] if ] if ] if ] if
+    ]
+]
+1061
+module decimal_fold@1 [
+    variant FoldError InvalidDigit Unit public OutOfRange Unit public
+    export FoldError
+    export FoldError.InvalidDigit
+    export FoldError.OutOfRange
+    export FoldError.match
+
+    signature fold forall<S:stack> [ S Text I64 I64 -- S result@1.Result<I64,FoldError> ! pure ]
+    export fold
+    def fold [
+        [ dup [ text.byte ] dip swap ] dip swap
+        dup -1 = [
+            drop swap 0 = [
+                drop drop unit FoldError.InvalidDigit result@1.Result.Err
+            ] [
+                swap drop result@1.Result.Ok
+            ] if
+        ] [
+            swap [ swap dup 18 = ] dip swap
+            [
+                drop drop drop drop unit FoldError.OutOfRange result@1.Result.Err
+            ] [
+                [ swap ] dip swap
+                decimal_digit@1.digit
+                [
+                    swap 10 * + swap 1 + swap fold
+                ] [
+                    drop drop drop drop unit FoldError.InvalidDigit result@1.Result.Err
+                ] if
+            ] if
+        ] if
+    ]
+
+]
+45
+"1234567890123456789" 0 0 decimal_fold@1.fold

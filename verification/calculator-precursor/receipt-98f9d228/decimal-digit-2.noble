@@ -1,0 +1,1 @@
+module decimal_digit@2 [ signature digit forall<S:stack> [ S I64 -- S I64 Bool ! pure ] export digit def digit [ drop 0 false ] ]

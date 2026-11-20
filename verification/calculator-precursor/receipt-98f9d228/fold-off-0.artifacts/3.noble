@@ -1,0 +1,34 @@
+module decimal_fold@1 [
+    variant FoldError InvalidDigit Unit public OutOfRange Unit public
+    export FoldError
+    export FoldError.InvalidDigit
+    export FoldError.OutOfRange
+    export FoldError.match
+
+    signature fold forall<S:stack> [ S Text I64 I64 -- S result@1.Result<I64,FoldError> ! pure ]
+    export fold
+    def fold [
+        [ dup [ text.byte ] dip swap ] dip swap
+        dup -1 = [
+            drop swap 0 = [
+                drop drop unit FoldError.InvalidDigit result@1.Result.Err
+            ] [
+                swap drop result@1.Result.Ok
+            ] if
+        ] [
+            swap [ swap dup 18 = ] dip swap
+            [
+                drop drop drop drop unit FoldError.OutOfRange result@1.Result.Err
+            ] [
+                [ swap ] dip swap
+                decimal_digit@1.digit
+                [
+                    swap 10 * + swap 1 + swap fold
+                ] [
+                    drop drop drop drop unit FoldError.InvalidDigit result@1.Result.Err
+                ] if
+            ] if
+        ] if
+    ]
+
+]

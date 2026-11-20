@@ -1,0 +1,2 @@
+121
+module cursor@1 [ signature read forall<S:stack> [ S Text I64 -- S Text I64 ! pure ] export read def read [ text.byte ] ]

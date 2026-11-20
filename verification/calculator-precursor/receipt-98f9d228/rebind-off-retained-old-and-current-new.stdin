@@ -1,0 +1,14 @@
+47
+module m@1 [ export addone def addone [ 1 + ] ]47
+module m@2 [ export addone def addone [ 2 + ] ]15
+import m@1 as m19
+import m@1 as other29
+def once [ let x x m.addone ]23
+def twice [ once once ]8
+[ once ]15
+import m@2 as m11
+20 swap run4
+drop15
+20 other.addone4
+drop8
+20 twice
