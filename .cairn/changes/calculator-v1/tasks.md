@@ -54,7 +54,9 @@
   `44329dc` silent recovery and external kill. The lane records retired rows without running them
   and refuses a retired row that still carries an expectation. The lane also sets
   `-p OOMPolicy=continue` on its memory-capped scopes so a cgroup OOM kill cannot race a
-  user-manager scope stop. The revised plan then ran: a release binary of `cb5e9f71` (sha256
+  user-manager scope stop; two one-row reruns at `c5f6d8ea` (binary sha256 `f45a6a3a…4ffa`,
+  receipts `057e1c98…` and `bfc25c2b…`) reproduced the memory-cap observation exactly. The revised
+  plan then ran: a release binary of `cb5e9f71` (sha256
   `b4b2931a…2d1736`) ran 20 sessions at concurrency 2 in 1,660 s and all 20 matched; all seven
   categories kept their boundaries (N−1 refused with its category named, N accepted, the
   follow-up line saw the prior state), and the four controls printed no `ResourceLimit`. The

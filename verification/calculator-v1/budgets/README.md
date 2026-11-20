@@ -190,6 +190,26 @@ The four non-retired controls matched and printed no `ResourceLimit` line:
 | `control/transport-limit` | `TransportLimit InputFrameBytes: source byte limit exceeded` | 2 | 1.7 s | 142 MiB |
 | `control/memory-cap` (48M) | `noble calculator: engine worker closed its reply stream` | 2 | 0.1 s | 73 MiB |
 
+### Determinism of `control/memory-cap`
+
+The user manager runs with `DefaultOOMPolicy=stop`, so an unconditional scope
+stop could race the host's own failure report. `run.mjs` therefore passes
+`-p OOMPolicy=continue` on its memory-capped scopes; the installed systemd
+accepts it (`systemd-run --user --scope -q -p OOMPolicy=continue -p
+MemoryMax=48M -p MemorySwapMax=0 -- true` exits 0). Two independent one-row
+reruns then confirmed the row on a release binary of `c5f6d8ea` (sha256
+`f45a6a3ada55ac5bc862413f99d13ff7a25f0081a52a99299e50e05720e94ffa`, runner
+`95c86365…`): both produced exactly the recorded observation — empty stdout,
+`noble calculator: engine worker closed its reply stream`, status 2, no signal,
+no `ResourceLimit` — in 91.7 ms and 91.3 ms, and both matched the plan. Both
+receipts name `repository.head` `c5f6d8ea` with no tracked changes and the same
+`plan_sha256` `3f2d1bf3…`; they stay external, `memcap-run1/receipt.json`
+sha256 `057e1c98196bd07663c1e001c90c7439566dad424bc805cb58ecd587fa96b1b8` and
+`memcap-run2/receipt.json` sha256
+`bfc25c2b784a10d6b3f0d08502da8615ef5ac8875ecd00714f252e532ddb8836`. The row's
+evidence is unchanged, so `summary-2026-11-20.json` is not replaced: it stays
+the record of the 20-row run and binds the runner that run used (`e258a622…`).
+
 ## Slow numeric-path tier on the integrated tree
 
 The ignored release tier ran on `main` at `05a50b0`, whose sources match the
