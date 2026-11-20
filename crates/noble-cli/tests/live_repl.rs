@@ -4910,3 +4910,30 @@ fn mismatched_declared_binding_refuses_at_startup_with_one_report(
     assert_eq!(generation, 1);
     accepted.finish()
 }
+
+/// The pinned Node/V8 selected by `crates/noble-cli/src/core/runtime/config.json`;
+/// the slot lanes use the same selected interpreter.
+const NODE: &str = "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node";
+
+/// Canonical LSLOT-09 (guarded `Live-Wasm-Draft`): a checked `slot.invoke`
+/// caller is refused at admission with no installed generation, while an
+/// explicit `:reload` still rebinds a current name and a saved quotation keeps
+/// its old capture. Ordinary capture does not become slot selection.
+#[test]
+fn guarded_live_draft_refuses_the_checked_slot_caller() -> Result<(), Box<dyn std::error::Error>> {
+    let output = Command::new(NODE)
+        .arg(std::format!(
+            "{}/tests/live_repl_slot_exclusion.mjs",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .arg(env!("CARGO_BIN_EXE_noble"))
+        .env_remove("NOBLE_LIVE_TEST_CURRENT_MAP")
+        .output()?;
+    assert!(
+        output.status.success(),
+        "checked live REPL lane failed: stdout={} stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+    Ok(())
+}

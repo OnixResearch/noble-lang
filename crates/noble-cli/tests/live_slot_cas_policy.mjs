@@ -252,7 +252,7 @@ await runCase('LSLOT07-publication-without-grant', async (s, log) => {
   observedRefusal(log, denied);
   const after = await select(s, 'emit', 1, 1, 21, 'callEmit');
   assert.equal(after.programValueId, before.programValueId);
-  log.denied = denied; log.after = after;
+  log.before = before; log.denied = denied; log.after = after;
 });
 await runCase('LSLOT07-static-dispatch-without-grant', async (s, log) => {
   await emitBaseline(s, 'emitDeny');
