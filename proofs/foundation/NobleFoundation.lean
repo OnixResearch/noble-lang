@@ -94,6 +94,7 @@ import NobleFoundation.Slice
 import NobleFoundation.Preservation
 import NobleFoundation.Laws
 import NobleFoundation.Effects
+import NobleFoundation.OwnershipModel
 import NobleFoundation.LinkBoundary
 import NobleFoundation.TaskInterleaving
 import NobleFoundation.TaskScope

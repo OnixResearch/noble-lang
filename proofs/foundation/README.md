@@ -713,6 +713,7 @@ premise.
 | PO-04 effect soundness | Effects layer: `Effects.effect_sound` (every finite prefix: `trace' = trace ++ new`, append-only, and every new label is in the bound `E`, **including denied/failed requests**), `step_trace`, `trace_within_bound`. Negative: `bound_does_not_fix_order` (the same bound allows different orders, so a bound does not justify reordering), `denied_request_recorded_and_halts` | `WT E c` (or a typed program from `init`); `Reach H` for any host oracle | effects beyond emit/acquire/release, real host contracts and `test.emit` implementation, ordered-trace *equivalence* laws |
 | PO-05 ownership | Effects layer: `Effects.owners_step` (OWN-PO-1 for this model: every typed step permutes the owner multiset of stack plus frame-held resources and keeps the live set and fresh counter, except a permitted `acquire`, which adds exactly the fresh id, and a permitted `release`, which consumes exactly the released id; `dip`, `restore`, both branch steps, `run` and `compose` included), `own_preserve` (the owners are a permutation of the host live set, no duplicates, fresh ids), `live_change` (the live set changes only by a recorded, permitted `acquire` or `release`; moves are permutations), `reachable_sound`, `move_then_release`, `dip_holds_resource_in_frame` (the stack-only count fails while a held resource sits in a frame), `branch_carries_resource`, `forged_frame_refused` | `WT E c`, `Own c` | temporaries/heap, borrowing, abnormal-stop cleanup (state is preserved but not cleaned, frames included), aggregates, whole language (#3) |
 | PO-06 recursive eligibility | MC1: `program_duplicable`. Effects layer: `ValT.rfree`/`OpT.rfree`/`CodeT.rfree` (typed programs contain no resource at any nesting depth), `KontT.rfree` and `typed_rfree` (every stack program is resource-free; the continuation is too, except that a `restore` frame may hold a resource token directly), `program_expecting_resource_is_copyable` | `WT E c` | aggregates (pairs/lists) and named captures (MC1 aggregates carry no resources; this layer has no aggregates), #3/#11 vocabulary |
+| PO-05/PO-06 extended model (aggregates, named definitions, case forms, heap) | `OwnershipModel.owners_step` (OWN-PO-1 over the extended language, with `acquire`, `release` and `alloc` as the declared transitions), `own_preserve`, `own_reach`, `live_change`, `typed_rfree`, `ValT.rfree`, `ValT.programsRFree`, `CodeT.rfree`, `KontT.rfree`, `HeapT.rfree`, `quote_capture_rfree`, `alloc_store_rfree`, `reachable_sound`; structure: `preserve`, `preserve_reach`, `progress`, `CodeT.append`, `CodeT.appendKont`; heap: `heap_safe_step`, `heap_safe_reach`, `init_heap_safe`; controls: `pair_unpair_round_trip`, `sum_case_selects_arm`, `list_case_selects_arm`, `call_runs_named_body`, `call_interface_exact`, `alloc_then_drop_keeps_cell`, `run_pins_program`, `dip_holds_aggregate_in_frame`, and the resource negatives `dup_pair_res_untypable`, `drop_sum_res_untypable`, `drop_list_res_untypable`, `alloc_res_untypable` | `WT D E c` (stack, continuation frames and heap included); `Reach D H (init p)` with cell-free source and `DefsCellFree D` for `reachable_sound` | the whole language; OWN-PO-2 (no borrow profile selected), OWN-PO-4..7 lowering/runtime/host-ledger correspondence, storage reclamation and heap reads |
 | PO-07 construction/execution | `construction_is_pure`, `latent_effect_not_performed`, `PExpr.exec_code`, `PExpr.exec_code_run`, `BehEq.append`, `BehEq.run`, `compose_assoc`, `compose_identity` | normal returns; `BehEq` observation | effectful laws (same host responses, ordered traces), allocation/quota (deliberately not promised) |
 | PO-08 recipe/quotation/reflection | `quote_laws`, `reflect_compose`, `PExpr.exec_code_reflect`, `exec_quote_program_run_run` | — | recipe *normalization* (MC1 does not normalize), named-definition reflection |
 | negative: behavior ≠ recipe | `behavior_is_not_recipe` (`1 1 +` vs `2`; `BehEq` is not a congruence under `reflect`) | — | — |
@@ -4327,7 +4328,7 @@ source-inventory renewal.
 | 1 | whitelist/representation/observation table; signed ZMod/BitVec/K-NUM-01 correspondence; universal add/sub/mul with preserved typed prefix and orientation; literal refusal vs wrapping (spec and transcription); lifting to sequences and quote/compose/run; regressions; issue #101 arbitrary-run soundness for checked matrix runs under the foundation axiom set; inventory and axiom audit | Rust frontend ↔ transcription refinement; MC1 `CodeTyped` ↔ kernel acceptance; choice-free arbitrary-run SCT proof in the strict size-change family and source/model correspondence |
 | 3 | one example from Lean spec to acquired bytes (opt off/on), helper model, ACORR-mapped refusals | E5 lowering, E7 assembler, E8 optimizer, E10 loader/engine, E12 PAA-1 envelope, ACORR-CASE-09, quote/compose/run helper models |
 | 4 | seeded differential comparator; separate fixed-input scalar if/case EMI; Lean-checked expectations, opt off/on, shrinking and replay, mutation controls, checker lanes, source-bound receipts, `--verify`, retained in-repo receipts, `ci.sh` recipe | Nix-sandbox CI check (see "CI": networked Mathlib cache, absent offline inputs, host services for the slice); rebuilt Mathlib `.olean` files; Rust renderer/lowering refinement and universal compiler equivalence |
-| 2 | MC1: preservation and primitive progress, pure laws and negative cases. Effects/resource layer: preservation, total progress, effect soundness for every prefix including denied/failed, ownership preservation with declared transitions, resource-free capture, resource negative cases | the whole language and implementation, abnormal cleanup, aggregates/borrowing, effectful equivalence laws, normalization |
+| 2 | MC1: preservation and primitive progress, pure laws and negative cases. Effects/resource layer: preservation, total progress, effect soundness for every prefix including denied/failed, ownership preservation with declared transitions, resource-free capture, resource negative cases. Extended ownership model: aggregates, named definitions, case forms, heap safety and OWN-PO-1/3 over that language | the whole language and implementation, abnormal cleanup, borrowing (no profile selected), effectful equivalence laws, normalization, OWN-PO-4..7 correspondence |
 
 ### Effect and resource layer (`NobleFoundation/Effects.lean`)
 
@@ -4414,11 +4415,79 @@ Open, and deliberately not closed by this model:
 
 - OWN-PO-1 for the language. This is one small-step model with I64,
   resources and Programs; it has no aggregates, named definitions,
-  `case`/`list.case`, borrowing or heap.
+  `case`/`list.case`, borrowing or heap. The extended model
+  (`NobleFoundation/OwnershipModel.lean`, below) covers aggregates, named
+  definitions, case forms and a heap for the model layer; this Effects
+  statement remains about its own language.
 - Cleanup after an abnormal stop. A frame-held resource stays held when a
   request is denied.
 - Any lowering, runtime or host-ledger correspondence (OWN-PO-4..7) and any
   checker refinement. Task 13 of `ownership-lifetime-contract` stays open.
+
+### Extended ownership model (`NobleFoundation/OwnershipModel.lean`)
+
+`OwnershipModel` is a second small-step model that imports
+`NobleFoundation/Effects.lean` for labels, responses, statuses and events.
+It does not replace the Effects model, and every theorem is still a model
+claim. It adds the language pieces OWN-PO-1/3 needed:
+
+- **aggregates**: `Pair`, `Sum` and `List` construction and elimination
+  (`pair`, `unpair`, `inl`, `inr`, `cases`, `nil`, `cons`, `listCase`).
+  Aggregates may hold a resource; `Copy` is recursive, so a
+  resource-bearing aggregate is not copyable, and `dup`/`drop`/`quote`/
+  `alloc` reject it.
+- **named definitions**: an exact-interface definition table `D` with its
+  own effect bound, applied by `call`. The call rule requires the body typed
+  at exactly the definition's input and output shapes, so a cyclic
+  definition has no finite typing derivation and a call is not polymorphic
+  (`call_interface_exact`).
+- **case forms**: `cases` runs one arm on a sum payload; `listCase` runs the
+  nil arm or the cons arm on a list. Both arms share one interface, so every
+  incoming linear claim is accounted for by either arm.
+- **a heap**: `alloc` moves a copyable value into a fresh cell and returns a
+  cell reference. Cells are immutable and shared by identity; `cells` is the
+  host-tracked allocation set. No step removes an allocated cell: storage
+  reclamation is a backend property here, and the heap theorem proves the
+  no-dangling half.
+- **frame pins**: `run` holds the executed Program value in a `pin` frame
+  until its body reaches the pin. `dip` keeps its `restore` frame; a
+  `restore` frame may hold a resource-bearing aggregate.
+
+Claims proved for this model:
+
+- `owners_step`: OWN-PO-1. Every typed step permutes the whole-configuration
+  owner multiset (stack, `restore`/`pin` frames and heap cells). The declared
+  exceptions are a permitted `acquire` (adds the fresh id), a permitted
+  `release` (consumes the released id) and `alloc` (consumes a fresh id for
+  the new cell; the resource multiset and live set are unchanged).
+  `own_preserve` and `own_reach` carry it to every finite prefix.
+- `typed_rfree`, `ValT.rfree`, `ValT.programsRFree`, `CodeT.rfree`,
+  `KontT.rfree`, `HeapT.rfree`: OWN-PO-3. Typed code and heap cells are
+  resource-free at every nesting depth, and every Program value on the stack
+  has a resource-free body. `quote_capture_rfree` and
+  `alloc_store_rfree` are the capture-restriction corollaries. The negatives
+  `dup_pair_res_untypable`, `drop_sum_res_untypable` and
+  `drop_list_res_untypable` show eligibility is recursive through
+  aggregates.
+- `preserve`, `preserve_reach`, `progress`, `halted_no_step` and
+  `reachable_sound`: the extended semantics is typed, has no forbidden stuck
+  state relative to the host contract, and every finite prefix of a typed
+  cell-free program satisfies OWN-PO-1, heap safety and OWN-PO-3.
+- `heap_safe_step`, `heap_safe_reach`: allocated cell ids are distinct and
+  fresh, and every cell reference in code, frames, the stack or the heap
+  names an allocated cell. `alloc_then_drop_keeps_cell` shows deferred
+  reclamation: the last reference ends and the cell remains allocated.
+
+Controls for the new constructs: `pair_unpair_round_trip`,
+`sum_case_selects_arm`, `list_case_selects_arm`, `call_runs_named_body`,
+`run_pins_program` and `dip_holds_aggregate_in_frame`.
+
+Not modelled, and explicitly outside this model's boundary: storage
+reclamation/RC/collection beyond the no-dangling invariant, heap reads,
+borrowing (the owner selected no borrow profile), abnormal cleanup, and any
+lowering, runtime or host-ledger correspondence (OWN-PO-4..7). No theorem in
+this module says anything about the Rust checker, emitted Wasm or the host
+ledger.
 
 ## Historical revision-1 checked interaction-net contract (issue #37, phase 1)
 
