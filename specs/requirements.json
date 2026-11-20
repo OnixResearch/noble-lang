@@ -5349,6 +5349,12 @@
         "review"
       ],
       "scenarios": [
+        "ACORR-CASE-01",
+        "ACORR-CASE-03",
+        "ACORR-CASE-06",
+        "ACORR-CASE-08",
+        "ACORR-CASE-09",
+        "ACORR-CASE-10",
         "CORE-10",
         "S-CASE-07"
       ],
@@ -5958,6 +5964,11 @@
         "review"
       ],
       "scenarios": [
+        "ACORR-CASE-01",
+        "ACORR-CASE-03",
+        "ACORR-CASE-04",
+        "ACORR-CASE-05",
+        "ACORR-CASE-09",
         "CONTRACT-08",
         "CONTRACT-13"
       ],
@@ -5972,8 +5983,11 @@
         "implementation-test",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "ACORR-CASE-05",
+        "ACORR-CASE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "VC-ADMIT-03",
@@ -5985,6 +5999,14 @@
         "review"
       ],
       "scenarios": [
+        "ACORR-CASE-01",
+        "ACORR-CASE-02",
+        "ACORR-CASE-03",
+        "ACORR-CASE-06",
+        "ACORR-CASE-07",
+        "ACORR-CASE-08",
+        "ACORR-CASE-09",
+        "ACORR-CASE-11",
         "CONTRACT-13",
         "CONTRACT-16"
       ],
@@ -6000,6 +6022,9 @@
         "review"
       ],
       "scenarios": [
+        "ACORR-CASE-04",
+        "ACORR-CASE-08",
+        "ACORR-CASE-12",
         "CONTRACT-02"
       ],
       "test_design": "scenario-described-not-executed"
@@ -6014,6 +6039,8 @@
         "review"
       ],
       "scenarios": [
+        "ACORR-CASE-02",
+        "ACORR-CASE-07",
         "ADAPT-15",
         "CONTRACT-07"
       ],
@@ -6831,6 +6858,7 @@
         "review"
       ],
       "scenarios": [
+        "ACORR-CASE-12",
         "CONTRACT-02",
         "CONTRACT-06"
       ],
@@ -6861,6 +6889,7 @@
         "review"
       ],
       "scenarios": [
+        "ACORR-CASE-11",
         "CONTRACT-10"
       ],
       "test_design": "scenario-described-not-executed"
