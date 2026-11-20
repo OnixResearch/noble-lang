@@ -10,6 +10,10 @@
 > land; only LSLOT-05 and LSLOT-08 wait for template identity." Promotion is still conditional on
 > an executed, source-bound receipt for exactly that case.
 
+> OWNER DECISION 2026-11-20: runtime implementation, source-bound evidence and case-status
+> promotion require later independent review (proposal.md). The promotions below are executed and
+> source-bound; the review record is scheduled by the integrator as `verification/lslot-cases/review-<date>.md`.
+
 > OWNER DECISION 2026-11-20: verification trees that enumerate change documents as live inputs are
 > historical-only; archiving a change does not regenerate them. `verification/live-slot-current-source/gate.mjs`
 > (which asserts all nine cases absent) and `verification/live-update-corpus` (which asserts they stay
