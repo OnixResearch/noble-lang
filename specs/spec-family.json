@@ -127,7 +127,8 @@
     "conformance/text-byte-cursor-cases.json",
     "conformance/recursion-cases.json",
     "conformance/effect-protocol-cases.json",
-    "conformance/ownership-cases.json"
+    "conformance/ownership-cases.json",
+    "conformance/artifact-correspondence-cases.json"
   ],
   "lifecycle": ".cairn"
 }

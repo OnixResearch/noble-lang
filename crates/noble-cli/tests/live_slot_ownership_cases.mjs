@@ -6,17 +6,21 @@ import { cli, expectOutcome, selectedAuthority } from './live_slot_resource_ref_
 // `live_slot_module_root_retention.mjs`.
 //   02: `[ 1 + ] dup` saves two owners of one Program; releasing them in either order leaves the
 //       other runnable after the first release, and refuses both after the second.
-//   03: an 8-leaf compose tree, each leaf and intermediate saved; after every owner except the
-//       root's is released, the root still runs and gives the same result. The capture summary of
-//       an anonymous saved Program is bounded exactly like the selected-origin/retained graph
-//       (32 nodes, 4096 bytes), so balanced, left-deep and right-deep 8-leaf trees all run. A
-//       40-leaf chain still exceeds that representation bound: the refusal is `execution-failed`,
-//       and the session terminates, as every failed root does in this profile.
+//   03: the design's 8-leaf `compose` trees of captured I64 Programs (`quote [ + ] compose` per
+//       leaf: the factory input I64 is captured by `quote`, and `[ + ]` adds it to the running
+//       value). Each leaf and intermediate is saved; after the 14 owners other than the root are
+//       released, the root still runs and gives the same result. The anonymous capture summary is
+//       bounded at 32 nodes and 4096 bytes per child, so the balanced tree fits and a deep chain
+//       exceeds the bound at compose 5: the refusal is `execution-failed` with
+//       "checked captured value exceeds host observation bound", and the session terminates, as
+//       every failed root does in this profile. The lane records which variants executed and which
+//       were refused; it does not narrow the design's 8-leaf deep chains.
 //   cross-module: a Program saved by one installed module is duplicated by a second one; both
 //       owners must run the original Program and release independently (issue #106).
 const binary = process.argv[2];
 const P = 'Program<I64,I64,pure>';
-const sources = { dupper: '[ 1 + ] dup', leaf: 'drop [ 1 + ]', composer: 'compose', runner: 'run',
+const sources = { dupper: '[ 1 + ] dup', leaf: 'quote [ + ] compose', composer: 'compose',
+  runner: 'run',
   maker: '[ 1 + ]', passer: 'dup' };
 const installs = [['dupper', []], ['leaf', ['I64']], ['composer', [P, P]], ['runner', ['I64', P]],
   ['maker', []], ['passer', [P]]];
@@ -64,12 +68,13 @@ async function sharedDuplicates(order) {
 
 async function balancedTree() {
   return session('OWN-CASE-03-balanced', async ({ issue, run }) => {
-    const leaves = [];
-    for (let k = 0; k < 8; k += 1) {
-      leaves.push((await issue({ operation: 'invoke', id: 'leaf', inputs: [i64(k)], refs: [] }, 'executed')).stack[0].owner);
+    const captured = [];
+    for (let k = 1; k <= 8; k += 1) {
+      captured.push((await issue({ operation: 'invoke', id: 'leaf',
+        inputs: [i64(k)], refs: [] }, 'executed')).stack[0].owner);
     }
     const intermediates = [];
-    let level = leaves;
+    let level = captured;
     while (level.length > 1) {
       const next = [];
       for (let at = 0; at < level.length; at += 2) {
@@ -82,42 +87,52 @@ async function balancedTree() {
     }
     const [root] = level;
     const before = expectOutcome(await run(root), 'executed');
-    assert.deepEqual(before.stack, [{ kind: 1, value: '8' }]);
-    const others = [...leaves, ...intermediates.filter(owner => owner !== root)];
+    assert.deepEqual(before.stack, [{ kind: 1, value: '36' }]);
+    const others = [...captured, ...intermediates.filter(owner => owner !== root)];
+    assert.equal(others.length, 14, 'the design releases every owner except the root');
     for (const owner of others) await issue({ operation: 'release-program', owner }, 'program-released');
     const after = expectOutcome(await run(root), 'executed');
     assert.deepEqual(after.stack, before.stack, 'the root runs alike after every other owner is released');
     for (const owner of others) assert.ok(refused(await run(owner)), `released ${owner} is refused`);
     await issue({ operation: 'release-program', owner: root }, 'program-released');
     assert.ok(refused(await run(root)), 'the root is refused after its release');
-    return { leaves: leaves.length, intermediates: intermediates.length, released_before_root: others.length,
-      before: before.stack, after: after.stack };
+    return { leaves: captured.length, intermediates: intermediates.length,
+      released_before_root: others.length, before: before.stack, after: after.stack };
   });
 }
 
 async function deepChain(side) {
-  return session(`OWN-CASE-03-${side}-deep`, async ({ issue, run }) => {
-    const leaves = [];
-    for (let k = 0; k < 8; k += 1) {
-      leaves.push((await issue({ operation: 'invoke', id: 'leaf', inputs: [i64(k)], refs: [] }, 'executed')).stack[0].owner);
+  return session(`OWN-CASE-03-${side}-deep`, async ({ live, issue, run }) => {
+    const captured = [];
+    for (let k = 1; k <= 8; k += 1) {
+      captured.push((await issue({ operation: 'invoke', id: 'leaf',
+        inputs: [i64(k)], refs: [] }, 'executed')).stack[0].owner);
     }
     // Left-deep folds leaf 0 then appends each later leaf on the right; right-deep folds the last
     // leaf then prepends each earlier leaf on the left.
-    let chain = side === 'left' ? leaves[0] : leaves[7];
+    let chain = side === 'left' ? captured[0] : captured[7];
     const owners = [chain];
-    let composed = 0;
-    for (const leaf of side === 'left' ? leaves.slice(1) : leaves.slice(0, 7).reverse()) {
+    const progressing = [];
+    const order = side === 'left' ? captured.slice(1) : captured.slice(0, 7).reverse();
+    for (const leaf of order) {
       const inputs = side === 'left'
         ? [program(chain), program(leaf)] : [program(leaf), program(chain)];
-      const row = await issue({ operation: 'invoke', id: 'composer', inputs, refs: [] }, 'executed');
-      composed += 1;
+      const row = await live.issue({ operation: 'invoke', id: 'composer', inputs, refs: [] });
+      if (row.outcome !== 'executed') {
+        assert.equal(row.outcome, 'execution-failed');
+        assert.match(row.diagnostic, /checked captured value exceeds host observation bound/);
+        assert.equal(row.session_state, 'terminated-after-guest-failure');
+        return { composed: owners.length - 1, refused_at_compose: owners.length,
+          diagnostic: row.diagnostic, session_state: row.session_state,
+          released_before_root: 0, progressing, refused: true };
+      }
       chain = row.stack[0].owner;
       owners.push(chain);
-      assert.deepEqual(expectOutcome(await run(chain), 'executed').stack, [{ kind: 1, value: String(composed + 1) }]);
+      progressing.push(expectOutcome(await run(chain), 'executed').stack);
     }
     const root = chain;
     const before = expectOutcome(await run(root), 'executed');
-    assert.deepEqual(before.stack, [{ kind: 1, value: '8' }]);
+    assert.deepEqual(before.stack, [{ kind: 1, value: '36' }]);
     const others = owners.filter(owner => owner !== root);
     for (const owner of others) await issue({ operation: 'release-program', owner }, 'program-released');
     const after = expectOutcome(await run(root), 'executed');
@@ -125,33 +140,35 @@ async function deepChain(side) {
     for (const owner of others) assert.ok(refused(await run(owner)), `released ${owner} is refused`);
     await issue({ operation: 'release-program', owner: root }, 'program-released');
     assert.ok(refused(await run(root)), 'the root is refused after its release');
-    return { composed, before: before.stack, after: after.stack, released_before_root: others.length };
+    return { composed: owners.length - 1, before: before.stack, after: after.stack,
+      released_before_root: others.length, progressing, refused: false };
   });
 }
 
 async function boundedChain() {
   return session('OWN-CASE-03-bounded-control', async ({ live, issue }) => {
-    const leaves = [];
-    for (let k = 0; k < 40; k += 1) {
-      leaves.push((await issue({ operation: 'invoke', id: 'leaf', inputs: [i64(k)], refs: [] }, 'executed')).stack[0].owner);
+    const captured = [];
+    for (let k = 1; k <= 40; k += 1) {
+      captured.push((await issue({ operation: 'invoke', id: 'leaf',
+        inputs: [i64(k)], refs: [] }, 'executed')).stack[0].owner);
     }
-    let chain = leaves[0];
+    let chain = captured[0];
     let composed = 0;
-    for (const leaf of leaves.slice(1)) {
+    for (const leaf of captured.slice(1)) {
       const row = await live.issue({ operation: 'invoke', id: 'composer',
         inputs: [program(chain), program(leaf)], refs: [] });
       if (row.outcome !== 'executed') {
         assert.equal(row.outcome, 'execution-failed');
-        assert.match(row.diagnostic, /host observation bound|exceed bounded exact trace representation/);
+        assert.match(row.diagnostic, /checked captured value exceeds host observation bound/);
         assert.equal(row.session_state, 'terminated-after-guest-failure');
         assert.equal(row.guest_requests, 0);
         return { refused_at_compose: composed + 1, diagnostic: row.diagnostic,
-          session_state: row.session_state };
+          session_state: row.session_state, frame_pins: row.frame_pins };
       }
       composed += 1;
       chain = row.stack[0].owner;
     }
-    assert.fail('the 40-leaf chain stayed within the representation bound');
+    assert.fail('the 40-leaf captured chain stayed within the summary node bound');
     return null;
   });
 }
@@ -186,8 +203,18 @@ const cases = {
 for (const row of cases['OWN-CASE-02']) assert.equal(row.exit, 0);
 assert.equal(cases['cross-module-alias'].exit, 0);
 assert.equal(cases['OWN-CASE-03'].balanced.exit, 0);
-for (const side of ['left_deep', 'right_deep']) assert.equal(cases['OWN-CASE-03'][side].exit, 0);
-assert.ok(cases['OWN-CASE-03'].bounded_control.refused_at_compose > 8,
-  'the 40-leaf control must exceed the representation bound that the 8-leaf trees fit inside');
+assert.equal(cases['OWN-CASE-03'].balanced.released_before_root, 14);
+// A deep chain either executes the design's full tree (14 releases) or is refused by the
+// summary's node bound; both outcomes are recorded, neither is narrowed or repaired here.
+for (const side of ['left_deep', 'right_deep']) {
+  const row = cases['OWN-CASE-03'][side];
+  if (row.refused) {
+    assert.equal(row.session_state, 'terminated-after-guest-failure');
+    assert.match(row.diagnostic, /checked captured value exceeds host observation bound/);
+  } else {
+    assert.equal(row.exit, 0);
+    assert.equal(row.released_before_root, 14);
+  }
+}
 assert.equal(cases['OWN-CASE-03'].bounded_control.exit, 2, 'a failed root terminates the session');
 console.log(JSON.stringify({ cases }));

@@ -11,6 +11,7 @@ mod arguments;
 mod artifacts;
 mod compilation;
 pub(crate) mod owner_law;
+pub(crate) mod paa1;
 mod release;
 mod report;
 
@@ -176,6 +177,7 @@ fn print_report(report: &report::Document) -> std::process::ExitCode {
 struct Products {
     contract: std::vec::Vec<u8>,
     wrapper: Option<std::string::String>,
+    wrapper_template: Option<noble_contracts::companion::GuardTemplate>,
     artifact_wat: Option<std::vec::Vec<u8>>,
     artifact_wasm: Option<std::vec::Vec<u8>>,
     /// The selected worker's verified tool record; a v4 report binds it.
@@ -221,7 +223,7 @@ fn execute(
         Some(_) | None => None,
     };
     let mut core = noble_contracts::companion::Core::new(crate::core::EVIDENCE_LIMITS);
-    core.set_policy(report::POLICY_REVISION);
+    core.set_policy(options.policy_revision);
     let admission = match crate::workflow::admission::admit(
         &mut core,
         &contract,
@@ -241,6 +243,7 @@ fn execute(
             return Ok(Products {
                 contract,
                 wrapper: None,
+                wrapper_template: None,
                 artifact_wat: Some(artifact.wat),
                 artifact_wasm: Some(artifact.wasm),
                 tools: artifact.tools,
@@ -249,7 +252,11 @@ fn execute(
         }
     };
     report.record_application(&admission.contract, &contract, admission.evidence);
-    let wrapper = wrapper_source(&core, admission.decision.contract);
+    let guard = wrapper_source(&core, admission.decision.contract);
+    let (wrapper, wrapper_template) = match guard {
+        Some((template, text)) => (Some(text), Some(template)),
+        None => (None, None),
+    };
     if evidence.is_none() {
         report.outcome = crate::workflow::output::Outcome::NotRun;
         report.release =
@@ -266,6 +273,7 @@ fn execute(
     Ok(Products {
         contract,
         wrapper,
+        wrapper_template,
         artifact_wat: Some(artifact.wat),
         artifact_wasm: Some(artifact.wasm),
         tools: artifact.tools,
@@ -282,13 +290,16 @@ fn execute(
 fn wrapper_source(
     core: &noble_contracts::companion::Core,
     contract: Option<noble_contracts::companion::ContractId>,
-) -> Option<std::string::String> {
+) -> Option<(
+    noble_contracts::companion::GuardTemplate,
+    std::string::String,
+)> {
     match contract {
         Some(contract) => match core.guard_templates(contract) {
             Ok(templates) => templates
                 .into_iter()
                 .next()
-                .map(|template| core.invocation_wrapper(template)),
+                .map(|template| (template, core.invocation_wrapper(template))),
             Err(_) => None,
         },
         None => None,

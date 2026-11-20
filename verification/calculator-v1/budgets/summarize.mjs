@@ -15,6 +15,18 @@ if (!planPath || !outPath || receiptPaths.length === 0) {
 const sha256 = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const planBytes = fs.readFileSync(planPath);
 const plan = JSON.parse(planBytes);
+// A retired row records a reviewed revision and asserts nothing: refuse one
+// that still carries an expectation, so an edited plan cannot slip past the
+// runner's own guard when only this summarizer is run.
+for (const session of plan.sessions) {
+  if (!session.retired) continue;
+  const leftovers = ['expect', 'expect_status', 'expect_signal', 'expect_timeout', 'lines']
+    .filter(key => session[key] !== undefined);
+  if (!session.retired_reason || leftovers.length > 0) {
+    console.error(`${session.id}: a retired row needs retired_reason and no ${leftovers.join('/')}`);
+    process.exit(2);
+  }
+}
 const receipts = receiptPaths.map(path => {
   const bytes = fs.readFileSync(path);
   return { bytes, receipt: JSON.parse(bytes) };

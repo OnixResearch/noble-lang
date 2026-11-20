@@ -179,9 +179,9 @@ Every layer assumes the following:
 - **Handle reuse**: epoch-qualified handles never wrap, and stale handles fail liveness.
 - **Failure behavior**: any nonzero status poisons the instance (`engine.mjs:1012`; `source.wat:1-3`). Cleanup is host-side, and process death reclaims everything without a claim of external exactly-once.
 
-### Decision: Conformance scenario designs (unexecuted)
+### Decision: Conformance scenario designs
 
-**Choice:** The following **Planned tests** are registered only in this document. Each has `implementation: absent`, `execution: not-run`, `proof: open`, `trust: unassessed` and `evidence: []`. They are not added to `specs/conformance`.
+**Choice:** The following **Planned tests** were designed here. OWNER DECISION 2026-11-20 (decision 1, plus the campaign scope amendment recorded in `proposal.md`) allowed the campaign to register them in `specs/conformance/ownership-cases.json` and execute those with a lane inside this change; the case file is authoritative for each case's `state` and `evidence`, and `verification/own-cases/` retains the gate receipts. The table below is the design as written; execution status, fidelity notes and any deviation are recorded in the registration and the change's `tasks.md`, not by editing this table.
 
 | ID | Input | Expected observation |
 |---|---|---|
@@ -198,6 +198,23 @@ Every layer assumes the following:
 | OWN-CASE-11 self-recursive package reclamation | self-recursive definition saved, then released | package reclaimed; self reference not counted as an owner |
 | OWN-CASE-12 data drop never releases a resource | `Pair<I64,Text>` dropped while a resource is held by `dip` | storage claim ends; the resource stays live and is returned exactly once |
 
+Annotations on the table (owner decisions and execution notes):
+
+- **OWN-CASE-04 fidelity.** The campaign's lane installs the design's source programs and feeds
+  `Pair<I64,Account@1>`, `Sum<Account@1,I64>` and `List<Account@1>` as typed root inputs instead of
+  constructing them with `pair`, `inl` or `cons`. The design's "`Pair` then `quote`" asks for the
+  eligibility of an aggregate that contains a resource; the receipt observes that exact aggregate
+  type in each refusal diagnostic. The borrow escape variants are inapplicable under OWNER
+  DECISION 2026-11-20 (decision 7: no borrow profile is selected).
+- **OWN-CASE-05 not executed here.** The live-slot profile has no `test.abort` row, and on an
+  abnormal exit the host neither releases nor counts the backend frame pins, so "frame pins are
+  released exactly once" is not observable. Real per-frame release accounting on the abnormal path
+  belongs to `live-reference-lifetimes` (OWNER DECISION 2026-11-20 decision 6, r[LREF-EXIT-01]),
+  which will execute OWN-CASE-05 later.
+- **OWN-CASE-03 execution outcome.** The design's balanced tree runs; the left- and right-deep
+  8-leaf chains are refused at compose 5 by the anonymous summary's node bound. The case is
+  recorded as an executed failure in the registration; the table keeps the design's expectation.
+
 ## Risks / Trade-offs
 
 - OWN-CASE-06 may reveal that module-root retirement unroots globals that a surviving saved Program's code still reads. Fixing that would need code→global owner edges or module lifetime extended to saved callers. Either option increases retention.
@@ -211,12 +228,12 @@ Every layer assumes the following:
 2. Select or reject the borrow profile, with concrete syntax (out of scope here) and checker refinement evidence for OWN-PO-2.
 3. Choose a promotion form for any scratch-arena profile, with measured costs (#5 benchmark plan).
 
-   Decisions 2 and 3 (owner, 2026-11-20): neither a borrow profile nor a
-   scratch-arena profile is selected. OWN-CASE-04's borrow variants and OWN-CASE-08
-   are inapplicable, and OWN-PO-2 is not applicable. Either profile can be
-   reopened later in a new change with its own syntax, measurements and evidence.
+   OWNER DECISION 2026-11-20 (decision 7): no borrow profile and no scratch-arena
+   profile are selected now. OWN-CASE-04's borrow variants and OWN-CASE-08 are
+   inapplicable, and OWN-PO-2 is not applicable. Either profile can be reopened
+   later in a new change with its own syntax, measurements and evidence.
 4. Mechanize OWN-PO-1/3 in the abstract model, then obtain correspondence evidence per layer. Abstract proofs never imply runtime correctness.
-5. Register OWN-CASE designs in `specs/conformance` only through a separate reviewed change.
+5. Register OWN-CASE designs in `specs/conformance` through a reviewed change. OWNER DECISION 2026-11-20 (decision 1): a fresh-context reviewer performs that review, and the review record is retained in the repository. The campaign scope amendment registers and executes the OWN-CASE scenarios inside this change under those terms; the reviewer verdict on the first attempt required revision, and only receipt-backed cases are promoted.
 
 ## Acceptance mapping
 

@@ -1,5 +1,11 @@
 # Ownership cases on the live-slot runtime (OWN-CASE-01 to 03)
 
+> **Superseded 2026-11-20.** The bound described below (1000 bytes / 64 nodes, refusal at the
+> fifth compose) is historical. The anonymous capture summary is now bounded at 32 nodes and 4096
+> bytes per child, and the executed cases live in [`verification/own-cases/`](../own-cases/README.md)
+> with their registration in `specs/conformance/ownership-cases.json`. This directory's receipt is
+> historical-only: it replays at the source state it records.
+
 `.cairn/changes/ownership-lifetime-contract` designs the OWN-CASE scenarios. This directory
 executes three of them against the live-slot runtime. They are executed, not registered: the task
 reserves registration for a reviewed conformance change.

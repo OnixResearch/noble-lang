@@ -491,6 +491,7 @@ export class SlotRegistry {
     const token = Object.freeze({});
     const root = { id: ++this.#nextRoot, state: frozen?.state ?? this.#current, refs: new Map(),
       callerHandle, callerModule, entered: false, boundRefs: new Set(), frames: [], pending: null,
+      framePins: { entered: 0, released: 0 },
       resources: new Map(), selectedHandles: new Map(), trace: [], traceBytes: 0,
       operations: 0 };
     this.#roots.set(token, root);
@@ -791,6 +792,11 @@ export class SlotRegistry {
         ? new Map(root.pending.site.forwarded.map(pair =>
           [pair.targetPosition, current.bindings.get(pair.sourcePosition)]))
         : new Map([...root.refs].map(([ordinal, ref]) => [ref.logicalInputPosition, ordinal])) });
+    // Per-root frame-pin ledger: one entry per backend frame pin request, released either by
+    // `leaveFrame` (normal unwinding) or by `abortRoot` (abandoned frames). The count is bounded by
+    // the guest frame region ($live_frame_new, 233 KiB of 16-byte-plus-bindings frames), never
+    // wrapping.
+    root.framePins.entered += 1;
     root.entered = true;
     root.pending = null;
     return frameToken;
@@ -802,7 +808,21 @@ export class SlotRegistry {
       throw Error('non-LIFO live-slot frame retirement');
     }
     root.frames.pop();
+    if (root.framePins.released >= root.framePins.entered) {
+      throw Error('live-slot frame pin ledger underflow');
+    }
+    root.framePins.released += 1;
     return 0;
+  }
+
+  // Operator-observable per-root frame-pin count: pins the root entered, pins it released through
+  // `leaveFrame`, and the difference. A root that finished normally reports `active: 0`;
+  // `abortRoot` reports the pins the failed root still held (it forgets its frame records and the
+  // poisoned instance is discarded, so it does NOT release or count them as released).
+  framePinCounts(token) {
+    const root = this.#root(token);
+    return { entered: root.framePins.entered, released: root.framePins.released,
+      active: root.framePins.entered - root.framePins.released };
   }
 
   requestEffect(token, frameToken, handle, effect, request) {
@@ -947,18 +967,30 @@ export class SlotRegistry {
   finishRoot(token) {
     const root = this.#root(token);
     if (root.frames.length || root.pending) throw Error('live-slot root still has an active frame');
+    if (root.framePins.released !== root.framePins.entered) {
+      throw Error('live-slot root still holds unreleased frame pins');
+    }
     this.#roots.delete(token);
     this.#retire('root-release');
   }
 
   // Only the trusted worker calls this after a trapped submit has unwound.
   // A failed guest is not permitted to keep refs or a pinned old map alive.
+  //
+  // Frame pins are NOT released here. The host forgets the failed root's frame records and the
+  // poisoned instance is discarded, so the returned `active` count is the number of frame pins the
+  // root still held when it was aborted. Reporting them as released would be an assignment, not a
+  // measurement; per-frame release accounting on the abnormal path belongs to
+  // live-reference-lifetimes (decision 6, r[LREF-EXIT-01]).
   abortRoot(token) {
     const root = this.#root(token);
+    const counts = { entered: root.framePins.entered, released: root.framePins.released,
+      active: root.framePins.entered - root.framePins.released };
     root.pending = null;
     root.frames.length = 0;
     this.#roots.delete(token);
     this.#retire('aborted-root-release');
+    return counts;
   }
 
   saveProgram(version) {

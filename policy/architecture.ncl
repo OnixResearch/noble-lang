@@ -9,11 +9,12 @@ let contracts = import "./architecture.contracts.ncl" in
     targets = [{
       triple = "x86_64-unknown-linux-gnu",
       # The complete plan. `noble-cli` declares the empty `safety-observe`
-      # feature for its explicit evidence build and the test-only
-      # `live-test-barrier` safepoint feature; the deny-all gate's
-      # --all-features plan enables both. Units without those features retain
-      # the default configuration. The installed CLI enables neither.
-      features = ["live-test-barrier", "safety-observe"],
+      # feature for its explicit evidence build, the test-only
+      # `live-test-barrier` safepoint feature and the test-only
+      # `paa1-test-barrier` comparison hook; the deny-all gate's
+      # --all-features plan enables all three. Units without those features
+      # retain the default configuration. The installed CLI enables none.
+      features = ["live-test-barrier", "paa1-test-barrier", "safety-observe"],
       default_features = true,
     }],
   },
@@ -478,7 +479,17 @@ let contracts = import "./architecture.contracts.ncl" in
     # complete compiler coverage; this is capacity, not a waiver.
     max_modules = 4096,
     max_items = 8192,
-    max_types = 4096,
+    # The 2026-11-20 Cairn campaign integration (the owner-law release consumer
+    # and the v4 MC2 build pins) grows the CLI noble bin+test shard past the 4096
+    # type-fact cap, so that shard was incomplete and its facts referenced
+    # missing types. A scratch collection of integration 9e1dc020 with every
+    # count cap quadrupled observed expected=110, observed=110, 0 missing,
+    # 0 unexpected, 0 duplicate unit ids, 0 invalid shards, status=complete, and
+    # a 438,707,591-byte IR. That shard had 4,433 type facts, 51,057 calls,
+    # 12,224 expansions, at least 54,688 distinct fact spans and 958 unknowns;
+    # every other per-unit maximum stayed below its cap. Double the type cap
+    # only; this is capacity, not a waiver.
+    max_types = 8192,
     max_traits = 512,
     # The #118 procedure library (noble_contracts) and the #33 specialization cache
     # (noble_ngraph) each fill their library and library+test shards to exactly the

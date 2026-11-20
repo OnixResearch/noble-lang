@@ -56,6 +56,19 @@ for (const session of plan.sessions) {
     process.exit(2);
   }
 }
+if (only) {
+  const known = new Map(plan.sessions.map(session => [session.id, session]));
+  const unknown = [...only].filter(id => !known.has(id));
+  if (unknown.length > 0) {
+    console.error(`--only names unknown sessions: ${unknown.join(', ')}`);
+    process.exit(2);
+  }
+  const runnable = [...only].filter(id => !known.get(id).retired);
+  if (runnable.length === 0) {
+    console.error(`--only names only retired sessions: ${[...only].join(', ')}`);
+    process.exit(2);
+  }
+}
 const sessions = plan.sessions.filter(session => !session.retired && (!only || only.has(session.id)));
 const timeoutMs = Number(options['timeout-s']) * 1000;
 const git = args => spawnSync('git', ['-C', repo, ...args], { encoding: 'utf8' }).stdout.trim();
@@ -76,8 +89,12 @@ const runSession = session => new Promise(resolve => {
   const calculator = [binary, 'calculator', ...session.flags];
   const timed = time ? [time, '-f', '%e %M', '-o', path.join(directory, 'time'), ...calculator] : calculator;
   const memoryMax = session.memory_max ?? options['memory-max'];
+  // OOMPolicy=continue keeps the user manager from stopping the scope when the
+  // kernel OOM-kills one member (the user manager's default policy is `stop`).
+  // The row then observes the host's own failure instead of racing a SIGTERM.
   const argv = memoryMax
-    ? ['systemd-run', '--user', '--scope', '-q', '-p', `MemoryMax=${memoryMax}`, '-p', 'MemorySwapMax=0', '--', ...timed]
+    ? ['systemd-run', '--user', '--scope', '-q', '-p', `MemoryMax=${memoryMax}`, '-p', 'MemorySwapMax=0',
+      '-p', 'OOMPolicy=continue', '--', ...timed]
     : timed;
   const events = [];
   const stdout = [];

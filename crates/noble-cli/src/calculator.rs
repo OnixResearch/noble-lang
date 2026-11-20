@@ -119,15 +119,19 @@ pub(crate) fn assemble_wat(arguments: &[std::ffi::OsString]) -> std::process::Ex
 }
 
 pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
+    let stdout = std::io::stdout();
+    let mut out = stdout.lock();
+    let stderr = std::io::stderr();
+    let mut err = stderr.lock();
     let (framed, finite_decimal, budget) = match parse_options(&arguments[1..]) {
         Ok(options) => options,
         Err(message) => {
-            eprintln!("{message}\n{USAGE}");
+            let _ = writeln!(err, "{message}\n{USAGE}");
             return std::process::ExitCode::from(2);
         }
     };
     if let Err(message) = trace::open() {
-        eprintln!("noble calculator: {message}");
+        let _ = writeln!(err, "noble calculator: {message}");
         return std::process::ExitCode::from(2);
     }
     let cache = match std::env::var(MODULE_CACHE_VARIABLE).as_deref() {
@@ -136,14 +140,17 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         )),
         Ok("off") => None,
         _ => {
-            eprintln!("noble calculator: {MODULE_CACHE_VARIABLE} must be `on` or `off`");
+            let _ = writeln!(
+                err,
+                "noble calculator: {MODULE_CACHE_VARIABLE} must be `on` or `off`"
+            );
             return std::process::ExitCode::from(2);
         }
     };
     let mut session = match Session::new(cache) {
         Ok(session) => session,
         Err(message) => {
-            eprintln!("noble calculator: {message}");
+            let _ = writeln!(err, "noble calculator: {message}");
             return std::process::ExitCode::from(2);
         }
     };
@@ -156,32 +163,25 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             Ok(None) => break,
             Err(error) => {
                 if error.context.outcome == "exhausted" {
-                    eprintln!("TransportLimit InputFrameBytes: {}", error.message);
+                    let _ = writeln!(err, "TransportLimit InputFrameBytes: {}", error.message);
                 } else {
-                    eprintln!("noble calculator: {}", error.message);
+                    let _ = writeln!(err, "noble calculator: {}", error.message);
                 }
                 return std::process::ExitCode::from(2);
             }
         };
         match session.submit(&line, finite_decimal, budget) {
-            Ok(outcome) => {
-                let (value, error, refused) = report(outcome);
-                if let Some(value) = value {
-                    println!("{value}");
+            Ok(outcome) => match emit(&mut out, &mut err, outcome) {
+                Ok(refused) => failed |= refused,
+                Err(error) => {
+                    let _ = writeln!(err, "{}", terminal_output_failure(&error));
+                    return std::process::ExitCode::from(2);
                 }
-                if let Some(error) = error {
-                    eprintln!("{error}");
-                }
-                failed |= refused;
-            }
+            },
             Err(message) => {
-                eprintln!("noble calculator: {message}");
+                let _ = writeln!(err, "noble calculator: {message}");
                 return std::process::ExitCode::from(2);
             }
-        }
-        if let Err(error) = std::io::stdout().flush() {
-            eprintln!("noble calculator: terminal output failed: {error}");
-            return std::process::ExitCode::from(2);
         }
     }
     if failed {
@@ -193,10 +193,12 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
 
 /// The terminal effects of one submitted line: its stdout line, its stderr
 /// line, and whether it makes the process exit with status 1. A value and a
-/// `let` echo are the only stdout lines, a `fn` definition prints nothing,
-/// and every refusal prints exactly one line on stderr. A fatal condition
-/// (usage, transport, restore, terminal write) is not an outcome here: it
-/// ends the process with status 2.
+/// `let` echo are the only stdout lines and a `fn` definition prints nothing.
+/// A refused line prints exactly one stderr line: the guest diagnostic
+/// `Category [start,end) provenance=unavailable`, `NativeFailure: <report>`
+/// or `InfrastructureFailure: <message>`. A fatal host condition is not an
+/// outcome here: `run` reports it as `noble calculator: <message>` with exit
+/// status 2.
 fn report(outcome: Outcome) -> (Option<String>, Option<String>, bool) {
     match outcome {
         Outcome::Value(value) => (Some(value), None, false),
@@ -209,6 +211,31 @@ fn report(outcome: Outcome) -> (Option<String>, Option<String>, bool) {
             true,
         ),
     }
+}
+
+/// Write one submitted line's terminal effects. A write error — a closed
+/// pipe or a failed terminal — is returned to `run`, which reports it and
+/// exits 2; it never panics.
+fn emit(
+    out: &mut impl std::io::Write,
+    err: &mut impl std::io::Write,
+    outcome: Outcome,
+) -> std::io::Result<bool> {
+    let (value, error, refused) = report(outcome);
+    if let Some(value) = value {
+        writeln!(out, "{value}")?;
+        out.flush()?;
+    }
+    if let Some(error) = error {
+        writeln!(err, "{error}")?;
+        err.flush()?;
+    }
+    Ok(refused)
+}
+
+/// The message `run` prints when a terminal write fails.
+fn terminal_output_failure(error: &std::io::Error) -> String {
+    format!("noble calculator: terminal output failed: {error}")
 }
 
 fn parse_options(arguments: &[std::ffi::OsString]) -> Result<(bool, bool, [i64; 7]), String> {
@@ -5985,8 +6012,8 @@ fn numeric_category(value: &serde_json::Value) -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        cache, diagnostic, parse_options, report, Outcome, Session, DEFAULT_BUDGET, INPUT_LIMIT,
-        NAMESPACE, USAGE,
+        cache, diagnostic, emit, parse_options, report, terminal_output_failure, Outcome, Session,
+        DEFAULT_BUDGET, INPUT_LIMIT, NAMESPACE, USAGE,
     };
     use noble_kernel::types::Ty;
 
@@ -6070,6 +6097,48 @@ mod tests {
             "usage: noble calculator [--framed] [--finite-decimal] [--input-bytes N] \
              [--numeric-digits N] [--intermediate-bits N] [--syntax-depth N] \
              [--call-depth N] [--evaluation-work N] [--output-size N]"
+        );
+    }
+
+    #[test]
+    fn terminal_write_failures_are_reported_instead_of_panicking() {
+        // The contract promises exit 2, not a panic (exit 101), when the
+        // terminal write fails. A closed stdout pipe surfaces as an error from
+        // `emit`, which `run` reports and turns into status 2.
+        struct Closed;
+        impl std::io::Write for Closed {
+            fn write(&mut self, _: &[u8]) -> std::io::Result<usize> {
+                Err(std::io::ErrorKind::BrokenPipe.into())
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Err(std::io::ErrorKind::BrokenPipe.into())
+            }
+        }
+        let mut out = Closed;
+        let mut err = Closed;
+        assert!(
+            emit(&mut out, &mut err, Outcome::Value("7".into())).is_err(),
+            "a value on a broken stdout is an error"
+        );
+        assert!(
+            emit(
+                &mut out,
+                &mut err,
+                Outcome::Diagnostic("SyntaxError [0,1) provenance=unavailable".into())
+            )
+            .is_err(),
+            "a diagnostic on a broken stderr is an error"
+        );
+        // A silent definition writes nothing, so a closed terminal cannot
+        // turn it into a failure.
+        assert!(matches!(
+            emit(&mut out, &mut err, Outcome::Defined),
+            Ok(false)
+        ));
+        let error = std::io::Error::from(std::io::ErrorKind::BrokenPipe);
+        assert_eq!(
+            terminal_output_failure(&error),
+            "noble calculator: terminal output failed: broken pipe"
         );
     }
 

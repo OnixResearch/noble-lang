@@ -29,7 +29,13 @@
     `1 m` `TrailingInput [2,3)`, `sqrt(2)` `UnknownName [0,4)` and `1 + 2i`
     `TrailingInput [5,6)`; the raw probe I/O is retained outside the repository. This task stays
     open: the six new vectors have no current-source acceptance receipt yet, so the whole contract
-    is not receipt-bound.
+    is not receipt-bound. Review R4: the CLI writes values and diagnostics with `writeln!` on
+    locked handles and reports a write failure as `noble calculator: terminal output failed: …` with
+    exit 2 instead of panicking with 101. `calculator::tests::terminal_write_failures_are_reported_instead_of_panicking`
+    pins the failing-writer path, and a release binary of `f45a6a3a…4ffa` with a genuinely closed
+    stdout read end exited 2 with `Broken pipe (os error 32)` after 117 s on `1+2`. A descriptor
+    that is already closed (`>&-`) is ignored by the standard library, so it prints nothing and
+    leaves the exit status at the line outcomes; the design records that.
 - [ ] [serial] Prove the seven guest budget categories with other budgets adequate, and verify independent native/transport/host failures never masquerade as `ResourceLimit`; exercise a failed candidate after an accepted line and verify the prior state survives. Restore evidence: `calculator::tests::failed_lines_of_every_class_restore_the_committed_session` restores the committed arena and host state byte for byte after a real `$` line (SyntaxError) and after failures of each class (guest diagnostic, guest `ResourceLimit`, native quota, host bound, Rust and worker infrastructure failure) injected after real worker modules ran, and later lines match a reference session and a replay-reconstructed one; the ignored `calc_state_02_failed_lines_leave_definitions_byte_identical` does the same after real `let`/`fn` lines, with real `let x = 1 / 0` and `2 ^ 5000` failures. The guest budget categories remain open. r[CALC-LIMIT-01] r[CALC-STATE-02]
   - Partial evidence (#20), release snapshot of 44329dc (sha256 e1fb70ba…8127), plan and observations in `verification/calculator-v1/budgets/` (README, summary.json). All seven categories were executed: N−1 refuses with its category named, N succeeds, and a follow-up line sees the prior state. The brackets were InputBytes 8/9, NumericDigits 2/3, IntermediateIntegerBits 25/26, SyntaxDepth 2/3, CallDepth 1/2, EvaluationWork 38,052/38,053 and OutputSize 6/7. In the OutputSize before-commit control, a refused `let` kept `x = 7` and left `y` unbound. None of these printed a `ResourceLimit`: TransportLimit, a forced timeout, a memory-capped scope, and the 44329dc-only HostLimit HistoryBytes/ReplayWork (#17 replaces replay with a committed session and restore). A lowered runtime step quota is a runtime status (library harness). The killed-worker control did not produce a native failure on 44329dc, because each line replays into a fresh candidate worker. This task stays open: the failed-candidate-after-accepted-line case on the integrated tree and the CALC case gates are not done.
   Progress (2026-11-10): the brackets were re-run on this tree. A release build of `53c89e0d`
@@ -52,14 +58,23 @@
   `control/memory-cap` now expect the selected failure labels (`calculator restore failed` and
   `engine worker closed its reply stream`, exit status 2, no `ResourceLimit`) instead of the
   `44329dc` silent recovery and external kill. The lane records retired rows without running them
-  and refuses a retired row that still carries an expectation. The revised plan then ran: a release
-  binary of `cb5e9f71` (sha256 `b4b2931a…2d1736`) ran 20 sessions at concurrency 2 in 1,660 s and
-  all 20 matched; all seven categories kept their boundaries (N−1 refused with its category named,
-  N accepted, the follow-up line saw the prior state), and the four controls printed no
-  `ResourceLimit`. The compact observations are `budgets/summary-2026-11-20.json` (the `44329dc`
+  and refuses a retired row that still carries an expectation. The lane also sets
+  `-p OOMPolicy=continue` on its memory-capped scopes so a cgroup OOM kill cannot race a
+  user-manager scope stop; two one-row reruns at `c5f6d8ea` (binary sha256 `f45a6a3a…4ffa`,
+  receipts `057e1c98…` and `bfc25c2b…`) reproduced the memory-cap observation exactly. The revised
+  plan then ran: a release binary of `cb5e9f71` (sha256
+  `b4b2931a…2d1736`) ran 20 sessions at concurrency 2 in 1,660 s and all 20 matched; all seven
+  categories kept their boundaries (N−1 refused with its category named, N accepted, the
+  follow-up line saw the prior state), and the four controls printed no `ResourceLimit`. The
+  compact observations are `budgets/summary-2026-11-20.json` (the `53c89e0d`, 2026-11-10
   `summary.json` is kept), and the raw receipt (sha256 `b1d66e0d…62034`) is outside the
-  repository. This task stays open: the plan revision still needs its independent review under
-  decision 1, and the CALC case gates are a separate step.
+  repository. Erratum: the plan's `revision.reason` says the two changed rows expected "silent
+  recovery"; they did not. v1 `control/worker-killed` expected exactly stdout `7` and no stderr,
+  with the next line failing, and v1 `control/memory-cap` expected no output; `44329dc` recovered
+  silently (exit 0) and was killed by the scope (SIGTERM), which is why those rows did not match.
+  `plan.json` keeps that sentence because its hash is bound to the receipt; the correction is here
+  and in `budgets/README.md`. This task stays open: the plan revision still needs its independent
+  review under decision 1, and the CALC case gates are a separate step.
 - [ ] [serial] Exercise applicable full CALC-01 through CALC-13 inputs, expected fields, hostile controls and independent-oracle requirements before proposing any canonical case state or implementation-status change. Leave unexercised scenarios absent/not-run with no invented evidence. The CLI runtime vectors of CALC-01/02/03/06/07/09 run through the [acceptance runner](../../../verification/calculator-v1/README.md), whose receipts are implementation observations only. Its [44329dc release receipt](../../../verification/calculator-v1/receipt-44329dc-release.json) and [integrated eccbc02 release receipt](../../../verification/calculator-v1/receipt-eccbc02-release.json) each observed 34/34 CLI vectors passing (CALC-07's two import/resource variants are unsupported on the CLI); no case state changes from them. r[CALC-GATE-01]
 
 ## Native lifecycle and closeout

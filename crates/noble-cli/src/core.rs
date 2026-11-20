@@ -178,6 +178,13 @@ pub const USAGE: &str = "usage:
   CLAIMS_JSON: {\"claimed_effects\":[]}; optional source/digest/allowed/trusted_correspondence are ignored
   --source and --allow-effects are selected by the host invoker, never by candidate claims.
   Admission rebuilds selected source and compares final Wasm bytes before fresh isolated execution.
+  noble admit-proof-artifact CANDIDATE --law FILE --law-digest SHA256 --source FILE --contract FILE
+                --proof FILE --pins FILE --call FILE --argument I64 [--manifest FILE] [--opt off|on]
+                [--policy-revision N] [--timeout-ms N]
+  noble admit-proof-artifact --emit-pins FILE [--cli-sha256 SHA256] [--opt off|on]
+  PAA-1: the opt-in `noble-proof-artifact-admission/v1` envelope joins the owner-law proof recheck and
+  subject binding with the host rebuild and final-byte comparison, then instantiates exactly the
+  compared subject and certified-call buffers in fresh workers. Separate tools below.
   noble run SOURCE [--opt off|on] [--emit NEW_DIR]
   noble compile SOURCE [--text-byte-cursor | --checked-i64] [--lowering baseline|type-directed-experimental] [--input-type I64|Bool|Text|Unit ...]
   noble compile SOURCE --declared-modules --bindings HOST_FILE [--module MODULE_FILE ...] [--input-type MODULE@VERSION.TYPE ...]
