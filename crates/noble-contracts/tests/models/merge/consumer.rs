@@ -2,7 +2,6 @@
     tigerstyle::assertion_density,
     tigerstyle::raw_arithmetic_overflow,
     tigerstyle::fragile_exhaustive_enum_match,
-    tigerstyle::function_length,
     reason = "Owner: noble-contracts-maintainers; this test-only consumer harness builds finite selections and replays bounded corpora, so long setup legs and fixed-width generator arithmetic are the readable form. Test-only lane: matches over the observable/fragment enums are intentional regression tables, panics and ignored cleanup results are fixture assertions, and the bounded checker's digest casts index a 16-entry nibble table."
 )]
 #![expect(
@@ -154,57 +153,8 @@ pub(super) fn search(selection: &Selection, seed: u64, vectors: usize) -> Search
             at += 1;
         }
         examined += 1;
-        match replay(selection, &input, seed) {
-            Witness::Differs(counterexample) => {
-                // Independent replay: the consumer re-executes the witness
-                // before it retains the refutation.
-                if replay(selection, &counterexample.input, seed)
-                    != Witness::Differs(counterexample.clone())
-                {
-                    return Search {
-                        outcome: Outcome::InternalFailure,
-                        counterexample: None,
-                        examined,
-                        truncated: false,
-                        seed,
-                    };
-                }
-                return Search {
-                    outcome: Outcome::ValidatedCounterexample,
-                    counterexample: Some(counterexample),
-                    examined,
-                    truncated: false,
-                    seed,
-                };
-            }
-            Witness::Conflict { .. } => {
-                return Search {
-                    outcome: Outcome::Conflict,
-                    counterexample: None,
-                    examined,
-                    truncated: false,
-                    seed,
-                };
-            }
-            Witness::Refused(Refusal::IncompatibleInterface) => {
-                return Search {
-                    outcome: Outcome::Unsupported,
-                    counterexample: None,
-                    examined,
-                    truncated: false,
-                    seed,
-                };
-            }
-            Witness::Refused(_) => {
-                return Search {
-                    outcome: Outcome::Unsupported,
-                    counterexample: None,
-                    examined,
-                    truncated: false,
-                    seed,
-                };
-            }
-            Witness::Agrees => {}
+        if let Some(result) = verdict(selection, &input, seed, examined) {
+            return result;
         }
     }
     Search {
@@ -213,6 +163,35 @@ pub(super) fn search(selection: &Selection, seed: u64, vectors: usize) -> Search
         examined,
         truncated: vectors > MAX_VECTORS,
         seed,
+    }
+}
+
+/// One vector's verdict: a mismatch is replayed before it is retained, a
+/// conflict stops the search, and an out-of-fragment subject is unsupported.
+fn verdict(selection: &Selection, input: &[u64], seed: u64, examined: usize) -> Option<Search> {
+    let stop = |outcome: Outcome, counterexample: Option<Counterexample>| {
+        Some(Search {
+            outcome,
+            counterexample,
+            examined,
+            truncated: false,
+            seed,
+        })
+    };
+    match replay(selection, input, seed) {
+        Witness::Differs(counterexample) => {
+            // Independent replay: the consumer re-executes the witness before
+            // it retains the refutation.
+            if replay(selection, &counterexample.input, seed)
+                != Witness::Differs(counterexample.clone())
+            {
+                return stop(Outcome::InternalFailure, None);
+            }
+            stop(Outcome::ValidatedCounterexample, Some(counterexample))
+        }
+        Witness::Conflict { .. } => stop(Outcome::Conflict, None),
+        Witness::Refused(_) => stop(Outcome::Unsupported, None),
+        Witness::Agrees => None,
     }
 }
 

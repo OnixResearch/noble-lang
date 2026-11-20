@@ -3,7 +3,6 @@
     tigerstyle::raw_arithmetic_overflow,
     tigerstyle::numeric_units,
     tigerstyle::fragile_exhaustive_enum_match,
-    tigerstyle::path_segment_repetition,
     tigerstyle::platform_dependent_cast,
     reason = "Owner: noble-contracts-maintainers; this test-only claim harness builds finite subjects, hash blocks and refusal tables, so long setup legs and fixed-width hash arithmetic are the readable form. Test-only lane: matches over the observable/fragment enums are intentional regression tables, panics and ignored cleanup results are fixture assertions, and the bounded checker's digest casts index a 16-entry nibble table."
 )]
@@ -23,7 +22,7 @@
 
 use super::model::{Op, Precondition, Program};
 
-/// Claim/relation revision.
+/// MergeClaim/relation revision.
 pub(super) const RELATION_REVISION: &str = "noble-merge-claim/v1";
 
 /// Evidence schema revision.
@@ -184,7 +183,7 @@ impl Selection {
 
 /// The exact regenerated claim and everything the consumer derived itself.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct Claim {
+pub(super) struct MergeClaim {
     pub(super) relation: &'static str,
     pub(super) semantic_revision: &'static str,
     pub(super) claim_text: String,
@@ -192,7 +191,7 @@ pub(super) struct Claim {
     pub(super) proof_digest: String,
 }
 
-impl Claim {
+impl MergeClaim {
     pub(super) fn digest(&self) -> String {
         let mut digest = Sha256::new();
         digest.update(RELATION_REVISION.as_bytes());
@@ -310,7 +309,7 @@ impl Outcome {
 /// observable list itself, requires exact `Ty` equality across the four
 /// preparations, an observable-only output stack, `true` preconditions and a
 /// nonempty input domain, then renders the exact `MergeRel` proposition.
-pub(super) fn regenerate(selection: &Selection) -> Result<Claim, Refusal> {
+pub(super) fn regenerate(selection: &Selection) -> Result<MergeClaim, Refusal> {
     if selection.precondition != Precondition::True {
         return Err(Refusal::VacuousPrecondition);
     }
@@ -334,7 +333,7 @@ pub(super) fn regenerate(selection: &Selection) -> Result<Claim, Refusal> {
         selection.second.lean_subject(),
         selection.candidate.lean_subject(),
     );
-    Ok(Claim {
+    Ok(MergeClaim {
         relation: RELATION_REVISION,
         semantic_revision: SEMANTIC_REVISION,
         claim_text,
@@ -346,7 +345,7 @@ pub(super) fn regenerate(selection: &Selection) -> Result<Claim, Refusal> {
 /// The consumer's admission rule: regenerate, then refuse every producer
 /// field that differs.  On success the returned claim is the consumer's own
 /// and the proof bytes are bound to it.
-pub(super) fn admit(selection: &Selection, evidence: &Evidence) -> Result<Claim, Refusal> {
+pub(super) fn admit(selection: &Selection, evidence: &Evidence) -> Result<MergeClaim, Refusal> {
     let mut claim = regenerate(selection)?;
     if evidence.schema != EVIDENCE_SCHEMA {
         return Err(Refusal::WrongSchema);
@@ -378,7 +377,7 @@ pub(super) fn admit(selection: &Selection, evidence: &Evidence) -> Result<Claim,
 
 /// The only path to `Verified`: the isolated pinned Lean consumer accepted the
 /// exact regenerated claim for the bound proof bytes.
-pub(super) fn checked(claim: &Claim, accepted: bool, axioms: &[String]) -> Outcome {
+pub(super) fn checked(claim: &MergeClaim, accepted: bool, axioms: &[String]) -> Outcome {
     let allowed = ["propext", "Classical.choice", "Quot.sound"];
     let mut is_allowed = true;
     let mut at = 0usize;
