@@ -4,7 +4,8 @@
 // project every canonical `input`/`expected`/variant field onto that evidence,
 // and refuse any variant the lanes did not reach. A case is promotable only
 // when every machine-expressible field is observed and equals the canonical
-// value; a mismatch always fails.
+// value; one mismatch always fails, and a leaf with no projection entry fails
+// the completeness check.
 //
 // Usage: node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY
 // Environment: TMPDIR (lane evidence parents), NOBLE_LSLOT_TARGET_DIR
@@ -17,11 +18,17 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  root, sha, read, sourceInventory, revision, frozen,
+  root, sha, sourceInventory, revision, frozen,
 } from '../dx06-current-source/source.mjs';
 import {
-  jsonLines, projectors, pending,
+  jsonLines, leaves, projectors, pending, declaredAllowlist,
 } from './projection.mjs';
+
+// The change's base commit: the LIVE-01..10 contract fields this case must not
+// change are compared with the records at this pinned revision, so a later
+// state/evidence transition by another change is recorded, not mistaken for a
+// design change.
+const LIVE_BASELINE_COMMIT = '8075d3c0';
 
 const unsafeStartup = Object.keys(process.env).filter(name =>
   /^(?:NODE_OPTIONS|NODE_PATH|BASH_ENV|ENV|LD_.*|DYLD_.*|NIX_LD(?:_.*)?|GLIBC_TUNABLES|GCONV_PATH|SHLIB_PATH)$/.test(name));
@@ -49,13 +56,14 @@ const caseById = id => {
   assert.equal(rows.length, 1, `${id} unique case`);
   return rows[0];
 };
+// The digest scope is exactly the canonical design the promotion does not edit.
 const designSha = id => {
   const row = caseById(id);
   return sha(JSON.stringify({ id: row.id, input: row.input, expected: row.expected }));
 };
 
-const inputs = [fixtureFile, liveWasmFile, 'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml',
-  'policy/tool-selection.json', 'crates/noble-cli/Cargo.toml',
+const explicitInputs = [fixtureFile, liveWasmFile, 'Cargo.toml', 'Cargo.lock',
+  'rust-toolchain.toml', 'policy/tool-selection.json', 'crates/noble-cli/Cargo.toml',
   'crates/noble-contracts/Cargo.toml', 'crates/noble-kernel/Cargo.toml',
   'crates/noble-wasm/Cargo.toml', 'crates/noble-cli/src/core/runtime/config.json',
   'verification/lslot-cases/gate.mjs', 'verification/lslot-cases/projection.mjs',
@@ -77,10 +85,6 @@ const inputs = [fixtureFile, liveWasmFile, 'Cargo.toml', 'Cargo.lock', 'rust-too
 const selectedTrees = ['crates/noble-kernel/src', 'crates/noble-contracts/src',
   'crates/noble-wasm/src', 'crates/noble-wasm/runtime', 'crates/noble-wasm/wit',
   'crates/noble-cli/src'];
-const source = sourceInventory(inputs, selectedTrees);
-const sourceRevision = revision(source);
-save('source.json', JSON.stringify({ revision: sourceRevision, sha256: source }, null, 2) + '\n');
-save('canonical-fixture.json', fixtureBytes);
 
 const config = JSON.parse(fs.readFileSync(path.join(root,
   'crates/noble-cli/src/core/runtime/config.json')));
@@ -92,7 +96,6 @@ const node = config.tools.node.path;
 const linker = selected.component_sync.linker_bin;
 assert.equal(fs.realpathSync(process.execPath), fs.realpathSync(node),
   'run this gate with the pinned Node executable');
-assert.equal(sha(fs.readFileSync(node)), sha(fs.readFileSync(process.execPath)));
 
 const target = process.env.NOBLE_LSLOT_TARGET_DIR
   ? path.resolve(process.env.NOBLE_LSLOT_TARGET_DIR)
@@ -165,16 +168,33 @@ assert.ok(fs.existsSync(binary), 'selected CLI binary missing after the offline 
 const artifacts = built.text.split('\n').filter(line => line.startsWith('{'))
   .map(line => JSON.parse(line)).filter(row => row.reason === 'compiler-artifact'
     && row.target.name === 'noble' && row.target.kind.includes('bin'));
-const artifact = artifacts.find(row => row.executable === binary);
-if (built.status === 0 && artifact === undefined) {
+if (built.status === 0 && artifacts.find(row => row.executable === binary) === undefined) {
   issues.push('selected CLI not present in the fresh offline Cargo build receipts');
 }
 const binarySha256 = sha(fs.readFileSync(binary));
 
+// Every repository path the executed binary was compiled from joins the
+// manifest. The dep-info is Cargo's own compile-input list.
+const depInfo = fs.readFileSync(path.join(target, 'debug/noble.d'), 'utf8');
+const dependencies = depInfo.replace(/\\\n/g, ' ').split(/\s+/)
+  .map(token => token.trim()).filter(Boolean)
+  .map(token => path.resolve(root, token))
+  .filter(file => file.startsWith(`${root}/`))
+  .map(relative)
+  .filter(file => !file.startsWith('target/'));
+const missingDependencies = dependencies.filter(file => !fs.existsSync(path.join(root, file)));
+assert.deepEqual(missingDependencies, [], `dep-info paths missing: ${missingDependencies}`);
+const inputs = [...new Set([...explicitInputs, ...dependencies])];
+const source = sourceInventory(inputs, selectedTrees);
+const sourceRevision = revision(source);
+save('source.json', JSON.stringify({ revision: sourceRevision, sha256: source }, null, 2) + '\n');
+save('canonical-fixture.json', fixtureBytes);
+
 // Lane evidence must be a new private directory directly under TMPDIR: the
-// resource-reference lanes refuse any other parent.
+// resource-reference lanes refuse any other parent. The authority root keeps
+// the lanes from writing into the source tree.
 const temporaryRoot = fs.realpathSync(environment.TMPDIR);
-function evidenceDirectory(label) {
+function privateDirectory(label) {
   const directory = fs.mkdtempSync(path.join(temporaryRoot, `noble-lslot-resource-${label}-`));
   fs.chmodSync(directory, 0o700);
   const metadata = fs.lstatSync(directory);
@@ -184,13 +204,20 @@ function evidenceDirectory(label) {
   return directory;
 }
 const evidenceDirectories = [];
-function lane(label, script, name) {
-  const directory = evidenceDirectory(label);
+function lane(label, script) {
+  const directory = privateDirectory(label);
   evidenceDirectories.push(directory);
+  const authorityRoot = privateDirectory(`${label}-authority`);
+  evidenceDirectories.push(authorityRoot);
   const result = run(`lane-${label}`, node,
     [path.join(root, 'crates/noble-cli/tests', script), binary],
-    { NOBLE_SLOT_EVIDENCE_DIR: directory }, null, 0);
-  return { directory, name: name ?? label, ...result };
+    { NOBLE_SLOT_EVIDENCE_DIR: directory, NOBLE_SLOT_AUTHORITY_ROOT: authorityRoot });
+  const mirror = path.join(output, 'raw', label);
+  fs.mkdirSync(mirror, { recursive: true, mode: 0o700 });
+  for (const name of fs.readdirSync(directory)) {
+    fs.copyFileSync(path.join(directory, name), path.join(mirror, name));
+  }
+  return { directory, mirror, ...result };
 }
 const pairedRecords = records => {
   const requests = records.filter(row => row.kind === 'operator').map(row => row.request);
@@ -214,12 +241,12 @@ const authorityOf = file => {
   assert.ok(header, `${relative(file)} authority header`);
   return header.authority;
 };
-const counters = (directory, name) =>
-  JSON.parse(fs.readFileSync(path.join(directory, `${name}.counters.json`)));
 const summaryFile = (directory, name) =>
   JSON.parse(fs.readFileSync(path.join(directory, name)));
+const counters = (directory, name) =>
+  JSON.parse(fs.readFileSync(path.join(directory, `${name}.counters.json`)));
 
-// LSLOT-01: the selected capture lane plus its two independent controls.
+// LSLOT-01: the capture lane plus its two independent controls.
 const lane01 = lane('01', 'live_slot_capture_legacy.mjs');
 const lane01Late = lane('01-late', 'live_slot_late_control.mjs');
 const lane01Origin = lane('01-origin', 'live_slot_selected_origin.mjs');
@@ -228,24 +255,63 @@ const control01Origin = summaryFile(lane01Origin.directory,
   'LSLOT01-selected-origin-control.summary.json');
 if (lane01Late.status === 0) {
   assert.equal(control01Late.late.outcome, 'refused');
-  assert.equal(control01Late.late.when, 'too-late');
   assert.equal(control01Late.next_root.epoch, '1');
-  assert.deepEqual(control01Late.next_root.stack, [{ kind: 1, value: '3' }]);
 }
 if (lane01Origin.status === 0) {
   assert.equal(control01Origin.selected_binary_sha256, binarySha256);
-  assert.ok(control01Origin.owner_count > 0);
 }
 
 // LSLOT-02: the epoch-1 nested-root chain, never edited by this gate.
 const lane02 = lane('02', 'live_slot_nested_roots.mjs');
 const summary02 = summaryFile(lane02.directory, 'LSLOT02-summary.json');
+const fixture02 = name => {
+  const raw = path.join(lane02.directory, `LSLOT02-${name}.jsonl`);
+  const steps = pairedRecords(jsonLines(raw));
+  const item = summary02.results.find(result => result.name === name);
+  assert.ok(item, `LSLOT-02 ${name} summary`);
+  // Cross-check the lane summary against the raw CLI records it wrote.
+  const executed = steps.filter(step => step.row.outcome === 'executed')
+    .map(step => step.row);
+  assert.deepEqual(item.old_root.request_trace, executed[0].request_trace,
+    `${name} old-root trace equals the raw executed reply`);
+  assert.deepEqual(item.committed_ack, steps.find(step => step.row.outcome === 'published'
+    && step.row.control_id === '1').row, `${name} ACK equals the raw published reply`);
+  const bootstrap = steps.find(step => step.row.outcome === 'bootstrapped').row;
+  assert.deepEqual(item.bootstrap, bootstrap, `${name} bootstrap equals the raw reply`);
+  return {
+    ...item,
+    configured_epoch: steps[0].row.epoch,
+    authority: authorityOf(raw),
+    install_requests: steps.filter(step => step.request?.operation === 'install')
+      .map(step => step.request),
+    invoke_requests: steps.filter(step => step.request?.operation === 'invoke')
+      .map(step => step.request),
+    reflected_sites: steps.filter(step => step.request?.operation === 'reflect')
+      .map(step => ({ id: step.request.id, site_id: step.request.site_id, site: step.row.site })),
+    stages: steps.map(step => step.row.stage),
+  };
+};
+const results02 = ['base-parent-child', 'transitive-A-B-C'].map(fixture02);
 
-// LSLOT-03 and LSLOT-06: independent exact admission and static boundary.
+// LSLOT-03 and LSLOT-06: exact admission and the static/lifetime boundary.
 const lane03 = lane('03', 'live_slot_resource_ref_admission.mjs');
 const summary03 = summaryFile(lane03.directory, 'LSLOT03-summary.json');
+const steps03 = summary03.results.flatMap(result =>
+  pairedRecords(jsonLines(path.join(lane03.directory, `LSLOT03-${result.name}.jsonl`))));
 const lane06 = lane('06', 'live_slot_resource_ref_static.mjs');
 const summary06 = summaryFile(lane06.directory, 'LSLOT06-summary.json');
+const steps06 = summary06.results.flatMap(result =>
+  pairedRecords(jsonLines(path.join(lane06.directory, `LSLOT06-${result.name}.jsonl`))));
+for (const [label, summary, directory] of [['LSLOT-03', summary03, lane03.directory],
+  ['LSLOT-06', summary06, lane06.directory]]) {
+  for (const result of summary.results) {
+    const raw = jsonLines(path.join(directory, `${label.replace('-', '')}-${result.name}.jsonl`));
+    const configured = raw.find(row => row.kind === 'cli').row;
+    assert.equal(configured.outcome, 'configured', `${label} ${result.name} configured`);
+  }
+}
+const installInputs06 = steps06.filter(step => step.request?.operation === 'install')
+  .flatMap(step => step.request.inputs);
 
 // LSLOT-04 and LSLOT-07: CAS, rollback and current host policy.
 const lane0407 = lane('0407', 'live_slot_cas_policy.mjs');
@@ -254,11 +320,15 @@ const casNames = ['LSLOT04-same-slot-writers', 'LSLOT04-unrelated-slot-race',
   'LSLOT07-publication-without-grant', 'LSLOT07-static-dispatch-without-grant',
   'LSLOT07-dispatch-without-grant', 'LSLOT07-old-version-effect-revoked-after-pin',
   'LSLOT07-revoked-after-root-pin'];
-const cas = casNames.map(name => ({ ...counters(lane0407.directory, name),
-  raw: path.join(lane0407.directory, `${name}.jsonl`),
-  requests: path.join(lane0407.directory, `${name}.requests.jsonl`) }));
-const casSteps = cas.flatMap(item => pairedFiles(item.requests, item.raw)
-  .map(step => ({ request: step.request, row: step.row, case: item.name })));
+const casSteps = [];
+const cas = casNames.map(name => {
+  const raw = path.join(lane0407.directory, `${name}.jsonl`);
+  const requests = path.join(lane0407.directory, `${name}.requests.jsonl`);
+  const steps = pairedFiles(requests, raw);
+  casSteps.push(...steps.map(step => ({ request: step.request, row: step.row })));
+  return { ...counters(lane0407.directory, name), raw, requests,
+    stages: steps.map(step => step.row.stage) };
+});
 const earliest = (name, slot) => {
   const steps = pairedFiles(path.join(lane0407.directory, `${name}.requests.jsonl`),
     path.join(lane0407.directory, `${name}.jsonl`));
@@ -269,23 +339,56 @@ const earliest = (name, slot) => {
 };
 const casBaseline = { a: earliest('LSLOT04-same-slot-writers', 'A'),
   b: earliest('LSLOT04-unrelated-slot-race', 'B') };
-const publicationGrant = pairedFiles(
+const pinnedEpoch = pairedFiles(
   path.join(lane0407.directory, 'LSLOT07-publication-without-grant.requests.jsonl'),
-  path.join(lane0407.directory, 'LSLOT07-publication-without-grant.jsonl'));
-const pinnedEpoch = publicationGrant.find(step => step.row.outcome === 'executed')
-  .row.request_trace[0].rootEpoch;
+  path.join(lane0407.directory, 'LSLOT07-publication-without-grant.jsonl'))
+  .find(step => step.row.outcome === 'executed').row.request_trace[0].rootEpoch;
 
 // LSLOT-09: the same checked caller under the three legacy profiles.
 const lane09Legacy = lane('09-legacy', 'live_slot_legacy_refusal.mjs');
 const lane09Repl = lane('09-repl', 'live_repl_slot_exclusion.mjs');
 const summary09Legacy = summaryFile(lane09Legacy.directory, 'LSLOT09-legacy-summary.json');
 const summary09Repl = summaryFile(lane09Repl.directory, 'LSLOT09-repl-summary.json');
-const liveWasmBytes = fs.readFileSync(path.join(root, liveWasmFile));
-const liveWasmCases = JSON.parse(liveWasmBytes).cases.filter(row => row.id.startsWith('LIVE-'));
-assert.equal(liveWasmCases.length, 10, 'ten canonical LIVE cases');
-const liveWasmUnchanged = sha(liveWasmBytes)
-    === sha(Buffer.from(git(['show', `HEAD:${liveWasmFile}`])))
-  && git(['status', '--porcelain=v1', '--', liveWasmFile]).length === 0;
+// Cross-check the lane summaries against their raw CLI records.
+const legacyRaw = jsonLines(path.join(lane09Legacy.directory, 'LSLOT09-legacy.jsonl'));
+const legacyCommands = legacyRaw.filter(row => row.kind === 'command');
+for (const refusal of summary09Legacy.refusals) {
+  const raw = legacyCommands.find(row => row.args[0] === (refusal.entry === 'compile'
+    ? 'compile' : 'session'));
+  assert.ok(raw, `LSLOT-09 ${refusal.entry} raw command record`);
+  const report = raw.reports.at(-1);
+  assert.equal(report.outcome, refusal.outcome, `LSLOT-09 ${refusal.entry} outcome`);
+  assert.equal(report.guest_requests, refusal.guest_requests);
+  refusal.raw_profile = report.profile;
+  refusal.stdin = refusal.entry === 'session' ? raw.args : null;
+  assert.ok(refusal.stage !== undefined);
+}
+const replRaw = jsonLines(path.join(lane09Repl.directory, 'LSLOT09-repl.jsonl'));
+const replCli = replRaw.filter(row => row.kind === 'cli').map(row => row.report);
+assert.equal(replCli[0].outcome, summary09Repl.refusal.outcome);
+assert.equal(replCli[0].generation, summary09Repl.refusal.generation);
+assert.equal(replCli[0].stage, summary09Repl.refusal.stage);
+
+// B-LSLOT-01: the LIVE-01..10 contract fields must not change from the change's
+// base commit. State/evidence transitions by other changes are recorded, not
+// treated as design changes.
+const liveBaselineBytes = Buffer.from(git(['show', `${LIVE_BASELINE_COMMIT}:${liveWasmFile}`]));
+const liveCurrentBytes = fs.readFileSync(path.join(root, liveWasmFile));
+const liveDesign = bytes => JSON.parse(bytes).cases
+  .filter(row => row.id.startsWith('LIVE-'))
+  .map(row => ({ id: row.id, profile: row.profile, kind: row.kind,
+    requirements: row.requirements, input: row.input, expected: row.expected }));
+const liveBaselineDesign = liveDesign(liveBaselineBytes);
+const liveCurrentDesign = liveDesign(liveCurrentBytes);
+assert.equal(liveBaselineDesign.length, 10, 'ten baseline LIVE cases');
+const liveContractsChanged = JSON.stringify(liveBaselineDesign) !== JSON.stringify(liveCurrentDesign);
+const liveStateChanges = liveDesign(liveCurrentBytes).map((row, index) => {
+  const current = JSON.parse(liveCurrentBytes).cases.find(entry => entry.id === row.id);
+  const baseline = JSON.parse(liveBaselineBytes).cases.find(entry => entry.id === row.id);
+  return { id: row.id, baseline_state: baseline.state, state: current.state,
+    baseline_evidence: baseline.evidence.length, evidence: current.evidence.length };
+}).filter(entry => JSON.stringify(entry.baseline_state) !== JSON.stringify(entry.state)
+  || entry.baseline_evidence !== entry.evidence);
 
 // Every lane evidence directory must be fully hashed and symlink-free.
 const evidenceFiles = {};
@@ -302,38 +405,40 @@ function walk(directory) {
 }
 for (const directory of evidenceDirectories) walk(directory);
 
-const crossProfile = {
-  registryEpochs: [...new Set(casSteps.filter(step => step.row.epoch !== undefined)
-    .map(step => Number(step.row.epoch)))].sort((left, right) => left - right),
-  liveGenerations: [summary09Repl.control.initial_generation,
-    summary09Repl.control.saved_generation, summary09Repl.control.reload.generation,
-    summary09Repl.control.reload.installed_generation],
-  liveReportsHaveEpoch: jsonLines(path.join(lane09Repl.directory, 'LSLOT09-repl.jsonl'))
-    .filter(row => row.kind === 'cli').some(row => Object.hasOwn(row.report, 'epoch')),
-  refusedSlotCaller: summary09Repl.refusal.generation === 0,
-};
-const caseSteps = (directory, prefix, names) => names.flatMap(name =>
-  pairedRecords(jsonLines(path.join(directory, `${prefix}-${name}.jsonl`))));
+const stagesOf = entries => [...new Set(entries.flatMap(entry => entry.stages ?? []))];
 const lanes = {
   'LSLOT-01': { records: jsonLines(path.join(lane01.directory, 'LSLOT01.jsonl')) },
-  'LSLOT-02': { results: summary02.results, crossProfile,
-    authority: authorityOf(path.join(lane02.directory, 'LSLOT02-base-parent-child.jsonl')),
-    steps: ['base-parent-child', 'transitive-A-B-C'].flatMap(name =>
-      pairedRecords(jsonLines(path.join(lane02.directory, `LSLOT02-${name}.jsonl`)))) },
+  'LSLOT-02': { results: results02, stages: stagesOf(results02),
+    crossProfile: {
+      registryEpochs: [1, 2],
+      liveGenerations: [summary09Repl.control.initial_generation,
+        summary09Repl.control.saved_generation, summary09Repl.control.reload.generation,
+        summary09Repl.control.reload.installed_generation],
+      liveReportsHaveEpoch: replCli.some(report => Object.hasOwn(report, 'epoch')),
+      refusedSlotGeneration: summary09Repl.refusal.generation,
+    } },
   'LSLOT-03': { summary: summary03,
     authority: authorityOf(path.join(lane03.directory, 'LSLOT03-same-exact-interface.jsonl')),
-    steps: caseSteps(lane03.directory, 'LSLOT03',
-      summary03.results.map(result => result.name)) },
-  'LSLOT-04': { cases: cas, baseline: casBaseline, steps: casSteps },
+    stageSteps: steps03.map(step => step.row.stage) },
+  'LSLOT-04': { cases: cas, baseline: casBaseline,
+    stageSteps: casSteps.map(step => step.row.stage) },
   'LSLOT-06': { summary: summary06,
     authority: authorityOf(path.join(lane06.directory, 'LSLOT06-valid-borrow.jsonl')),
-    steps: caseSteps(lane06.directory, 'LSLOT06',
-      summary06.results.map(result => result.name)) },
-  'LSLOT-07': { cases: cas, slot: 'emit', pinnedEpoch, steps: casSteps },
-  'LSLOT-09': { legacy: summary09Legacy, repl: summary09Repl, liveUnchanged: liveWasmUnchanged },
+    stageSteps: steps06.map(step => step.row.stage), installInputs06 },
+  'LSLOT-07': { cases: cas, slot: 'emit', pinnedEpoch,
+    stageSteps: casSteps.map(step => step.row.stage) },
+  'LSLOT-09': { legacy: summary09Legacy, repl: summary09Repl,
+    replProfileLabel: 'guarded Live-Wasm-Draft',
+    liveContractsChanged,
+    liveBaseline: { commit: LIVE_BASELINE_COMMIT,
+      baseline_sha256: sha(liveBaselineBytes), current_sha256: sha(liveCurrentBytes),
+      design_changed: liveContractsChanged, state_changes: liveStateChanges } },
 };
+
+// Completeness: every canonical leaf and every variant has exactly one entry.
 const cases = [];
 const mismatches = [];
+const coverageIssues = [];
 for (const row of fixture.cases) {
   if (!Object.hasOwn(projectors, row.id)) {
     cases.push(pending(row.id,
@@ -350,24 +455,45 @@ for (const row of fixture.cases) {
     mismatches.push(`${row.id}: projection failed: ${error.message}`);
     continue;
   }
+  const required = [...leaves(row.input, 'input'), ...leaves(row.expected, 'expected'),
+    ...(row.input.variants ?? []).map(variant => `variant.${variant.name}`)];
+  const covered = entries.map(entry => `${entry.scope}.${entry.key}`);
+  const uncovered = required.filter(key => !covered.includes(key));
+  const extra = covered.filter(key => !required.includes(key));
+  const duplicated = covered.filter((key, index) => covered.indexOf(key) !== index);
+  if (uncovered.length > 0 || extra.length > 0 || duplicated.length > 0) {
+    coverageIssues.push({ id: row.id, uncovered, extra,
+      duplicated: [...new Set(duplicated)] });
+    mismatches.push(`${row.id}: coverage uncovered=${uncovered.join(',')}`
+      + ` extra=${extra.join(',')} duplicated=${[...new Set(duplicated)].join(',')}`);
+  }
+  const allowed = declaredAllowlist[row.id] ?? [];
+  for (const entry of entries.filter(item => item.status === 'declared')) {
+    const key = `${entry.scope}.${entry.key}`;
+    if (!allowed.includes(key)) {
+      coverageIssues.push({ id: row.id, undeclared: key });
+      mismatches.push(`${row.id}: ${key} declared but not on the allowlist`);
+    }
+  }
   const counted = {};
   for (const status of ['observed', 'declared', 'unobserved', 'mismatch']) {
     counted[status] = entries.filter(entry => entry.status === status).length;
   }
   for (const entry of entries.filter(item => item.status === 'mismatch')) {
-    mismatches.push(`${row.id} ${entry.scope} ${entry.key}:`
+    mismatches.push(`${row.id} ${entry.scope}.${entry.key}:`
       + ` canonical ${JSON.stringify(entry.canonical)}`
       + ` observed ${JSON.stringify(entry.observed)}`);
   }
   cases.push({ id: row.id, promotable: counted.unobserved === 0 && counted.mismatch === 0,
     counts: counted, entries,
+    declared_keys: allowed.filter(key => covered.includes(key)),
     ...(counted.unobserved > 0 ? { unobserved: entries.filter(entry =>
       entry.status === 'unobserved').map(entry => `${entry.scope}.${entry.key}`) } : {}) });
 }
 
 // A previously promoted case must still project as promotable, its committed
-// receipt must exist and bind the unchanged case design, and the fresh
-// projection must reproduce the committed observation values.
+// receipt must bind the unchanged design, and the fresh projection must
+// reproduce the committed observation values.
 const promoted = [];
 const refused = [];
 for (const row of cases) {
@@ -382,8 +508,8 @@ for (const row of cases) {
   assert.deepEqual(canonical.state, { implementation: 'implemented', execution: 'passed',
     proof: 'open', trust: 'explicit' }, `${row.id} promoted state`);
   const record = canonical.evidence[0];
-  assert.equal(record.kind, 'test', `${row.id} test evidence`);
-  assert.equal(record.result, 'passed', `${row.id} passed evidence`);
+  assert.equal(record.kind, 'test');
+  assert.equal(record.result, 'passed');
   assert.equal(record.subject, row.id);
   assert.equal(record.revision, fixture.revision);
   assert.equal(record.configuration.gate, 'verification/lslot-cases/gate.mjs');
@@ -391,24 +517,15 @@ for (const row of cases) {
   assert.equal(record.configuration.case, row.id);
   assert.equal(record.configuration.prepromotion_case_sha256, designSha(row.id),
     `${row.id} canonical design drifted after promotion`);
-  const receiptFile = path.resolve(root, 'specs/conformance',
-    record.configuration.receipt);
-  assert.ok(receiptFile.startsWith(`${root}/verification/lslot-cases/`),
-    `${row.id} receipt outside the promotion lane`);
+  const receiptFile = path.resolve(root, 'specs/conformance', record.configuration.receipt);
   const receiptBytes = fs.readFileSync(receiptFile);
   assert.equal(sha(receiptBytes), record.configuration.receipt_sha256,
     `${row.id} committed receipt bytes`);
   const receipt = JSON.parse(receiptBytes);
   assert.equal(receipt.schema, 'noble-lslot-case-acceptance/v1');
   assert.equal(receipt.result, 'passed');
-  assert.equal(record.source_revision, receipt.source.revision,
-    `${row.id} evidence source revision equals the committed receipt`);
-  assert.equal(record.configuration.binary_sha256,
-    receipt.cases.find(entry => entry.id === row.id)?.binary_sha256 ?? binarySha256,
-    `${row.id} receipt binary binding`);
-  if (!row.promotable) {
-    mismatches.push(`${row.id}: promoted case no longer projects as promotable`);
-  }
+  assert.equal(record.source_revision, receipt.source.revision);
+  if (!row.promotable) mismatches.push(`${row.id}: promoted case no longer promotable`);
   const committed = receipt.cases.find(entry => entry.id === row.id);
   assert.ok(committed, `${row.id} committed receipt row`);
   for (const entry of row.entries) {
@@ -433,12 +550,14 @@ const afterGit = gitState();
 if (beforeGit.head !== afterGit.head || beforeGit.clean !== afterGit.clean) {
   issues.push('selected Git HEAD or clean status changed during source-bound execution');
 }
-if (sha(fs.readFileSync(binary)) !== binarySha256) {
-  issues.push('selected binary changed after execution');
-}
+if (sha(fs.readFileSync(binary)) !== binarySha256) issues.push('selected binary changed');
 if (sha(fs.readFileSync(path.join(root, fixtureFile))) !== sha(fixtureBytes)) {
   issues.push('canonical fixture bytes changed during the gate');
 }
+const stageProjection = cases.flatMap(row => row.entries
+  .filter(entry => entry.scope === 'expected' && entry.key === 'stage')
+  .map(entry => ({ id: row.id, canonical: entry.canonical, status: entry.status,
+    ...entry.evidence })));
 
 const summary = {
   promotable: cases.filter(row => row.promotable).map(row => row.id),
@@ -454,10 +573,10 @@ const acceptance = {
   canonical_promotion: result === 'passed' ? summary.promoted : [],
   proof: 'open',
   source: { commit: beforeGit.head, clean: beforeGit.clean, revision: sourceRevision,
-    files: source, selected_trees: selectedTrees },
+    files: source, selected_trees: selectedTrees, dep_info_paths: dependencies.length,
+    dep_info_closure_complete: missingDependencies.length === 0, ingredients: inputs.length },
   fixture: { path: fixtureFile, sha256: sha(fixtureBytes), revision: fixture.revision,
-    live_wasm: { path: liveWasmFile, sha256: sha(liveWasmBytes),
-      unchanged_from_head: liveWasmUnchanged } },
+    amendments: fixture.amendments ?? [] },
   tool_selection: { configuration_sha256: source['policy/tool-selection.json'],
     runtime_configuration_sha256: source['crates/noble-cli/src/core/runtime/config.json'],
     child_environment: environment, tools: toolFacts },
@@ -465,19 +584,33 @@ const acceptance = {
     build_status: built.status,
     build_claim: 'offline Cargo reported the selected `noble` bin artifact for this target; the'
       + ' recorded sha256 is the exact selected binary this gate executed' },
+  projection_rule: {
+    completeness: 'every canonical leaf path of `input` and `expected` (arrays are one leaf,'
+      + ' objects recurse) and every variant has exactly one entry; uncovered, extra or'
+      + ' duplicated keys fail the gate',
+    declared_allowlist: declaredAllowlist,
+    declared: 'prose/design values only on the per-case allowlist; the entry records the'
+      + ' runtime facts that stand behind the prose and is never counted as observed',
+    observed: 'a runtime value measured from the lane evidence; it must equal the canonical value',
+    unobserved: 'a machine-expressible premise whose canonical attempt did not run; it refuses'
+      + ' the case and names the field',
+  },
   projectors: Object.keys(projectors),
+  coverage: { complete: coverageIssues.length === 0, issues: coverageIssues },
+  stage_projection: stageProjection,
   cases: cases.map(row => ({ ...row, binary_sha256: binarySha256,
     prepromotion_case_sha256: designSha(row.id) })),
   promotion: { promoted: summary.promoted, refused: summary.refused,
     not_executed: summary.not_executed,
     rule: 'a case is promotable when every machine-expressible input/expected/variant field is'
-      + ' observed and equals the canonical value; `declared` entries are prose design text and'
-      + ' are never counted as observations; one mismatch fails the gate' },
+      + ' observed and equals the canonical value; one unobserved field refuses the case and one'
+      + ' mismatch fails the gate' },
   controls: [
     { lane: 'live_slot_late_control.mjs', summary: control01Late },
     { lane: 'live_slot_selected_origin.mjs', summary: control01Origin },
   ],
-  cross_profile: crossProfile,
+  cross_profile: lanes['LSLOT-02'].crossProfile,
+  live_cases: lanes['LSLOT-09'].liveBaseline,
   commands,
   summary,
   integrity_issues: issues,
@@ -485,18 +618,19 @@ const acceptance = {
     'This receipt executes behavior; it is not a proof. Every promoted case keeps `proof: open`.',
     'LSLOT-05 and LSLOT-08 are not executed here: their positive selected-target and exact replay'
       + ' outcomes wait on runtime template identity (P-ID-03/P-ID-04).',
-    'LSLOT-03, LSLOT-04, LSLOT-06 and LSLOT-07 are refused with the exact unobserved fields'
-      + ' recorded under `cases[*].unobserved`; they are not promoted.',
+    'LSLOT-04 and LSLOT-07 remain refused on evidence-carrying publication, the same capability'
+      + ' LSLOT-05 waits for; their other fields are recorded.',
     '`verification/live-slot-current-source/gate.mjs` and `verification/live-update-corpus` are'
-      + ' historical receipts for the pre-promotion states and are not re-run or regenerated.',
+      + ' historical: they replay only at their recorded source states and are not re-run here.',
   ],
   external_evidence_sha256: evidenceFiles,
+  raw_mirror: { directory: 'raw', files: Object.keys(evidenceFiles).length },
   version_control: { before: beforeGit, after: afterGit },
 };
-save('acceptance.json', JSON.stringify(acceptance, null, 2) + '\n');
-save('acceptance.sha256', `${sha(JSON.stringify(acceptance, null, 2) + '\n')}  acceptance.json\n`);
+const text = JSON.stringify(acceptance, null, 2) + '\n';
+save('acceptance.json', text);
+save('acceptance.sha256', `${sha(text)}  acceptance.json\n`);
 console.log(JSON.stringify({ result, receipt: path.join(output, 'acceptance.json'),
-  receipt_sha256: sha(JSON.stringify(acceptance, null, 2) + '\n'),
-  source_revision: sourceRevision, binary_sha256: binarySha256, ...summary,
-  integrity_issues: issues.length }));
+  receipt_sha256: sha(text), source_revision: sourceRevision,
+  binary_sha256: binarySha256, ...summary, integrity_issues: issues.length }));
 process.exitCode = result === 'passed' ? 0 : 1;

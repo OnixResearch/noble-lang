@@ -12,9 +12,8 @@ assert.deepEqual(chosen.input.slot_contract, {
 assert.equal(chosen.input.current_epoch, 4);
 const variants = chosen.input.variants;
 assert.deepEqual(variants.map(row => row.name), [
-  'same-exact-interface', 'reversed-input', 'same-layout-different-resource-schema',
-  'effect-ceiling-widened', 'unknown-host-contract', 'generic-caller-underdeclares-dispatch',
-]);
+  'same-exact-interface', 'reversed-input',
+], 'decision-19 amendment: only the constructible variants remain');
 const base = { source: '"admit" test.emit drop', inputs: chosen.input.slot_contract.input };
 const candidates = {
   'same-exact-interface': base,

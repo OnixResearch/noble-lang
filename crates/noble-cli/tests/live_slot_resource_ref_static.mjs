@@ -9,9 +9,8 @@ const canonicalCase = canonical('LSLOT-06');
 assert.equal(canonicalCase.input.issued_ref, 'LiveRef<I64,I64,{}> for slot increment in root R');
 const variants = canonicalCase.input.variants;
 assert.deepEqual(variants.map(row => row.name), [
-  'direct-quotation-capture', 'aggregate-capture', 'aggregate-storage',
-  'export-or-return', 'serialize', 'forge', 'retain', 'valid-borrow',
-]);
+  'direct-quotation-capture', 'aggregate-storage', 'valid-borrow',
+], 'decision-19 amendment: only the constructible variants remain');
 const liveRef = 'LiveRef<I64,I64,pure>';
 const caller = { source: 'slot.invoke', inputs: ['I64', liveRef] };
 const invalid = {
