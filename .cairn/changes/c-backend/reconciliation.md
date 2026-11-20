@@ -19,8 +19,10 @@ links.
 Classification is the state **before** this reconciliation. "Delta stronger"
 means every canonical sentence survives byte-identical and the delta only
 adds reviewed text. "Both changed" means a sync would replace canonical
-sentences. No block was delta-weaker: no canonical obligation was missing
-from any delta.
+sentences. One pre-fix block was weaker in part: CB-SANDBOX-01 narrowed the
+unqualified "escape attempts" obligation to "namespace/sandbox escape
+attempts", although it also strengthened the clock clause. No other block
+omitted a canonical obligation.
 
 | Requirement | Canon. chars | Delta chars (before) | Classification (before) | Action (after) |
 |---|---:|---:|---|---|
@@ -30,15 +32,15 @@ from any delta.
 | CB-NUM-01 | 887 | 887 | identical | identical; generated region removed |
 | CB-VALUE-01 | 1116 | 1116 | identical | identical; generated region removed |
 | CB-ORDER-01 | 697 | 697 | identical | identical; generated region removed |
-| CB-LIMIT-01 | 1469 | 1717 | both changed (one status sentence replaced, one obligation added) | canonical verbatim + 2 inserted sentences |
+| CB-LIMIT-01 | 1469 | 1717 | both changed (one status sentence replaced, one obligation added) | canonical verbatim + 3 inserted sentences |
 | CB-HOST-01 | 1426 | 1426 | identical | identical; generated region removed |
-| CB-SANDBOX-01 | 2954 | 3296 | both changed (two canonical sentences replaced by stronger clauses) | canonical verbatim + 2 inserted sentences |
+| CB-SANDBOX-01 | 2954 | 3296 | both changed (escape obligation narrowed, clock clause strengthened) | canonical verbatim + 2 inserted sentences |
 | CB-ADMIT-01 | 2345 | 2808 | delta stronger (canonical verbatim + 1 paragraph) | unchanged prose; generated region removed |
 | CB-GATE-01 | 1510 | 1510 | identical | identical; generated region removed |
 
 Character counts and "identical" compare requirement prose only: the
 canonical document also carries generated scenario regions (and, for
-CB-IDENTITY-01 and CB-ORDER-01, a trailing section heading inside the parsed
+CB-IDENTITY-01 and CB-LIMIT-01, a trailing section heading inside the parsed
 block), which the delta intentionally omits. After the fix, seven blocks are
 byte-identical to the canonical requirement prose and the other four differ
 only by inserted sentences; a sentence-level diff reports no deleted or
@@ -55,8 +57,9 @@ I64/Bool/Unit/Text result; `stack_slots`/`steps`/`output_bytes` plus an
 optional exact `list_length` 0..255 (default 255); `expected_interface`
 comparison against source preparation and kernel acceptance; internal
 Pair/Sum/List lowering with checked shapes and a 256-slot arena; effective
-list bound retained in the manifest and emitted C; recursive duplicate JSON
-member refusal; and the explicit statement that this is not native
+list bound retained in the manifest and emitted C with a pre-`cons` check
+that is not executed as native code; recursive duplicate JSON member
+refusal; and the explicit statement that this is not native
 compilation, admission, sandbox evidence or CB-CASE-01/06 observation.
 
 ### CB-LIMIT-01 (fixed)
@@ -80,11 +83,13 @@ and appended the duplicate-member obligation:
 
 Both sentences are correct for the current emitter, but the canonical status
 clause is stale. The delta now keeps the canonical sentence verbatim and
-inserts a paragraph that (a) marks that refusal clause stale, (b) records the
-exact accepted range and enforcement, and (c) keeps the duplicate-member
-obligation. No canonical sentence is deleted, so a sync cannot drop the
-canonical `CB-CASE-01` OPEN sentence; the review packet flags the stale
-clause as an owner decision.
+inserts a paragraph that (a) names the `e76d8469` state recorded by the
+preceding sentence, (b) records the exact accepted range and the pre-`cons`
+check (not executed as native code), and (c) keeps the duplicate-member
+obligation. The insertion avoids "this first-parent canonical" self-reference
+so it reads correctly once merged. No canonical sentence is deleted, so a
+sync cannot drop the canonical `CB-CASE-01` OPEN sentence; the review packet
+still offers a direct canonical correction as an owner option.
 
 ### CB-SANDBOX-01 (fixed)
 
@@ -113,10 +118,10 @@ The delta now keeps both canonical sentences verbatim and adds one inserted
 sentence to each paragraph:
 
 > Hostile vDSO `__vdso_clock_gettime`, `__vdso_time`,
-> `__vdso_gettimeofday`, coarse-clock, direct-vvar and x86 `rdtscp` attempts
-> likewise MUST refuse or be demonstrably contained without host-time or
-> elapsed-time disclosure; trapping or virtualizing only the TSC is
-> insufficient, and a vDSO-only or coarse-clock-only mechanism is not
+> `__vdso_gettimeofday`, coarse-clock, direct-vvar and x86 `rdtsc`/`rdtscp`
+> attempts likewise MUST refuse or be demonstrably contained without
+> host-time or elapsed-time disclosure; trapping or virtualizing only the
+> TSC is insufficient, and a vDSO-only or coarse-clock-only mechanism is not
 > equivalent.
 
 > The barrier MUST also cover direct vvar reads and x86 `rdtscp`; a
@@ -127,9 +132,10 @@ sentence to each paragraph:
 
 Canonical paragraphs 1-2 are reproduced verbatim; one three-sentence
 paragraph is added. It states that the restricted source-only emitter is not
-CB-ADMIT-01 admission, that its final-component `O_NOFOLLOW` reads do not
-authenticate ancestors or seal inputs and its output child paths are
-re-resolved after directory creation, and that the gap remains open until a
+CB-ADMIT-01 admission; that its final-component `O_NOFOLLOW` reads refuse
+only a final-component symlink, authenticate no path component and seal no
+inputs; that its output child paths are re-resolved after directory creation;
+and that the gap remains open until a
 separately admitted descriptor-bound path exists.
 
 ## CB-LIMIT-01: the exact supplied limit
@@ -145,13 +151,15 @@ Emitter facts checked in `crates/noble-cli/src/c_backend.rs`:
   `list_length_cap: 255`.
 - `cons` checks `previous->length == LIST_LIMIT` before growth and fails with
   `list length exhausted`; element/length reads are also bounded by
-  `LIST_LIMIT`.
+  `LIST_LIMIT`. This is inspection only: the emitted C is checked with
+  `-fsyntax-only` and the bound check has never been executed.
 
 Canonical obligation retained verbatim: the supplied bound is an exact policy
 value, must be retained in the manifest/build subject, must be enforced
-before list growth, and a profile that cannot honour it must refuse rather
-than strip or advertise it. The delta adds only the stale-clause correction
-and the duplicate-member obligation.
+before list growth when lists are supported, and a profile that cannot honour
+it must refuse rather than strip or advertise it. The delta adds only the
+state-naming correction (which reads correctly after a sync) and the
+duplicate-member obligation.
 
 CB-CASE-06 remains a design only: its `quota_controls` supply
 `list_length: 1` (expects normal stack `21`) and `list_length: 0` (expects
@@ -181,8 +189,8 @@ Canonical obligations retained verbatim:
 
 Added by the delta: the vDSO function family (`__vdso_clock_gettime`,
 `__vdso_time`, `__vdso_gettimeofday`), coarse clocks, direct vvar reads and
-`rdtscp` are named channels that must refuse or be demonstrably contained
-without host or elapsed time; a TSC-only or offset-TSC barrier is
+x86 `rdtsc`/`rdtscp` are named channels that must refuse or be demonstrably
+contained without host or elapsed time; a TSC-only or offset-TSC barrier is
 insufficient and a vDSO-only or coarse-clock-only mechanism is not
 equivalent. Without a reviewed complete barrier, native execution stays
 unavailable.
@@ -207,10 +215,11 @@ for unsupported architecture, interpreter, dynamic import, load segment,
 relocation or writable/executable mapping.
 
 The delta discloses, without claiming conformance, that the current
-source-only emitter opens only the final path component with `O_NOFOLLOW`,
-does not authenticate ancestor components or seal inputs, and re-resolves
-output child paths after creating the output directory. Code inspection
-confirms both facts. CB-CASE-05 remains an unexecuted design.
+source-only emitter's final-component `O_NOFOLLOW` reads refuse only a
+final-component symlink, authenticate no path component and seal no inputs,
+and that output child paths are re-resolved after creating the output
+directory. Code inspection confirms both facts. CB-CASE-05 remains an
+unexecuted design.
 
 ## Generated scenario links
 
@@ -234,8 +243,10 @@ requirement identities.
 |---|---|---|---|
 | before fix | `9a5c9b2a779cfa378afbf853fe5c53e72d66075df022a802769eed014c0d1bb6` | `a5515aa621083bdca8564ed52976788d79b77e627e6768a4d8e9395149ef18c4` | 11 modified |
 | after fix | `cdb0eae6a0b9d188d8339d16b15e36551fa0ac9f9a673b23b800797a379f7336` | `11d99f29b0b54218d40ad6804bdde0202a8bcf99711c258c9044536c58434940` | 11 modified |
+| after round-1 review revisions | `14ff1574c20707e95871d898bc7a978d7e1894d29b14f8fd835f157d4cfd0035` | `bd84b26a63902668d09e604412985065d424cc8767cbe664d90aa7ef22d3150b` | 11 modified |
+| after round-2 notes (current) | `ebb57a7aff2992febb9fd83021a77d5e516cabc48261854f93db445908573c61` | `e2b67dc4087dbf73b245e91bf4f525e8091bfbb86ad3c7aa10564435ee7493d2` | 11 modified |
 
-Both `expected_after` values were reproduced independently from the two
+Every `expected_after` value was reproduced independently from the two
 documents before being trusted; the preview is a dry run and does not
 authorize `--execute`.
 
@@ -247,10 +258,12 @@ Known losses if the integrator later runs `sync --execute` and only
 regenerates views:
 
 - the two canonical section headings `## Representation and execution` and
-  `## Native trust boundaries` sit inside a requirement block (at the end of
-  CB-IDENTITY-01 and CB-ORDER-01 respectively) and are not restored by
-  regeneration; re-insert them after the sync, or move them out of the
-  requirement blocks before syncing;
+  `## Native trust boundaries` sit inside a requirement block and are not
+  restored by regeneration. They belong between CB-IDENTITY-01 and
+  CB-NUM-01, and between CB-LIMIT-01 and CB-HOST-01, respectively. Restore
+  them at those positions after **every** sync. Moving them out of the
+  blocks before syncing is not an option: a `## ` line inside a delta
+  section ends the `MODIFIED` section and silently drops all later blocks;
 - the generated scenario regions are dropped by the merge and restored by
   `--write-views`.
 
@@ -259,11 +272,16 @@ canonical sentence plus only the reviewed insertions.
 
 ## Checks
 
-- `cairn validate --root .`: `valid: true`, zero issues, zero findings.
+- `cairn validate --root .`: `valid: true`, 0 issues, 0 findings, 21
+  changes.
 - `cairn sync c-backend --root .`: `blocked: false`, eleven `modified`
   operations, hashes above.
-- `bun tools/cairn-specs.mjs --self-test` and
-  `bun tools/check-specs.mjs --self-test`: passing (see tasks.md).
+- `bun tools/cairn-specs.mjs --self-test`: `result: passed`, 16 specs, 274
+  scenarios, 26 self-tests.
+- `bun tools/check-specs.mjs --self-test`: `result: passed`, 627
+  requirements, 230 self-tests.
+- `cairn gate proposal`, `cairn gate design` and `cairn gate tasks` for
+  `c-backend`: PASS each.
 
 This reconciliation is document review only. It is not owner acceptance, not
 `cairn sync --execute` authorization, not native GO, and not case evidence.

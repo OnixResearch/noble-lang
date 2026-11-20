@@ -1533,13 +1533,13 @@ and bounded immutable aggregate/Program captures. Pair/Sum/List/Syntax/Program
 final results, reflect, runtime inputs and host mediation remain unsupported.
 An optional exact supplied `limits.list_length` from 0 to 255 (default 255)
 is accepted, retained in the manifest and emitted as the effective
-`LIST_LIMIT` enforced before `cons` growth, so the field
+`LIST_LIMIT` with a pre-`cons` check that has not been executed, so the field
 cannot be silently dropped or advertised as an unenforced no-op; the internal
 List ceiling stays 255. This is not CB-CASE-01/06 admission. The held
-canonical CB-BUILD-01 still describes a narrower route; the reconciled active
-delta cannot replace it before independent owner review and legal sync, and
-the eleven-block reconciliation is recorded in the change's
-`reconciliation.md`. `--native` and `execute --target c` refuse. CB-CASE-01
+canonical CB-BUILD-01 does not describe the source-only route; the reconciled
+delta's disclosure needs independent owner review and legal sync, and the
+eleven-block reconciliation is recorded in the change's `reconciliation.md`.
+`--native` and `execute --target c` refuse. CB-CASE-01
 supplies `limits.list_length` and remains open because no native runtime or
 selected-Wasm comparison has run, not because the exact source-only policy
 rejects it. Recursive duplicate JSON members refuse before policy

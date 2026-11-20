@@ -58,11 +58,11 @@ sync MUST NOT erase. The open delta records, without syncing:
   r[CB-LIMIT-01]
 - CB-SANDBOX-01 preserves the first-parent VM/virtualized-clock-or-equivalent
   barrier and initial ELF load versus post-load no-exec ordering; **retains**
-  the prior MUST that direct syscall, inherited-FD
-  and namespace/sandbox escape attempts refuse or terminate with zero
-  protected operations; and adds vDSO/coarse/vvar/TSC host-time and
-  elapsed-time controls. TSC-only isolation is not a complete clock
-  barrier. r[CB-SANDBOX-01]
+  the canonical MUST that direct syscall, inherited-FD and escape attempts
+  refuse or terminate with zero protected operations (the fixed delta keeps
+  the canonical unqualified "escape attempts"); and adds vDSO, coarse-clock,
+  direct-vvar, `rdtsc` and `rdtscp` host-time and elapsed-time controls.
+  TSC-only isolation is not a complete clock barrier. r[CB-SANDBOX-01]
 - CB-ADMIT-01 retains the first-parent descriptor-bound obligation for
   every build and execution request, while disclosing the source-only
   ancestor and output re-resolution gaps without claiming conformance.

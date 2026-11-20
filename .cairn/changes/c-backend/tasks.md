@@ -29,7 +29,16 @@ CB-LIMIT-01, CB-SANDBOX-01 and CB-ADMIT-01 are canonical text plus only
 reviewed insertions, without relaxing the first-parent bound, clock or
 descriptor requirements. The delta omits the generated scenario-link
 regions; regeneration restores them on the canonical document. This is not
-owner approval or legal sync while the eight remaining gates are undone.
+owner approval, and it does not authorize an unreviewed sync while the eight
+remaining gates are undone. A reviewed mid-change sync that applies the
+delta without archiving is the owner's decision in the packet; no gate is
+closed by it.
+
+Document checks at the reconciled commit on 2026-11-20: `cairn validate`
+0 issues and 0 findings over 21 changes; the `cairn sync c-backend` dry run
+is unblocked with eleven `modified` operations; `cairn-specs.mjs
+--self-test` passes 26 checks and `check-specs.mjs --self-test` passes 230.
+These are document checks, not runtime, native or proof evidence.
 
 OWNER DECISION 2026-11-20: c-backend: do the source-only slices (input
 integrity, emitter coverage, reconciliation of the eleven MODIFIED blocks,
@@ -53,7 +62,7 @@ cannot count as native runtime or CB-CASE-01 evidence. The supplied bound
 cannot be silently dropped or advertised as an unenforced no-op.
 
 - [ ] [serial] Obtain explicit independent owner review of all direct canonical CB-BUILD-01/CB-LIMIT-01/CB-SANDBOX-01/CB-ADMIT-01 edits and the aligned CB-CASE-06/08 designs **before integration**; document the reviewed safety obligations and any rejection. This source-only corrective commit is not owner acceptance, native GO or permission for `cairn sync --execute`. r[CB-BUILD-01] r[CB-LIMIT-01] r[CB-SANDBOX-01] r[CB-ADMIT-01]
-  Packet prepared 2026-11-20 in `review-packet.md` (canonical edit diffs, case designs, obligations, risks, Accept/Reject/Revise checklist); the box stays unchecked until the owner answers after the independent reviewer pass.
+  Packet prepared 2026-11-20 in `review-packet.md` (canonical edit diffs, case designs, obligations, risks, Accept/Reject/Revise checklist); the box stays unchecked until the owner answers after the independent reviewer pass. Record the item-2 answer together with the packet's reading that ¶1 "candidate instructions" and ¶2 "untrusted instructions" are the same boundary, so the accepted or rejected interpretation is durable.
 - [ ] [serial] Reconcile each of the eleven active MODIFIED delta blocks against the current canonical requirement and scenario links before any `cairn sync --execute` or archive; a passing structural preview alone does not authorize replacing stronger canonical prose. Review CB-LIMIT-01's exact supplied limit and CB-SANDBOX-01/CB-ADMIT-01's sealed loader, clock and path obligations individually. r[CB-LIMIT-01] r[CB-SANDBOX-01] r[CB-ADMIT-01]
   Reconciliation completed 2026-11-20 in `reconciliation.md`: eleven blocks (seven identical, four canonical plus reviewed insertions), exact differing sentences, CB-LIMIT-01 supplied-bound code facts, CB-SANDBOX-01 clock/vvar/TSC and loader obligations, CB-ADMIT-01 descriptor/sealed-byte obligations, and dry-run preview hashes. The box stays unchecked pending the owner's yes/no on `review-packet.md`; the integrator records it after that.
 - [ ] [serial] Bring the restricted source-only build into full input-integrity conformance before counting CB-BUILD-01/CB-LIMIT-01/CB-ADMIT-01: recursive duplicate JSON member rejection and exact supplied `limits.list_length` retention/source-only C enforcement are present, but native admission still needs trusted ancestor-anchored sealed input/output binding and independently verified execution. Until then this emitter remains nonadmitted and `--native`/`execute --target c` refuse. r[CB-BUILD-01] r[CB-LIMIT-01] r[CB-ADMIT-01]
