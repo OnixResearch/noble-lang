@@ -37,9 +37,13 @@ const fail = (message) => {
 };
 
 const line = (stdout, prefix) => {
-  const found = stdout.split("\n").find((entry) => entry.startsWith(prefix));
-  if (!found) fail(`missing ${prefix.trim()} line`);
-  return { ...JSON.parse(found.slice(prefix.length)), raw: found };
+  // `--nocapture` interleaves a test's stdout on its harness line, so the
+  // marker is found anywhere in a line and the payload starts after it.
+  for (const entry of stdout.split("\n")) {
+    const at = entry.indexOf(prefix);
+    if (at >= 0) return { ...JSON.parse(entry.slice(at + prefix.length)), raw: entry };
+  }
+  fail(`missing ${prefix.trim()} line`);
 };
 
 const status = (
