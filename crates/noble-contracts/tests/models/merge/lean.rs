@@ -7,8 +7,9 @@
     tigerstyle::function_length,
     tigerstyle::ignored_result,
     tigerstyle::path_segment_repetition,
+    tigerstyle::too_many_parameters,
     tigerstyle::unbounded_collection_growth,
-    reason = "Owner: noble-contracts-maintainers; this test-only lane discovers the pinned Lean, library and optional bubblewrap paths once at its process boundary and enforces one wall-clock deadline against each child, so the ambient observation is the operation. Test-only lane: matches over the observable/fragment enums are intentional regression tables, panics and ignored cleanup results are fixture assertions, and the bounded checker's digest casts index a 16-entry nibble table."
+    reason = "Owner: noble-contracts-maintainers; this test-only lane discovers the pinned Lean, library and optional bubblewrap paths once at its process boundary and enforces one wall-clock deadline against each child, so the ambient observation is the operation. The private run_step helper names the binary, source, directory, output, mounts, sandbox and deadline together because they are one child-process description. Test-only lane: matches over the observable/fragment enums are intentional regression tables, panics and ignored cleanup results are fixture assertions, and the bounded checker's digest casts index a 16-entry nibble table."
 )]
 #![expect(
     tigerstyle::non_trait_imports,
