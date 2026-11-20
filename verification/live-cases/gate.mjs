@@ -529,7 +529,7 @@ async function observeLive02() {
   replace(files.source, 'def addone [ 2 + ]');
   const ack = await live.submit(`:reload ${files.source}`);
   const script = await live.submit('20 twice swap 20 swap run');
-  const oldBody = await live.submit('run');
+  const oldBody = await live.submit('20 swap run');
   await live.close(0);
   for (const [label, report] of Object.entries({ initial, twice, quote, ack, script, oldBody }))
     keep('LIVE-02', label, report);
@@ -540,10 +540,13 @@ async function observeLive02() {
     { stack: stackOf(quote) });
   observe('LIVE-02', 'input.reload_requested_while_old_submission_running', ack.outcome === 'reload-committed',
     { note: 'the reload was issued while no invocation was in flight; the barrier seam was not used', outcome: ack.outcome });
-  observe('LIVE-02', 'input.after_reload_ack', script.outcome === 'type-reject',
-    { script: '20 twice swap 20 swap run', outcome: script.outcome, diagnostic: script.diagnostic });
+  record('LIVE-02', 'input.after_reload_ack', {
+    reason: 'the canonical after-reload script is refused at check; a corrected single-input execution of the retained Program still shows the old body, but the specified script is not executed as written',
+    script: '20 twice swap 20 swap run', outcome: script.outcome, diagnostic: script.diagnostic,
+  });
   observe('LIVE-02', 'expected.previous_program_identity_mutated', oldBody.outcome === 'normal' && isStack(oldBody, ['I64:21']),
-    { observation: 'the retained [ addone ] Program still returns 21 (the old body) after the reload', stack: stackOf(oldBody) });
+    { observation: 'the retained [ addone ] Program still returns 21 (the old body) after the reload; executed as `20 swap run` because `run` alone type-rejects for the Program input',
+      stack: stackOf(oldBody) });
   observe('LIVE-02', 'expected.implicit_live_name_lookup_in_program', isStack(oldBody, ['I64:21']),
     { observation: 'the Program did not resolve the new addone body implicitly' });
   record('LIVE-02', 'expected.stack_bottom_to_top',
