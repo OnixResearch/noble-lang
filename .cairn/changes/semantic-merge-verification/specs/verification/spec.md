@@ -78,8 +78,8 @@ open; a test corpus alone MUST NOT close a universal obligation.
 - GIVEN SMERGE-CASE-01 through SMERGE-CASE-05 executed against frozen subjects
 - WHEN the receipt is reviewed
 - THEN it records exact subjects, claims, proofs, observations, toolchain,
-  revisions, bounds and outcomes, and only Lean acceptance marks a case
-  `verified`
+  revisions, bounds and outcomes, and only the isolated replay checker's
+  kernel acceptance marks a case `verified`
 
 #### Scenario: SMERGE-CASE-20 no automatic merge
 

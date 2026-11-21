@@ -173,9 +173,12 @@ try {
   // evaluation and counterexample lemmas), and NamedV3 T2-T5 (entry embedding, call frame,
   // MC1 claim lift, call chains) together with the six reviewed rule identities
   // (`List.append_assoc`, `List.nil_append`, `List.append_nil`, `BitVec.add_assoc`,
-  // `BitVec.add_comm`, `BitVec.mul_add`), so the strict verdict now pins 124 required
-  // theorems; the exact string keeps the verdict non-substitutable.
-  if (!library.includes('MC1-CONTRACT-LIBRARY: 124 required theorems; strict axioms accepted')) {
+  // `BitVec.add_comm`, `BitVec.mul_add`) (124), and then with the 31 semantic-merge
+  // relation/termination theorems of `NobleContracts.Merge`, so the strict verdict now
+  // pins 155 required theorems. The exact string keeps the verdict non-substitutable; a
+  // merged branch that also adds pins must sum its additions here rather than read the
+  // gate's printed count. The library's globs build `NobleContracts.Merge` too.
+  if (!library.includes('MC1-CONTRACT-LIBRARY: 155 required theorems; strict axioms accepted')) {
     throw Error('missing strict contract-library verdict');
   }
   const audit = run('implementation-audit', tool('lean', 'lake'), ['env', 'lean', 'ImplementationGate.lean'], proofRoot);

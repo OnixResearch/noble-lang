@@ -1,0 +1,94 @@
+{
+  "schema": "noble-semantic-merge-verification-receipt/v1",
+  "relation": "noble-merge-claim/v1",
+  "semantic_revision": "SMERGE/1",
+  "source_revision": "4a2bb9864d84ddede2ee276fbf85a9952e3de12d",
+  "dirty": false,
+  "command": "lake build NobleContracts.Merge && cargo test -p noble-contracts --test source -- --nocapture semantic_merge_model && cargo test -p noble-contracts --test source -- --ignored semantic_merge_lean_check",
+  "toolchain": {
+    "rust": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)",
+    "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)"
+  },
+  "bounds": {
+    "search_seed": 104372539625753,
+    "search_vectors": 25,
+    "lean_timeout_ms": 60000,
+    "proof_bytes": 16384
+  },
+  "phase2_rerun": {
+    "fixtures": 10,
+    "verified": 4,
+    "conflicts": 1,
+    "counterexamples": 3,
+    "incompatible": 1,
+    "abnormal": 1,
+    "inputs": 25,
+    "decision": "no-go"
+  },
+  "search": {
+    "outcome": "unknown",
+    "subject_candidate": "87669653452fd1f3237a9abbe85885a3fa155aa053e10a4812f883a53e6dcbec"
+  },
+  "claims": [
+    {
+      "case": "SMERGE-CASE-04",
+      "claim": "MergeRel [Ty.i64, Ty.i64] [Ty.i64, Ty.i64] [] [Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4] [Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4] [Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4]",
+      "claim_sha256": "a93e572c7c091286e6eb41e6146add9be80e2286f8635b345f8f60eff924208d",
+      "claim_binding_sha256": "5d50c6cafbe72cfac8115084c2dd3129ff1c8b9bdcf8b81fa2aee3190c9bf644",
+      "proof": "NobleContracts.mergeRel_identical_increment",
+      "proof_sha256": "f6e1011394b03a8d2f5fd38ca05a8c364fe4b253f16ee75a3f5f3077159d2dfa",
+      "outcome": "verified"
+    },
+    {
+      "case": "SMERGE-CASE-01",
+      "claim": "MergeRel [Ty.i64, Ty.i64] [Ty.i64, Ty.i64] [] [Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4] [Op.word 2, Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4, Op.word 2] [Op.word 2, Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4, Op.word 2, Op.lit (Value.i64 (BitVec.ofNat 64 1)), Op.word 4]",
+      "claim_sha256": "10c3967e4ffe97b29d11f1abb8a5c13756e6bf6ba1dee36b243395e4981814bb",
+      "claim_binding_sha256": "b408d995df7cf895b3b1051c1d5980dd45ab7ea5ebd7339d81a151c860f38b05",
+      "proof": "NobleContracts.mergeRel_independent_changes",
+      "proof_sha256": "35c401e8b72d7dc102a50758d20b979765794214fba969c374c7c971e80698ae",
+      "outcome": "verified"
+    }
+  ],
+  "refusals": {
+    "producer_fields": "refused: stale subject, wrong claim, assumptions, claim hash, trust flag, revision, schema, premarked outcome",
+    "interfaces": "refused: incompatible interface, vacuous precondition, empty input domain",
+    "observables": "refused: non-I64 observable corpus (unit, bool, text)",
+    "proofs": "wrong proof: unknown; command submission: unknown"
+  },
+  "outcomes": [
+    "verified",
+    "conflict",
+    "validated-counterexample",
+    "unknown",
+    "unsupported",
+    "exhausted",
+    "internal-failure"
+  ],
+  "lean_axioms": [
+    "propext",
+    "Quot.sound"
+  ],
+  "library": {
+    "digest": "69fa1ef71fdccb431ab2c3895f42375e723f52fd4eaa68554a7fe8b4e2bfdee1",
+    "root": "/var/tmp/noble-cairn/wt/semantic-merge/proofs/mc1"
+  },
+  "decision": "no-go",
+  "decision_reasons": [
+    "SM-4 is narrowed, not discharged: the isolated check is a fresh pinned Lean process, not the production sandboxed consumer, and no production claim path is wired.",
+    "The separately reviewed integration plan is pending the independent review scheduled by the owner (OWNER DECISION 2026-11-20 item 1).",
+    "SM-7 stays separate: source-model proof and installed Wasm correspondence are different obligations.",
+    "SM-8: this lane performs no merge, publication, live-slot admission, migration or release action."
+  ],
+  "proof_obligations": {
+    "SM-1": "proved (NobleContracts.MergeRel, mergeVal_*, mergeStack_*)",
+    "SM-2": "proved for the narrowed fragment (NobleContracts.outer_exec, mergeRel_terminating)",
+    "SM-3": "narrowed and tested (consumer regeneration over lowered MC1 subjects)",
+    "SM-4": "narrowed (pinned process-level check); production consumer not wired",
+    "SM-5": "tested (every differing producer field refused)",
+    "SM-6": "tested (total outcome lattice; only Lean acceptance yields verified)",
+    "SM-7": "documented separate",
+    "SM-8": "documented: no automatic action follows"
+  },
+  "elapsed_ms": 6265
+}

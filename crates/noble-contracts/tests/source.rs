@@ -2,9 +2,10 @@
 #![register_tool(tigerstyle)]
 #![allow(
     tigerstyle::excessive_file_length,
+    tigerstyle::module_file_count,
     tigerstyle::no_unwrap,
     tigerstyle::non_trait_imports,
-    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form; the merge/ model lane keeps one module per relation, claim, consumer and checker concern."
 )]
 
 const fn limits() -> noble_contracts::Limits {
