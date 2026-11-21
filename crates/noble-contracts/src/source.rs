@@ -2945,7 +2945,10 @@ mod tests {
         let submission = prepared.submission().expect("checked submission");
         assert_eq!(
             submission.request.expected.allowed_effects.as_slice(),
-            [noble_kernel::contracts::TEST_EMIT, noble_kernel::types::EffId(1)]
+            [
+                noble_kernel::contracts::TEST_EMIT,
+                noble_kernel::types::EffId(1)
+            ]
         );
         // An operation outside the host-selected environment stays unbound.
         assert!(granted.prepare(b"test.clock", &[], limits).is_err());
