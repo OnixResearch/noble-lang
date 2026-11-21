@@ -15,14 +15,17 @@ import { cli, expectOutcome, selectedAuthority } from './live_slot_resource_ref_
 //    and then performs `test.emit`; the effect grant is revoked first, so the guest fails before
 //    the root returns. The reply reports no stack (no saved-owner token), the request trace
 //    [dispatch allowed, effect denied], the poisoned session state, and the per-root frame-pin
-//    ledger as the pins the root still held when it was aborted (`released < entered`,
-//    `active > 0`, `released_by_host: false`) -- not a release measurement.
+//    ledger of host entry/exit calls. On this policy-denied-effect mechanism the guest unwinds its
+//    frames, so the reply reports 2 entered / 2 released / 0 active; that is a count of host calls,
+//    not a release measurement, and it does not exercise the abandoned-pin path. The in-process
+//    abort below does: it reports the pins it still held (2 / 0 / 2). No `released_by_host`
+//    field is emitted.
 //
-// 2. `test.abort` is not installable in this profile. The kernel bootstrap environment has no
-//    abort row for declared-module profiles, so a source containing `test.abort` is refused with
-//    an internal `inconsistent frontend arena` diagnostic. That message is a frontend robustness
-//    defect the integrator tracks separately; this lane records it as a witness only and never
-//    treats it as the case's success condition.
+// 2. `test.abort` is not installable in this profile. The live-slot test hosts grant only
+//    `test.emit`, and the environment has no `test.abort` row, so a source containing
+//    `test.abort` is refused as invalid input (`word test.abort is not available in this
+//    environment`). This lane records that refusal as a witness only and never treats it as the
+//    case's success condition.
 const binary = process.argv[2];
 
 async function abnormalExit() {
@@ -85,8 +88,8 @@ async function abnormalExit() {
 }
 
 async function abortRefusalWitness() {
-  // `test.abort` is outside the declared-module bootstrap table; the refusal is recorded as a
-  // frontend-defect witness, not as this case's success condition.
+  // `test.abort` has no row in the live-slot test-host environment; the invalid-input refusal is
+  // recorded as a witness, not as this case's success condition.
   const sources = { abort: '1 test.abort' };
   const authority = selectedAuthority({ sources, quota: 24,
     effects: ['test.emit', 'test.abort', 'live.dispatch'],

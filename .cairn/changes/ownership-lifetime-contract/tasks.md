@@ -76,8 +76,10 @@
     the case returns to `absent/not-run/open/unassessed`, and it is not promoted. Real per-frame
     release accounting on the abnormal path belongs to `live-reference-lifetimes` (OWNER DECISION
     2026-11-20 decision 6; that change's LREF-EXIT-01), which will execute OWN-CASE-05 later. `test.abort`
-    remains uninstallable in this profile; its internal `inconsistent frontend arena` refusal is a
-    frontend-defect witness tracked by the integrator and is not the case's success condition.
+    remains uninstallable in this profile. It used to be refused with the internal `inconsistent
+    frontend arena` diagnostic; the frontend now refuses an unavailable builtin word as invalid
+    input (`word test.abort is not available in this environment`), and the refusal stays a
+    witness, not the case's success condition.
   - **OWN-CASE-07 bound to H-LIVE-03.** The saved old definition yields 1 after the reload, its old
     code span stays installed while the owner lives, and `:release-observed-roots` retires the span
     after the release.

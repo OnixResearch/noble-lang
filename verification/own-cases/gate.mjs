@@ -301,7 +301,10 @@ observe('OWN-CASE-04', 'crates/noble-cli/tests/live_slot_own_resource_rejection.
   for (const row of observed.variants) {
     expectValue(`OWN-CASE-04 ${row.variant} outcome`, row.outcome, 'refused');
     expectValue(`OWN-CASE-04 ${row.variant} stage`, row.stage, expected.stage);
-    expectValue(`OWN-CASE-04 ${row.variant} checker stage`, expected.checker_stage, 'check');
+    // Registration consistency check, not an observation: it compares the registered
+    // checker stage with the constant the lane's refusal path implies.
+    expectValue(`OWN-CASE-04 ${row.variant} registered checker stage (consistency)`,
+      expected.checker_stage, 'check');
     expectValue(`OWN-CASE-04 ${row.variant} guest requests`, row.guest_requests,
       expected.guest_requests);
     expectValue(`OWN-CASE-04 ${row.variant} protected operations`, row.protected_operations,
@@ -345,8 +348,10 @@ observe('OWN-CASE-05', 'crates/noble-cli/tests/live_slot_own_trap.mjs', expected
   expectValue('OWN-CASE-05 dispatch trace', exit.target_trace,
     [['dispatch', 'allowed'], ['effect', 'denied']]);
   expectValue('OWN-CASE-05 exit', exit.exit, 2);
+  // Consistency check, not an observation: released + active = entered holds by the
+  // ledger's construction, so it only guards the reply's shape.
   assert.equal(exit.frame_pins.released + exit.frame_pins.active, exit.frame_pins.entered,
-    `the reply's ledger must balance: ${JSON.stringify(exit.frame_pins)}`);
+    `the reply's ledger is malformed (consistency): ${JSON.stringify(exit.frame_pins)}`);
   assert.ok(typeof exit.frame_pins.measurement === 'string',
     'the reply must label the count as host entry/exit calls, not a release proof');
   expectValue('OWN-CASE-05 abort witness', witness.outcome, 'refused');
