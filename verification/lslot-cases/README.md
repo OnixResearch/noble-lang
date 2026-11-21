@@ -29,6 +29,11 @@ Retained receipts live beside the gate: `acceptance.json` is the round-1 receipt
 overwrites or binds a retained receipt — every retained receipt file is excluded from the receipt's
 manifest, and promoting copies a run's new receipt to a new retained name. The raw mirror of a
 promoted run keeps the lane evidence and the run's own command outputs.
+`acceptance-2026-11-21-b1.json` (sha256 `e240cdf6…`, mirror `raw/b1-054806`) re-runs the gate on
+the merged Cairn batch-1 tree `05bac95a` (source revision `sha256:0c80b13f…`, binary
+`d0c98cc0…`): the same five cases are promotable, LSLOT-04 and LSLOT-07 are refused, LSLOT-05 and
+LSLOT-08 are not executed, and there are no mismatches or integrity issues. The case records keep
+citing the r4 receipt.
 
 ## What a promotion means
 

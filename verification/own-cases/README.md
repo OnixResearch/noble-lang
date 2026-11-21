@@ -16,6 +16,7 @@ It promotes nothing by itself.
 | [`runs/20261120-failed`](runs/20261120-failed) | superseded gate before its row parser was fixed | `failed`; OWN-CASE-04 rows were misparsed after the test harness prefix |
 | [`runs/20261120-r2`](runs/20261120-r2) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `81139111` | `completed` / `unmet-cases`; OWN-CASE-01, 02, 04, 05, 06, 07 promoted; OWN-CASE-03 is an executed failure (deep chains refused at compose 5) |
 | [`runs/20261120-r3`](runs/20261120-r3) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `33318b7c` | `completed` / `unmet-cases`; OWN-CASE-01, 02, 04, 06, 07 promoted, OWN-CASE-03 failed, OWN-CASE-05 withheld after review round 2 |
+| [`runs/20261121-b1`](runs/20261121-b1) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `05bac95a` (Cairn batch-1 tree) | `completed` / `unmet-cases`; the same verdicts as r3: OWN-CASE-01, 02, 04, 06, 07 promotable, OWN-CASE-03 failed, OWN-CASE-05 withheld |
 
 [`acceptance.json`](acceptance.json) is the **first** run's receipt (`sha256 e873df58…`, tested
 commit `5c9e38f4`), kept byte-for-byte as the immutable path the first OWN promotions cite. Later
@@ -23,7 +24,10 @@ runs live under `runs/` and are cited by their own paths; superseded receipts st
 rework receipts are added beside them, never edited. The current promotion facts come from
 [`runs/20261120-r3/acceptance.json`](runs/20261120-r3/acceptance.json) (`sha256 3d7666bf…`,
 `source_revision sha256:fdf333df…`, binary `5a62b529…` before and after, tested commit `33318b7c`);
-the r2 receipt (`sha256 ae533fdd…`, tested commit `81139111`) remains beside it.
+the r2 receipt (`sha256 ae533fdd…`, tested commit `81139111`) remains beside it. The batch-1
+re-run [`runs/20261121-b1/acceptance.json`](runs/20261121-b1/acceptance.json) (`sha256 3d311f50…`,
+tested commit `05bac95a`) confirms those verdicts on the merged Cairn batch-1 tree; the case
+records keep citing r3.
 
 ## Cases this gate executes
 

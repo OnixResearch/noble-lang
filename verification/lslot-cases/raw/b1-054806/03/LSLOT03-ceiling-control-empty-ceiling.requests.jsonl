@@ -1,0 +1,6 @@
+{"operation":"trace"}
+{"operation":"install","id":"candidate","source":"\"admit\" test.emit drop","inputs":["Account@1","I64"]}
+{"operation":"publish","slot":"account","id":"candidate","expected_epoch":"0"}
+{"operation":"install","id":"pure","source":"swap swap","inputs":["Account@1","I64"]}
+{"operation":"publish","slot":"account","id":"pure","expected_epoch":"0"}
+{"operation":"trace"}
