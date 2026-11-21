@@ -117,6 +117,9 @@ struct Entry {
     stacks: encoding::Json,
     premises: encoding::Json,
     sites: encoding::Json,
+    /// The inserted-arguments row: what the `implicit-args/v1` elaborator
+    /// filled into this site's proof, from its elaboration record.
+    inserted: encoding::Json,
     assumptions: encoding::Json,
     vacuity: &'static str,
     staleness: encoding::Json,
@@ -146,6 +149,7 @@ impl Entry {
             ("stacks", self.stacks.clone()),
             ("premises", self.premises.clone()),
             ("sites", self.sites.clone()),
+            ("inserted", self.inserted.clone()),
             ("arithmetic", arithmetic()),
             ("assumptions", self.assumptions.clone()),
             ("vacuity", encoding::string(self.vacuity)),
@@ -184,11 +188,48 @@ impl Entry {
             ("stacks", self.stacks.clone()),
             ("premises", self.premises.clone()),
             ("sites", self.sites.clone()),
+            ("inserted", self.inserted.clone()),
             ("assumptions", self.assumptions.clone()),
             ("acceptance", encoding::Json::Bool(false)),
             ("staleness", self.staleness.clone()),
         ]))
     }
+}
+
+/// The inserted-arguments row for `proof`: every argument the
+/// `implicit-args/v1` elaborator filled in, from the batch's elaboration
+/// record. A proof written fully explicitly has no record and an empty row.
+/// The row restates an untrusted producer's record; it is never acceptance
+/// evidence, which comes only from checking the explicit term.
+fn inserted_arguments(batch: Option<&ProofBatch>, proof: Option<&str>) -> encoding::Json {
+    let record = batch.zip(proof).and_then(|(batch, proof)| {
+        batch
+            .elaborations
+            .iter()
+            .find(|record| record.proof == proof)
+    });
+    let Some(record) = record else {
+        return encoding::Json::Array(std::vec::Vec::new());
+    };
+    encoding::Json::Array(
+        record
+            .inserted
+            .iter()
+            .map(|argument| {
+                encoding::object([
+                    ("revision", encoding::string(&record.revision)),
+                    ("binder", encoding::string(&argument.binder)),
+                    (
+                        "position",
+                        encoding::Json::Number(u64::from(argument.position)),
+                    ),
+                    ("head", encoding::string(&argument.head)),
+                    ("solution", encoding::string(&argument.solution)),
+                    ("span", span_json(argument.span)),
+                ])
+            })
+            .collect(),
+    )
 }
 
 /// One assembled report before encoding.
@@ -942,6 +983,7 @@ fn contract_entry(
         stacks: stacks(&goal.inputs, &goal.outputs, reviewed_slices(goal, proof)),
         premises,
         sites,
+        inserted: encoding::Json::Array(std::vec::Vec::new()),
         assumptions: module_assumptions(versions, limits),
         vacuity: if precondition_is_true(&goal.requires) {
             "none"
@@ -1009,6 +1051,7 @@ fn pure_entry(
         stacks: empty_stacks(),
         premises: encoding::Json::Array(premises),
         sites: encoding::Json::Array(sites),
+        inserted: encoding::Json::Array(std::vec::Vec::new()),
         assumptions: module_assumptions(versions, limits),
         vacuity: "not-assessed",
         staleness: pure_staleness(
@@ -1064,19 +1107,21 @@ fn module_report(
     let mut entries = std::vec::Vec::new();
     for goal in prepared.contract_goals() {
         let proof = batch.and_then(|batch| contract_proof(batch, goal));
-        entries.push(contract_entry(
+        let mut entry = contract_entry(
             goal,
             proof,
             source,
             &versions,
             digest.as_deref(),
             limits,
-        ));
+        );
+        entry.inserted = inserted_arguments(batch, entry.proof.as_deref());
+        entries.push(entry);
     }
     if let Some(batch) = batch {
         for obligation in &batch.obligations {
             if let PendingGoal::Pure { proposition } = &obligation.goal {
-                entries.push(pure_entry(
+                let mut entry = pure_entry(
                     &PureContext {
                         name: module_name,
                         version: module_version,
@@ -1087,7 +1132,9 @@ fn module_report(
                     proposition,
                     &versions,
                     limits,
-                ));
+                );
+                entry.inserted = inserted_arguments(Some(batch), Some(&obligation.name));
+                entries.push(entry);
             }
         }
     }
@@ -1210,6 +1257,7 @@ fn contract_file_entry(
         ]),
         premises: encoding::Json::Array(std::vec::Vec::new()),
         sites,
+        inserted: encoding::Json::Array(std::vec::Vec::new()),
         assumptions: contract_file_assumptions(limits),
         vacuity: "not-assessed",
         staleness: contract_file_staleness(source_sha256, Some(&statement_digest)),
@@ -1539,6 +1587,51 @@ mod tests {
 
     fn statement_store(statement: &str) -> std::string::String {
         std::string::String::from(statement)
+    }
+
+    #[test]
+    fn goal_view_lists_the_arguments_the_elaborator_inserted() {
+        let source: &[u8] = b"module logic@1 [ proof 1 poly-refl : [ (Pi (A Type0) (Pi (x A) (Eq A x x))) ] [ (intro (A Type0) (intro (x A) (refl x))) ] proof 1 refl-type infer : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (apply (use poly-refl) (infer)) (infer))) ] ]";
+        let limits = Limits::default();
+        let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("retained source budget");
+        let session = ModuleSession::new(&[], retained).expect("session");
+        let prepared = session.prepare(source, &[], limits).expect("prepares");
+        let digest = intrinsic::sha256(source);
+        let view = module_report(&prepared, source, "logic.noble", &digest, Report::View).encode();
+        let parsed: serde_json::Value = serde_json::from_str(&view).expect("goal view JSON");
+        let sites = parsed["sites"].as_array().expect("goal view rows");
+        let row = |declaration: &str| {
+            sites
+                .iter()
+                .find(|site| site["declaration"] == declaration)
+                .unwrap_or_else(|| panic!("no row for {declaration}: {view}"))
+        };
+        assert_eq!(
+            row("poly-refl")["inserted"],
+            serde_json::json!([]),
+            "an explicit proof has an empty inserted-arguments row"
+        );
+        let inserted = row("refl-type")["inserted"]
+            .as_array()
+            .expect("inserted-arguments row");
+        let pairs: std::vec::Vec<(&str, &str)> = inserted
+            .iter()
+            .map(|argument| {
+                (
+                    argument["binder"].as_str().unwrap_or_default(),
+                    argument["solution"].as_str().unwrap_or_default(),
+                )
+            })
+            .collect();
+        assert_eq!(pairs, [("A", "I64"), ("x", "x")], "{view}");
+        assert!(
+            inserted.iter().all(|argument| argument["revision"]
+                == "implicit-args/v1"
+                && argument["head"] == "logic@1/poly-refl"),
+            "every row names the elaborator revision and the exact head: {view}"
+        );
+        assert_eq!(parsed["acceptance"], false, "the view stays a projection");
     }
 
     #[test]
