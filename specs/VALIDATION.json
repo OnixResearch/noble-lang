@@ -2,7 +2,7 @@
   "revision": "0.1.0-draft.5",
   "validator": {
     "file": "tools/check-specs.mjs",
-    "sha256": "e3399504ee8fd90711e5b4b8bcbae86a4e83c335808e1e56a84ec4d50ec430e8",
+    "sha256": "dc3db296950df2f93ca74c45d643a2f2a663344c59857b2082900cb4ab8c823e",
     "adapter": {
       "file": "tools/cairn-specs.mjs",
       "sha256": "628700981379a20afdec4203526a2c4676d65d6b3d46eae025e151abe4acee79"
@@ -15,10 +15,10 @@
     "node_api": "24.3.0"
   },
   "documents": 16,
-  "requirements": 627,
+  "requirements": 632,
   "scenarios": 298,
   "scenarios_executed": 210,
-  "open_test_design": 237,
+  "open_test_design": 242,
   "proof_obligations": 30,
   "completed_proofs": 3,
   "self_tests": [
@@ -2159,6 +2159,54 @@
       "sha256": "1e018478f14ee4edb720c84c2511ecd69afbad7dabf42ebc6af668c76f4fc665"
     },
     {
+      "file": ".cairn/archive/2026-11-21-numeric-graph-v1/design.md",
+      "sha256": "7cacb93589be34ad34b92ab29aab0e3ad7b13f8e1b23cdc3a506c37e089eba4e"
+    },
+    {
+      "file": ".cairn/archive/2026-11-21-numeric-graph-v1/proposal.md",
+      "sha256": "7c31ca842d184abe57caac7807b79e00382ac5806de97e6ac8f7387ada62ba30"
+    },
+    {
+      "file": ".cairn/archive/2026-11-21-numeric-graph-v1/specs/developer-experience/spec.md",
+      "sha256": "ccac088ec7114c6cad51e87de08714ecb0b221206ab7cfa81ac41f47dbcee45a"
+    },
+    {
+      "file": ".cairn/archive/2026-11-21-numeric-graph-v1/specs/evidence/spec.md",
+      "sha256": "c3b32e03e34bbb18472fb2c2abde49a71ba6cb44b18324bc85aad488122e0d0e"
+    },
+    {
+      "file": ".cairn/archive/2026-11-21-numeric-graph-v1/specs/language/spec.md",
+      "sha256": "83af187d0c0634bfcac1530918b4ea0d64bde7d4d59021d0a3cb8b8241a2f17b"
+    },
+    {
+      "file": ".cairn/archive/2026-11-21-numeric-graph-v1/tasks.md",
+      "sha256": "62eeb806bc67fb91be6d2aa3cdd05d5dfb0040d9a174ce59764f02b8c593d6f8"
+    },
+    {
+      "file": ".cairn/archive/2026-11-21-semantic-merge-verification/design.md",
+      "sha256": "12da1bff26588e93057a73bed13c083b8991095b6bdf82a6dd5fcdc720cb4b4d"
+    },
+    {
+      "file": ".cairn/archive/2026-11-21-semantic-merge-verification/proposal.md",
+      "sha256": "5386a498cca96c41677bdaf4fa633d0aace797de9e70404bc9cc6cfe751747df"
+    },
+    {
+      "file": ".cairn/archive/2026-11-21-semantic-merge-verification/review-integrator-round3-2026-11-21.md",
+      "sha256": "2865a0d69f8206be2bc36404abc405782a1adb8aa327accb4250c0638b40cd4a"
+    },
+    {
+      "file": ".cairn/archive/2026-11-21-semantic-merge-verification/specs/program-contracts/spec.md",
+      "sha256": "e379c88ff80e038c29d9b1e5400c2944539428e8a6a117eee274caaf8064b2b1"
+    },
+    {
+      "file": ".cairn/archive/2026-11-21-semantic-merge-verification/specs/verification/spec.md",
+      "sha256": "6069ad36baf3de8715384b290e398da945943d25847b6c9bbf5474e6d21a2613"
+    },
+    {
+      "file": ".cairn/archive/2026-11-21-semantic-merge-verification/tasks.md",
+      "sha256": "d107c9627d350a60e864ac59042972efb49d26220252c12ad8a290c0426b48cf"
+    },
+    {
       "file": ".cairn/changes/allocation-strategy-contract/design.md",
       "sha256": "6b34ad39dd8180a08464c66daf450af2f6a687f9dee4bf1c5abd0f3436f06b66"
     },
@@ -2189,6 +2237,10 @@
     {
       "file": ".cairn/changes/artifact-correspondence-extension/proposal.md",
       "sha256": "287ed3ab25c2dd76bf81a2409261c3c0bd81a1fcc01be7f25facacd057a4584e"
+    },
+    {
+      "file": ".cairn/changes/artifact-correspondence-extension/review-acorr-gate-2026-11-21.md",
+      "sha256": "35c3064199e61000cc1b3e137ae7f4bad661162c914ecefee8cfd5fc18d380b1"
     },
     {
       "file": ".cairn/changes/artifact-correspondence-extension/specs/program-contracts/spec.md",
@@ -2471,30 +2523,6 @@
       "sha256": "810c5c5aac2d9ce7e4e3ec7aa75e29b018fe72267b697896a5a6334f009e35fc"
     },
     {
-      "file": ".cairn/changes/numeric-graph-v1/design.md",
-      "sha256": "57990129cba432f21f2f96c9fb23f4742555989fbb39cc61c443b998a987c9d9"
-    },
-    {
-      "file": ".cairn/changes/numeric-graph-v1/proposal.md",
-      "sha256": "7c31ca842d184abe57caac7807b79e00382ac5806de97e6ac8f7387ada62ba30"
-    },
-    {
-      "file": ".cairn/changes/numeric-graph-v1/specs/developer-experience/spec.md",
-      "sha256": "ccac088ec7114c6cad51e87de08714ecb0b221206ab7cfa81ac41f47dbcee45a"
-    },
-    {
-      "file": ".cairn/changes/numeric-graph-v1/specs/evidence/spec.md",
-      "sha256": "c3b32e03e34bbb18472fb2c2abde49a71ba6cb44b18324bc85aad488122e0d0e"
-    },
-    {
-      "file": ".cairn/changes/numeric-graph-v1/specs/language/spec.md",
-      "sha256": "83af187d0c0634bfcac1530918b4ea0d64bde7d4d59021d0a3cb8b8241a2f17b"
-    },
-    {
-      "file": ".cairn/changes/numeric-graph-v1/tasks.md",
-      "sha256": "ee784d60bc1b4b230f1c54e96c350e9483af246a70a0325954e33546e432ab69"
-    },
-    {
       "file": ".cairn/changes/ownership-lifetime-contract/design.md",
       "sha256": "c927cdb49ba9086d39dd5caa22bfc8f5c7942484e92c3c332d9fc15627ba3f1b"
     },
@@ -2516,7 +2544,7 @@
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/tasks.md",
-      "sha256": "be61e41d70963f47e234a44330db4b83d5284fbb7603fe95b80cf06e091d1ba2"
+      "sha256": "ba095d71c806c99b471624e9ade5be8e64919e8720cc690d92d10afc2b079e35"
     },
     {
       "file": ".cairn/changes/proof-automation-diagnostics/design.md",
@@ -2611,26 +2639,6 @@
       "sha256": "036e63d1fda9d4ddf2a29e9da4d3fe271f4783dedaf19b2ffcc98116698186e0"
     },
     {
-      "file": ".cairn/changes/semantic-merge-verification/design.md",
-      "sha256": "e1fd8b333c123307fc9b87360bc550869126fb46a7bb5c19ed7ddfe8432ba434"
-    },
-    {
-      "file": ".cairn/changes/semantic-merge-verification/proposal.md",
-      "sha256": "2321d0b571fb9be30c70304e1cfb31ec2b5614ad58c897f81da78cd7320e17a2"
-    },
-    {
-      "file": ".cairn/changes/semantic-merge-verification/specs/program-contracts/spec.md",
-      "sha256": "e379c88ff80e038c29d9b1e5400c2944539428e8a6a117eee274caaf8064b2b1"
-    },
-    {
-      "file": ".cairn/changes/semantic-merge-verification/specs/verification/spec.md",
-      "sha256": "2fbdce498e9ba4f2c484c87c7f6347d8db5e41d064408e20d1c86ff9d8f97843"
-    },
-    {
-      "file": ".cairn/changes/semantic-merge-verification/tasks.md",
-      "sha256": "7c41569c58b8592b4d150566f90d5ff92277fae14066f7e3de3573d6483b7c68"
-    },
-    {
       "file": ".cairn/MIGRATION.md",
       "sha256": "e05f953b21ae5551711f99b85588b966a04c83f751e6faabdcadd9c6f38184f4"
     },
@@ -2676,7 +2684,7 @@
     },
     {
       "file": ".cairn/specs/program-contracts/spec.md",
-      "sha256": "16da253f801b917eff73ea5030b6a0e51262b994b8615e738db58009c56a0957"
+      "sha256": "4cc47c875b7620252d02c4027b3a7bfc3fce617d588c561317e5a6d26d217489"
     },
     {
       "file": ".cairn/specs/resource-adapters/spec.md",
@@ -2692,11 +2700,11 @@
     },
     {
       "file": ".cairn/specs/verification-toolchain/spec.md",
-      "sha256": "51f7b4aa929fc4a8af380f48f7e4c3231a08c4d12fd5a68ae48fa42d0a965b36"
+      "sha256": "dccd028fb77f33c228aefb0cb1bb91bf2a2886abf0127651f91ec855c2407305"
     },
     {
       "file": ".cairn/specs/verification/spec.md",
-      "sha256": "d41f539dda0713865eca0cd84ddecb3033f62169350091f4db3c0a9f705c573c"
+      "sha256": "7a216a87db01c7bfd97e25f93bcb8bac3d7bc85a5783bf3f9fbd297ecdc4807b"
     },
     {
       "file": ".cairn/specs/wit-wasi/spec.md",
@@ -2740,7 +2748,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "7cf7da80e77e5f12d9acee33317daa25537cbac1d4fc361fb4ebe164b4a4982c"
+      "sha256": "b5a9aac054cab02b1200b87a384b81a89b4b180c97d0a79dfb888e598eaa4790"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -2760,7 +2768,7 @@
     },
     {
       "file": "specs/conformance/artifact-correspondence-cases.json",
-      "sha256": "61cdfab2369ecd7927c4d9282229708b56e837e8862df9bbe53de7526660b6a2"
+      "sha256": "c137686182311f62e15c1cd2f5f57295b39e843cfdbd975f2d4d96a04bb5865a"
     },
     {
       "file": "specs/conformance/c-backend-cases.json",
@@ -2824,7 +2832,7 @@
     },
     {
       "file": "specs/conformance/ownership-cases.json",
-      "sha256": "8525867fd0ef10b5568080946f331f46eaf2fe22d982df4cc73e94bd5b1e355e"
+      "sha256": "9841accb927707986f1058ad89566ee016796d52f69d826c9ec797ea7937bd45"
     },
     {
       "file": "specs/conformance/recursion-cases.json",
@@ -2884,7 +2892,7 @@
     },
     {
       "file": "specs/PROGRAM-CONTRACTS.md",
-      "sha256": "71d17ce9e3465b2cf12313a8d5e19a487e9be441e1fa4ed6920e77193c981f3d"
+      "sha256": "0854f42449bcdfc19ab7413f2c6aa1cb7df28564378284b9265dabadf4407f50"
     },
     {
       "file": "specs/README.md",
@@ -2892,7 +2900,7 @@
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "022d3cbca21e51aff50a6806edd3c26e4e17f71d2d0380b769e17888cab4fb25"
+      "sha256": "c62d80ece893433d82f10a27441148fc732ad920ab03ab88625c8cd48c07adaa"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -2908,7 +2916,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "b315d11fbaaaeb1c4bd0533a19de10b42f3a42005e6f517828803b94b10c712f"
+      "sha256": "6219cd0c0840ad1c01323f9d26762574d732828b815cc89e9824f0b8ed5217e8"
     },
     {
       "file": "specs/SAFETY.md",
@@ -2928,7 +2936,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "4e77f56a8cc8473d68dd2d86114b18726c62c6fdf91ecf03f1f0db1385b4336c"
+      "sha256": "beb5dd62b7af95d25e814e7ef8dc28a37503f006b581c7bc7d0e0f81f9c3956c"
     },
     {
       "file": "specs/TYPED-CHUNK-RANKING.md",
@@ -2936,11 +2944,11 @@
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
-      "sha256": "6d4d82e560a9a75c8a657d39f98fab9b4feb6ef197a14d3e3ee738e0f62d2a06"
+      "sha256": "4245c3402c8d0678936c415ed802438d8a0e2429ea3766270f7dfbf71c507728"
     },
     {
       "file": "specs/VERIFICATION.md",
-      "sha256": "fa0e33c45e8400fbe24fa28a13029a4f3b2f7fe17d65eb41618039909d5614b1"
+      "sha256": "fea99c29f945435b935d7dd03b68dc4f32abf42cc57c77bd58bafc4602e7ff84"
     },
     {
       "file": "specs/verification/obligations.json",
@@ -3376,7 +3384,7 @@
     },
     {
       "file": "verification/numeric-graph-v1/README.md",
-      "sha256": "a9984e300346c8317d425797071537867b96ad86015870cd964746a872c665a3"
+      "sha256": "734d9c2d7fb7e89eecd7b7ee73ce8d780d78675cb0f94d8a1ad9f2af195c0ad4"
     },
     {
       "file": "verification/numeric-graph-v1/sentinel-fallback.md",
@@ -3420,7 +3428,7 @@
     },
     {
       "file": "verification/own-cases/README.md",
-      "sha256": "1809d00cbc92d56eb8d15c5e75f81a6b50298425af58eecdc37701d471c8c2fc"
+      "sha256": "61dfb794c34bdcb39b5517fb36d31f84243fb356f5ca4e67f58edb259c2f37b7"
     },
     {
       "file": "verification/owner-law/README.md",

@@ -5399,6 +5399,66 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "SMERGE-CHECK-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "SMERGE-EVIDENCE-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "SMERGE-GATE-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "SMERGE-REL-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "SMERGE-SCOPE-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
       "id": "TCRANK-01",
       "document": "../.cairn/specs/typed-chunk-ranking/spec.md",
       "document_id": "SPEC-TCRANK001",
