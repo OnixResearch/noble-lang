@@ -8,16 +8,15 @@ const kernel = 'noble_kernel.dataspace';
 const mainSource = 'crates/noble-kernel/src/dataspace/mod.rs';
 const sourcePrefix = 'crates/noble-kernel/src/dataspace/';
 // Compiler declaration IDs of the reviewed extraction. They shift whenever an
-// earlier kernel declaration is added or removed (31-33 at M7, 42-44 at #97,
-// 43-45 after `contracts::test_abort_scheme`), so each renewal is reviewed
-// together with the extraction lock.
+// earlier kernel declaration is added or removed (31-33 at M7, 42-44 at #97),
+// so each renewal is reviewed together with the extraction lock.
 const exactRoots = [
   { rust: 'noble_kernel::dataspace::admit_shared_memory',
-    declaration: `${kernel}.admit_shared_memory`, def_id: 43 },
+    declaration: `${kernel}.admit_shared_memory`, def_id: 42 },
   { rust: 'noble_kernel::dataspace::decide_publication',
-    declaration: `${kernel}.decide_publication`, def_id: 44 },
+    declaration: `${kernel}.decide_publication`, def_id: 43 },
   { rust: 'noble_kernel::dataspace::permits',
-    declaration: `${kernel}.permits`, def_id: 45 },
+    declaration: `${kernel}.permits`, def_id: 44 },
 ];
 const tableRoots = [
   ...['value', 'reserve'].map(method => ({
