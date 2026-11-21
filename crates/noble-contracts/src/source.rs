@@ -1688,10 +1688,10 @@ impl Session {
         }
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
-    )]
+    // The effect universe the session may name: an explicit live-slot or
+    // declared environment comes first, then component bindings, then the
+    // host-selected Core test hosts (with the live session's two self-edit
+    // identities).
     fn effect_universe(&self) -> u64 {
         if let Some(profile) = &self.live_slots {
             return effect_mask(&profile.environment.effects);
