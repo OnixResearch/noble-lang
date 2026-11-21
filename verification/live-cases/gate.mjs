@@ -1022,7 +1022,8 @@ async function observeLive04(feature) {
     'excess-module-bytes': { stage: 'bytecode-admission', outcome: 'reload-refused',
       diagnostic: /4194304/ },
   };
-  assert.deepEqual(Object.keys(expectedStops).sort(), variants.map(([name]) => name).sort(),
+  // `live04Variants` returns a Map of variant name to bytes.
+  assert.deepEqual(Object.keys(expectedStops).sort(), [...variants.keys()].sort(),
     'every LIVE-04 variant needs an exact expected stop class');
   const rows = [];
   for (const [name, bytes] of variants) {
