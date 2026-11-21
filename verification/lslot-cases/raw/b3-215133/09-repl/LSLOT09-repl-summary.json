@@ -1,0 +1,85 @@
+{
+  "case": "LSLOT-09",
+  "gate": "guarded-live-draft-refuses-checked-slot-caller",
+  "selected_binary_sha256": "c9b21ea8816b274864f3bc7d140db76acec74ff484f3fd67edc23d1fc868d46d",
+  "slot_source_sha256": "dc092831152f157ba46eaa686eb5462fa9efd436a4901c47c1264d11adaca870",
+  "refusal": {
+    "profile": "guarded Live-Wasm-Draft",
+    "stage": "admission",
+    "outcome": "reload-refused",
+    "diagnostic": "slot.invoke requires the opt-in live-slot source profile",
+    "generation": 0,
+    "exit": 2,
+    "guest_requests": 0,
+    "protected_operations": 0
+  },
+  "control": {
+    "initial_generation": 1,
+    "saved_generation": 2,
+    "reload": {
+      "generation": 2,
+      "installed_generation": 3,
+      "stack": [
+        {
+          "handle": 7,
+          "interface": {
+            "effects": [],
+            "stack_in": "[I64]",
+            "stack_out": "[I64]"
+          },
+          "recipe": [
+            {
+              "invoke": "definition:1"
+            }
+          ],
+          "type": "Program",
+          "witnesses": [
+            {
+              "effects": [],
+              "node": 0,
+              "stack_in": "[I64]",
+              "stack_out": "[I64]"
+            }
+          ]
+        }
+      ]
+    },
+    "saved_program": {
+      "handle": 7,
+      "interface": {
+        "effects": [],
+        "stack_in": "[I64]",
+        "stack_out": "[I64]"
+      },
+      "recipe": [
+        {
+          "invoke": "definition:1"
+        }
+      ],
+      "type": "Program",
+      "witnesses": [
+        {
+          "effects": [],
+          "node": 0,
+          "stack_in": "[I64]",
+          "stack_out": "[I64]"
+        }
+      ]
+    },
+    "stack": [
+      {
+        "handle": null,
+        "type": "I64",
+        "value": "21"
+      }
+    ],
+    "source_generations": [
+      1,
+      2,
+      2,
+      4
+    ]
+  },
+  "guest_requests": 0,
+  "protected_operations": 0
+}

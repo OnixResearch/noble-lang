@@ -39,6 +39,14 @@ the Cairn batch-2 tree `7d910d87` (source revision `sha256:a319bebd…`, binary 
 the gate learned to list the batch-1 receipt: the same five cases are promotable, LSLOT-04 and
 LSLOT-07 are refused, LSLOT-05 and LSLOT-08 are not executed, and there are no mismatches or
 integrity issues. The case records keep citing the r4 receipt.
+`acceptance-2026-11-21-b3.json` (sha256 `f5b0744d…`, mirror `raw/b3-215133`) re-runs the gate on
+the combined Cairn tree `151fa703` (batch 2 plus LIVE round 3; source revision
+`sha256:b9dd56f1…`, binary `c9b21ea8…`). That tree first refused LSLOT-09's
+`historical_LIVE_01_to_10_changed`, because owner decision 30 dropped LIVE-05's `missing-import`
+variant; `live-baseline.mjs` now admits exactly that drop beside decision 21a's LIVE-02 change.
+The same five cases are promotable, LSLOT-04 and LSLOT-07 are refused, LSLOT-05 and LSLOT-08 are
+not executed, and there are no mismatches or integrity issues. The case records keep citing the
+r4 receipt.
 
 ## What a promotion means
 

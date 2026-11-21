@@ -18,6 +18,7 @@ It promotes nothing by itself.
 | [`runs/20261120-r3`](runs/20261120-r3) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `33318b7c` | `completed` / `unmet-cases`; OWN-CASE-01, 02, 04, 06, 07 promoted, OWN-CASE-03 failed, OWN-CASE-05 withheld after review round 2 |
 | [`runs/20261121-b1`](runs/20261121-b1) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `05bac95a` (Cairn batch-1 tree) | `completed` / `unmet-cases`; the same verdicts as r3: OWN-CASE-01, 02, 04, 06, 07 promotable, OWN-CASE-03 failed, OWN-CASE-05 withheld |
 | [`runs/20261121-b2`](runs/20261121-b2) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `b088cfc7` (Cairn batch-2 tree, after review round-3 notes R3-1 and R3-4) | `completed` / `unmet-cases`; the same verdicts: OWN-CASE-01, 02, 04, 06, 07 promotable, OWN-CASE-03 failed, OWN-CASE-05 withheld |
+| [`runs/20261121-b3`](runs/20261121-b3) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `c9343972` (combined Cairn tree: batch 2 plus LIVE round 3) | `completed` / `unmet-cases`; the same verdicts, projection `7aa15017…` and gate `828ff88e…` as b2; the case records keep citing b2 |
 
 [`acceptance.json`](acceptance.json) is the **first** run's receipt (`sha256 e873df58…`, tested
 commit `5c9e38f4`), kept byte-for-byte as the immutable path the first OWN promotions cite. Later

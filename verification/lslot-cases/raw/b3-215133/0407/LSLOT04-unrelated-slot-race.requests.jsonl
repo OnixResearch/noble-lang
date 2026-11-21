@@ -1,0 +1,50 @@
+{"operation":"install","id":"callAB","source":"slot.invoke","inputs":["I64","LiveRef<I64,I64,pure>"]}
+{"operation":"candidate","id":"callAB"}
+{"operation":"install","id":"A1","source":"1 +","inputs":["I64"]}
+{"operation":"candidate","id":"A1"}
+{"operation":"install","id":"A2","source":"2 +","inputs":["I64"]}
+{"operation":"candidate","id":"A2"}
+{"operation":"install","id":"A3","source":"3 +","inputs":["I64"]}
+{"operation":"candidate","id":"A3"}
+{"operation":"install","id":"B1","source":"1 +","inputs":["I64"]}
+{"operation":"candidate","id":"B1"}
+{"operation":"install","id":"B1fresh","source":"1 +","inputs":["I64"]}
+{"operation":"candidate","id":"B1fresh"}
+{"operation":"install","id":"B2","source":"2 +","inputs":["I64"]}
+{"operation":"candidate","id":"B2"}
+{"operation":"publish","slot":"B","id":"B1","expected_epoch":"0","expected_incarnation":null,"expected_generation":null}
+{"operation":"delete","slot":"B","expected_epoch":"1","expected_incarnation":"1","expected_generation":"1"}
+{"operation":"publish","slot":"B","id":"B1fresh","expected_epoch":"2","expected_incarnation":null,"expected_generation":null}
+{"operation":"publish","slot":"A","id":"A1","expected_epoch":"3","expected_incarnation":null,"expected_generation":null}
+{"operation":"delete","slot":"A","expected_epoch":"4","expected_incarnation":"1","expected_generation":"1"}
+{"operation":"install","id":"A1fresh","source":"1 +","inputs":["I64"]}
+{"operation":"candidate","id":"A1fresh"}
+{"operation":"publish","slot":"A","id":"A1fresh","expected_epoch":"5","expected_incarnation":null,"expected_generation":null}
+{"operation":"delete","slot":"A","expected_epoch":"6","expected_incarnation":"2","expected_generation":"1"}
+{"operation":"install","id":"Ainc3","source":"1 +","inputs":["I64"]}
+{"operation":"candidate","id":"Ainc3"}
+{"operation":"publish","slot":"A","id":"Ainc3","expected_epoch":"7","expected_incarnation":null,"expected_generation":null}
+{"operation":"delete","slot":"A","expected_epoch":"8","expected_incarnation":"3","expected_generation":"1"}
+{"operation":"install","id":"Ainc4","source":"1 +","inputs":["I64"]}
+{"operation":"candidate","id":"Ainc4"}
+{"operation":"publish","slot":"A","id":"Ainc4","expected_epoch":"9","expected_incarnation":null,"expected_generation":null}
+{"operation":"delete","slot":"A","expected_epoch":"10","expected_incarnation":"4","expected_generation":"1"}
+{"operation":"install","id":"Ainc5","source":"1 +","inputs":["I64"]}
+{"operation":"candidate","id":"Ainc5"}
+{"operation":"publish","slot":"A","id":"Ainc5","expected_epoch":"11","expected_incarnation":null,"expected_generation":null}
+{"operation":"delete","slot":"A","expected_epoch":"12","expected_incarnation":"5","expected_generation":"1"}
+{"operation":"install","id":"Ainc6","source":"1 +","inputs":["I64"]}
+{"operation":"candidate","id":"Ainc6"}
+{"operation":"publish","slot":"A","id":"Ainc6","expected_epoch":"13","expected_incarnation":null,"expected_generation":null}
+{"operation":"delete","slot":"A","expected_epoch":"14","expected_incarnation":"6","expected_generation":"1"}
+{"operation":"install","id":"Ainc7","source":"1 +","inputs":["I64"]}
+{"operation":"candidate","id":"Ainc7"}
+{"operation":"publish","slot":"A","id":"Ainc7","expected_epoch":"15","expected_incarnation":null,"expected_generation":null}
+{"operation":"publish","slot":"A","id":"Ainc7","expected_epoch":"16","expected_incarnation":"7","expected_generation":"1"}
+{"operation":"publish","slot":"A","id":"Ainc7","expected_epoch":"17","expected_incarnation":"7","expected_generation":"2"}
+{"operation":"invoke","id":"callAB","inputs":[{"kind":"i64","value":"20"}],"refs":[{"position":1,"ordinal":0,"slot":"A"}]}
+{"operation":"invoke","id":"callAB","inputs":[{"kind":"i64","value":"20"}],"refs":[{"position":1,"ordinal":0,"slot":"B"}]}
+{"operation":"publish","slot":"B","id":"B2","expected_epoch":"18","expected_incarnation":"2","expected_generation":"1"}
+{"operation":"publish","slot":"A","id":"A2","expected_epoch":"18","expected_incarnation":"7","expected_generation":"3"}
+{"operation":"invoke","id":"callAB","inputs":[{"kind":"i64","value":"20"}],"refs":[{"position":1,"ordinal":0,"slot":"A"}]}
+{"operation":"invoke","id":"callAB","inputs":[{"kind":"i64","value":"20"}],"refs":[{"position":1,"ordinal":0,"slot":"B"}]}
