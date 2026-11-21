@@ -217,7 +217,7 @@
     "crates/noble-contracts/src/inference/construct.rs": "1b1b35217e4ffe7cbc9550542f683e5e391833af2a3efe6ffbdda7fdb63fed89",
     "crates/noble-contracts/src/inference/effects.rs": "82b75957534cdffbee495ec6ff15e2a9b4390d70000ae8376d0ecaba3358bcca",
     "crates/noble-contracts/src/inference/mod.rs": "3f4e059c487775c40072ba78815a7f80a31cce029b7b76a20f8914943b9c77f2",
-    "crates/noble-contracts/src/source.rs": "3a803ca35e33e7d7f77f19bb8c1ac04311e6bf1123f79730abc277e4645a2808",
+    "crates/noble-contracts/src/source.rs": "da73d32089f9055172152b8102a258d9584b720c6b3d173703fd0d52063f2e00",
     "crates/noble-contracts/src/source/declared.rs": "fa30c64b49d0b574d8de0a456b56ad3435eadbd73685437d3abf5e2dda53bac3",
     "crates/noble-contracts/src/source/declared/links.rs": "7922725f885f36cd978cf6278c857b981c77fa1c02409476e1169ac1568946ba",
     "crates/noble-contracts/src/source/declared/parsing/members.rs": "1c7b107d23b9780b8f7a1787b976de74e0497c346a059345eb82fa2386fe53f5",
