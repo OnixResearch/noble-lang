@@ -890,7 +890,7 @@ async function observeLive03() {
     bindingAck.stage === 'wasm-live' && bindingDefinition.outcome === 'namespace-committed'
       && isStack(bindingPushed, ['I64:7'])
       && bindingRefused.stage === 'admission' && bindingRefused.outcome === 'reload-refused'
-      && /bound adapter (input|output|effect) differs from required operation/
+      && /^bound adapter input, output or effect differs from required operation$/
         .test(bindingRefused.diagnostic ?? '')
       && bindingRefused.generation === bindingDefinition.generation
       && isStack(bindingRefused, ['I64:7'])
