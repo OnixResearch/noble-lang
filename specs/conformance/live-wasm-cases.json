@@ -60,22 +60,23 @@
         "revision": "0.1.0-draft.5",
         "kind": "test",
         "result": "passed",
-        "source_revision": "sha256:2b6bdcc400d957899f4ab8035e81360d6ef3e7eb1ff4440d6b0efaba990aa9d6",
+        "source_revision": "sha256:e8e13fbd91f793b2d72abfbd619a9e0469932946b58c287369eff72cb8bcfbfd",
         "configuration": {
           "profile": "Live-Wasm-Draft",
-          "harness": "real-live-repl-with-resident-v8",
+          "harness": "transitive-dependent-rebuild-and-immutable-capture",
           "case": "LIVE-02",
-          "receipt": "../../verification/live-cases/acceptance-2026-11-20-r2.json",
-          "receipt_sha256": "f7328af3cfd90b56e24dd348c613cee063f8cc345204d4c2d05414f29157f977",
+          "receipt": "../../verification/live-cases/acceptance-2026-11-21-r3.json",
+          "receipt_sha256": "bac5b385c01d2520a13192f7a9e292393b524f6a6e9480e00fd3b61cc9bf20e7",
           "gate": "verification/live-cases/gate.mjs",
-          "tested_commit": "a5f0ded36d9e42586cf341c03eec2b6a337c82c7",
-          "binary_sha256": "fecb65c70ba7e4a558bb53e9d9b74c17255287529d2b627f3c8faa042720c81f",
-          "live_repl_tests_sha256": "44bc962e84e16c1f7fb2f0caff7629b85a112db2062d6bb092fe0fbece85c1d1",
-          "command": "noble live repl --source math.noble --engine v8",
+          "tested_commit": "e8c83ddb4123d39a18db5fed27defeaea0aa963e",
+          "binary_sha256": "e7b76767ba77f9f24e25a881799c95b9e0f9f9e02969dd4e2d021539fc2ec6af",
+          "live_repl_tests_sha256": "6a16781708f8a01304a26af4eed7552d822b0ec0dce8f48ef624a0bb68c5ac4b",
+          "feature_binary_sha256": "883d96796e2d26f82f8ec9aff0910f0b0ca7c055878fc876f5326cbbe9afe5cc",
+          "command": "noble live repl --source math.noble --engine v8 (default binary; the in-flight child is the live-test-barrier build at the in-flight-execution seam)",
           "tests": [
-            "old_active_wasm_frame_finishes_before_queued_reload_ack"
+            "case_in_flight_word_quote_completes_before_reload_ack"
           ],
-          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 f5c9c947b0fed8b82d4414de4e2b20e38005871963e3b5770f7da356a6041baf); the input carries OWNER DECISION 2026-11-20 (Decision 21a). The receipt holds every observed field, raw command output hashes and the source manifest."
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 ec9f76dd2daeb6537a588189910a19aa76b1a7d53d0bd7b62389ebe47779a215). The receipt holds every observed field, raw command output hashes and the source manifest; raw outputs and binaries are retained outside the repository with the run."
         },
         "assumptions": [
           "The host selects the absolute `math.noble` path and writes exactly the case's before/after bytes, including the fsynced atomic rename where the case specifies one.",
@@ -83,7 +84,7 @@
           "The case's `stage`/`outcome` names are mapped to the CLI's `wasm-live`/`wasm` stages and `reload-committed`/`normal`/`trap` outcomes; the receipt records each mapping.",
           "No proof is claimed: the case keeps `proof: open`, and the receipt covers only this exact source revision and binary.",
           "`previous_program_identity_mutated` and `implicit_live_name_lookup_in_program` are observed from the post-reload stack: the old Program returned 21 (its captured +1), not 22.",
-          "The in-flight fields are observed by the named feature-gated test over a real child at the `in-flight-generation` safepoint; the plain child issues the reload between invocations and records that limitation."
+          "The in-flight fields are observed on the case's own source, flags and `[ addone ]` submission held by the `in-flight-execution` seam in the feature build (review A1); OWNER DECISION 2026-11-20 (Decision 21a) replaced `after_reload_ack` and is recorded in the change tasks, not in the case input (review A2)."
         ]
       }
       ]
@@ -92,7 +93,34 @@
       "id": "LIVE-03", "profile": "Live-Wasm-Draft", "kind": "admission", "requirements": ["H-LIVE-02", "S-LIVE-01", "DX-LIVE-01"],
       "input": {"harness": "failed-reload-preserves-complete-session", "initial_source": "def addone [ 1 + ]", "initial_module": "module count@1 [ opaque Count I64 public export Count ]", "initial_submission": "7", "initial_stack": [{"type": "I64", "value": "7"}], "effect_ceiling": [], "variants": [{"name": "malformed-source", "replacement": "def addone [ 2 +"}, {"name": "wrong-input-type", "replacement": "def addone [ true + ]"}, {"name": "effect-ceiling-increase", "replacement": "def addone [ \"x\" test.emit 2 + ]", "selected_checked_host_contract": "test.emit : Text -- ! {test.emit}"}, {"name": "incompatible-public-interface", "replacement": "def addone [ dup ]", "old_interface": "I64 -- I64 ! {}", "new_interface": "I64 -- I64 I64 ! {}"}, {"name": "incompatible-schema", "replacement": "module count@1 [ opaque Count Bool public export Count ]"}, {"name": "missing-module", "replacement": "import absent@1 as m", "supplied_registry": []}, {"name": "changed-file-during-read", "first_read": "def addone [ 2 + ]", "final_read": "def addone [ 3 + ]"}, {"name": "host-binding-mismatch", "replacement": "module emit@1 [ require emit Text -- ! test.emit export send def send [ \"x\" emit ] ]", "binding": "bind emit@1 test.emit adapter Bool -- ! test.emit allow"}, {"name": "dependency-cycle", "replacement": "module cycle@1 [ export first def first [ second ] def second [ first ] ]"}]},
       "expected": {"stage": "admission", "outcome": "all-variants-reject", "namespace_unchanged": true, "stack_bottom_to_top": [{"type": "I64", "value": "7"}], "authorizations_unchanged": true, "guest_requests": 0, "protected_operations": 0, "old_definition_next_call": {"submission": "addone", "stack_bottom_to_top": [{"type": "I64", "value": "8"}]}},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "claim": "Every LIVE-03 replacement of the selected file was refused at admission while the resident V8 `noble live repl` session survived with its generation, the stack [I64 7] and zero guest requests and protected operations, and the old `addone` still returned 8 afterwards. This includes the host-binding-mismatch variant run as written: the startup manifest binds `emit@1` with an adapter of a different interface, the replacement module is refused with `bound adapter input, output or effect differs from required operation`. No proof is claimed.",
+        "subject": "LIVE-03",
+        "revision": "0.1.0-draft.5",
+        "kind": "test",
+        "result": "passed",
+        "source_revision": "sha256:e8e13fbd91f793b2d72abfbd619a9e0469932946b58c287369eff72cb8bcfbfd",
+        "configuration": {
+          "profile": "Live-Wasm-Draft",
+          "harness": "failed-reload-preserves-complete-session",
+          "case": "LIVE-03",
+          "receipt": "../../verification/live-cases/acceptance-2026-11-21-r3.json",
+          "receipt_sha256": "bac5b385c01d2520a13192f7a9e292393b524f6a6e9480e00fd3b61cc9bf20e7",
+          "gate": "verification/live-cases/gate.mjs",
+          "tested_commit": "e8c83ddb4123d39a18db5fed27defeaea0aa963e",
+          "binary_sha256": "e7b76767ba77f9f24e25a881799c95b9e0f9f9e02969dd4e2d021539fc2ec6af",
+          "live_repl_tests_sha256": "6a16781708f8a01304a26af4eed7552d822b0ec0dce8f48ef624a0bb68c5ac4b",
+          "command": "noble live repl --source math.noble --engine v8 [--declared-modules --bindings bindings.txt]",
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 bec86d121b5d6cee4c6de5f76d5235c5b442736d369f98e4581b5eb18d8ec2b5). The receipt holds every observed field, raw command output hashes and the source manifest; raw outputs and binaries are retained outside the repository with the run."
+        },
+        "assumptions": [
+          "The host selects the absolute `math.noble` path and replaces it with exactly each variant's bytes before an explicit `:reload`.",
+          "`incompatible-schema` is refused as a second declaration of the same module version before any opaque-schema comparison; the reject outcome and preserved session are observed, a distinct schema diagnostic is not claimed.",
+          "`missing-module` and `effect-ceiling-increase` are refused lexically or as unbound words; `changed-file-during-read` rests on its named feature-gated real-child test.",
+          "No proof is claimed: the case keeps `proof: open`, and the receipt covers only this exact source revision and binary."
+        ]
+      }]
     },
     {
       "id": "LIVE-04", "profile": "Live-Wasm-Draft", "kind": "admission", "requirements": ["BE-LIVE-01", "S-LIVE-01", "V-LIVE-01"],
@@ -100,32 +128,33 @@
       "expected": {"stage": "bytecode-admission", "outcome": "all-variants-reject-before-live-install", "initial_stack_bottom_to_top": [], "final_stack_bottom_to_top": [], "old_memory_table_globals_unchanged": true, "guest_requests": 0, "protected_operations": 0, "wasm_validation_alone_proves_noble_typing": false},
       "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
       "evidence": [{
-        "claim": "The actual in-process emitted Core v1 module for the host-selected `1 2 +` (12,839 bytes) was captured at the checked-emission/worker boundary and served back in ten canonical-unsigned-LEB128-edited variants through the `live-test-barrier` byte seam. wasm-tools classified three variants as invalid and seven as valid. The worker's own byte validator or V8 refused the invalid and Noble-policy variants at report stage `wasm` with outcome `compile-refused`; a valid independently emitted `2 2 +` module, its forged-digest presentation, and a 4,194,305-byte module were refused at host stage `bytecode-admission` with outcome `reload-refused`. Every variant left generation 1, an empty typed stack, zero guest requests and zero protected operations, and the previously installed `base` still returned 7. A default binary with every seam name set executed normally and wrote no capture. No proof is claimed.",
+        "claim": "The actual in-process emitted Core v1 module for the host-selected `1 2 +` was captured at the checked-emission/worker boundary and served back in ten canonical-section-edited variants through the `live-test-barrier` byte seam. Each stopped at its exact expected class: the four Noble-policy and three invalid variants in the worker's own byte validator or V8 at stage `wasm` (`compile-refused`), and the forged-digest, independent-digest and 4,194,305-byte variants at the shipped host byte admission (`reload-refused`). Across every refusal the worker's `:arena` witness (memory, table and globals digests, guest executions, host requests, protected operations, source generation) was unchanged apart from the one documented discarded preparation, the session kept generation 1 and an empty stack, and the installed `base` still returned 7. A default binary with every seam variable set executed normally and wrote no capture. No proof is claimed.",
         "subject": "LIVE-04",
         "revision": "0.1.0-draft.5",
         "kind": "test",
         "result": "passed",
-        "source_revision": "sha256:c68d8b37d799caf38afdf379c404fc8a42368aee27ed66a04475e817a31cf647",
+        "source_revision": "sha256:e8e13fbd91f793b2d72abfbd619a9e0469932946b58c287369eff72cb8bcfbfd",
         "configuration": {
           "profile": "Live-Wasm-Draft",
           "harness": "actual-binary-verifier-and-source-bound-admission",
           "case": "LIVE-04",
-          "receipt": "../../verification/live-cases/acceptance-2026-11-20-seams.json",
-          "receipt_sha256": "a503ddf2372e9ead8e0a3194e99785149268f758d32aad194d0b4f2e16170c85",
+          "receipt": "../../verification/live-cases/acceptance-2026-11-21-r3.json",
+          "receipt_sha256": "bac5b385c01d2520a13192f7a9e292393b524f6a6e9480e00fd3b61cc9bf20e7",
           "gate": "verification/live-cases/gate.mjs",
           "editor": "verification/live-cases/wasm-edit.mjs",
-          "tested_commit": "20f32e269de1a9a86e93c7b9a343e6ba89589852",
-          "binary_sha256": "0a6c7c3f6159d371c44990b689cdd64199dd80e48d3c93198297bc29736960f0",
-          "live_repl_tests_sha256": "200f0139448423c05b3441435da189c6a11a0ddd212244d50dae95180f8da616",
+          "tested_commit": "e8c83ddb4123d39a18db5fed27defeaea0aa963e",
+          "binary_sha256": "e7b76767ba77f9f24e25a881799c95b9e0f9f9e02969dd4e2d021539fc2ec6af",
+          "live_repl_tests_sha256": "6a16781708f8a01304a26af4eed7552d822b0ec0dce8f48ef624a0bb68c5ac4b",
+          "feature_binary_sha256": "883d96796e2d26f82f8ec9aff0910f0b0ca7c055878fc876f5326cbbe9afe5cc",
           "command": "noble live repl --source math.noble --engine v8",
           "tests": ["default_binary_ignores_private_live_binary_seam_names", "live_test_binary_seam_captures_exact_bytes_and_refuses_substitution"],
-          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 99aa94afa26f4e53eb2b63f91c68b621cf77bf984329950665df9d7f3fdbb570); the receipt holds every observed field, its raw stdout/stderr hash, the captured and variant byte hashes, and the source manifest."
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 99aa94afa26f4e53eb2b63f91c68b621cf77bf984329950665df9d7f3fdbb570); the receipt holds every observed field, its raw stdout/stderr hash, the captured and variant byte hashes, and the source manifest; raw outputs and binaries are retained outside the repository with the run."
         },
         "assumptions": [
           "The live `--source` file holds one installed definition (`def base [ 7 ]`) so the arena has an old owner; the host-selected source under mutation test is the top-level `1 2 +` submission, whose checked emission is captured before the worker.",
-          "Byte substitution is a `live-test-barrier` seam: the worker's real validator, the Noble ABI/policy checks and the host source/binding correspondence are the observed deciders; the default binary ignores every seam name and wrote no capture.",
-          "`forged-source-digest` and `valid-wasm-from-different-source` execute the same source/binding refusal because emitted Wasm carries no digest field; the digest is host metadata, and both serve the independently emitted `2 2 +` bytes.",
-          "`old_memory_table_globals_unchanged` is observed by calling the installed `base` after each refusal, not by dumping raw memory.",
+          "Byte substitution is a `live-test-barrier` seam that only serves bytes (and, for the independent-digest variant, presents a digest); the worker's real validator, the Noble ABI/policy checks and the shipped host source/binding/frame admission are the observed deciders (review L2).",
+          "`forged-source-digest` presents the checked source's own digest and `valid-wasm-from-different-source` the different source's digest, so they are two executions refused on `wasm_sha256` and `wat_sha256` respectively (review L3).",
+          "`old_memory_table_globals_unchanged` is observed directly on the worker's `:arena` digests before and after each refusal and by calling the installed `base` (review L1, L4).",
           "The case stage `bytecode-admission` maps to worker report stage `wasm` for validator/V8 refusals and to host stage `bytecode-admission` for source/binding or frame-bound refusals."
         ]
       }]
@@ -136,29 +165,30 @@
       "expected": {"stage": "wasm-live", "outcome": "complete-save-only-publishes", "partial_or_unsupported_in_place_write_runs": false, "atomic_save_after_ack_next_call_stack_bottom_to_top": [{"type": "I64", "value": "22"}], "successful_ack_only_after_commit": true, "new_submission_after_ack_uses_new_generation": true, "racing_before_commit_reports_pinned_old_generation": true, "superseded_candidate_acknowledged_as_current": false, "missing_or_escape_publishes": false, "retained_budget_failure_explicit_and_prior_generation_unchanged": true, "runtime_trap_retains_prior_effect_prefix_and_poisons_session": true},
       "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
       "evidence": [{
-        "claim": "A resident V8 `noble live watch` child publishes only complete checked saves and the shipped `noble live repl --allow-effects test.emit,test.abort` executes the host-granted `\"A\" test.emit test.abort`: the trap report retained the exact request prefix [test.emit:A, test.abort], counted zero protected operations, and terminated the session; partial in-place writes, missing imports and symlink escapes published nothing, the retained-generation budget refused explicitly, and the feature-gated seams observed the racing and superseded save orderings. No proof is claimed.",
+        "claim": "A resident V8 `noble live watch` child publishes only complete checked saves and the shipped `noble live repl --allow-effects test.emit,test.abort` executes the host-granted `\"A\" test.emit test.abort`: the trap report retained the exact request prefix [test.emit:A, test.abort], counted zero protected operations, and terminated the session; a partial in-place write and a symlink escape published nothing, the retained-generation budget refused explicitly with the prior generation unchanged, and the feature-gated seams observed the racing and superseded save orderings. The `missing-import` variant is dropped as inapplicable (owner decision 30). No proof is claimed.",
         "subject": "LIVE-05",
         "revision": "0.1.0-draft.5",
         "kind": "test",
         "result": "passed",
-        "source_revision": "sha256:2b6bdcc400d957899f4ab8035e81360d6ef3e7eb1ff4440d6b0efaba990aa9d6",
+        "source_revision": "sha256:e8e13fbd91f793b2d72abfbd619a9e0469932946b58c287369eff72cb8bcfbfd",
         "configuration": {
           "profile": "Live-Wasm-Draft",
-          "harness": "real-live-watch-and-repl-with-resident-v8",
+          "harness": "watched-on-save-complete-file-snapshot",
           "case": "LIVE-05",
-          "receipt": "../../verification/live-cases/acceptance-2026-11-20-r2.json",
-          "receipt_sha256": "f7328af3cfd90b56e24dd348c613cee063f8cc345204d4c2d05414f29157f977",
+          "receipt": "../../verification/live-cases/acceptance-2026-11-21-r3.json",
+          "receipt_sha256": "bac5b385c01d2520a13192f7a9e292393b524f6a6e9480e00fd3b61cc9bf20e7",
           "gate": "verification/live-cases/gate.mjs",
-          "tested_commit": "a5f0ded36d9e42586cf341c03eec2b6a337c82c7",
-          "binary_sha256": "fecb65c70ba7e4a558bb53e9d9b74c17255287529d2b627f3c8faa042720c81f",
-          "live_repl_tests_sha256": "44bc962e84e16c1f7fb2f0caff7629b85a112db2062d6bb092fe0fbece85c1d1",
+          "tested_commit": "e8c83ddb4123d39a18db5fed27defeaea0aa963e",
+          "binary_sha256": "e7b76767ba77f9f24e25a881799c95b9e0f9f9e02969dd4e2d021539fc2ec6af",
+          "live_repl_tests_sha256": "6a16781708f8a01304a26af4eed7552d822b0ec0dce8f48ef624a0bb68c5ac4b",
+          "feature_binary_sha256": "883d96796e2d26f82f8ec9aff0910f0b0ca7c055878fc876f5326cbbe9afe5cc",
           "command": "noble live watch --source math.noble --engine v8; noble live repl --source math.noble --engine v8 --allow-effects test.emit,test.abort",
           "tests": [
             "watched_accepted_top_level_finishes_old_frame_before_new_save_ack",
             "compiled_candidate_a_is_superseded_by_fsynced_rename_b_without_ack",
             "explicit_reload_pending_a_cannot_republish_in_place_drift"
           ],
-          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 a1d4c1df39a1f7a23f039233a92d333fa5abcff48c1cc0f8e8687e8331137785); the host grant is OWNER DECISION 2026-11-20 (Decision 22). The receipt holds every observed field, raw command output hashes and the source manifest."
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 80351e26157e4c9337eb04e421b1ae2f1126a38b3acd2ba431870abb9ae312d7) after the dated amendment dropping `missing-import` (decision 30); the host grant is OWNER DECISION 2026-11-20 (Decision 22). The receipt holds every observed field, raw command output hashes and the source manifest; raw outputs and binaries are retained outside the repository with the run."
         },
         "assumptions": [
           "The host selects the absolute `math.noble` path and writes exactly the case's before/after bytes, including the fsynced atomic rename where the case specifies one.",
@@ -166,7 +196,8 @@
           "The case's `stage`/`outcome` names are mapped to the CLI's `wasm-live`/`wasm` stages and `reload-committed`/`normal`/`trap` outcomes; the receipt records each mapping.",
           "No proof is claimed: the case keeps `proof: open`, and the receipt covers only this exact source revision and binary.",
           "`test.abort` is a declared abnormal termination, not a protected operation: the trap report's `protected_operations` is 0 and its request trace is [test.emit:A, test.abort].",
-          "The host grant is the explicit `--allow-effects test.emit,test.abort` flag on the shipped CLI; no source or ambient default selects it."
+          "The host grant is the explicit `--allow-effects test.emit,test.abort` flag on the shipped CLI; no source or ambient default selects it. The trap variant runs in `noble live repl`, not under the watched-session harness (review A7).",
+          "`missing_or_escape_publishes` rests on the symlink-escape variant; the `missing-import` variant was dropped as inapplicable because the live profiles have no import grammar (owner decision 30, review A4)."
         ]
       }
       ]
@@ -291,30 +322,30 @@
       },
       "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
       "evidence": [{
-        "claim": "Two real V8 `noble live repl` children ran the case's actual Wasm guest self-edit. Child `20 evolve` returned 21, queued a pure Program with request trace `live.observe-generation:1`, then `live.propose:evolve:queued`, and committed generation 2 with derived source `def evolve [ 2 + ]`; the next `20 evolve` returned [21,22]. Child `21 evolve` returned 22, derived `def evolve [ 3 + ]`, and the next submission returned [22,23]. The post-commit `:reload evolve.noble` of the effectful file was refused (`live replacement increases effects beyond the installed bound`) at generation 2 with the stack unchanged. A dependent candidate refusal left the grant usable for a second queue, while a successful commit consumed it. The selected file bytes were unchanged, the whole flow ran with a PATH containing only failing wasm-tools/wasm-opt/binaryen traps and left no marker, and ordinary `run`/`session` kept `self.propose` unbound. No proof is claimed.",
+        "claim": "Two real V8 `noble live repl` children ran the case's actual Wasm guest self-edit from the selected `evolve.noble`. Child `20 evolve` returned 21, queued a pure Program after observing generation 1, and committed generation 2 with derived source `def evolve [ 2 + ]`; child `21 evolve` derived `def evolve [ 3 + ]`. The committed source digests are the digests of the re-accepted derived texts and the isolated shadow preflight instantiated exactly the committed source/WAT/Wasm digests. The worker's cumulative guest-execution counter was identical across each child's invocation, pending and committed receipts and advanced by one on the next call. The worker's `:arena` showed the grant still selected after two refused dependent candidates and null after the successful publication. A post-commit effect-increasing file restore was refused at generation 2 with the stack unchanged, the whole flow ran with a PATH of failing wasm-tools/wasm-opt/binaryen traps and left no marker, and ordinary `run`/`session` kept `self.propose` unbound. No proof is claimed.",
         "subject": "LIVE-09",
         "revision": "0.1.0-draft.5",
         "kind": "test",
         "result": "passed",
-        "source_revision": "sha256:c68d8b37d799caf38afdf379c404fc8a42368aee27ed66a04475e817a31cf647",
+        "source_revision": "sha256:e8e13fbd91f793b2d72abfbd619a9e0469932946b58c287369eff72cb8bcfbfd",
         "configuration": {
           "profile": "Live-Wasm-Draft",
           "harness": "actual-wasm-guest-structured-self-edit",
           "case": "LIVE-09",
-          "receipt": "../../verification/live-cases/acceptance-2026-11-20-seams.json",
-          "receipt_sha256": "a503ddf2372e9ead8e0a3194e99785149268f758d32aad194d0b4f2e16170c85",
+          "receipt": "../../verification/live-cases/acceptance-2026-11-21-r3.json",
+          "receipt_sha256": "bac5b385c01d2520a13192f7a9e292393b524f6a6e9480e00fd3b61cc9bf20e7",
           "gate": "verification/live-cases/gate.mjs",
-          "tested_commit": "20f32e269de1a9a86e93c7b9a343e6ba89589852",
-          "binary_sha256": "e0411c53600b3f5c757873e733522df7c1feb93d409c0e617abf592926bec5cb",
-          "live_repl_tests_sha256": "7dbbc3df654e4b76ce83a24abe8065b0154b60a4b8485164923570c13feb79f3",
+          "tested_commit": "e8c83ddb4123d39a18db5fed27defeaea0aa963e",
+          "binary_sha256": "e7b76767ba77f9f24e25a881799c95b9e0f9f9e02969dd4e2d021539fc2ec6af",
+          "live_repl_tests_sha256": "6a16781708f8a01304a26af4eed7552d822b0ec0dce8f48ef624a0bb68c5ac4b",
           "command": "noble live repl --source evolve.noble --engine v8 --self-edit evolve --expect-generation 1",
           "tests": ["named_guest_captures_i64_then_publishes_pure_self_replacement", "named_guest_selects_a_different_captured_i64_from_runtime_input", "postreturn_guest_dependent_refusal_retains_stack_and_grant"],
-          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 0787a4357513531b03a2eb02f85878d39f14e7de71d137503a5425857b968ce9); the receipt holds every observed field, its raw stdout/stderr hash, the derived-source recipe events and the source manifest."
+          "workload_binding": "Exact id/profile/kind/requirements/input/expected projection (sha256 0787a4357513531b03a2eb02f85878d39f14e7de71d137503a5425857b968ce9); the receipt holds every observed field, its raw stdout/stderr hash, the derived-source recipe events and the source manifest; raw outputs and binaries are retained outside the repository with the run."
         },
         "assumptions": [
           "The case stage `wasm-live` maps to the reload ACK and commit receipts; the invocation itself is the live arena execution report labelled `wasm`, and the pending/refused rows are `self-edit`.",
-          "`candidate_body_executions_before_publication` is observed on the pending receipt's zero candidate prepare request plus the unchanged invocation request prefix; the host receipt does not dump the worker's internal candidate instruction counter.",
-          "`independent_source_type_effect_kernel_byte_and_shadow_checks` is observed on the checked candidate interface, bounded recipe events, post-return snapshot verification and the dependent-candidate refusal; the worker-internal signature descriptors are not repeated on the host receipt.",
+          "`candidate_body_executions_before_publication` is observed on the worker's cumulative `guest_executions` counter reported on distinct receipts (review L5).",
+          "`independent_source_type_effect_kernel_byte_and_shadow_checks` is observed on the checked `[I64] -> [I64]` interface with 0 effects, the post-return snapshot verification, the committed source digests equal to the derived texts, and the shadow preflight's instantiated digests equal to the committed module (review L7); no signature catalogue is claimed. The two children's emitted module digests coincide while their sources and recipes differ.",
           "`guest_file_or_compiler_authority` is observed by a poisoned PATH with no trap marker and by the unchanged selected-file bytes, not by inspecting the binary's code.",
           "`ordinary_run_session_semantics_unchanged` is the same committed default binary and Core-Bootstrap profile; it observes that the live self-edit words remain unbound outside the live REPL."
         ]

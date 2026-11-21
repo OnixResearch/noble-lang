@@ -306,6 +306,27 @@ the `004d24c4` receipt; no case state changes.
 > `amendments` block dated 2026-11-21; the gate's `missing_or_escape_publishes`
 > row now rests on the symlink-escape variant alone.
 
+Round 3 (2026-11-21, Cairn campaign): `cairn/live-seams`, `cairn/abort-env` and the
+LiveR2 fixes for review findings L1-L15/A1-A9 were integrated on `cairn/live-r3`
+with the batch-2 tree. The first complete runs of the merged gate refused five
+observations on gate defects (no CLI behaviour changed): LIVE-03's adapter
+diagnostic wording, LIVE-02's `input.before` stack field, LIVE-04's variant
+`Map`, and two LIVE-09 conjuncts that could never hold (distinct module digests
+for byte-identical emissions; a `signatures` field the pending report does not
+carry). With those fixed, review L13 fixed (the absence run's byte-seam scope is
+now the submitted `20 addone`) and decision 30 applied, one run of the merged
+gate on clean `e8c83ddb` passed: LIVE-01, 02, 03, 04, 05, 06, 07 and 09 fully
+observed, 95 commands, 122 reports. Its receipt
+[`verification/live-cases/acceptance-2026-11-21-r3.json`](../../../verification/live-cases/acceptance-2026-11-21-r3.json)
+(SHA-256 `bac5b385c01d2520a13192f7a9e292393b524f6a6e9480e00fd3b61cc9bf20e7`; source
+revision `sha256:e8e13fbd…`, CLI `e7b76767…`, feature CLI `883d9679…`) is cited by
+LIVE-02, 03, 04, 05 and 09; its raw outputs and `bin/` are retained outside the
+repository (review A3, L14). LIVE-01, 06 and 07 keep citing the reviewed
+`004d24c4` receipt and are observed again by this run. LIVE-08 and LIVE-10 stay
+`absent`/`not-run`. The integrator review of round 2 is
+[`review-integrator-round2-2026-11-21.md`](review-integrator-round2-2026-11-21.md)
+(decision 28): ACCEPT-WITH-NOTES; the round-1 L1 mutant was not re-run.
+
 ### Amendment proposal: LIVE-02 `input.after_reload_ack`
 
 The canonical case cannot type-check its own `expected` fields. In the
