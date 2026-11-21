@@ -1700,21 +1700,19 @@ impl Session {
             // Kernel validation binds non-bootstrap IDs to exact host-selected adapters.
             return effect_mask(&context.environment.effects);
         }
-        match &self.bindings {
-            Some(bindings) => bindings.effects,
-            None => {
-                if self.live_selected.is_some() {
-                    // The host-selected Core test environment adds exactly the
-                    // two resource-free test hosts, at Core's identities.
-                    let test_hosts = if self.hosts { (1 << 0) | (1 << 1) } else { 0 };
-                    test_hosts | (1 << 3) | (1 << 4)
-                } else if self.hosts {
-                    3
-                } else {
-                    0
-                }
-            }
+        if let Some(bindings) = &self.bindings {
+            return bindings.effects;
         }
+        // Without component bindings, the two resource-free Core test hosts
+        // (`test.emit`, `test.abort`) are the host-selected test environment at
+        // Core's identities; a live session adds its two self-edit identities.
+        // Each branch returns directly: Aeneas cannot join a nested `if` value
+        // inside the borrowed `bindings` match.
+        let test_hosts: u64 = if self.hosts { (1 << 0) | (1 << 1) } else { 0 };
+        if self.live_selected.is_some() {
+            return test_hosts | (1 << 3) | (1 << 4);
+        }
+        test_hosts
     }
 
     fn program_type_effect_universe(&self) -> u64 {
