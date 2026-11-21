@@ -10,8 +10,9 @@ candidate; exact-source cold review and bounded terminal receipts bind their
 disposition. CASE-02 is now closed by a compiler-derived boundary receipt
 ([`../ngraph-library-boundary/receipt.json`](../ngraph-library-boundary/receipt.json));
 proof stays open.
-Proof stays open for every case. The [implementation change](../../.cairn/changes/numeric-graph-v1/design.md)
-stays active and is not archived; this is not whole-feature or global-gate acceptance.
+Proof stays open for every case. The [implementation change](../../.cairn/archive/2026-11-21-numeric-graph-v1/design.md)
+was archived on 2026-11-21 after all 17 flake checks passed on its closeout tree; this is
+not whole-feature acceptance and closes no proof obligation.
 
 `acceptance.mjs` records observations for `NGRAPH-CASE-01..15`. It never edits
 case state or evidence; it writes one receipt, `acceptance.json`, and keeps

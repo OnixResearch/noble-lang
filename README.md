@@ -432,7 +432,7 @@ For constructor JSON, the check report also carries `lowerer_revision`.
 Facts with `evidence` provenance are refused (`E-FACT-UNCHECKED`) until issue #8 supplies
 witness binding. The subcommands run no Node, Wasm, `wasm-opt` or other
 process, so they need none of the pinned runtime tools. The contract is the
-[numeric-graph-v1 design](.cairn/changes/numeric-graph-v1/design.md), which
+[numeric-graph-v1 design](.cairn/archive/2026-11-21-numeric-graph-v1/design.md), which
 builds on the archived
 [numeric-graph-profile design](.cairn/archive/2026-10-16-numeric-graph-profile/design.md).
 
@@ -744,7 +744,7 @@ the seed, `parent` is the id of the seed-initialized snapshot S₀. The
 provenance digest uses the same identity encoding as every other identity
 (length-prefixed byte strings and fixed-width little-endian integers); its
 exact field list is in design D6 of the
-[numeric-graph-v1 change](.cairn/changes/numeric-graph-v1/design.md).
+[numeric-graph-v1 change](.cairn/archive/2026-11-21-numeric-graph-v1/design.md).
 
 Loading a snapshot recomputes its layout key, its `ParamSnapshotId` and its
 provenance digest; any mismatch, a non-finite parameter or recorded `adam/0`
@@ -912,7 +912,9 @@ which is supporting evidence and does not discharge the case. The
 exact library mappings, supplemental runtime bounds and current selected-tool
 boundary. The eight-case historical acceptance and six additional finite
 execution records are not whole-feature or global-gate acceptance. The
-[change](.cairn/changes/numeric-graph-v1/design.md) stays active and is not archived.
+[change](.cairn/archive/2026-11-21-numeric-graph-v1/design.md) was archived on
+2026-11-21 after all 17 flake checks passed on its closeout tree; every proof
+obligation stays open.
 
 `#![no_std]` is a crate/build constraint, not a transitive purity guarantee.
 Injected `IdentityScheme`/`IdentityHasher` implementations and caller-owned

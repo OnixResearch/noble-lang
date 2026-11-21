@@ -103,8 +103,8 @@ Optional calculator proof claims additionally require applicable MC1/MC2 support
 
 ## Numeric-Graph-v1 (bounded active opt-in profile)
 
-The selected [Numeric-Graph-v1 change](../.cairn/changes/numeric-graph-v1/design.md)
-is active, not archived. Only explicit `noble ngraph` and the `noble-ngraph`
+The selected [Numeric-Graph-v1 change](../.cairn/archive/2026-11-21-numeric-graph-v1/design.md)
+is archived (2026-11-21). Only explicit `noble ngraph` and the `noble-ngraph`
 library select it: exact `ngraph-i64/0` extraction and directly authored
 `ngraph-f32/0` graphs, checked CPU evaluation, immutable training snapshots
 and same-platform replay. Ordinary entry points, K-NUM-01 and the kernel

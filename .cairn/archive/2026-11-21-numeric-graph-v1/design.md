@@ -455,8 +455,10 @@ implementation; final acceptance and claims review were then pending.
 The later immutable acceptance and independent review support only the
 eight recorded cases in the lifecycle section below. They do not rerun or
 relabel the historical gate logs. CASE-02 has since been closed by its own
-compiler-derived boundary receipt (above); NG-PO-A..H stay OPEN. The change
-stays active and is not archived.
+compiler-derived boundary receipt (above); NG-PO-A..H stay OPEN. After all 17
+flake checks passed on the Cairn batch-1 tree `d717da5b` and the owner
+authorized it (2026-11-21), the change was archived; the archive closes no
+proof obligation.
 
 - **Workspace and lock.** `Cargo.toml` members add `crates/noble-ngraph`, and `Cargo.lock` changes. There are no new third-party crates: vendoring is unchanged except for the path-crate entries, so re-pin the vendor hash if the lock hash changes.
 - **Tool selection.** `nix/tool-selection-files.nix` and `policy/tool-selection-files.ncl`/`.json` gain `crates/noble-ngraph/Cargo.toml` and new hashes for `crates/noble-cli/Cargo.toml` and `crates/noble-ngraph-experiment/Cargo.toml` (repin script).
