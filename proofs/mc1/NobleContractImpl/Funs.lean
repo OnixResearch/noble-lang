@@ -50607,7 +50607,7 @@ def source.inference.operations.signed_self
       ok (core.result.Result.Err failure, frame, state, meter)
 
 /-- [noble_contracts::source::inference::operations::contextualize::{impl core::ops::function::FnOnce<(noble_contracts::StackDifference,), noble_contracts::StackDifference> for noble_contracts::source::inference::operations::contextualize::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/inference/operations.rs', lines 586:35-596:9 -/
+    Source: 'crates/noble-contracts/src/source/inference/operations.rs', lines 600:35-610:9 -/
 def
   source.inference.operations.contextualize.closure.Insts.CoreOpsFunctionFnOnceTupleStackDifferenceStackDifference.call_once
   (c : source.inference.operations.contextualize.closure)
@@ -50620,7 +50620,7 @@ def
   else ok tupled_args
 
 /-- Trait implementation: [noble_contracts::source::inference::operations::contextualize::{impl core::ops::function::FnOnce<(noble_contracts::StackDifference,), noble_contracts::StackDifference> for noble_contracts::source::inference::operations::contextualize::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/inference/operations.rs', lines 586:35-596:9 -/
+    Source: 'crates/noble-contracts/src/source/inference/operations.rs', lines 600:35-610:9 -/
 @[reducible]
 def
   source.inference.operations.contextualize.closure.Insts.CoreOpsFunctionFnOnceTupleStackDifferenceStackDifference
@@ -50686,7 +50686,7 @@ def Diagnostic.join_with
   ok { self with join := (some join) }
 
 /-- [noble_contracts::source::inference::operations::contextualize]:
-    Source: 'crates/noble-contracts/src/source/inference/operations.rs', lines 537:0-598:1 -/
+    Source: 'crates/noble-contracts/src/source/inference/operations.rs', lines 551:0-612:1 -/
 def source.inference.operations.contextualize
   (error : Diagnostic) (definition : noble_kernel.contracts.Definition)
   (behavior : Option noble_kernel.contracts.Behavior) (caller : Option Span)
@@ -50806,6 +50806,21 @@ def source.inference.operations.contextualize
         value_origin := o,
         difference := o1
       }
+
+/-- [noble_contracts::source::inference::operations::unavailable_builtin]:
+    Source: 'crates/noble-contracts/src/source/inference/operations.rs', lines 533:0-541:1 -/
+def source.inference.operations.unavailable_builtin
+  (definition : noble_kernel.contracts.Definition) (span : Span) :
+  Result Diagnostic
+  := do
+  let message ←
+    alloc.string.String.Insts.CoreConvertFromShared0Str.from (toStr "word ")
+  let message1 ← program.append_bootstrap_spelling definition message
+  let message2 ←
+    alloc.string.String.push_str message1 (toStr
+      " is not available in this environment")
+  let s ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref message2
+  invalid span s
 
 /-- [noble_contracts::source::inference::operations::literal_matches]:
     Source: 'crates/noble-contracts/src/source/inference/operations.rs', lines 508:0-527:1 -/
@@ -51550,7 +51565,7 @@ def source.inference.operations.builtin
   let o ← noble_kernel.contracts.Env.scheme environment call.id
   match o with
   | none =>
-    let d ← internal call.span
+    let d ← source.inference.operations.unavailable_builtin call.id call.span
     ok (core.result.Result.Err d, frame, state, meter)
   | some scheme =>
     let s := alloc.vec.Vec.deref scheme.var_kinds

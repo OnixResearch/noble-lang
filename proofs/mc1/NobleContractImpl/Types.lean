@@ -2429,7 +2429,7 @@ def inference.construct.Arena.build_ty.closure :=
 def source.inference.operations.signed_self_with.closure := Span
 
 /-- [noble_contracts::source::inference::operations::contextualize::{closure}]
-    Source: 'crates/noble-contracts/src/source/inference/operations.rs', lines 586:35-596:9 -/
+    Source: 'crates/noble-contracts/src/source/inference/operations.rs', lines 600:35-610:9 -/
 @[reducible]
 def source.inference.operations.contextualize.closure := Option Span
 
