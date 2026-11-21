@@ -7,7 +7,7 @@
 // compiler-derived artifacts instead:
 //
 //   cargo-octet check --workspace --output-format json --artifact-dir OUT \
-//     -- --all-targets --features live-test-barrier,safety-observe --offline
+//     -- --all-targets --features <the architecture policy's plan row> --offline
 //
 // It refuses a dirty source tree, runs that exact row on the committed tree,
 // replays the artifact with `cargo-octet artifact verify`, and evaluates the
@@ -48,11 +48,13 @@ const forbiddenHasherNeedles = ['DefaultHasher', 'RandomState', 'SipHasher', 'st
 // the lane gives each run and the artifact replay four hours before refusing.
 const octetTimeoutMs = 4 * 60 * 60 * 1000;
 // `--artifact-dir` is an Octet option and must precede the `--` separator;
-// everything after it is passed through to Cargo.
-const octetArgv = (binary, artifactDirectory) => [
+// everything after it is passed through to Cargo. The feature list is the
+// architecture policy's reviewed plan row for the selected target: Octet
+// refuses a collection whose Cargo features differ from that row.
+const octetArgv = (binary, artifactDirectory, features) => [
   binary, 'check', '--workspace', '--output-format', 'json',
   '--artifact-dir', artifactDirectory,
-  '--', '--all-targets', '--features', 'live-test-barrier,safety-observe', '--offline',
+  '--', '--all-targets', '--features', features.join(','), '--offline',
 ];
 const controlMutation = [
   '',
@@ -220,10 +222,10 @@ function setupEnvironment(output, octetBinary, rustOutput, ccDirectory, vendor, 
   return { environment, cargoHome, target, tmp };
 }
 
-function runOctet({ source, artifactDirectory, output, octetBinary, environment }) {
+function runOctet({ source, artifactDirectory, output, octetBinary, environment, features }) {
   fs.mkdirSync(output, { recursive: true });
   fs.mkdirSync(artifactDirectory, { recursive: true });
-  const argv = octetArgv(octetBinary, artifactDirectory);
+  const argv = octetArgv(octetBinary, artifactDirectory, features);
   const result = spawn(argv, { cwd: source, env: environment, timeout: octetTimeoutMs });
   fs.writeFileSync(path.join(output, 'octet.stdout.json'), result.stdout);
   fs.writeFileSync(path.join(output, 'octet.stderr.log'), result.stderr);
@@ -392,7 +394,7 @@ function evaluate({ artifactDirectory, run, artifact, source, policy, measured =
       && units.every(unit => unit.target_triple === 'x86_64-unknown-linux-gnu')
       && units.every(unit => unit.default_features === true)
       && units.every(unit => unit.features.length === 0
-        || sorted(unit.features).join(',') === sorted(['live-test-barrier', 'safety-observe']).join(',')),
+        || sorted(unit.features).join(',') === sorted(policy.plan_features).join(',')),
     { target: sorted(new Set(units.map(unit => unit.target_triple))),
       feature_sets: [...new Set(units.map(unit => sorted(unit.features).join(',')))],
       default_features: [...new Set(units.map(unit => unit.default_features))] });
@@ -560,8 +562,13 @@ function main() {
     manifest_sha256: fileSha256(path.join(root, 'policy/architecture.manifest.json')),
     core_no_std: exportedPolicy.core_no_std,
     dynamic_dispatch: exportedPolicy.dynamic_dispatch ?? {},
+    plan_features: (exportedPolicy.production?.targets ?? [])
+      .find(row => row.triple === 'x86_64-unknown-linux-gnu')?.features ?? null,
   };
   if (exportEntry === undefined) throw new Error('policy/architecture.manifest.json does not export policy/architecture.json');
+  if (!Array.isArray(policy.plan_features) || policy.plan_features.length === 0) {
+    throw new Error('policy/architecture.json has no reviewed feature row for x86_64-unknown-linux-gnu');
+  }
   if (typeof policy.policy_blake3 !== 'string' || policy.policy_blake3.length !== 64) {
     throw new Error('policy/architecture.manifest.json has no BLAKE3 identity for policy/architecture.json');
   }
@@ -606,7 +613,7 @@ function main() {
 
   const positiveDirectory = path.join(options.output, 'artifact-positive');
   const positiveRun = runOctet({ source: root, artifactDirectory: positiveDirectory, output: options.output,
-    octetBinary, environment });
+    octetBinary, environment, features: policy.plan_features });
   const positiveArtifact = readArtifact(positiveDirectory);
   const positive = evaluate({ artifactDirectory: positiveDirectory, run: positiveRun, artifact: positiveArtifact,
     source: root, policy });
@@ -632,7 +639,8 @@ function main() {
   fs.mkdirSync(controlEnvironment.TMPDIR, { recursive: true });
   const controlDirectory = path.join(options.output, 'artifact-control');
   const controlRun = runOctet({ source: controlSource, artifactDirectory: controlDirectory,
-    output: path.join(options.output, 'control-logs'), octetBinary, environment: controlEnvironment });
+    output: path.join(options.output, 'control-logs'), octetBinary, environment: controlEnvironment,
+    features: policy.plan_features });
   let controlEvaluation = null;
   let controlArtifact = null;
   try {
@@ -684,7 +692,7 @@ function main() {
       'policy/tool-selection.json': fileSha256(policyPath(root)),
     },
     command: {
-      argv: octetArgv(octetBinary, positiveDirectory),
+      argv: octetArgv(octetBinary, positiveDirectory, policy.plan_features),
       cwd: root,
       environment,
       exit: positiveRun.result.status,
@@ -710,7 +718,7 @@ function main() {
       commit: source.commit,
       source_directory: controlSource,
       mutation: { file: `crates/${packageName}/src/lib.rs`, appended: controlMutation, sha256: controlLibSha256 },
-      command: { argv: octetArgv(octetBinary, controlDirectory),
+      command: { argv: octetArgv(octetBinary, controlDirectory, policy.plan_features),
         exit: controlRun.result.status, signal: controlRun.result.signal,
         duration_ms: controlRun.result.duration_ms,
         stdout_sha256: sha256(controlRun.result.stdout),
