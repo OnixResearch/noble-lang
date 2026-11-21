@@ -2440,7 +2440,7 @@
     },
     {
       "file": ".cairn/changes/live-wasm-reload/tasks.md",
-      "sha256": "4d02970c73b3fb7bcd28450bd07bc0f22d3ccb3d7e7170483a3c7a09b89b69b4"
+      "sha256": "440a965753dcb0d71c4f06ca645cbc1e763ee4db3ccc1815314f90f988ca16ad"
     },
     {
       "file": ".cairn/changes/ma-language-prerequisites/design.md",
@@ -2516,7 +2516,7 @@
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/tasks.md",
-      "sha256": "e41960c3e99da68f9ccaaded27c403064f3921a3a3523fe64960fdc2deb82c45"
+      "sha256": "be61e41d70963f47e234a44330db4b83d5284fbb7603fe95b80cf06e091d1ba2"
     },
     {
       "file": ".cairn/changes/proof-automation-diagnostics/design.md",
@@ -2540,7 +2540,7 @@
     },
     {
       "file": ".cairn/changes/proof-automation-diagnostics/tasks.md",
-      "sha256": "f21c9ddc29d12098b68e56b0d12167a89accfbfd2c371b1c4a7f7bd7dbc80f1d"
+      "sha256": "8902e6da509ba7b107b68977309d2a5ea63862a68dc1f5f21203a725cd108228"
     },
     {
       "file": ".cairn/changes/resource-safe-wiring-laws/design.md",
@@ -2692,7 +2692,7 @@
     },
     {
       "file": ".cairn/specs/verification-toolchain/spec.md",
-      "sha256": "2ff24801f3e505da9701278f1acc466798f99b9731f516c8f11a2a910e316a25"
+      "sha256": "51f7b4aa929fc4a8af380f48f7e4c3231a08c4d12fd5a68ae48fa42d0a965b36"
     },
     {
       "file": ".cairn/specs/verification/spec.md",
@@ -2824,7 +2824,7 @@
     },
     {
       "file": "specs/conformance/ownership-cases.json",
-      "sha256": "81c5f849b6598c75deb0205c7e503d1489b23230a6a159c8ef6ee0264387cacf"
+      "sha256": "8525867fd0ef10b5568080946f331f46eaf2fe22d982df4cc73e94bd5b1e355e"
     },
     {
       "file": "specs/conformance/recursion-cases.json",
@@ -2936,7 +2936,7 @@
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
-      "sha256": "16657fdbd496e19a72b1d18c8715e1d999044731837441539dc95b9aa7040877"
+      "sha256": "6d4d82e560a9a75c8a657d39f98fab9b4feb6ef197a14d3e3ee738e0f62d2a06"
     },
     {
       "file": "specs/VERIFICATION.md",
@@ -2972,7 +2972,7 @@
     },
     {
       "file": "verification/aeneas-re-extraction/README.md",
-      "sha256": "b429b84939f14ea152af57e949c8029b420ad8adbaedad95a78c2d01d17c0e68"
+      "sha256": "2fc56f460601c1652ca11e077631491e8e8222433d4825b53c78ee9de3cbc2c3"
     },
     {
       "file": "verification/allocator-admission/decision.md",
@@ -3220,7 +3220,7 @@
     },
     {
       "file": "verification/lslot-cases/README.md",
-      "sha256": "a16d871764c2cceecbe7c80ddb9426be5a0c27de57c6514e28b3d93fe617bd9c"
+      "sha256": "780f9f56e19cdab484879ed1cdc8b823cf6338ed72c2536535bb71f8a9bd0dcf"
     },
     {
       "file": "verification/lslot-cases/review-2026-11-20.md",
@@ -3420,7 +3420,7 @@
     },
     {
       "file": "verification/own-cases/README.md",
-      "sha256": "69a5c03c8993f2812ccbaffb2de424927a9e2cd1205288f68127cfb25389e672"
+      "sha256": "1809d00cbc92d56eb8d15c5e75f81a6b50298425af58eecdc37701d471c8c2fc"
     },
     {
       "file": "verification/owner-law/README.md",
@@ -3500,7 +3500,7 @@
     },
     {
       "file": "verification/service-wire-refinement/README.md",
-      "sha256": "662569d18549580834e6be7d91b015a695fc1b5bfc75d6c2af795c9272386744"
+      "sha256": "e5cfc1b955f7e496fdd075a1abbf7cb770ec2bdbd2c23d0d83d03dd950c7d6be"
     },
     {
       "file": "verification/shared-candidates/criteria.md",
