@@ -7,7 +7,8 @@
 //! refuses `(infer)` without elaboration.
 
 use noble_contracts::intrinsic::{
-    check_batch, ElaborationRecord, Form, FormKind, PendingGoal, ProofObligation,
+    check_batch, check_batch_with_budgets, ElaborationRecord, Form, FormKind, PendingGoal,
+    ProofBudgets, ProofObligation, ProofWork,
 };
 
 const POLY_REFL: &str = "proof 1 poly-refl : [ (Pi (A Type0) (Pi (x A) (Eq A x x))) ] [ (intro (A Type0) (intro (x A) (refl x))) ]";
@@ -27,14 +28,14 @@ fn refuse(source: &str) -> String {
 }
 
 fn refusal(source: &str) -> (noble_contracts::source::Stage, String) {
-    match prepare(source) {
-        Ok(_) => panic!("elaboration admitted a refused proof"),
-        Err(error) => (error.stage(), error.diagnostic().message.clone()),
-    }
+    let error = prepare(source).expect_err("elaboration admitted a refused proof");
+    (error.stage(), error.diagnostic().message.clone())
 }
 
 fn batch(source: &str) -> noble_contracts::source::ModulePrepared {
-    prepare(source).unwrap_or_else(|error| panic!("{}", error.diagnostic().message))
+    prepare(source)
+        .map_err(|error| error.diagnostic().message.clone())
+        .expect("elaboration admits the proof")
 }
 
 fn obligations(
@@ -49,15 +50,23 @@ fn records(prepared: &noble_contracts::source::ModulePrepared) -> &[ElaborationR
     &obligations(prepared).elaborations
 }
 
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the two declarations are positional in module order and named at every call site"
+)]
 fn module(first: &str, second: &str) -> String {
     format!("module logic@1 [ {first} {second} ]")
 }
 
 /// A tiny S-expression builder for hand-built proof terms.
+#[expect(
+    tigerstyle::allocation_in_loop,
+    reason = "Owner: noble-contracts; the test-only builder opens one child list per open parenthesis of a short literal fixture"
+)]
 fn sexpr(text: &str) -> Form {
     let span = noble_contracts::Span {
         start: 0,
-        end: u32::try_from(text.len()).unwrap_or(0),
+        end: u32::try_from(text.len()).expect("a test S-expression fits a u32 span"),
     };
     let mut stack: std::vec::Vec<std::vec::Vec<Form>> = std::vec![std::vec::Vec::new()];
     let mut atom = std::string::String::new();
@@ -286,6 +295,50 @@ fn apply_placeholders_elaborate_from_the_goal() {
     assert_eq!(checked[1].claim, "(∀ (v0 : El .i64), v0 = v0)");
 }
 
+/// IMPL-TRUST-01: elaboration and the explicit checker share one request
+/// budget. The checker resumes from the work elaboration charged, so a work
+/// limit that fits checking alone but not both together refuses as exhausted.
+#[test]
+fn elaboration_and_checking_share_one_request_budget() {
+    let prepared = batch(&format!(
+        "module logic@1 [ {POLY_REFL} proof 1 refl-type infer : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (apply (use poly-refl) (infer)) (infer))) ] ]"
+    ));
+    let staged = obligations(&prepared);
+    let elaboration = staged.elaboration_work;
+    assert!(
+        elaboration.total > 0,
+        "the abbreviated proof charged the shared meter"
+    );
+    let mut alone = staged.clone();
+    alone.elaboration_work = ProofWork {
+        normalization: 0,
+        substitution: 0,
+        total: 0,
+    };
+    let budgets = ProofBudgets::from_limits(super::LIMITS);
+    let (_, checker_only) =
+        check_batch_with_budgets(&alone, super::LIMITS, budgets).expect("explicit term checks");
+    let (_, shared) =
+        check_batch_with_budgets(staged, super::LIMITS, budgets).expect("shared request fits");
+    assert_eq!(shared.total, checker_only.total + elaboration.total);
+    let exact = noble_contracts::Limits {
+        work: shared.total,
+        ..super::LIMITS
+    };
+    check_batch_with_budgets(staged, exact, ProofBudgets::from_limits(exact))
+        .expect("exactly the combined work fits");
+    let short = noble_contracts::Limits {
+        work: shared.total - 1,
+        ..super::LIMITS
+    };
+    let error = check_batch_with_budgets(staged, short, ProofBudgets::from_limits(short))
+        .err()
+        .expect("one unit below the combined work exhausts");
+    assert_eq!(error.kind, noble_contracts::DiagnosticKind::Exhausted);
+    check_batch_with_budgets(&alone, short, ProofBudgets::from_limits(short))
+        .expect("checking alone fits the same limit");
+}
+
 /// IMPL-2: P1 with a context code, whose solution must stay below its depth.
 #[test]
 fn context_code_solution_is_well_scoped() {
@@ -418,9 +471,10 @@ fn elaboration_budget_exhaustion_names_the_stage() {
     ));
     let staged = obligations(&prepared);
     let goal = match &staged.obligations[1].goal {
-        PendingGoal::Pure { proposition } => proposition.clone(),
-        PendingGoal::Contract { .. } => panic!("pure fixture"),
-    };
+        PendingGoal::Pure { proposition } => Some(proposition.clone()),
+        PendingGoal::Contract { .. } => None,
+    }
+    .expect("pure fixture");
     let abbreviated = sexpr("(intro (x (List I64)) (app (use poly-refl) x))");
     let span = abbreviated.span;
     let obligation = ProofObligation {

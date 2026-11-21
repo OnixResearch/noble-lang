@@ -3351,11 +3351,14 @@ pub fn check_batch_with_budgets(
         limits,
         tree_bounds: TreeBounds::new(limits).ok_or_else(|| exhausted(Span { start: 0, end: 0 }))?,
     };
+    // Elaboration and checking share one request budget (r[IMPL-TRUST-01]):
+    // the checker resumes from the work staging already charged to the
+    // `implicit-args/v1` elaborator, which is zero for a fully explicit batch.
     let mut meter = Meter {
         nodes: 0,
-        work: 0,
-        normalization: 0,
-        substitution: 0,
+        work: batch.elaboration_work.total,
+        normalization: batch.elaboration_work.normalization,
+        substitution: batch.elaboration_work.substitution,
         config: &config,
     };
     // Each accepted obligation has already consumed a visited node. Do not
