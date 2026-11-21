@@ -182,7 +182,7 @@
   "crates/noble-contracts/tests/declared/origin.rs" = "cddf070687d9ef8430ce63049faa0ea70f99a0b5e78ed9bd94b2a6b67eb2c74e",
   "crates/noble-contracts/tests/named_v2.rs" = "cbdfdbb01860e8e6aff2e0a5aa821d952b9a64b4476adade5582317bab2334aa",
   "crates/noble-contracts/tests/publication.rs" = "47e49b6cf822750d0fc509082378ad276b4a9770f0fe5648cd0bb78837f894ed",
-  "crates/noble-contracts/tests/source.rs" = "b65da8589cf8739adb84de786305ad3c858f68352dca12ececdae21fce8aec09",
+  "crates/noble-contracts/tests/source.rs" = "c0b90a80d0a822f39fddfb51da9437eefe303fb80482b7285068c1b9dae92511",
   "crates/noble-contracts/tests/source_proof.rs" = "5ef30f24a8669b16699cc023776ffd4df2ffa249b201f1e66453bdd34104a92a",
   "crates/noble-wasm/src/source/admission.rs" = "7ce415e8a771c073d28e25593d473b3878d5da1ffa8476406c9031893f9402aa",
   "crates/noble-wasm/src/source/admission/environment.rs" = "2875572e22b80837759d7e16ce62c8f48b34b64a9cac1f2fd138928f18fa73ff",
