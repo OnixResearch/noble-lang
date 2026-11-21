@@ -325,7 +325,7 @@
         "outcome": "abnormal-exit-without-a-saved-owner",
         "saved_owner_tokens_issued": 0,
         "frame_pins_released": "not-directly-observable: the host abandons the failed root's frame pins without releasing or counting them (live-reference-lifetimes, r[LREF-EXIT-01])",
-        "frame_pins_reported": "the pins the root still held when aborted (entered 2, released 0, active 2 in the observed run)",
+        "frame_pins_reported": "host entry/exit counts, not a release measurement: the CLI root unwinds its frames on the policy-denied effect (entered 2, released 2, active 0); only the in-process abandoned-pin abort reports the pins it still held (entered 2, released 0, active 2)",
         "guest_instance": "terminated-after-guest-failure",
         "session_state": {
           "observed_rule": "terminated-after-guest-failure",

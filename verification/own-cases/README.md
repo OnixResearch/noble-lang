@@ -55,9 +55,11 @@ records keep citing r3.
   entry/exit calls, which do not prove backend pin release; no `released_by_host` field is
   emitted. Real
   per-frame release accounting belongs to `live-reference-lifetimes` (decision 6,
-  r[LREF-EXIT-01]). `test.abort` is still not installable in this profile; its internal
-  `inconsistent frontend arena` refusal is a frontend-defect witness tracked by the integrator,
-  never the case's success condition.
+  r[LREF-EXIT-01]). `test.abort` is still not installable in this profile: the live-slot test
+  hosts grant only `test.emit`, and the source is refused as invalid input (`word test.abort is
+  not available in this environment`). That refusal is a witness, never the case's success
+  condition. (It used to surface as the internal `inconsistent frontend arena` diagnostic; the
+  frontend now refuses an unavailable builtin word as ordinary invalid input.)
 - **OWN-CASE-01, 02, 06, 07** run the lanes already described in the change's `tasks.md`; their
   observations are read from the lanes' JSONL evidence and printed values, not declared by the gate.
   Every observed field is compared with the case's registered `expected` values; a mismatch is

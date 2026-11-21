@@ -68,7 +68,7 @@ pub(super) fn builtin(
     let definition = noble_kernel::contracts::Definition(call.id);
     let scheme = match environment.scheme(definition) {
         Some(scheme) => scheme,
-        None => return Err(crate::internal(call.span)),
+        None => return Err(unavailable_builtin(definition, call.span)),
     };
     let variables = attempt!(state.arena.variables(&scheme.var_kinds, call.span, meter));
     let input = attempt!(state
@@ -524,6 +524,20 @@ const fn literal_matches(
         }
         _ => None,
     }
+}
+
+/// A resolved builtin word whose row this environment does not carry, such as
+/// `test.abort` under the live-slot test hosts, which grant only `test.emit`.
+/// The source named a word the selected profile does not offer, so this is
+/// invalid input rather than an inconsistent arena.
+fn unavailable_builtin(
+    definition: noble_kernel::contracts::Definition,
+    span: crate::Span,
+) -> crate::Diagnostic {
+    let mut message = alloc::string::String::from("word ");
+    crate::program::append_bootstrap_spelling(definition, &mut message);
+    message.push_str(" is not available in this environment");
+    crate::invalid(span, &message)
 }
 
 #[expect(
