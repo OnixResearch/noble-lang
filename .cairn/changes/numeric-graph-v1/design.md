@@ -61,9 +61,20 @@ constraint, not a transitive purity guarantee. Injected
 are not made effect-free by it. A retained hostile consumer returned `I64(7)`
 while recording 42 reads and 42 writes in the injected hasher callbacks; this
 is callback-effect evidence, not a semantic observer control or a destructor
-measurement. CASE-02 still requires the selected compiler-authenticated
-complete capability closure and remains `absent/not-run/open/unassessed` with
-empty evidence. The crate's no-std status also matches the three existing
+measurement. CASE-02 is closed by its own compiler-derived boundary: the
+selected pinned Octet row's artifacts record every production `noble-ngraph`
+unit carrying `crate:no-std=noble-ngraph`, exactly the two Noble normal edges,
+no production effect fact in the seven forbidden families, every production
+compiler unknown declared by the reviewed dynamic-dispatch policy, a clean gate
+with no findings or waivers, and both injected identity traits reached through
+resolved calls with no standard hasher selected; a scratch-copy control that
+adds an aliased `std` environment probe is refused. The immutable
+[receipt](../../../verification/ngraph-library-boundary/receipt.json)
+(SHA-256 `9d63d5c65bb4b27c0b87f8c178acaa615b27d2cb1406f335e10064be7ba9e5c3`)
+binds the verified commit, command, policy export and every raw artifact file.
+It is compiler-derived evidence for one run, not a proof or a runtime
+observation; the policy's classifications remain reviewed premises. The
+crate's no-std status also matches the three existing
 domain-core crates. Q1 was approved as a tightening, and the integrator applied
 it on `integration/ngraph-v1`: `policy/architecture.ncl` `core_no_std` adds
 `noble-ngraph` and `dylint.toml` `core_source_scopes` adds
@@ -393,7 +404,7 @@ r[NGRAPH-SCOPE-01]
 
 ## Test plan
 
-The default suite needs no Node and no external CLI: CLI tests use `env!("CARGO_BIN_EXE_noble")`, and no ngraph path spawns Node or Wasm. The tests below ran; their results are recorded in [tasks.md](tasks.md). The registered [case file](../../../specs/conformance/numeric-graph-cases.json) now records a 14-passed/1-held candidate: eight cases retain immutable historical acceptance, six additional execution records retain their preliminary packet and bind fresh full-source safety observations, and CASE-02 remains held. The exact integrated-source cold-review and bounded terminal receipts govern the six-record disposition. Passing tests alone are not complete case acceptance.
+The default suite needs no Node and no external CLI: CLI tests use `env!("CARGO_BIN_EXE_noble")`, and no ngraph path spawns Node or Wasm. The tests below ran; their results are recorded in [tasks.md](tasks.md). The registered [case file](../../../specs/conformance/numeric-graph-cases.json) now records a 14-passed/1-held candidate: eight cases retain immutable historical acceptance, six additional execution records retain their preliminary packet and bind fresh full-source safety observations, and CASE-02 is now closed by its own compiler-derived boundary receipt (Phase 7); the 14-passed/1-held candidate above is the disposition it superseded. The exact integrated-source cold-review and bounded terminal receipts govern the six-record disposition. Passing tests alone are not complete case acceptance.
 
 - **`crates/noble-ngraph/tests`:**
   - `ir_check.rs` and `extract_b1.rs` (moved); `refusals_before_evaluation_evaluate_no_node` directly observes input-fact, interface and missing/stale-snapshot eval refusals at zero evaluated nodes in both library evaluators. The approved NGRAPH-CASE-08 mapping uses the exact three named refusal classes, not CLI counters or CLI guard/F1 bytes. This test does not measure NGRAPH-CASE-04 `check`, guest/protected-operation counters or every NGRAPH-CASE-12 parse/integrity path;
@@ -443,8 +454,9 @@ runner, inputs and docs without changing the tested Rust/Cargo/policy/Nix
 implementation; final acceptance and claims review were then pending.
 The later immutable acceptance and independent review support only the
 eight recorded cases in the lifecycle section below. They do not rerun or
-relabel the historical gate logs. CASE-02 capability closure remains open,
-and NG-PO-A..H stay OPEN. The change stays active and is not archived.
+relabel the historical gate logs. CASE-02 has since been closed by its own
+compiler-derived boundary receipt (above); NG-PO-A..H stay OPEN. The change
+stays active and is not archived.
 
 - **Workspace and lock.** `Cargo.toml` members add `crates/noble-ngraph`, and `Cargo.lock` changes. There are no new third-party crates: vendoring is unchanged except for the path-crate entries, so re-pin the vendor hash if the lock hash changes.
 - **Tool selection.** `nix/tool-selection-files.nix` and `policy/tool-selection-files.ncl`/`.json` gain `crates/noble-ngraph/Cargo.toml` and new hashes for `crates/noble-cli/Cargo.toml` and `crates/noble-ngraph-experiment/Cargo.toml` (repin script).
@@ -504,13 +516,17 @@ bounded terminal receipts bind their exact packet and source hashes. Every
 case retains `proof: open`; none of these execution records rewrite or relabel
 historical acceptance/review receipts, close global gates, or authorize archive.
 
-CASE-02 remains `absent/not-run/open/unassessed` with `evidence: []`: complete
-compiler-authenticated zero-use capability closure is still missing, with
-637 relevant unknowns in the historical record. The actual arbitrary `std`
-consumer of the `no_std` library produced `I64(7)` while recording 42 reads
-and 42 writes; it is a finite adversarial boundary control, not a CASE-02
-capability proof. No input, expected field, case kind, profile, policy,
-capacity or requirement is weakened to change this boundary.
+CASE-02 is `implemented/passed/open/explicit` on the second evidence record of
+the case file, bound to the compiler-derived boundary receipt
+(`verification/ngraph-library-boundary/receipt.json`, SHA-256
+`9d63d5c65bb4b27c0b87f8c178acaa615b27d2cb1406f335e10064be7ba9e5c3`). The
+first evidence record, the static 23-source crate-boundary scan, remains
+untouched and `insufficient`; the historical 637-unknown gate state and the
+hostile-consumer callback control remain preserved history and are not
+reclassified. Proof stays open: the architecture policy is an explicitly
+reviewed premise, identity scheme implementations live in composition roots,
+and no runtime observation of the library is claimed. No input, expected field,
+case kind, profile, policy, capacity or requirement is weakened.
 
 The current selected-tool boundary is complete for ordinary source-only
 coverage: the corrected r8 final index binds all 88 raw shards with zero
@@ -520,7 +536,8 @@ retained full-88 artifact (`status: valid`, no diagnostics, exit 0). These
 receipts establish neither authenticated origin nor Architecture PASS; the
 historical producer/runner exit 1, Architecture blocked state, 4,389 open
 required unknowns and zero waivers are preserved. CASE-02 and its exact
-capability-closure obligation remain open. The selected Octet package's
+capability-closure obligation were open at that state; CASE-02 is now closed
+by the separate compiler-derived boundary receipt above. The selected Octet package's
 deliberate `no_unwrap` negative fixture is denied while its clean positive
 control passes; this is expected lint behavior, not a compiler blocker.
 

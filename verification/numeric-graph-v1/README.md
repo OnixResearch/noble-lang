@@ -7,7 +7,9 @@ record a 14-passed/1-held candidate, including six additional finite
 counter-evidence records for CASE-03/04/05/09/11/12. The records retain the
 historical 002d packet and bind a fresh full-source safety run for the final
 candidate; exact-source cold review and bounded terminal receipts bind their
-disposition. CASE-02 remains unrun with its capability closure open.
+disposition. CASE-02 is now closed by a compiler-derived boundary receipt
+([`../ngraph-library-boundary/receipt.json`](../ngraph-library-boundary/receipt.json));
+proof stays open.
 Proof stays open for every case. The [implementation change](../../.cairn/changes/numeric-graph-v1/design.md)
 stays active and is not archived; this is not whole-feature or global-gate acceptance.
 
@@ -354,6 +356,21 @@ observation packets and keep proof open. No compiler unknown is waived, and this
 does not establish CASE-02, proof, global-gate, archive, performance, or
 cross-platform acceptance. Failed and interrupted attempts remain separate
 rejected evidence, never relabeled as the fresh result.
+
+**CASE-02 boundary (2026-11-20):** the open paragraph above is the historical
+disposition. A separate source-bound lane now executes the selected pinned Octet
+row on a clean committed tree and evaluates its own artifacts: every production
+`noble-ngraph` unit owns `crate:no-std=noble-ngraph`, the resolved normal edges
+are exactly `noble-contracts` and `noble-kernel`, no production effect fact in
+the seven forbidden families belongs to the crate, every production compiler
+unknown is a policy-declared dynamic dispatch with no required-unknown finding,
+the gate is clean with no findings or waivers, and both identity traits are
+injected, implemented and called with no standard hasher selected. Its negative
+control (an aliased `std` environment probe in a `git archive` copy) is refused
+on the environment effect. The [receipt](../ngraph-library-boundary/receipt.json)
+(SHA-256 `9d63d5c65bb4b27c0b87f8c178acaa615b27d2cb1406f335e10064be7ba9e5c3`)
+retains every artifact file's sha256; proof remains open and the historical
+637-unknown record is unchanged.
 
 ## Integrated counter record and selected-tool boundary (2026-10-17)
 
