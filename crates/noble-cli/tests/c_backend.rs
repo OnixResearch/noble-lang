@@ -140,6 +140,20 @@ fn checked_c_source_is_c11_syntax_valid_without_native_execution(
             "20 nil [ 1 + ] swap cons [ 2 * ] swap cons [ drop 0 ] [ drop run ] list.case",
             "-- I64",
         ),
+        ("result-pair", "1 true pair", "-- Pair<I64,Bool>"),
+        (
+            "result-nested-pair",
+            "1 2 pair 3 pair",
+            "-- Pair<Pair<I64,I64>,I64>",
+        ),
+        (
+            "result-list-pair",
+            "1 2 pair nil cons",
+            "-- List<Pair<I64,I64>>",
+        ),
+        ("result-list-text", "\"a\" nil cons", "-- List<Text>"),
+        ("result-sum-left", "1 inl", "-- Sum<I64,Unit>"),
+        ("result-sum-right", "true inr", "-- Sum<Unit,Bool>"),
     ] {
         let source = scratch.file(&format!("{name}.noble"), source.as_bytes())?;
         let contract = scratch.file(
@@ -420,8 +434,12 @@ fn checked_nested_contracts_do_not_enable_unsupported_c_values(
         br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024}}"#,
     )?;
     for (index, (source, interface, diagnostic)) in [
-        ("1 true pair", "-- Pair<I64,Bool>", "unsupported"),
-        ("1 nil cons", "-- List<I64>", "unsupported"),
+        (
+            "1 2 pair",
+            "-- Pair<Program<empty,I64,pure>,I64>",
+            "Syntax or Program",
+        ),
+        ("1 nil cons", "-- List<Syntax>", "Syntax or Program"),
         ("[ 1 ] reflect", "-- Syntax", "unsupported"),
         ("[ 1 ]", "-- Program<empty,I64,pure>", "unsupported"),
         ("1 true pair", "-- Pair<I64>", "invalid Core interface"),
@@ -629,3 +647,71 @@ fn invalid_or_unknown_list_length_refuses_before_source_only_emission(
     }
     Ok(())
 }
+
+#[test]
+fn aggregate_results_bind_to_their_exact_checked_interface(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let scratch = Scratch::new()?;
+    let policy = scratch.file(
+        "policy.json",
+        br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":100,"output_bytes":1024}}"#,
+    )?;
+    for (name, source, interface) in [
+        ("pair", "1 true pair", "-- Pair<I64,Bool>"),
+        ("list", "1 2 pair nil cons", "-- List<Pair<I64,I64>>"),
+        ("sum-right", "true inr", "-- Sum<Unit,Bool>"),
+    ] {
+        let source = scratch.file(&format!("{name}.noble"), source.as_bytes())?;
+        let contract = scratch.file(
+            &format!("{name}-contract.json"),
+            format!(r#"{{"expected_interface":"{interface}","resolved_host_contracts":{{}}}}"#)
+                .as_bytes(),
+        )?;
+        let out = scratch.0.join(format!("{name}-out"));
+        let built = build(&source, &contract, &policy, &out)?;
+        assert!(
+            built.status.success(),
+            "{name}: aggregate result build: {}",
+            String::from_utf8_lossy(&built.stderr)
+        );
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(out.join("manifest.json"))?)?;
+        assert_eq!(manifest["status"], "nonselected-source-only", "{name}");
+        assert_eq!(manifest["source_to_elf_admitted"], false, "{name}");
+        assert!(manifest["native_artifact"].is_null(), "{name}");
+        assert_eq!(manifest["runtime_limits"]["aggregate_slots"], 256, "{name}");
+        let c = std::fs::read_to_string(out.join("artifact.c"))?;
+        assert!(
+            c.contains("static void emit_value(Value value, size_t depth)"),
+            "{name}: aggregate value rendering is missing"
+        );
+        assert!(
+            c.contains("if (height != 1 || !shape_kind(stack[0].tag,"),
+            "{name}: the checked result shape guard is missing"
+        );
+        for literal in [
+            "{\\\"type\\\":\\\"Unit\\\",\\\"value\\\":null}",
+            "{\\\"type\\\":\\\"Pair\\\",\\\"value\\\":[",
+            "{\\\"type\\\":\\\"Sum\\\",\\\"variant\\\":",
+            "{\\\"type\\\":\\\"List\\\",\\\"value\\\":[",
+        ] {
+            assert!(c.contains(literal), "{name}: missing encoding {literal}");
+        }
+    }
+    // A checked aggregate interface whose element order differs from the
+    // prepared body still refuses; the result form does not bypass matching.
+    let source = scratch.file("mismatch.noble", b"1 true pair")?;
+    let contract = scratch.file(
+        "mismatch-contract.json",
+        br#"{"expected_interface":"-- Pair<Bool,I64>","resolved_host_contracts":{}}"#,
+    )?;
+    let out = scratch.0.join("mismatch-out");
+    let refused = build(&source, &contract, &policy, &out)?;
+    assert_eq!(refused.status.code(), Some(2));
+    assert!(refused.stdout.is_empty());
+    assert!(!out.exists());
+    Ok(())
+}
+
+#[path = "c_backend/integrity.rs"]
+mod integrity;

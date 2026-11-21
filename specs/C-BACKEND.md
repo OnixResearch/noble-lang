@@ -3,7 +3,7 @@
 Document: SPEC-BE002  
 Revision: 0.1.0-draft.5  
 Depends on: SPEC-0001, SPEC-B001, SPEC-BE001, SPEC-S001, SPEC-V001 and IMPL-V001 at 0.1.0-draft.5  
-Status: Proposed C-Backend-Draft contract; restricted inert I64/Bool source emission exists, while native compilation/execution, sandbox, conformance evidence and backend proof remain absent
+Status: Proposed C-Backend-Draft contract; restricted inert I64/Bool/Unit/Text-result source emission with internal Pair/Sum/List aggregates exists, while native compilation/execution, sandbox, conformance evidence and backend proof remain absent
 
 ## Scope and selection
 
