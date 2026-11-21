@@ -53,7 +53,7 @@
   admission, and one barrier admission whose replaced files left the executed result `42` with
   `load` equal to the compared hashes. Tests: `cargo test -p noble-cli --test build paa1` (5),
   `--test smoke paa1` (3), `--bin noble paa1` (2); clippy `-D warnings` clean; rustfmt clean.
-- [ ] [serial] Build the independent negative-preparation script, then execute ACORR-CASE-01…12 against a frozen consumer with immutable receipts. r[ACORR-CTRL-01]
+- [x] [serial] Build the independent negative-preparation script, then execute ACORR-CASE-01…12 against a frozen consumer with immutable receipts. r[ACORR-CTRL-01]
   Progress (2026-11-20, commits `f73e560b`, `7a123120`, `61ff634a`): the independent preparation
   (`verification/acorr/prepare.mjs`: sealed wrapper/call renderings, wasm-tools print/parse
   mutations, pin-document text edits) and `verification/acorr/gate.mjs` are committed. The gate
@@ -70,4 +70,17 @@
   `bun verification/acorr/gate.mjs NOBLE NEW_DIR --barrier-cli NOBLE_BARRIER` on a clean commit
   (`NOBLE` a `cargo build -p noble-cli --bin noble` artifact, `NOBLE_BARRIER` the same build with
   `--features paa1-test-barrier`); then promote only the cases the retained receipt records.
+  Closed 2026-11-21 (Cairn campaign batch 2): the first complete run (clean `aabe2dd3`) passed ten
+  cases and failed ACORR-CASE-01 and -10 on two gate defects (the opt-on pass re-created an
+  exclusive input file; the discarded manifest was read inside the envelope instead of beside it),
+  fixed in `6caeb64b` after the integrator review's requirement of a complete run. The complete run
+  on clean `6caeb64b` (frozen CLI `735aca67…`, barrier CLI `87cdfb61…`, both built from that commit)
+  passed all twelve cases in 87 commands. Its receipt is retained as
+  [`verification/acorr/acceptance.json`](../../../verification/acorr/acceptance.json) (file sha256
+  `18534d32…`), with the 38 admission reports and the 123 hashed prepared inputs, candidates and
+  pin documents in `verification/acorr/raw/20261121-6caeb64b`. ACORR-CASE-01…12 are
+  implemented/passed with proof open and trust explicit. ACORR-CASE-08's evidence records review
+  note N-1: the altered-helper control edits the candidate's emitted WAT and rebuilds no CLI. The
+  receipt's `gate_sha256`/`prepare_sha256` fields hold the script paths; the digests are in its
+  `inputs` map and the case records cite them (`verification/acorr/README.md`).
 - [ ] [serial] Pursue O1–O7 separately (PO-17/18 slices, optimizer, PO-21 C6, the PO-20 erasure theorem, PO-16 refinement); never close them from hashes, tests or extraction success. Extend the envelope for the #7 named-call profile only after its dependency-closure design is accepted. r[ACORR-TB-01]

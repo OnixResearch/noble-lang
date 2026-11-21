@@ -1,0 +1,35 @@
+{
+  "cli": {
+    "sha256": "87cdfb613e0228658e710e9e45c5a5b0267de9702ea61ae4c51580a939b1d8f7"
+  },
+  "helpers": {
+    "count": 27,
+    "root": "crates/noble-wasm/runtime",
+    "set_sha256": "211d016d58265968082e383f78790c26c20d8eaf135b0dd401253fa3c238639f"
+  },
+  "lean": {
+    "binary_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+    "commit": "eb6cafb7290e8bd5f2937522d8d804f58f02bafc",
+    "library_blake3": "bfdf639678e36c78685c14eb109b74680d65d9440142550b82865fdcb79bb83b",
+    "toolchain": "leanprover/lean4:v4.35.0"
+  },
+  "opt_mode": "off",
+  "schema": "noble-build-report-pins/v1",
+  "tools": {
+    "node": {
+      "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "version": "24.13.0"
+    },
+    "wasm_opt": {
+      "path": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125/bin/wasm-opt",
+      "sha256": "e68e014ba43ece72b23e4e9955b822d65ec2c3dbab6f407ca3af6cc5639543a2",
+      "version": "wasm-opt version 125"
+    },
+    "wasm_tools": {
+      "path": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+      "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+      "version": "wasm-tools 1.245.1"
+    }
+  }
+}

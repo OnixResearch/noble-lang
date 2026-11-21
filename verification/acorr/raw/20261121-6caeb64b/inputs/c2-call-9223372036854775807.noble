@@ -1,0 +1,2 @@
+9223372036854775807 [ 1 + ]
+ [ swap dup 9223372036854775807 = [ drop drop 1 inl ] [ swap run inr ] if ] run

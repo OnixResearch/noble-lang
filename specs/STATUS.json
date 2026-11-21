@@ -1621,6 +1621,30 @@
             "Regressions retain their original bounded MC1, M3 and M4 scopes and selected tooling/host assumptions.",
             "Not universal frontend, consumer, compiler or backend refinement."
           ]
+        },
+        {
+          "claim": "All twelve ACORR controls pass on the opt-in PAA-1 proof-bound artifact admission envelope for the MC2 pure quotation profile: owner-law-bound admission in both optimizer modes, guarded calls, subject, correspondence, law, guard and tool-pin refusals, post-comparison file replacement, producer-metadata forgery, proof-only erasure and revalidation.",
+          "subject": "program-contracts",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "git-tree:24428e2d5728dff710808bc9c3033b52657b52d6",
+          "configuration": {
+            "receipt": "../verification/acorr/acceptance.json",
+            "receipt_sha256": "18534d32e0e4056ee6ee87e70b5855d8003aa24c830acc593040f4418ed93cfe",
+            "raw_outputs": "../verification/acorr/raw/20261121-6caeb64b",
+            "gate": "verification/acorr/gate.mjs",
+            "gate_sha256": "c1f574450e1d1ab521e42ace89e9099883af6096cf4e92295b9f5764fb17bb44",
+            "tested_commit": "6caeb64b6ce5a604bb156649903575ea64f0823d",
+            "cli_sha256": "735aca6776fc8919fc22752a06b405b53c635a17c684925afa12a2353c1895a7",
+            "barrier_cli_sha256": "87cdfb613e0228658e710e9e45c5a5b0267de9702ea61ae4c51580a939b1d8f7",
+            "cases": "ACORR-CASE-01..12",
+            "commands": 87
+          },
+          "assumptions": [
+            "Finite admission controls on one frozen debug CLI and its barrier build; artifact identity is not semantic preservation.",
+            "No translation validation, compiler correctness or verified backend is claimed; PO-14/16/17/18/20/21 (O1-O7) stay open."
+          ]
         }
       ]
     },
