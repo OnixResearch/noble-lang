@@ -82,7 +82,7 @@ const scope = ['crates', 'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'pol
 // must not change the source revision this run records. Every
 // `verification/live-cases/acceptance*.json` file is excluded from the source
 // manifest, and `tools/check-specs.mjs` checks each cited receipt digest.
-const receiptName = 'acceptance-2026-11-20-r3.json';
+const receiptName = 'acceptance-2026-11-21-r3.json';
 const git = args => {
   const result = spawnSync('git', args, { cwd: root, maxBuffer: 64 * 1024 * 1024 });
   assert.equal(result.status, 0, `git ${args.join(' ')} failed: ${result.stderr}`);
@@ -2085,7 +2085,9 @@ async function observeSeamAbsence() {
     NOBLE_LIVE_TEST_BARRIER_EXPECTED: '1',
     NOBLE_LIVE_TEST_BINARY_CAPTURE: absentCapture,
     NOBLE_LIVE_TEST_BINARY_REPLACE: absentReplace,
-    NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE: 'db addone [ 2 + ]',
+    // A scope equal to a submitted source: a binary that compiled the byte
+    // seam in would capture and replace `20 addone` (review L13).
+    NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE: '20 addone',
     NOBLE_LIVE_TEST_PROPOSAL_TAMPER: 'snapshot-cell',
   });
   const ack = await live.report();
