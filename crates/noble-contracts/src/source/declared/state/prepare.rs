@@ -1328,6 +1328,7 @@ mod tests {
                 },
                 term: atom("t"),
                 span: crate::Span { start: 0, end: 1 },
+                elaboration: false,
             },
             exported: false,
             dependencies,
@@ -1517,6 +1518,12 @@ mod tests {
                 .map(|name| proof(name, 2, alloc::vec::Vec::new()))
                 .collect(),
             obligations: alloc::vec::Vec::new(),
+            elaborations: alloc::vec::Vec::new(),
+            elaboration_work: crate::intrinsic::ProofWork {
+                normalization: 0,
+                substitution: 0,
+                total: 0,
+            },
         };
         let proofs = local
             .iter()
