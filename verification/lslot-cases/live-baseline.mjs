@@ -1,9 +1,11 @@
 // B-LSLOT-01: the LIVE-01..10 contract fields must not change from the
 // change's base commit. State/evidence transitions made by another change are
-// recorded, not treated as design changes. Exactly one owner-approved LIVE
-// contract change is allowed: owner decision 21a replaces LIVE-02's
-// `input.after_reload_ack`. The comparison is a pure function so the gate and
-// its regression can exercise the original, amended and rejected states.
+// recorded, not treated as design changes. Exactly two owner-approved LIVE
+// contract changes are allowed: owner decision 21a replaces LIVE-02's
+// `input.after_reload_ack`, and owner decision 30 drops LIVE-05's
+// `missing-import` variant (and nothing else) from `input.variants`. The
+// comparison is a pure function so the gate and its regression can exercise
+// the original, amended and rejected states.
 
 // The change's base commit (full hash; the abbreviated `8075d3c0` used before
 // was ambiguous as a baseline pin).
@@ -24,6 +26,14 @@ export const APPROVED_LIVE_CHANGES = {
       + ' (rebuilt dependent, +4) -> [21,24] -> swap -> [24,21]. Nothing else in the case'
       + ' changes; LIVE-02 is promoted only if a fresh receipt observes exactly [24, 21] and'
       + ' every other expected field."',
+  },
+  'LIVE-05': {
+    path: ['input', 'variants'],
+    // The amended value is the baseline array with exactly this variant removed.
+    dropped: 'missing-import',
+    decision: 'OWNER DECISION 2026-11-21 (decision 30, verbatim): "Drop the variant: record it'
+      + ' as inapplicable (live profiles have no import grammar). LIVE-05 can then promote'
+      + ' from the merged run."',
   },
 };
 
@@ -60,6 +70,12 @@ export function liveContractDiffs({ baselineBytes, currentBytes,
     const beforeField = fieldOf(before, approval.path);
     const afterField = fieldOf(after, approval.path);
     if (JSON.stringify(beforeField) === JSON.stringify(afterField)) return false;
+    if (approval.dropped !== undefined) {
+      if (!Array.isArray(beforeField)
+        || beforeField.filter(variant => variant?.name === approval.dropped).length !== 1) return true;
+      return JSON.stringify(afterField)
+        !== JSON.stringify(beforeField.filter(variant => variant?.name !== approval.dropped));
+    }
     return JSON.stringify(beforeField) !== JSON.stringify(approval.original)
       || JSON.stringify(afterField) !== JSON.stringify(approval.amended);
   });

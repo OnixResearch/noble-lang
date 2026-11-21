@@ -201,6 +201,8 @@ const retainedReceipts = [
   'verification/lslot-cases/acceptance-2026-11-21-b1.sha256',
   'verification/lslot-cases/acceptance-2026-11-21-b2.json',
   'verification/lslot-cases/acceptance-2026-11-21-b2.sha256',
+  'verification/lslot-cases/acceptance-2026-11-21-b3.json',
+  'verification/lslot-cases/acceptance-2026-11-21-b3.sha256',
 ];
 const presentReceipts = fs.readdirSync(path.join(root, 'verification/lslot-cases'))
   .filter(name => name.startsWith('acceptance'))
@@ -678,16 +680,21 @@ const regressions = {};
   const diffs = bytes => liveContractDiffs({ baselineBytes: liveBaselineBytes,
     currentBytes: bytes });
   const amendment = APPROVED_LIVE_CHANGES['LIVE-02'];
+  const baselineLive05 = JSON.parse(liveBaselineBytes).cases
+    .find(row => row.id === 'LIVE-05').input.variants;
   const observed = {
     original: diffs(liveCurrentBytes),
     amended: diffs(withField('LIVE-02', amendment.path, amendment.amended)),
     superseded_decision_21: diffs(withField('LIVE-02', amendment.path,
       ['20 twice swap run'])),
     other_case: diffs(withField('LIVE-03', ['expected', 'outcome'], 'other')),
+    live05_restored: diffs(withField('LIVE-05', ['input', 'variants'], baselineLive05)),
+    live05_other_drop: diffs(withField('LIVE-05', ['input', 'variants'],
+      baselineLive05.filter(variant => variant.name !== 'symlink-escape'))),
   };
   regressions.live_contract_baseline = observed;
   const expected = { original: [], amended: [], superseded_decision_21: ['LIVE-02'],
-    other_case: ['LIVE-03'] };
+    other_case: ['LIVE-03'], live05_restored: [], live05_other_drop: ['LIVE-05'] };
   for (const [label, value] of Object.entries(observed)) {
     if (JSON.stringify(value) !== JSON.stringify(expected[label])) {
       issues.push(`regression: LIVE baseline ${label} changed=${JSON.stringify(value)}`
