@@ -28,12 +28,20 @@
 //! term, which the existing source checker and the pinned Lean consumer
 //! recheck independently. Nothing here is proof authority.
 
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 use super::{
     atom, code, deeper, head_atom, list, operation, proposition, shifted_prop, sort, stack_binder,
     Binder, Code, ContractGoal, Diagnostic, DiagnosticKind, Form, FormKind, Limits, Meter,
     MeterConfig, PendingGoal, ProofBudgets, ProofDependency, ProofObligation, ProofWork,
     Proposition, Sort, Span, TreeBounds, WorkStack,
 };
+#[expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+)]
 use alloc::{boxed::Box, format, string::String, vec::Vec};
 
 /// The selected elaborator revision. Any behavior change that could alter an
@@ -83,8 +91,16 @@ pub struct Elaborated {
 /// abbreviation, which is refused with the opt-in requirement as its named
 /// diagnostic. A refusal never accepts, refutes or assumes anything.
 #[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the single-pass admission loop keeps one declaration's checks in one reviewable order"
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; the name matches the established vocabulary used by callers; renaming it would churn call sites without clarifying them."
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
 pub fn elaborate_obligations(
     module: &str,
@@ -108,7 +124,7 @@ pub fn elaborate_obligations(
         config: &config,
     };
     let mut elaborated = Vec::with_capacity(obligations.len());
-    let mut records = Vec::new();
+    let mut records = Vec::with_capacity(obligations.len());
     let mut at = 0usize;
     // Aeneas refuses early returns inside loops: the loop only accumulates the
     // first refusal, and one loop-free helper stages one obligation.
@@ -153,8 +169,12 @@ pub fn elaborate_obligations(
 /// opted in. Returns the rewritten obligation and record, or the unchanged
 /// pass-through as no staged pair.
 #[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; one obligation's admission order stays reviewable in one loop-free helper"
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
 fn stage_obligation<'m>(
     module: &str,
@@ -236,6 +256,18 @@ fn stage_obligation<'m>(
 }
 
 /// Record one pure proposition goal as an available proof.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the helper appends to the caller's list with Vec::push, so it needs the growable vector, not a slice."
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
 fn push_available(
     available: &mut Vec<Available>,
     identity: String,
@@ -268,6 +300,10 @@ struct Abbreviation {
 }
 
 /// Elaborate one revision-1 pure proof.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn pure<'m>(
     obligation: &ProofObligation,
     statement: &Form,
@@ -307,6 +343,10 @@ fn pure<'m>(
 }
 
 /// Elaborate the structural literal of a revision-1 contract rule.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn contract_rule(
     obligation: &ProofObligation,
     contract: &ContractGoal,
@@ -359,6 +399,22 @@ fn contract_rule(
 #[expect(
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; the rewrite follows the finite, already parsed proof term under the caller's depth budget"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the rewrite appends each inserted literal to the caller's record list with Vec::push, so it needs the growable vector, not a slice."
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
 fn rewrite_exec_literal(
     form: &Form,
@@ -571,6 +627,10 @@ enum MeterStep {
     Substitute(usize),
 }
 
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the methods mutate only the elaborator's own metavariable table, deferred queue, binder context and meter for one bounded elaboration; the borrowed proof terms and dependency snapshot stay immutable."
+)]
 impl Elaborator<'_, '_> {
     /// Elaborate `term` against `goal`, then finish the obligation: resolve
     /// deferred premise checks and verify every metavariable is ground.
@@ -709,6 +769,10 @@ impl Elaborator<'_, '_> {
     }
 
     /// Allocate a fresh code metavariable for the head's next binder.
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+    )]
     fn alloc_code(
         &mut self,
         binder: &str,
@@ -732,10 +796,18 @@ impl Elaborator<'_, '_> {
             sorts,
             constraints: Vec::new(),
         });
-        u32_level(self.metas.len() - 1, span)
+        u32_level(self.metas.len().saturating_sub(1), span)
     }
 
     /// Allocate a fresh value metavariable with `required` as its code.
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+    )]
+    #[expect(
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    )]
     fn alloc_value(
         &mut self,
         binder: &str,
@@ -760,7 +832,7 @@ impl Elaborator<'_, '_> {
             sorts,
             constraints: Vec::new(),
         });
-        u32_level(self.metas.len() - 1, span)
+        u32_level(self.metas.len().saturating_sub(1), span)
     }
 
     /// The current proof-context binder names and sorts, by level.
@@ -768,8 +840,8 @@ impl Elaborator<'_, '_> {
         let mut names = Vec::with_capacity(self.context.total);
         let mut sorts = Vec::with_capacity(self.context.total);
         let mut level = 0usize;
-        let mut complete = true;
-        while complete && level < self.context.total {
+        let mut is_complete = true;
+        while is_complete && level < self.context.total {
             let binder = match u32_level(level, Span { start: 0, end: 0 }) {
                 Ok(value) => self.context_at(value),
                 Err(_) => None,
@@ -779,7 +851,7 @@ impl Elaborator<'_, '_> {
                     names.push(binder.name.clone());
                     sorts.push(binder.sort.clone());
                 }
-                None => complete = false,
+                None => is_complete = false,
             }
             level = level.saturating_add(1);
         }
@@ -787,6 +859,10 @@ impl Elaborator<'_, '_> {
     }
 
     /// Charge one meter operation, naming the stage when it exhausts.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper calls the non-const meter transitions and stage_error, so the const suggestion does not apply"
+    )]
     fn meter_step(
         &mut self,
         step: MeterStep,
@@ -813,7 +889,7 @@ impl Elaborator<'_, '_> {
         if index < inline {
             self.context.inline[index].as_ref()
         } else {
-            self.context.spill.get(index - inline)
+            self.context.spill.get(index.saturating_sub(inline))
         }
     }
 
@@ -839,6 +915,10 @@ fn meta_index(value: u32, span: Span) -> Result<usize, Diagnostic> {
     usize::try_from(value).map_err(|_| internal(span, "metavariable index exceeds the host"))
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper compares DiagnosticKind through its non-const PartialEq and builds the exhaustion diagnostic with format!, so the const suggestion does not apply"
+)]
 fn stage_error(error: Diagnostic, stage: &'static str, span: Span) -> Diagnostic {
     if error.kind == DiagnosticKind::Exhausted {
         stage_exhausted(span, stage)
@@ -855,6 +935,10 @@ fn stage_exhausted(span: Span, stage: &'static str) -> Diagnostic {
     )
 }
 
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
 fn infer_diagnostic(
     kind: DiagnosticKind,
     span: Span,
@@ -915,6 +999,10 @@ fn resolve_ty(elaborator: &Elaborator<'_, '_>, ty: &Ty, span: Span) -> Result<Ty
     }
 }
 
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the methods mutate only the elaborator's own metavariable table, deferred queue, binder context and meter for one bounded elaboration; the borrowed proof terms and dependency snapshot stay immutable."
+)]
 impl Elaborator<'_, '_> {
     fn resolve_ty(&self, ty: &Ty, span: Span) -> Result<Ty, Diagnostic> {
         resolve_ty(self, ty, span)
@@ -962,10 +1050,6 @@ impl Elaborator<'_, '_> {
         }
     }
 
-    #[expect(
-        tigerstyle::no_recursion,
-        reason = "Owner: noble-contracts; resolution follows the finite sort tree"
-    )]
     fn resolve_sort(&self, sort: &SortTerm, span: Span) -> Result<SortTerm, Diagnostic> {
         match sort {
             SortTerm::Codes => Ok(SortTerm::Codes),
@@ -982,13 +1066,17 @@ impl Elaborator<'_, '_> {
         tigerstyle::mutating_input_in_pure,
         reason = "Owner: noble-contracts; the metavariable table is the elaborator's locally owned state and recording a constraint origin is the operation"
     )]
+    #[expect(
+        tigerstyle::unbounded_collection_growth,
+        reason = "Owner: noble-contracts; the worklist is bounded by the 4,096-node budget the loop decrements before every push"
+    )]
     fn note_ty(&mut self, ty: &Ty, span: Span) {
         let mut pending = Vec::new();
         pending.push(ty);
         let mut budget = 4096usize;
         let mut next = pending.pop();
-        let mut running = next.is_some() && budget > 0;
-        while running {
+        let mut is_running = next.is_some() && budget > 0;
+        while is_running {
             if let Some(node) = next {
                 budget -= 1;
                 match node {
@@ -1010,7 +1098,7 @@ impl Elaborator<'_, '_> {
                 }
                 next = pending.pop();
             }
-            running = next.is_some() && budget > 0;
+            is_running = next.is_some() && budget > 0;
         }
     }
 
@@ -1021,6 +1109,10 @@ impl Elaborator<'_, '_> {
     #[expect(
         tigerstyle::no_recursion,
         reason = "Owner: noble-contracts; recording constraint origins follows the finite constraint term"
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; recording constraint origins pushes onto the growable metavariable table, so the const suggestion does not apply"
     )]
     fn note_prop(&mut self, prop: &PropTerm, span: Span) {
         match prop {
@@ -1035,6 +1127,10 @@ impl Elaborator<'_, '_> {
             }
         }
     }
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; recording constraint origins pushes onto the growable metavariable table, so the const suggestion does not apply"
+    )]
     fn note_val(&mut self, value: Val, span: Span) {
         if let Val::Meta(meta) = value {
             if let Ok(index) = meta_index(meta, span) {
@@ -1051,8 +1147,8 @@ impl Elaborator<'_, '_> {
     fn constrain_ty(&mut self, left: &Ty, right: &Ty, span: Span) -> Result<(), Diagnostic> {
         self.note_ty(left, span);
         self.note_ty(right, span);
-        let size = ty_size(left).saturating_add(ty_size(right));
-        self.meter_step(MeterStep::Charge(size), "constraint", span)?;
+        let nodes = ty_size(left).saturating_add(ty_size(right));
+        self.meter_step(MeterStep::Charge(nodes), "constraint", span)?;
         self.unify_ty(left, right, span)
     }
 
@@ -1064,11 +1160,15 @@ impl Elaborator<'_, '_> {
     ) -> Result<(), Diagnostic> {
         self.note_prop(left, span);
         self.note_prop(right, span);
-        let size = prop_size_of(left).saturating_add(prop_size_of(right));
-        self.meter_step(MeterStep::Charge(size), "constraint", span)?;
+        let nodes = prop_size_of(left).saturating_add(prop_size_of(right));
+        self.meter_step(MeterStep::Charge(nodes), "constraint", span)?;
         self.unify_prop(left, right, span)
     }
 
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; recording constraint origins pushes onto the growable metavariable table, so the const suggestion does not apply"
+    )]
     fn note_sort(&mut self, sort: &SortTerm, span: Span) {
         match sort {
             SortTerm::Codes => {}
@@ -1158,6 +1258,10 @@ impl Elaborator<'_, '_> {
 
     /// Unify two sorts by their constructors; the only definitional equality
     /// is structural identity.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; a sort clash builds its diagnostic with format!, so the const suggestion does not apply"
+    )]
     fn unify_sort(
         &mut self,
         left: &SortTerm,
@@ -1329,6 +1433,10 @@ impl Elaborator<'_, '_> {
         }
     }
 
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-contracts; grounding follows the finite resolved code tree"
+    )]
     fn ground_ty(&self, ty: &Ty, span: Span) -> Result<Code, Diagnostic> {
         let resolved = self.resolve_ty(ty, span)?;
         match &resolved {
@@ -1366,6 +1474,10 @@ impl Elaborator<'_, '_> {
         }
     }
 
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-contracts; grounding follows the finite resolved proposition tree"
+    )]
     fn ground_prop(&self, prop: &PropTerm, span: Span) -> Result<Proposition, Diagnostic> {
         let resolved = self.resolve_prop(prop, span)?;
         match &resolved {
@@ -1395,12 +1507,12 @@ impl Elaborator<'_, '_> {
     }
 }
 
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the methods mutate only the elaborator's own metavariable table, deferred queue, binder context and meter for one bounded elaboration; the borrowed proof terms and dependency snapshot stay immutable."
+)]
 impl Elaborator<'_, '_> {
     /// Check `term` against `goal`, the checker's check-mode rule set.
-    #[expect(
-        tigerstyle::function_length,
-        reason = "Owner: noble-contracts; the single-pass dispatcher keeps the checker's rule order reviewable"
-    )]
     fn check(&mut self, form: &Form, goal: &PropTerm, depth: u32) -> Result<Out, Diagnostic> {
         self.meter_step(MeterStep::Visit(depth), "work", form.span)?;
         if matches!(goal, PropTerm::Pi(..)) {
@@ -1469,10 +1581,6 @@ impl Elaborator<'_, '_> {
 
     /// Check a `subst` against a goal: the motive is explicit, the evidence is
     /// inferred, and the premise is checked against the substituted motive.
-    #[expect(
-        tigerstyle::function_length,
-        reason = "Owner: noble-contracts; the single-pass substitution keeps its checker-mirroring order reviewable"
-    )]
     fn subst(
         &mut self,
         form: &Form,
@@ -1588,6 +1696,10 @@ impl Elaborator<'_, '_> {
 
     /// Infer the proposition a `use`, `apply`, `refl` or `app` term
     /// establishes.
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-contracts; inference follows the finite application spine under the caller's depth budget"
+    )]
     fn infer(&mut self, form: &Form, depth: u32) -> Result<Inferred, Diagnostic> {
         self.meter_step(MeterStep::Visit(depth), "work", form.span)?;
         if let Ok(args) = operation(form, "use", 1) {
@@ -1703,8 +1815,8 @@ impl Elaborator<'_, '_> {
         }
         let child = deeper(depth, argument.span)?;
         let (arg_out, arg_term) = self.argument(&sort, argument, &mut head, child)?;
-        let size = prop_size_of(&body);
-        self.meter_step(MeterStep::Substitute(size), "substitution", span)?;
+        let nodes = prop_size_of(&body);
+        self.meter_step(MeterStep::Substitute(nodes), "substitution", span)?;
         let next = inst_prop(&body, index, &arg_term, span)?;
         Ok(Inferred {
             prop: next,
@@ -1714,10 +1826,6 @@ impl Elaborator<'_, '_> {
     }
 
     /// Elaborate one argument at a telescope binder.
-    #[expect(
-        tigerstyle::function_length,
-        reason = "Owner: noble-contracts; the three binder sorts share one metavariable allocation path that stays reviewable together"
-    )]
     fn argument(
         &mut self,
         sort: &SortTerm,
@@ -1800,10 +1908,6 @@ impl Elaborator<'_, '_> {
     }
 
     /// Refuse a premise placeholder, listing candidates without choosing.
-    #[expect(
-        tigerstyle::function_length,
-        reason = "Owner: noble-contracts; the bounded candidate listing keeps its caps and rendering in one reviewable unit"
-    )]
     fn premise_refusal(&self, span: Span, expected: &PropTerm) -> Diagnostic {
         const MAX_CANDIDATES: usize = 8;
         let mut detail = String::from(
@@ -1846,7 +1950,7 @@ impl Elaborator<'_, '_> {
             }
         }
         if total > listed {
-            detail.push_str(&format!("; and {} more", total - listed));
+            detail.push_str(&format!("; and {} more", total.saturating_sub(listed)));
         }
         unsupported(span, &detail)
     }
@@ -1867,10 +1971,6 @@ impl Elaborator<'_, '_> {
     }
 
     /// Elaborate the A2 explicit spine `(app H a1 … an)`.
-    #[expect(
-        tigerstyle::function_length,
-        reason = "Owner: noble-contracts; the telescope walk fills implicit Type0 binders and explicit arguments in one reviewable order"
-    )]
     fn app(&mut self, form: &Form, depth: u32) -> Result<Inferred, Diagnostic> {
         let items = list(form)?;
         if items.len() < 3 {
@@ -1880,10 +1980,10 @@ impl Elaborator<'_, '_> {
             ));
         }
         let head_form = &items[1];
-        let supported = operation(head_form, "use", 1).is_ok()
+        let is_supported = operation(head_form, "use", 1).is_ok()
             || operation(head_form, "apply", 2).is_ok()
             || super::list_head_atom(head_form) == Some("app");
-        if !supported {
+        if !is_supported {
             return Err(unsupported(
                 head_form.span,
                 "app head must be a use, app or apply spine",
@@ -1893,12 +1993,12 @@ impl Elaborator<'_, '_> {
         let mut inferred = self.infer(head_form, head_depth)?;
         let mut argument_at = 2usize;
         let mut outcome: Result<(), Diagnostic> = Ok(());
-        let mut complete = false;
-        while outcome.is_ok() && !complete {
+        let mut is_spine_complete = false;
+        while outcome.is_ok() && !is_spine_complete {
             match Self::app_step(self, form, items, &mut inferred, argument_at, depth) {
                 Ok((next_argument, is_complete)) => {
                     argument_at = next_argument;
-                    complete = is_complete;
+                    is_spine_complete = is_complete;
                 }
                 Err(error) => outcome = Err(error),
             }
@@ -1909,10 +2009,6 @@ impl Elaborator<'_, '_> {
 
     /// One telescope step of an A2 spine: fill one binder, or report that the
     /// spine is complete. Returns the updated spine state and argument cursor.
-    #[expect(
-        tigerstyle::function_length,
-        reason = "Owner: noble-contracts; one spine step keeps its binder cases and substitution in one reviewable helper"
-    )]
     fn app_step(
         &mut self,
         form: &Form,
@@ -1958,8 +2054,8 @@ impl Elaborator<'_, '_> {
         } else {
             return Err(unsupported(form.span, "app under-application"));
         };
-        let size = prop_size_of(&body);
-        self.meter_step(MeterStep::Substitute(size), "substitution", form.span)?;
+        let nodes = prop_size_of(&body);
+        self.meter_step(MeterStep::Substitute(nodes), "substitution", form.span)?;
         let next = inst_prop(&body, index, &arg_term, form.span)?;
         let previous = core::mem::replace(&mut inferred.out, out_atom("apply", form.span));
         inferred.out = Out::List(
@@ -2103,6 +2199,10 @@ impl Elaborator<'_, '_> {
     }
 
     /// Render a solved value as its binder name.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper clones the binder name through level_name and builds a diagnostic, so the const suggestion does not apply"
+    )]
     fn render_val(&self, value: Val, span: Span, names: &[String]) -> Result<String, Diagnostic> {
         match value {
             Val::Level(level) => level_name(names, level, span),
@@ -2115,6 +2215,10 @@ impl Elaborator<'_, '_> {
 }
 
 /// The binder name at a solution level, from the metavariable's snapshot.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper clones the recorded String name, which is not a const operation"
+)]
 fn level_name(names: &[String], level: u32, span: Span) -> Result<String, Diagnostic> {
     let index = match usize::try_from(level) {
         Ok(index) => index,
@@ -2162,6 +2266,10 @@ fn out_atom(text: &str, span: Span) -> Out {
 
 /// Whether `form` is the nullary `(infer)` placeholder. Binder names are
 /// atoms, so the form never collides with one.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; comparing the head atom uses the non-const PartialEq of Option<&str>, so the const suggestion does not apply"
+)]
 fn is_infer_form(form: &Form) -> bool {
     match &form.kind {
         FormKind::List(items) => items.len() == 1 && head_atom(items) == Some("infer"),
@@ -2170,11 +2278,19 @@ fn is_infer_form(form: &Form) -> bool {
 }
 
 /// Whether `items` is `(exec-literal (infer))`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; comparing the head atom uses the non-const PartialEq of Option<&str>, so the const suggestion does not apply"
+)]
 fn is_exec_literal_infer(items: &[Form]) -> bool {
     items.len() == 2 && head_atom(items) == Some("exec-literal") && is_infer_form(&items[1])
 }
 
 /// Whether `form` is a proof form whose proposition the elaborator infers.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper calls the non-const operation recognizer and compares Option<&str> through PartialEq, so the const suggestion does not apply"
+)]
 fn is_inferable(form: &Form) -> bool {
     operation(form, "use", 1).is_ok()
         || operation(form, "apply", 2).is_ok()
@@ -2183,6 +2299,10 @@ fn is_inferable(form: &Form) -> bool {
 }
 
 /// Whether a term contains `(infer)` or an `app` spine.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn scan_abbreviation(form: &Form, limits: Limits) -> Result<Abbreviation, Diagnostic> {
     let mut abbreviation = Abbreviation {
         infer: false,
@@ -2212,6 +2332,22 @@ fn scan_abbreviation(form: &Form, limits: Limits) -> Result<Abbreviation, Diagno
 
 /// Visit one abbreviation-scan node: record the abbreviation and schedule its
 /// children. The loop only accumulates this helper's verdict.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; unseen children are appended to the walk's worklist with Vec::push, so it needs the growable vector."
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn abbreviation_step<'a>(
     current: &'a Form,
     depth: u32,
@@ -2271,6 +2407,18 @@ fn find_infer_span(form: &Form, limits: Limits) -> Result<Option<Span>, Diagnost
 
 /// Visit one infer-span node: report the first placeholder or schedule its
 /// children in reverse so the leftmost form is visited first.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; unseen children are appended to the walk's worklist with Vec::push, so it needs the growable vector."
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn infer_span_step<'a>(
     current: &'a Form,
     depth: u32,
@@ -2330,7 +2478,7 @@ enum Position {
 
 impl Position {
     /// The refusal detail for `(infer)` at this position.
-    fn refusal(self) -> &'static str {
+    const fn refusal(self) -> &'static str {
         match self {
             Self::Root => "infer is not a whole proof term",
             Self::UseTarget => "infer cannot name a proof",
@@ -2373,6 +2521,26 @@ fn scan_positions(form: &Form, limits: Limits) -> Result<(), Diagnostic> {
 
 /// Visit one position-scan node: refuse a misplaced placeholder or schedule
 /// the node's children. The loop only accumulates this helper's verdict.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; unseen children are appended to the walk's worklist with Vec::push, so it needs the growable vector."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; scheduling children pushes onto the caller's growable worklist, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn position_step<'a>(
     current: &'a Form,
     position: Position,
@@ -2408,6 +2576,14 @@ fn position_step<'a>(
 }
 
 /// Schedule the children of one proof form with their positions.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; unseen children are appended to the walk's worklist with Vec::push, so it needs the growable vector."
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
 fn push_positions<'a>(
     pending: &mut Vec<(&'a Form, Position, u32)>,
     items: &'a [Form],
@@ -2430,8 +2606,12 @@ fn push_positions<'a>(
 
 /// The position of item `index` of a list headed by `head`.
 #[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the grammar table is one reviewable mapping from constructors to subterm positions"
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the grammar table is one total mapping from constructors to subterm positions; every input selects a position, so there is no invariant to assert"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; matching constructor names compares str through its non-const equality, so the const suggestion does not apply"
 )]
 fn child_position(head: Option<&str>, position: Position, index: usize) -> Position {
     match (position, index) {
@@ -2456,42 +2636,54 @@ fn child_position(head: Option<&str>, position: Position, index: usize) -> Posit
         Some("app") if index == 1 => Position::AppHead,
         Some("app") if index >= 2 => Position::AppArgument,
         Some("exec-literal") if index == 1 => Position::ExecLiteral,
-        _ => Position::RuleArgument,
+        Some(_) | None => Position::RuleArgument,
     }
 }
 
 /// The binder names of a proposition's leading dependent `Pi` telescope.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+#[expect(
+    tigerstyle::nested_conditionals,
+    reason = "Owner: noble-contracts; the walk mirrors the Pi binder grammar one nested match per form level, so each exit names the exact form that ends the telescope"
+)]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; the walk pushes at most one name per iteration of its 64-step loop"
+)]
 fn pi_names(form: &Form) -> Vec<String> {
     let mut names = Vec::new();
     let mut current = form;
     let mut remaining = 64usize;
-    let mut running = true;
-    while running && remaining > 0 {
+    let mut is_running = true;
+    while is_running && remaining > 0 {
         remaining -= 1;
         match &current.kind {
             FormKind::List(items) => {
                 if items.len() != 3 || head_atom(items) != Some("Pi") {
-                    running = false;
+                    is_running = false;
                 } else {
                     match &items[1].kind {
                         FormKind::List(binding) => {
                             if binding.len() != 2 {
-                                running = false;
+                                is_running = false;
                             } else {
                                 match &binding[0].kind {
                                     FormKind::Atom(name) => {
                                         names.push(name.clone());
                                         current = &items[2];
                                     }
-                                    FormKind::List(_) => running = false,
+                                    FormKind::List(_) => is_running = false,
                                 }
                             }
                         }
-                        FormKind::Atom(_) => running = false,
+                        FormKind::Atom(_) => is_running = false,
                     }
                 }
             }
-            FormKind::Atom(_) => running = false,
+            FormKind::Atom(_) => is_running = false,
         }
     }
     names
@@ -2590,22 +2782,30 @@ fn clone_prop(prop: &PropTerm) -> PropTerm {
 }
 
 /// Whether `meta` occurs in a resolved code.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; the worklist is bounded by the 4,096-node budget the loop decrements before every push"
+)]
 fn occurs_code(meta: u32, ty: &Ty) -> bool {
     let mut pending = Vec::new();
     pending.push(ty);
     let mut budget = 4096usize;
-    let mut found = false;
+    let mut is_found = false;
     let mut next = pending.pop();
-    while !found && next.is_some() {
+    while !is_found && next.is_some() {
         if let Some(node) = next {
             if budget == 0 {
                 // The original walk treated a spent budget as conservative
                 // membership; keep that exact outcome.
-                found = true;
+                is_found = true;
             } else {
                 budget -= 1;
                 match node {
-                    Ty::Meta(other) => found = *other == meta,
+                    Ty::Meta(other) => is_found = *other == meta,
                     Ty::Pair(left, right) | Ty::Sum(left, right) => {
                         pending.push(right);
                         pending.push(left);
@@ -2617,13 +2817,17 @@ fn occurs_code(meta: u32, ty: &Ty) -> bool {
             next = pending.pop();
         }
     }
-    found
+    is_found
 }
 
 /// The node count of one metavariable code.
 #[expect(
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; the count follows the finite term tree"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the count dereferences Box children through the non-const Deref impl, so the const suggestion does not apply"
 )]
 fn ty_size(ty: &Ty) -> usize {
     match ty {
@@ -2640,16 +2844,20 @@ fn ty_size(ty: &Ty) -> usize {
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; the count follows the finite term tree"
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the count dereferences Box children through the non-const Deref impl, so the const suggestion does not apply"
+)]
 fn prop_size_of(prop: &PropTerm) -> usize {
     match prop {
         PropTerm::Pi(_, sort, body) => {
-            let sort_size = match sort {
+            let sort_nodes = match sort {
                 SortTerm::Codes => 1,
                 SortTerm::Value(ty) => ty_size(ty),
                 SortTerm::Premise(inner) => prop_size_of(inner),
             };
             1usize
-                .saturating_add(sort_size)
+                .saturating_add(sort_nodes)
                 .saturating_add(prop_size_of(body))
         }
         PropTerm::Eq(code, _, _) => 3usize.saturating_add(ty_size(code)),
@@ -2726,6 +2934,18 @@ fn render_form(form: &Form, limits: Limits) -> Result<String, Diagnostic> {
 #[expect(
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; the rendering follows the finite proof term under the depth budget"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; appending a type rendering requires the caller's growable String, not a fixed str slice."
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
 fn render_into(
     form: &Form,
@@ -2835,7 +3055,7 @@ fn inst_ty(ty: &Ty, binder: u32, argument: &ArgTerm, span: Span) -> Result<Ty, D
 }
 
 /// Substitute the eliminated binder in a value position.
-fn inst_val(value: Val, binder: u32, argument: &ArgTerm) -> Val {
+const fn inst_val(value: Val, binder: u32, argument: &ArgTerm) -> Val {
     match value {
         Val::Level(level) => {
             if level == binder {
@@ -2881,6 +3101,10 @@ mod tests {
         Span { start: 0, end: 1 }
     }
 
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; the fixture builder only constructs an elaborator; every test that uses it asserts on the outcome"
+    )]
     fn with_elaborator<R>(body: impl FnOnce(&mut Elaborator<'_, '_>) -> R) -> R {
         let limits = crate::Limits::default();
         let config = MeterConfig {
@@ -3008,6 +3232,13 @@ mod tests {
             elaborator
                 .unify_val(Val::Meta(right), Val::Level(0), one_span())
                 .expect("an I64 binder solves an I64 value meta");
+            assert!(
+                matches!(
+                    elaborator.metas.first().and_then(|meta| meta.value),
+                    Some(Val::Level(0))
+                ),
+                "the value metavariable is solved by the I64 binder at level 0"
+            );
             elaborator.verify_ground().expect("every meta is ground");
         });
     }

@@ -351,6 +351,10 @@ fn contract(
 }
 
 /// Consume the optional `infer` elaboration opt-in after the proof name.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; recognizing the opt-in compares the token bytes through the non-const slice PartialEq, so the const suggestion does not apply"
+)]
 fn opt_in(mut cursor: super::Cursor<'_>) -> Result<(bool, super::Cursor<'_>), crate::Diagnostic> {
     let is_infer = matches!(
         cursor.tokens.get(cursor.at),

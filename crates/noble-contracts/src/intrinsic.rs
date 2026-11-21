@@ -5178,6 +5178,10 @@ mod proposition_impl_tests {
     }
 
     /// One pure obligation `p` proving `reflexive_goal` by `term`.
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; the fixture builder only constructs a proof batch; the tests that consume it assert on the checker's outcome"
+    )]
     fn pure_batch(term: super::Form) -> super::ProofBatch {
         let proposition = reflexive_goal();
         super::ProofBatch {
