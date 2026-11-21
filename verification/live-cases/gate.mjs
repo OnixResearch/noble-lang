@@ -642,8 +642,16 @@ async function observeLive02(feature) {
 
   observe('LIVE-02', 'input.harness', initial.stage === 'wasm-live',
     { argv: live.argv, binary: { path: binary, sha256: binarySha256 }, initial_stage: initial.stage });
-  observe('LIVE-02', 'input.before', twice.outcome === 'defined' && twice.stack?.length === 0,
-    { twice: twice.outcome });
+  // A definition report carries no stack: it states `prior_stack: unchanged`
+  // and `prior_namespace: extended`. The selected file's `def addone [ 1 + ]`
+  // is the startup commit (generation 1, empty stack).
+  observe('LIVE-02', 'input.before',
+    initial.outcome === 'reload-committed' && initial.generation === 1 && isStack(initial, [])
+      && twice.outcome === 'defined' && twice.prior_stack === 'unchanged'
+      && twice.prior_namespace === 'extended',
+    { initial: { outcome: initial.outcome, generation: initial.generation, stack: stackOf(initial) },
+      twice: { outcome: twice.outcome, prior_stack: twice.prior_stack,
+        prior_namespace: twice.prior_namespace } });
   observe('LIVE-02', 'input.old_in_flight_submission',
     quote.outcome === 'normal' && quote.stack?.[0]?.type === 'Program',
     { stack: stackOf(quote) });
