@@ -54,7 +54,8 @@ against the then-current canonical text rather than reapply this snapshot.
   independent recheck, and leaves ordinary compile/verify unchanged. Owner-law
   independence rests on that custody, not on an observation; the release route
   starts no guest, so its request counters are constant zeros. Ordinary
-  proof-free execution is unchanged.
+  proof-free execution is unchanged. OWNER CONFIRMATION 2026-11-21: "accept"
+  to review item C2, so this custody-based independence stands.
 - DX-04: the separately completed Result library gate covers generic
   schema/versioned signatures and ordinary checked selected-arm callbacks,
   including compiled bypassed effectful callbacks with zero requests.
@@ -124,7 +125,8 @@ not pass at any committed state: its receipt's native-spec (`6301b19e…`) and
 design (`27ea7df7…`) inputs were never committed, `specs/DECISIONS.md` changed
 at 912aedf9, and STATUS `unexecuted_cases` no longer lists CONTRACT-16 after
 62a24094; it is historical-only (integrator decision 23 under the owner's
-delegation, 2026-11-20). The DX-04 receipt's `build.git_head` a46f588a is the
+delegation, 2026-11-20; OWNER CONFIRMATION 2026-11-21: "yes" to review item
+C1). The DX-04 receipt's `build.git_head` a46f588a is the
 base of an uncommitted worktree, not the built source (its source identity is
 only the content hash `sha256:16f9d850…`), and its external raw-artifact
 directory is no longer retained.
