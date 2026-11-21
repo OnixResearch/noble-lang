@@ -1,0 +1,1105 @@
+{
+  "schema": "noble-ngraph-library-boundary-receipt/v1",
+  "case": "NGRAPH-CASE-02",
+  "subject": "noble-ngraph",
+  "assertion": "compiler-derived capability boundary for noble-ngraph from the selected pinned Octet run, with one refused negative control; not a proof, not runtime observation, and not whole-program authenticity",
+  "verdict": "passed",
+  "source": {
+    "commit": "6e415f0d1cb8dc1aac4f909bec4336258354951c",
+    "tree": "69f9dd32ca8e62577ecf6e0e2508d7ae69be583a",
+    "branch": "cairn/ngraph-case02",
+    "status": "clean",
+    "tracked_files": 5503,
+    "git_manifest_sha256": "d39f52b8b4d497cf6f70a232929bb80174fa90d3f87364c9c890b968af78c967"
+  },
+  "tools": {
+    "octet": {
+      "output": "/nix/store/znmkgimllzx7gyrlani4xbj1fs47vnf5-cargo-octet-0.1.0-typed-strict-trait",
+      "binary": "/nix/store/znmkgimllzx7gyrlani4xbj1fs47vnf5-cargo-octet-0.1.0-typed-strict-trait/bin/cargo-octet",
+      "binary_sha256": "35eeb65773230e66be8a3b2de00afc2d05e9224d6d5e845d81f0bc3ebc9ec8cf"
+    },
+    "quality_rust": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21",
+    "linker_bin": "/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin",
+    "vendor": "/nix/store/yzbn175x9008mr2dvr81bbbn8yslf7zs-noble-reviewed-offline-vendor",
+    "node": {
+      "path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+      "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "version": "v24.13.0",
+      "exec_argv": [
+        "--max-old-space-size=8192"
+      ]
+    },
+    "runner": {
+      "path": "verification/ngraph-library-boundary/gate.mjs",
+      "sha256": "1b4db7071fb01328fd1b8ac76c1211cc870d895c636dd26a305a8c6d80d74306"
+    }
+  },
+  "inputs": {
+    "policy/architecture.json": "16432391907e495b82fe1d802efabc6b2afa571ebef0147b192ab7f5024985f5",
+    "policy/architecture.manifest.json": "84dbfd882796423c4e9517fc92cd5a2e5fee3e2e426845289cba529f210b532f",
+    "policy_blake3": "49fb49992c5790e26ab6572f4a2380078416c2bdefd2c55f571b7bb759c73395",
+    "crates/noble-ngraph/Cargo.toml": "9fdaf8bf88be311b40962fbedf4af3349ff1f1768c89785a1ea21ff39202138d",
+    "Cargo.lock": "582a7c91d10c3a6cbdaec2968b61e878821acc9781dfb84d53df096a778a862c",
+    "Cargo.toml": "28f50596ae329c104c28d0c4ae10c35b2ef1f20e95662356e69affda47e13bf9",
+    "dylint.toml": "265d16c2a5bba73d011ce460e1e9d15ce04dca24cdf6e7bc0cf4e66a9040a88b",
+    "policy/tool-selection.json": "8ed766cdfa42f8228bfba41c28c6aee91afd97652418ae7f16952cdc51875e9b"
+  },
+  "command": {
+    "argv": [
+      "/nix/store/znmkgimllzx7gyrlani4xbj1fs47vnf5-cargo-octet-0.1.0-typed-strict-trait/bin/cargo-octet",
+      "check",
+      "--workspace",
+      "--output-format",
+      "json",
+      "--artifact-dir",
+      "/home/brittonr/.cache/noble-cairn/scratch/ngraph-case02/boundary-20261120-final2/artifact-positive",
+      "--",
+      "--all-targets",
+      "--features",
+      "live-test-barrier,safety-observe",
+      "--offline"
+    ],
+    "cwd": "/var/tmp/noble-cairn/wt/ngraph-case02",
+    "environment": {
+      "HOME": "/home/brittonr",
+      "USER": "brittonr",
+      "LOGNAME": "brittonr",
+      "LANG": "C.UTF-8",
+      "PATH": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin:/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin:/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin:/nix/store/znmkgimllzx7gyrlani4xbj1fs47vnf5-cargo-octet-0.1.0-typed-strict-trait/bin:/run/current-system/sw/bin",
+      "CARGO_HOME": "/home/brittonr/.cache/noble-cairn/scratch/ngraph-case02/boundary-20261120-final2/cargo-home",
+      "CARGO_TARGET_DIR": "/home/brittonr/.cache/noble-cairn/scratch/ngraph-case02/boundary-20261120-final2/target",
+      "CARGO_NET_OFFLINE": "true",
+      "CARGO_BUILD_JOBS": "6",
+      "CARGO_INCREMENTAL": "0",
+      "TMPDIR": "/home/brittonr/.cache/noble-cairn/scratch/ngraph-case02/boundary-20261120-final2/tmp",
+      "RUSTC_WRAPPER": "",
+      "RUSTC_WORKSPACE_WRAPPER": "",
+      "CARGO_BUILD_RUSTC_WRAPPER": "",
+      "RUSTFLAGS": "",
+      "CARGO_ENCODED_RUSTFLAGS": "",
+      "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS": "",
+      "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER": "/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin/cc"
+    },
+    "exit": 0,
+    "signal": null,
+    "duration_ms": 2496062,
+    "stdout_sha256": "abeff0c2fdb23c14f5de92e4f598993da0965f7e107b8a5326ec118d90b76321",
+    "stderr_sha256": "003c53b04df69e0c796af4ab767ca5e13bc2328229009fb75544d7213d4ceddd",
+    "stdout_bytes": 1154,
+    "stderr_bytes": 544
+  },
+  "staging": {
+    "verified_tree_had_no_octet_directory": true
+  },
+  "artifact": {
+    "directory": "/home/brittonr/.cache/noble-cairn/scratch/ngraph-case02/boundary-20261120-final2/artifact-positive",
+    "files": [
+      {
+        "name": "command.txt",
+        "bytes": 323,
+        "sha256": "85243cea6daf5eccf6da99d6d1fe9bd53eac17d61317bf1d3286797182840c13"
+      },
+      {
+        "name": "compiler-architecture-coverage.json",
+        "bytes": 16183,
+        "sha256": "1f9fa722e082e267a3ec1552fb2b9a19b616777cc7e1983c11e267efcbc77788"
+      },
+      {
+        "name": "compiler-architecture-ir.json",
+        "bytes": 429490357,
+        "sha256": "637aba5efe5a55ed266c9ab0a810675992f8cca1bbe312293c365213e394d3f0"
+      },
+      {
+        "name": "compiler-architecture-issues.json",
+        "bytes": 3,
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+      },
+      {
+        "name": "compiler-architecture-receipt.json",
+        "bytes": 624,
+        "sha256": "dc0b5942a88deb6d6a5960c5bc08270e4be44d9f793efa4d72a5e15d3894de07"
+      },
+      {
+        "name": "project-architecture-cargo-graph.json",
+        "bytes": 4489,
+        "sha256": "eea735c70c7575d05634c8ac39c16acb643c43fa3e504dca1671f7563abc5e46"
+      },
+      {
+        "name": "project-architecture-policy-source.ncl",
+        "bytes": 35155,
+        "sha256": "29d7486ccc6855a0558e84821d5218095a9568b0aac361efc8715d8603ee7853"
+      },
+      {
+        "name": "project-architecture-policy.json",
+        "bytes": 23806,
+        "sha256": "16432391907e495b82fe1d802efabc6b2afa571ebef0147b192ab7f5024985f5"
+      },
+      {
+        "name": "project-architecture-receipt.json",
+        "bytes": 20993588,
+        "sha256": "7af7a72f74bc759d377199bb74fabe616b24190fa437835e9c54d17ac39e2116"
+      },
+      {
+        "name": "provenance.jsonl",
+        "bytes": 4251,
+        "sha256": "e63ed2b7fc41a2b738bd89489f40a5ae873b92bde798bb6500ec006686ac11c0"
+      },
+      {
+        "name": "results.jsonl",
+        "bytes": 1154,
+        "sha256": "abeff0c2fdb23c14f5de92e4f598993da0965f7e107b8a5326ec118d90b76321"
+      },
+      {
+        "name": "status.json",
+        "bytes": 1724,
+        "sha256": "bdf869319ff15320d673e622a22d16544facb6c0d4007af47c897a6d2be652de"
+      },
+      {
+        "name": "summary.txt",
+        "bytes": 544,
+        "sha256": "003c53b04df69e0c796af4ab767ca5e13bc2328229009fb75544d7213d4ceddd"
+      }
+    ],
+    "total_bytes": 450572201,
+    "replay": {
+      "exit": 0,
+      "stdout_sha256": "fd517456f5100263765717d7b3f7957f6397d725bd32c3bb2181c11f11c5a9b5",
+      "status": "valid"
+    }
+  },
+  "evaluation": {
+    "verdict": "passed",
+    "checks": [
+      {
+        "name": "octet-process",
+        "claim": "The selected Octet row completed the Cargo process successfully for the committed tree.",
+        "ok": true,
+        "observed": {
+          "exit": 0,
+          "signal": null,
+          "error": null,
+          "lint_status": "clean",
+          "lint_findings": 0
+        }
+      },
+      {
+        "name": "artifact-replay",
+        "claim": "`cargo-octet artifact verify` replays the stored artifact with no diagnostics.",
+        "ok": true,
+        "observed": {
+          "exit": 0,
+          "status": "valid",
+          "artifacts": 12,
+          "diagnostics": 0
+        }
+      },
+      {
+        "name": "artifact-schema",
+        "claim": "Every required Octet artifact file is present and parses as JSON.",
+        "ok": true,
+        "observed": {
+          "files": [
+            "command.txt",
+            "compiler-architecture-coverage.json",
+            "compiler-architecture-ir.json",
+            "compiler-architecture-issues.json",
+            "compiler-architecture-receipt.json",
+            "project-architecture-cargo-graph.json",
+            "project-architecture-policy-source.ncl",
+            "project-architecture-policy.json",
+            "project-architecture-receipt.json",
+            "provenance.jsonl",
+            "results.jsonl",
+            "status.json",
+            "summary.txt"
+          ]
+        }
+      },
+      {
+        "name": "collection-complete",
+        "claim": "Compiler collection covered the exact expected unit roster with no missing, unexpected, duplicate or invalid shards.",
+        "ok": true,
+        "observed": {
+          "coverage_status": "complete",
+          "expected_units": 110,
+          "observed_units": 110,
+          "missing": [],
+          "unexpected": [],
+          "duplicate": [],
+          "invalid_shards": [],
+          "collection_receipt_status": "complete",
+          "ir_schema": "octet-compiler-architecture-ir/v2"
+        }
+      },
+      {
+        "name": "receipt-policy-binding",
+        "claim": "The architecture receipt binds the committed exported architecture policy byte for byte, and the Cargo graph, IR and coverage identities.",
+        "ok": true,
+        "observed": {
+          "schema": "octet-project-architecture-receipt/v2",
+          "mode": "gate",
+          "project": "noble",
+          "policy_blake3": "49fb49992c5790e26ab6572f4a2380078416c2bdefd2c55f571b7bb759c73395",
+          "expected_policy_blake3": "49fb49992c5790e26ab6572f4a2380078416c2bdefd2c55f571b7bb759c73395",
+          "artifact_policy_sha256": "16432391907e495b82fe1d802efabc6b2afa571ebef0147b192ab7f5024985f5",
+          "committed_policy_sha256": "16432391907e495b82fe1d802efabc6b2afa571ebef0147b192ab7f5024985f5",
+          "cargo_graph_binding": true,
+          "ir_binding": true,
+          "coverage_binding": true,
+          "collection_binding": true
+        }
+      },
+      {
+        "name": "architecture-clean",
+        "claim": "The selected architecture gate completed clean with no findings, no waived findings and no waivers applied; every retained compiler unknown is classified by the reviewed policy.",
+        "ok": true,
+        "observed": {
+          "status": "clean",
+          "findings": [],
+          "applied_waivers": [],
+          "retained_unknown_ids": 4306,
+          "phase_status": "clean"
+        }
+      },
+      {
+        "name": "ngraph-unit-roster",
+        "claim": "The compiler observed noble-ngraph units, each with the policy role for its source root.",
+        "ok": true,
+        "observed": {
+          "units": 17,
+          "roster": [
+            {
+              "unit_id": "0359e9217c214c1e81b287d92c22ec9be15078c7093faef7a892a2d48253bc11",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/snapshot_file.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "1673ad9996593d6579313429d6c31a8248c3567013e8b8181c96276621c5a8f4",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/format_values.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "18e5ea752cc0f1f2acd966ca6b12e78561f8487f7a8781bbe5d0533d4186198f",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/rewrite_cost.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "3af4d747cbcd0362b8921d4cea8a84ae3a437db87e2f3084b87e0dbe1c81941b",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/format_graph.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "47dfbc2bd75d6616a5bdd2c34412f92d783c57f78fe4c663cbe58374fdbe2afb",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/extract_b1.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "5b6e67cfe727859e29eb90b56b0646981008615a082e59643ea87f53fb0ec5a6",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/layout_reorder.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "65545be5448468f8abb578a72ce7bedd0d49948c6ab112392546bc4fb3d8a814",
+              "target_kind": "lib+test",
+              "source_path": "crates/noble-ngraph/src/lib.rs",
+              "role": "domain-core",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "6a3423eb9946489c5a36a0864b0e8f57df696b5bf7e25636f03b2d726654db96",
+              "target_kind": "lib",
+              "source_path": "crates/noble-ngraph/src/lib.rs",
+              "role": "domain-core",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "762edd84b4cfbf080431ab84b44b16fa421afd7136ed727cc689ce5e3b66407c",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/batch_row_reference.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "8e16c54ae70f26e298863b6cb8fd6c9c2c1c477d82d7a02f816b757af75f2e4e",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/ir_check.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "9ae37320fddb4734aaf41792ba8ccbfb8141c986aa22163e9536cf33dac976e6",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/schedule_correspondence.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "9dec17c015af5b7075643e1ac3cf3ec2f0ed37eacf6dd2c93d9b49144a07291e",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/cert_differential.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "d716f1a55ad70c30b71f00d45a2d76f05b571c1e146a25ff1887b0ad61e359be",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/layout_differential.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "d7a68ec76c1bc0362d72d8020f9a642dfad1f934f03c6a3f85741b4241b4ef21",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/rewrite_quality.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "daefa1a3dcc5369c0143767370f7dc7880dbccbca8b893159b35ef823fa23444",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/train_admission.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "e33e9c03a8f632e7c54f1afa6e7cdf5b7c4f7f150c5e4e6c1b7beb99354d4bc6",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/soft_float.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "ed242e6e36a8b7ec8b0520f8cd0c22bcb412d73c9297d1a787e9a0d3ec123eed",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/retained_bytes.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            }
+          ]
+        }
+      },
+      {
+        "name": "selection-configuration",
+        "claim": "Every observed unit selected the single declared target/feature row of the architecture policy.",
+        "ok": true,
+        "observed": {
+          "target": [
+            "x86_64-unknown-linux-gnu"
+          ],
+          "feature_sets": [
+            ""
+          ],
+          "default_features": [
+            true
+          ]
+        }
+      },
+      {
+        "name": "no-std-compiler-confirmed",
+        "claim": "Every production noble-ngraph unit owns an active compiler configuration fact for `crate:no-std=noble-ngraph`.",
+        "ok": true,
+        "observed": {
+          "predicate": "crate:no-std=noble-ngraph",
+          "production_units": [
+            {
+              "unit_id": "65545be5448468f8abb578a72ce7bedd0d49948c6ab112392546bc4fb3d8a814",
+              "source_path": "crates/noble-ngraph/src/lib.rs",
+              "role": "domain-core",
+              "facts": 1
+            },
+            {
+              "unit_id": "6a3423eb9946489c5a36a0864b0e8f57df696b5bf7e25636f03b2d726654db96",
+              "source_path": "crates/noble-ngraph/src/lib.rs",
+              "role": "domain-core",
+              "facts": 1
+            }
+          ],
+          "observed_units": 17,
+          "production_unit_count": 2
+        }
+      },
+      {
+        "name": "normal-dependencies",
+        "claim": "The resolved Cargo graph contains exactly the two declared Noble normal edges out of noble-ngraph and no build edge.",
+        "ok": true,
+        "observed": {
+          "edges": [
+            {
+              "caller_package": "noble-ngraph",
+              "callee_package": "noble-contracts",
+              "edge_kind": "normal",
+              "target_predicate": null
+            },
+            {
+              "caller_package": "noble-ngraph",
+              "callee_package": "noble-kernel",
+              "edge_kind": "normal",
+              "target_predicate": null
+            }
+          ],
+          "normal_callees": [
+            "noble-contracts",
+            "noble-kernel"
+          ],
+          "declared_packages": [
+            "noble-cli",
+            "noble-contracts",
+            "noble-kernel",
+            "noble-ngraph",
+            "noble-ngraph-experiment",
+            "noble-syndicate",
+            "noble-wasm"
+          ]
+        }
+      },
+      {
+        "name": "manifest-dependencies",
+        "claim": "The committed manifest declares exactly noble-contracts and noble-kernel as normal dependencies, with no build or third-party dependency.",
+        "ok": true,
+        "observed": {
+          "manifest_sha256": "9fdaf8bf88be311b40962fbedf4af3349ff1f1768c89785a1ea21ff39202138d",
+          "normal": [
+            "noble-contracts",
+            "noble-kernel"
+          ],
+          "build_dependencies": null,
+          "third_party_edges": []
+        }
+      },
+      {
+        "name": "forbidden-capability-uses-zero",
+        "claim": "No production compiler effect fact owned by a noble-ngraph unit uses any of the seven forbidden capability families, and none is an authorized outbound effect.",
+        "ok": true,
+        "observed": {
+          "families": {
+            "filesystem": 0,
+            "process": 0,
+            "environment": 0,
+            "time": 0,
+            "concurrency": 0,
+            "observability": 0,
+            "unsafe-code": 0
+          },
+          "observed_families": [],
+          "production_effect_facts": 0,
+          "test_only_effect_facts": 177,
+          "test_only_families": [
+            "concurrency",
+            "environment",
+            "filesystem",
+            "process",
+            "time"
+          ]
+        }
+      },
+      {
+        "name": "required-unknowns-zero",
+        "claim": "Every production compiler unknown owned by a noble-ngraph unit is a dynamic-dispatch unknown declared by the reviewed policy, and the gate raises no required-compiler-unknown finding.",
+        "ok": true,
+        "observed": {
+          "production_unknowns": 1527,
+          "unknown_characters": {
+            "core::iter": 860,
+            "core::hash": 248,
+            "core::cmp": 84,
+            "noble_ngraph::identity": 144,
+            "core::ops": 112,
+            "noble_ngraph::grad": 70,
+            "core::convert": 2,
+            "core::fmt": 5,
+            "core::clone": 2
+          },
+          "unclassified": [],
+          "required_unknown_findings": 0,
+          "retained_unknown_ids": 4306,
+          "test_only_unknowns": 2210
+        }
+      },
+      {
+        "name": "identity-hash-injected",
+        "claim": "The production compiled noble-ngraph facts declare both injected identity traits, reach them through resolved trait calls and implementations, and select no standard hasher.",
+        "ok": true,
+        "observed": {
+          "traits": [
+            "noble_ngraph::identity::IdentityHasher",
+            "noble_ngraph::identity::IdentityScheme"
+          ],
+          "resolved_trait_calls": [
+            "noble_ngraph::identity::IdentityHasher::finish",
+            "noble_ngraph::identity::IdentityHasher::update",
+            "noble_ngraph::identity::IdentityScheme::name",
+            "noble_ngraph::identity::IdentityScheme::start"
+          ],
+          "implementations": [
+            "noble_ngraph::identity::IdentityHasher",
+            "noble_ngraph::identity::IdentityScheme"
+          ],
+          "forbidden_hasher_needles": []
+        }
+      }
+    ],
+    "failed": []
+  },
+  "control": {
+    "method": "git archive of the verified commit, then an aliased `extern crate std` environment probe appended to crates/noble-ngraph/src/lib.rs",
+    "commit": "6e415f0d1cb8dc1aac4f909bec4336258354951c",
+    "source_directory": "/home/brittonr/.cache/noble-cairn/scratch/ngraph-case02/boundary-20261120-final2/control-source",
+    "mutation": {
+      "file": "crates/noble-ngraph/src/lib.rs",
+      "appended": "\n// NGRAPH-CASE-02 negative control: not part of the verified tree.\nextern crate std as boundary_control_std;\n\n#[doc(hidden)]\npub fn boundary_control_probe() -> Option<boundary_control_std::ffi::OsString> {\n    boundary_control_std::env::var_os(\"NOBLE_NGRAPH_BOUNDARY_CONTROL\")\n}\n",
+      "sha256": "d8b981ee85dc84f1193f483c5bc7d663bc9101f5188b7afb70338568fffc3ec5"
+    },
+    "command": {
+      "argv": [
+        "/nix/store/znmkgimllzx7gyrlani4xbj1fs47vnf5-cargo-octet-0.1.0-typed-strict-trait/bin/cargo-octet",
+        "check",
+        "--workspace",
+        "--output-format",
+        "json",
+        "--artifact-dir",
+        "/home/brittonr/.cache/noble-cairn/scratch/ngraph-case02/boundary-20261120-final2/artifact-control",
+        "--",
+        "--all-targets",
+        "--features",
+        "live-test-barrier,safety-observe",
+        "--offline"
+      ],
+      "exit": 1,
+      "signal": null,
+      "duration_ms": 2002341,
+      "stdout_sha256": "30abcc669033f96989450bbb99d3558b0ea55f25c18fad35b5149c4cf4e19f7c",
+      "stderr_sha256": "af051492c56d0894473f116ab3eecbec0dcfee28abf6a27538982d9ba8ea9ce9",
+      "stdout_bytes": 5511,
+      "stderr_bytes": 1007
+    },
+    "artifact": {
+      "directory": "/home/brittonr/.cache/noble-cairn/scratch/ngraph-case02/boundary-20261120-final2/artifact-control",
+      "files": [
+        {
+          "name": "command.txt",
+          "bytes": 322,
+          "sha256": "d59740462e4f8e9ecf99192488cce0ddbc9ec776a1d943747015ff3c553ea05b"
+        },
+        {
+          "name": "compiler-architecture-coverage.json",
+          "bytes": 16183,
+          "sha256": "8db23f1f108cd4bdd280125dca5d0af3ba15628a315b6558477d6aedcdf57203"
+        },
+        {
+          "name": "compiler-architecture-ir.json",
+          "bytes": 429498595,
+          "sha256": "2ea932db328e5b71ee22ba7dd6c9c2b10fa414c459c9c2c3f908f5f964f2675d"
+        },
+        {
+          "name": "compiler-architecture-issues.json",
+          "bytes": 3,
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        {
+          "name": "compiler-architecture-receipt.json",
+          "bytes": 624,
+          "sha256": "778ea2ee9ae269673f4b30f41ca6b77c97ef9898391c9c425b4ba97e8c3fb4bb"
+        },
+        {
+          "name": "project-architecture-cargo-graph.json",
+          "bytes": 4489,
+          "sha256": "eea735c70c7575d05634c8ac39c16acb643c43fa3e504dca1671f7563abc5e46"
+        },
+        {
+          "name": "project-architecture-policy-source.ncl",
+          "bytes": 35155,
+          "sha256": "29d7486ccc6855a0558e84821d5218095a9568b0aac361efc8715d8603ee7853"
+        },
+        {
+          "name": "project-architecture-policy.json",
+          "bytes": 23806,
+          "sha256": "16432391907e495b82fe1d802efabc6b2afa571ebef0147b192ab7f5024985f5"
+        },
+        {
+          "name": "project-architecture-receipt.json",
+          "bytes": 20994283,
+          "sha256": "58b97650dc1170998fbfe15f9123a6badc1a92d9a99dfd4017ba1ced72053d5d"
+        },
+        {
+          "name": "provenance.jsonl",
+          "bytes": 4251,
+          "sha256": "b32099d51d1e1eff930c0f4d102faea8cc0a6cd34528f65a4cc7046d1083cf18"
+        },
+        {
+          "name": "results.jsonl",
+          "bytes": 5511,
+          "sha256": "30abcc669033f96989450bbb99d3558b0ea55f25c18fad35b5149c4cf4e19f7c"
+        },
+        {
+          "name": "status.json",
+          "bytes": 1822,
+          "sha256": "bac90cb4bfec142f6896655155c431a54e252f106b49bc2062a085d7b97ac84f"
+        },
+        {
+          "name": "summary.txt",
+          "bytes": 1007,
+          "sha256": "af051492c56d0894473f116ab3eecbec0dcfee28abf6a27538982d9ba8ea9ce9"
+        }
+      ],
+      "total_bytes": 450586051
+    },
+    "verdict": "refused",
+    "summary": {
+      "verdict": "refused",
+      "checks": 14,
+      "failed": [
+        "architecture-clean",
+        "forbidden-capability-uses-zero"
+      ]
+    },
+    "checks": [
+      {
+        "name": "octet-process",
+        "claim": "The selected Octet row completed the Cargo process successfully for the committed tree.",
+        "ok": true,
+        "observed": {
+          "exit": 1,
+          "signal": null,
+          "error": null,
+          "lint_status": "warning-only",
+          "lint_findings": 4
+        }
+      },
+      {
+        "name": "artifact-replay",
+        "claim": "`cargo-octet artifact verify` replays the stored artifact with no diagnostics.",
+        "ok": true,
+        "observed": {
+          "exit": 0,
+          "status": "valid",
+          "artifacts": 12,
+          "diagnostics": 0
+        }
+      },
+      {
+        "name": "artifact-schema",
+        "claim": "Every required Octet artifact file is present and parses as JSON.",
+        "ok": true,
+        "observed": {
+          "files": [
+            "command.txt",
+            "compiler-architecture-coverage.json",
+            "compiler-architecture-ir.json",
+            "compiler-architecture-issues.json",
+            "compiler-architecture-receipt.json",
+            "project-architecture-cargo-graph.json",
+            "project-architecture-policy-source.ncl",
+            "project-architecture-policy.json",
+            "project-architecture-receipt.json",
+            "provenance.jsonl",
+            "results.jsonl",
+            "status.json",
+            "summary.txt"
+          ]
+        }
+      },
+      {
+        "name": "collection-complete",
+        "claim": "Compiler collection covered the exact expected unit roster with no missing, unexpected, duplicate or invalid shards.",
+        "ok": true,
+        "observed": {
+          "coverage_status": "complete",
+          "expected_units": 110,
+          "observed_units": 110,
+          "missing": [],
+          "unexpected": [],
+          "duplicate": [],
+          "invalid_shards": [],
+          "collection_receipt_status": "complete",
+          "ir_schema": "octet-compiler-architecture-ir/v2"
+        }
+      },
+      {
+        "name": "receipt-policy-binding",
+        "claim": "The architecture receipt binds the committed exported architecture policy byte for byte, and the Cargo graph, IR and coverage identities.",
+        "ok": true,
+        "observed": {
+          "schema": "octet-project-architecture-receipt/v2",
+          "mode": "gate",
+          "project": "noble",
+          "policy_blake3": "49fb49992c5790e26ab6572f4a2380078416c2bdefd2c55f571b7bb759c73395",
+          "expected_policy_blake3": "49fb49992c5790e26ab6572f4a2380078416c2bdefd2c55f571b7bb759c73395",
+          "artifact_policy_sha256": "16432391907e495b82fe1d802efabc6b2afa571ebef0147b192ab7f5024985f5",
+          "committed_policy_sha256": "16432391907e495b82fe1d802efabc6b2afa571ebef0147b192ab7f5024985f5",
+          "cargo_graph_binding": true,
+          "ir_binding": true,
+          "coverage_binding": true,
+          "collection_binding": true
+        }
+      },
+      {
+        "name": "architecture-clean",
+        "claim": "The selected architecture gate completed clean with no findings, no waived findings and no waivers applied; every retained compiler unknown is classified by the reviewed policy.",
+        "ok": false,
+        "observed": {
+          "status": "blocked",
+          "findings": [
+            {
+              "finding_id": "622cc010aa9086b38730555fb956b2e9ee760ff9f090f39e3055492a815bbbcc",
+              "code": "domain-core-effect",
+              "severity": "policy",
+              "status": "open",
+              "affected_claim": "domain-core-purity",
+              "package_name": "noble-ngraph",
+              "unit_id": "04b3c213ec0f69e8a48c53147abc03e0e0a497331f37e7b6b39191097efebb31",
+              "fact_id": "d3d1f766189e730504ecf62e47cfdd14e31b89ef09b5a19d2bb4c0369ba933d0",
+              "source_path": "crates/noble-ngraph/src/lib.rs",
+              "source_blake3": "6d93c0d492db26f2b647fea7850f1d379d6ac3537217d2da324ff39e30366ed6",
+              "message": "domain-core compiler fact performs `Environment` through `std::env::var_os`"
+            }
+          ],
+          "applied_waivers": [],
+          "retained_unknown_ids": 4306,
+          "phase_status": "blocked"
+        }
+      },
+      {
+        "name": "ngraph-unit-roster",
+        "claim": "The compiler observed noble-ngraph units, each with the policy role for its source root.",
+        "ok": true,
+        "observed": {
+          "units": 17,
+          "roster": [
+            {
+              "unit_id": "04b3c213ec0f69e8a48c53147abc03e0e0a497331f37e7b6b39191097efebb31",
+              "target_kind": "lib+test",
+              "source_path": "crates/noble-ngraph/src/lib.rs",
+              "role": "domain-core",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "0ac37cf7bfdaa47eb016101dc631e5827198509533f6c1abd864e9bfaaa555f9",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/schedule_correspondence.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "0b0f9ffaa839874afe43db840fc88eb741d114737877ff95927ca2e0a8f5f65f",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/rewrite_quality.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "12a6a6dd8b0b767c4742d2ef5c2e124155a3ae3888c65a4fb0022be29277af08",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/soft_float.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "1499852da4bee98bd32fdb4f1621dc58daf765388e1c5c0c64b7039bae582cef",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/layout_differential.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "42f5bb75b91928ecfbcfe613125293ebb8151df7a39894ceafc4a36f19aec426",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/retained_bytes.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "5e540d448625ad1d4afcfc177aceb4017c1fce74fe0ceb44e78fd199755e92bf",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/batch_row_reference.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "858374f5cacd4d6de49f3d3a6dab4038a9f0ae762ab4509c61384e81997e8c25",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/format_graph.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "909f133b21bb6253a7bca7584af2ca7f2b4b240fab114bea0d2cf1e0fb013370",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/layout_reorder.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "9c4d7b02f97fb2ba88df01efa97db66f78c351c44e7efa7983fcea5c4c664571",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/format_values.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "a4c1e1de06f80d1a666d6d09323bab97c65391b64829b0268d750dc1857fee69",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/snapshot_file.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "a80f8cca88112d13a1b9d11823a109c498b69c620d0e3926c6ace19551d3962c",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/extract_b1.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "c0b8168403a040e14e844eaf267e227b5aab89afb5dd77e1423fb01a768e5c25",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/rewrite_cost.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "c3fe1461180d43d6cd5ca204f43b8b90125f7334838da4f4220114706ad6ede1",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/cert_differential.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "c4bd8b4fdc1121cf7aebeab147b38cdd72607a1e2a30ffd85ac9c84854e1e3ea",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/train_admission.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "cd5b42c49069924b9a8dc32d89f60c83d3761fc358652bdb40da76db39812cea",
+              "target_kind": "test+test",
+              "source_path": "crates/noble-ngraph/tests/ir_check.rs",
+              "role": "test",
+              "features": [],
+              "default_features": true
+            },
+            {
+              "unit_id": "d6016bd7aec130e199742d245092870256bd610d4939191e402cece996276c84",
+              "target_kind": "lib",
+              "source_path": "crates/noble-ngraph/src/lib.rs",
+              "role": "domain-core",
+              "features": [],
+              "default_features": true
+            }
+          ]
+        }
+      },
+      {
+        "name": "selection-configuration",
+        "claim": "Every observed unit selected the single declared target/feature row of the architecture policy.",
+        "ok": true,
+        "observed": {
+          "target": [
+            "x86_64-unknown-linux-gnu"
+          ],
+          "feature_sets": [
+            ""
+          ],
+          "default_features": [
+            true
+          ]
+        }
+      },
+      {
+        "name": "no-std-compiler-confirmed",
+        "claim": "Every production noble-ngraph unit owns an active compiler configuration fact for `crate:no-std=noble-ngraph`.",
+        "ok": true,
+        "observed": {
+          "predicate": "crate:no-std=noble-ngraph",
+          "production_units": [
+            {
+              "unit_id": "04b3c213ec0f69e8a48c53147abc03e0e0a497331f37e7b6b39191097efebb31",
+              "source_path": "crates/noble-ngraph/src/lib.rs",
+              "role": "domain-core",
+              "facts": 1
+            },
+            {
+              "unit_id": "d6016bd7aec130e199742d245092870256bd610d4939191e402cece996276c84",
+              "source_path": "crates/noble-ngraph/src/lib.rs",
+              "role": "domain-core",
+              "facts": 1
+            }
+          ],
+          "observed_units": 17,
+          "production_unit_count": 2
+        }
+      },
+      {
+        "name": "normal-dependencies",
+        "claim": "The resolved Cargo graph contains exactly the two declared Noble normal edges out of noble-ngraph and no build edge.",
+        "ok": true,
+        "observed": {
+          "edges": [
+            {
+              "caller_package": "noble-ngraph",
+              "callee_package": "noble-contracts",
+              "edge_kind": "normal",
+              "target_predicate": null
+            },
+            {
+              "caller_package": "noble-ngraph",
+              "callee_package": "noble-kernel",
+              "edge_kind": "normal",
+              "target_predicate": null
+            }
+          ],
+          "normal_callees": [
+            "noble-contracts",
+            "noble-kernel"
+          ],
+          "declared_packages": [
+            "noble-cli",
+            "noble-contracts",
+            "noble-kernel",
+            "noble-ngraph",
+            "noble-ngraph-experiment",
+            "noble-syndicate",
+            "noble-wasm"
+          ]
+        }
+      },
+      {
+        "name": "manifest-dependencies",
+        "claim": "The committed manifest declares exactly noble-contracts and noble-kernel as normal dependencies, with no build or third-party dependency.",
+        "ok": true,
+        "observed": {
+          "manifest_sha256": "9fdaf8bf88be311b40962fbedf4af3349ff1f1768c89785a1ea21ff39202138d",
+          "normal": [
+            "noble-contracts",
+            "noble-kernel"
+          ],
+          "build_dependencies": null,
+          "third_party_edges": []
+        }
+      },
+      {
+        "name": "forbidden-capability-uses-zero",
+        "claim": "No production compiler effect fact owned by a noble-ngraph unit uses any of the seven forbidden capability families, and none is an authorized outbound effect.",
+        "ok": false,
+        "observed": {
+          "families": {
+            "filesystem": 0,
+            "process": 0,
+            "environment": 1,
+            "time": 0,
+            "concurrency": 0,
+            "observability": 0,
+            "unsafe-code": 0
+          },
+          "observed_families": [
+            "environment"
+          ],
+          "production_effect_facts": 1,
+          "test_only_effect_facts": 177,
+          "test_only_families": [
+            "concurrency",
+            "environment",
+            "filesystem",
+            "process",
+            "time"
+          ]
+        }
+      },
+      {
+        "name": "required-unknowns-zero",
+        "claim": "Every production compiler unknown owned by a noble-ngraph unit is a dynamic-dispatch unknown declared by the reviewed policy, and the gate raises no required-compiler-unknown finding.",
+        "ok": true,
+        "observed": {
+          "production_unknowns": 1527,
+          "unknown_characters": {
+            "core::iter": 860,
+            "core::ops": 112,
+            "noble_ngraph::grad": 70,
+            "noble_ngraph::identity": 144,
+            "core::hash": 248,
+            "core::cmp": 84,
+            "core::fmt": 5,
+            "core::clone": 2,
+            "core::convert": 2
+          },
+          "unclassified": [],
+          "required_unknown_findings": 0,
+          "retained_unknown_ids": 4306,
+          "test_only_unknowns": 2210
+        }
+      },
+      {
+        "name": "identity-hash-injected",
+        "claim": "The production compiled noble-ngraph facts declare both injected identity traits, reach them through resolved trait calls and implementations, and select no standard hasher.",
+        "ok": true,
+        "observed": {
+          "traits": [
+            "noble_ngraph::identity::IdentityHasher",
+            "noble_ngraph::identity::IdentityScheme"
+          ],
+          "resolved_trait_calls": [
+            "noble_ngraph::identity::IdentityHasher::finish",
+            "noble_ngraph::identity::IdentityHasher::update",
+            "noble_ngraph::identity::IdentityScheme::name",
+            "noble_ngraph::identity::IdentityScheme::start"
+          ],
+          "implementations": [
+            "noble_ngraph::identity::IdentityHasher",
+            "noble_ngraph::identity::IdentityScheme"
+          ],
+          "forbidden_hasher_needles": []
+        }
+      }
+    ]
+  },
+  "non_claims": [
+    "Bounded compiler-derived facts for the selected Octet run only; not a proof or runtime observation.",
+    "The architecture policy is an explicitly reviewed input; its role, provider, capability and no_std classifications are premises, not compiler theorems.",
+    "Identity scheme implementations in composition roots, native code, the operating system and the hash function implementation retain separate assumptions.",
+    "The negative control mutates only the scratch copy; the verified tree is unchanged and its commit/tree identities are recorded."
+  ]
+}
