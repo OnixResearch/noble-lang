@@ -108,9 +108,16 @@
     the gate run's own `cargo test` steps are among the round-3 receipt's hashed raw outputs.
   - Review status: round 1 returned REVISE, round 2 accepted the registration with notes, accepted
     01/02/06/07, accepted 03 as an executed failure, accepted 04 with notes and rejected the
-    OWN-CASE-05 promotion. The round-3 revision (OWN-CASE-05 withheld, honesty fixes and a new
-    receipt) awaits the next review. This task stays open until that review and the remaining owner
-    decision on the round-1 commit identity.
+    OWN-CASE-05 promotion. Round 3 accepted the registration and the promotions with notes
+    R3-1..R3-4 and accepted the OWN-CASE-05 withholding. R3-1's task and README wording is fixed;
+    R3-2 is applied (the evidence records name the full tested commit
+    `33318b7cb518a53efc04e116981fbd70c6aec853`). R3-3: the gate re-ran on the merged Cairn batch-1
+    tree `05bac95a` ([`runs/20261121-b1`](../../../verification/own-cases/runs/20261121-b1/acceptance.json),
+    sha256 `3d311f50…`) with the same verdicts. R3-1's projected `frame_pins_reported` field and
+    lane-header wording and R3-4's two consistency checks change the projection digest, the gate
+    and an M4-bound lane file, so they go with the next OWN gate run, which LREF-EXIT-01 and
+    OWN-CASE-05 need anyway; that run re-cites the promoted cases. This task stays open until
+    OWN-CASE-05 executes and the owner decides the round-1 commit identity.
 - [x] [serial] If a borrow profile is selected, specify syntax separately, implement the checker escape test and obtain checker-refinement evidence for OWN-PO-2. r[OWN-BORROW-01] OWNER DECISION 2026-11-20: no borrow profile is selected, so the condition does not hold and the task closes with that recorded outcome (owner rule: a recorded negative outcome completes a conditional task). Noble keeps only the WIT `own`/`borrow` adapter forms; it has no `borrow` word. OWN-CASE-04's borrow variants are therefore inapplicable, OWN-PO-2 is not applicable, and no checker escape test or refinement evidence is claimed. Selecting a borrow profile later needs a new change carrying its syntax, escape test and OWN-PO-2 evidence.
 - [ ] [serial] Mechanize OWN-PO-1/3 in the abstract model, then obtain separate lowering, runtime and host-ledger correspondence for OWN-PO-4..7. r[OWN-EV-01]
   Progress (2026-10-30): `proofs/foundation/NobleFoundation/Effects.lean` proved OWN-PO-1 for
