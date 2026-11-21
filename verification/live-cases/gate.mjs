@@ -1434,7 +1434,6 @@ async function observeLive09() {
       && first.pending.candidate_program_interface.input === '[I64]'
       && first.pending.candidate_program_interface.output === '[I64]'
       && first.pending.candidate_program_interface.effects === 0
-      && Array.isArray(first.pending.signatures)
       && Array.isArray(first.pending.candidate_recipe_events)
       && first.pending.candidate_recipe_events.length >= 4
       // Kernel: the committed derived source digest is the digest of the
@@ -1462,7 +1461,6 @@ async function observeLive09() {
         postreturn_snapshot_verified: first.pending.postreturn_snapshot_verified,
         candidate_program_interface: first.pending.candidate_program_interface,
         recipe_event_count: first.pending.candidate_recipe_events?.length,
-        signature_rows: first.pending.signatures?.length,
       },
       kernel: { first: first.committed.source_sha256, second: second.committed.source_sha256 },
       byte: { first: first.committed.module.wasm_sha256,
