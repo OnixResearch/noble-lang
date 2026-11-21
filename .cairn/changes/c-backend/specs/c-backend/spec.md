@@ -211,13 +211,17 @@ time without following any symlink and refuses relative, `.`, `..`, empty or
 non-UTF-8 components; it refuses a non-regular, multiply-linked or
 stage-oversized input, snapshots the bytes it read into a memfd sealed with
 `F_SEAL_WRITE`/`F_SEAL_SHRINK`/`F_SEAL_GROW`/`F_SEAL_SEAL` and uses the
-read-back snapshot for this build, and rechecks the leaf's device and inode
-afterwards. It creates the output directory with `mkdirat` under the walked
-parent and writes every artifact through that directory descriptor with
-`O_CREAT|O_EXCL|O_NOFOLLOW` instead of re-resolving the output path. The
+read-back snapshot for this build; the bytes read must equal the leaf's
+recorded size, and afterwards it rechecks the leaf's device, inode, link
+count, size and modification and change timestamps. It creates the output
+directory with `mkdirat` under the walked parent, re-opens that leaf name once
+and compares the opened directory's identity with the name, then writes every
+artifact through that directory descriptor with `O_CREAT|O_EXCL|O_NOFOLLOW`
+instead of re-resolving the output path; a principal who can write the parent
+can still substitute the new directory between `mkdirat` and that re-open. The
 sealed descriptor is released when the snapshot is read and is not retained
-for a later launch; the recheck compares identity only, so an in-place
-rewrite of the same inode is not detected. The build still selects no trusted
+for a later launch; an in-place rewrite that leaves the inode, link count,
+size and both timestamps unchanged is not detected. The build still selects no trusted
 anchor, performs no independent native admission, and does not launch or
 compare native bytes; this paragraph does not close the OPEN gap above.
 

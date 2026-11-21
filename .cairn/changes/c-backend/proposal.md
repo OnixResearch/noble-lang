@@ -91,8 +91,9 @@ not native runtime quota evidence, source-to-ELF admission or a passed CB case.
 After the 2026-11-20 source-only slices, the restricted emitter also accepts
 one checked `Pair`/`Sum`/`List` result rendered as bounded value text and
 binds its inputs through descriptor-anchored sealed snapshots without
-selecting a trusted anchor or detecting an in-place rewrite of the same
-inode; the earlier result-form, "no final aggregate output" and ancestor-gap
+selecting a trusted anchor or detecting an in-place rewrite that leaves the
+inode, link count, size and timestamps unchanged; the earlier result-form,
+"no final aggregate output" and ancestor-gap
 sentences in this proposal record the creation state. This is still inert
 source emission: no native compilation, execution, sandbox, differential or
 CB case evidence follows.

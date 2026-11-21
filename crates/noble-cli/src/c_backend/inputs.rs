@@ -252,9 +252,11 @@ impl OutputDir {
 }
 
 /// Create one new output directory under the walked parent and bind its
-/// descriptor. The directory is re-opened for reading and its identity is
-/// compared with the leaf name, refusing a directory replaced during
-/// creation.
+/// descriptor. The leaf name is re-opened once after `mkdirat` and the opened
+/// directory's identity is compared with the name, refusing a replacement
+/// between that re-open and the comparison. A principal who can write the
+/// parent can still substitute the directory between `mkdirat` and the
+/// re-open; only a trusted anchor would close that window.
 pub(super) fn create_output(path: &Path) -> Result<OutputDir, String> {
     let (parents, leaf) = components(path)?;
     let mut dir = root()?;

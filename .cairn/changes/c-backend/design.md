@@ -135,8 +135,10 @@ does not spawn `cc`, produce ELF or satisfy CB-ADMIT-01. Its source-only path
 binding walks each input from the filesystem root without following a
 symlink, refuses relative and `.`/`..` components and multiply-linked or
 non-regular files, snapshots the bytes into a sealed memfd and writes outputs
-through the created directory descriptor; trusted-anchor selection, in-place
-rewrite detection beyond the identity recheck, and every native admission
+through the output directory descriptor it re-opens once after `mkdirat` (a
+writer of the parent can substitute the directory before that re-open);
+trusted-anchor selection, detection of an in-place rewrite that leaves the
+inode, link count, size and timestamps unchanged, and every native admission
 step remain open. `--native` and `execute --target c` continue to refuse.
 Canonical C text and all case evidence remain HOLD until a separate owner
 decision.
@@ -160,9 +162,10 @@ decision.
    links and replacement. Snapshot checked bytes in sealed read-only
    descriptors; reject duplicate JSON members before interpreting limits.
    The source-only build already walks its three inputs that way and writes
-   through the created output directory descriptor, but it releases each
-   sealed snapshot after reading it, compares identity only, selects no
-   trusted anchor and performs no native byte comparison below.
+   through the output directory descriptor it re-opens once after creation,
+   but it releases each sealed snapshot after reading it, rechecks only the
+   leaf's identity, link count, size and timestamps, selects no trusted
+   anchor and performs no native byte comparison below.
    Independently check the exact source/resolved contracts, re-emit C under
    the pinned emitter/runtime and compare *all* C bytes. Compile that
    trusted C in a hermetic fixed environment and compare *all* ELF bytes,
