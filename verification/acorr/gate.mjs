@@ -381,7 +381,9 @@ case_('ACORR-CASE-01', 'positive `[ 1 + ]` increment law, no guard, off and on',
   for (const mode of ['off', 'on']) {
     const subject = emit(increment.source, mode, 'c1-subject');
     for (const argument of [41n, I64_MAX]) {
-      const call = emit(input(`c1-call-${argument}.noble`, callSource(argument, Q_ONE, null)), mode,
+      // One prepared input per mode: inputs are created exclusively, so the
+      // second mode must not reuse the first mode's file name.
+      const call = emit(input(`c1-call-${mode}-${argument}.noble`, callSource(argument, Q_ONE, null)), mode,
         `c1-call-${argument}`);
       const admission = admit(`case01-${mode}-${argument}`, {
         subject: subject.module, call: call.module, law: increment, pins: join(out, `pins-${mode}.json`),
@@ -712,10 +714,16 @@ case_('ACORR-CASE-10', 'producer metadata forgery is discarded', entry => {
   });
   admitted(entry, 'forged manifest still admits the valid pair', forgedAdmission, 'off');
   variant(entry, 'identical outcome and identities with and without metadata', () => {
+    // The discarded producer manifest is reported beside the envelope
+    // (`candidate.manifest`), never inside the identity-bearing envelope.
+    const manifest = forgedAdmission.report.candidate?.manifest;
     observation('forged manifest parsed and discarded',
-      forgedAdmission.envelope.candidate.manifest.present === true &&
-        JSON.stringify(forgedAdmission.envelope.candidate.manifest.discarded_fields.sort()) ===
-          JSON.stringify(['allowed', 'claimed_effects', 'digest', 'opt', 'source', 'tool_sha256', 'trusted_correspondence']));
+      manifest?.present === true &&
+        JSON.stringify([...(manifest.discarded_fields ?? [])].sort()) ===
+          JSON.stringify(['allowed', 'claimed_effects', 'digest', 'opt', 'source', 'tool_sha256', 'trusted_correspondence']),
+      { manifest: manifest ?? null });
+    observation('the forged manifest is not part of the envelope',
+      !Object.hasOwn(forgedAdmission.envelope, 'candidate'));
     observation('the producer opt claim did not select the mode',
       forgedAdmission.envelope.build.opt === 'off');
     observation('the same subject artifact',
