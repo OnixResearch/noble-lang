@@ -232,7 +232,7 @@
   "crates/noble-contracts/src/inference/mod.rs" = "3f4e059c487775c40072ba78815a7f80a31cce029b7b76a20f8914943b9c77f2",
   "crates/noble-contracts/src/source/declared.rs" = "fa30c64b49d0b574d8de0a456b56ad3435eadbd73685437d3abf5e2dda53bac3",
   "crates/noble-contracts/src/source/declared/links.rs" = "7922725f885f36cd978cf6278c857b981c77fa1c02409476e1169ac1568946ba",
-  "crates/noble-contracts/src/source/declared/parsing/members.rs" = "a5c8901ae1136c3fc6bc277e2c99be5c3f922215b0d6b6da44c11e4ca3eb1dae",
+  "crates/noble-contracts/src/source/declared/parsing/members.rs" = "34d9e9ff61bfd832aa1c5700d43c87eb5502b623b0d75309128cb33c93b33a82",
   "crates/noble-contracts/src/source/declared/signatures.rs" = "035c5a0eef31f9cc03d7d047f4cccf160ff694dfe917a2020dcdfd0ff4fad240",
   "crates/noble-contracts/src/source/declared/state/register/adapter.rs" = "003111578dfbd493f27948d1000166e7002259bcc858e8723ba25e7a039309a4",
   "crates/noble-contracts/src/source/declared/types.rs" = "7561c06c4287daa92772fc0b66ea60a88dd3272fae7e1f8d18e1c0f3b2043889",
