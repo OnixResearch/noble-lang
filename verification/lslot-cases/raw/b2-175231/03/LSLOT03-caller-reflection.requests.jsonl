@@ -1,0 +1,2 @@
+{"operation":"install","id":"caller","source":"slot.invoke","inputs":["Account@1","I64","LiveRef<Account@1+I64,Account@1+I64,test.emit>"]}
+{"operation":"reflect","id":"caller","site_id":0}

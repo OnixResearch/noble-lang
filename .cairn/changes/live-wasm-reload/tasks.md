@@ -288,6 +288,16 @@ CLI `be2d6ed6…`, `live_repl` test binary `99c540e7…`, 34 commands, 75 report
 promotes the same LIVE-01, LIVE-06 and LIVE-07. The case records keep citing
 the `004d24c4` receipt; no case state changes.
 
+Batch-2 re-run (2026-11-21): batch 2 merged the frontend refusal of an
+unavailable builtin word, so the gate ran again on the batch tree `b088cfc7`.
+Its receipt
+[`verification/live-cases/acceptance-2026-11-21-b2.json`](../../../verification/live-cases/acceptance-2026-11-21-b2.json)
+(SHA-256 `c809f006a6529a0685a2fc4185e54f34b473f842f27e1fcf23c93d16387b12c2`;
+source revision `sha256:3141a5ac01ea7747a526171c8e992b130e1b71e40cb14a057952b9b7235c124b`,
+CLI `7a30c78e…`, `live_repl` test binary `f329b3b4…`, 34 commands, 75 reports)
+promotes the same LIVE-01, LIVE-06 and LIVE-07. The case records keep citing
+the `004d24c4` receipt; no case state changes.
+
 ### Amendment proposal: LIVE-02 `input.after_reload_ack`
 
 The canonical case cannot type-check its own `expected` fields. In the
