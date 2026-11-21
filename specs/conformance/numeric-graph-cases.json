@@ -177,10 +177,10 @@
         "identity_hash_injected": true
       },
       "state": {
-        "implementation": "absent",
-        "execution": "not-run",
+        "implementation": "implemented",
+        "execution": "passed",
         "proof": "open",
-        "trust": "unassessed"
+        "trust": "explicit"
       },
       "evidence": [
         {
@@ -207,6 +207,127 @@
             "Static boundary checks over declared sources and metadata, not a proof of source purity, native-assurance receipt or Octet architecture admission, and not an execution of the capability claim.",
             "The receipt's source list and digest cover the 23 library sources present when it was recorded; crates/noble-ngraph/src now holds 27 .rs files, so the scan does not cover batch.rs, cert.rs, layout.rs or schedule.rs and its count is stale.",
             "Forbidden-capability scanning matches literal source needles; an obfuscated alias could evade a textual scan, which is why no proof claim is made."
+          ]
+        },
+        {
+          "kind": "test",
+          "subject": "NGRAPH-CASE-02",
+          "revision": "0.1.0-draft.5",
+          "claim": "The selected pinned Octet row ran on the verified clean commit and its own compiler-derived artifacts record: every production noble-ngraph unit owns an active `crate:no-std=noble-ngraph` configuration fact; the resolved Cargo graph has exactly the two Noble normal edges and no build or third-party edge; no production effect fact in the seven forbidden capability families belongs to the crate and none is an authorized outbound effect; every production compiler unknown owned by the crate is a dynamic-dispatch unknown declared by the reviewed policy and the gate raises no required-compiler-unknown finding; the gate is clean with no findings and no applied waiver; and both injected identity traits are declared, implemented and reached by resolved calls with no standard hasher in production facts. The same lane's scratch-copy negative control, which adds an aliased `std` environment probe to the crate, is refused. This is bounded compiler-derived evidence for one run, not proof, runtime observation or whole-program authenticity.",
+          "result": "passed",
+          "source_revision": "sha256:d39f52b8b4d497cf6f70a232929bb80174fa90d3f87364c9c890b968af78c967",
+          "configuration": {
+            "profile": "Numeric-Graph-v1",
+            "case_id": "NGRAPH-CASE-02",
+            "harness": "verification/ngraph-library-boundary/gate.mjs",
+            "harness_sha256": "1b4db7071fb01328fd1b8ac76c1211cc870d895c636dd26a305a8c6d80d74306",
+            "receipt": "../../verification/ngraph-library-boundary/receipt.json",
+            "receipt_sha256": "9d63d5c65bb4b27c0b87f8c178acaa615b27d2cb1406f335e10064be7ba9e5c3",
+            "tested_commit": "6e415f0d1cb8dc1aac4f909bec4336258354951c",
+            "tested_tree": "69f9dd32ca8e62577ecf6e0e2508d7ae69be583a",
+            "tested_source_manifest_sha256": "d39f52b8b4d497cf6f70a232929bb80174fa90d3f87364c9c890b968af78c967",
+            "octet": "/nix/store/znmkgimllzx7gyrlani4xbj1fs47vnf5-cargo-octet-0.1.0-typed-strict-trait",
+            "octet_command": "cargo-octet check --workspace --output-format json --artifact-dir OUT -- --all-targets --features live-test-barrier,safety-observe --offline",
+            "architecture_policy_blake3": "49fb49992c5790e26ab6572f4a2380078416c2bdefd2c55f571b7bb759c73395",
+            "architecture_policy_sha256": "16432391907e495b82fe1d802efabc6b2afa571ebef0147b192ab7f5024985f5",
+            "toolchain": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21",
+            "artifact_directory": "/home/brittonr/.cache/noble-cairn/scratch/ngraph-case02/boundary-20261120-final2/artifact-positive",
+            "artifact_files": [
+              {
+                "name": "command.txt",
+                "bytes": 323,
+                "sha256": "85243cea6daf5eccf6da99d6d1fe9bd53eac17d61317bf1d3286797182840c13"
+              },
+              {
+                "name": "compiler-architecture-coverage.json",
+                "bytes": 16183,
+                "sha256": "1f9fa722e082e267a3ec1552fb2b9a19b616777cc7e1983c11e267efcbc77788"
+              },
+              {
+                "name": "compiler-architecture-ir.json",
+                "bytes": 429490357,
+                "sha256": "637aba5efe5a55ed266c9ab0a810675992f8cca1bbe312293c365213e394d3f0"
+              },
+              {
+                "name": "compiler-architecture-issues.json",
+                "bytes": 3,
+                "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+              },
+              {
+                "name": "compiler-architecture-receipt.json",
+                "bytes": 624,
+                "sha256": "dc0b5942a88deb6d6a5960c5bc08270e4be44d9f793efa4d72a5e15d3894de07"
+              },
+              {
+                "name": "project-architecture-cargo-graph.json",
+                "bytes": 4489,
+                "sha256": "eea735c70c7575d05634c8ac39c16acb643c43fa3e504dca1671f7563abc5e46"
+              },
+              {
+                "name": "project-architecture-policy-source.ncl",
+                "bytes": 35155,
+                "sha256": "29d7486ccc6855a0558e84821d5218095a9568b0aac361efc8715d8603ee7853"
+              },
+              {
+                "name": "project-architecture-policy.json",
+                "bytes": 23806,
+                "sha256": "16432391907e495b82fe1d802efabc6b2afa571ebef0147b192ab7f5024985f5"
+              },
+              {
+                "name": "project-architecture-receipt.json",
+                "bytes": 20993588,
+                "sha256": "7af7a72f74bc759d377199bb74fabe616b24190fa437835e9c54d17ac39e2116"
+              },
+              {
+                "name": "provenance.jsonl",
+                "bytes": 4251,
+                "sha256": "e63ed2b7fc41a2b738bd89489f40a5ae873b92bde798bb6500ec006686ac11c0"
+              },
+              {
+                "name": "results.jsonl",
+                "bytes": 1154,
+                "sha256": "abeff0c2fdb23c14f5de92e4f598993da0965f7e107b8a5326ec118d90b76321"
+              },
+              {
+                "name": "status.json",
+                "bytes": 1724,
+                "sha256": "bdf869319ff15320d673e622a22d16544facb6c0d4007af47c897a6d2be652de"
+              },
+              {
+                "name": "summary.txt",
+                "bytes": 544,
+                "sha256": "003c53b04df69e0c796af4ab767ca5e13bc2328229009fb75544d7213d4ceddd"
+              }
+            ],
+            "artifact_total_bytes": 450572201,
+            "artifact_replay_status": "valid",
+            "checks": 14,
+            "checks_passed": 14,
+            "control": {
+              "method": "git archive of the verified commit, then an aliased `extern crate std` environment probe appended to crates/noble-ngraph/src/lib.rs",
+              "verdict": "refused",
+              "mutation_sha256": "d8b981ee85dc84f1193f483c5bc7d663bc9101f5188b7afb70338568fffc3ec5",
+              "failed_checks": [
+                "architecture-clean",
+                "forbidden-capability-uses-zero"
+              ],
+              "forbidden_family_counts": {
+                "filesystem": 0,
+                "process": 0,
+                "environment": 1,
+                "time": 0,
+                "concurrency": 0,
+                "observability": 0,
+                "unsafe-code": 0
+              }
+            }
+          },
+          "assumptions": [
+            "The architecture policy is an explicitly reviewed input: its role, provider, capability, no_std and dynamic-dispatch classifications are premises, not compiler theorems.",
+            "Production scope is the gate's own production view; the receipt records 177 test-only effect facts and 2,210 test-only unknowns separately, and test-only evidence cannot discharge or violate the production claim.",
+            "Identity scheme implementations in composition roots, the hash function, native code and the operating system retain separate assumptions; no standard hasher is selected by production facts, not a proof that no caller can supply an effectful scheme.",
+            "The negative control mutates only the `git archive` scratch copy; the verified tree is unchanged and its commit/tree identities are recorded in the receipt.",
+            "Proof stays open; no runtime, performance, cross-platform, global-gate, archive or whole-feature claim follows."
           ]
         }
       ]
