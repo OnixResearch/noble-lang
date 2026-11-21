@@ -197,6 +197,10 @@ const retainedReceipts = [
   'verification/lslot-cases/acceptance-2026-11-20-r3.sha256',
   'verification/lslot-cases/acceptance-2026-11-20-r4.json',
   'verification/lslot-cases/acceptance-2026-11-20-r4.sha256',
+  'verification/lslot-cases/acceptance-2026-11-21-b1.json',
+  'verification/lslot-cases/acceptance-2026-11-21-b1.sha256',
+  'verification/lslot-cases/acceptance-2026-11-21-b2.json',
+  'verification/lslot-cases/acceptance-2026-11-21-b2.sha256',
 ];
 const presentReceipts = fs.readdirSync(path.join(root, 'verification/lslot-cases'))
   .filter(name => name.startsWith('acceptance'))
