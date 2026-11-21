@@ -202,7 +202,7 @@
     "open_assumptions": [
       "Source translation soundness, model/type-code fidelity and actual Rust checker/translator refinement beyond the finite CONTRACT-26 source-bound acceptance",
       "General proof erasure, backend/Wasm correspondence and host MC1 release authority",
-      "VC-OWNER-01 owner-frozen law and CONTRACT-16 host acceptance before CONTRACT-20/23"
+      "CONTRACT-20/23 stay unimplemented; their VC-OWNER-01 owner-frozen law and CONTRACT-16 host-acceptance prerequisites are met (laws frozen and CONTRACT-16 implemented/passed with proof open, 2026-11-20)"
     ],
     "legacy_mc2_caveat": "The selected MC2 certify/inspect observations do not report request counters; the receipt marks both as unreported, not zero."
   },
