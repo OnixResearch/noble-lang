@@ -101,6 +101,18 @@ complete CB-LIMIT-01 limits or CB-BUILD-01 native build contract; both remain
 open. This is not native compilation, execution, sandbox or artifact admission
 evidence.
 
+The preceding result-form sentence records the source-only WIP text that the
+mid-change sync at `8c6ab3d0` applied to canonical. The current nonselected
+source-only emitter does not refuse `Pair`/`Sum`/`List` results: it accepts
+exactly one checked `Pair`, `Sum` or `List` result whose complete element
+types are `I64`, `Bool`, `Unit`, `Text` or a nested `Pair`/`Sum`/`List` of
+those, and renders it as bounded JSON value text in the selected runtime's
+value encoding. `Syntax` and `Program` results, `reflect`, typed runtime
+inputs, named definitions and host effects still refuse. It emits that
+rendering into the inert C source only: the aggregate result has not been
+executed, compared to selected Wasm or admitted as native code, so no
+CB-GATE-01, quota or CB-ADMIT-01 evidence follows.
+
 
 <!-- cairn:scenario-links:start -->
 #### Scenario: CB-CASE-04 for CB-BUILD-01
@@ -293,7 +305,7 @@ r[CB-SANDBOX-01]
 
 **CB-SANDBOX-01.**
 
-Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before candidate instructions it closes inherited file descriptors except explicitly enumerated private request/response protocol FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock, post-load process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and escape attempts MUST refuse or terminate with zero protected operations, with a benign authorized `test.emit` control under the same confinement. Hostile vDSO `__vdso_clock_gettime`, `__vdso_time`, `__vdso_gettimeofday`, coarse-clock, direct-vvar and x86 `rdtsc`/`rdtscp` attempts likewise MUST refuse or be demonstrably contained without host-time or elapsed-time disclosure; trapping or virtualizing only the TSC is insufficient, and a vDSO-only or coarse-clock-only mechanism is not equivalent. A native crash cannot become a successful Noble result.
+Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before candidate instructions it closes inherited file descriptors except explicitly enumerated private request/response protocol and output FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock, post-load process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and escape attempts MUST refuse or terminate with zero protected operations, with a benign authorized `test.emit` control under the same confinement. Hostile vDSO `__vdso_clock_gettime`, `__vdso_time`, `__vdso_gettimeofday`, coarse-clock, direct-vvar and x86 `rdtsc`/`rdtscp` attempts likewise MUST refuse or be demonstrably contained without host-time or elapsed-time disclosure; trapping or virtualizing only the TSC is insufficient, and a vDSO-only or coarse-clock-only mechanism is not equivalent. A native crash cannot become a successful Noble result.
 
 The native runner MUST select a reviewed immutable derivation and policy
 separate from the proof-only Lean runner and any package merely cached on
@@ -357,6 +369,27 @@ inputs, and its output child paths are re-resolved after directory creation;
 it MUST NOT turn those file digests into a claim of native correspondence or
 permit native execution. This gap remains OPEN until a separately admitted
 native build/launch path implements the descriptor-bound contract above.
+
+The preceding paragraph records the source-only state the mid-change sync at
+`8c6ab3d0` applied. The current nonselected source-only build instead walks
+every host-selected input path from the filesystem root one component at a
+time without following any symlink and refuses relative, `.`, `..`, empty or
+non-UTF-8 components; it refuses a non-regular, multiply-linked or
+stage-oversized input, snapshots the bytes it read into a memfd sealed with
+`F_SEAL_WRITE`/`F_SEAL_SHRINK`/`F_SEAL_GROW`/`F_SEAL_SEAL` and uses the
+read-back snapshot for this build; the bytes read must equal the leaf's
+recorded size, and afterwards it rechecks the leaf's device, inode, link
+count, size and modification and change timestamps. It creates the output
+directory with `mkdirat` under the walked parent, re-opens that leaf name once
+and compares the opened directory's identity with the name, then writes every
+artifact through that directory descriptor with `O_CREAT|O_EXCL|O_NOFOLLOW`
+instead of re-resolving the output path; a principal who can write the parent
+can still substitute the new directory between `mkdirat` and that re-open. The
+sealed descriptor is released when the snapshot is read and is not retained
+for a later launch; an in-place rewrite that leaves the inode, link count,
+size and both timestamps unchanged is not detected. The build still selects no trusted
+anchor, performs no independent native admission, and does not launch or
+compare native bytes; this paragraph does not close the OPEN gap above.
 
 
 <!-- cairn:scenario-links:start -->
