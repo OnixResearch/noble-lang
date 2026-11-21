@@ -137,6 +137,15 @@ theorems are checked again against the selected new subject and trusted models.
 
 ## Retained runs
 
+### `05bac95a`: [receipt-05bac95a.json](receipt-05bac95a.json)
+
+Cairn campaign batch 1 regenerated the contracts and Wasm subjects, and the lock
+and receipt were renewed (discovery `4fad091a`, check `783de42e`). The kernel
+subject this profile consumes is unchanged, so only the lock and receipt hashes
+moved (`05bac95a`). This clean run at `05bac95a` on that binding has the same 61
+theorems and the same refusals of all eleven mutation controls (8, 8, 9, 9, 8,
+10, 8, 3, 3, 3 and 3 strict theorems lost).
+
 ### `0287ea06`: [receipt-0287ea06.json](receipt-0287ea06.json)
 
 The #137 metadata changed `Cargo.toml` and `flake.nix`, so the lock and receipt
