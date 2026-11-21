@@ -21,26 +21,8 @@ fn empty_dependency_list() -> alloc::vec::Vec<Definition> {
     alloc::vec::Vec::new()
 }
 
-/// The fixed `forall<S> [ S -- S ! {test.abort} ]` row: it preserves the whole
-/// stack and terminates abnormally. The host records the request and performs
-/// no protected operation.
-pub fn test_abort_scheme() -> crate::words::Scheme {
-    let tail = crate::shapes::Pattern::StackVar(crate::words::Variable(0));
-    crate::words::Scheme {
-        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
-        stack_in: alloc::vec![tail.clone()],
-        stack_out: alloc::vec![tail],
-        effects: alloc::vec![crate::shapes::EffectSlot::Effect(TEST_ABORT)],
-    }
-}
-
 /// The reserved identity of the resource-free `test.emit` effect.
 pub const TEST_EMIT: crate::types::EffId = crate::types::EffId(0);
-/// The reserved identity of the resource-free `test.abort` terminal effect.
-/// It is a declared abnormal termination, not a protected host operation, and
-/// shares Core's exact identity in every profile that selects the test
-/// environment.
-pub const TEST_ABORT: crate::types::EffId = crate::types::EffId(1);
 /// The reserved identity of the opt-in scripted `test.clock` effect.
 pub const TEST_CLOCK: crate::types::EffId = crate::types::EffId(2);
 /// The reserved identity of the required, deny-only `test.code-export` effect.

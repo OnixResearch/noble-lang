@@ -1877,6 +1877,10 @@ pub(crate) fn checked_i64_environment() -> Result<noble_kernel::contracts::Env, 
     adapt_environment(env, false)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; the fixed bootstrap environment and emit slot are checked fallibly before appending matching scheme, behavior, dependency, and effect entries."
+)]
 fn adapt_environment(
     mut env: noble_kernel::contracts::Env,
     source_abort: bool,
@@ -1888,11 +1892,22 @@ fn adapt_environment(
         None => return Err(crate::internal(span)),
     }
     if source_abort {
-        env.defs.push(noble_kernel::contracts::test_abort_scheme());
+        // The fixed `forall<S> [ S -- S ! {test.abort} ]` row at Core's
+        // identity 1. `noble-wasm`'s `abort_scheme` builds the same row; both
+        // are constructed locally because each extracted subject models the
+        // kernel types itself.
+        env.defs.push(noble_kernel::words::Scheme {
+            var_kinds: alloc::vec![noble_kernel::words::VariableKind::Stack],
+            stack_in: alloc::vec![tail.clone()],
+            stack_out: alloc::vec![tail],
+            effects: alloc::vec![noble_kernel::shapes::EffectSlot::Effect(
+                noble_kernel::types::EffId(1)
+            )],
+        });
         env.kinds.push(noble_kernel::contracts::Behavior::Named);
         env.deps.push(alloc::vec::Vec::new());
         env.definition_owners.push(None);
-        env.effects.push(noble_kernel::contracts::TEST_ABORT);
+        env.effects.push(noble_kernel::types::EffId(1));
     }
     Ok(env)
 }
@@ -2930,10 +2945,7 @@ mod tests {
         let submission = prepared.submission().expect("checked submission");
         assert_eq!(
             submission.request.expected.allowed_effects.as_slice(),
-            [
-                noble_kernel::contracts::TEST_EMIT,
-                noble_kernel::contracts::TEST_ABORT
-            ]
+            [noble_kernel::contracts::TEST_EMIT, noble_kernel::types::EffId(1)]
         );
         // An operation outside the host-selected environment stays unbound.
         assert!(granted.prepare(b"test.clock", &[], limits).is_err());

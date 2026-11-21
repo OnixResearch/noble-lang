@@ -20,11 +20,22 @@ fn same_kind(
     left == right
 }
 
-/// The fixed terminal `test.abort` row. Core and the host-selected live test
-/// environment share the kernel's single constructor, so the identity cannot
-/// drift between profiles.
+/// The fixed terminal `test.abort` row at Core's identity 1, shared by Core and
+/// the host-selected live test environment. `noble-contracts` builds the same
+/// row in `adapt_environment`; each extracted subject constructs it locally.
 fn abort_scheme() -> noble_kernel::words::Scheme {
-    noble_kernel::contracts::test_abort_scheme()
+    noble_kernel::words::Scheme {
+        var_kinds: alloc::vec![noble_kernel::words::VariableKind::Stack],
+        stack_in: alloc::vec![noble_kernel::shapes::Pattern::StackVar(
+            noble_kernel::words::Variable(0)
+        )],
+        stack_out: alloc::vec![noble_kernel::shapes::Pattern::StackVar(
+            noble_kernel::words::Variable(0)
+        )],
+        effects: alloc::vec![noble_kernel::shapes::EffectSlot::Effect(
+            noble_kernel::types::EffId(1)
+        )],
+    }
 }
 
 fn live_schemes() -> [noble_kernel::words::Scheme; 2] {
