@@ -298,6 +298,14 @@ CLI `7a30c78e…`, `live_repl` test binary `f329b3b4…`, 34 commands, 75 report
 promotes the same LIVE-01, LIVE-06 and LIVE-07. The case records keep citing
 the `004d24c4` receipt; no case state changes.
 
+> OWNER DECISION 2026-11-21 (decision 30; verbatim): "Drop the variant: record it
+> as inapplicable (live profiles have no import grammar). LIVE-05 can then promote
+> from the merged run." Review finding A4 showed that the live profiles refuse
+> `import missing@1 as m` at `@` before any import resolution or registry lookup.
+> The variant is removed from LIVE-05's input and recorded in the case file's
+> `amendments` block dated 2026-11-21; the gate's `missing_or_escape_publishes`
+> row now rests on the symlink-escape variant alone.
+
 ### Amendment proposal: LIVE-02 `input.after_reload_ack`
 
 The canonical case cannot type-check its own `expected` fields. In the

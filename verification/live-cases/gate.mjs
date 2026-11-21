@@ -53,7 +53,7 @@ const projections = {
   'LIVE-02': 'ec9f76dd2daeb6537a588189910a19aa76b1a7d53d0bd7b62389ebe47779a215',
   'LIVE-03': 'bec86d121b5d6cee4c6de5f76d5235c5b442736d369f98e4581b5eb18d8ec2b5',
   'LIVE-04': '99aa94afa26f4e53eb2b63f91c68b621cf77bf984329950665df9d7f3fdbb570',
-  'LIVE-05': 'a1d4c1df39a1f7a23f039233a92d333fa5abcff48c1cc0f8e8687e8331137785',
+  'LIVE-05': '80351e26157e4c9337eb04e421b1ae2f1126a38b3acd2ba431870abb9ae312d7',
   'LIVE-06': '6ab3f70f7edd8db1734f005680d48cb0bcd4b4f2cae975bebece606302b171d5',
   'LIVE-07': 'aa80f1244e9039b8c7a2a3ebdfa19a05e97658cc8d03c4d78177b56d403d77b5',
   'LIVE-08': 'db9b11bbeb86a1afebf945d585123d0ab755a9e3b84c751ad3785f6a7e4cddc3',
@@ -70,9 +70,10 @@ for (const [id, digest] of Object.entries(projections))
 
 // Promoted by this slice. Every `expected` field of these cases must be
 // observed below; see `promotionGate`.
-// LIVE-05 stays unpromoted: its `missing-import` variant is refused lexically
-// before any import or registry check, so not every variant runs as designed.
-const promoted = ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-06', 'LIVE-07', 'LIVE-09'];
+// LIVE-05's `missing-import` variant is dropped as inapplicable (owner decision
+// 30: the live profiles have no import grammar); its remaining variants are
+// observed below.
+const promoted = ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-06', 'LIVE-07', 'LIVE-09'];
 
 
 // ---------------------------------------------------------------------------
@@ -1967,31 +1968,6 @@ async function observeLive05() {
   observe('LIVE-05', 'expected.new_submission_after_ack_uses_new_generation', isStack(next, ['I64:22']),
     { stack: stackOf(next) });
 
-  const missing = fixture('LIVE-05-missing', 'math.noble', 'def addone [ 1 + ]');
-  const missingWatch = start('LIVE-05-missing', ['live', 'watch', '--source', missing.source, '--engine', 'v8']);
-  const missingInitial = await missingWatch.report();
-  const missingPushed = await missingWatch.submit('7');
-  replace(missing.source, 'import missing@1 as m');
-  const missingRefused = await missingWatch.report();
-  // A watch session executes again only on the last ACKed selected bytes.
-  const missingBlocked = await missingWatch.submit('20 addone');
-  fs.writeFileSync(missing.source, 'def addone [ 1 + ]');
-  const missingOld = await missingWatch.submit('20 addone');
-  await missingWatch.close(0);
-  for (const [label, report] of Object.entries({ initial: missingInitial, pushed: missingPushed, refused: missingRefused,
-    blocked: missingBlocked, oldCall: missingOld })) keep('LIVE-05-missing', label, report);
-  // The variant as designed needs an import-capable registry profile. This
-  // Core profile refuses the word `missing@1` at the ASCII token grammar
-  // before any import or registry check, so the refused reload says nothing
-  // about registry lookup. It stays unobserved, and LIVE-05 stays unpromoted.
-  record('LIVE-05', 'input.variants.missing-import.registry', {
-    reason: 'the Core live profile refuses `import missing@1 as m` lexically (`@` is outside the ASCII token grammar) before import resolution or registry lookup; the observed reload-refused is a lexical refusal, not the designed missing-registry check, so this variant needs an owner-approved amendment or an import-capable profile',
-    observed_refusal: { stage: missingRefused.stage, outcome: missingRefused.outcome,
-      diagnostic: missingRefused.diagnostic, generation: missingRefused.generation },
-    no_publication: { blocked: missingBlocked.outcome,
-      old_call_stack: stackOf(missingOld), old_call_generation: missingOld.source_generation },
-  });
-
   const escape = fixture('LIVE-05-escape', 'math.noble', 'def addone [ 1 + ]');
   const outside = path.join(escape.directory, '..', 'unselected.noble');
   fs.writeFileSync(outside, 'def addone [ 100 + ]');
@@ -2007,8 +1983,13 @@ async function observeLive05() {
   observe('LIVE-05', 'input.variants.symlink-escape.event', escapeRefused.outcome === 'reload-refused'
     && escapeRefused.generation === escapeInitial.generation && /symlink/.test(escapeRefused.diagnostic ?? ''),
     { outcome: escapeRefused.outcome, generation: escapeRefused.generation, diagnostic: escapeRefused.diagnostic });
-  observe('LIVE-05', 'expected.missing_or_escape_publishes', missingRefused.outcome === 'reload-refused'
-    && escapeRefused.outcome === 'reload-refused', { missing: missingRefused.outcome, escape: escapeRefused.outcome });
+  // The `missing-import` half of this field was dropped with its variant
+  // (owner decision 30, recorded in the case file's `amendments`); the escape
+  // variant is the remaining publication attempt.
+  observe('LIVE-05', 'expected.missing_or_escape_publishes', escapeRefused.outcome === 'reload-refused'
+    && escapeRefused.generation === escapeInitial.generation,
+    { escape: escapeRefused.outcome, generation: [escapeInitial.generation, escapeRefused.generation],
+      dropped_variant: 'missing-import (decision 30)' });
 
   const budget = fixture('LIVE-05-budget', 'math.noble', 'def addone [ 1 + ]');
   const budgetWatch = start('LIVE-05-budget', ['live', 'watch', '--source', budget.source, '--engine', 'v8',
@@ -2256,7 +2237,7 @@ const receipt = {
   kind: 'test',
   result: 'passed',
 
-  claim: `The promoted LIVE cases (${promoted.join(', ')}) are exercised against the production ${'`'}noble live repl${'`'} child built from this committed tree. LIVE-01: a resident V8 reload whose ACK precedes a fresh next top-level stack, with the same worker child PID observed before the first submission and after the ACK. LIVE-02: Decision 21a's post-ACK script derives the declared [24, 21] from the retained old Program's captured 21 and the rebuilt dependent's 24, and the same source, flags and ${'`'}[ addone ]${'`'} submission are additionally held in flight at the feature seam so the reload ACK is observed only after that frame returns on its old generation. LIVE-03: every declared replacement is refused at admission with the old definition still callable, including the host-binding-mismatch variant run as written (startup manifest binding, replacement module, admission refusal, generation and stack preserved, next ${'`'}addone${'`'} = 8). LIVE-04: ten canonical-section-edited variants of the captured emission each stop at an exact expected class - the four Noble-policy and three invalid variants in the worker's own byte validator or V8 at stage ${'`'}wasm${'`'}, the forged-digest, independent-digest and oversized variants at shipped host byte admission - with the worker's memory, table, globals, guest-execution and host-request witness unchanged and the installed ${'`'}base${'`'} still returning 7. LIVE-06: a retained old Program whose request is denied under the revoked current host policy. LIVE-07: an explicit interpreter choice refused at startup without a V8 fallback. LIVE-09: two real V8 guests that observe generation 1, queue a typed pure Program during the callback, publish input-dependent derived definitions at generation 2 whose committed source digests are the re-accepted derived texts, show the worker's cumulative guest-execution counter identical across invocation, pending and committed receipts, show the grant still selected after two refused dependents and null after the successful publication, and refuse an effect-increasing file restore. Byte substitution, the in-flight hold and proposal tampering are named ${'`'}live-test-barrier${'`'} seams; their default-binary absence is observed separately. LIVE-05 is not promoted: its ${'`'}missing-import${'`'} variant is refused by the Core lexer before any import or registry check. No proof and no case outside the promoted set is claimed.`,
+  claim: `The promoted LIVE cases (${promoted.join(', ')}) are exercised against the production ${'`'}noble live repl${'`'} child built from this committed tree. LIVE-01: a resident V8 reload whose ACK precedes a fresh next top-level stack, with the same worker child PID observed before the first submission and after the ACK. LIVE-02: Decision 21a's post-ACK script derives the declared [24, 21] from the retained old Program's captured 21 and the rebuilt dependent's 24, and the same source, flags and ${'`'}[ addone ]${'`'} submission are additionally held in flight at the feature seam so the reload ACK is observed only after that frame returns on its old generation. LIVE-03: every declared replacement is refused at admission with the old definition still callable, including the host-binding-mismatch variant run as written (startup manifest binding, replacement module, admission refusal, generation and stack preserved, next ${'`'}addone${'`'} = 8). LIVE-04: ten canonical-section-edited variants of the captured emission each stop at an exact expected class - the four Noble-policy and three invalid variants in the worker's own byte validator or V8 at stage ${'`'}wasm${'`'}, the forged-digest, independent-digest and oversized variants at shipped host byte admission - with the worker's memory, table, globals, guest-execution and host-request witness unchanged and the installed ${'`'}base${'`'} still returning 7. LIVE-05: a resident V8 ${'`'}noble live watch${'`'} child publishes only the complete atomic save (the next call returns 22) and leaves the prior generation unchanged for a partial in-place write, a symlink escape and the retained-generation budget refusal, and the shipped ${'`'}noble live repl --allow-effects test.emit,test.abort${'`'} trap keeps the request prefix [test.emit:A, test.abort] and terminates the session; its ${'`'}missing-import${'`'} variant is dropped as inapplicable (owner decision 30). LIVE-06: a retained old Program whose request is denied under the revoked current host policy. LIVE-07: an explicit interpreter choice refused at startup without a V8 fallback. LIVE-09: two real V8 guests that observe generation 1, queue a typed pure Program during the callback, publish input-dependent derived definitions at generation 2 whose committed source digests are the re-accepted derived texts, show the worker's cumulative guest-execution counter identical across invocation, pending and committed receipts, show the grant still selected after two refused dependents and null after the successful publication, and refuse an effect-increasing file restore. Byte substitution, the in-flight hold and proposal tampering are named ${'`'}live-test-barrier${'`'} seams; their default-binary absence is observed separately. No proof and no case outside the promoted set is claimed.`,
 
   tested_commit: studiedCommit,
   source_revision: sourceRevision,
@@ -2282,7 +2263,7 @@ const receipt = {
     'No Lean/Aeneas/Verus proof, translation validation or refinement claim is made; every promoted case keeps proof open.',
     'LIVE-02 is promoted from same-input evidence: the plain child runs the case source, flags and submissions, and the `live-repl` feature child holds the identical `[ addone ]` submission at the `in-flight-execution` seam. OWNER DECISION 2026-11-20 (Decision 21a) replaced the case\'s `after_reload_ack` script; the decision is recorded in the change tasks and here, not in the case `input`.',
     'LIVE-03\'s `incompatible-schema` variant is refused as a second declaration of the same module version, before any opaque-schema comparison; the case reject outcome and the preserved session are observed, a distinct schema diagnostic is not claimed. Its `missing-module` and `effect-ceiling-increase` replacements are refused lexically or as unbound words, and `changed-file-during-read` rests on the named feature-gated real-child test.',
-    'LIVE-05 is not promoted: the `missing-import` variant\'s replacement `import missing@1 as m` is refused by the Core lexer before any import resolution or registry lookup, so that variant did not exercise the designed missing-registry check. Its other variants (atomic save, partial in-place write, retained-generation budget, symlink escape, host-granted `test.emit`/`test.abort` trap under `--allow-effects`) were executed and observed; the trap variant runs in the shipped `noble live repl` under the explicit host grant (Decision 22), where `test.emit` is a Core host effect request that performs no Declared-Modules protected operation, so its measured `protected_operations` is 0.',
+    'LIVE-05\'s `missing-import` variant is dropped as inapplicable (owner decision 30: the live profiles have no import grammar, so `import missing@1 as m` is refused lexically before any import resolution); no missing-registry check is claimed. The trap variant runs in the shipped `noble live repl` under the explicit host grant (Decision 22), not under the watched-session harness, and `test.emit` is a Core host effect request that performs no Declared-Modules protected operation, so its measured `protected_operations` is 0.',
     'LIVE-04 observations use the `live-test-barrier` byte seam only to serve the mutated bytes and, for the independent-digest variant, to present a digest; the decisions are the shipped worker byte validator/Noble policy checks and the shipped host source/binding/frame admission compiled into every binary. A default binary with every seam variable set executed normally and wrote no capture (observed absence).',
     'LIVE-09\'s ordinary `run`/`session` rows are the same committed default binary and Core-Bootstrap profile; they observe that the live self-edit words remain unbound outside the live REPL, not a temporal comparison with an older binary.',
     'LIVE-10 stays absent/not-run: `foreign-session-grant` has no cross-session grant input, and `shadow-stage-failure` plus `generation-changed-between-enqueue-and-publication-CAS` need host seams this slice did not add; all other pre-invocation, callback-denial, post-return-refusal and trap variants were executed.',

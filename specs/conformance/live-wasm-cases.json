@@ -2,6 +2,15 @@
   "schema_version": 1,
   "revision": "0.1.0-draft.5",
   "origin": "opt-in-live-wasm-specification-only",
+  "amendments": [
+    {
+      "date": "2026-11-21",
+      "case": "LIVE-05",
+      "dropped_variant": {"name": "missing-import", "bytes": "import missing@1 as m", "registry": []},
+      "reason": "The live profiles have no import grammar: the live tokenizer refuses `import missing@1 as m` at `@` before any import resolution or registry lookup, so the variant cannot exercise a missing registry entry (review finding A4).",
+      "decision": "OWNER DECISION 2026-11-21 (decision 30): \"Drop the variant: record it as inapplicable (live profiles have no import grammar). LIVE-05 can then promote from the merged run.\""
+    }
+  ],
   "cases": [
     {
       "id": "LIVE-01", "profile": "Live-Wasm-Draft", "kind": "runtime", "requirements": ["K-LIVE-01", "H-LIVE-01", "H-LIVE-02", "DX-LIVE-01", "B-LIVE-01"],
@@ -123,7 +132,7 @@
     },
     {
       "id": "LIVE-05", "profile": "Live-Wasm-Draft", "kind": "runtime", "requirements": ["H-LIVE-01", "H-LIVE-02", "H-LIVE-03", "S-LIVE-01"],
-      "input": {"harness": "watched-on-save-complete-file-snapshot", "watched_path": "math.noble", "initial_file": "def addone [ 1 + ]", "initial_stack_bottom_to_top": [], "save_protocol": "write-math.noble.tmp-then-fsync-and-atomic-rename-to-math.noble", "new_file": "def addone [ 2 + ]", "new_top_level_after_success_ack": "20 addone", "variants": [{"name": "partial-in-place-write", "bytes": "def addone [ 2 +", "event": "write-without-rename"}, {"name": "atomic-complete-rename-and-ack", "bytes": "def addone [ 2 + ]", "event": "rename-then-ack"}, {"name": "watch-ack-races-new-top-level-submission", "event": "submit-20-addone-concurrently-with-rename; record-accepted-sequence-and-ack"}, {"name": "superseded-during-compile", "first_rename": "def addone [ 2 + ]", "second_rename_before_publication": "def addone [ 3 + ]"}, {"name": "missing-import", "bytes": "import missing@1 as m", "registry": []}, {"name": "symlink-escape", "event": "rename-symlink-to-../unselected.noble"}, {"name": "retained-generation-budget-exhaustion", "max_retained_generations": 2, "keep_old_program": "[ addone ]", "successive_files": ["def addone [ 2 + ]", "def addone [ 3 + ]"]}, {"name": "effectful-runtime-trap", "submission": "\"A\" test.emit test.abort", "host_effects": ["test.emit", "test.abort"], "expected_prior_request": "test.emit:A"}]},
+      "input": {"harness": "watched-on-save-complete-file-snapshot", "watched_path": "math.noble", "initial_file": "def addone [ 1 + ]", "initial_stack_bottom_to_top": [], "save_protocol": "write-math.noble.tmp-then-fsync-and-atomic-rename-to-math.noble", "new_file": "def addone [ 2 + ]", "new_top_level_after_success_ack": "20 addone", "variants": [{"name": "partial-in-place-write", "bytes": "def addone [ 2 +", "event": "write-without-rename"}, {"name": "atomic-complete-rename-and-ack", "bytes": "def addone [ 2 + ]", "event": "rename-then-ack"}, {"name": "watch-ack-races-new-top-level-submission", "event": "submit-20-addone-concurrently-with-rename; record-accepted-sequence-and-ack"}, {"name": "superseded-during-compile", "first_rename": "def addone [ 2 + ]", "second_rename_before_publication": "def addone [ 3 + ]"}, {"name": "symlink-escape", "event": "rename-symlink-to-../unselected.noble"}, {"name": "retained-generation-budget-exhaustion", "max_retained_generations": 2, "keep_old_program": "[ addone ]", "successive_files": ["def addone [ 2 + ]", "def addone [ 3 + ]"]}, {"name": "effectful-runtime-trap", "submission": "\"A\" test.emit test.abort", "host_effects": ["test.emit", "test.abort"], "expected_prior_request": "test.emit:A"}]},
       "expected": {"stage": "wasm-live", "outcome": "complete-save-only-publishes", "partial_or_unsupported_in_place_write_runs": false, "atomic_save_after_ack_next_call_stack_bottom_to_top": [{"type": "I64", "value": "22"}], "successful_ack_only_after_commit": true, "new_submission_after_ack_uses_new_generation": true, "racing_before_commit_reports_pinned_old_generation": true, "superseded_candidate_acknowledged_as_current": false, "missing_or_escape_publishes": false, "retained_budget_failure_explicit_and_prior_generation_unchanged": true, "runtime_trap_retains_prior_effect_prefix_and_poisons_session": true},
       "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
       "evidence": [{
