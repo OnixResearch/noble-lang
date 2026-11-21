@@ -1249,58 +1249,58 @@ Unit
 def source.admission.environment.replay.Cursor.append_nominal.closure := Unit
 
 /-- [noble_wasm::source::admission::environment::bootstrap::{closure}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 580:64-580:96 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 592:64-592:96 -/
 @[reducible]
 def source.admission.environment.bootstrap.closure := Unit
 
 /-- [noble_wasm::source::admission::environment::live_resource::{closure}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 573:17-573:47 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 585:17-585:47 -/
 @[reducible]
 def source.admission.environment.live_resource.closure := Unit
 
 /-- [noble_wasm::source::admission::environment::canonical_prefix::{closure#2}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 456:17-456:49 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 468:17-468:49 -/
 @[reducible]
 def source.admission.environment.canonical_prefix.closure_2 := Unit
 
 /-- [noble_wasm::source::admission::environment::canonical_prefix::{closure#1}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 441:21-441:53 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 453:21-453:53 -/
 @[reducible]
 def source.admission.environment.canonical_prefix.closure_1 := Unit
 
 /-- [noble_wasm::source::admission::environment::canonical_prefix::{closure}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 423:21-423:53 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 435:21-435:53 -/
 @[reducible]
 def source.admission.environment.canonical_prefix.closure := Unit
 
 /-- [noble_wasm::source::admission::environment::exact_effects::{closure#3}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 383:46-385:9 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 395:46-397:9 -/
 @[reducible]
 def source.admission.environment.exact_effects.closure_3 :=
   Slice noble_kernel.types.EffId
 
 /-- [noble_wasm::source::admission::environment::exact_effects::{closure#2}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 330:55-332:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 342:55-344:5 -/
 @[reducible]
 def source.admission.environment.exact_effects.closure_2 := Unit
 
 /-- [noble_wasm::source::admission::environment::exact_effects::{closure#1}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 326:62-328:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 338:62-340:5 -/
 @[reducible]
 def source.admission.environment.exact_effects.closure_1 := Unit
 
 /-- [noble_wasm::source::admission::environment::exact_effects::{closure}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 322:56-324:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 334:56-336:5 -/
 @[reducible]
 def source.admission.environment.exact_effects.closure := Unit
 
 /-- [noble_wasm::source::admission::environment::has_non_live::{closure}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 314:37-314:72 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 323:37-325:5 -/
 @[reducible]
-def source.admission.environment.has_non_live.closure := Unit
+def source.admission.environment.has_non_live.closure := Bool
 
 /-- [noble_wasm::source::admission::environment::check::{closure}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 167:20-167:73 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 170:20-170:73 -/
 @[reducible]
 def source.admission.environment.check.closure := noble_kernel.contracts.Env
 
@@ -1501,7 +1501,7 @@ structure source.LiveSiteMetadata where
   effect_mask : Std.U32
 
 /-- [noble_wasm::source::plan::Layout]
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 262:0-306:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 262:0-309:1 -/
 structure source.plan.Layout where
   programs : alloc.vec.Vec source.plan.Program
   definition_roots : alloc.vec.Vec Std.Usize
@@ -1524,6 +1524,7 @@ structure source.plan.Layout where
   core_live : Bool
   live_slots : Bool
   live_test_hosts : Bool
+  core_test_hosts : Bool
   live_sites : alloc.vec.Vec source.LiveSiteMetadata
   text_cursor : Bool
   calculator : Bool
@@ -1992,7 +1993,7 @@ def source.Prepared.runtime_signature_catalog.closure := Unit
 def source.Compiler.fitting_free_code.closure := Std.U32
 
 /-- [noble_wasm::source::plan::Arena]
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 308:0-311:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 311:0-314:1 -/
 structure source.plan.Arena where
   root : Std.Usize
   quotes : alloc.vec.Vec (Option Std.Usize)

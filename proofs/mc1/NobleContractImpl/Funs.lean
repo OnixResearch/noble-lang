@@ -10977,7 +10977,7 @@ def internal (span : Span) : Result Diagnostic := do
     "inconsistent frontend arena")
 
 /-- [noble_contracts::source::adapt_environment]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1861:0-1886:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1884:0-1913:1 -/
 def source.adapt_environment
   (env : noble_kernel.contracts.Env) (source_abort : Bool) :
   Result (core.result.Result noble_kernel.contracts.Env Diagnostic)
@@ -11054,7 +11054,7 @@ def source.adapt_environment
       ok (core.result.Result.Ok { env with defs := v })
 
 /-- [noble_contracts::source::environment]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1839:0-1846:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1862:0-1869:1 -/
 def source.environment
   : Result (core.result.Result noble_kernel.contracts.Env Diagnostic) := do
   let r ← noble_kernel.contracts.environment
@@ -19697,7 +19697,7 @@ def source.Session.without_test_hosts : Result source.Session := do
     }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::with_bindings]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1662:4-1667:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1684:4-1689:5 -/
 def source.Session.with_bindings
   (bindings : component.Bindings) : Result source.Session := do
   let s ← source.Session.without_test_hosts
@@ -20303,7 +20303,7 @@ def source.Error.at
   ok { stage, diagnostic, work_used := 0#u32 }
 
 /-- [noble_contracts::source::every_byte]: loop body 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1816:4-1818:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1839:4-1841:5 -/
 @[rust_loop_body]
 def source.every_byte_loop.body
   {T0 : Type _} (coreopsfunctionFnMutT0TupleU8BoolInst :
@@ -20324,7 +20324,7 @@ def source.every_byte_loop.body
   else ok (done «at»)
 
 /-- [noble_contracts::source::every_byte]: loop 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1816:4-1818:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1839:4-1841:5 -/
 @[rust_loop]
 def source.every_byte_loop
   {T0 : Type _} (coreopsfunctionFnMutT0TupleU8BoolInst :
@@ -20338,7 +20338,7 @@ def source.every_byte_loop
     (predicate, «at»)
 
 /-- [noble_contracts::source::every_byte]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1814:0-1820:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1837:0-1843:1 -/
 def source.every_byte
   {T0 : Type _} (coreopsfunctionFnMutT0TupleU8BoolInst :
   core.ops.function.FnMut T0 Std.U8 Bool) (bytes : Slice Std.U8)
@@ -25849,7 +25849,7 @@ def source.resolution.resolve
     meter
 
 /-- [noble_contracts::source::exhausted]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1782:0-1784:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1805:0-1807:1 -/
 def source.exhausted (span : Span) (message : Str) : Result Diagnostic := do
   Diagnostic.new DiagnosticKind.Exhausted span message
 
@@ -26449,7 +26449,7 @@ def source.resolution.comparison.identity
   | some problem => ok (core.result.Result.Err problem, meter1)
 
 /-- [noble_contracts::source::preparation::declaration::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::Context,), core::option::Option<u64>> for noble_contracts::source::preparation::declaration::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 816:54-816:77 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 818:54-818:77 -/
 def
   source.preparation.declaration.closure.Insts.CoreOpsFunctionFnOnceTupleShared0ContextOptionU64.call_once
   (c : source.preparation.declaration.closure)
@@ -26459,7 +26459,7 @@ def
   ok tupled_args.owner
 
 /-- Trait implementation: [noble_contracts::source::preparation::declaration::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::Context,), core::option::Option<u64>> for noble_contracts::source::preparation::declaration::{closure}}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 816:54-816:77 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 818:54-818:77 -/
 @[reducible]
 def
   source.preparation.declaration.closure.Insts.CoreOpsFunctionFnOnceTupleShared0ContextOptionU64
@@ -26470,7 +26470,7 @@ def
 }
 
 /-- [noble_contracts::source::preparation::declaration]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 792:0-825:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 794:0-827:1 -/
 def source.preparation.declaration
   (tree : source.Tree) («name» : String) (source_bytes : Slice Std.U8)
   (signature : Option noble_kernel.words.Scheme)
@@ -26529,7 +26529,7 @@ def source.preparation.declaration
     ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::source::preparation::checked_alias_use::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::AliasUse,), bool> for noble_contracts::source::preparation::checked_alias_use::{closure#3}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 766:62-768:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 768:62-770:5 -/
 def
   source.preparation.checked_alias_use.closure_3.Insts.CoreOpsFunctionFnMutTupleShared2AliasUseBool.call_mut
   (c : source.preparation.checked_alias_use.closure_3)
@@ -26546,7 +26546,7 @@ def
   else ok (false, c)
 
 /-- [noble_contracts::source::preparation::checked_alias_use::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::AliasUse,), bool> for noble_contracts::source::preparation::checked_alias_use::{closure#3}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 766:62-768:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 768:62-770:5 -/
 def
   source.preparation.checked_alias_use.closure_3.Insts.CoreOpsFunctionFnOnceTupleShared2AliasUseBool.call_once
   (c : source.preparation.checked_alias_use.closure_3) (au : source.AliasUse) :
@@ -26558,7 +26558,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::preparation::checked_alias_use::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::AliasUse,), bool> for noble_contracts::source::preparation::checked_alias_use::{closure#3}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 766:62-768:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 768:62-770:5 -/
 @[reducible]
 def
   source.preparation.checked_alias_use.closure_3.Insts.CoreOpsFunctionFnOnceTupleShared2AliasUseBool
@@ -26569,7 +26569,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::preparation::checked_alias_use::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::AliasUse,), bool> for noble_contracts::source::preparation::checked_alias_use::{closure#3}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 766:62-768:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 768:62-770:5 -/
 @[reducible]
 def
   source.preparation.checked_alias_use.closure_3.Insts.CoreOpsFunctionFnMutTupleShared2AliasUseBool
@@ -26582,7 +26582,7 @@ def
 }
 
 /-- [noble_contracts::source::preparation::checked_alias_use::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::preparation::checked_alias_use::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 749:28-749:57 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 751:28-751:57 -/
 def
   source.preparation.checked_alias_use.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : source.preparation.checked_alias_use.closure_2) (_ : Unit) :
@@ -26591,7 +26591,7 @@ def
   internal c.span
 
 /-- Trait implementation: [noble_contracts::source::preparation::checked_alias_use::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::preparation::checked_alias_use::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 749:28-749:57 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 751:28-751:57 -/
 @[reducible]
 def
   source.preparation.checked_alias_use.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -26602,7 +26602,7 @@ def
 }
 
 /-- [noble_contracts::source::preparation::checked_alias_use::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::preparation::checked_alias_use::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 737:20-737:49 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 739:20-739:49 -/
 def
   source.preparation.checked_alias_use.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : source.preparation.checked_alias_use.closure_1) (_ : Unit) :
@@ -26611,7 +26611,7 @@ def
   internal c.span
 
 /-- Trait implementation: [noble_contracts::source::preparation::checked_alias_use::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::preparation::checked_alias_use::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 737:20-737:49 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 739:20-739:49 -/
 @[reducible]
 def
   source.preparation.checked_alias_use.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -26622,7 +26622,7 @@ def
 }
 
 /-- [noble_contracts::source::preparation::checked_alias_use::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::preparation::checked_alias_use::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 734:20-734:49 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 736:20-736:49 -/
 def
   source.preparation.checked_alias_use.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : source.preparation.checked_alias_use.closure) (_ : Unit) :
@@ -26631,7 +26631,7 @@ def
   internal c.span
 
 /-- Trait implementation: [noble_contracts::source::preparation::checked_alias_use::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::preparation::checked_alias_use::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 734:20-734:49 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 736:20-736:49 -/
 @[reducible]
 def
   source.preparation.checked_alias_use.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -26728,7 +26728,7 @@ def scan.find_first_mut
     ok (some t, back)
 
 /-- [noble_contracts::source::preparation::checked_alias_use]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 722:0-779:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 724:0-781:1 -/
 def source.preparation.checked_alias_use
   (tree : source.Tree) (session : source.Session)
   (aliases : Slice (String × Std.U64)) (candidate : (Std.U32 × Std.Usize))
@@ -26929,7 +26929,7 @@ def source.preparation.checked_alias_use
     ok (core.result.Result.Err failure, uses, meter)
 
 /-- [noble_contracts::source::preparation::checked_alias_uses::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::preparation::checked_alias_uses::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 692:20-692:49 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 694:20-694:49 -/
 def
   source.preparation.checked_alias_uses.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : source.preparation.checked_alias_uses.closure) (_ : Unit) :
@@ -26938,7 +26938,7 @@ def
   internal c.span
 
 /-- Trait implementation: [noble_contracts::source::preparation::checked_alias_uses::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::preparation::checked_alias_uses::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 692:20-692:49 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 694:20-694:49 -/
 @[reducible]
 def
   source.preparation.checked_alias_uses.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -26949,7 +26949,7 @@ def
 }
 
 /-- [noble_contracts::source::preparation::checked_alias_uses]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 696:4-706:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 698:4-708:5 -/
 @[rust_loop_body]
 def source.preparation.checked_alias_uses_loop.body
   (tree : source.Tree) (v : alloc.vec.Vec source.Named)
@@ -26993,7 +26993,7 @@ def source.preparation.checked_alias_uses_loop.body
   else ok (done (meter, uses, outcome))
 
 /-- [noble_contracts::source::preparation::checked_alias_uses]: loop 0:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 696:4-706:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 698:4-708:5 -/
 @[rust_loop]
 def source.preparation.checked_alias_uses_loop
   (tree : source.Tree) (v : alloc.vec.Vec source.Named)
@@ -27013,7 +27013,7 @@ def source.preparation.checked_alias_uses_loop
     (meter, uses, «at», outcome)
 
 /-- [noble_contracts::source::preparation::checked_alias_uses]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 680:0-709:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 682:0-711:1 -/
 def source.preparation.checked_alias_uses
   (tree : source.Tree) (session : source.Session)
   (candidates : Slice (Std.U32 × Std.Usize)) (meter : Meter) :
@@ -27051,7 +27051,7 @@ def source.preparation.checked_alias_uses
       ok (r1, meter)
 
 /-- [noble_contracts::source::preparation::qualifies]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 671:0-674:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 673:0-676:1 -/
 def source.preparation.qualifies
   (word : Slice Std.U8) («alias» : (String × Std.U64)) : Result Bool := do
   let (alias1, _) := «alias»
@@ -27069,7 +27069,7 @@ def source.preparation.qualifies
   else ok false
 
 /-- [noble_contracts::source::preparation::first_alias]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 649:4-657:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 651:4-659:5 -/
 @[rust_loop_body]
 def source.preparation.first_alias_loop.body
   (word : Slice Std.U8) (aliases : Slice (String × Std.U64)) (span : Span)
@@ -27108,7 +27108,7 @@ def source.preparation.first_alias_loop.body
   else ok (done (meter, found, charged))
 
 /-- [noble_contracts::source::preparation::first_alias]: loop 0:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 649:4-657:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 651:4-659:5 -/
 @[rust_loop]
 def source.preparation.first_alias_loop
   (word : Slice Std.U8) (aliases : Slice (String × Std.U64)) (span : Span)
@@ -27123,7 +27123,7 @@ def source.preparation.first_alias_loop
     (meter, alias_index, found, charged)
 
 /-- [noble_contracts::source::preparation::first_alias]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 640:0-660:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 642:0-662:1 -/
 def source.preparation.first_alias
   (word : Slice Std.U8) (aliases : Slice (String × Std.U64)) (span : Span)
   (meter : Meter) :
@@ -27138,7 +27138,7 @@ def source.preparation.first_alias
     ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::source::preparation::alias_candidate]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 620:0-637:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 622:0-639:1 -/
 def source.preparation.alias_candidate
   (node : source.Node) (node_index : Std.Usize)
   (aliases : Slice (String × Std.U64)) (meter : Meter) :
@@ -27175,7 +27175,7 @@ def source.preparation.alias_candidate
     ok (core.result.Result.Err failure, meter1)
 
 /-- [noble_contracts::source::preparation::alias_candidates]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 605:4-612:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 607:4-614:5 -/
 @[rust_loop_body]
 def source.preparation.alias_candidates_loop.body
   (tree : source.Tree) (v : alloc.vec.Vec (String × Std.U64)) (meter : Meter)
@@ -27214,7 +27214,7 @@ def source.preparation.alias_candidates_loop.body
   else ok (done (meter, candidates, failure))
 
 /-- [noble_contracts::source::preparation::alias_candidates]: loop 0:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 605:4-612:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 607:4-614:5 -/
 @[rust_loop]
 def source.preparation.alias_candidates_loop
   (tree : source.Tree) (meter : Meter) (v : alloc.vec.Vec (String × Std.U64))
@@ -27230,7 +27230,7 @@ def source.preparation.alias_candidates_loop
     (meter, candidates, node_index, failure)
 
 /-- [noble_contracts::source::preparation::alias_candidates]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 587:0-617:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 589:0-619:1 -/
 def source.preparation.alias_candidates
   (tree : source.Tree) (session : source.Session) (is_named : Bool)
   (meter : Meter) :
@@ -27268,7 +27268,7 @@ def source.preparation.alias_candidates
       meter)
 
 /-- [noble_contracts::source::preparation::emission_environment]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 515:0-552:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 517:0-554:1 -/
 def source.preparation.emission_environment
   (environment : alloc.borrow.Cow noble_kernel.contracts.Env
   noble_kernel.contracts.Env) (span : Span) (meter : Meter) :
@@ -27331,7 +27331,7 @@ def source.preparation.emission_environment
   | alloc.borrow.Cow.Owned owned => ok (core.result.Result.Ok owned, meter)
 
 /-- [noble_contracts::source::preparation::retention]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 488:0-503:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 490:0-505:1 -/
 def source.preparation.retention
   (is_named : Bool) (source_len : Std.Usize) (span : Span) :
   Result (core.result.Result (Std.Usize × source.inference.Mode) source.Error)
@@ -27351,7 +27351,7 @@ def source.preparation.retention
   else ok (core.result.Result.Ok (0#usize, source.inference.Mode.Submission))
 
 /-- [noble_contracts::source::preparation::lone_named_root]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 469:0-480:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 471:0-482:1 -/
 def source.preparation.lone_named_root
   (tree : source.Tree) : Result (Option Std.U32) := do
   let i := alloc.vec.Vec.len tree.body
@@ -27383,7 +27383,7 @@ def source.preparation.lone_named_root
       | source.Kind.EditorHole => ok none
 
 /-- [noble_contracts::source::preparation::signed_owner]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 450:0-458:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 452:0-460:1 -/
 def source.preparation.signed_owner
   (signature : Option noble_kernel.words.Scheme) (is_signed_self : Bool) :
   Result Bool
@@ -27393,7 +27393,7 @@ def source.preparation.signed_owner
   | some _ => ok is_signed_self
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::retained::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::preparation::{noble_contracts::source::Session}::retained::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 412:78-414:9 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 414:78-416:9 -/
 def
   source.preparation.Session.retained.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : source.preparation.Session.retained.closure) (_ : Unit) :
@@ -27402,7 +27402,7 @@ def
   source.exhausted c (toStr "retained definition history byte count overflows")
 
 /-- Trait implementation: [noble_contracts::source::preparation::{noble_contracts::source::Session}::retained::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::source::preparation::{noble_contracts::source::Session}::retained::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 412:78-414:9 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 414:78-416:9 -/
 @[reducible]
 def
   source.preparation.Session.retained.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -27413,7 +27413,7 @@ def
 }
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::retained]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 403:4-422:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 405:4-424:5 -/
 def source.preparation.Session.retained
   (self : source.Session) (extra : Std.Usize) (retained_bytes : Std.U32)
   (span : Span) (meter : Meter) :
@@ -52767,7 +52767,7 @@ def source.inference.traversal.visit
   | core.result.Result.Err _ => ok (r, parents, state, meter1)
 
 /-- [noble_contracts::source::effect_mask]: loop body 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1805:4-1808:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1828:4-1831:5 -/
 @[rust_loop_body]
 def source.effect_mask_loop.body
   (effects : Slice noble_kernel.types.EffId) (mask : Std.U64)
@@ -52786,7 +52786,7 @@ def source.effect_mask_loop.body
   else ok (done mask)
 
 /-- [noble_contracts::source::effect_mask]: loop 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1805:4-1808:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1828:4-1831:5 -/
 @[rust_loop]
 def source.effect_mask_loop
   (effects : Slice noble_kernel.types.EffId) (mask : Std.U64)
@@ -52798,14 +52798,14 @@ def source.effect_mask_loop
     (mask, «at»)
 
 /-- [noble_contracts::source::effect_mask]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1802:0-1810:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1825:0-1833:1 -/
 @[reducible]
 def source.effect_mask
   (effects : Slice noble_kernel.types.EffId) : Result Std.U64 := do
   source.effect_mask_loop effects 0#u64 0#usize
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::effect_universe]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1673:4-1693:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1695:4-1716:5 -/
 def source.Session.effect_universe
   (self : source.Session) : Result Std.U64 := do
   match self.live_slots with
@@ -52814,14 +52814,22 @@ def source.Session.effect_universe
     | none =>
       match self.bindings with
       | none =>
+        let test_hosts ←
+          if self.hosts
+          then
+            do
+            let i ← 1#u64 <<< 0#i32
+            let i1 ← 1#u64 <<< 1#i32
+            ok (i ||| i1)
+          else ok 0#u64
         let b := core.option.Option.is_some self.live_selected
         if b
-        then let i ← 1#u64 <<< 3#i32
-             let i1 ← 1#u64 <<< 4#i32
-             ok (i ||| i1)
-        else if self.hosts
-             then ok 3#u64
-             else ok 0#u64
+        then
+          let i ← 1#u64 <<< 3#i32
+          let i1 ← lift (test_hosts ||| i)
+          let i2 ← 1#u64 <<< 4#i32
+          ok (i1 ||| i2)
+        else ok test_hosts
       | some bindings => ok bindings.effects
     | some context =>
       let s := alloc.vec.Vec.deref context.environment.effects
@@ -56709,7 +56717,7 @@ def source.inference.infer
   | core.result.Result.Err _ => ok (r, meter1)
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::infer_with]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 354:4-397:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 356:4-399:5 -/
 def source.preparation.Session.infer_with
   (self : source.Session) (environment : noble_kernel.contracts.Env)
   (request : source.preparation.Inference) (meter : Meter) :
@@ -56751,7 +56759,7 @@ def source.preparation.Session.infer_with
     ok (core.result.Result.Err e, meter1)
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::infer_signed]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 330:4-346:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 332:4-348:5 -/
 def source.preparation.Session.infer_signed
   (self : source.Session)
   (environment : alloc.borrow.Cow noble_kernel.contracts.Env
@@ -56772,7 +56780,7 @@ def source.preparation.Session.infer_signed
     ok ((environment, inferred), meter1)
 
 /-- [noble_contracts::source::preparation::environment_rows]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 569:0-577:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 571:0-579:1 -/
 def source.preparation.environment_rows
   (environment : alloc.borrow.Cow noble_kernel.contracts.Env
   noble_kernel.contracts.Env) :
@@ -56788,7 +56796,7 @@ def source.preparation.environment_rows
     ok (environment, rows)
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{closure#3}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 304:21-304:77 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 306:21-306:77 -/
 def
   source.preparation.Session.prospective_owner.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.preparation.Session.prospective_owner.closure_3)
@@ -56798,7 +56806,7 @@ def
   source.Error.at source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{closure#3}}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 304:21-304:77 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 306:21-306:77 -/
 @[reducible]
 def
   source.preparation.Session.prospective_owner.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -56810,7 +56818,7 @@ def
 }
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{closure#2}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 301:21-301:77 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 303:21-303:77 -/
 def
   source.preparation.Session.prospective_owner.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.preparation.Session.prospective_owner.closure_2)
@@ -56820,7 +56828,7 @@ def
   source.Error.at source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{closure#2}}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 301:21-301:77 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 303:21-303:77 -/
 @[reducible]
 def
   source.preparation.Session.prospective_owner.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -56832,7 +56840,7 @@ def
 }
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::Context,), core::option::Option<u64>> for noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 293:58-293:81 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 295:58-295:81 -/
 def
   source.preparation.Session.prospective_owner.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared0ContextOptionU64.call_once
   (c : source.preparation.Session.prospective_owner.closure_1)
@@ -56842,7 +56850,7 @@ def
   ok tupled_args.owner
 
 /-- Trait implementation: [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::Context,), core::option::Option<u64>> for noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 293:58-293:81 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 295:58-295:81 -/
 @[reducible]
 def
   source.preparation.Session.prospective_owner.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared0ContextOptionU64
@@ -56854,7 +56862,7 @@ def
 }
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::Node,), bool> for noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{closure}}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 280:52-282:13 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 282:52-284:13 -/
 def
   source.preparation.Session.prospective_owner.closure.Insts.CoreOpsFunctionFnMutTupleShared0NodeBool.call_mut
   (c : source.preparation.Session.prospective_owner.closure)
@@ -56875,7 +56883,7 @@ def
   | source.Kind.EditorHole => ok (false, c)
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::Node,), bool> for noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 280:52-282:13 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 282:52-284:13 -/
 def
   source.preparation.Session.prospective_owner.closure.Insts.CoreOpsFunctionFnOnceTupleShared0NodeBool.call_once
   (c : source.preparation.Session.prospective_owner.closure) (n : source.Node)
@@ -56888,7 +56896,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::Node,), bool> for noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{closure}}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 280:52-282:13 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 282:52-284:13 -/
 @[reducible]
 def
   source.preparation.Session.prospective_owner.closure.Insts.CoreOpsFunctionFnOnceTupleShared0NodeBool
@@ -56899,7 +56907,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{impl core::ops::function::FnMut<(&'_0 noble_contracts::source::Node,), bool> for noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{closure}}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 280:52-282:13 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 282:52-284:13 -/
 @[reducible]
 def
   source.preparation.Session.prospective_owner.closure.Insts.CoreOpsFunctionFnMutTupleShared0NodeBool
@@ -56912,7 +56920,7 @@ def
 }
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 265:4-318:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 267:4-320:5 -/
 def source.preparation.Session.prospective_owner
   (self : source.Session)
   (environment : alloc.borrow.Cow noble_kernel.contracts.Env
@@ -56996,46 +57004,60 @@ def source.preparation.Session.prospective_owner
   else ok (core.result.Result.Ok (environment, none), meter)
 
 /-- [noble_contracts::source::live_environment]: loop body 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1934:4-1939:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1965:4-1970:5 -/
 @[rust_loop_body]
 def source.live_environment_loop.body
   (iter : core.array.iter.IntoIter noble_kernel.words.Scheme 2#usize)
-  (env : noble_kernel.contracts.Env) :
+  (v : alloc.vec.Vec noble_kernel.words.Scheme)
+  (v1 : alloc.vec.Vec noble_kernel.contracts.Behavior)
+  (v2 : alloc.vec.Vec (alloc.vec.Vec noble_kernel.contracts.Definition))
+  (v3 : alloc.vec.Vec (Option Std.U64)) :
   Result (ControlFlow ((core.array.iter.IntoIter noble_kernel.words.Scheme
-    2#usize) × noble_kernel.contracts.Env) noble_kernel.contracts.Env)
+    2#usize) × (alloc.vec.Vec noble_kernel.words.Scheme) × (alloc.vec.Vec
+    noble_kernel.contracts.Behavior) × (alloc.vec.Vec (alloc.vec.Vec
+    noble_kernel.contracts.Definition)) × (alloc.vec.Vec (Option Std.U64)))
+    ((alloc.vec.Vec noble_kernel.words.Scheme) × (alloc.vec.Vec
+    noble_kernel.contracts.Behavior) × (alloc.vec.Vec (alloc.vec.Vec
+    noble_kernel.contracts.Definition)) × (alloc.vec.Vec (Option Std.U64))))
   := do
   let (o, iter1) ←
     core.array.iter.IntoIter.Insts.CoreIterTraitsIteratorIterator.next iter
   match o with
-  | none => ok (done env)
+  | none => ok (done (v, v1, v2, v3))
   | some scheme =>
-    let v ← alloc.vec.Vec.push env.defs scheme
-    let v1 ←
-      alloc.vec.Vec.push env.kinds
-        noble_kernel.contracts.Behavior.NamedBehavior
-    let v2 ←
-      alloc.vec.Vec.push env.deps (alloc.vec.Vec.new
+    let v4 ← alloc.vec.Vec.push v scheme
+    let v5 ←
+      alloc.vec.Vec.push v1 noble_kernel.contracts.Behavior.NamedBehavior
+    let v6 ←
+      alloc.vec.Vec.push v2 (alloc.vec.Vec.new
         noble_kernel.contracts.Definition)
-    let v3 ← alloc.vec.Vec.push env.definition_owners none
-    ok (cont (iter1,
-      { env with defs := v, kinds := v1, deps := v2, definition_owners := v3 }))
+    let v7 ← alloc.vec.Vec.push v3 none
+    ok (cont (iter1, v4, v5, v6, v7))
 
 /-- [noble_contracts::source::live_environment]: loop 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1934:4-1939:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1965:4-1970:5 -/
 @[rust_loop]
 def source.live_environment_loop
   (iter : core.array.iter.IntoIter noble_kernel.words.Scheme 2#usize)
-  (env : noble_kernel.contracts.Env) :
-  Result noble_kernel.contracts.Env
+  (v : alloc.vec.Vec noble_kernel.words.Scheme)
+  (v1 : alloc.vec.Vec noble_kernel.contracts.Behavior)
+  (v2 : alloc.vec.Vec (alloc.vec.Vec noble_kernel.contracts.Definition))
+  (v3 : alloc.vec.Vec (Option Std.U64)) :
+  Result ((alloc.vec.Vec noble_kernel.words.Scheme) × (alloc.vec.Vec
+    noble_kernel.contracts.Behavior) × (alloc.vec.Vec (alloc.vec.Vec
+    noble_kernel.contracts.Definition)) × (alloc.vec.Vec (Option Std.U64)))
   := do
   loop
-    (fun (iter1, env1) => source.live_environment_loop.body iter1 env1)
-    (iter, env)
+    (fun (iter1, v4, v5, v6, v7) => source.live_environment_loop.body iter1 v4
+      v5 v6 v7)
+    (iter, v, v1, v2, v3)
 
 /-- [noble_contracts::source::live_environment]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1900:0-1943:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1927:0-1974:1 -/
 def source.live_environment
-  : Result (core.result.Result noble_kernel.contracts.Env Diagnostic) := do
+  (test_hosts : Bool) :
+  Result (core.result.Result noble_kernel.contracts.Env Diagnostic)
+  := do
   let r ← source.environment
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
@@ -57113,16 +57135,28 @@ def source.live_environment
              effects := ret9
            } : noble_kernel.words.Scheme)
           ])
-    let env ← source.live_environment_loop iter val
-    let v ← alloc.vec.Vec.push env.effects 3#u32
-    let v1 ← alloc.vec.Vec.push v 4#u32
-    ok (core.result.Result.Ok { env with effects := v1 })
+    let (v, v1, v2, v3) ←
+      source.live_environment_loop iter val.defs val.kinds val.deps
+        val.definition_owners
+    let v4 ← alloc.vec.Vec.push val.effects 3#u32
+    let v5 ← alloc.vec.Vec.push v4 4#u32
+    ok (core.result.Result.Ok
+      {
+        val
+          with
+          defs := v,
+          kinds := v1,
+          deps := v2,
+          live_test_hosts := test_hosts,
+          definition_owners := v3,
+          effects := v5
+      })
   | core.ops.control_flow.ControlFlow.Break residual =>
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
       noble_kernel.contracts.Env (core.convert.FromSame Diagnostic) residual
 
 /-- [noble_contracts::source::checked_i64_environment]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1848:0-1855:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1871:0-1878:1 -/
 def source.checked_i64_environment
   : Result (core.result.Result noble_kernel.contracts.Env Diagnostic) := do
   let r ← noble_kernel.contracts.checked_i64_environment
@@ -57133,7 +57167,7 @@ def source.checked_i64_environment
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::source::preparation::owned_environment]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 559:0-566:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 561:0-568:1 -/
 def source.preparation.owned_environment
   (environment : core.result.Result noble_kernel.contracts.Env Diagnostic) :
   Result (core.result.Result (alloc.borrow.Cow noble_kernel.contracts.Env
@@ -57187,7 +57221,7 @@ def
 }
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::environment]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 234:4-260:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 234:4-262:5 -/
 def source.preparation.Session.environment
   (self : source.Session) :
   Result (core.result.Result (alloc.borrow.Cow noble_kernel.contracts.Env
@@ -57225,7 +57259,7 @@ def source.preparation.Session.environment
               let b := core.option.Option.is_some self.live_selected
               if b
               then
-                let r ← source.live_environment
+                let r ← source.live_environment self.hosts
                 source.preparation.owned_environment r
               else
                 let r ← source.environment
@@ -57509,7 +57543,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::program_type_effect_universe::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::component::Bindings,), u64> for noble_contracts::source::{noble_contracts::source::Session}::program_type_effect_universe::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1701:27-1701:67 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1724:27-1724:67 -/
 def
   source.Session.program_type_effect_universe.closure.Insts.CoreOpsFunctionFnOnceTupleShared0BindingsU64.call_once
   (c : source.Session.program_type_effect_universe.closure)
@@ -57519,7 +57553,7 @@ def
   ok tupled_args.program_type_effects
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::program_type_effect_universe::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::component::Bindings,), u64> for noble_contracts::source::{noble_contracts::source::Session}::program_type_effect_universe::{closure}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1701:27-1701:67 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1724:27-1724:67 -/
 @[reducible]
 def
   source.Session.program_type_effect_universe.closure.Insts.CoreOpsFunctionFnOnceTupleShared0BindingsU64
@@ -57531,7 +57565,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::program_type_effect_universe]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1695:4-1702:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1718:4-1725:5 -/
 def source.Session.program_type_effect_universe
   (self : source.Session) : Result Std.U64 := do
   let effects ← source.Session.effect_universe self
@@ -79526,7 +79560,7 @@ def intrinsic.named_v2.same_derived
   else ok false
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::is_current_namespace]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1756:4-1779:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1779:4-1802:5 -/
 def source.Session.is_current_namespace
   (self : source.Session) (prepared : source.SourcePrepared) :
   Result Bool
@@ -79590,7 +79624,7 @@ def source.Session.is_current_namespace
                   else ok false
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::commit]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1717:4-1746:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 1740:4-1769:5
     Visibility: public -/
 def source.Session.commit
   (self : source.Session) (prepared : source.SourcePrepared) :
@@ -149627,7 +149661,7 @@ def source.declared.state.rebind.has_outside_alias_use
     owner false 0#usize
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#7}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1473:53-1478:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1484:53-1489:9 -/
 def
   source.Session.definition_source.closure_7.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.Session.definition_source.closure_7) (_ : Unit) :
@@ -149637,7 +149671,7 @@ def
   source.Error.at source.Stage.Acceptance d
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#7}<'_0>}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1473:53-1478:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1484:53-1489:9 -/
 @[reducible]
 def
   source.Session.definition_source.closure_7.Insts.CoreOpsFunctionFnOnceTupleError
@@ -149648,7 +149682,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#6}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1467:66-1472:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1478:66-1483:9 -/
 def
   source.Session.definition_source.closure_6.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.Session.definition_source.closure_6) (_ : Unit) :
@@ -149658,7 +149692,7 @@ def
   source.Error.at source.Stage.Acceptance d
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#6}<'_0>}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1467:66-1472:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1478:66-1483:9 -/
 @[reducible]
 def
   source.Session.definition_source.closure_6.Insts.CoreOpsFunctionFnOnceTupleError
@@ -149669,7 +149703,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#5}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1461:17-1466:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1472:17-1477:9 -/
 def
   source.Session.definition_source.closure_5.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
   (c : source.Session.definition_source.closure_5)
@@ -149680,7 +149714,7 @@ def
   source.Error.at source.Stage.Acceptance d
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#5}<'_0>}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1461:17-1466:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1472:17-1477:9 -/
 @[reducible]
 def
   source.Session.definition_source.closure_5.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
@@ -149691,7 +149725,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(core::array::TryFromSliceError,), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#4}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1454:48-1459:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1465:48-1470:13 -/
 def
   source.Session.definition_source.closure_4.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.call_once
   (c : source.Session.definition_source.closure_4)
@@ -149702,7 +149736,7 @@ def
   source.Error.at source.Stage.Acceptance d
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(core::array::TryFromSliceError,), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#4}<'_0>}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1454:48-1459:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1465:48-1470:13 -/
 @[reducible]
 def
   source.Session.definition_source.closure_4.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError
@@ -149713,7 +149747,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1447:75-1452:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1458:75-1463:9 -/
 def
   source.Session.definition_source.closure_3.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.Session.definition_source.closure_3) (_ : Unit) :
@@ -149723,7 +149757,7 @@ def
   source.Error.at source.Stage.Acceptance d
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1447:75-1452:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1458:75-1463:9 -/
 @[reducible]
 def
   source.Session.definition_source.closure_3.Insts.CoreOpsFunctionFnOnceTupleError
@@ -149734,7 +149768,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1441:64-1446:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1452:64-1457:9 -/
 def
   source.Session.definition_source.closure_2.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.Session.definition_source.closure_2) (_ : Unit) :
@@ -149744,7 +149778,7 @@ def
   source.Error.at source.Stage.Acceptance d
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1441:64-1446:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1452:64-1457:9 -/
 @[reducible]
 def
   source.Session.definition_source.closure_2.Insts.CoreOpsFunctionFnOnceTupleError
@@ -149755,7 +149789,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1435:24-1440:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1446:24-1451:13 -/
 def
   source.Session.definition_source.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.Session.definition_source.closure_1) (_ : Unit) :
@@ -149766,7 +149800,7 @@ def
   source.Error.at source.Stage.Acceptance d
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1435:24-1440:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1446:24-1451:13 -/
 @[reducible]
 def
   source.Session.definition_source.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
@@ -149777,7 +149811,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::Named,), core::option::Option<usize>> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1434:22-1434:59 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1445:22-1445:59 -/
 def
   source.Session.definition_source.closure.Insts.CoreOpsFunctionFnOnceTupleShared0NamedOptionUsize.call_once
   (c : source.Session.definition_source.closure) (tupled_args : source.Named) :
@@ -149786,7 +149820,7 @@ def
   ok tupled_args.history_start
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::Named,), core::option::Option<usize>> for noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1434:22-1434:59 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1445:22-1445:59 -/
 @[reducible]
 def
   source.Session.definition_source.closure.Insts.CoreOpsFunctionFnOnceTupleShared0NamedOptionUsize
@@ -149797,7 +149831,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1429:4-1479:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1440:4-1490:5 -/
 def source.Session.definition_source
   (self : source.Session) (index1 : Std.Usize) :
   Result (core.result.Result (Slice Std.U8) source.Error)
@@ -167489,7 +167523,7 @@ def source.preparation.symbolic.Subject.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::source::preparation::{impl core::clone::Clone for noble_contracts::source::preparation::Inference<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 426:9-426:14
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 428:9-428:14
     Visibility: public -/
 def source.preparation.Inference.Insts.CoreCloneClone.clone
   (self : source.preparation.Inference) :
@@ -167498,7 +167532,7 @@ def source.preparation.Inference.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [noble_contracts::source::preparation::{impl core::clone::Clone for noble_contracts::source::preparation::Inference<'a>}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 426:9-426:14 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 428:9-428:14 -/
 @[reducible]
 impl_def source.preparation.Inference.Insts.CoreCloneClone : core.clone.Clone
   source.preparation.Inference := {
@@ -167508,7 +167542,7 @@ impl_def source.preparation.Inference.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::source::preparation::{impl core::marker::Copy for noble_contracts::source::preparation::Inference<'a>}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 426:16-426:20 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 428:16-428:20 -/
 @[reducible]
 def source.preparation.Inference.Insts.CoreMarkerCopy : core.marker.Copy
   source.preparation.Inference := {
@@ -205715,7 +205749,7 @@ def source.Named.is_named
   alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq self.name «name»
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::last_definition_named]: loop body 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1070:8-1075:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1081:8-1086:9 -/
 @[rust_loop_body]
 def source.Session.last_definition_named_loop.body
   (v : alloc.vec.Vec source.Named) («name» : Str) («at» : Std.Usize)
@@ -205739,7 +205773,7 @@ def source.Session.last_definition_named_loop.body
   else ok (done found)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::last_definition_named]: loop 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1070:8-1075:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1081:8-1086:9 -/
 @[rust_loop]
 def source.Session.last_definition_named_loop
   (v : alloc.vec.Vec source.Named) («name» : Str) («at» : Std.Usize)
@@ -205752,7 +205786,7 @@ def source.Session.last_definition_named_loop
     («at», found)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::last_definition_named]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1067:4-1077:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1078:4-1088:5 -/
 def source.Session.last_definition_named
   (self : source.Session) («name» : Str) : Result (Option Std.Usize) := do
   let «at» := alloc.vec.Vec.len self.definitions
@@ -211903,8 +211937,18 @@ def source.Session.new_live (selected_name : Str) : Result source.Session := do
   let s1 ← source.Session.without_test_hosts
   ok { s1 with live_selected := (some s) }
 
+/-- [noble_contracts::source::{noble_contracts::source::Session}::new_live_with_test_hosts]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 890:4-896:5
+    Visibility: public -/
+def source.Session.new_live_with_test_hosts
+  (selected_name : Str) : Result source.Session := do
+  let s ←
+    alloc.string.String.Insts.CoreConvertFromShared0Str.from selected_name
+  let s1 ← source.Session.without_test_hosts
+  ok { s1 with hosts := true, live_selected := (some s) }
+
 /-- [noble_contracts::source::{noble_contracts::source::Session}::new_live_slots]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 889:4-907:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 900:4-918:5
     Visibility: public -/
 def source.Session.new_live_slots
   (environment : noble_kernel.contracts.Env) :
@@ -211943,7 +211987,7 @@ def source.Session.new_live_slots
     ok (core.result.Result.Err e)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::new_live_slots_with_test_hosts]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 912:4-918:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 923:4-929:5
     Visibility: public -/
 def source.Session.new_live_slots_with_test_hosts
   (environment : noble_kernel.contracts.Env) :
@@ -211960,7 +212004,7 @@ def source.Session.new_live_slots_with_test_hosts
       source.Session (core.convert.FromSame source.Error) residual
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 999:61-1004:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1010:61-1015:9 -/
 def
   source.Session.register_live_resource.closure_3.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.Session.register_live_resource.closure_3) (_ : Unit) :
@@ -211970,7 +212014,7 @@ def
   source.Error.at source.Stage.Acceptance d
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 999:61-1004:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1010:61-1015:9 -/
 @[reducible]
 def
   source.Session.register_live_resource.closure_3.Insts.CoreOpsFunctionFnOnceTupleError
@@ -211981,7 +212025,7 @@ def
 }
 
 /-- [noble_contracts::source::is_resource_registration]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1791:0-1798:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1814:0-1821:1 -/
 def source.is_resource_registration
   (resource : (String × noble_kernel.types.Ty)) («name» : Str)
   (id : noble_kernel.types.NominalTypeId) :
@@ -212017,7 +212061,7 @@ def source.is_resource_registration
     | noble_kernel.types.Ty.GenericNominalType _ _ _ => ok false
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{impl core::ops::function::FnMut<(&'_2 (alloc::string::String, noble_kernel::types::Ty),), bool> for noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure#2}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 989:59-991:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1000:59-1002:13 -/
 def
   source.Session.register_live_resource.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2PairStringTyBool.call_mut
   (c : source.Session.register_live_resource.closure_2)
@@ -212029,7 +212073,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{impl core::ops::function::FnOnce<(&'_2 (alloc::string::String, noble_kernel::types::Ty),), bool> for noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure#2}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 989:59-991:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1000:59-1002:13 -/
 def
   source.Session.register_live_resource.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared2PairStringTyBool.call_once
   (c : source.Session.register_live_resource.closure_2)
@@ -212042,7 +212086,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{impl core::ops::function::FnOnce<(&'_2 (alloc::string::String, noble_kernel::types::Ty),), bool> for noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure#2}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 989:59-991:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1000:59-1002:13 -/
 @[reducible]
 def
   source.Session.register_live_resource.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared2PairStringTyBool
@@ -212053,7 +212097,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{impl core::ops::function::FnMut<(&'_2 (alloc::string::String, noble_kernel::types::Ty),), bool> for noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure#2}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 989:59-991:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1000:59-1002:13 -/
 @[reducible]
 def
   source.Session.register_live_resource.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2PairStringTyBool
@@ -212066,7 +212110,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{impl core::ops::function::FnMut<(u8,), bool> for noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure#1}}::call_mut]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 950:47-950:75 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 961:47-961:75 -/
 def
   source.Session.register_live_resource.closure_1.Insts.CoreOpsFunctionFnMutTupleU8Bool.call_mut
   (c : source.Session.register_live_resource.closure_1) (tupled_args : Std.U8)
@@ -212077,7 +212121,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{impl core::ops::function::FnOnce<(u8,), bool> for noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 950:47-950:75 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 961:47-961:75 -/
 def
   source.Session.register_live_resource.closure_1.Insts.CoreOpsFunctionFnOnceTupleU8Bool.call_once
   (c : source.Session.register_live_resource.closure_1) (i : Std.U8) :
@@ -212089,7 +212133,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{impl core::ops::function::FnOnce<(u8,), bool> for noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 950:47-950:75 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 961:47-961:75 -/
 @[reducible]
 def
   source.Session.register_live_resource.closure_1.Insts.CoreOpsFunctionFnOnceTupleU8Bool
@@ -212100,7 +212144,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{impl core::ops::function::FnMut<(u8,), bool> for noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 950:47-950:75 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 961:47-961:75 -/
 @[reducible]
 def
   source.Session.register_live_resource.closure_1.Insts.CoreOpsFunctionFnMutTupleU8Bool
@@ -212113,7 +212157,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{impl core::ops::function::FnMut<(u8,), bool> for noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure}}::call_mut]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 944:44-946:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 955:44-957:13 -/
 def
   source.Session.register_live_resource.closure.Insts.CoreOpsFunctionFnMutTupleU8Bool.call_mut
   (c : source.Session.register_live_resource.closure) (tupled_args : Std.U8) :
@@ -212125,7 +212169,7 @@ def
   else ok (tupled_args = 95#u8, c)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{impl core::ops::function::FnOnce<(u8,), bool> for noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 944:44-946:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 955:44-957:13 -/
 def
   source.Session.register_live_resource.closure.Insts.CoreOpsFunctionFnOnceTupleU8Bool.call_once
   (c : source.Session.register_live_resource.closure) (i : Std.U8) :
@@ -212137,7 +212181,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{impl core::ops::function::FnOnce<(u8,), bool> for noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 944:44-946:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 955:44-957:13 -/
 @[reducible]
 def
   source.Session.register_live_resource.closure.Insts.CoreOpsFunctionFnOnceTupleU8Bool
@@ -212148,7 +212192,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{impl core::ops::function::FnMut<(u8,), bool> for noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 944:44-946:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 955:44-957:13 -/
 @[reducible]
 def
   source.Session.register_live_resource.closure.Insts.CoreOpsFunctionFnMutTupleU8Bool
@@ -212161,7 +212205,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 931:4-1011:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 942:4-1022:5
     Visibility: public -/
 def source.Session.register_live_resource
   (self : source.Session) («name» : Str)
@@ -212876,7 +212920,7 @@ def source.Session.register_live_resource
         ok (core.result.Result.Err e, self)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::parse_live_type::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::parse_live_type::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1031:17-1031:55 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1042:17-1042:55 -/
 def
   source.Session.parse_live_type.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.Session.parse_live_type.closure_1) (tupled_args : Diagnostic) :
@@ -212885,7 +212929,7 @@ def
   source.Error.at source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::parse_live_type::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::parse_live_type::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1031:17-1031:55 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1042:17-1042:55 -/
 @[reducible]
 def
   source.Session.parse_live_type.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -212896,7 +212940,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::parse_live_type::{impl core::ops::function::FnOnce<(noble_contracts::source::declared::types::ParsedType,), noble_kernel::types::Ty> for noble_contracts::source::{noble_contracts::source::Session}::parse_live_type::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1030:13-1030:31 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1041:13-1041:31 -/
 def
   source.Session.parse_live_type.closure.Insts.CoreOpsFunctionFnOnceTupleParsedTypeTy.call_once
   (c : source.Session.parse_live_type.closure)
@@ -212906,7 +212950,7 @@ def
   ok tupled_args.ty
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::parse_live_type::{impl core::ops::function::FnOnce<(noble_contracts::source::declared::types::ParsedType,), noble_kernel::types::Ty> for noble_contracts::source::{noble_contracts::source::Session}::parse_live_type::{closure}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1030:13-1030:31 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1041:13-1041:31 -/
 @[reducible]
 def
   source.Session.parse_live_type.closure.Insts.CoreOpsFunctionFnOnceTupleParsedTypeTy
@@ -212917,7 +212961,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::parse_live_type]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1015:4-1032:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 1026:4-1043:5
     Visibility: public -/
 def source.Session.parse_live_type
   (self : source.Session) (text : Str) :
@@ -212947,28 +212991,28 @@ def source.Session.parse_live_type
       r1 ()
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::new_calculator]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1034:4-1039:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 1045:4-1050:5
     Visibility: public -/
 def source.Session.new_calculator : Result source.Session := do
   let s ← source.Session.without_test_hosts
   ok { s with calculator := true }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::new_checked_i64]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1041:4-1046:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 1052:4-1057:5
     Visibility: public -/
 def source.Session.new_checked_i64 : Result source.Session := do
   let s ← source.Session.without_test_hosts
   ok { s with checked_i64 := true }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::generation]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1047:4-1049:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 1058:4-1060:5
     Visibility: public -/
 def source.Session.impl.generation
   (self : source.Session) : Result Std.U64 := do
   ok self.generation
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::installed_definition_identity]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1061:4-1064:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 1072:4-1075:5
     Visibility: public -/
 def source.Session.installed_definition_identity
   (self : source.Session) («name» : Str) : Result (Option Std.U64) := do
@@ -212985,7 +213029,7 @@ def source.Session.installed_definition_identity
       Std.U64 residual
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::selected_definition_identity]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1052:4-1057:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 1063:4-1068:5
     Visibility: public -/
 def source.Session.selected_definition_identity
   (self : source.Session) («name» : Str) : Result (Option Std.U64) := do
@@ -213002,7 +213046,7 @@ def source.Session.selected_definition_identity
   else source.Session.installed_definition_identity self «name»
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::same_name]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1162:4-1164:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1173:4-1175:5 -/
 def source.Session.same_name
   (self : source.Session) (left : Std.Usize) (right : Std.Usize) :
   Result Bool
@@ -213016,7 +213060,7 @@ def source.Session.same_name
   alloc.string.String.Insts.CoreCmpPartialEqString.eq n.name n1.name
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::is_shadowed]: loop body 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1145:8-1148:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1156:8-1159:9 -/
 @[rust_loop_body]
 def source.Session.is_shadowed_loop.body
   (self : source.Session) (index1 : Std.Usize) (later : Std.Usize)
@@ -213035,7 +213079,7 @@ def source.Session.is_shadowed_loop.body
     else ok (done is_found)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::is_shadowed]: loop 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1145:8-1148:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1156:8-1159:9 -/
 @[rust_loop]
 def source.Session.is_shadowed_loop
   (self : source.Session) (index1 : Std.Usize) (later : Std.Usize)
@@ -213048,14 +213092,14 @@ def source.Session.is_shadowed_loop
     (later, is_found)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::is_shadowed]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1142:4-1150:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1153:4-1161:5 -/
 def source.Session.is_shadowed
   (self : source.Session) (index1 : Std.Usize) : Result Bool := do
   let later ← lift (core.num.Usize.saturating_add index1 1#usize)
   source.Session.is_shadowed_loop self index1 later false
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::current_dependents]: loop body 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1126:8-1137:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1137:8-1148:9 -/
 @[rust_loop_body]
 def source.Session.current_dependents_loop.body
   (v : alloc.vec.Vec source.Named) (v1 : alloc.vec.Vec Std.U8) (i : Std.U64)
@@ -213114,7 +213158,7 @@ def source.Session.current_dependents_loop.body
   else ok (done dependents)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::current_dependents]: loop 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1126:8-1137:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1137:8-1148:9 -/
 @[rust_loop]
 def source.Session.current_dependents_loop
   (v : alloc.vec.Vec source.Named) (v1 : alloc.vec.Vec Std.U8) (i : Std.U64)
@@ -213132,7 +213176,7 @@ def source.Session.current_dependents_loop
     (affected, dependents, index1)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::current_dependents]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1118:4-1139:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1129:4-1150:5 -/
 def source.Session.current_dependents
   (self : source.Session) (original : Std.Usize) :
   Result (alloc.vec.Vec Std.Usize)
@@ -213149,7 +213193,7 @@ def source.Session.current_dependents
     self.declared original affected1 (alloc.vec.Vec.new Std.Usize) 0#usize
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_name_at]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1100:4-1103:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1111:4-1114:5 -/
 def source.Session.definition_name_at
   (self : source.Session) (index1 : Std.Usize) : Result (Option String) := do
   let s := alloc.vec.Vec.deref self.definitions
@@ -213166,7 +213210,7 @@ def source.Session.definition_name_at
       String residual
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::current_dependent_names]: loop body 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1090:8-1095:9
+    Source: 'crates/noble-contracts/src/source.rs', lines 1101:8-1106:9
     Visibility: public -/
 @[rust_loop_body]
 def source.Session.current_dependent_names_loop.body
@@ -213191,7 +213235,7 @@ def source.Session.current_dependent_names_loop.body
   else ok (done names)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::current_dependent_names]: loop 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1090:8-1095:9
+    Source: 'crates/noble-contracts/src/source.rs', lines 1101:8-1106:9
     Visibility: public -/
 @[rust_loop]
 def source.Session.current_dependent_names_loop
@@ -213205,7 +213249,7 @@ def source.Session.current_dependent_names_loop
     (names, «at»)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::current_dependent_names]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1083:4-1097:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 1094:4-1108:5
     Visibility: public -/
 def source.Session.current_dependent_names
   (self : source.Session) («name» : Str) :
@@ -213221,7 +213265,7 @@ def source.Session.current_dependent_names
     source.Session.current_dependent_names_loop self dependents names 0#usize
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::live_definition_has_dependents]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1107:4-1112:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 1118:4-1123:5
     Visibility: public -/
 def source.Session.live_definition_has_dependents
   (self : source.Session) («name» : Str) : Result Bool := do
@@ -213234,7 +213278,7 @@ def source.Session.live_definition_has_dependents
     ok (¬ b)
 
 /-- [noble_contracts::source::classify_diagnostic]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1829:0-1835:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1852:0-1858:1 -/
 def source.classify_diagnostic
   (kind : source.PreviewRefusal) (error : source.Error) :
   Result source.PreviewError
@@ -213249,7 +213293,7 @@ def source.classify_diagnostic
   source.PreviewError.new kind1 error
 
 /-- [noble_contracts::source::classify]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1822:0-1824:1 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1845:0-1847:1 -/
 def source.classify
   (kind : source.PreviewRefusal) (error : source.Error) :
   Result source.PreviewError
@@ -213257,7 +213301,7 @@ def source.classify
   source.classify_diagnostic kind error
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::queue_named]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1625:4-1644:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1636:4-1655:5 -/
 def source.Session.queue_named
   (self : source.Session) (index1 : Std.Usize) (seen : Slice Bool)
   (pending : alloc.vec.Vec Std.Usize) :
@@ -213286,13 +213330,42 @@ def source.Session.queue_named
         let seen1 := get_mut_back (some true)
         ok (false, seen1, pending1)
 
+/-- [noble_contracts::source::{noble_contracts::source::Session}::scoped_live_effect]:
+    Source: 'crates/noble-contracts/src/source.rs', lines 1672:4-1682:5 -/
+def source.Session.scoped_live_effect
+  (self : source.Session) (effect : noble_kernel.shapes.EffectSlot) :
+  Result Bool
+  := do
+  let b := core.option.Option.is_none self.live_selected
+  if b
+  then ok false
+  else
+    match effect with
+    | noble_kernel.shapes.EffectSlot.Effect id =>
+      let b1 ←
+        match id with
+        | 3#uscalar => ok true
+        | 4#uscalar => ok true
+        | _ => ok false
+      if b1
+      then ok true
+      else
+        if self.hosts
+        then
+          match id with
+          | 0#uscalar => ok true
+          | 1#uscalar => ok true
+          | _ => ok false
+        else ok false
+    | noble_kernel.shapes.EffectSlot.Var _ => ok true
+
 /-- [noble_contracts::source::{noble_contracts::source::Session}::scheme_requires_host_effects]: loop body 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1651:8-1658:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1662:8-1665:9 -/
 @[rust_loop_body]
 def source.Session.scheme_requires_host_effects_loop.body
-  (scheme : noble_kernel.words.Scheme) (self : source.Session)
+  (self : source.Session) (scheme : noble_kernel.words.Scheme)
   (needs_host_effects : Bool) («at» : Std.Usize) :
-  Result (ControlFlow (source.Session × Bool × Std.Usize) Bool)
+  Result (ControlFlow (Bool × Std.Usize) Bool)
   := do
   if needs_host_effects
   then ok (done needs_host_effects)
@@ -213303,38 +213376,13 @@ def source.Session.scheme_requires_host_effects_loop.body
       let es ←
         alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
           noble_kernel.shapes.EffectSlot) scheme.effects «at»
-      let (self1, b) ←
-        match es with
-        | noble_kernel.shapes.EffectSlot.Effect ei =>
-          match ei with
-          | 3#uscalar =>
-            do
-            let b1 := core.option.Option.is_some self.live_selected
-            let b2 ← if b1
-                       then ok true
-                       else ok false
-            ok (self, b2)
-          | 4#uscalar =>
-            do
-            let b1 := core.option.Option.is_some self.live_selected
-            let b2 ← if b1
-                       then ok true
-                       else ok false
-            ok (self, b2)
-          | _ => ok (self, false)
-        | noble_kernel.shapes.EffectSlot.Var _ =>
-          do
-          let b1 := core.option.Option.is_some self.live_selected
-          let b2 ← if b1
-                     then ok true
-                     else ok false
-          ok (self, b2)
+      let b ← source.Session.scoped_live_effect self es
       let at1 ← «at» + 1#usize
-      ok (cont (self1, ¬ b, at1))
+      ok (cont (¬ b, at1))
     else ok (done needs_host_effects)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::scheme_requires_host_effects]: loop 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1651:8-1658:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1662:8-1665:9 -/
 @[rust_loop]
 def source.Session.scheme_requires_host_effects_loop
   (self : source.Session) (scheme : noble_kernel.words.Scheme)
@@ -213342,13 +213390,13 @@ def source.Session.scheme_requires_host_effects_loop
   Result Bool
   := do
   loop
-    (fun (self1, needs_host_effects1, at1) =>
-      source.Session.scheme_requires_host_effects_loop.body scheme self1
+    (fun (needs_host_effects1, at1) =>
+      source.Session.scheme_requires_host_effects_loop.body self scheme
       needs_host_effects1 at1)
-    (self, needs_host_effects, «at»)
+    (needs_host_effects, «at»)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::scheme_requires_host_effects]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1648:4-1660:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1659:4-1667:5 -/
 @[reducible]
 def source.Session.scheme_requires_host_effects
   (self : source.Session) (scheme : noble_kernel.words.Scheme) :
@@ -213357,7 +213405,7 @@ def source.Session.scheme_requires_host_effects
   source.Session.scheme_requires_host_effects_loop self scheme false 0#usize
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::builtin_requires_host_effects]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1601:4-1610:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1612:4-1621:5 -/
 def source.Session.builtin_requires_host_effects
   (self : source.Session) (environment : noble_kernel.contracts.Env)
   (index1 : Std.U32) :
@@ -213373,7 +213421,7 @@ def source.Session.builtin_requires_host_effects
   | some scheme => source.Session.scheme_requires_host_effects self scheme
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::node_requires_host_effects]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1576:4-1590:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1587:4-1601:5 -/
 def source.Session.node_requires_host_effects
   (self : source.Session) (environment : noble_kernel.contracts.Env)
   (node : source.Node) (seen : Slice Bool) (pending : alloc.vec.Vec Std.Usize)
@@ -213399,7 +213447,7 @@ def source.Session.node_requires_host_effects
   | source.Kind.EditorHole => ok (false, seen, pending)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::nodes_require_host_effects]: loop body 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1550:8-1554:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1561:8-1565:9 -/
 @[rust_loop_body]
 def source.Session.nodes_require_host_effects_loop.body
   (self : source.Session) (environment : noble_kernel.contracts.Env)
@@ -213424,7 +213472,7 @@ def source.Session.nodes_require_host_effects_loop.body
     else ok (done (needs_host_effects, seen, pending))
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::nodes_require_host_effects]: loop 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1550:8-1554:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1561:8-1565:9 -/
 @[rust_loop]
 def source.Session.nodes_require_host_effects_loop
   (self : source.Session) (environment : noble_kernel.contracts.Env)
@@ -213440,7 +213488,7 @@ def source.Session.nodes_require_host_effects_loop
     (seen, pending, needs_host_effects, «at»)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::nodes_require_host_effects]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1541:4-1556:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1552:4-1567:5 -/
 @[reducible]
 def source.Session.nodes_require_host_effects
   (self : source.Session) (environment : noble_kernel.contracts.Env)
@@ -213452,7 +213500,7 @@ def source.Session.nodes_require_host_effects
     pending false 0#usize
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::tree_requires_host_effects]: loop body 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1516:8-1528:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1527:8-1539:9 -/
 @[rust_loop_body]
 def source.Session.tree_requires_host_effects_loop.body
   (v : alloc.vec.Vec source.Named) (v1 : alloc.vec.Vec Std.U8) (i : Std.U64)
@@ -213495,7 +213543,7 @@ def source.Session.tree_requires_host_effects_loop.body
       ok (cont (seen1, pending2, needs_host_effects1))
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::tree_requires_host_effects]: loop 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1516:8-1528:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1527:8-1539:9 -/
 @[rust_loop]
 def source.Session.tree_requires_host_effects_loop
   (v : alloc.vec.Vec source.Named) (v1 : alloc.vec.Vec Std.U8) (i : Std.U64)
@@ -213513,7 +213561,7 @@ def source.Session.tree_requires_host_effects_loop
     (seen, pending, needs_host_effects)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::tree_requires_host_effects]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1507:4-1530:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1518:4-1541:5 -/
 def source.Session.tree_requires_host_effects
   (self : source.Session) (environment : noble_kernel.contracts.Env)
   (root : source.Tree) :
@@ -213533,7 +213581,7 @@ def source.Session.tree_requires_host_effects
     self.declared environment seen1 pending needs_host_effects
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::core_definition_requires_host_effects]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1487:4-1503:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 1498:4-1514:5
     Visibility: public -/
 def source.Session.core_definition_requires_host_effects
   (self : source.Session) (prepared : source.SourcePrepared) :
@@ -213556,7 +213604,7 @@ def source.Session.core_definition_requires_host_effects
     | core.result.Result.Err _ => ok true
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_contracts::source::PreviewError> for noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{closure#3}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1395:21-1395:89 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1406:21-1406:89 -/
 def
   source.Session.rebuild_dependent.closure_3.Insts.CoreOpsFunctionFnOnceTupleErrorPreviewError.call_once
   (c : source.Session.rebuild_dependent.closure_3) (tupled_args : source.Error)
@@ -213566,7 +213614,7 @@ def
   source.classify_diagnostic source.PreviewRefusal.DependentRebuild tupled_args
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_contracts::source::PreviewError> for noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{closure#3}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1395:21-1395:89 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1406:21-1406:89 -/
 @[reducible]
 def
   source.Session.rebuild_dependent.closure_3.Insts.CoreOpsFunctionFnOnceTupleErrorPreviewError
@@ -213577,7 +213625,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::PreviewError> for noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{closure#2}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1373:16-1378:17 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1384:16-1389:17 -/
 def
   source.Session.rebuild_dependent.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnosticPreviewError.call_once
   (c : source.Session.rebuild_dependent.closure_2) (tupled_args : Diagnostic) :
@@ -213587,7 +213635,7 @@ def
   source.classify_diagnostic source.PreviewRefusal.DependentRebuild e
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::PreviewError> for noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{closure#2}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1373:16-1378:17 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1384:16-1389:17 -/
 @[reducible]
 def
   source.Session.rebuild_dependent.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnosticPreviewError
@@ -213598,7 +213646,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_contracts::source::PreviewError> for noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1335:21-1335:89 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1346:21-1346:89 -/
 def
   source.Session.rebuild_dependent.closure_1.Insts.CoreOpsFunctionFnOnceTupleErrorPreviewError.call_once
   (c : source.Session.rebuild_dependent.closure_1) (tupled_args : source.Error)
@@ -213608,7 +213656,7 @@ def
   source.classify_diagnostic source.PreviewRefusal.DependentRebuild tupled_args
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_contracts::source::PreviewError> for noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1335:21-1335:89 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1346:21-1346:89 -/
 @[reducible]
 def
   source.Session.rebuild_dependent.closure_1.Insts.CoreOpsFunctionFnOnceTupleErrorPreviewError
@@ -213619,7 +213667,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_contracts::source::PreviewError> for noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1332:21-1332:87 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1343:21-1343:87 -/
 def
   source.Session.rebuild_dependent.closure.Insts.CoreOpsFunctionFnOnceTupleErrorPreviewError.call_once
   (c : source.Session.rebuild_dependent.closure) (tupled_args : source.Error) :
@@ -213628,7 +213676,7 @@ def
   source.classify_diagnostic source.PreviewRefusal.RetainedSource tupled_args
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_contracts::source::PreviewError> for noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{closure}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1332:21-1332:87 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1343:21-1343:87 -/
 @[reducible]
 def
   source.Session.rebuild_dependent.closure.Insts.CoreOpsFunctionFnOnceTupleErrorPreviewError
@@ -213639,7 +213687,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1322:4-1396:5 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1333:4-1407:5 -/
 def source.Session.rebuild_dependent
   (self : source.Session) (successor : source.Session)
   (replacements : Slice (Option Std.Usize)) (index1 : Std.Usize)
@@ -213762,7 +213810,7 @@ def source.Session.rebuild_dependent
     ok (r2, successor, replacements)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_contracts::source::PreviewError> for noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{closure#2}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1285:21-1285:91 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1296:21-1296:91 -/
 def
   source.Session.preview_core_rebuild.closure_2.Insts.CoreOpsFunctionFnOnceTupleErrorPreviewError.call_once
   (c : source.Session.preview_core_rebuild.closure_2)
@@ -213773,7 +213821,7 @@ def
     tupled_args
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_contracts::source::PreviewError> for noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{closure#2}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1285:21-1285:91 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1296:21-1296:91 -/
 @[reducible]
 def
   source.Session.preview_core_rebuild.closure_2.Insts.CoreOpsFunctionFnOnceTupleErrorPreviewError
@@ -213784,7 +213832,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_contracts::source::PreviewError> for noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1252:21-1252:89 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1263:21-1263:89 -/
 def
   source.Session.preview_core_rebuild.closure_1.Insts.CoreOpsFunctionFnOnceTupleErrorPreviewError.call_once
   (c : source.Session.preview_core_rebuild.closure_1)
@@ -213794,7 +213842,7 @@ def
   source.classify_diagnostic source.PreviewRefusal.ComparisonFailed tupled_args
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_contracts::source::PreviewError> for noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1252:21-1252:89 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1263:21-1263:89 -/
 @[reducible]
 def
   source.Session.preview_core_rebuild.closure_1.Insts.CoreOpsFunctionFnOnceTupleErrorPreviewError
@@ -213805,7 +213853,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::PreviewError> for noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1213:21-1218:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1224:21-1229:13 -/
 def
   source.Session.preview_core_rebuild.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnosticPreviewError.call_once
   (c : source.Session.preview_core_rebuild.closure) (tupled_args : Diagnostic)
@@ -213816,7 +213864,7 @@ def
   source.classify_diagnostic source.PreviewRefusal.ComparisonFailed e
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::PreviewError> for noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{closure}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1213:21-1218:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1224:21-1229:13 -/
 @[reducible]
 def
   source.Session.preview_core_rebuild.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnosticPreviewError
@@ -213827,7 +213875,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild]: loop body 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1307:8-1311:9
+    Source: 'crates/noble-contracts/src/source.rs', lines 1318:8-1322:9
     Visibility: public -/
 @[rust_loop_body]
 def source.Session.preview_core_rebuild_loop0.body
@@ -213876,7 +213924,7 @@ def source.Session.preview_core_rebuild_loop0.body
   else ok (done (successor, outcome))
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild]: loop 0:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1307:8-1311:9
+    Source: 'crates/noble-contracts/src/source.rs', lines 1318:8-1322:9
     Visibility: public -/
 @[rust_loop]
 def source.Session.preview_core_rebuild_loop0
@@ -213897,7 +213945,7 @@ def source.Session.preview_core_rebuild_loop0
     (successor, replacements, «at», outcome)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild]: loop body 1:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1307:8-1311:9
+    Source: 'crates/noble-contracts/src/source.rs', lines 1318:8-1322:9
     Visibility: public -/
 @[rust_loop_body]
 def source.Session.preview_core_rebuild_loop1.body
@@ -213946,7 +213994,7 @@ def source.Session.preview_core_rebuild_loop1.body
   else ok (done (successor, outcome))
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild]: loop 1:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1307:8-1311:9
+    Source: 'crates/noble-contracts/src/source.rs', lines 1318:8-1322:9
     Visibility: public -/
 @[rust_loop]
 def source.Session.preview_core_rebuild_loop1
@@ -213967,7 +214015,7 @@ def source.Session.preview_core_rebuild_loop1
     (successor, replacements, «at», outcome)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1181:4-1314:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 1192:4-1325:5
     Visibility: public -/
 def source.Session.preview_core_rebuild
   (self : source.Session) (prepared : source.SourcePrepared) :
@@ -214251,7 +214299,7 @@ def source.Session.preview_core_rebuild
     ok (core.result.Result.Err pe)
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::installed_ordered_interface::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::installed_ordered_interface::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1410:21-1410:69 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1421:21-1421:69 -/
 def
   source.Session.installed_ordered_interface.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.Session.installed_ordered_interface.closure)
@@ -214261,7 +214309,7 @@ def
   source.Error.at source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::installed_ordered_interface::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::installed_ordered_interface::{closure}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1410:21-1410:69 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1421:21-1421:69 -/
 @[reducible]
 def
   source.Session.installed_ordered_interface.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -214272,7 +214320,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::installed_ordered_interface]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1400:4-1411:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 1411:4-1422:5
     Visibility: public -/
 def source.Session.installed_ordered_interface
   (self : source.Session) («name» : Str) (limits : Limits) :
@@ -214294,7 +214342,7 @@ def source.Session.installed_ordered_interface
       r1 ()
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::candidate_ordered_interface::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::candidate_ordered_interface::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1424:21-1424:69 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1435:21-1435:69 -/
 def
   source.Session.candidate_ordered_interface.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.Session.candidate_ordered_interface.closure)
@@ -214304,7 +214352,7 @@ def
   source.Error.at source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::{noble_contracts::source::Session}::candidate_ordered_interface::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::{noble_contracts::source::Session}::candidate_ordered_interface::{closure}}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1424:21-1424:69 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1435:21-1435:69 -/
 @[reducible]
 def
   source.Session.candidate_ordered_interface.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -214315,7 +214363,7 @@ def
 }
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::candidate_ordered_interface]:
-    Source: 'crates/noble-contracts/src/source.rs', lines 1415:4-1425:5
+    Source: 'crates/noble-contracts/src/source.rs', lines 1426:4-1436:5
     Visibility: public -/
 def source.Session.candidate_ordered_interface
   (self : source.Session) (prepared : source.SourcePrepared) :

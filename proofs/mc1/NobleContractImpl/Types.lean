@@ -1719,31 +1719,31 @@ structure source.resolution.comparison.Entry where
 def source.resolution.comparison.identity.closure := Unit
 
 /-- [noble_contracts::source::preparation::declaration::{closure}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 816:54-816:77 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 818:54-818:77 -/
 @[reducible]
 def source.preparation.declaration.closure := Unit
 
 /-- [noble_contracts::source::preparation::checked_alias_use::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 766:62-768:5 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 768:62-770:5 -/
 def source.preparation.checked_alias_use.closure_3 := String × Std.U64
 
 /-- [noble_contracts::source::preparation::checked_alias_use::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 749:28-749:57 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 751:28-751:57 -/
 @[reducible]
 def source.preparation.checked_alias_use.closure_2 := source.Node
 
 /-- [noble_contracts::source::preparation::checked_alias_use::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 737:20-737:49 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 739:20-739:49 -/
 @[reducible]
 def source.preparation.checked_alias_use.closure_1 := source.Node
 
 /-- [noble_contracts::source::preparation::checked_alias_use::{closure}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 734:20-734:49 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 736:20-736:49 -/
 @[reducible]
 def source.preparation.checked_alias_use.closure := source.Tree
 
 /-- [noble_contracts::source::preparation::checked_alias_uses::{closure}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 692:20-692:49 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 694:20-694:49 -/
 @[reducible]
 def source.preparation.checked_alias_uses.closure := source.Tree
 
@@ -1756,7 +1756,7 @@ inductive source.inference.Mode where
 | EditorAnalysis : source.inference.Mode
 
 /-- [noble_contracts::source::preparation::Parts]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 440:0-446:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 442:0-448:1 -/
 structure source.preparation.Parts where
   definition : Option source.Named
   addition : alloc.vec.Vec Std.U8
@@ -1765,7 +1765,7 @@ structure source.preparation.Parts where
   output : alloc.vec.Vec noble_kernel.types.Ty
 
 /-- [noble_contracts::source::preparation::Inference]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 427:0-434:1 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 429:0-436:1 -/
 structure source.preparation.Inference where
   tree : source.Tree
   signature : Option noble_kernel.words.Scheme
@@ -1775,7 +1775,7 @@ structure source.preparation.Inference where
   source_bytes : Slice Std.U8
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::retained::{closure}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 412:78-414:9 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 414:78-416:9 -/
 @[reducible]
 def source.preparation.Session.retained.closure := Span
 
@@ -2510,22 +2510,22 @@ structure inference.effects.solve.Symbolic where
 def inference.effects.solve.initial_fact.closure := Span
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 304:21-304:77 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 306:21-306:77 -/
 @[reducible]
 def source.preparation.Session.prospective_owner.closure_3 := Unit
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 301:21-301:77 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 303:21-303:77 -/
 @[reducible]
 def source.preparation.Session.prospective_owner.closure_2 := Unit
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 293:58-293:81 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 295:58-295:81 -/
 @[reducible]
 def source.preparation.Session.prospective_owner.closure_1 := Unit
 
 /-- [noble_contracts::source::preparation::{noble_contracts::source::Session}::prospective_owner::{closure}]
-    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 280:52-282:13 -/
+    Source: 'crates/noble-contracts/src/source/preparation.rs', lines 282:52-284:13 -/
 @[reducible]
 def source.preparation.Session.prospective_owner.closure := Unit
 
@@ -2580,7 +2580,7 @@ def source.preparation.Session.prepare_signed_metered.closure_1 := Unit
 def source.preparation.Session.prepare_signed_metered.closure := Unit
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::program_type_effect_universe::{closure}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1701:27-1701:67 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1724:27-1724:67 -/
 @[reducible]
 def source.Session.program_type_effect_universe.closure := Unit
 
@@ -7805,42 +7805,42 @@ def source.declared.state.ModuleSession.declared_text.closure := Unit
 def source.declared.state.rebind.alias_used.closure := Str × Std.U64
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#7}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1473:53-1478:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1484:53-1489:9 -/
 @[reducible]
 def source.Session.definition_source.closure_7 := Span
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#6}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1467:66-1472:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1478:66-1483:9 -/
 @[reducible]
 def source.Session.definition_source.closure_6 := Span
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#5}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1461:17-1466:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1472:17-1477:9 -/
 @[reducible]
 def source.Session.definition_source.closure_5 := Span
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#4}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1454:48-1459:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1465:48-1470:13 -/
 @[reducible]
 def source.Session.definition_source.closure_4 := Span
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#3}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1447:75-1452:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1458:75-1463:9 -/
 @[reducible]
 def source.Session.definition_source.closure_3 := Span
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#2}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1441:64-1446:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1452:64-1457:9 -/
 @[reducible]
 def source.Session.definition_source.closure_2 := Span
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure#1}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1435:24-1440:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1446:24-1451:13 -/
 @[reducible]
 def source.Session.definition_source.closure_1 := Span
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::definition_source::{closure}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1434:22-1434:59 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1445:22-1445:59 -/
 @[reducible]
 def source.Session.definition_source.closure := Unit
 
@@ -10241,77 +10241,77 @@ def source.Prepared.definition_identity.closure := Unit
 def source.Prepared.submission_interface.closure := Unit
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure#3}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 999:61-1004:9 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1010:61-1015:9 -/
 @[reducible]
 def source.Session.register_live_resource.closure_3 := Span
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure#2}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 989:59-991:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1000:59-1002:13 -/
 def source.Session.register_live_resource.closure_2 :=
   Str × noble_kernel.types.NominalTypeId
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure#1}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 950:47-950:75 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 961:47-961:75 -/
 @[reducible]
 def source.Session.register_live_resource.closure_1 := Unit
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::register_live_resource::{closure}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 944:44-946:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 955:44-957:13 -/
 @[reducible]
 def source.Session.register_live_resource.closure := Unit
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::parse_live_type::{closure#1}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1031:17-1031:55 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1042:17-1042:55 -/
 @[reducible]
 def source.Session.parse_live_type.closure_1 := Unit
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::parse_live_type::{closure}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1030:13-1030:31 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1041:13-1041:31 -/
 @[reducible]
 def source.Session.parse_live_type.closure := Unit
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{closure#3}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1395:21-1395:89 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1406:21-1406:89 -/
 @[reducible]
 def source.Session.rebuild_dependent.closure_3 := Unit
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{closure#2}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1373:16-1378:17 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1384:16-1389:17 -/
 @[reducible]
 def source.Session.rebuild_dependent.closure_2 := Unit
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{closure#1}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1335:21-1335:89 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1346:21-1346:89 -/
 @[reducible]
 def source.Session.rebuild_dependent.closure_1 := Unit
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::rebuild_dependent::{closure}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1332:21-1332:87 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1343:21-1343:87 -/
 @[reducible]
 def source.Session.rebuild_dependent.closure := Unit
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{closure#2}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1285:21-1285:91 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1296:21-1296:91 -/
 @[reducible]
 def source.Session.preview_core_rebuild.closure_2 := Unit
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{closure#1}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1252:21-1252:89 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1263:21-1263:89 -/
 @[reducible]
 def source.Session.preview_core_rebuild.closure_1 := Unit
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::preview_core_rebuild::{closure}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1213:21-1218:13 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1224:21-1229:13 -/
 @[reducible]
 def source.Session.preview_core_rebuild.closure := Unit
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::installed_ordered_interface::{closure}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1410:21-1410:69 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1421:21-1421:69 -/
 @[reducible]
 def source.Session.installed_ordered_interface.closure := Unit
 
 /-- [noble_contracts::source::{noble_contracts::source::Session}::candidate_ordered_interface::{closure}]
-    Source: 'crates/noble-contracts/src/source.rs', lines 1424:21-1424:69 -/
+    Source: 'crates/noble-contracts/src/source.rs', lines 1435:21-1435:69 -/
 @[reducible]
 def source.Session.candidate_ordered_interface.closure := Unit
 

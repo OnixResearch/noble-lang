@@ -15141,7 +15141,7 @@ def source.admission.metadata.check
                   { totals with nodes := value }, work1)
 
 /-- [noble_wasm::source::admission::environment::lookup_rows]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 671:0-676:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 683:0-688:1 -/
 def source.admission.environment.lookup_rows
   (env : noble_kernel.contracts.Env) :
   Result (core.result.Result Std.Usize Diagnostic)
@@ -15991,7 +15991,7 @@ def source.admission.environment.weight.scheme
           | core.result.Result.Err _ => ok (r1, work)
 
 /-- [noble_wasm::source::admission::environment::contract_work]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 662:0-669:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 674:0-681:1 -/
 def source.admission.environment.contract_work
   (env : noble_kernel.contracts.Env)
   («def» : noble_kernel.contracts.Definition) (work : source.Work) :
@@ -16010,7 +16010,7 @@ def source.admission.environment.contract_work
   | core.result.Result.Err failure => ok (core.result.Result.Err failure, work)
 
 /-- [noble_wasm::source::admission::environment::scheme_work]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 782:0-805:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 794:0-817:1 -/
 def source.admission.environment.scheme_work
   (scheme : noble_kernel.words.Scheme) :
   Result (core.result.Result Std.U64 Diagnostic)
@@ -16049,7 +16049,7 @@ def source.admission.environment.scheme_work
             ok (core.result.Result.Err Diagnostic.Exhausted)
 
 /-- [noble_wasm::source::admission::environment::exact_contract]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 618:0-660:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 630:0-672:1 -/
 def source.admission.environment.exact_contract
   (env : noble_kernel.contracts.Env)
   («def» : noble_kernel.contracts.Definition)
@@ -19415,7 +19415,7 @@ def source.admission.environment.same_kind
   noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq left right
 
 /-- [noble_wasm::source::admission::environment::abort_scheme]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 23:0-36:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 26:0-39:1 -/
 def source.admission.environment.abort_scheme
   : Result noble_kernel.words.Scheme := do
   let y ←
@@ -19441,7 +19441,7 @@ def source.admission.environment.abort_scheme
   ok { var_kinds := ret, stack_in := ret1, stack_out := ret2, effects := ret3 }
 
 /-- [noble_wasm::source::admission::environment::live_schemes]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 38:0-66:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 41:0-69:1 -/
 def source.admission.environment.live_schemes
   : Result (Array noble_kernel.words.Scheme 2#usize) := do
   let y ←
@@ -19537,7 +19537,7 @@ def source.maximum_rows
           ok (core.num.Usize.saturating_add source.DEFINITION_LIMIT 26#usize)
 
 /-- [noble_wasm::source::admission::environment::check_builtin_rows]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 600:4-610:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 612:4-622:5 -/
 @[rust_loop_body]
 def source.admission.environment.check_builtin_rows_loop.body
   (env : noble_kernel.contracts.Env) (fixed : noble_kernel.contracts.Env)
@@ -19589,7 +19589,7 @@ def source.admission.environment.check_builtin_rows_loop.body
   else ok (done (core.result.Result.Ok ()))
 
 /-- [noble_wasm::source::admission::environment::check_builtin_rows]: loop 0:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 600:4-610:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 612:4-622:5 -/
 @[rust_loop]
 def source.admission.environment.check_builtin_rows_loop
   (env : noble_kernel.contracts.Env) (fixed : noble_kernel.contracts.Env)
@@ -19602,7 +19602,7 @@ def source.admission.environment.check_builtin_rows_loop
     index
 
 /-- [noble_wasm::source::admission::environment::check_builtin_rows]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 594:0-612:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 606:0-624:1 -/
 @[reducible]
 def source.admission.environment.check_builtin_rows
   (env : noble_kernel.contracts.Env) (fixed : noble_kernel.contracts.Env) :
@@ -19611,7 +19611,7 @@ def source.admission.environment.check_builtin_rows
   source.admission.environment.check_builtin_rows_loop env fixed 0#usize
 
 /-- [noble_wasm::source::admission::environment::bootstrap::{impl core::ops::function::FnOnce<(noble_kernel::shapes::Defect,), noble_wasm::Diagnostic> for noble_wasm::source::admission::environment::bootstrap::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 580:64-580:96 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 592:64-592:96 -/
 def
   source.admission.environment.bootstrap.closure.Insts.CoreOpsFunctionFnOnceTupleDefectDiagnostic.call_once
   (c : source.admission.environment.bootstrap.closure)
@@ -19621,7 +19621,7 @@ def
   ok Diagnostic.Defective
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::bootstrap::{impl core::ops::function::FnOnce<(noble_kernel::shapes::Defect,), noble_wasm::Diagnostic> for noble_wasm::source::admission::environment::bootstrap::{closure}}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 580:64-580:96 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 592:64-592:96 -/
 @[reducible]
 def
   source.admission.environment.bootstrap.closure.Insts.CoreOpsFunctionFnOnceTupleDefectDiagnostic
@@ -19632,7 +19632,7 @@ def
 }
 
 /-- [noble_wasm::source::admission::environment::bootstrap]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 576:0-592:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 588:0-604:1 -/
 def source.admission.environment.bootstrap
   (env : noble_kernel.contracts.Env) :
   Result (core.result.Result noble_kernel.contracts.Env Diagnostic)
@@ -19661,7 +19661,7 @@ def source.admission.environment.bootstrap
   | core.result.Result.Err _ => ok r1
 
 /-- [noble_wasm::source::admission::environment::live_resource::{impl core::ops::function::FnOnce<(noble_kernel::contracts::NominalError,), noble_wasm::Diagnostic> for noble_wasm::source::admission::environment::live_resource::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 573:17-573:47 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 585:17-585:47 -/
 def
   source.admission.environment.live_resource.closure.Insts.CoreOpsFunctionFnOnceTupleNominalErrorDiagnostic.call_once
   (c : source.admission.environment.live_resource.closure)
@@ -19671,7 +19671,7 @@ def
   ok Diagnostic.Invalid
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::live_resource::{impl core::ops::function::FnOnce<(noble_kernel::contracts::NominalError,), noble_wasm::Diagnostic> for noble_wasm::source::admission::environment::live_resource::{closure}}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 573:17-573:47 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 585:17-585:47 -/
 @[reducible]
 def
   source.admission.environment.live_resource.closure.Insts.CoreOpsFunctionFnOnceTupleNominalErrorDiagnostic
@@ -19682,7 +19682,7 @@ def
 }
 
 /-- [noble_wasm::source::admission::environment::live_resource]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 565:0-574:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 577:0-586:1 -/
 def source.admission.environment.live_resource
   (env : noble_kernel.contracts.Env) (fixed : noble_kernel.contracts.Env)
   (id : noble_kernel.types.NominalTypeId) :
@@ -19701,7 +19701,7 @@ def source.admission.environment.live_resource
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::source::admission::environment::live_resources]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 550:4-559:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 562:4-571:5 -/
 @[rust_loop_body]
 def source.admission.environment.live_resources_loop.body
   (env : noble_kernel.contracts.Env) (index : Std.Usize)
@@ -19730,7 +19730,7 @@ def source.admission.environment.live_resources_loop.body
   else ok (done outcome)
 
 /-- [noble_wasm::source::admission::environment::live_resources]: loop 0:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 550:4-559:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 562:4-571:5 -/
 @[rust_loop]
 def source.admission.environment.live_resources_loop
   (env : noble_kernel.contracts.Env) (index : Std.Usize)
@@ -19744,7 +19744,7 @@ def source.admission.environment.live_resources_loop
     (index, outcome)
 
 /-- [noble_wasm::source::admission::environment::live_resources]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 544:0-561:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 556:0-573:1 -/
 @[reducible]
 def source.admission.environment.live_resources
   (env : noble_kernel.contracts.Env) (fixed : noble_kernel.contracts.Env) :
@@ -19754,7 +19754,7 @@ def source.admission.environment.live_resources
     (core.result.Result.Ok fixed)
 
 /-- [noble_wasm::source::admission::environment::has_prefix_drift]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 532:4-538:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 544:4-550:5 -/
 @[rust_loop_body]
 def source.admission.environment.has_prefix_drift_loop.body
   (env : noble_kernel.contracts.Env) (fixed : noble_kernel.contracts.Env)
@@ -19805,7 +19805,7 @@ def source.admission.environment.has_prefix_drift_loop.body
     else ok (done has_definition_drift)
 
 /-- [noble_wasm::source::admission::environment::has_prefix_drift]: loop 0:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 532:4-538:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 544:4-550:5 -/
 @[rust_loop]
 def source.admission.environment.has_prefix_drift_loop
   (env : noble_kernel.contracts.Env) (fixed : noble_kernel.contracts.Env)
@@ -19819,7 +19819,7 @@ def source.admission.environment.has_prefix_drift_loop
     (index, has_definition_drift)
 
 /-- [noble_wasm::source::admission::environment::has_prefix_drift]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 525:0-540:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 537:0-552:1 -/
 @[reducible]
 def source.admission.environment.has_prefix_drift
   (env : noble_kernel.contracts.Env) (fixed : noble_kernel.contracts.Env)
@@ -19830,7 +19830,7 @@ def source.admission.environment.has_prefix_drift
     false
 
 /-- [noble_wasm::source::admission::environment::canonical_prefix::{impl core::ops::function::FnOnce<(noble_kernel::shapes::Defect,), noble_wasm::Diagnostic> for noble_wasm::source::admission::environment::canonical_prefix::{closure#2}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 456:17-456:49 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 468:17-468:49 -/
 def
   source.admission.environment.canonical_prefix.closure_2.Insts.CoreOpsFunctionFnOnceTupleDefectDiagnostic.call_once
   (c : source.admission.environment.canonical_prefix.closure_2)
@@ -19840,7 +19840,7 @@ def
   ok Diagnostic.Defective
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::canonical_prefix::{impl core::ops::function::FnOnce<(noble_kernel::shapes::Defect,), noble_wasm::Diagnostic> for noble_wasm::source::admission::environment::canonical_prefix::{closure#2}}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 456:17-456:49 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 468:17-468:49 -/
 @[reducible]
 def
   source.admission.environment.canonical_prefix.closure_2.Insts.CoreOpsFunctionFnOnceTupleDefectDiagnostic
@@ -19852,7 +19852,7 @@ def
 }
 
 /-- [noble_wasm::source::admission::environment::canonical_prefix::{impl core::ops::function::FnOnce<(noble_kernel::shapes::Defect,), noble_wasm::Diagnostic> for noble_wasm::source::admission::environment::canonical_prefix::{closure#1}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 441:21-441:53 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 453:21-453:53 -/
 def
   source.admission.environment.canonical_prefix.closure_1.Insts.CoreOpsFunctionFnOnceTupleDefectDiagnostic.call_once
   (c : source.admission.environment.canonical_prefix.closure_1)
@@ -19862,7 +19862,7 @@ def
   ok Diagnostic.Defective
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::canonical_prefix::{impl core::ops::function::FnOnce<(noble_kernel::shapes::Defect,), noble_wasm::Diagnostic> for noble_wasm::source::admission::environment::canonical_prefix::{closure#1}}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 441:21-441:53 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 453:21-453:53 -/
 @[reducible]
 def
   source.admission.environment.canonical_prefix.closure_1.Insts.CoreOpsFunctionFnOnceTupleDefectDiagnostic
@@ -19874,7 +19874,7 @@ def
 }
 
 /-- [noble_wasm::source::admission::environment::canonical_prefix::{impl core::ops::function::FnOnce<(noble_kernel::shapes::Defect,), noble_wasm::Diagnostic> for noble_wasm::source::admission::environment::canonical_prefix::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 423:21-423:53 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 435:21-435:53 -/
 def
   source.admission.environment.canonical_prefix.closure.Insts.CoreOpsFunctionFnOnceTupleDefectDiagnostic.call_once
   (c : source.admission.environment.canonical_prefix.closure)
@@ -19884,7 +19884,7 @@ def
   ok Diagnostic.Defective
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::canonical_prefix::{impl core::ops::function::FnOnce<(noble_kernel::shapes::Defect,), noble_wasm::Diagnostic> for noble_wasm::source::admission::environment::canonical_prefix::{closure}}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 423:21-423:53 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 435:21-435:53 -/
 @[reducible]
 def
   source.admission.environment.canonical_prefix.closure.Insts.CoreOpsFunctionFnOnceTupleDefectDiagnostic
@@ -19896,7 +19896,7 @@ def
 }
 
 /-- [noble_wasm::source::admission::environment::canonical_prefix]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 499:8-513:9 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 511:8-525:9 -/
 @[rust_loop_body]
 def source.admission.environment.canonical_prefix_loop.body
   (v : alloc.vec.Vec noble_kernel.words.Scheme)
@@ -19973,7 +19973,7 @@ def source.admission.environment.canonical_prefix_loop.body
           }, has_scheme_row_drift1))
 
 /-- [noble_wasm::source::admission::environment::canonical_prefix]: loop 0:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 499:8-513:9 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 511:8-525:9 -/
 @[rust_loop]
 def source.admission.environment.canonical_prefix_loop
   (iter : core.iter.adapters.enumerate.Enumerate (core.array.iter.IntoIter
@@ -19992,7 +19992,7 @@ def source.admission.environment.canonical_prefix_loop
     (iter, fixed, has_scheme_row_drift)
 
 /-- [noble_wasm::source::admission::environment::canonical_prefix]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 412:0-520:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 424:0-532:1 -/
 def source.admission.environment.canonical_prefix
   (env : noble_kernel.contracts.Env) (live : Bool) (live_slots : Bool)
   (text_cursor : Bool) (calculator : Bool) (checked_i64 : Bool)
@@ -20206,7 +20206,7 @@ def source.admission.environment.canonical_prefix
         | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::source::admission::environment::present_count]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 392:4-396:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 404:4-408:5 -/
 @[rust_loop_body]
 def source.admission.environment.present_count_loop.body
   (iter : core.slice.iter.Iter (Bool × noble_kernel.types.EffId))
@@ -20225,7 +20225,7 @@ def source.admission.environment.present_count_loop.body
     else ok (cont (iter1, present))
 
 /-- [noble_wasm::source::admission::environment::present_count]: loop 0:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 392:4-396:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 404:4-408:5 -/
 @[rust_loop]
 def source.admission.environment.present_count_loop
   (iter : core.slice.iter.Iter (Bool × noble_kernel.types.EffId))
@@ -20238,7 +20238,7 @@ def source.admission.environment.present_count_loop
     (iter, present)
 
 /-- [noble_wasm::source::admission::environment::present_count]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 390:0-398:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 402:0-410:1 -/
 def source.admission.environment.present_count
   (optional : Slice (Bool × noble_kernel.types.EffId)) :
   Result Std.Usize
@@ -20249,7 +20249,7 @@ def source.admission.environment.present_count
   source.admission.environment.present_count_loop iter 0#usize
 
 /-- [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnMut<(&'_1 (bool, noble_kernel::types::EffId),), bool> for noble_wasm::source::admission::environment::exact_effects::{closure#3}<'_0>}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 383:46-385:9 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 395:46-397:9 -/
 def
   source.admission.environment.exact_effects.closure_3.Insts.CoreOpsFunctionFnMutTupleShared1PairBoolEffIdBool.call_mut
   (c : source.admission.environment.exact_effects.closure_3)
@@ -20263,7 +20263,7 @@ def
   ok (b != present, c)
 
 /-- [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnOnce<(&'_1 (bool, noble_kernel::types::EffId),), bool> for noble_wasm::source::admission::environment::exact_effects::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 383:46-385:9 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 395:46-397:9 -/
 def
   source.admission.environment.exact_effects.closure_3.Insts.CoreOpsFunctionFnOnceTupleShared1PairBoolEffIdBool.call_once
   (c : source.admission.environment.exact_effects.closure_3)
@@ -20276,7 +20276,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnOnce<(&'_1 (bool, noble_kernel::types::EffId),), bool> for noble_wasm::source::admission::environment::exact_effects::{closure#3}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 383:46-385:9 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 395:46-397:9 -/
 @[reducible]
 def
   source.admission.environment.exact_effects.closure_3.Insts.CoreOpsFunctionFnOnceTupleShared1PairBoolEffIdBool
@@ -20288,7 +20288,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnMut<(&'_1 (bool, noble_kernel::types::EffId),), bool> for noble_wasm::source::admission::environment::exact_effects::{closure#3}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 383:46-385:9 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 395:46-397:9 -/
 @[reducible]
 def
   source.admission.environment.exact_effects.closure_3.Insts.CoreOpsFunctionFnMutTupleShared1PairBoolEffIdBool
@@ -20302,7 +20302,7 @@ def
 }
 
 /-- [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnMut<(&'_0 noble_kernel::contracts::Behavior,), bool> for noble_wasm::source::admission::environment::exact_effects::{closure#2}}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 330:55-332:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 342:55-344:5 -/
 def
   source.admission.environment.exact_effects.closure_2.Insts.CoreOpsFunctionFnMutTupleShared0BehaviorBool.call_mut
   (c : source.admission.environment.exact_effects.closure_2)
@@ -20363,7 +20363,7 @@ def
   | noble_kernel.contracts.Behavior.NamedBehavior => ok (false, c)
 
 /-- [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::contracts::Behavior,), bool> for noble_wasm::source::admission::environment::exact_effects::{closure#2}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 330:55-332:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 342:55-344:5 -/
 def
   source.admission.environment.exact_effects.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared0BehaviorBool.call_once
   (c : source.admission.environment.exact_effects.closure_2)
@@ -20376,7 +20376,7 @@ def
   ok b1
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::contracts::Behavior,), bool> for noble_wasm::source::admission::environment::exact_effects::{closure#2}}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 330:55-332:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 342:55-344:5 -/
 @[reducible]
 def
   source.admission.environment.exact_effects.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared0BehaviorBool
@@ -20388,7 +20388,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnMut<(&'_0 noble_kernel::contracts::Behavior,), bool> for noble_wasm::source::admission::environment::exact_effects::{closure#2}}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 330:55-332:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 342:55-344:5 -/
 @[reducible]
 def
   source.admission.environment.exact_effects.closure_2.Insts.CoreOpsFunctionFnMutTupleShared0BehaviorBool
@@ -20402,7 +20402,7 @@ def
 }
 
 /-- [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnMut<(&'_0 noble_kernel::contracts::Behavior,), bool> for noble_wasm::source::admission::environment::exact_effects::{closure#1}}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 326:62-328:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 338:62-340:5 -/
 def
   source.admission.environment.exact_effects.closure_1.Insts.CoreOpsFunctionFnMutTupleShared0BehaviorBool.call_mut
   (c : source.admission.environment.exact_effects.closure_1)
@@ -20463,7 +20463,7 @@ def
   | noble_kernel.contracts.Behavior.NamedBehavior => ok (false, c)
 
 /-- [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::contracts::Behavior,), bool> for noble_wasm::source::admission::environment::exact_effects::{closure#1}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 326:62-328:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 338:62-340:5 -/
 def
   source.admission.environment.exact_effects.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared0BehaviorBool.call_once
   (c : source.admission.environment.exact_effects.closure_1)
@@ -20476,7 +20476,7 @@ def
   ok b1
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::contracts::Behavior,), bool> for noble_wasm::source::admission::environment::exact_effects::{closure#1}}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 326:62-328:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 338:62-340:5 -/
 @[reducible]
 def
   source.admission.environment.exact_effects.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared0BehaviorBool
@@ -20488,7 +20488,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnMut<(&'_0 noble_kernel::contracts::Behavior,), bool> for noble_wasm::source::admission::environment::exact_effects::{closure#1}}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 326:62-328:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 338:62-340:5 -/
 @[reducible]
 def
   source.admission.environment.exact_effects.closure_1.Insts.CoreOpsFunctionFnMutTupleShared0BehaviorBool
@@ -20502,7 +20502,7 @@ def
 }
 
 /-- [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnMut<(&'_0 noble_kernel::contracts::Behavior,), bool> for noble_wasm::source::admission::environment::exact_effects::{closure}}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 322:56-324:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 334:56-336:5 -/
 def
   source.admission.environment.exact_effects.closure.Insts.CoreOpsFunctionFnMutTupleShared0BehaviorBool.call_mut
   (c : source.admission.environment.exact_effects.closure)
@@ -20563,7 +20563,7 @@ def
   | noble_kernel.contracts.Behavior.NamedBehavior => ok (false, c)
 
 /-- [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::contracts::Behavior,), bool> for noble_wasm::source::admission::environment::exact_effects::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 322:56-324:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 334:56-336:5 -/
 def
   source.admission.environment.exact_effects.closure.Insts.CoreOpsFunctionFnOnceTupleShared0BehaviorBool.call_once
   (c : source.admission.environment.exact_effects.closure)
@@ -20576,7 +20576,7 @@ def
   ok b1
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::contracts::Behavior,), bool> for noble_wasm::source::admission::environment::exact_effects::{closure}}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 322:56-324:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 334:56-336:5 -/
 @[reducible]
 def
   source.admission.environment.exact_effects.closure.Insts.CoreOpsFunctionFnOnceTupleShared0BehaviorBool
@@ -20587,7 +20587,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::exact_effects::{impl core::ops::function::FnMut<(&'_0 noble_kernel::contracts::Behavior,), bool> for noble_wasm::source::admission::environment::exact_effects::{closure}}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 322:56-324:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 334:56-336:5 -/
 @[reducible]
 def
   source.admission.environment.exact_effects.closure.Insts.CoreOpsFunctionFnMutTupleShared0BehaviorBool
@@ -20600,7 +20600,7 @@ def
 }
 
 /-- [noble_wasm::source::admission::environment::exact_effects]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 321:0-387:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 333:0-399:1 -/
 def source.admission.environment.exact_effects
   (env : noble_kernel.contracts.Env) (count : Std.Usize) (live_slots : Bool) :
   Result Bool
@@ -20746,10 +20746,10 @@ def source.admission.environment.exact_effects
         else ok false
       else ok false
 
-/-- [noble_wasm::source::admission::environment::has_non_live::{impl core::ops::function::FnMut<(&'_0 noble_kernel::types::EffId,), bool> for noble_wasm::source::admission::environment::has_non_live::{closure}}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 314:37-314:72 -/
+/-- [noble_wasm::source::admission::environment::has_non_live::{impl core::ops::function::FnMut<(&'_1 noble_kernel::types::EffId,), bool> for noble_wasm::source::admission::environment::has_non_live::{closure}<'_0>}::call_mut]:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 323:37-325:5 -/
 def
-  source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnMutTupleShared0EffIdBool.call_mut
+  source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnMutTupleShared1EffIdBool.call_mut
   (c : source.admission.environment.has_non_live.closure)
   (tupled_args : noble_kernel.types.EffId) :
   Result (Bool × source.admission.environment.has_non_live.closure)
@@ -20759,61 +20759,74 @@ def
     | 3#uscalar => ok true
     | 4#uscalar => ok true
     | _ => ok false
-  ok (¬ b, c)
+  let b1 ←
+    if b
+    then ok true
+    else
+      if c
+      then
+        match tupled_args with
+        | 0#uscalar => ok true
+        | 1#uscalar => ok true
+        | _ => ok false
+      else ok false
+  ok (¬ b1, c)
 
-/-- [noble_wasm::source::admission::environment::has_non_live::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::types::EffId,), bool> for noble_wasm::source::admission::environment::has_non_live::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 314:37-314:72 -/
+/-- [noble_wasm::source::admission::environment::has_non_live::{impl core::ops::function::FnOnce<(&'_1 noble_kernel::types::EffId,), bool> for noble_wasm::source::admission::environment::has_non_live::{closure}<'_0>}::call_once]:
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 323:37-325:5 -/
 def
-  source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnOnceTupleShared0EffIdBool.call_once
+  source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnOnceTupleShared1EffIdBool.call_once
   (c : source.admission.environment.has_non_live.closure)
   (ei : noble_kernel.types.EffId) :
   Result Bool
   := do
   let (b, _) ←
-    source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnMutTupleShared0EffIdBool.call_mut
+    source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnMutTupleShared1EffIdBool.call_mut
       c ei
   ok b
 
-/-- Trait implementation: [noble_wasm::source::admission::environment::has_non_live::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::types::EffId,), bool> for noble_wasm::source::admission::environment::has_non_live::{closure}}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 314:37-314:72 -/
+/-- Trait implementation: [noble_wasm::source::admission::environment::has_non_live::{impl core::ops::function::FnOnce<(&'_1 noble_kernel::types::EffId,), bool> for noble_wasm::source::admission::environment::has_non_live::{closure}<'_0>}]
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 323:37-325:5 -/
 @[reducible]
 def
-  source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnOnceTupleShared0EffIdBool
+  source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnOnceTupleShared1EffIdBool
   : core.ops.function.FnOnce source.admission.environment.has_non_live.closure
   noble_kernel.types.EffId Bool := {
   call_once :=
-    source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnOnceTupleShared0EffIdBool.call_once
+    source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnOnceTupleShared1EffIdBool.call_once
 }
 
-/-- Trait implementation: [noble_wasm::source::admission::environment::has_non_live::{impl core::ops::function::FnMut<(&'_0 noble_kernel::types::EffId,), bool> for noble_wasm::source::admission::environment::has_non_live::{closure}}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 314:37-314:72 -/
+/-- Trait implementation: [noble_wasm::source::admission::environment::has_non_live::{impl core::ops::function::FnMut<(&'_1 noble_kernel::types::EffId,), bool> for noble_wasm::source::admission::environment::has_non_live::{closure}<'_0>}]
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 323:37-325:5 -/
 @[reducible]
 def
-  source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnMutTupleShared0EffIdBool
+  source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnMutTupleShared1EffIdBool
   : core.ops.function.FnMut source.admission.environment.has_non_live.closure
   noble_kernel.types.EffId Bool := {
   FnOnceInst :=
-    source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnOnceTupleShared0EffIdBool
+    source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnOnceTupleShared1EffIdBool
   call_mut :=
-    source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnMutTupleShared0EffIdBool.call_mut
+    source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnMutTupleShared1EffIdBool.call_mut
 }
 
 /-- [noble_wasm::source::admission::environment::has_non_live]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 313:0-315:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 322:0-327:1 -/
 def source.admission.environment.has_non_live
-  (effects : Slice noble_kernel.types.EffId) : Result Bool := do
+  (effects : Slice noble_kernel.types.EffId) (test_hosts : Bool) :
+  Result Bool
+  := do
   let o ←
     scan.find_first
-      source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnMutTupleShared0EffIdBool
-      effects ()
+      source.admission.environment.has_non_live.closure.Insts.CoreOpsFunctionFnMutTupleShared1EffIdBool
+      effects test_hosts
   ok (core.option.Option.is_some o)
 
 /-- [noble_wasm::source::admission::environment::has_non_live_effect]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 300:4-308:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 308:4-317:5 -/
 @[rust_loop_body]
 def source.admission.environment.has_non_live_effect_loop.body
-  (v : alloc.vec.Vec noble_kernel.execution.Definition) (has_other : Bool)
-  (index : Std.Usize) :
+  (v : alloc.vec.Vec noble_kernel.execution.Definition) (test_hosts : Bool)
+  (has_other : Bool) (index : Std.Usize) :
   Result (ControlFlow (Bool × Std.Usize) Bool)
   := do
   if has_other
@@ -20826,48 +20839,52 @@ def source.admission.environment.has_non_live_effect_loop.body
         alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
           noble_kernel.execution.Definition) v index
       let s ← noble_kernel.types.EffSet.as_slice d.expected.allowed_effects
-      let has_other1 ← source.admission.environment.has_non_live s
+      let has_other1 ← source.admission.environment.has_non_live s test_hosts
       let index1 ← index + 1#usize
       ok (cont (has_other1, index1))
     else ok (done has_other)
 
 /-- [noble_wasm::source::admission::environment::has_non_live_effect]: loop 0:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 300:4-308:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 308:4-317:5 -/
 @[rust_loop]
 def source.admission.environment.has_non_live_effect_loop
-  (v : alloc.vec.Vec noble_kernel.execution.Definition) (has_other : Bool)
-  (index : Std.Usize) :
+  (v : alloc.vec.Vec noble_kernel.execution.Definition) (test_hosts : Bool)
+  (has_other : Bool) (index : Std.Usize) :
   Result Bool
   := do
   loop
     (fun (has_other1, index1) =>
-      source.admission.environment.has_non_live_effect_loop.body v has_other1
-      index1)
+      source.admission.environment.has_non_live_effect_loop.body v test_hosts
+      has_other1 index1)
     (has_other, index)
 
 /-- [noble_wasm::source::admission::environment::has_non_live_effect]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 297:0-310:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 302:0-319:1 -/
 def source.admission.environment.has_non_live_effect
-  (submission : noble_kernel.execution.Submission) : Result Bool := do
+  (submission : noble_kernel.execution.Submission) (test_hosts : Bool) :
+  Result Bool
+  := do
   let s ←
     noble_kernel.types.EffSet.as_slice
       submission.request.expected.allowed_effects
-  let has_other ← source.admission.environment.has_non_live s
+  let has_other ← source.admission.environment.has_non_live s test_hosts
   source.admission.environment.has_non_live_effect_loop submission.definitions
-    has_other 0#usize
+    test_hosts has_other 0#usize
 
 /-- [noble_wasm::source::admission::environment::has_live_effect_mismatch]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 291:0-293:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 296:0-298:1 -/
 def source.admission.environment.has_live_effect_mismatch
   (submission : noble_kernel.execution.Submission) (live : Bool) :
   Result Bool
   := do
   if live
-  then source.admission.environment.has_non_live_effect submission
+  then
+    source.admission.environment.has_non_live_effect submission
+      submission.environment.live_test_hosts
   else ok false
 
 /-- [noble_wasm::source::admission::environment::has_noncanonical_core_declarations]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 283:0-288:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 286:0-291:1 -/
 def source.admission.environment.has_noncanonical_core_declarations
   (env : noble_kernel.contracts.Env) : Result Bool := do
   if env.declared_modules
@@ -20885,7 +20902,7 @@ def source.admission.environment.has_noncanonical_core_declarations
     else ok true
 
 /-- [noble_wasm::source::admission::environment::has_invalid_metadata]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 276:0-280:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 279:0-283:1 -/
 def source.admission.environment.has_invalid_metadata
   (env : noble_kernel.contracts.Env) (live_slots : Bool) : Result Bool := do
   let b ← alloc.vec.Vec.is_empty Global env.schemas
@@ -20905,7 +20922,7 @@ def source.admission.environment.has_invalid_metadata
   else ok true
 
 /-- [noble_wasm::source::admission::environment::has_resource_nominals_without_slots]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 268:0-273:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 271:0-276:1 -/
 def source.admission.environment.has_resource_nominals_without_slots
   (env : noble_kernel.contracts.Env) (live_slots : Bool) : Result Bool := do
   if live_slots
@@ -20915,7 +20932,7 @@ def source.admission.environment.has_resource_nominals_without_slots
     ok (¬ b)
 
 /-- [noble_wasm::source::admission::environment::has_checked_i64_mismatch]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 257:0-265:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 260:0-268:1 -/
 def source.admission.environment.has_checked_i64_mismatch
   (env : noble_kernel.contracts.Env) (checked_i64 : Bool)
   (has_other_profile : Bool) :
@@ -20938,7 +20955,7 @@ def source.admission.environment.has_checked_i64_mismatch
     else ok false
 
 /-- [noble_wasm::source::admission::environment::has_other_profile]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 245:0-253:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 248:0-256:1 -/
 def source.admission.environment.has_other_profile
   (live : Bool) (live_slots : Bool) (text_cursor : Bool) (calculator : Bool)
   (declared_text : Bool) :
@@ -20957,7 +20974,7 @@ def source.admission.environment.has_other_profile
            else ok declared_text
 
 /-- [noble_wasm::source::admission::environment::has_calculator_mismatch]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 239:0-242:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 242:0-245:1 -/
 def source.admission.environment.has_calculator_mismatch
   (env : noble_kernel.contracts.Env) (calculator : Bool) : Result Bool := do
   if env.calculator != calculator
@@ -20972,7 +20989,7 @@ def source.admission.environment.has_calculator_mismatch
     else ok false
 
 /-- [noble_wasm::source::admission::environment::has_declared_text_mismatch]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 224:0-236:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 227:0-239:1 -/
 def source.admission.environment.has_declared_text_mismatch
   (env : noble_kernel.contracts.Env) (text_cursor : Bool) (calculator : Bool)
   (declared_text : Bool) :
@@ -20996,7 +21013,7 @@ def source.admission.environment.has_declared_text_mismatch
   else ok false
 
 /-- [noble_wasm::source::admission::environment::has_text_cursor_mismatch]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 213:0-221:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 216:0-224:1 -/
 def source.admission.environment.has_text_cursor_mismatch
   (env : noble_kernel.contracts.Env) (live : Bool) (text_cursor : Bool)
   (declared_text : Bool) :
@@ -21012,7 +21029,7 @@ def source.admission.environment.has_text_cursor_mismatch
     else ok false
 
 /-- [noble_wasm::source::admission::environment::has_live_slot_mismatch]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 201:0-210:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 204:0-213:1 -/
 def source.admission.environment.has_live_slot_mismatch
   (env : noble_kernel.contracts.Env) (live : Bool) (live_slots : Bool)
   (text_cursor : Bool) :
@@ -21033,7 +21050,18 @@ def source.admission.environment.has_live_slot_mismatch
                then ok true
                else ok (¬ env.declared_modules)
         else ok false
-      else ok true
+      else
+        if live
+        then
+          if live_slots
+          then
+            if live
+            then ok true
+            else if text_cursor
+                 then ok true
+                 else ok (¬ env.declared_modules)
+          else ok false
+        else ok true
     else
       if live_slots
       then
@@ -21045,7 +21073,7 @@ def source.admission.environment.has_live_slot_mismatch
       else ok false
 
 /-- [noble_wasm::source::admission::environment::has_excess_definitions]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 192:0-198:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 195:0-201:1 -/
 def source.admission.environment.has_excess_definitions
   (env : noble_kernel.contracts.Env) (definition_cap : Std.Usize) :
   Result Bool
@@ -21078,7 +21106,7 @@ def source.admission.environment.has_excess_definitions
 def source.CALCULATOR_DEFINITION_LIMIT : Std.Usize := 512#usize
 
 /-- [noble_wasm::source::admission::environment::definition_ceiling]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 183:0-189:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 186:0-192:1 -/
 def source.admission.environment.definition_ceiling
   (calculator : Bool) : Result Std.Usize := do
   if calculator
@@ -21086,7 +21114,7 @@ def source.admission.environment.definition_ceiling
   else ok source.DEFINITION_LIMIT
 
 /-- [noble_wasm::source::admission::environment::check::{impl core::ops::function::FnMut<(&'_1 noble_kernel::contracts::NominalDecl,), bool> for noble_wasm::source::admission::environment::check::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 167:20-167:73 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 170:20-170:73 -/
 def
   source.admission.environment.check.closure.Insts.CoreOpsFunctionFnMutTupleShared1NominalDeclBool.call_mut
   (c : source.admission.environment.check.closure)
@@ -21101,7 +21129,7 @@ def
   ok (¬ b, c)
 
 /-- [noble_wasm::source::admission::environment::check::{impl core::ops::function::FnOnce<(&'_1 noble_kernel::contracts::NominalDecl,), bool> for noble_wasm::source::admission::environment::check::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 167:20-167:73 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 170:20-170:73 -/
 def
   source.admission.environment.check.closure.Insts.CoreOpsFunctionFnOnceTupleShared1NominalDeclBool.call_once
   (c : source.admission.environment.check.closure)
@@ -21114,7 +21142,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::check::{impl core::ops::function::FnOnce<(&'_1 noble_kernel::contracts::NominalDecl,), bool> for noble_wasm::source::admission::environment::check::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 167:20-167:73 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 170:20-170:73 -/
 @[reducible]
 def
   source.admission.environment.check.closure.Insts.CoreOpsFunctionFnOnceTupleShared1NominalDeclBool
@@ -21125,7 +21153,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::admission::environment::check::{impl core::ops::function::FnMut<(&'_1 noble_kernel::contracts::NominalDecl,), bool> for noble_wasm::source::admission::environment::check::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 167:20-167:73 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 170:20-170:73 -/
 @[reducible]
 def
   source.admission.environment.check.closure.Insts.CoreOpsFunctionFnMutTupleShared1NominalDeclBool
@@ -21138,7 +21166,7 @@ def
 }
 
 /-- [noble_wasm::source::admission::environment::check]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 80:0-180:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 83:0-183:1 -/
 def source.admission.environment.check
   (submission : noble_kernel.execution.Submission) (live : Bool)
   (live_slots : Bool) (text_cursor : Bool) (calculator : Bool)
@@ -21313,7 +21341,7 @@ def source.admission.environment.check
                                   ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::source::admission::environment::work]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 721:4-737:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 733:4-749:5 -/
 @[rust_loop_body]
 def source.admission.environment.work_loop0.body
   (v : alloc.vec.Vec noble_kernel.words.Scheme) (b : Bool)
@@ -21352,7 +21380,7 @@ def source.admission.environment.work_loop0.body
   else ok (done (meter, cost, none))
 
 /-- [noble_wasm::source::admission::environment::work]: loop 0:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 721:4-737:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 733:4-749:5 -/
 @[rust_loop]
 def source.admission.environment.work_loop0
   (v : alloc.vec.Vec noble_kernel.words.Scheme) (b : Bool)
@@ -21367,7 +21395,7 @@ def source.admission.environment.work_loop0
     (meter, cost, index)
 
 /-- [noble_wasm::source::admission::environment::work]: loop body 1:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 742:4-752:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 754:4-764:5 -/
 @[rust_loop_body]
 def source.admission.environment.work_loop1.body
   (v : alloc.vec.Vec noble_kernel.contracts.BoundAdapter) (cost : Std.U64)
@@ -21392,7 +21420,7 @@ def source.admission.environment.work_loop1.body
   else ok (done (cost, none))
 
 /-- [noble_wasm::source::admission::environment::work]: loop 1:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 742:4-752:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 754:4-764:5 -/
 @[rust_loop]
 def source.admission.environment.work_loop1
   (v : alloc.vec.Vec noble_kernel.contracts.BoundAdapter) (cost : Std.U64)
@@ -21405,7 +21433,7 @@ def source.admission.environment.work_loop1
     (cost, row_index)
 
 /-- [noble_wasm::source::admission::environment::work]: loop body 2:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 764:4-770:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 776:4-782:5 -/
 @[rust_loop_body]
 def source.admission.environment.work_loop2.body
   (v : alloc.vec.Vec noble_kernel.words.Scheme)
@@ -21428,7 +21456,7 @@ def source.admission.environment.work_loop2.body
   else ok (done none)
 
 /-- [noble_wasm::source::admission::environment::work]: loop 2:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 764:4-770:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 776:4-782:5 -/
 @[rust_loop]
 def source.admission.environment.work_loop2
   (v : alloc.vec.Vec noble_kernel.words.Scheme)
@@ -21441,7 +21469,7 @@ def source.admission.environment.work_loop2
     index
 
 /-- [noble_wasm::source::admission::environment::work]: loop body 3:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 721:4-737:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 733:4-749:5 -/
 @[rust_loop_body]
 def source.admission.environment.work_loop3.body
   (v : alloc.vec.Vec noble_kernel.words.Scheme) (b : Bool)
@@ -21478,7 +21506,7 @@ def source.admission.environment.work_loop3.body
   else ok (done (meter, cost, none))
 
 /-- [noble_wasm::source::admission::environment::work]: loop 3:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 721:4-737:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 733:4-749:5 -/
 @[rust_loop]
 def source.admission.environment.work_loop3
   (v : alloc.vec.Vec noble_kernel.words.Scheme) (b : Bool)
@@ -21491,7 +21519,7 @@ def source.admission.environment.work_loop3
     (meter, cost, index)
 
 /-- [noble_wasm::source::admission::environment::work]: loop body 4:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 742:4-752:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 754:4-764:5 -/
 @[rust_loop_body]
 def source.admission.environment.work_loop4.body
   (v : alloc.vec.Vec noble_kernel.contracts.BoundAdapter) (cost : Std.U64)
@@ -21516,7 +21544,7 @@ def source.admission.environment.work_loop4.body
   else ok (done (cost, none))
 
 /-- [noble_wasm::source::admission::environment::work]: loop 4:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 742:4-752:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 754:4-764:5 -/
 @[rust_loop]
 def source.admission.environment.work_loop4
   (v : alloc.vec.Vec noble_kernel.contracts.BoundAdapter) (cost : Std.U64)
@@ -21529,7 +21557,7 @@ def source.admission.environment.work_loop4
     (cost, row_index)
 
 /-- [noble_wasm::source::admission::environment::work]: loop body 5:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 764:4-770:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 776:4-782:5 -/
 @[rust_loop_body]
 def source.admission.environment.work_loop5.body
   (v : alloc.vec.Vec noble_kernel.words.Scheme)
@@ -21552,7 +21580,7 @@ def source.admission.environment.work_loop5.body
   else ok (done none)
 
 /-- [noble_wasm::source::admission::environment::work]: loop 5:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 764:4-770:5 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 776:4-782:5 -/
 @[rust_loop]
 def source.admission.environment.work_loop5
   (v : alloc.vec.Vec noble_kernel.words.Scheme)
@@ -21565,7 +21593,7 @@ def source.admission.environment.work_loop5
     index
 
 /-- [noble_wasm::source::admission::environment::work]:
-    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 686:0-775:1 -/
+    Source: 'crates/noble-wasm/src/source/admission/environment.rs', lines 698:0-787:1 -/
 def source.admission.environment.work
   (environment : noble_kernel.contracts.Env)
   (profile : source.ProfileSelection) (meter : source.Work) :
@@ -26146,26 +26174,32 @@ def source.emit.imports.entry.core_text_output
   let (r, out1) ← output.Buffer.append out s
   match r with
   | core.result.Result.Ok _ =>
-    if plan.live_test_hosts
+    if plan.live_slots
     then
-      let s1 ←
-        lift (Array.to_slice
-          (Array.make 63#usize [
-            32#u8, 40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
-            46#u8, 101#u8, 113#u8, 122#u8, 32#u8, 40#u8, 103#u8, 108#u8,
-            111#u8, 98#u8, 97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8, 32#u8,
-            36#u8, 102#u8, 97#u8, 105#u8, 108#u8, 117#u8, 114#u8, 101#u8,
-            41#u8, 41#u8, 32#u8, 40#u8, 116#u8, 104#u8, 101#u8, 110#u8, 32#u8,
-            40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8, 112#u8, 117#u8,
-            115#u8, 104#u8, 95#u8, 117#u8, 110#u8, 105#u8, 116#u8, 41#u8,
-            41#u8, 41#u8, 10#u8
-            ]))
-      let (r1, out2) ← output.Buffer.append out1 s1
-      match r1 with
-      | core.result.Result.Ok _ =>
-        let s2 ← lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
-        output.Buffer.append out2 s2
-      | core.result.Result.Err _ => ok (r1, out2)
+      if plan.live_test_hosts
+      then
+        let s1 ←
+          lift (Array.to_slice
+            (Array.make 63#usize [
+              32#u8, 40#u8, 105#u8, 102#u8, 32#u8, 40#u8, 105#u8, 51#u8, 50#u8,
+              46#u8, 101#u8, 113#u8, 122#u8, 32#u8, 40#u8, 103#u8, 108#u8,
+              111#u8, 98#u8, 97#u8, 108#u8, 46#u8, 103#u8, 101#u8, 116#u8,
+              32#u8, 36#u8, 102#u8, 97#u8, 105#u8, 108#u8, 117#u8, 114#u8,
+              101#u8, 41#u8, 41#u8, 32#u8, 40#u8, 116#u8, 104#u8, 101#u8,
+              110#u8, 32#u8, 40#u8, 99#u8, 97#u8, 108#u8, 108#u8, 32#u8, 36#u8,
+              112#u8, 117#u8, 115#u8, 104#u8, 95#u8, 117#u8, 110#u8, 105#u8,
+              116#u8, 41#u8, 41#u8, 41#u8, 10#u8
+              ]))
+        let (r1, out2) ← output.Buffer.append out1 s1
+        match r1 with
+        | core.result.Result.Ok _ =>
+          let s2 ←
+            lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+          output.Buffer.append out2 s2
+        | core.result.Result.Err _ => ok (r1, out2)
+      else
+        let s1 ← lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
+        output.Buffer.append out1 s1
     else
       let s1 ← lift (Array.to_slice (Array.make 2#usize [ 41#u8, 10#u8 ]))
       output.Buffer.append out1 s1
@@ -29563,7 +29597,7 @@ def source.emit.initialize.programs
   | some problem => ok (core.result.Result.Err problem, out1)
 
 /-- [noble_wasm::source::plan::number]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 714:0-719:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 718:0-723:1 -/
 def source.plan.number
   (value : Std.Usize) : Result (core.result.Result Std.U32 Diagnostic) := do
   let r ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from value
@@ -38945,7 +38979,7 @@ def source.transaction.Base.capture
     }
 
 /-- [noble_wasm::source::plan::variant_definition]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 706:0-712:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 710:0-716:1 -/
 def source.plan.variant_definition
   (action : source.plan.Action) : Result (Option Std.U32) := do
   match action with
@@ -38991,7 +39025,7 @@ def source.plan.variant_definition
   | source.plan.Action.SlotInvokeAction _ _ => ok none
 
 /-- [noble_wasm::source::plan::is_case_word]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 701:0-703:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 705:0-707:1 -/
 def source.plan.is_case_word (action : source.plan.Action) : Result Bool := do
   match action with
   | source.plan.Action.I64Action _ => ok false
@@ -39035,7 +39069,7 @@ def source.plan.is_case_word (action : source.plan.Action) : Result Bool := do
   | source.plan.Action.SlotInvokeAction _ _ => ok false
 
 /-- [noble_wasm::source::plan::is_static_quotation]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 696:0-698:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 700:0-702:1 -/
 def source.plan.is_static_quotation
   (action : source.plan.Action) : Result Bool := do
   match action with
@@ -39077,7 +39111,7 @@ def source.plan.is_static_quotation
   | source.plan.Action.SlotInvokeAction _ _ => ok false
 
 /-- [noble_wasm::source::plan::is_scalar_literal]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 691:0-693:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 695:0-697:1 -/
 def source.plan.is_scalar_literal
   (action : source.plan.Action) : Result Bool := do
   match action with
@@ -39119,7 +39153,7 @@ def source.plan.is_scalar_literal
   | source.plan.Action.SlotInvokeAction _ _ => ok false
 
 /-- [noble_wasm::source::plan::known_sum_pattern]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 668:0-688:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 672:0-692:1 -/
 def source.plan.known_sum_pattern
   (literal : source.plan.Action) (variant : source.plan.Action)
   (left : source.plan.Action) (right : source.plan.Action)
@@ -39144,7 +39178,7 @@ def source.plan.known_sum_pattern
   else ok none
 
 /-- [noble_wasm::source::plan::known_sum_definition]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 652:0-663:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 656:0-667:1 -/
 def source.plan.known_sum_definition
   (operations : Slice source.plan.Operation) (index : Std.Usize) :
   Result (Option Std.U32)
@@ -39167,7 +39201,7 @@ def source.plan.known_sum_definition
       o4.action
 
 /-- [noble_wasm::source::plan::specialize_at]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 627:0-647:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 631:0-651:1 -/
 def source.plan.specialize_at
   (program : source.plan.Program) (index : Std.Usize) (work : source.Work)
   (specializations : Std.U64) (fallback_operations : Std.U64) :
@@ -39235,7 +39269,7 @@ def source.plan.specialize_at
       fallback_operations)
 
 /-- [noble_wasm::source::plan::specialize_program]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 611:4-619:5 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 615:4-623:5 -/
 @[rust_loop_body]
 def source.plan.specialize_program_loop.body
   (program : source.plan.Program) (work : source.Work)
@@ -39260,7 +39294,7 @@ def source.plan.specialize_program_loop.body
   else ok (done (program, work, specializations, fallback_operations, none))
 
 /-- [noble_wasm::source::plan::specialize_program]: loop 0:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 611:4-619:5 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 615:4-623:5 -/
 @[rust_loop]
 def source.plan.specialize_program_loop
   (program : source.plan.Program) (work : source.Work)
@@ -39276,7 +39310,7 @@ def source.plan.specialize_program_loop
     (program, work, specializations, fallback_operations, index)
 
 /-- [noble_wasm::source::plan::specialize_program]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 603:0-624:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 607:0-628:1 -/
 def source.plan.specialize_program
   (program : source.plan.Program) (work : source.Work)
   (specializations : Std.U64) (fallback_operations : Std.U64) :
@@ -39295,7 +39329,7 @@ def source.plan.specialize_program
       fallback_operations1)
 
 /-- [noble_wasm::source::plan::specialize_known_sum_cases]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 589:4-597:5 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 593:4-601:5 -/
 @[rust_loop_body]
 def source.plan.specialize_known_sum_cases_loop.body
   (programs : Slice source.plan.Program) (work : source.Work)
@@ -39326,7 +39360,7 @@ def source.plan.specialize_known_sum_cases_loop.body
     ok (done (programs, work, specializations, fallback_operations, outcome))
 
 /-- [noble_wasm::source::plan::specialize_known_sum_cases]: loop 0:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 589:4-597:5 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 593:4-601:5 -/
 @[rust_loop]
 def source.plan.specialize_known_sum_cases_loop
   (programs : Slice source.plan.Program) (work : source.Work)
@@ -39342,7 +39376,7 @@ def source.plan.specialize_known_sum_cases_loop
     (programs, work, specializations, fallback_operations, program, outcome)
 
 /-- [noble_wasm::source::plan::specialize_known_sum_cases]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 581:0-600:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 585:0-604:1 -/
 def source.plan.specialize_known_sum_cases
   (programs : Slice source.plan.Program) (work : source.Work) :
   Result ((core.result.Result (Std.U64 × Std.U64) Diagnostic) × (Slice
@@ -39359,7 +39393,7 @@ def source.plan.specialize_known_sum_cases
     ok (core.result.Result.Err failure, programs1, work1)
 
 /-- [noble_wasm::source::plan::operation_footprint]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 483:0-514:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 487:0-518:1 -/
 def source.plan.operation_footprint
   (layout : source.plan.Layout) (action : source.plan.Action) :
   Result ((core.result.Result Unit Diagnostic) × source.plan.Layout)
@@ -39374,7 +39408,26 @@ def source.plan.operation_footprint
     match i with
     | 22#uscalar =>
       if layout.live
-      then ok (core.result.Result.Err Diagnostic.Invalid, layout)
+      then
+        if layout.core_test_hosts
+        then
+          if layout.text_cursor
+          then ok (core.result.Result.Err Diagnostic.Invalid, layout)
+          else
+            if layout.calculator
+            then ok (core.result.Result.Err Diagnostic.Invalid, layout)
+            else
+              if layout.declared_modules
+              then
+                if layout.live_test_hosts
+                then
+                  ok (core.result.Result.Ok (),
+                    { layout with has_core_emit := true })
+                else ok (core.result.Result.Err Diagnostic.Invalid, layout)
+              else
+                ok (core.result.Result.Ok (),
+                  { layout with has_core_emit := true })
+        else ok (core.result.Result.Err Diagnostic.Invalid, layout)
       else
         if layout.text_cursor
         then ok (core.result.Result.Err Diagnostic.Invalid, layout)
@@ -39397,7 +39450,18 @@ def source.plan.operation_footprint
       then ok (core.result.Result.Err Diagnostic.Invalid, layout)
       else
         if layout.live
-        then ok (core.result.Result.Err Diagnostic.Invalid, layout)
+        then
+          if layout.core_test_hosts
+          then
+            if layout.text_cursor
+            then ok (core.result.Result.Err Diagnostic.Invalid, layout)
+            else
+              if layout.calculator
+              then ok (core.result.Result.Err Diagnostic.Invalid, layout)
+              else
+                ok (core.result.Result.Ok (),
+                  { layout with has_core_abort := true })
+          else ok (core.result.Result.Err Diagnostic.Invalid, layout)
         else
           if layout.text_cursor
           then ok (core.result.Result.Err Diagnostic.Invalid, layout)
@@ -39470,7 +39534,7 @@ def source.plan.operation_footprint
     ok (core.result.Result.Ok (), layout)
 
 /-- [noble_wasm::source::plan::program_footprint]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 470:4-474:5 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 474:4-478:5 -/
 @[rust_loop_body]
 def source.plan.program_footprint_loop.body
   (program : Std.Usize) (layout : source.plan.Layout) («at» : Std.Usize)
@@ -39499,7 +39563,7 @@ def source.plan.program_footprint_loop.body
   else ok (done (outcome, layout))
 
 /-- [noble_wasm::source::plan::program_footprint]: loop 0:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 470:4-474:5 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 474:4-478:5 -/
 @[rust_loop]
 def source.plan.program_footprint_loop
   (layout : source.plan.Layout) (program : Std.Usize) («at» : Std.Usize)
@@ -39512,7 +39576,7 @@ def source.plan.program_footprint_loop
     (layout, «at», outcome)
 
 /-- [noble_wasm::source::plan::program_footprint]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 467:0-476:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 471:0-480:1 -/
 @[reducible]
 def source.plan.program_footprint
   (layout : source.plan.Layout) (program : Std.Usize) :
@@ -39522,7 +39586,7 @@ def source.plan.program_footprint
     (core.result.Result.Ok ())
 
 /-- [noble_wasm::source::plan::host_footprint]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 459:4-462:5 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 463:4-466:5 -/
 @[rust_loop_body]
 def source.plan.host_footprint_loop.body
   (layout : source.plan.Layout) (program : Std.Usize)
@@ -39544,7 +39608,7 @@ def source.plan.host_footprint_loop.body
   else ok (done (outcome, layout))
 
 /-- [noble_wasm::source::plan::host_footprint]: loop 0:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 459:4-462:5 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 463:4-466:5 -/
 @[rust_loop]
 def source.plan.host_footprint_loop
   (layout : source.plan.Layout) (program : Std.Usize)
@@ -39557,7 +39621,7 @@ def source.plan.host_footprint_loop
     (layout, program, outcome)
 
 /-- [noble_wasm::source::plan::host_footprint]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 456:0-464:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 460:0-468:1 -/
 @[reducible]
 def source.plan.host_footprint
   (layout : source.plan.Layout) :
@@ -39678,7 +39742,7 @@ def source.plan.operations.derivation
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_wasm::source::plan::effect_mask]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 321:4-337:5 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 324:4-340:5 -/
 @[rust_loop_body]
 def source.plan.effect_mask_loop.body
   (effects : noble_kernel.types.EffSet) (mask : Std.U32) (index : Std.Usize) :
@@ -39726,7 +39790,7 @@ def source.plan.effect_mask_loop.body
   else ok (done (mask, none))
 
 /-- [noble_wasm::source::plan::effect_mask]: loop 0:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 321:4-337:5 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 324:4-340:5 -/
 @[rust_loop]
 def source.plan.effect_mask_loop
   (effects : noble_kernel.types.EffSet) (mask : Std.U32) (index : Std.Usize) :
@@ -39738,7 +39802,7 @@ def source.plan.effect_mask_loop
     (mask, index)
 
 /-- [noble_wasm::source::plan::effect_mask]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 317:0-342:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 320:0-345:1 -/
 def source.plan.effect_mask
   (effects : noble_kernel.types.EffSet) :
   Result (core.result.Result Std.U32 Diagnostic)
@@ -39998,7 +40062,7 @@ def source.plan.allocation.arena
     ok (core.result.Result.Err failure, programs1, compiler1, work1)
 
 /-- [noble_wasm::source::plan::start]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 371:4-388:5 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 374:4-391:5 -/
 @[rust_loop_body]
 def source.plan.start_loop0.body
   (v : alloc.vec.Vec noble_kernel.execution.Definition)
@@ -40033,7 +40097,7 @@ def source.plan.start_loop0.body
   else ok (done (checked, compiler, work, programs, arenas, index, none))
 
 /-- [noble_wasm::source::plan::start]: loop 0:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 371:4-388:5 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 374:4-391:5 -/
 @[rust_loop]
 def source.plan.start_loop0
   (v : alloc.vec.Vec noble_kernel.execution.Definition)
@@ -40051,7 +40115,7 @@ def source.plan.start_loop0
     (compiler, work, programs, arenas, index)
 
 /-- [noble_wasm::source::plan::start]: loop body 1:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 401:8-403:9 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 404:8-406:9 -/
 @[rust_loop_body]
 def source.plan.start_loop1.body
   (iter : core.slice.iter.Iter source.plan.Arena)
@@ -40067,7 +40131,7 @@ def source.plan.start_loop1.body
     ok (cont (iter1, roots1))
 
 /-- [noble_wasm::source::plan::start]: loop 1:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 401:8-403:9 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 404:8-406:9 -/
 @[rust_loop]
 def source.plan.start_loop1
   (iter : core.slice.iter.Iter source.plan.Arena)
@@ -40079,7 +40143,7 @@ def source.plan.start_loop1
     (iter, roots)
 
 /-- [noble_wasm::source::plan::start]: loop body 2:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 401:8-403:9 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 404:8-406:9 -/
 @[rust_loop_body]
 def source.plan.start_loop2.body
   (iter : core.slice.iter.Iter source.plan.Arena)
@@ -40095,7 +40159,7 @@ def source.plan.start_loop2.body
     ok (cont (iter1, roots1))
 
 /-- [noble_wasm::source::plan::start]: loop 2:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 401:8-403:9 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 404:8-406:9 -/
 @[rust_loop]
 def source.plan.start_loop2
   (iter : core.slice.iter.Iter source.plan.Arena)
@@ -40107,7 +40171,7 @@ def source.plan.start_loop2
     (iter, roots)
 
 /-- [noble_wasm::source::plan::start]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 352:0-451:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 355:0-455:1 -/
 def source.plan.start
   (submission : noble_kernel.execution.Submission)
   (checked : source.admission.Accepted) (compiler : source.Compiler)
@@ -40163,6 +40227,10 @@ def source.plan.start
           alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
             source.plan.Arena) arenas2 index
         let r1 ← source.types.Registry.new
+        let b1 ←
+          if is_live
+          then ok submission.environment.live_test_hosts
+          else ok false
         ok (core.result.Result.Ok
           ({
              programs := programs2,
@@ -40186,6 +40254,7 @@ def source.plan.start
              core_live := is_core_live,
              live_slots := submission.environment.live_slots,
              live_test_hosts := submission.environment.live_test_hosts,
+             core_test_hosts := b1,
              live_sites := (alloc.vec.Vec.new source.LiveSiteMetadata),
              text_cursor := submission.environment.text_cursor,
              calculator := submission.environment.calculator,
@@ -40221,6 +40290,10 @@ def source.plan.start
             alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
               source.plan.Arena) arenas2 index
           let r1 ← source.types.Registry.new
+          let b1 ←
+            if is_live
+            then ok submission.environment.live_test_hosts
+            else ok false
           ok (core.result.Result.Ok
             ({
                programs := programs2,
@@ -40244,6 +40317,7 @@ def source.plan.start
                core_live := is_core_live,
                live_slots := submission.environment.live_slots,
                live_test_hosts := submission.environment.live_test_hosts,
+               core_test_hosts := b1,
                live_sites := (alloc.vec.Vec.new source.LiveSiteMetadata),
                text_cursor := submission.environment.text_cursor,
                calculator := submission.environment.calculator,
@@ -40270,6 +40344,10 @@ def source.plan.start
             alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
               source.plan.Arena) arenas2 index
           let r1 ← source.types.Registry.new
+          let b1 ←
+            if is_live
+            then ok submission.environment.live_test_hosts
+            else ok false
           ok (core.result.Result.Ok
             ({
                programs := programs2,
@@ -40293,6 +40371,7 @@ def source.plan.start
                core_live := is_core_live,
                live_slots := submission.environment.live_slots,
                live_test_hosts := submission.environment.live_test_hosts,
+               core_test_hosts := b1,
                live_sites := (alloc.vec.Vec.new source.LiveSiteMetadata),
                text_cursor := submission.environment.text_cursor,
                calculator := submission.environment.calculator,
@@ -40432,10 +40511,11 @@ def source.plan.topology.program_loop.body
     (alloc.vec.Vec Std.U8))) × (alloc.vec.Vec (Std.U32 × Std.U32)) ×
     source.types.Registry × (alloc.vec.Vec Std.U32) × (alloc.vec.Vec Std.U32)
     × (alloc.vec.Vec Std.U32) × Std.U32 × Bool × Bool × Bool × Bool ×
-    Bool × Bool × Bool × Bool × (alloc.vec.Vec source.LiveSiteMetadata) ×
+    Bool × Bool × Bool × Bool × Bool × (alloc.vec.Vec
+    source.LiveSiteMetadata) × Bool × Bool × Bool × Bool × Bool × Bool ×
     Bool × Bool × Bool × Bool × Bool × Bool × Bool × Bool × Bool ×
-    Bool × Bool × Bool × Bool × Bool × Bool × Bool × Std.U64 × Std.U64
-    × Bool × Std.U32 × Std.U32 × (Option Diagnostic)))
+    Bool × Std.U64 × Std.U64 × Bool × Std.U32 × Std.U32 × (Option
+    Diagnostic)))
   := do
   let p ←
     alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
@@ -40461,12 +40541,12 @@ def source.plan.topology.program_loop.body
           plan.borrowed_input_positions, plan.text_witness,
           plan.declared_modules, plan.declared_text, plan.worker_inputs,
           plan.worker_interruption, plan.live, plan.core_live, plan.live_slots,
-          plan.live_test_hosts, plan.live_sites, plan.text_cursor,
-          plan.calculator, plan.checked_i64, plan.has_nominals,
-          plan.has_core_emit, plan.has_core_abort, plan.has_text_byte,
-          plan.has_i64_less, plan.has_bound_emit, plan.has_bound_clock,
-          plan.has_bound_code_export, plan.has_bound_send,
-          plan.has_live_propose, plan.has_live_generation,
+          plan.live_test_hosts, plan.core_test_hosts, plan.live_sites,
+          plan.text_cursor, plan.calculator, plan.checked_i64,
+          plan.has_nominals, plan.has_core_emit, plan.has_core_abort,
+          plan.has_text_byte, plan.has_i64_less, plan.has_bound_emit,
+          plan.has_bound_clock, plan.has_bound_code_export,
+          plan.has_bound_send, plan.has_live_propose, plan.has_live_generation,
           plan.type_directed_experimental, plan.experimental_cleanup,
           plan.type_directed_specializations,
           plan.type_directed_fallback_operations, false, depth1, leaves1,
@@ -40478,8 +40558,8 @@ def source.plan.topology.program_loop.body
         plan.borrowed_input_positions, plan.text_witness,
         plan.declared_modules, plan.declared_text, plan.worker_inputs,
         plan.worker_interruption, plan.live, plan.core_live, plan.live_slots,
-        plan.live_test_hosts, plan.live_sites, plan.text_cursor,
-        plan.calculator, plan.checked_i64, plan.has_nominals,
+        plan.live_test_hosts, plan.core_test_hosts, plan.live_sites,
+        plan.text_cursor, plan.calculator, plan.checked_i64, plan.has_nominals,
         plan.has_core_emit, plan.has_core_abort, plan.has_text_byte,
         plan.has_i64_less, plan.has_bound_emit, plan.has_bound_clock,
         plan.has_bound_code_export, plan.has_bound_send, plan.has_live_propose,
@@ -40494,11 +40574,11 @@ def source.plan.topology.program_loop.body
       plan.borrowed_input_positions, plan.text_witness, plan.declared_modules,
       plan.declared_text, plan.worker_inputs, plan.worker_interruption,
       plan.live, plan.core_live, plan.live_slots, plan.live_test_hosts,
-      plan.live_sites, plan.text_cursor, plan.calculator, plan.checked_i64,
-      plan.has_nominals, plan.has_core_emit, plan.has_core_abort,
-      plan.has_text_byte, plan.has_i64_less, plan.has_bound_emit,
-      plan.has_bound_clock, plan.has_bound_code_export, plan.has_bound_send,
-      plan.has_live_propose, plan.has_live_generation,
+      plan.core_test_hosts, plan.live_sites, plan.text_cursor, plan.calculator,
+      plan.checked_i64, plan.has_nominals, plan.has_core_emit,
+      plan.has_core_abort, plan.has_text_byte, plan.has_i64_less,
+      plan.has_bound_emit, plan.has_bound_clock, plan.has_bound_code_export,
+      plan.has_bound_send, plan.has_live_propose, plan.has_live_generation,
       plan.type_directed_experimental, plan.experimental_cleanup,
       plan.type_directed_specializations,
       plan.type_directed_fallback_operations, true, depth, leaves, none))
@@ -40514,11 +40594,11 @@ def source.plan.topology.program_loop
     (alloc.vec.Vec (Std.U32 × (alloc.vec.Vec Std.U8))) × (alloc.vec.Vec
     (Std.U32 × Std.U32)) × source.types.Registry × (alloc.vec.Vec Std.U32)
     × (alloc.vec.Vec Std.U32) × (alloc.vec.Vec Std.U32) × Std.U32 × Bool ×
-    Bool × Bool × Bool × Bool × Bool × Bool × Bool × (alloc.vec.Vec
-    source.LiveSiteMetadata) × Bool × Bool × Bool × Bool × Bool × Bool ×
+    Bool × Bool × Bool × Bool × Bool × Bool × Bool × Bool ×
+    (alloc.vec.Vec source.LiveSiteMetadata) × Bool × Bool × Bool × Bool ×
     Bool × Bool × Bool × Bool × Bool × Bool × Bool × Bool × Bool ×
-    Bool × Std.U64 × Std.U64 × Bool × Std.U32 × Std.U32 × (Option
-    Diagnostic))
+    Bool × Bool × Bool × Std.U64 × Std.U64 × Bool × Std.U32 × Std.U32 ×
+    (Option Diagnostic))
   := do
   loop
     (fun (depth1, leaves1, at1) => source.plan.topology.program_loop.body plan
@@ -40537,8 +40617,9 @@ def source.plan.topology.program
   then ok (core.result.Result.Ok (), plan, done1)
   else
     let (v, v1, v2, i, i1, i2, v3, v4, r, v5, v6, v7, i3, b1, b2, b3, b4, b5,
-      b6, b7, b8, v8, b9, b10, b11, b12, b13, b14, b15, b16, b17, b18, b19,
-      b20, b21, b22, b23, b24, i4, i5, is_ready, depth, leaves, failure) ←
+      b6, b7, b8, b9, v8, b10, b11, b12, b13, b14, b15, b16, b17, b18, b19,
+      b20, b21, b22, b23, b24, b25, i4, i5, is_ready, depth, leaves, failure)
+      ←
       source.plan.topology.program_loop plan done1 index 1#u32 0#u32 0#usize
     match failure with
     | none =>
@@ -40577,23 +40658,24 @@ def source.plan.topology.program
             core_live := b6,
             live_slots := b7,
             live_test_hosts := b8,
+            core_test_hosts := b9,
             live_sites := v8,
-            text_cursor := b9,
-            calculator := b10,
-            checked_i64 := b11,
-            has_nominals := b12,
-            has_core_emit := b13,
-            has_core_abort := b14,
-            has_text_byte := b15,
-            has_i64_less := b16,
-            has_bound_emit := b17,
-            has_bound_clock := b18,
-            has_bound_code_export := b19,
-            has_bound_send := b20,
-            has_live_propose := b21,
-            has_live_generation := b22,
-            type_directed_experimental := b23,
-            experimental_cleanup := b24,
+            text_cursor := b10,
+            calculator := b11,
+            checked_i64 := b12,
+            has_nominals := b13,
+            has_core_emit := b14,
+            has_core_abort := b15,
+            has_text_byte := b16,
+            has_i64_less := b17,
+            has_bound_emit := b18,
+            has_bound_clock := b19,
+            has_bound_code_export := b20,
+            has_bound_send := b21,
+            has_live_propose := b22,
+            has_live_generation := b23,
+            type_directed_experimental := b24,
+            experimental_cleanup := b25,
             type_directed_specializations := i4,
             type_directed_fallback_operations := i5
           }, done2)
@@ -40621,23 +40703,24 @@ def source.plan.topology.program
             core_live := b6,
             live_slots := b7,
             live_test_hosts := b8,
+            core_test_hosts := b9,
             live_sites := v8,
-            text_cursor := b9,
-            calculator := b10,
-            checked_i64 := b11,
-            has_nominals := b12,
-            has_core_emit := b13,
-            has_core_abort := b14,
-            has_text_byte := b15,
-            has_i64_less := b16,
-            has_bound_emit := b17,
-            has_bound_clock := b18,
-            has_bound_code_export := b19,
-            has_bound_send := b20,
-            has_live_propose := b21,
-            has_live_generation := b22,
-            type_directed_experimental := b23,
-            experimental_cleanup := b24,
+            text_cursor := b10,
+            calculator := b11,
+            checked_i64 := b12,
+            has_nominals := b13,
+            has_core_emit := b14,
+            has_core_abort := b15,
+            has_text_byte := b16,
+            has_i64_less := b17,
+            has_bound_emit := b18,
+            has_bound_clock := b19,
+            has_bound_code_export := b20,
+            has_bound_send := b21,
+            has_live_propose := b22,
+            has_live_generation := b23,
+            type_directed_experimental := b24,
+            experimental_cleanup := b25,
             type_directed_specializations := i4,
             type_directed_fallback_operations := i5
           }, done1)
@@ -40665,23 +40748,24 @@ def source.plan.topology.program
           core_live := b6,
           live_slots := b7,
           live_test_hosts := b8,
+          core_test_hosts := b9,
           live_sites := v8,
-          text_cursor := b9,
-          calculator := b10,
-          checked_i64 := b11,
-          has_nominals := b12,
-          has_core_emit := b13,
-          has_core_abort := b14,
-          has_text_byte := b15,
-          has_i64_less := b16,
-          has_bound_emit := b17,
-          has_bound_clock := b18,
-          has_bound_code_export := b19,
-          has_bound_send := b20,
-          has_live_propose := b21,
-          has_live_generation := b22,
-          type_directed_experimental := b23,
-          experimental_cleanup := b24,
+          text_cursor := b10,
+          calculator := b11,
+          checked_i64 := b12,
+          has_nominals := b13,
+          has_core_emit := b14,
+          has_core_abort := b15,
+          has_text_byte := b16,
+          has_i64_less := b17,
+          has_bound_emit := b18,
+          has_bound_clock := b19,
+          has_bound_code_export := b20,
+          has_bound_send := b21,
+          has_live_propose := b22,
+          has_live_generation := b23,
+          type_directed_experimental := b24,
+          experimental_cleanup := b25,
           type_directed_specializations := i4,
           type_directed_fallback_operations := i5
         }, done1)
@@ -43984,7 +44068,7 @@ def source.plan.allocation.finish
     ok (core.result.Result.Err failure, layout, compiler, work)
 
 /-- [noble_wasm::source::plan::lower]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 529:4-546:5 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 533:4-550:5 -/
 @[rust_loop_body]
 def source.plan.lower_loop.body
   (submission : noble_kernel.execution.Submission)
@@ -44035,7 +44119,7 @@ def source.plan.lower_loop.body
       submission.request, checked, compiler, work, layout, index, none))
 
 /-- [noble_wasm::source::plan::lower]: loop 0:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 529:4-546:5 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 533:4-550:5 -/
 @[rust_loop]
 def source.plan.lower_loop
   (submission : noble_kernel.execution.Submission)
@@ -44054,7 +44138,7 @@ def source.plan.lower_loop
     (compiler, work, layout, index)
 
 /-- [noble_wasm::source::plan::lower]:
-    Source: 'crates/noble-wasm/src/source/plan.rs', lines 520:0-575:1 -/
+    Source: 'crates/noble-wasm/src/source/plan.rs', lines 524:0-579:1 -/
 def source.plan.lower
   (submission : noble_kernel.execution.Submission)
   (checked : source.admission.Accepted) (compiler : source.Compiler)

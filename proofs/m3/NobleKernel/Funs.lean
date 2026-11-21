@@ -2091,7 +2091,7 @@ def contracts.Env.knows_effect
   contracts.Env.knows_effect_loop self id 0#usize
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::contracts::nominal::validation::valid_program_components::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 695:23-695:60 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 694:23-694:60 -/
 def
   contracts.nominal.validation.valid_program_components.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool.call_once
   (c : contracts.nominal.validation.valid_program_components.closure)
@@ -2102,7 +2102,7 @@ def
   ok (tupled_args <= i)
 
 /-- Trait implementation: [noble_kernel::contracts::nominal::validation::valid_program_components::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::contracts::nominal::validation::valid_program_components::{closure}<'_0>}]
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 695:23-695:60 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 694:23-694:60 -/
 @[reducible]
 def
   contracts.nominal.validation.valid_program_components.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool
@@ -2114,7 +2114,7 @@ def
 }
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 689:4-692:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 688:4-691:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.valid_program_components_loop.body
   (env : contracts.Env) (ids : Slice types.EffId) (index : Std.Usize)
@@ -2134,7 +2134,7 @@ def contracts.nominal.validation.valid_program_components_loop.body
   else ok (done is_effect_set_known)
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 689:4-692:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 688:4-691:5 -/
 @[rust_loop]
 def contracts.nominal.validation.valid_program_components_loop
   (env : contracts.Env) (ids : Slice types.EffId) (index : Std.Usize)
@@ -2148,7 +2148,7 @@ def contracts.nominal.validation.valid_program_components_loop
     (index, is_effect_set_known)
 
 /-- [noble_kernel::contracts::nominal::validation::valid_program_components]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 679:0-696:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 678:0-695:1 -/
 def contracts.nominal.validation.valid_program_components
   (env : contracts.Env) (stack_in : Slice types.Ty)
   (stack_out : Slice types.Ty) (effects : types.EffSet) (max_nodes : Std.U32) :
@@ -9740,7 +9740,7 @@ impl_def contracts.Definition.Insts.CoreCmpPartialEqDefinition :
 }
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop body 1:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 669:8-673:9 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 668:8-672:9 -/
 @[rust_loop_body]
 def contracts.nominal.validation.bound_adapters_unique_loop0_loop0.body
   (v : alloc.vec.Vec contracts.BoundAdapter) (index : Std.Usize)
@@ -9768,7 +9768,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0_loop0.body
   else ok (done is_unique)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop 1:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 669:8-673:9 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 668:8-672:9 -/
 @[rust_loop]
 def contracts.nominal.validation.bound_adapters_unique_loop0_loop0
   (v : alloc.vec.Vec contracts.BoundAdapter) (index : Std.Usize)
@@ -9783,7 +9783,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0_loop0
     (is_unique, prior)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 658:4-675:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 657:4-674:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.bound_adapters_unique_loop0.body
   (env : contracts.Env) (index : Std.Usize) (is_unique : Bool) :
@@ -9874,7 +9874,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0.body
   else ok (done is_unique)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 658:4-675:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 657:4-674:5 -/
 @[rust_loop]
 def contracts.nominal.validation.bound_adapters_unique_loop0
   (env : contracts.Env) (index : Std.Usize) (is_unique : Bool) :
@@ -9887,7 +9887,7 @@ def contracts.nominal.validation.bound_adapters_unique_loop0
     (index, is_unique)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapters_unique]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 655:0-677:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 654:0-676:1 -/
 @[reducible]
 def contracts.nominal.validation.bound_adapters_unique
   (env : contracts.Env) : Result Bool := do
@@ -9915,7 +9915,7 @@ def contracts.TEST_CODE_EXPORT : types.EffId := 6#u32
 @[global_simps, irreducible] def contracts.TEST_EMIT : types.EffId := 0#u32
 
 /-- [noble_kernel::contracts::nominal::validation::definition_has_owner]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 647:0-649:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 646:0-648:1 -/
 def contracts.nominal.validation.definition_has_owner
   (env : contracts.Env) (index : Std.Usize) : Result Bool := do
   let s := alloc.vec.Vec.deref env.definition_owners
@@ -9929,7 +9929,7 @@ def contracts.nominal.validation.definition_has_owner
                | some _ => ok true
 
 /-- [noble_kernel::contracts::nominal::validation::bound_row_has_only_effect]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 638:0-644:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 637:0-643:1 -/
 def contracts.nominal.validation.bound_row_has_only_effect
   (env : contracts.Env) (index : Std.Usize) (effect : types.EffId) :
   Result Bool
@@ -9942,7 +9942,7 @@ def contracts.nominal.validation.bound_row_has_only_effect
     types.EffId.Insts.CoreCmpPartialEqEffId s (Array.make 1#usize [ effect ])
 
 /-- [noble_kernel::contracts::nominal::validation::bound_row_names]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 620:0-631:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 619:0-630:1 -/
 def contracts.nominal.validation.bound_row_names
   (env : contracts.Env) (index : Std.Usize) («def» : contracts.Definition)
   (slot : Std.U32) :
@@ -9960,7 +9960,7 @@ def contracts.nominal.validation.bound_row_names
   else ok (row.adapter_slot = slot)
 
 /-- [noble_kernel::contracts::nominal::validation::first_bound_row]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 606:4-611:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 605:4-610:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.first_bound_row_loop.body
   (env : contracts.Env) («def» : contracts.Definition) (slot : Std.U32)
@@ -9984,7 +9984,7 @@ def contracts.nominal.validation.first_bound_row_loop.body
   else ok (done found)
 
 /-- [noble_kernel::contracts::nominal::validation::first_bound_row]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 606:4-611:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 605:4-610:5 -/
 @[rust_loop]
 def contracts.nominal.validation.first_bound_row_loop
   (env : contracts.Env) («def» : contracts.Definition) (slot : Std.U32)
@@ -9998,7 +9998,7 @@ def contracts.nominal.validation.first_bound_row_loop
     (index, found)
 
 /-- [noble_kernel::contracts::nominal::validation::first_bound_row]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 599:0-613:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 598:0-612:1 -/
 @[reducible]
 def contracts.nominal.validation.first_bound_row
   (env : contracts.Env) («def» : contracts.Definition) (slot : Std.U32) :
@@ -10029,7 +10029,7 @@ def contracts.TEST_CODE_EXPORT_IDENTITY_BYTES : Array Std.U8 29#usize :=
     ]
 
 /-- [noble_kernel::contracts::nominal::validation::bound_row_contract]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 201:0-219:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 200:0-218:1 -/
 def contracts.nominal.validation.bound_row_contract
   (row : contracts.BoundAdapter) : Result Bool := do
   let b ← alloc.string.String.is_empty row.adapter_identity
@@ -11132,7 +11132,7 @@ def contracts.nominal.validation.bound_row_contract
           else ok false
 
 /-- [noble_kernel::contracts::nominal::validation::bound_row_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 181:0-195:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 180:0-194:1 -/
 def contracts.nominal.validation.bound_row_matches
   (env : contracts.Env) (index : Std.Usize) («def» : contracts.Definition)
   (slot : Std.U32) :
@@ -11153,7 +11153,7 @@ def contracts.nominal.validation.bound_row_matches
     else contracts.nominal.validation.bound_row_contract row
 
 /-- [noble_kernel::contracts::nominal::validation::{noble_kernel::contracts::Env}::matching_bound_rows]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 52:8-57:9 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 51:8-56:9 -/
 @[rust_loop_body]
 def contracts.nominal.validation.Env.matching_bound_rows_loop.body
   (self : contracts.Env) («def» : contracts.Definition) (slot : Std.U32)
@@ -11175,7 +11175,7 @@ def contracts.nominal.validation.Env.matching_bound_rows_loop.body
   else ok (done «matches»)
 
 /-- [noble_kernel::contracts::nominal::validation::{noble_kernel::contracts::Env}::matching_bound_rows]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 52:8-57:9 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 51:8-56:9 -/
 @[rust_loop]
 def contracts.nominal.validation.Env.matching_bound_rows_loop
   (self : contracts.Env) («def» : contracts.Definition) (slot : Std.U32)
@@ -11189,7 +11189,7 @@ def contracts.nominal.validation.Env.matching_bound_rows_loop
     («matches», row_index)
 
 /-- [noble_kernel::contracts::nominal::validation::{noble_kernel::contracts::Env}::matching_bound_rows]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 49:4-59:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 48:4-58:5 -/
 @[reducible]
 def contracts.nominal.validation.Env.matching_bound_rows
   (self : contracts.Env) («def» : contracts.Definition) (slot : Std.U32) :
@@ -12106,7 +12106,7 @@ def contracts.nominal.schemes.valid_emit_scheme
   else ok false
 
 /-- [noble_kernel::contracts::nominal::validation::bound_definition_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 559:0-591:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 558:0-590:1 -/
 def contracts.nominal.validation.bound_definition_matches
   (env : contracts.Env) (index : Std.Usize) (slot : Std.U32)
   (effect : types.EffId) :
@@ -13049,7 +13049,7 @@ def contracts.nominal.schemes.same_scheme
   else ok false
 
 /-- [noble_kernel::contracts::nominal::validation::declared_definition_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 533:0-549:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 532:0-548:1 -/
 def contracts.nominal.validation.declared_definition_matches
   (env : contracts.Env) (index : Std.Usize) (kind : contracts.Behavior)
   (id : types.NominalTypeId) :
@@ -13269,7 +13269,7 @@ def contracts.nominal.schemes.expected_generic_scheme
   | contracts.Behavior.NamedBehavior => ok none
 
 /-- [noble_kernel::contracts::nominal::validation::generic_definition_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 511:0-527:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 510:0-526:1 -/
 def contracts.nominal.validation.generic_definition_matches
   (env : contracts.Env) (index : Std.Usize) (kind : contracts.Behavior)
   (id : types.NominalTypeId) :
@@ -13302,7 +13302,7 @@ def contracts.nominal.validation.generic_definition_matches
         contracts.nominal.schemes.same_scheme s1 expected
 
 /-- [noble_kernel::contracts::nominal::validation::bound_operation]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 447:0-505:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 446:0-504:1 -/
 def contracts.nominal.validation.bound_operation
   (kind : contracts.Behavior) : Result (Option (Std.U32 × types.EffId)) := do
   match kind with
@@ -13361,7 +13361,7 @@ def contracts.nominal.validation.bound_operation
   | contracts.Behavior.NamedBehavior => ok none
 
 /-- [noble_kernel::contracts::nominal::validation::generic_operation_id]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 371:0-427:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 370:0-426:1 -/
 def contracts.nominal.validation.generic_operation_id
   (kind : contracts.Behavior) : Result (Option types.NominalTypeId) := do
   match kind with
@@ -13416,7 +13416,7 @@ def contracts.nominal.validation.generic_operation_id
   | contracts.Behavior.NamedBehavior => ok none
 
 /-- [noble_kernel::contracts::nominal::validation::operation_identity_slot]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 338:0-357:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 337:0-356:1 -/
 def contracts.nominal.validation.operation_identity_slot
   (kind : contracts.Behavior) :
   Result (Option (types.NominalTypeId × Std.Usize))
@@ -13473,7 +13473,7 @@ def contracts.nominal.validation.operation_identity_slot
   | contracts.Behavior.NamedBehavior => ok none
 
 /-- [noble_kernel::contracts::nominal::validation::kind_matches_definition]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 429:0-444:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 428:0-443:1 -/
 def contracts.nominal.validation.kind_matches_definition
   (env : contracts.Env) (index : Std.Usize) (kind : contracts.Behavior) :
   Result Bool
@@ -13498,7 +13498,7 @@ def contracts.nominal.validation.kind_matches_definition
     contracts.nominal.validation.bound_definition_matches env index slot effect
 
 /-- [noble_kernel::contracts::nominal::validation::definitions_match]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 362:4-367:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 361:4-366:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.definitions_match_loop.body
   (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
@@ -13520,7 +13520,7 @@ def contracts.nominal.validation.definitions_match_loop.body
   else ok (done is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::definitions_match]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 362:4-367:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 361:4-366:5 -/
 @[rust_loop]
 def contracts.nominal.validation.definitions_match_loop
   (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
@@ -13533,14 +13533,14 @@ def contracts.nominal.validation.definitions_match_loop
     (index, is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::definitions_match]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 359:0-369:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 358:0-368:1 -/
 @[reducible]
 def contracts.nominal.validation.definitions_match
   (env : contracts.Env) : Result Bool := do
   contracts.nominal.validation.definitions_match_loop env 0#usize true
 
 /-- [noble_kernel::contracts::nominal::validation::operation_slot]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 324:0-336:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 323:0-335:1 -/
 def contracts.nominal.validation.operation_slot
   (kind : contracts.Behavior) (id : types.NominalTypeId) :
   Result (Option Std.Usize)
@@ -13557,7 +13557,7 @@ def contracts.nominal.validation.operation_slot
     else ok none
 
 /-- [noble_kernel::contracts::nominal::validation::declaration_counts_match]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 306:4-311:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 305:4-310:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.declaration_counts_match_loop.body
   (env : contracts.Env) (decl : contracts.NominalDecl)
@@ -13585,7 +13585,7 @@ def contracts.nominal.validation.declaration_counts_match_loop.body
   else ok (done (env.live_resource_nominals, decl, actual))
 
 /-- [noble_kernel::contracts::nominal::validation::declaration_counts_match]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 306:4-311:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 305:4-310:5 -/
 @[rust_loop]
 def contracts.nominal.validation.declaration_counts_match_loop
   (env : contracts.Env) (decl : contracts.NominalDecl)
@@ -13600,7 +13600,7 @@ def contracts.nominal.validation.declaration_counts_match_loop
     (actual, index)
 
 /-- [noble_kernel::contracts::nominal::validation::declaration_counts_match]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 303:0-322:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 302:0-321:1 -/
 def contracts.nominal.validation.declaration_counts_match
   (env : contracts.Env) (decl : contracts.NominalDecl) : Result Bool := do
   let actual := Array.repeat 5#usize 0#u8
@@ -13636,7 +13636,7 @@ def contracts.nominal.validation.declaration_counts_match
       else ok false
 
 /-- [noble_kernel::contracts::nominal::validation::counts_match]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 292:4-295:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 291:4-294:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.counts_match_loop.body
   (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
@@ -13658,7 +13658,7 @@ def contracts.nominal.validation.counts_match_loop.body
   else ok (done is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::counts_match]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 292:4-295:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 291:4-294:5 -/
 @[rust_loop]
 def contracts.nominal.validation.counts_match_loop
   (env : contracts.Env) (index : Std.Usize) (is_matching : Bool) :
@@ -13671,7 +13671,7 @@ def contracts.nominal.validation.counts_match_loop
     (index, is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::counts_match]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 289:0-297:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 288:0-296:1 -/
 @[reducible]
 def contracts.nominal.validation.counts_match
   (env : contracts.Env) : Result Bool := do
@@ -14517,7 +14517,7 @@ def contracts.bootstrap.data.table
   ok (alloc.slice.Slice.into_vec y)
 
 /-- [noble_kernel::contracts::nominal::validation::fixed_definitions_match]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 280:4-285:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 279:4-284:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.fixed_definitions_match_loop.body
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -14553,7 +14553,7 @@ def contracts.nominal.validation.fixed_definitions_match_loop.body
   else ok (done is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::fixed_definitions_match]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 280:4-285:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 279:4-284:5 -/
 @[rust_loop]
 def contracts.nominal.validation.fixed_definitions_match_loop
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -14568,7 +14568,7 @@ def contracts.nominal.validation.fixed_definitions_match_loop
     (index, is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::fixed_definitions_match]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 273:0-287:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 272:0-286:1 -/
 def contracts.nominal.validation.fixed_definitions_match
   (env : contracts.Env) : Result Bool := do
   let fixed ← contracts.bootstrap.data.table
@@ -14592,7 +14592,7 @@ def contracts.FIXTURE_RESOURCE : types.ResourceKind := 0#u32
 @[global_simps, irreducible] def contracts.LIVE_DISPATCH : types.EffId := 5#u32
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapter_kinds]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 260:4-269:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 259:4-268:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.bound_adapter_kinds_loop.body
   (env : contracts.Env) (has_clock : Bool) (has_code_export : Bool)
@@ -14711,7 +14711,7 @@ def contracts.nominal.validation.bound_adapter_kinds_loop.body
   else ok (done (has_clock, has_code_export, has_send))
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapter_kinds]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 260:4-269:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 259:4-268:5 -/
 @[rust_loop]
 def contracts.nominal.validation.bound_adapter_kinds_loop
   (env : contracts.Env) (has_clock : Bool) (has_code_export : Bool)
@@ -14725,7 +14725,7 @@ def contracts.nominal.validation.bound_adapter_kinds_loop
     (has_clock, has_code_export, has_send, index)
 
 /-- [noble_kernel::contracts::nominal::validation::bound_adapter_kinds]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 255:0-271:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 254:0-270:1 -/
 @[reducible]
 def contracts.nominal.validation.bound_adapter_kinds
   (env : contracts.Env) : Result (Bool × Bool × Bool) := do
@@ -14733,7 +14733,7 @@ def contracts.nominal.validation.bound_adapter_kinds
     0#usize
 
 /-- [noble_kernel::contracts::nominal::validation::bootstrap_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 229:0-249:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 228:0-248:1 -/
 def contracts.nominal.validation.bootstrap_matches
   (env : contracts.Env) : Result Bool := do
   if env.declared_modules
@@ -14814,7 +14814,7 @@ def contracts.nominal.validation.bootstrap_matches
   else ok true
 
 /-- [noble_kernel::contracts::nominal::validation::generic_family_counts]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 158:4-173:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 157:4-172:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.generic_family_counts_loop.body
   (env : contracts.Env) (id : types.NominalTypeId) (left : Std.U8)
@@ -14915,7 +14915,7 @@ def contracts.nominal.validation.generic_family_counts_loop.body
   else ok (done (left, right, matcher))
 
 /-- [noble_kernel::contracts::nominal::validation::generic_family_counts]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 158:4-173:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 157:4-172:5 -/
 @[rust_loop]
 def contracts.nominal.validation.generic_family_counts_loop
   (env : contracts.Env) (id : types.NominalTypeId) (left : Std.U8)
@@ -14929,7 +14929,7 @@ def contracts.nominal.validation.generic_family_counts_loop
     (left, right, matcher, kind_index)
 
 /-- [noble_kernel::contracts::nominal::validation::generic_family_counts]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 153:0-175:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 152:0-174:1 -/
 def contracts.nominal.validation.generic_family_counts
   (env : contracts.Env) (id : types.NominalTypeId) :
   Result (Array Std.U8 3#usize)
@@ -15045,7 +15045,7 @@ def contracts.nominal.validation.Env.valid_generic_declarations
     0#usize true
 
 /-- [noble_kernel::contracts::nominal::validation::generic_counts_match]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 134:10-137:9 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 133:10-136:9 -/
 @[rust_loop_body]
 def contracts.nominal.validation.generic_counts_match_loop.body
   (env : contracts.Env) (index : Std.Usize) :
@@ -15067,7 +15067,7 @@ def contracts.nominal.validation.generic_counts_match_loop.body
   else ok (done true)
 
 /-- [noble_kernel::contracts::nominal::validation::generic_counts_match]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 134:10-137:9 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 133:10-136:9 -/
 @[rust_loop]
 def contracts.nominal.validation.generic_counts_match_loop
   (env : contracts.Env) (index : Std.Usize) : Result Bool := do
@@ -15077,7 +15077,7 @@ def contracts.nominal.validation.generic_counts_match_loop
     index
 
 /-- [noble_kernel::contracts::nominal::validation::generic_counts_match]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 129:0-141:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 128:0-140:1 -/
 def contracts.nominal.validation.generic_counts_match
   (env : contracts.Env) : Result Bool := do
   let b ← contracts.nominal.validation.Env.valid_generic_declarations env
@@ -15717,12 +15717,12 @@ def contracts.calculator_environment
       contracts.Env (core.convert.FromSame shapes.Defect) residual
 
 /-- [noble_kernel::contracts::nominal::validation::CALCULATOR_FIRST_ROW]
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 127:0-127:39 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 126:0-126:39 -/
 @[global_simps, irreducible]
 def contracts.nominal.validation.CALCULATOR_FIRST_ROW : Std.Usize := 27#usize
 
 /-- [noble_kernel::contracts::nominal::validation::calculator_prefix_matches]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 116:4-122:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 115:4-121:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.calculator_prefix_matches_loop.body
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -15776,7 +15776,7 @@ def contracts.nominal.validation.calculator_prefix_matches_loop.body
   else ok (done is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::calculator_prefix_matches]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 116:4-122:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 115:4-121:5 -/
 @[rust_loop]
 def contracts.nominal.validation.calculator_prefix_matches_loop
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -15793,7 +15793,7 @@ def contracts.nominal.validation.calculator_prefix_matches_loop
     (index, is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::calculator_prefix_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 103:0-124:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 102:0-123:1 -/
 def contracts.nominal.validation.calculator_prefix_matches
   (env : contracts.Env) : Result Bool := do
   let r ← contracts.calculator_environment
@@ -15895,7 +15895,7 @@ def contracts.declared_text_environment
       contracts.Env (core.convert.FromSame shapes.Defect) residual
 
 /-- [noble_kernel::contracts::nominal::validation::declared_text_prefix_matches]: loop body 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 82:4-88:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 81:4-87:5 -/
 @[rust_loop_body]
 def contracts.nominal.validation.declared_text_prefix_matches_loop.body
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -15949,7 +15949,7 @@ def contracts.nominal.validation.declared_text_prefix_matches_loop.body
   else ok (done is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::declared_text_prefix_matches]: loop 0:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 82:4-88:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 81:4-87:5 -/
 @[rust_loop]
 def contracts.nominal.validation.declared_text_prefix_matches_loop
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -15966,7 +15966,7 @@ def contracts.nominal.validation.declared_text_prefix_matches_loop
     (index, is_matching)
 
 /-- [noble_kernel::contracts::nominal::validation::declared_text_prefix_matches]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 69:0-90:1 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 68:0-89:1 -/
 def contracts.nominal.validation.declared_text_prefix_matches
   (env : contracts.Env) : Result Bool := do
   let r ← contracts.declared_text_environment
@@ -16228,7 +16228,7 @@ def contracts.live.catalog_valid (env : contracts.Env) : Result Bool := do
   else alloc.vec.Vec.is_empty Global env.live_resource_nominals
 
 /-- [noble_kernel::contracts::nominal::validation::{noble_kernel::contracts::Env}::validate_contracts]:
-    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 23:4-47:5 -/
+    Source: 'crates/noble-kernel/src/contracts/nominal/validation.rs', lines 23:4-46:5 -/
 def contracts.nominal.validation.Env.validate_contracts
   (self : contracts.Env) : Result Bool := do
   let i := alloc.vec.Vec.len self.kinds
@@ -16243,21 +16243,381 @@ def contracts.nominal.validation.Env.validate_contracts
     else
       if self.live_test_hosts
       then
-        if self.live_slots
-        then
-          if self.declared_modules
-          then
-            if self.text_cursor
-            then ok false
-            else
-              let b ← alloc.vec.Vec.is_empty Global self.nominals
-              if b
+        if self.text_cursor
+        then ok false
+        else
+          if self.calculator
+          then ok false
+          else
+            let b ← alloc.vec.Vec.is_empty Global self.nominals
+            if b
+            then
+              let b1 ← alloc.vec.Vec.is_empty Global self.generic_variants
+              if b1
               then
-                let b1 ← alloc.vec.Vec.is_empty Global self.generic_variants
-                if b1
+                let b2 ← alloc.vec.Vec.is_empty Global self.bound_adapters
+                if b2
                 then
-                  let b2 ← alloc.vec.Vec.is_empty Global self.bound_adapters
-                  if b2
+                  let b3 ←
+                    contracts.nominal.validation.bootstrap_matches self
+                  if b3
+                  then
+                    if self.text_cursor
+                    then
+                      if self.declared_modules
+                      then
+                        let b4 ←
+                          contracts.nominal.validation.declared_text_prefix_matches
+                            self
+                        if b4
+                        then
+                          if self.calculator
+                          then
+                            let b5 ←
+                              contracts.nominal.validation.calculator_prefix_matches
+                                self
+                            if b5
+                            then
+                              let b6 ← contracts.live.catalog_valid self
+                              if b6
+                              then
+                                if self.declared_modules
+                                then
+                                  let b7 ←
+                                    contracts.nominal.validation.fixed_definitions_match
+                                      self
+                                  if b7
+                                  then
+                                    let b8 ←
+                                      contracts.nominal.validation.counts_match
+                                        self
+                                    if b8
+                                    then
+                                      let b9 ←
+                                        contracts.nominal.validation.generic_counts_match
+                                          self
+                                      if b9
+                                      then
+                                        let b10 ←
+                                          contracts.nominal.validation.definitions_match
+                                            self
+                                        if b10
+                                        then
+                                          contracts.nominal.validation.bound_adapters_unique
+                                            self
+                                        else ok false
+                                      else ok false
+                                    else ok false
+                                  else ok false
+                                else
+                                  let b7 ←
+                                    contracts.nominal.validation.counts_match
+                                      self
+                                  if b7
+                                  then
+                                    let b8 ←
+                                      contracts.nominal.validation.generic_counts_match
+                                        self
+                                    if b8
+                                    then
+                                      let b9 ←
+                                        contracts.nominal.validation.definitions_match
+                                          self
+                                      if b9
+                                      then
+                                        contracts.nominal.validation.bound_adapters_unique
+                                          self
+                                      else ok false
+                                    else ok false
+                                  else ok false
+                              else ok false
+                            else ok false
+                          else
+                            let b5 ← contracts.live.catalog_valid self
+                            if b5
+                            then
+                              if self.declared_modules
+                              then
+                                let b6 ←
+                                  contracts.nominal.validation.fixed_definitions_match
+                                    self
+                                if b6
+                                then
+                                  let b7 ←
+                                    contracts.nominal.validation.counts_match
+                                      self
+                                  if b7
+                                  then
+                                    let b8 ←
+                                      contracts.nominal.validation.generic_counts_match
+                                        self
+                                    if b8
+                                    then
+                                      let b9 ←
+                                        contracts.nominal.validation.definitions_match
+                                          self
+                                      if b9
+                                      then
+                                        contracts.nominal.validation.bound_adapters_unique
+                                          self
+                                      else ok false
+                                    else ok false
+                                  else ok false
+                                else ok false
+                              else
+                                let b6 ←
+                                  contracts.nominal.validation.counts_match
+                                    self
+                                if b6
+                                then
+                                  let b7 ←
+                                    contracts.nominal.validation.generic_counts_match
+                                      self
+                                  if b7
+                                  then
+                                    let b8 ←
+                                      contracts.nominal.validation.definitions_match
+                                        self
+                                    if b8
+                                    then
+                                      contracts.nominal.validation.bound_adapters_unique
+                                        self
+                                    else ok false
+                                  else ok false
+                                else ok false
+                            else ok false
+                        else ok false
+                      else
+                        if self.calculator
+                        then
+                          let b4 ←
+                            contracts.nominal.validation.calculator_prefix_matches
+                              self
+                          if b4
+                          then
+                            let b5 ← contracts.live.catalog_valid self
+                            if b5
+                            then
+                              if self.declared_modules
+                              then
+                                let b6 ←
+                                  contracts.nominal.validation.fixed_definitions_match
+                                    self
+                                if b6
+                                then
+                                  let b7 ←
+                                    contracts.nominal.validation.counts_match
+                                      self
+                                  if b7
+                                  then
+                                    let b8 ←
+                                      contracts.nominal.validation.generic_counts_match
+                                        self
+                                    if b8
+                                    then
+                                      let b9 ←
+                                        contracts.nominal.validation.definitions_match
+                                          self
+                                      if b9
+                                      then
+                                        contracts.nominal.validation.bound_adapters_unique
+                                          self
+                                      else ok false
+                                    else ok false
+                                  else ok false
+                                else ok false
+                              else
+                                let b6 ←
+                                  contracts.nominal.validation.counts_match
+                                    self
+                                if b6
+                                then
+                                  let b7 ←
+                                    contracts.nominal.validation.generic_counts_match
+                                      self
+                                  if b7
+                                  then
+                                    let b8 ←
+                                      contracts.nominal.validation.definitions_match
+                                        self
+                                    if b8
+                                    then
+                                      contracts.nominal.validation.bound_adapters_unique
+                                        self
+                                    else ok false
+                                  else ok false
+                                else ok false
+                            else ok false
+                          else ok false
+                        else
+                          let b4 ← contracts.live.catalog_valid self
+                          if b4
+                          then
+                            if self.declared_modules
+                            then
+                              let b5 ←
+                                contracts.nominal.validation.fixed_definitions_match
+                                  self
+                              if b5
+                              then
+                                let b6 ←
+                                  contracts.nominal.validation.counts_match
+                                    self
+                                if b6
+                                then
+                                  let b7 ←
+                                    contracts.nominal.validation.generic_counts_match
+                                      self
+                                  if b7
+                                  then
+                                    let b8 ←
+                                      contracts.nominal.validation.definitions_match
+                                        self
+                                    if b8
+                                    then
+                                      contracts.nominal.validation.bound_adapters_unique
+                                        self
+                                    else ok false
+                                  else ok false
+                                else ok false
+                              else ok false
+                            else
+                              let b5 ←
+                                contracts.nominal.validation.counts_match self
+                              if b5
+                              then
+                                let b6 ←
+                                  contracts.nominal.validation.generic_counts_match
+                                    self
+                                if b6
+                                then
+                                  let b7 ←
+                                    contracts.nominal.validation.definitions_match
+                                      self
+                                  if b7
+                                  then
+                                    contracts.nominal.validation.bound_adapters_unique
+                                      self
+                                  else ok false
+                                else ok false
+                              else ok false
+                          else ok false
+                    else
+                      if self.calculator
+                      then
+                        let b4 ←
+                          contracts.nominal.validation.calculator_prefix_matches
+                            self
+                        if b4
+                        then
+                          let b5 ← contracts.live.catalog_valid self
+                          if b5
+                          then
+                            if self.declared_modules
+                            then
+                              let b6 ←
+                                contracts.nominal.validation.fixed_definitions_match
+                                  self
+                              if b6
+                              then
+                                let b7 ←
+                                  contracts.nominal.validation.counts_match
+                                    self
+                                if b7
+                                then
+                                  let b8 ←
+                                    contracts.nominal.validation.generic_counts_match
+                                      self
+                                  if b8
+                                  then
+                                    let b9 ←
+                                      contracts.nominal.validation.definitions_match
+                                        self
+                                    if b9
+                                    then
+                                      contracts.nominal.validation.bound_adapters_unique
+                                        self
+                                    else ok false
+                                  else ok false
+                                else ok false
+                              else ok false
+                            else
+                              let b6 ←
+                                contracts.nominal.validation.counts_match self
+                              if b6
+                              then
+                                let b7 ←
+                                  contracts.nominal.validation.generic_counts_match
+                                    self
+                                if b7
+                                then
+                                  let b8 ←
+                                    contracts.nominal.validation.definitions_match
+                                      self
+                                  if b8
+                                  then
+                                    contracts.nominal.validation.bound_adapters_unique
+                                      self
+                                  else ok false
+                                else ok false
+                              else ok false
+                          else ok false
+                        else ok false
+                      else
+                        let b4 ← contracts.live.catalog_valid self
+                        if b4
+                        then
+                          if self.declared_modules
+                          then
+                            let b5 ←
+                              contracts.nominal.validation.fixed_definitions_match
+                                self
+                            if b5
+                            then
+                              let b6 ←
+                                contracts.nominal.validation.counts_match self
+                              if b6
+                              then
+                                let b7 ←
+                                  contracts.nominal.validation.generic_counts_match
+                                    self
+                                if b7
+                                then
+                                  let b8 ←
+                                    contracts.nominal.validation.definitions_match
+                                      self
+                                  if b8
+                                  then
+                                    contracts.nominal.validation.bound_adapters_unique
+                                      self
+                                  else ok false
+                                else ok false
+                              else ok false
+                            else ok false
+                          else
+                            let b5 ←
+                              contracts.nominal.validation.counts_match self
+                            if b5
+                            then
+                              let b6 ←
+                                contracts.nominal.validation.generic_counts_match
+                                  self
+                              if b6
+                              then
+                                let b7 ←
+                                  contracts.nominal.validation.definitions_match
+                                    self
+                                if b7
+                                then
+                                  contracts.nominal.validation.bound_adapters_unique
+                                    self
+                                else ok false
+                              else ok false
+                            else ok false
+                        else ok false
+                  else ok false
+                else
+                  if self.declared_modules
                   then
                     let b3 ←
                       contracts.nominal.validation.bootstrap_matches self
@@ -16620,255 +16980,23 @@ def contracts.nominal.validation.Env.validate_contracts
                               else ok false
                           else ok false
                     else ok false
-                  else
-                    if self.declared_modules
+                  else ok false
+              else
+                if self.declared_modules
+                then
+                  let b2 ←
+                    contracts.nominal.validation.bootstrap_matches self
+                  if b2
+                  then
+                    if self.text_cursor
                     then
-                      let b3 ←
-                        contracts.nominal.validation.bootstrap_matches self
-                      if b3
+                      if self.declared_modules
                       then
-                        if self.text_cursor
+                        let b3 ←
+                          contracts.nominal.validation.declared_text_prefix_matches
+                            self
+                        if b3
                         then
-                          if self.declared_modules
-                          then
-                            let b4 ←
-                              contracts.nominal.validation.declared_text_prefix_matches
-                                self
-                            if b4
-                            then
-                              if self.calculator
-                              then
-                                let b5 ←
-                                  contracts.nominal.validation.calculator_prefix_matches
-                                    self
-                                if b5
-                                then
-                                  let b6 ← contracts.live.catalog_valid self
-                                  if b6
-                                  then
-                                    if self.declared_modules
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.fixed_definitions_match
-                                          self
-                                      if b7
-                                      then
-                                        let b8 ←
-                                          contracts.nominal.validation.counts_match
-                                            self
-                                        if b8
-                                        then
-                                          let b9 ←
-                                            contracts.nominal.validation.generic_counts_match
-                                              self
-                                          if b9
-                                          then
-                                            let b10 ←
-                                              contracts.nominal.validation.definitions_match
-                                                self
-                                            if b10
-                                            then
-                                              contracts.nominal.validation.bound_adapters_unique
-                                                self
-                                            else ok false
-                                          else ok false
-                                        else ok false
-                                      else ok false
-                                    else
-                                      let b7 ←
-                                        contracts.nominal.validation.counts_match
-                                          self
-                                      if b7
-                                      then
-                                        let b8 ←
-                                          contracts.nominal.validation.generic_counts_match
-                                            self
-                                        if b8
-                                        then
-                                          let b9 ←
-                                            contracts.nominal.validation.definitions_match
-                                              self
-                                          if b9
-                                          then
-                                            contracts.nominal.validation.bound_adapters_unique
-                                              self
-                                          else ok false
-                                        else ok false
-                                      else ok false
-                                  else ok false
-                                else ok false
-                              else
-                                let b5 ← contracts.live.catalog_valid self
-                                if b5
-                                then
-                                  if self.declared_modules
-                                  then
-                                    let b6 ←
-                                      contracts.nominal.validation.fixed_definitions_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.counts_match
-                                          self
-                                      if b7
-                                      then
-                                        let b8 ←
-                                          contracts.nominal.validation.generic_counts_match
-                                            self
-                                        if b8
-                                        then
-                                          let b9 ←
-                                            contracts.nominal.validation.definitions_match
-                                              self
-                                          if b9
-                                          then
-                                            contracts.nominal.validation.bound_adapters_unique
-                                              self
-                                          else ok false
-                                        else ok false
-                                      else ok false
-                                    else ok false
-                                  else
-                                    let b6 ←
-                                      contracts.nominal.validation.counts_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.generic_counts_match
-                                          self
-                                      if b7
-                                      then
-                                        let b8 ←
-                                          contracts.nominal.validation.definitions_match
-                                            self
-                                        if b8
-                                        then
-                                          contracts.nominal.validation.bound_adapters_unique
-                                            self
-                                        else ok false
-                                      else ok false
-                                    else ok false
-                                else ok false
-                            else ok false
-                          else
-                            if self.calculator
-                            then
-                              let b4 ←
-                                contracts.nominal.validation.calculator_prefix_matches
-                                  self
-                              if b4
-                              then
-                                let b5 ← contracts.live.catalog_valid self
-                                if b5
-                                then
-                                  if self.declared_modules
-                                  then
-                                    let b6 ←
-                                      contracts.nominal.validation.fixed_definitions_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.counts_match
-                                          self
-                                      if b7
-                                      then
-                                        let b8 ←
-                                          contracts.nominal.validation.generic_counts_match
-                                            self
-                                        if b8
-                                        then
-                                          let b9 ←
-                                            contracts.nominal.validation.definitions_match
-                                              self
-                                          if b9
-                                          then
-                                            contracts.nominal.validation.bound_adapters_unique
-                                              self
-                                          else ok false
-                                        else ok false
-                                      else ok false
-                                    else ok false
-                                  else
-                                    let b6 ←
-                                      contracts.nominal.validation.counts_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.generic_counts_match
-                                          self
-                                      if b7
-                                      then
-                                        let b8 ←
-                                          contracts.nominal.validation.definitions_match
-                                            self
-                                        if b8
-                                        then
-                                          contracts.nominal.validation.bound_adapters_unique
-                                            self
-                                        else ok false
-                                      else ok false
-                                    else ok false
-                                else ok false
-                              else ok false
-                            else
-                              let b4 ← contracts.live.catalog_valid self
-                              if b4
-                              then
-                                if self.declared_modules
-                                then
-                                  let b5 ←
-                                    contracts.nominal.validation.fixed_definitions_match
-                                      self
-                                  if b5
-                                  then
-                                    let b6 ←
-                                      contracts.nominal.validation.counts_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.generic_counts_match
-                                          self
-                                      if b7
-                                      then
-                                        let b8 ←
-                                          contracts.nominal.validation.definitions_match
-                                            self
-                                        if b8
-                                        then
-                                          contracts.nominal.validation.bound_adapters_unique
-                                            self
-                                        else ok false
-                                      else ok false
-                                    else ok false
-                                  else ok false
-                                else
-                                  let b5 ←
-                                    contracts.nominal.validation.counts_match
-                                      self
-                                  if b5
-                                  then
-                                    let b6 ←
-                                      contracts.nominal.validation.generic_counts_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.definitions_match
-                                          self
-                                      if b7
-                                      then
-                                        contracts.nominal.validation.bound_adapters_unique
-                                          self
-                                      else ok false
-                                    else ok false
-                                  else ok false
-                              else ok false
-                        else
                           if self.calculator
                           then
                             let b4 ←
@@ -16984,256 +17112,7 @@ def contracts.nominal.validation.Env.validate_contracts
                                   else ok false
                                 else ok false
                             else ok false
-                      else ok false
-                    else ok false
-                else
-                  if self.declared_modules
-                  then
-                    let b2 ←
-                      contracts.nominal.validation.bootstrap_matches self
-                    if b2
-                    then
-                      if self.text_cursor
-                      then
-                        if self.declared_modules
-                        then
-                          let b3 ←
-                            contracts.nominal.validation.declared_text_prefix_matches
-                              self
-                          if b3
-                          then
-                            if self.calculator
-                            then
-                              let b4 ←
-                                contracts.nominal.validation.calculator_prefix_matches
-                                  self
-                              if b4
-                              then
-                                let b5 ← contracts.live.catalog_valid self
-                                if b5
-                                then
-                                  if self.declared_modules
-                                  then
-                                    let b6 ←
-                                      contracts.nominal.validation.fixed_definitions_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.counts_match
-                                          self
-                                      if b7
-                                      then
-                                        let b8 ←
-                                          contracts.nominal.validation.generic_counts_match
-                                            self
-                                        if b8
-                                        then
-                                          let b9 ←
-                                            contracts.nominal.validation.definitions_match
-                                              self
-                                          if b9
-                                          then
-                                            contracts.nominal.validation.bound_adapters_unique
-                                              self
-                                          else ok false
-                                        else ok false
-                                      else ok false
-                                    else ok false
-                                  else
-                                    let b6 ←
-                                      contracts.nominal.validation.counts_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.generic_counts_match
-                                          self
-                                      if b7
-                                      then
-                                        let b8 ←
-                                          contracts.nominal.validation.definitions_match
-                                            self
-                                        if b8
-                                        then
-                                          contracts.nominal.validation.bound_adapters_unique
-                                            self
-                                        else ok false
-                                      else ok false
-                                    else ok false
-                                else ok false
-                              else ok false
-                            else
-                              let b4 ← contracts.live.catalog_valid self
-                              if b4
-                              then
-                                if self.declared_modules
-                                then
-                                  let b5 ←
-                                    contracts.nominal.validation.fixed_definitions_match
-                                      self
-                                  if b5
-                                  then
-                                    let b6 ←
-                                      contracts.nominal.validation.counts_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.generic_counts_match
-                                          self
-                                      if b7
-                                      then
-                                        let b8 ←
-                                          contracts.nominal.validation.definitions_match
-                                            self
-                                        if b8
-                                        then
-                                          contracts.nominal.validation.bound_adapters_unique
-                                            self
-                                        else ok false
-                                      else ok false
-                                    else ok false
-                                  else ok false
-                                else
-                                  let b5 ←
-                                    contracts.nominal.validation.counts_match
-                                      self
-                                  if b5
-                                  then
-                                    let b6 ←
-                                      contracts.nominal.validation.generic_counts_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.definitions_match
-                                          self
-                                      if b7
-                                      then
-                                        contracts.nominal.validation.bound_adapters_unique
-                                          self
-                                      else ok false
-                                    else ok false
-                                  else ok false
-                              else ok false
-                          else ok false
-                        else
-                          if self.calculator
-                          then
-                            let b3 ←
-                              contracts.nominal.validation.calculator_prefix_matches
-                                self
-                            if b3
-                            then
-                              let b4 ← contracts.live.catalog_valid self
-                              if b4
-                              then
-                                if self.declared_modules
-                                then
-                                  let b5 ←
-                                    contracts.nominal.validation.fixed_definitions_match
-                                      self
-                                  if b5
-                                  then
-                                    let b6 ←
-                                      contracts.nominal.validation.counts_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.generic_counts_match
-                                          self
-                                      if b7
-                                      then
-                                        let b8 ←
-                                          contracts.nominal.validation.definitions_match
-                                            self
-                                        if b8
-                                        then
-                                          contracts.nominal.validation.bound_adapters_unique
-                                            self
-                                        else ok false
-                                      else ok false
-                                    else ok false
-                                  else ok false
-                                else
-                                  let b5 ←
-                                    contracts.nominal.validation.counts_match
-                                      self
-                                  if b5
-                                  then
-                                    let b6 ←
-                                      contracts.nominal.validation.generic_counts_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.definitions_match
-                                          self
-                                      if b7
-                                      then
-                                        contracts.nominal.validation.bound_adapters_unique
-                                          self
-                                      else ok false
-                                    else ok false
-                                  else ok false
-                              else ok false
-                            else ok false
-                          else
-                            let b3 ← contracts.live.catalog_valid self
-                            if b3
-                            then
-                              if self.declared_modules
-                              then
-                                let b4 ←
-                                  contracts.nominal.validation.fixed_definitions_match
-                                    self
-                                if b4
-                                then
-                                  let b5 ←
-                                    contracts.nominal.validation.counts_match
-                                      self
-                                  if b5
-                                  then
-                                    let b6 ←
-                                      contracts.nominal.validation.generic_counts_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.definitions_match
-                                          self
-                                      if b7
-                                      then
-                                        contracts.nominal.validation.bound_adapters_unique
-                                          self
-                                      else ok false
-                                    else ok false
-                                  else ok false
-                                else ok false
-                              else
-                                let b4 ←
-                                  contracts.nominal.validation.counts_match
-                                    self
-                                if b4
-                                then
-                                  let b5 ←
-                                    contracts.nominal.validation.generic_counts_match
-                                      self
-                                  if b5
-                                  then
-                                    let b6 ←
-                                      contracts.nominal.validation.definitions_match
-                                        self
-                                    if b6
-                                    then
-                                      contracts.nominal.validation.bound_adapters_unique
-                                        self
-                                    else ok false
-                                  else ok false
-                                else ok false
-                            else ok false
+                        else ok false
                       else
                         if self.calculator
                         then
@@ -17349,172 +17228,167 @@ def contracts.nominal.validation.Env.validate_contracts
                                 else ok false
                               else ok false
                           else ok false
-                    else ok false
-                  else ok false
-              else
-                if self.declared_modules
-                then
-                  let b1 ←
-                    contracts.nominal.validation.bootstrap_matches self
-                  if b1
-                  then
-                    if self.text_cursor
-                    then
-                      if self.declared_modules
+                    else
+                      if self.calculator
                       then
-                        let b2 ←
-                          contracts.nominal.validation.declared_text_prefix_matches
+                        let b3 ←
+                          contracts.nominal.validation.calculator_prefix_matches
                             self
-                        if b2
+                        if b3
                         then
-                          if self.calculator
+                          let b4 ← contracts.live.catalog_valid self
+                          if b4
                           then
-                            let b3 ←
-                              contracts.nominal.validation.calculator_prefix_matches
-                                self
-                            if b3
+                            if self.declared_modules
                             then
-                              let b4 ← contracts.live.catalog_valid self
-                              if b4
+                              let b5 ←
+                                contracts.nominal.validation.fixed_definitions_match
+                                  self
+                              if b5
                               then
-                                if self.declared_modules
-                                then
-                                  let b5 ←
-                                    contracts.nominal.validation.fixed_definitions_match
-                                      self
-                                  if b5
-                                  then
-                                    let b6 ←
-                                      contracts.nominal.validation.counts_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.generic_counts_match
-                                          self
-                                      if b7
-                                      then
-                                        let b8 ←
-                                          contracts.nominal.validation.definitions_match
-                                            self
-                                        if b8
-                                        then
-                                          contracts.nominal.validation.bound_adapters_unique
-                                            self
-                                        else ok false
-                                      else ok false
-                                    else ok false
-                                  else ok false
-                                else
-                                  let b5 ←
-                                    contracts.nominal.validation.counts_match
-                                      self
-                                  if b5
-                                  then
-                                    let b6 ←
-                                      contracts.nominal.validation.generic_counts_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.definitions_match
-                                          self
-                                      if b7
-                                      then
-                                        contracts.nominal.validation.bound_adapters_unique
-                                          self
-                                      else ok false
-                                    else ok false
-                                  else ok false
-                              else ok false
-                            else ok false
-                          else
-                            let b3 ← contracts.live.catalog_valid self
-                            if b3
-                            then
-                              if self.declared_modules
-                              then
-                                let b4 ←
-                                  contracts.nominal.validation.fixed_definitions_match
-                                    self
-                                if b4
-                                then
-                                  let b5 ←
-                                    contracts.nominal.validation.counts_match
-                                      self
-                                  if b5
-                                  then
-                                    let b6 ←
-                                      contracts.nominal.validation.generic_counts_match
-                                        self
-                                    if b6
-                                    then
-                                      let b7 ←
-                                        contracts.nominal.validation.definitions_match
-                                          self
-                                      if b7
-                                      then
-                                        contracts.nominal.validation.bound_adapters_unique
-                                          self
-                                      else ok false
-                                    else ok false
-                                  else ok false
-                                else ok false
-                              else
-                                let b4 ←
+                                let b6 ←
                                   contracts.nominal.validation.counts_match
                                     self
-                                if b4
+                                if b6
                                 then
-                                  let b5 ←
+                                  let b7 ←
                                     contracts.nominal.validation.generic_counts_match
                                       self
-                                  if b5
+                                  if b7
                                   then
-                                    let b6 ←
+                                    let b8 ←
                                       contracts.nominal.validation.definitions_match
                                         self
-                                    if b6
+                                    if b8
                                     then
                                       contracts.nominal.validation.bound_adapters_unique
                                         self
                                     else ok false
                                   else ok false
                                 else ok false
-                            else ok false
+                              else ok false
+                            else
+                              let b5 ←
+                                contracts.nominal.validation.counts_match self
+                              if b5
+                              then
+                                let b6 ←
+                                  contracts.nominal.validation.generic_counts_match
+                                    self
+                                if b6
+                                then
+                                  let b7 ←
+                                    contracts.nominal.validation.definitions_match
+                                      self
+                                  if b7
+                                  then
+                                    contracts.nominal.validation.bound_adapters_unique
+                                      self
+                                  else ok false
+                                else ok false
+                              else ok false
+                          else ok false
                         else ok false
                       else
+                        let b3 ← contracts.live.catalog_valid self
+                        if b3
+                        then
+                          if self.declared_modules
+                          then
+                            let b4 ←
+                              contracts.nominal.validation.fixed_definitions_match
+                                self
+                            if b4
+                            then
+                              let b5 ←
+                                contracts.nominal.validation.counts_match self
+                              if b5
+                              then
+                                let b6 ←
+                                  contracts.nominal.validation.generic_counts_match
+                                    self
+                                if b6
+                                then
+                                  let b7 ←
+                                    contracts.nominal.validation.definitions_match
+                                      self
+                                  if b7
+                                  then
+                                    contracts.nominal.validation.bound_adapters_unique
+                                      self
+                                  else ok false
+                                else ok false
+                              else ok false
+                            else ok false
+                          else
+                            let b4 ←
+                              contracts.nominal.validation.counts_match self
+                            if b4
+                            then
+                              let b5 ←
+                                contracts.nominal.validation.generic_counts_match
+                                  self
+                              if b5
+                              then
+                                let b6 ←
+                                  contracts.nominal.validation.definitions_match
+                                    self
+                                if b6
+                                then
+                                  contracts.nominal.validation.bound_adapters_unique
+                                    self
+                                else ok false
+                              else ok false
+                            else ok false
+                        else ok false
+                  else ok false
+                else ok false
+            else
+              if self.declared_modules
+              then
+                let b1 ← contracts.nominal.validation.bootstrap_matches self
+                if b1
+                then
+                  if self.text_cursor
+                  then
+                    if self.declared_modules
+                    then
+                      let b2 ←
+                        contracts.nominal.validation.declared_text_prefix_matches
+                          self
+                      if b2
+                      then
                         if self.calculator
                         then
-                          let b2 ←
+                          let b3 ←
                             contracts.nominal.validation.calculator_prefix_matches
                               self
-                          if b2
+                          if b3
                           then
-                            let b3 ← contracts.live.catalog_valid self
-                            if b3
+                            let b4 ← contracts.live.catalog_valid self
+                            if b4
                             then
                               if self.declared_modules
                               then
-                                let b4 ←
+                                let b5 ←
                                   contracts.nominal.validation.fixed_definitions_match
                                     self
-                                if b4
+                                if b5
                                 then
-                                  let b5 ←
+                                  let b6 ←
                                     contracts.nominal.validation.counts_match
                                       self
-                                  if b5
+                                  if b6
                                   then
-                                    let b6 ←
+                                    let b7 ←
                                       contracts.nominal.validation.generic_counts_match
                                         self
-                                    if b6
+                                    if b7
                                     then
-                                      let b7 ←
+                                      let b8 ←
                                         contracts.nominal.validation.definitions_match
                                           self
-                                      if b7
+                                      if b8
                                       then
                                         contracts.nominal.validation.bound_adapters_unique
                                           self
@@ -17523,20 +17397,20 @@ def contracts.nominal.validation.Env.validate_contracts
                                   else ok false
                                 else ok false
                               else
-                                let b4 ←
+                                let b5 ←
                                   contracts.nominal.validation.counts_match
                                     self
-                                if b4
+                                if b5
                                 then
-                                  let b5 ←
+                                  let b6 ←
                                     contracts.nominal.validation.generic_counts_match
                                       self
-                                  if b5
+                                  if b6
                                   then
-                                    let b6 ←
+                                    let b7 ←
                                       contracts.nominal.validation.definitions_match
                                         self
-                                    if b6
+                                    if b7
                                     then
                                       contracts.nominal.validation.bound_adapters_unique
                                         self
@@ -17546,30 +17420,30 @@ def contracts.nominal.validation.Env.validate_contracts
                             else ok false
                           else ok false
                         else
-                          let b2 ← contracts.live.catalog_valid self
-                          if b2
+                          let b3 ← contracts.live.catalog_valid self
+                          if b3
                           then
                             if self.declared_modules
                             then
-                              let b3 ←
+                              let b4 ←
                                 contracts.nominal.validation.fixed_definitions_match
                                   self
-                              if b3
+                              if b4
                               then
-                                let b4 ←
+                                let b5 ←
                                   contracts.nominal.validation.counts_match
                                     self
-                                if b4
+                                if b5
                                 then
-                                  let b5 ←
+                                  let b6 ←
                                     contracts.nominal.validation.generic_counts_match
                                       self
-                                  if b5
+                                  if b6
                                   then
-                                    let b6 ←
+                                    let b7 ←
                                       contracts.nominal.validation.definitions_match
                                         self
-                                    if b6
+                                    if b7
                                     then
                                       contracts.nominal.validation.bound_adapters_unique
                                         self
@@ -17578,19 +17452,19 @@ def contracts.nominal.validation.Env.validate_contracts
                                 else ok false
                               else ok false
                             else
-                              let b3 ←
+                              let b4 ←
                                 contracts.nominal.validation.counts_match self
-                              if b3
+                              if b4
                               then
-                                let b4 ←
+                                let b5 ←
                                   contracts.nominal.validation.generic_counts_match
                                     self
-                                if b4
+                                if b5
                                 then
-                                  let b5 ←
+                                  let b6 ←
                                     contracts.nominal.validation.definitions_match
                                       self
-                                  if b5
+                                  if b6
                                   then
                                     contracts.nominal.validation.bound_adapters_unique
                                       self
@@ -17598,6 +17472,7 @@ def contracts.nominal.validation.Env.validate_contracts
                                 else ok false
                               else ok false
                           else ok false
+                      else ok false
                     else
                       if self.calculator
                       then
@@ -17711,10 +17586,120 @@ def contracts.nominal.validation.Env.validate_contracts
                               else ok false
                             else ok false
                         else ok false
-                  else ok false
+                  else
+                    if self.calculator
+                    then
+                      let b2 ←
+                        contracts.nominal.validation.calculator_prefix_matches
+                          self
+                      if b2
+                      then
+                        let b3 ← contracts.live.catalog_valid self
+                        if b3
+                        then
+                          if self.declared_modules
+                          then
+                            let b4 ←
+                              contracts.nominal.validation.fixed_definitions_match
+                                self
+                            if b4
+                            then
+                              let b5 ←
+                                contracts.nominal.validation.counts_match self
+                              if b5
+                              then
+                                let b6 ←
+                                  contracts.nominal.validation.generic_counts_match
+                                    self
+                                if b6
+                                then
+                                  let b7 ←
+                                    contracts.nominal.validation.definitions_match
+                                      self
+                                  if b7
+                                  then
+                                    contracts.nominal.validation.bound_adapters_unique
+                                      self
+                                  else ok false
+                                else ok false
+                              else ok false
+                            else ok false
+                          else
+                            let b4 ←
+                              contracts.nominal.validation.counts_match self
+                            if b4
+                            then
+                              let b5 ←
+                                contracts.nominal.validation.generic_counts_match
+                                  self
+                              if b5
+                              then
+                                let b6 ←
+                                  contracts.nominal.validation.definitions_match
+                                    self
+                                if b6
+                                then
+                                  contracts.nominal.validation.bound_adapters_unique
+                                    self
+                                else ok false
+                              else ok false
+                            else ok false
+                        else ok false
+                      else ok false
+                    else
+                      let b2 ← contracts.live.catalog_valid self
+                      if b2
+                      then
+                        if self.declared_modules
+                        then
+                          let b3 ←
+                            contracts.nominal.validation.fixed_definitions_match
+                              self
+                          if b3
+                          then
+                            let b4 ←
+                              contracts.nominal.validation.counts_match self
+                            if b4
+                            then
+                              let b5 ←
+                                contracts.nominal.validation.generic_counts_match
+                                  self
+                              if b5
+                              then
+                                let b6 ←
+                                  contracts.nominal.validation.definitions_match
+                                    self
+                                if b6
+                                then
+                                  contracts.nominal.validation.bound_adapters_unique
+                                    self
+                                else ok false
+                              else ok false
+                            else ok false
+                          else ok false
+                        else
+                          let b3 ←
+                            contracts.nominal.validation.counts_match self
+                          if b3
+                          then
+                            let b4 ←
+                              contracts.nominal.validation.generic_counts_match
+                                self
+                            if b4
+                            then
+                              let b5 ←
+                                contracts.nominal.validation.definitions_match
+                                  self
+                              if b5
+                              then
+                                contracts.nominal.validation.bound_adapters_unique
+                                  self
+                              else ok false
+                            else ok false
+                          else ok false
+                      else ok false
                 else ok false
-          else ok false
-        else ok false
+              else ok false
       else
         let b ← alloc.vec.Vec.is_empty Global self.nominals
         if b
