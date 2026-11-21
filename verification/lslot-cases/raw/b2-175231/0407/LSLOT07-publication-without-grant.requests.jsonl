@@ -1,0 +1,11 @@
+{"operation":"install","id":"callEmit","source":"slot.invoke","inputs":["I64","LiveRef<I64,I64,test.emit>"]}
+{"operation":"candidate","id":"callEmit"}
+{"operation":"install","id":"emit1","source":"\"touched\" test.emit drop 1 +","inputs":["I64"]}
+{"operation":"candidate","id":"emit1"}
+{"operation":"install","id":"emit2","source":"\"touched-v2\" test.emit drop 2 +","inputs":["I64"]}
+{"operation":"candidate","id":"emit2"}
+{"operation":"publish","slot":"emit","id":"emit1","expected_epoch":"0","expected_incarnation":null,"expected_generation":null}
+{"operation":"invoke","id":"callEmit","inputs":[{"kind":"i64","value":"20"}],"refs":[{"position":1,"ordinal":0,"slot":"emit"}]}
+{"operation":"policy","grant":{"operation":"publish","slotId":"emit","allowed":false}}
+{"operation":"publish","slot":"emit","id":"emit2","expected_epoch":"1","expected_incarnation":"1","expected_generation":"1"}
+{"operation":"invoke","id":"callEmit","inputs":[{"kind":"i64","value":"20"}],"refs":[{"position":1,"ordinal":0,"slot":"emit"}]}

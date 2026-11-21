@@ -2,7 +2,7 @@
 
 ## Context
 
-`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles checked, effect-free Core-Bootstrap I64/Bool/Unit/Text-result expressions plus internal Pair/Sum/List operations; it does not compile or execute native ELF. The held canonical CB-BUILD-01 does not describe the source-only route, so the reconciled delta's disclosure needs independent owner review and legal delta sync. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
+`Wasm-Draft` requires compiled Wasm, and M4 selected managed-linear-memory Wasm with a Node/V8 engine. An inert, nonselected C11 source emitter in this isolated WIP handles checked, effect-free Core-Bootstrap expressions with one I64/Bool/Unit/Text/Pair/Sum/List result plus internal Pair/Sum/List operations; it does not compile or execute native ELF. The canonical CB-BUILD-01 carries the source-only WIP paragraph applied at `8c6ab3d0`; the delta's later source-only disclosures need independent review before they are synced. The proposed full native profile applies only when explicitly requested from a separately accepted Core-Bootstrap candidate. It is not the opt-in live Wasm VM session; `W-EXEC-01` need not be reinterpreted and the verification-toolchain's Eurydice/Scylla Rust↔C discussion is not a Noble→C implementation path. r[CB-SCOPE-01]
 
 The isolated source-only emitter now lowers checked pure `dip` and `if`
 as well as literal/stack/arithmetic/Unit/quotation/`quote`/`compose`/`run`.
@@ -28,7 +28,12 @@ iterative step-charged nested capture accounting. The maximum 255-element
 List ceiling now accepts an optional exact `limits.list_length` from 0 to 255;
 the effective bound is emitted as `LIST_LIMIT` and retained in the manifest,
 with `cons` checking it before List growth.
-Final aggregates remain unsupported. The complete CB-SCOPE/CB-VALUE/
+One checked `Pair`, `Sum` or `List` result over those supported element
+types is now also admitted: the runtime renders it as bounded JSON value
+text in the selected runtime's value encoding (`Pair` as an ordered
+two-element array, `Sum` with its `left`/`right` variant, `List` as an
+ordered array), with a depth bound and the output-byte quota covering the
+rendering. `Syntax` and `Program` results remain unsupported. The complete CB-SCOPE/CB-VALUE/
 CB-LIMIT contracts remain open: inert Syntax/`reflect`, native List quota
 outcomes, typed runtime input, definitions, `test.emit`
 and current host authority require distinct checked representations
@@ -126,10 +131,17 @@ syntax-only check authorizes MCB acceptance. r[CB-ADMIT-01] r[CB-GATE-01]
 
 This is a review plan, **not** a selected runner, compiler, VM, executable
 recipe or authorization to launch a guest. The checked source-only emitter
-does not spawn `cc`, produce ELF or satisfy CB-ADMIT-01. Its ancestor/output
-path races remain open despite strict duplicate-key decoding. `--native` and
-`execute --target c` continue to refuse. Canonical C text and all case
-evidence remain HOLD until a separate owner decision.
+does not spawn `cc`, produce ELF or satisfy CB-ADMIT-01. Its source-only path
+binding walks each input from the filesystem root without following a
+symlink, refuses relative and `.`/`..` components and multiply-linked or
+non-regular files, snapshots the bytes into a sealed memfd and writes outputs
+through the output directory descriptor it re-opens once after `mkdirat` (a
+writer of the parent can substitute the directory before that re-open);
+trusted-anchor selection, detection of an in-place rewrite that leaves the
+inode, link count, size and timestamps unchanged, and every native admission
+step remain open. `--native` and `execute --target c` continue to refuse.
+Canonical C text and all case evidence remain HOLD until a separate owner
+decision.
 
 1. **Pin an inert build service first.** Derive the proposed C11 compiler,
    linker, headers/sysroot, libc/startup and static runtime from the already
@@ -149,6 +161,11 @@ evidence remain HOLD until a separate owner decision.
    descriptors, rejecting ancestor symlinks, magic links, mutable hard
    links and replacement. Snapshot checked bytes in sealed read-only
    descriptors; reject duplicate JSON members before interpreting limits.
+   The source-only build already walks its three inputs that way and writes
+   through the output directory descriptor it re-opens once after creation,
+   but it releases each sealed snapshot after reading it, rechecks only the
+   leaf's identity, link count, size and timestamps, selects no trusted
+   anchor and performs no native byte comparison below.
    Independently check the exact source/resolved contracts, re-emit C under
    the pinned emitter/runtime and compare *all* C bytes. Compile that
    trusted C in a hermetic fixed environment and compare *all* ELF bytes,

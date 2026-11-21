@@ -20,7 +20,7 @@
 )]
 //! Black-box tests of the `noble ngraph` CLI (`Numeric-Graph-v1`).
 //!
-//! Every expectation is derived from `.cairn/changes/numeric-graph-v1`:
+//! Every expectation is derived from `.cairn/archive/2026-11-21-numeric-graph-v1`:
 //! design D4–D11, the NGRAPH-CLI-01, NGRAPH-FORMAT-01 and NGRAPH-SNAP-02
 //! deltas, and the draft cases NGRAPH-CASE-03..05, -07, -08 and -10..13. Only
 //! stable contract fields are asserted: `detail` is informative (D8), and

@@ -201,8 +201,8 @@ CONTRACT-24 is `partial/passed`, and CONTRACT-20/23 remain
 `absent/not-run/open/unassessed`; every passed row keeps proof open, so none is
 a spec-only design and none is a proof claim. For an owner-law release,
 candidate-authored module contracts do not replace the pre-frozen independent
-VC-OWNER-01 law. The new change does not close or edit the active Bend/qcue
-change or alter older MC1/MC2 receipts.
+VC-OWNER-01 law. The new change does not close or edit the Bend/qcue change
+(archived 2026-11-21) or alter older MC1/MC2 receipts.
 
 ## Platform direction
 

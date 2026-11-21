@@ -16,8 +16,8 @@
 //! and no law are read outside this command.
 
 mod arguments;
-mod compare;
-mod law;
+pub(crate) mod compare;
+pub(crate) mod law;
 mod terms;
 
 pub const USAGE: &str = "usage:
@@ -54,7 +54,7 @@ const ARTIFACT_LIMIT: usize = 33_554_432;
 
 /// How one release ended.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Admission {
+pub(crate) enum Admission {
     Eligible,
     Rejected,
     Error,
@@ -62,7 +62,7 @@ enum Admission {
 }
 
 impl Admission {
-    const fn name(self) -> &'static str {
+    pub(crate) const fn name(self) -> &'static str {
         match self {
             Self::Eligible => "eligible",
             Self::Rejected => "rejected",
@@ -74,16 +74,20 @@ impl Admission {
 
 /// Why the release gate refused, with the exact check that refused.
 #[derive(Debug)]
-struct Refusal {
-    code: &'static str,
-    check: &'static str,
-    message: std::string::String,
-    admission: Admission,
-    exit: u8,
+pub(crate) struct Refusal {
+    pub(crate) code: &'static str,
+    pub(crate) check: &'static str,
+    pub(crate) message: std::string::String,
+    pub(crate) admission: Admission,
+    pub(crate) exit: u8,
 }
 
 impl Refusal {
-    fn rejected(code: &'static str, check: &'static str, message: std::string::String) -> Self {
+    pub(crate) fn rejected(
+        code: &'static str,
+        check: &'static str,
+        message: std::string::String,
+    ) -> Self {
         Self {
             code,
             check,
@@ -93,7 +97,7 @@ impl Refusal {
         }
     }
 
-    fn rejected_at(
+    pub(crate) fn rejected_at(
         code: &'static str,
         check: &'static str,
         message: std::string::String,
@@ -108,7 +112,11 @@ impl Refusal {
         }
     }
 
-    fn error(code: &'static str, check: &'static str, message: std::string::String) -> Self {
+    pub(crate) fn error(
+        code: &'static str,
+        check: &'static str,
+        message: std::string::String,
+    ) -> Self {
         Self {
             code,
             check,
@@ -118,7 +126,11 @@ impl Refusal {
         }
     }
 
-    fn unsupported(code: &'static str, check: &'static str, message: std::string::String) -> Self {
+    pub(crate) fn unsupported(
+        code: &'static str,
+        check: &'static str,
+        message: std::string::String,
+    ) -> Self {
         Self {
             code,
             check,
@@ -450,6 +462,7 @@ fn exact(
         lean_binary: Some(lean_binary),
         library_tree: Some(library_tree),
         pins: None,
+        policy_revision: super::report::POLICY_REVISION,
     };
     let mut build = super::report::Document::new();
     build.require_proof = true;

@@ -891,7 +891,7 @@ inductive noble_kernel.words.InstError where
 | WalkExhausted : noble_kernel.words.InstError
 
 /-- [noble_wasm::Diagnostic]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 126:0-131:1
+    Source: 'crates/noble-wasm/src/lib.rs', lines 127:0-132:1
     Visibility: public -/
 @[discriminant isize]
 inductive Diagnostic where
@@ -1055,7 +1055,7 @@ structure lowering.Plan where
   registry_slots : Std.U32
 
 /-- [noble_wasm::Representation]
-    Source: 'crates/noble-wasm/src/lib.rs', lines 119:0-122:1
+    Source: 'crates/noble-wasm/src/lib.rs', lines 120:0-123:1
     Visibility: public -/
 @[discriminant isize]
 inductive Representation where

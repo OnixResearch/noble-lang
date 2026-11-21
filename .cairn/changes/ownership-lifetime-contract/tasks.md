@@ -23,64 +23,107 @@
   - **Evidence.** `verification/module-root-retention/receipt.json`: the fixed CLI passes from clean
     source `27e941a0`, and the CLI from the parent commit `3baaa029` fails at the trap.
 - [ ] [serial] Register the OWN-CASE designs in a reviewed conformance change and execute OWN-CASE-01..05 and 07 against the actual runtimes, without inheriting LIVE or LSLOT acceptance. r[OWN-EV-01]
-  Progress (2026-11-09): OWN-CASE-01 to 03 run on the live-slot runtime; see
-  `verification/ownership-cases/receipt.json`, from clean source `dd96f88c`. OWN-CASE-01 is the
-  direct quote of `live_slot_direct_quote.mjs`.
-  `live_slot_ownership_cases.mjs` runs OWN-CASE-02 in both release orders and OWN-CASE-03 as a
-  balanced 8-leaf tree, whose root gives the same result after the 14 other owners are released.
-  The left- and right-deep 8-leaf trees cannot run as designed. The host bounds its observation of
-  an anonymous saved Program at 1000 bytes and 64 nodes, so it refuses a chain's fifth compose (the
-  second with captured leaves) and the session ends with `terminated-after-guest-failure`.
-  Progress (2026-11-20, campaign slice own-cases):
-  - **Registration prepared, review pending.** `specs/conformance/ownership-cases.json` registers
-    OWN-CASE-01..12 in a new `Ownership-Lifetime-Design` family with canonical requirement
-    bindings; `specs/spec-family.json`, the scenario views and the requirement ledger are
-    regenerated. OWN-CASE-08 and OWN-CASE-09 record the 2026-11-20 owner decision that no
-    scratch-arena or borrow profile is selected. Independent review is still required by the
-    integrator before any registration is accepted.
-  - **OWN-CASE-01, 02, 06 executed and published.** The committed lanes pass on the selected CLI: the direct
-    quote's capture is live after invocation exit (25); both shared-owner release orders leave the
-    survivor runnable and refuse released owners; the saved named caller still yields 42 after
-    supersession and the module retires only after the owner is released.
-  - **OWN-CASE-03 executed and passed.** Balanced, left-deep and right-deep 8-leaf trees each
-    return 8 before and after every other owner is released. The anonymous capture summary had
-    been bounded at 64 nodes/1000 bytes while the selected-origin and retained-graph paths
-    already used 32 nodes/4096 bytes for the same graph; it now uses the same exact bound
-    (`slot-engine.mjs`). Retention accounting is unchanged (`observeProgramGraph` already walks up
-    to 4096 nodes), and a 40-leaf control is still refused at compose 16 by the 32-node
-    exact-summary bound.
-  - **OWN-CASE-04 non-borrow variants executed.** `crates/noble-cli/tests/core/ownership.rs`
-    rejects `dup`, `drop`, `quote`, `Pair` then `quote`, `Sum` then `drop` and `List` then `drop`
-    at the kernel check stage with the exact `Eligibility` constraint, before any candidate
-    submission or emission. The borrow variants remain inapplicable under the 2026-11-20 owner
-    decision.
-  - **OWN-CASE-07 executed.** `def n [ 1 ]`, `[ n ]` saved, `def n [ 2 ]` reloaded: the saved
-    Program yields 1, its old code span stays installed while the owner lives, and
-    `:release-observed-roots` retires the span after the owner is consumed.
-  - **OWN-CASE-05 NOT executed as designed (kernel-blocked).** Every live-slot source containing
-    `test.abort` is refused at `install` with the internal diagnostic
-    `inconsistent frontend arena`. The ordinary Core source environment appends the abort row
-    (Definition 23, effect id 1) in `adapt_environment`; the live-slot session uses the kernel
-    environment directly, which ends at `test.emit`. Appending the row without the effect is
-    refused as `unknown source host effect`; appending the effect too is refused as an invalid
-    contract because `bootstrap_matches` fixes a declared-module environment's effect list to
-    `test.emit` + `live.dispatch`. Even with a session-side effect universe, the kernel's
-    `acceptance/parts/instantiate.rs` rejects any candidate effect absent from `env.effects`
-    (`first_unknown`). Admitting `test.abort` therefore needs an environment-rule change in the
-    M4-locked `crates/noble-kernel`; this slice did not take a contract escape around it. The
-    host ledger path was measured separately in
-    `crates/noble-cli/tests/live_slot_own_trap.mjs`: `abortRoot` clears entered dispatch frames,
-    a normal `finishRoot` is refused while frames are entered, and the aborted root's captured
-    map pin is retired exactly once. Backend per-root frame-pin counters are not observable, so
-    the case is withheld from promotion.
-  - **Gate run from a clean tree; cases promoted.** `verification/own-cases/gate.mjs` ran at
-    commit `5c9e38f4`; `verification/own-cases/acceptance.json` has sha256 `e873df58…` and source
-    revision `sha256:3d24…`. OWN-CASE-01, 02, 03, 04, 06 and 07 are promoted
-    implemented/passed/open/explicit, each with one evidence record binding the receipt and
-    binary digest. OWN-CASE-05 stays absent/not-run. The failed first gate run is retained under
-    `verification/own-cases/runs/20261120-failed/`.
-  - Independent review of the registration is still required, and OWN-CASE-05 is not executed as
-    designed, so this task stays open.
+  Progress (2026-11-09): OWN-CASE-01 to 03 first ran on the live-slot runtime; see
+  `verification/ownership-cases/receipt.json`, from clean source `dd96f88c` (historical-only after
+  2026-11-20; its bound description is superseded).
+  Progress (2026-11-20, campaign slice own-cases, reworked after independent review):
+  - **Registration reworked.** `specs/conformance/ownership-cases.json` registers OWN-CASE-01..12 in
+    the `Ownership-Lifetime-Design` family with canonical requirement bindings; `specs/spec-family.json`,
+    the scenario views and the requirement ledger are regenerated. The independent review of
+    2026-11-20 (retained by the integrator, owner decision 1) returned REVISE on the first attempt:
+    OWN-CASE-03's promotion was unsupported, OWN-CASE-04's registered input was not what ran,
+    OWN-CASE-05's trap and session expectation were wrong, and the gate hard-coded its verdicts.
+    This rework executes the design's cases instead of narrowing them and re-derives every verdict.
+  - **OWN-CASE-03 executed against the design's case.** The leaves are captured-I64 Programs
+    (`quote [ + ] compose`: `quote` captures the factory input, `[ + ]` adds it to the running
+    value), and all 14 owners other than the root are released. The balanced 8-leaf tree returns 36
+    before and after the releases and refuses every released owner. The left-deep and right-deep
+    8-leaf chains are refused at compose 5 by the anonymous summary's 32-node per-child bound
+    (`checked captured value exceeds host observation bound`), and the session ends
+    `terminated-after-guest-failure`. The design's deep trees therefore do not execute; the case
+    records that executed failure and is not promoted on this receipt.
+  - **Bound change notes corrected.** The anonymous summary is bounded at 32 nodes / 4096 bytes
+    *per child*, not by the same whole-graph bound as selected results, and a refused deep composite
+    is stopped by that summary node limit, not by retained-graph accounting (`observeProgramGraph`
+    keeps its separate 4096-node walk). Admission rises from about ten nodes per child (the old
+    1000-byte cap bound first) to about 32; roots previously ending in `execution-failed` with a
+    poisoned session now receive an owner. The consuming live-slot test targets were re-run at the
+    receipt's commit; the observed results are recorded below.
+  - **OWN-CASE-04 registered as executed.** The registered input is the design's `Account@1` opaque
+    nominal (module 110, ordinal 0, resource kind 41) with its source programs, and the lane
+    installs them through the real CLI: `dup`, `drop` and `quote` on `Account@1`, `quote` on
+    `Pair<I64,Account@1>`, `drop` on `Sum<Account@1,I64>` and `drop` on `List<Account@1>`. Each is
+    refused by the checker's eligibility rule with the exact `required S Data` diagnostic; the host
+    reports the refusal at its command stage, and the reply carries zero guest requests, zero
+    protected operations and no artifact. Two controls (an I64 program and a resource pass-through)
+    install and emit an artifact. **Fidelity note:** the design constructs `Pair`/`Sum`/`List` in
+    source; the lane feeds those aggregate types as typed root inputs and the diagnostics name the
+    exact aggregate type, so the eligibility property is observed without running `pair`/`inl`/`cons`.
+    The six borrow escape variants of `design.md` are registered verbatim as inapplicable under
+    OWNER DECISION 2026-11-20 (decision 7: no borrow profile is selected).
+  - **OWN-CASE-05 withheld (review round 2, N-01).** The lane records the abnormal exit: a
+    policy-denied effect inside a dispatched frame after the target produced a captured Program. The
+    reply has no stack (no saved-owner token), the request trace is `[dispatch allowed, effect
+    denied]`, and the session ends `terminated-after-guest-failure`. The design's "frame pins are
+    released exactly once" is **not observed**: on the abnormal path the host forgets the failed
+    root's frame records and neither releases nor counts the backend frame pins (the instance is
+    discarded). Neither ledger is a release measurement: the in-process abort probe of
+    `abortRoot` reports `entered 2 / released 0 / active 2` (the pins the root still held), while
+    the CLI root in the r3 receipt reports `entered 2 / released 2 / active 0` from host entry/exit
+    calls, which do not prove backend pin release; no `released_by_host` field is emitted. The normal
+    path keeps its real counts and the `finishRoot` unbalanced-pin refusal. The registration marks
+    `frame_pins_released` and `retained_owner_reaches_failed_root_cell` as not-directly-observable,
+    the case returns to `absent/not-run/open/unassessed`, and it is not promoted. Real per-frame
+    release accounting on the abnormal path belongs to `live-reference-lifetimes` (OWNER DECISION
+    2026-11-20 decision 6; that change's LREF-EXIT-01), which will execute OWN-CASE-05 later. `test.abort`
+    remains uninstallable in this profile. It used to be refused with the internal `inconsistent
+    frontend arena` diagnostic; the frontend now refuses an unavailable builtin word as invalid
+    input (`word test.abort is not available in this environment`), and the refusal stays a
+    witness, not the case's success condition.
+  - **OWN-CASE-07 bound to H-LIVE-03.** The saved old definition yields 1 after the reload, its old
+    code span stays installed while the owner lives, and `:release-observed-roots` retires the span
+    after the release.
+  - **Gate rework.** `verification/own-cases/gate.mjs` derives `promotable`, `failed_cases` and
+    `receipts[*].case` from the observations, writes a receipt even when a lane fails, hashes every
+    raw output file, re-hashes the executable after the run, reads the observed OWN-CASE-01/07
+    values from the lanes, pins the bounded control's refusal point and diagnostic, takes the
+    OWN-CASE-04 lane path from the tree, and never requires an internal diagnostic as success.
+  - **Receipts and promotions.** The r2 gate receipt is
+    `verification/own-cases/runs/20261120-r2/acceptance.json` (sha256 `ae533fdd…`, tested commit
+    `81139111`, source revision `sha256:f09c0d…`); OWN-CASE-01, 02, 04, 06 and 07 are promoted from
+    it (OWN-CASE-05 was promoted there and is withheld again after review round 2). The round-3
+    receipt is `verification/own-cases/runs/20261120-r3/acceptance.json` (sha256 `3d7666bf…`,
+    tested commit `33318b7c`, source revision `sha256:fdf333df…`, binary `5a62b529…` before and
+    after, 17 hashed raw outputs; `result: completed`, `verdict: unmet-cases`, `promotable`
+    OWN-CASE-01/02/04/06/07, `withheld` OWN-CASE-05, `failed_cases` OWN-CASE-03). Its projection
+    digest `26bb4a11…` reflects the round-3 registration edits. OWN-CASE-03 stays
+    implemented/failed with the observed compose-5 refusal. The first receipt (`acceptance.json`,
+    `e873df58…`) and the intermediate runs (`runs/20261120c`, `runs/20261120-failed`) stay
+    immutable. Batch 2 (2026-11-21): after R3-1/R3-4 and the frontend fix merged, the gate ran on
+    the batch-2 tree `b088cfc7`; the promoted cases and OWN-CASE-03's executed failure now cite
+    [`runs/20261121-b2`](../../../verification/own-cases/runs/20261121-b2/acceptance.json)
+    (sha256 `f5c2d53a…`, source revision `sha256:0feaed54…`, binary `8c0844c8…` before and after,
+    projection digest `7aa15017…`, gate `828ff88e…`) with the same verdicts.
+  - **Consumer tests.** Every noble-cli live-slot target plus `live_repl` was run after the runtime
+    change: `live_slot`, `live_slot_capture_legacy`, `live_slot_cas_policy`,
+    `live_slot_coherent_maps`, `live_slot_direct_quote`, `live_slot_late_control`,
+    `live_slot_quota_replay`, `live_slot_relocation_witness`, `live_slot_resource_ref`,
+    `live_slot_selected_origin`, `live_slot_selected_retention`, `live_slot_typed_cases` and
+    `live_repl` all pass. The run also covers the new OWN-CASE-04 lane through
+    `live_slot_resource_ref` and `core`; all 14 targets pass after the abort-ledger change, and
+    the gate run's own `cargo test` steps are among the round-3 receipt's hashed raw outputs.
+  - Review status: round 1 returned REVISE, round 2 accepted the registration with notes, accepted
+    01/02/06/07, accepted 03 as an executed failure, accepted 04 with notes and rejected the
+    OWN-CASE-05 promotion. Round 3 accepted the registration and the promotions with notes
+    R3-1..R3-4 and accepted the OWN-CASE-05 withholding. R3-1's task and README wording is fixed;
+    R3-2 is applied (the evidence records name the full tested commit
+    `33318b7cb518a53efc04e116981fbd70c6aec853`). R3-3: the gate re-ran on the merged Cairn batch-1
+    tree `05bac95a` ([`runs/20261121-b1`](../../../verification/own-cases/runs/20261121-b1/acceptance.json),
+    sha256 `3d311f50…`) with the same verdicts. R3-1's projected `frame_pins_reported` field and
+    lane-header wording and R3-4's two consistency checks change the projection digest, the gate
+    and an M4-bound lane file; they merged in batch 2 and the batch-2 run above re-cites the
+    promoted cases. This task stays open until OWN-CASE-05 executes (it needs observable
+    frame-pin release, shared with LREF-EXIT-01) and the owner decides the round-1 commit identity.
 - [x] [serial] If a borrow profile is selected, specify syntax separately, implement the checker escape test and obtain checker-refinement evidence for OWN-PO-2. r[OWN-BORROW-01] OWNER DECISION 2026-11-20: no borrow profile is selected, so the condition does not hold and the task closes with that recorded outcome (owner rule: a recorded negative outcome completes a conditional task). Noble keeps only the WIT `own`/`borrow` adapter forms; it has no `borrow` word. OWN-CASE-04's borrow variants are therefore inapplicable, OWN-PO-2 is not applicable, and no checker escape test or refinement evidence is claimed. Selecting a borrow profile later needs a new change carrying its syntax, escape test and OWN-PO-2 evidence.
 - [ ] [serial] Mechanize OWN-PO-1/3 in the abstract model, then obtain separate lowering, runtime and host-ledger correspondence for OWN-PO-4..7. r[OWN-EV-01]
   Progress (2026-10-30): `proofs/foundation/NobleFoundation/Effects.lean` proved OWN-PO-1 for

@@ -1,5 +1,5 @@
 //! `noble ngraph`: the opt-in `Numeric-Graph-v1` entry point (design D7–D11
-//! of `.cairn/changes/numeric-graph-v1`). It reads only the files named by
+//! of `.cairn/archive/2026-11-21-numeric-graph-v1`). It reads only the files named by
 //! its arguments, writes only its `--out` file, and runs no subprocess, Wasm
 //! or network operation. Graph semantics live in the pure `noble-ngraph`
 //! library; this module supplies bytes, budgets and the BLAKE3 identity

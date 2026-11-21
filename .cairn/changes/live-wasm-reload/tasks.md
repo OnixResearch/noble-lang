@@ -278,6 +278,26 @@ LIVE-08, LIVE-09 and LIVE-10 are untouched. No proof, Octet or Lean claim is
 made; every promoted case keeps `proof: open`, and task 3 below stays unchecked
 because not every LIVE case is exercised.
 
+Batch-1 re-run (2026-11-21): Cairn campaign batch 1 merged later runtime
+changes (the OWN round-2 frame-pin ring and abort ledger, the PAA-1 worker
+assembly), so the same gate ran again on the batch tree `05bac95a`. Its receipt
+[`verification/live-cases/acceptance-2026-11-21-b1.json`](../../../verification/live-cases/acceptance-2026-11-21-b1.json)
+(SHA-256 `fd5e4a96ba488365b284bbc66d9bde3170d705918b6f26592e021fd2dc769fd5`;
+source revision `sha256:13ac9083a61ee517e44db8b617b72419b3b79d7c5840ff78b0f9b4f72c73843a`,
+CLI `be2d6ed6…`, `live_repl` test binary `99c540e7…`, 34 commands, 75 reports)
+promotes the same LIVE-01, LIVE-06 and LIVE-07. The case records keep citing
+the `004d24c4` receipt; no case state changes.
+
+Batch-2 re-run (2026-11-21): batch 2 merged the frontend refusal of an
+unavailable builtin word, so the gate ran again on the batch tree `b088cfc7`.
+Its receipt
+[`verification/live-cases/acceptance-2026-11-21-b2.json`](../../../verification/live-cases/acceptance-2026-11-21-b2.json)
+(SHA-256 `c809f006a6529a0685a2fc4185e54f34b473f842f27e1fcf23c93d16387b12c2`;
+source revision `sha256:3141a5ac01ea7747a526171c8e992b130e1b71e40cb14a057952b9b7235c124b`,
+CLI `7a30c78e…`, `live_repl` test binary `f329b3b4…`, 34 commands, 75 reports)
+promotes the same LIVE-01, LIVE-06 and LIVE-07. The case records keep citing
+the `004d24c4` receipt; no case state changes.
+
 ### Amendment proposal: LIVE-02 `input.after_reload_ack`
 
 The canonical case cannot type-check its own `expected` fields. In the

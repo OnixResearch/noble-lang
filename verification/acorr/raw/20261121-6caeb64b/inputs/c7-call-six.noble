@@ -1,0 +1,2 @@
+5 [ 1 + ]
+ [ swap dup 6 = [ swap run inr ] [ drop drop 1 inl ] if ] run

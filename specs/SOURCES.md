@@ -129,7 +129,7 @@ Upstream description, from static reads of its README, `laws.bend`, and `cert.be
 
 The file separation illustrates Noble's owner-law direction; it does not implement it. A law file in the same mutable repository, or check flags supplied with a candidate, cannot authenticate the owner-controlled immutable MC2 law record or the independently selected release policy that [VC-OWNER-01](PROGRAM-CONTRACTS.md) requires. CONTRACT-16 has since passed with proof open. Its laws live in this repository: their authority rests on owner decision 11 (2026-11-20) and custody (the freeze commit precedes the consumer; the digests are pinned in the gate and receipt), not on the file separation.
 
-This entry selects no Bend dependency and adopts no Bend syntax or semantics into Noble. No upstream source was copied, and no upstream gate was executed. It does not change the pinned Bend/qcue comparisons in [DECISIONS.md](DECISIONS.md) or the active Bend/qcue change.
+This entry selects no Bend dependency and adopts no Bend syntax or semantics into Noble. No upstream source was copied, and no upstream gate was executed. It does not change the pinned Bend/qcue comparisons in [DECISIONS.md](DECISIONS.md) or the Bend/qcue change (archived 2026-11-21).
 
 ## Missing historical material
 

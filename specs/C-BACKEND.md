@@ -3,7 +3,7 @@
 Document: SPEC-BE002  
 Revision: 0.1.0-draft.5  
 Depends on: SPEC-0001, SPEC-B001, SPEC-BE001, SPEC-S001, SPEC-V001 and IMPL-V001 at 0.1.0-draft.5  
-Status: Proposed C-Backend-Draft contract; restricted inert I64/Bool source emission exists, while native compilation/execution, sandbox, conformance evidence and backend proof remain absent
+Status: Proposed C-Backend-Draft contract; restricted inert I64/Bool/Unit/Text-result source emission with internal Pair/Sum/List aggregates exists, while native compilation/execution, sandbox, conformance evidence and backend proof remain absent
 
 ## Scope and selection
 
@@ -56,6 +56,18 @@ complete CB-LIMIT-01 limits or CB-BUILD-01 native build contract; both remain
 open. This is not native compilation, execution, sandbox or artifact admission
 evidence.
 
+The preceding result-form sentence records the source-only WIP text that the
+mid-change sync at `8c6ab3d0` applied to canonical. The current nonselected
+source-only emitter does not refuse `Pair`/`Sum`/`List` results: it accepts
+exactly one checked `Pair`, `Sum` or `List` result whose complete element
+types are `I64`, `Bool`, `Unit`, `Text` or a nested `Pair`/`Sum`/`List` of
+those, and renders it as bounded JSON value text in the selected runtime's
+value encoding. `Syntax` and `Program` results, `reflect`, typed runtime
+inputs, named definitions and host effects still refuse. It emits that
+rendering into the inert C source only: the aggregate result has not been
+executed, compared to selected Wasm or admitted as native code, so no
+CB-GATE-01, quota or CB-ADMIT-01 evidence follows.
+
 **CB-IDENTITY-01.**
 
 A domain-separated versioned C build key MUST bind exact host-selected SOURCE byte digest *in addition to* canonical semantic recipe and checked candidate revision, independently supplied expected interface, exact resolved definition/schema/host-effect **contract** identities from `CONTRACT_JSON` and acceptance policy, C emitter/runtime revision, target triple, ABI, compiler/linker/sysroot/runtime-byte identities, options, and limit policy. It MUST preserve Noble definition/program identities independently of source spelling, optimizer choice or native layout: renaming a display alias cannot rebind a captured or previously compiled program; a changed referenced resolved operation *contract* changes semantic identity; changed source bytes, option/ABI/compiler change the build key rather than the language identity when the resolved recipe is unchanged. Runtime `HOST_FILE` grants are replaceable/revocable and MUST NOT be part of semantic/build identity: a compatible new authorization is checked per request, while an incompatible host operation contract refuses before launch. Content hashes and self-reported manifests are identifiers, not proof of acceptance, correspondence or authorization. Old artifacts are immutable; a stale artifact for a changed immutable policy, referenced host operation contract, ABI or target MUST be refused before execution.
@@ -103,7 +115,7 @@ The only first-subset candidate-body host operation is the independently checked
 
 **CB-SANDBOX-01.**
 
-Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before candidate instructions it closes inherited file descriptors except explicitly enumerated private request/response protocol FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock, post-load process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and escape attempts MUST refuse or terminate with zero protected operations, with a benign authorized `test.emit` control under the same confinement. Hostile vDSO `__vdso_clock_gettime`, `__vdso_time`, `__vdso_gettimeofday`, coarse-clock, direct-vvar and x86 `rdtsc`/`rdtscp` attempts likewise MUST refuse or be demonstrably contained without host-time or elapsed-time disclosure; trapping or virtualizing only the TSC is insufficient, and a vDSO-only or coarse-clock-only mechanism is not equivalent. A native crash cannot become a successful Noble result.
+Generated ELF is native code and CAN issue direct Linux syscalls regardless of C source or ABI policy. A runnable C profile therefore additionally REQUIRES a separately pinned Linux native sandbox runner, not a C-source allowlist: before candidate instructions it closes inherited file descriptors except explicitly enumerated private request/response protocol and output FDs, starts with no ambient credentials or environment secrets, confines filesystem and mount view, blocks network, clock, post-load process creation/exec and unmediated file/syscall authority, and enforces memory, CPU and wall-clock bounds. The pinned local C runtime/shim, separate launcher/worker, private IPC framing and out-of-process host mediator each have distinct recorded source and trust subjects; the isolated worker MUST NOT share mediator address space, callable host pointers or protected FDs. The loader, dynamic linker/libc or static-link assumptions, startup syscalls, syscall filter, FD protocol, kernel/version prerequisites and target ABI MUST be pinned and tested as a single profile; permitted loader/setup operations MUST NOT be usable by guest computation to open authority. If these restrictions cannot be enforced on the selected host, execution is blocked/nonselected, not safe merely because source validation succeeds. Host-side compiler setup is separate from isolated candidate execution. Hostile direct `openat`, `connect`, `clock_gettime`, `execve`, inherited-FD and escape attempts MUST refuse or terminate with zero protected operations, with a benign authorized `test.emit` control under the same confinement. Hostile vDSO `__vdso_clock_gettime`, `__vdso_time`, `__vdso_gettimeofday`, coarse-clock, direct-vvar and x86 `rdtsc`/`rdtscp` attempts likewise MUST refuse or be demonstrably contained without host-time or elapsed-time disclosure; trapping or virtualizing only the TSC is insufficient, and a vDSO-only or coarse-clock-only mechanism is not equivalent. A native crash cannot become a successful Noble result.
 
 The native runner MUST select a reviewed immutable derivation and policy
 separate from the proof-only Lean runner and any package merely cached on
@@ -152,6 +164,27 @@ inputs, and its output child paths are re-resolved after directory creation;
 it MUST NOT turn those file digests into a claim of native correspondence or
 permit native execution. This gap remains OPEN until a separately admitted
 native build/launch path implements the descriptor-bound contract above.
+
+The preceding paragraph records the source-only state the mid-change sync at
+`8c6ab3d0` applied. The current nonselected source-only build instead walks
+every host-selected input path from the filesystem root one component at a
+time without following any symlink and refuses relative, `.`, `..`, empty or
+non-UTF-8 components; it refuses a non-regular, multiply-linked or
+stage-oversized input, snapshots the bytes it read into a memfd sealed with
+`F_SEAL_WRITE`/`F_SEAL_SHRINK`/`F_SEAL_GROW`/`F_SEAL_SEAL` and uses the
+read-back snapshot for this build; the bytes read must equal the leaf's
+recorded size, and afterwards it rechecks the leaf's device, inode, link
+count, size and modification and change timestamps. It creates the output
+directory with `mkdirat` under the walked parent, re-opens that leaf name once
+and compares the opened directory's identity with the name, then writes every
+artifact through that directory descriptor with `O_CREAT|O_EXCL|O_NOFOLLOW`
+instead of re-resolving the output path; a principal who can write the parent
+can still substitute the new directory between `mkdirat` and that re-open. The
+sealed descriptor is released when the snapshot is read and is not retained
+for a later launch; an in-place rewrite that leaves the inode, link count,
+size and both timestamps unchanged is not detected. The build still selects no trusted
+anchor, performs no independent native admission, and does not launch or
+compare native bytes; this paragraph does not close the OPEN gap above.
 
 **CB-GATE-01.**
 

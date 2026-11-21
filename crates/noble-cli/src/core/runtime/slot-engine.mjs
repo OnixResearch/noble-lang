@@ -7,6 +7,9 @@ const GLOBAL_TRACE_BYTES = 2 * 1024 * 1024;
 const ROOT_TRACE_RESERVATION_BYTES = 1024 * 1024;
 const REPLAY_TRACE_BYTES = Buffer.byteLength(',"replay":"scripted"');
 const TRACE_ROWS = 4096;
+// Per-root frame-pin rows retained for the `trace` operation. Every root enters its own frame, so
+// this ring cannot be charged against request trace rows; each root's invoke reply is exact.
+const FRAME_PIN_ROWS = 256;
 
 function slotDecimal(value, label) {
   if (typeof value !== 'string' || !/^(0|[1-9][0-9]{0,19})$/.test(value)
@@ -102,6 +105,14 @@ class SlotEngine {
     this.active = null;
     this.trace = [];
     this.traceBytes = 0;
+    // One frame-pin row per root, retained as a bounded ring for the `trace` operation (every root
+    // enters its own frame, so this cannot be charged against trace rows). A row carries the root's
+    // entered/released/active counts, or an explicit error when the abort ledger itself failed. The
+    // ring keeps the most recent FRAME_PIN_ROWS roots and reports how many older rows it displaced;
+    // each root's own invoke reply always carries that root's row. Older rows are displaced, never
+    // silently mixed with a newer root's numbers.
+    this.rootFramePins = [];
+    this.rootFramePinsTotal = 0;
     this.traceFailure = null;
     this.poisoned = false;
     this.proposalInspectionFailed = false;
@@ -1105,69 +1116,11 @@ class SlotEngine {
     }
   }
 
-  /// Canonical normalized recipe spelling of one static quotation body. Two
-  /// independently written but equal quotation bodies therefore share one
-  /// logical source-binding class.
-  selectedStaticBinding(module, index, visiting, memo, depth) {
-    if (memo.has(index)) return memo.get(index);
-    if (depth >= 32 || visiting.has(index)) {
-      throw Error('selected static quotation binding is recursive or over depth');
-    }
-    const program = module.selected_origin.programs[index];
-    if (!program || program.source_artifact !== 'definition' || program.effect_mask !== 0
-      || !Array.isArray(program.operations) || program.operations.length > 128) {
-      throw Error('selected static quotation binding is foreign or over bound');
-    }
-    visiting.add(index);
-    let key = `p${program.input_signature}:${program.output_signature}[`;
-    program.operations.forEach((operation, at) => {
-      if (at > 0) key += ';';
-      if (operation.kind === 'i64') key += `#${operation.value}`;
-      else if (operation.kind === 'static-program') {
-        key += this.selectedStaticBinding(module, operation.static_program_index,
-          visiting, memo, depth + 1);
-      } else if (operation.kind === 'quote-i64' || operation.kind === 'quote-program') {
-        key += 'quote';
-      } else if (['add', 'sub', 'mul', 'dup', 'drop', 'swap', 'dip', 'run', 'compose']
-        .includes(operation.kind)) key += operation.kind;
-      else throw Error('selected static quotation has an unclassified binding operation');
-    });
-    key += ']';
-    visiting.delete(index);
-    memo.set(index, key);
-    return key;
-  }
-
-  /// Canonical structural spelling of a fixed I64 source recipe.
-  selectedRecipeBinding(recipe, depth, budget) {
-    if (++budget.nodes > 128 || depth > 32) {
-      throw Error('selected fixed I64 expression exceeds bounded source');
-    }
-    if (recipe?.kind === 'literal') {
-      if (typeof recipe.value !== 'string') {
-        throw Error('selected fixed I64 literal lacks a canonical value');
-      }
-      return `#${recipe.value}`;
-    }
-    if (['add', 'sub', 'mul'].includes(recipe?.kind)) {
-      return `${recipe.kind}(${this.selectedRecipeBinding(recipe.left, depth + 1, budget)},`
-        + `${this.selectedRecipeBinding(recipe.right, depth + 1, budget)})`;
-    }
-    throw Error('selected fixed I64 expression has an unsupported source operation');
-  }
-
   selectedResultTemplate(module, result, inputs, dependencies, bodies) {
     const aliases = new Map(), normalized = new Map();
-    const captures = [], capturePositions = [], captured = new Set();
+    const captures = [], captured = new Set();
     const constructedSites = [], staticSites = [];
-    const classes = new Map();
-    const staticBindings = new Map(), staticVisiting = new Set();
     const fixedBudget = { nodes: 0 };
-    const intern = binding => {
-      const prior = classes.get(binding);
-      if (prior) prior.occurrences += 1;
-      else classes.set(binding, { binding, occurrences: 1 });
-    };
     const sites = module.selected_origin.programs.flatMap(program => program.operations);
     const site = (description, kind) => {
       const matches = sites.filter(op => op.kind === kind
@@ -1195,23 +1148,16 @@ class SlotEngine {
           node: value.node, table_entry: op.table_entry });
         const body = { kind: value.kind,
           program: this.selectedStaticBody(module, value.program_index, [], dependencies, bodies) };
-        const binding = this.selectedStaticBinding(module, value.program_index,
-          staticVisiting, staticBindings, 0);
-        intern(binding);
-        const entry = { body, binding };
-        normalized.set(value.alias, entry);
-        return entry;
+        normalized.set(value.alias, body);
+        return body;
       }
       if (value.kind === 'quote-i64' || value.kind === 'quote-program') {
         const op = site(value, value.kind);
         constructedSites.push({ kind: value.kind, node: op.node, table_entry: op.table_entry });
         if (value.kind === 'quote-program') {
-          const operand = walk(value.operand);
-          const binding = `q(${operand.binding})`;
-          intern(binding);
-          const entry = { body: { kind: value.kind, operand: operand.body }, binding };
-          normalized.set(value.alias, entry);
-          return entry;
+          const body = { kind: value.kind, operand: walk(value.operand) };
+          normalized.set(value.alias, body);
+          return body;
         }
         const operand = value.operand;
         if (operand?.kind === 'root-i64') {
@@ -1221,15 +1167,11 @@ class SlotEngine {
           }
           if (!captured.has(position)) {
             captured.add(position);
-            capturePositions.push(position);
             captures.push({ type: 'I64', value: inputs[position].value });
           }
           const body = { kind: value.kind, operand: { kind: 'root-i64', position } };
-          const binding = `q(r${position})`;
-          intern(binding);
-          const entry = { body, binding };
-          normalized.set(value.alias, entry);
-          return entry;
+          normalized.set(value.alias, body);
+          return body;
         }
         if (operand?.kind !== 'fixed-i64'
           || typeof operand.value !== 'string'
@@ -1240,29 +1182,20 @@ class SlotEngine {
         this.countSelectedFixedRecipe(operand.recipe, fixedBudget);
         const body = { kind: value.kind,
           operand: { kind: 'fixed-i64', value: operand.value, recipe: operand.recipe } };
-        const binding = `q(${this.selectedRecipeBinding(operand.recipe, 0, { nodes: 0 })})`;
-        intern(binding);
-        const entry = { body, binding };
-        normalized.set(value.alias, entry);
-        return entry;
+        normalized.set(value.alias, body);
+        return body;
       }
       if (value.kind === 'compose') {
         const op = site(value, 'compose');
         constructedSites.push({ kind: value.kind, node: op.node, table_entry: op.table_entry });
-        const left = walk(value.left), right = walk(value.right);
-        const binding = `c(${left.binding},${right.binding})`;
-        intern(binding);
-        const entry = { body: { kind: value.kind, left: left.body, right: right.body }, binding };
-        normalized.set(value.alias, entry);
-        return entry;
+        const body = { kind: value.kind,
+          left: walk(value.left), right: walk(value.right) };
+        normalized.set(value.alias, body);
+        return body;
       }
       throw Error('selected returned Program contains an unsupported source node');
     };
-    const walked = walk(result);
-    const templateClasses = [...classes.values()]
-      .sort((left, right) => left.binding < right.binding ? -1 : left.binding > right.binding ? 1 : 0);
-    return { template: walked.body, captures, capturePositions, templateClasses,
-      constructedSites, staticSites };
+    return { template: walk(result), captures, constructedSites, staticSites };
   }
 
   returnedManifest(owner, saved, claimed) {
@@ -1286,8 +1219,7 @@ class SlotEngine {
     const result = this.evaluateSelectedOrigin(caller, selected.inputs).get(selected.position);
     const dependencies = new Set();
     const bodies = new Map();
-    const { template, captures, capturePositions, templateClasses, constructedSites,
-      staticSites } =
+    const { template, captures, constructedSites, staticSites } =
       this.selectedResultTemplate(caller, result, selected.inputs, dependencies, bodies);
     if (result.kind === 'static-program') {
       throw Error('pinned static Program cannot acquire a constructed returned-target identity');
@@ -1344,32 +1276,26 @@ class SlotEngine {
       }
     };
     boundTemplate(template, 1);
-    const lexicalRecursiveOwner = { kind: 'absent' };
-    const definitionDescriptor = { schema: 'noble-returned-pure-i64-dag/experimental-v4',
-      interface: targetInterface, template, lexical_recursive_owner: lexicalRecursiveOwner };
-    const definitionId = `anonymous-template-experimental-v4-sha256:${sha256(Buffer.concat([
-      Buffer.from('noble returned pure-i64 DAG definition experimental v4\0'),
+    const definitionDescriptor = { schema: 'noble-returned-pure-i64-dag/experimental-v3',
+      interface: targetInterface, template, lexical_recursive_owner: null };
+    const definitionId = `anonymous-template-experimental-v3-sha256:${sha256(Buffer.concat([
+      Buffer.from('noble returned pure-i64 DAG definition experimental v3\0'),
       Buffer.from(canonicalSlotJSON(definitionDescriptor))]))}`;
     const valueDescriptor = { definition_id: definitionId, captures };
-    const programValueId = `anonymous-program-experimental-v4-sha256:${sha256(Buffer.concat([
-      Buffer.from('noble returned pure-i64 DAG value experimental v4\0'),
+    const programValueId = `anonymous-program-experimental-v3-sha256:${sha256(Buffer.concat([
+      Buffer.from('noble returned pure-i64 DAG value experimental v3\0'),
       Buffer.from(canonicalSlotJSON(valueDescriptor))]))}`;
-    const templateProjection = { interface: targetInterface, template,
-      lexical_recursive_owner: lexicalRecursiveOwner, captures,
-      template_classes: templateClasses };
     const descriptor = {
       schema: 'noble-live-slot-composite-code-donors/v1',
       owner: { token: owner, handle: saved.handle },
       identity: { definition_id: definitionId, program_value_id: programValueId,
-        captures, interface: targetInterface, lexical_recursive_owner: lexicalRecursiveOwner,
-        template_classes: templateClasses },
+        captures, interface: targetInterface, lexical_recursive_owner: null },
       source: { caller_id: caller.id, source_sha256: caller.source_sha256,
         selected_source_sha256: caller.selected_origin.selected_source_sha256,
         definition_identity: caller.selected_origin.definition_identity,
         source_generation: caller.selected_origin.source_generation,
         constructed_sites: constructedSites, static_sites: staticSites,
-        program_indices: programIndices, template_captures: capturePositions,
-        template_classes: templateClasses },
+        program_indices: programIndices },
       donors: {
         native: { module_id: core.id, artifact_sha256: core.artifactSha256,
           source_sha256: core.source_sha256, span: { ...core.code_span }, entries: nativeEntries },
@@ -1377,9 +1303,6 @@ class SlotEngine {
           source_sha256: caller.source_sha256, span: { ...caller.code_span },
           entries: staticEntries },
       },
-      template_sha256: sha256(Buffer.concat([
-        Buffer.from('noble returned pure-i64 template projection experimental v1\0'),
-        Buffer.from(canonicalSlotJSON(templateProjection))])),
       graph_sha256: sha256(Buffer.from(canonicalSlotJSON(graph))),
       recipe_sha256: sha256(Buffer.from(canonicalSlotJSON(recipe))),
     };
@@ -2155,10 +2078,14 @@ class SlotEngine {
       } else {
         observedCaptures = ['cell_a', 'cell_b'].flatMap(field => {
           const child = runtime[field](handle) >>> 0;
-          // The summary is an exact representation of the same graph `observeProgramGraph`
-          // already walks (4096 nodes) and the selected-origin path already encodes (32 nodes /
-          // 4096 bytes). It is bounded identically for anonymous and selected results so a deep
-          // composite is refused by retained-graph accounting, not by a smaller summary budget.
+          // Each child summary is an exact representation bounded at 32 nodes and 4096 bytes,
+          // the same per-child limit the selected-origin path encodes; an anonymous result may
+          // therefore carry two such summaries (about 65 cells), while a selected result is also
+          // capped as a whole by `verifySelectedGraph`. The node limit is what refuses a deep
+          // composite here: `captureValue` raises "checked captured value exceeds host observation
+          // bound" before `observeProgramGraph`'s separate 4096-node retained-graph walk can bind.
+          // Before this per-child limit the anonymous summary was capped at 1000 bytes / 64 nodes,
+          // whose byte cap bound first at about 10 nodes; admission is now about 32 nodes per child.
           return child ? [{ field, value: JSON.parse(this.captureValue(runtime, child,
             32, 4096)) }] : [];
         });
@@ -2276,6 +2203,12 @@ class SlotEngine {
     return slotReply('replay-released', { token });
   }
 
+  retainFramePins(row) {
+    this.rootFramePinsTotal += 1;
+    this.rootFramePins.push(row);
+    if (this.rootFramePins.length > FRAME_PIN_ROWS) this.rootFramePins.shift();
+  }
+
   appendRootTrace(trace, size) {
     const bytes = size.bytes + (this.replaying ? size.rows * REPLAY_TRACE_BYTES : 0);
     if (size.rows !== trace.length || this.traceBytes + bytes > GLOBAL_TRACE_BYTES) {
@@ -2382,14 +2315,17 @@ class SlotEngine {
         this.replays.set(replayToken, { snapshot, id: module.id, trace, stack, identity });
       }
       const traceSize = this.registry.traceSize(root);
+      const framePins = this.registry.framePinCounts(root);
       this.registry.finishRoot(root);
       this.active = null;
       for (const candidate of this.modules.values()) this.sweepRetirement(candidate);
       this.appendRootTrace(trace, traceSize);
+      this.retainFramePins({ root: this.rootSequence, ...framePins });
       return slotReply('executed', { epoch: rootEpoch, stack,
         ...(replayToken === null ? {} : { replay_token: replayToken }),
         ...(replayToken === null ? {} : { frozen_identity: this.replays.get(replayToken).identity }),
         request_trace: trace, control_events: this.controlEvents.splice(0),
+        frame_pins: framePins,
         guest_requests: trace.length,
         protected_operations: this.replaying ? 0 : trace.filter(item =>
           item.operation === 'effect' && item.outcome === 'performed').length });
@@ -2407,13 +2343,19 @@ class SlotEngine {
       let traceSize = { bytes: 0, rows: 0 };
       try { traceSize = this.registry.traceSize(root); }
       catch (inspection) { error = inspection; }
-      try { this.registry.abortRoot(root); } catch (retired) { error = retired; }
+      let framePins = null;
+      try { framePins = this.registry.abortRoot(root); } catch (retired) { error = retired; }
       this.active = null;
       this.poisoned = true;
       this.appendRootTrace(trace, traceSize);
+      // Never fabricate a zero row for a failed ledger: record that the counts are unavailable.
+      this.retainFramePins(framePins === null
+        ? { root: this.rootSequence, error: 'frame-pin ledger unavailable: abortRoot failed' }
+        : { root: this.rootSequence, ...framePins });
       return slotReply('execution-failed', { diagnostic: String(error)
         + (this.checkpointFailure === null ? '' : `; checkpoint: ${this.checkpointFailure}`),
         request_trace: trace, control_events: this.controlEvents.splice(0),
+        frame_pins: framePins,
         guest_requests: trace.length,
         protected_operations: this.replaying ? 0 : trace.filter(item =>
           item.operation === 'effect' && item.outcome === 'performed').length,
@@ -2459,7 +2401,10 @@ class SlotEngine {
       if (site === null) return slotReply('unadmitted-site', { id: request.id, site_id: request.site });
       return slotReply('reflected', { site });
     }
-    if (request.operation === 'trace') return slotReply('trace-observed', { trace: this.trace });
+    if (request.operation === 'trace') return slotReply('trace-observed', {
+      trace: this.trace,
+      frame_pins: { rows: this.rootFramePins, roots: this.rootFramePinsTotal,
+        omitted: this.rootFramePinsTotal - this.rootFramePins.length } });
     if (request.operation === 'policy') {
       const grant = request.grant;
       if (!grant || typeof grant.operation !== 'string'

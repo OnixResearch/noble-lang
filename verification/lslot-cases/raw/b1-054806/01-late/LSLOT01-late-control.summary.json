@@ -1,0 +1,25 @@
+{
+  "late": {
+    "control_id": "1",
+    "diagnostic": "no remaining protected checkpoint in this root; control was not applied",
+    "outcome": "refused",
+    "schema": "noble-live-slot-report/v1",
+    "scope": "publish:ordinary-control",
+    "stage": "operator-control",
+    "when": "too-late"
+  },
+  "published_epoch": "1",
+  "next_root": {
+    "epoch": "1",
+    "stack": [
+      {
+        "kind": 1,
+        "value": "3"
+      }
+    ],
+    "guest_requests": 1,
+    "protected_operations": 0
+  },
+  "after_checkpoint_epoch": "2",
+  "selected_binary_sha256": "d0c98cc036f2ba55545a88d127086d377b8343a39488ee560546b994128a038c"
+}

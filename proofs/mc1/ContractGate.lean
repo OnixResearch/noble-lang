@@ -1,6 +1,7 @@
 import NobleContracts
 import NobleContracts.Refutation
 import NobleContracts.NamedV3
+import NobleContracts.Merge
 import NobleContracts.SpecQuality
 import NobleContracts.Wire
 import Lean
@@ -94,7 +95,25 @@ elab "check_contract_library" : command => do
     ``NobleContracts.monotonic_refutation,
     ``NobleContracts.wrap_constant_counterexample_run,
     ``NobleContracts.wrap_constant_postcondition_false,
-    ``NobleContracts.wrap_constant_refutation]
+    ``NobleContracts.wrap_constant_refutation,
+    -- Semantic merge (SMERGE-CHECK-01): SM-1/SM-2 and the fixture instances.
+    ``NobleContracts.mergeVal_functional, ``NobleContracts.mergeVal_total,
+    ``NobleContracts.mergeVal_comm, ``NobleContracts.mergeVal_no_conflict,
+    ``NobleContracts.mergeStack_functional, ``NobleContracts.mergeStack_comm,
+    ``NobleContracts.mergeStack_lengths, ``NobleContracts.mergeStack_position,
+    ``NobleContracts.mergeStack_append, ``NobleContracts.i64_value_eq,
+    ``NobleContracts.wrap_max_add_one, ``NobleContracts.add_one_ne_self,
+    ``NobleContracts.add_two_ne_self, ``NobleContracts.add_one_ne_add_two,
+    ``NobleContracts.firstOrder_of_observable, ``NobleContracts.observable_allLeaf,
+    ``NobleContracts.codeTyped_append, ``NobleContracts.core_step,
+    ``NobleContracts.leaf_exec, ``NobleContracts.outer_step,
+    ``NobleContracts.outer_exec, ``NobleContracts.mergeRel_returns,
+    ``NobleContracts.mergeRel_values, ``NobleContracts.mergeRel_symm,
+    ``NobleContracts.mergeRel_terminating, ``NobleContracts.mergeRel_conflict_absurd,
+    ``NobleContracts.mergeRel_identical_increment, ``NobleContracts.mergeRel_independent_changes,
+    ``NobleContracts.conflict_incompatible_increments,
+    ``NobleContracts.no_candidate_for_incompatible_increments,
+    ``NobleContracts.wrapping_boundary_is_not_merge]
   for name in required do
     match env.find? name with
     | some (.thmInfo _) => pure ()

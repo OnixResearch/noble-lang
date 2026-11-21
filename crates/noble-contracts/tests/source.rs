@@ -2,9 +2,10 @@
 #![register_tool(tigerstyle)]
 #![allow(
     tigerstyle::excessive_file_length,
+    tigerstyle::module_file_count,
     tigerstyle::no_unwrap,
     tigerstyle::non_trait_imports,
-    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form; the merge/ model lane keeps one module per relation, claim, consumer and checker concern."
 )]
 
 const fn limits() -> noble_contracts::Limits {
@@ -338,6 +339,36 @@ fn typed_source_resource_input_rejects_dup_with_exact_eligibility() -> Result<()
         noble_contracts::Span { start: 0, end: 3 }
     );
     println!("DX-01 checked exact Resource<test.counter> source: {error:?}");
+    Ok(())
+}
+
+/// `test.abort` is a bootstrap builtin word, but the live-slot test-host
+/// environment grants only `test.emit` and has no `test.abort` row. Using the
+/// word there is invalid user input: it must be refused as an ordinary invalid
+/// diagnostic, never as the frontend's internal-consistency failure.
+#[test]
+fn a_builtin_word_missing_from_the_environment_is_an_ordinary_refusal() -> Result<(), String> {
+    let environment = noble_kernel::contracts::environment()
+        .map_err(|error| format!("{error:?}"))?
+        .enable_live_slots();
+    let session = noble_contracts::source::Session::new_live_slots_with_test_hosts(environment)
+        .map_err(|error| format!("{error:?}"))?;
+    let Err(error) = session.prepare(b"1 test.abort", &[], limits()) else {
+        return Err(String::from(
+            "test.abort was admitted by an environment without its row",
+        ));
+    };
+    let diagnostic = error.diagnostic();
+    assert_eq!(
+        diagnostic.kind,
+        noble_contracts::DiagnosticKind::Invalid,
+        "{error:?}"
+    );
+    assert!(
+        diagnostic.message.contains("test.abort"),
+        "the refusal names the unavailable word: {error:?}"
+    );
+    assert_eq!(diagnostic.span, noble_contracts::Span { start: 2, end: 12 });
     Ok(())
 }
 

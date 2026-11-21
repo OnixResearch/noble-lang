@@ -35,3 +35,8 @@ fn canonical_ordered_nominal_resource_admission_uses_real_cli_and_epoch_four() {
 fn canonical_borrowed_reference_static_and_invocation_boundaries_use_real_cli() {
     run_selected_cases("live_slot_resource_ref_static.mjs");
 }
+
+#[test]
+fn own_case_04_resource_variants_are_rejected_before_emission_through_the_real_cli() {
+    run_selected_cases("live_slot_own_resource_rejection.mjs");
+}

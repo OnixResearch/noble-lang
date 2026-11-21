@@ -706,53 +706,6 @@ fn debug_origin(
 pub struct OriginOutput {
     pub stack_position: usize,
     pub result: alloc::rc::Rc<OriginProgramValue>,
-    /// Exact checked template projection: ordered distinct root captures,
-    /// logical source-binding classes and the recursive-owner classification.
-    pub template: OriginTemplate,
-}
-
-/// One verified logical source-binding class of a returned template. `binding`
-/// is the canonical structural spelling of the checked source binding (root
-/// input position, fixed I64 recipe, static quotation index, quotation or
-/// composition of those); it never contains a source span or a NodeId.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct OriginClass {
-    pub binding: alloc::string::String,
-    /// Distinct retained VM cells that currently instantiate this binding. This
-    /// count is observation data: physical sharing may change it without
-    /// changing the binding, the captures or the target template identity.
-    pub occurrences: u32,
-}
-
-/// Whether a returned template requires a semantic lexical recursive owner.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum OriginOwner {
-    /// Every reachable quotation is an acyclic static definition body and no
-    /// reference resolves the enclosing named definition.
-    Absent,
-    /// A reachable quotation resolves the enclosing named definition. The
-    /// bounded selected-origin subset does not classify this shape, so no
-    /// target identity may be minted for it.
-    SelfNamed,
-}
-
-/// Exact checked template projection of one returned Program. Identity-bearing
-/// admission binds it to the actual retained graph and installed code; it is
-/// not a `DefinitionId`.
-#[derive(Clone, Debug)]
-pub struct OriginTemplate {
-    /// Ordered distinct root-input positions a reachable `quote` consumes.
-    pub captures: alloc::vec::Vec<u32>,
-    /// Logical binding classes, ordered by canonical binding spelling.
-    pub classes: alloc::vec::Vec<OriginClass>,
-    pub owner: OriginOwner,
-}
-
-/// Re-derive every retained template projection from the immutable origin
-/// values and require it to equal the stored metadata. The host calls this on
-/// retained worker metadata; `origin::build` also calls it before returning.
-pub fn verify_selected_origin_template(origin: &SelectedOriginMetadata) -> bool {
-    origin::verified_templates(origin)
 }
 
 /// An independently rechecked, emitted named definition, not the submission's

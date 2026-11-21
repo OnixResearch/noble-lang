@@ -1,0 +1,1008 @@
+{
+  "schema": "noble-acorr-gate/v1",
+  "case_ids": [
+    "ACORR-CASE-01",
+    "ACORR-CASE-02",
+    "ACORR-CASE-03",
+    "ACORR-CASE-04",
+    "ACORR-CASE-05",
+    "ACORR-CASE-06",
+    "ACORR-CASE-07",
+    "ACORR-CASE-08",
+    "ACORR-CASE-09",
+    "ACORR-CASE-10",
+    "ACORR-CASE-11",
+    "ACORR-CASE-12"
+  ],
+  "selection": null,
+  "source": {
+    "commit": "6caeb64b6ce5a604bb156649903575ea64f0823d",
+    "tree": "24428e2d5728dff710808bc9c3033b52657b52d6",
+    "clean": true,
+    "dirty_allowed": false
+  },
+  "frozen_cli": {
+    "supplied": "/var/tmp/noble-cairn/acorr-noble-default-b2r",
+    "executed": "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/bin/noble-executed",
+    "sha256": "735aca6776fc8919fc22752a06b405b53c635a17c684925afa12a2353c1895a7"
+  },
+  "barrier_cli": {
+    "supplied": "/var/tmp/noble-cairn/acorr-noble-barrier-b2r",
+    "executed": "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/bin/noble-barrier-executed",
+    "sha256": "87cdfb613e0228658e710e9e45c5a5b0267de9702ea61ae4c51580a939b1d8f7"
+  },
+  "environment": {
+    "HOME": "/home/brittonr",
+    "USER": "brittonr",
+    "LOGNAME": "brittonr",
+    "LANG": "C.UTF-8",
+    "CI": "1",
+    "GIT_TERMINAL_PROMPT": "0",
+    "TMPDIR": "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/tmp",
+    "PATH": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin:/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin:/run/current-system/sw/bin:/usr/bin:/bin",
+    "NOBLE_LEAN": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+    "NOBLE_BWRAP": "/nix/store/lqndphylsxqwbwm804n473pb4sqb98sh-bubblewrap-0.11.2/bin/bwrap",
+    "NOBLE_PRLIMIT": "/nix/store/mqvbf0flamqaq9c3ihb496aahag897n0-util-linux-2.42.3-bin/bin/prlimit",
+    "NOBLE_SYSTEMD_RUN": "/nix/store/baxgs06659w4i6ggsfr56srjrb52v1h8-systemd-261.2/bin/systemd-run",
+    "NOBLE_CONTRACT_LIBRARY": "/home/brittonr/.cache/noble-cairn/wt/verify-b1/proofs/mc1",
+    "XDG_RUNTIME_DIR": "/run/user/1555"
+  },
+  "pins": {
+    "off": {
+      "path": "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/pins-off.json",
+      "sha256": "4917f9d86498854b01ab4cb11407c84de6c0476c87c1fbbfa6b2e86ba4df2305",
+      "document": {
+        "cli": {
+          "sha256": "735aca6776fc8919fc22752a06b405b53c635a17c684925afa12a2353c1895a7"
+        },
+        "helpers": {
+          "count": 27,
+          "root": "crates/noble-wasm/runtime",
+          "set_sha256": "211d016d58265968082e383f78790c26c20d8eaf135b0dd401253fa3c238639f"
+        },
+        "lean": {
+          "binary_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+          "commit": "eb6cafb7290e8bd5f2937522d8d804f58f02bafc",
+          "library_blake3": "bfdf639678e36c78685c14eb109b74680d65d9440142550b82865fdcb79bb83b",
+          "toolchain": "leanprover/lean4:v4.35.0"
+        },
+        "opt_mode": "off",
+        "schema": "noble-build-report-pins/v1",
+        "tools": {
+          "node": {
+            "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+            "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+            "version": "24.13.0"
+          },
+          "wasm_opt": {
+            "path": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125/bin/wasm-opt",
+            "sha256": "e68e014ba43ece72b23e4e9955b822d65ec2c3dbab6f407ca3af6cc5639543a2",
+            "version": "wasm-opt version 125"
+          },
+          "wasm_tools": {
+            "path": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+            "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+            "version": "wasm-tools 1.245.1"
+          }
+        }
+      }
+    },
+    "on": {
+      "path": "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/pins-on.json",
+      "sha256": "3d57b4e80b173bcb00f00ae3e1d88d935e41a1b777351a3c7abcf9c263311af7",
+      "document": {
+        "cli": {
+          "sha256": "735aca6776fc8919fc22752a06b405b53c635a17c684925afa12a2353c1895a7"
+        },
+        "helpers": {
+          "count": 27,
+          "root": "crates/noble-wasm/runtime",
+          "set_sha256": "211d016d58265968082e383f78790c26c20d8eaf135b0dd401253fa3c238639f"
+        },
+        "lean": {
+          "binary_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+          "commit": "eb6cafb7290e8bd5f2937522d8d804f58f02bafc",
+          "library_blake3": "bfdf639678e36c78685c14eb109b74680d65d9440142550b82865fdcb79bb83b",
+          "toolchain": "leanprover/lean4:v4.35.0"
+        },
+        "opt_mode": "on",
+        "schema": "noble-build-report-pins/v1",
+        "tools": {
+          "node": {
+            "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+            "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+            "version": "24.13.0"
+          },
+          "wasm_opt": {
+            "path": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125/bin/wasm-opt",
+            "sha256": "e68e014ba43ece72b23e4e9955b822d65ec2c3dbab6f407ca3af6cc5639543a2",
+            "version": "wasm-opt version 125"
+          },
+          "wasm_tools": {
+            "path": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+            "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+            "version": "wasm-tools 1.245.1"
+          }
+        }
+      }
+    },
+    "barrier-off": {
+      "path": "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/pins-barrier-off.json",
+      "sha256": "f0a4d9f7bb404733081416e0c47ded25fa33aa4f91eeca8262d84fae2e9999ff",
+      "document": {
+        "cli": {
+          "sha256": "87cdfb613e0228658e710e9e45c5a5b0267de9702ea61ae4c51580a939b1d8f7"
+        },
+        "helpers": {
+          "count": 27,
+          "root": "crates/noble-wasm/runtime",
+          "set_sha256": "211d016d58265968082e383f78790c26c20d8eaf135b0dd401253fa3c238639f"
+        },
+        "lean": {
+          "binary_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+          "commit": "eb6cafb7290e8bd5f2937522d8d804f58f02bafc",
+          "library_blake3": "bfdf639678e36c78685c14eb109b74680d65d9440142550b82865fdcb79bb83b",
+          "toolchain": "leanprover/lean4:v4.35.0"
+        },
+        "opt_mode": "off",
+        "schema": "noble-build-report-pins/v1",
+        "tools": {
+          "node": {
+            "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+            "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+            "version": "24.13.0"
+          },
+          "wasm_opt": {
+            "path": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125/bin/wasm-opt",
+            "sha256": "e68e014ba43ece72b23e4e9955b822d65ec2c3dbab6f407ca3af6cc5639543a2",
+            "version": "wasm-opt version 125"
+          },
+          "wasm_tools": {
+            "path": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+            "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f",
+            "version": "wasm-tools 1.245.1"
+          }
+        }
+      }
+    }
+  },
+  "inputs": {
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/wrong-body.noble": "64e32c18b04575e2d5c3f89c2c2552d666a3b8781df25e27b9883e5b62e6c7de",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/definition.noble": "44e7c76d7a8f093ac8cd889c38db333d92dfa0fbaa70fdc9c2a55989afee76bc",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/pins-off.json": "4917f9d86498854b01ab4cb11407c84de6c0476c87c1fbbfa6b2e86ba4df2305",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/pins-on.json": "3d57b4e80b173bcb00f00ae3e1d88d935e41a1b777351a3c7abcf9c263311af7",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/pins-barrier-off.json": "f0a4d9f7bb404733081416e0c47ded25fa33aa4f91eeca8262d84fae2e9999ff",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/mc2/contracts/increment.contract": "db1f896543b105864c12ada50ada35318e0f7babfda35723d5884a92a9149190",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/mc2/contracts/increment.proof.lean": "a0cad534eb68a1797dcb402837d82df87b70e47e19d66b9fc9cfae1fe46ad891",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/mc2/contracts/q-one.noble": "9869deb50309d348e81aeb57ddab7e7a70cc2e86b364d0e763ce10e19bd5d381",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/mc2/contracts/guarded.contract": "ec7b0dba4fedc886a78a8be28b0f71b1ba588e18ed83e38e774af7b41526abdd",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/mc2/contracts/guarded.proof.lean": "22fb51bd49f5cd9807bfcc323c2e098ead3487dae17b3bdc6f2b77b5b839f0f5",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/acorr/fixtures/eq-five.contract": "99c88672ea8a5fdab2722e7f1ded536e119e6a89653cd09bd5da1e5dccabea01",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/acorr/fixtures/eq-five.proof.lean": "0246fa836f22f257895b3b8d2edfce07c47223737ff29cb4ed7f0ca1173cad83",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/owner-law/fixtures/add-two.contract": "b4222a1a8750cbde1f512fc3bab3eef42b9e939240b51bd78065261493f13fc7",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/owner-law/fixtures/add-two.proof.lean": "5e19e72c5678b480eee2aa6d4f718b77a43b2500a3109e9f92457a318504fd28",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/owner-law/fixtures/add-two.noble": "64e32c18b04575e2d5c3f89c2c2552d666a3b8781df25e27b9883e5b62e6c7de",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/owner-law/laws/owner-law-v1.json": "9a8eda12c74356ca0d312be840411d4445c6f377c16ee7b96a680581b2e91eac",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/owner-law/laws/owner-law-v2.json": "51f2a3158155077dcb29c8f354d356d31df3282b3c76f60c2bc8534c7932ee80",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/policy/tool-selection.json": "52fd43b509541183dd51ebe034c98204c4d1e7d77372997a1f334a45ad720cd7",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/acorr/gate.mjs": "c1f574450e1d1ab521e42ace89e9099883af6096cf4e92295b9f5764fb17bb44",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c1-subject-off/engine/module-1.wasm": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c1-subject-off/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c1-call-off-41.noble": "609243a4aa0564f6ccae69c953e1cdbd9ea6ec215791801f30f247194286f415",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c1-call-41-off/engine/module-1.wasm": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c1-call-41-off/engine/module-1.wat": "90c8d2145e9f3da552f2ddc8013fd97465b183e3933986727afa8a12960011fa",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c1-call-off-9223372036854775807.noble": "82be2b7da6e186deee18953c7c7ab68506430ff845bc5e7993bf80cfa3fe3ca7",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c1-call-9223372036854775807-off/engine/module-1.wasm": "7dada604916e9e61c18649a2c45ea05abcbbf15979107fa41091d6c709be9ac9",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c1-call-9223372036854775807-off/engine/module-1.wat": "d85c3a50038a686778edc6364712be7938e7d11fa3f79ffa8d68ee1e13e96dcc",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c1-subject-on/engine/module-1-optimized.wasm": "ff4d96bb1f864de456964ebb2d945500126617d62331295f1d897ec4555c1501",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c1-subject-on/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c1-call-on-41.noble": "609243a4aa0564f6ccae69c953e1cdbd9ea6ec215791801f30f247194286f415",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c1-call-41-on/engine/module-1-optimized.wasm": "bdad023b1af9d11512e440b9f752b46cb35c070990cf66b33ff32b2392ba75bf",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c1-call-41-on/engine/module-1.wat": "90c8d2145e9f3da552f2ddc8013fd97465b183e3933986727afa8a12960011fa",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c1-call-on-9223372036854775807.noble": "82be2b7da6e186deee18953c7c7ab68506430ff845bc5e7993bf80cfa3fe3ca7",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c1-call-9223372036854775807-on/engine/module-1-optimized.wasm": "40ba2f4b6fcbb63bfa0014a27c4e17c1da7cd7d7b31e00482a0780090d24a724",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c1-call-9223372036854775807-on/engine/module-1.wat": "d85c3a50038a686778edc6364712be7938e7d11fa3f79ffa8d68ee1e13e96dcc",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c2-subject-off/engine/module-1.wasm": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c2-subject-off/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c2-call-9223372036854775806.noble": "aff88b475b6c05ff6c52556ee09b96fddec8735ed4d8fefe6e621e30bbdedc90",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c2-call-9223372036854775806-off/engine/module-1.wasm": "6d610d9280e9cb914f47d15a4ee55f7fff0afcf2a11d9a40bf0e10efde1875c3",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c2-call-9223372036854775806-off/engine/module-1.wat": "e9c74209fc3406ab4cc365096465220d921fe21e601e93a293f97550fe4c431a",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c2-call-9223372036854775807.noble": "10652269645e463d213919636406a4ecd8bdb922c136505d4601bdace6b63350",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c2-call-9223372036854775807-off/engine/module-1.wasm": "8c39ad3bc19d7098280c13cbcac744145b52b06002cc4c08331332a2f0e0cbfc",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c2-call-9223372036854775807-off/engine/module-1.wat": "9a7db005a41c0321b73ec8427004b60c16fc3bc3171a46afec89c11d025b9240",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c3-wrong-subject-off/engine/module-1.wasm": "6130671a8991339e1c03cf56da285e2496b975414f53443c9b631b9046bb648a",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c3-wrong-subject-off/engine/module-1.wat": "327893830062794293bdb71c546074766f5493f060aefc096bfbdb18422ef402",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c3-call.noble": "5893d334304025b7bea0465d7b9ce8fa31b07e106054d671443b95bd74266ff9",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c3-call-off/engine/module-1.wasm": "f4a56615e05f670c911fc860d7a66d024e76cbc57dbe5bdf58650edb5ea9c2c1",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c3-call-off/engine/module-1.wat": "d7c638d8d320eb06047f13c8a01397c4f2732b3ff8558cc211267a95d5af7855",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c3-valid-subject-off/engine/module-1.wasm": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c3-valid-subject-off/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c3-valid-call.noble": "609243a4aa0564f6ccae69c953e1cdbd9ea6ec215791801f30f247194286f415",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c3-valid-call-off/engine/module-1.wasm": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c3-valid-call-off/engine/module-1.wat": "90c8d2145e9f3da552f2ddc8013fd97465b183e3933986727afa8a12960011fa",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c4-subject-off/engine/module-1.wasm": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c4-subject-off/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c4-call.noble": "609243a4aa0564f6ccae69c953e1cdbd9ea6ec215791801f30f247194286f415",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c4-call-off/engine/module-1.wasm": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c4-call-off/engine/module-1.wat": "90c8d2145e9f3da552f2ddc8013fd97465b183e3933986727afa8a12960011fa",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/pins-off-old-helpers-prepared.json": "9a107080f8c2984bf55d431e6e90a525c6b254c7a7a9baa95416a94eed9d0ee5",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/pins-off-old-cli-prepared.json": "d47717d1f3542a889688aed55afde4cc339b5e0b1438b136b8e30bc0794c12c8",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c5-subject-off/engine/module-1.wasm": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c5-subject-off/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c5-call.noble": "609243a4aa0564f6ccae69c953e1cdbd9ea6ec215791801f30f247194286f415",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c5-call-off/engine/module-1.wasm": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c5-call-off/engine/module-1.wat": "90c8d2145e9f3da552f2ddc8013fd97465b183e3933986727afa8a12960011fa",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c6-subject-off/engine/module-1.wasm": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c6-subject-off/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c6-call.noble": "609243a4aa0564f6ccae69c953e1cdbd9ea6ec215791801f30f247194286f415",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c6-call-off/engine/module-1.wasm": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c6-call-off/engine/module-1.wat": "90c8d2145e9f3da552f2ddc8013fd97465b183e3933986727afa8a12960011fa",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c6-code-mutation.wat": "02328cf41196299d3bc543714b4fd18921042c679f0da7299a7df5fc56cd2144",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c6-code-mutation.wasm": "8730d8b16081d6df2c3ae33a9d3bb9698ab72113b60f755283302a128b47fa4c",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c6-recipe-mutation.wat": "2dde4612722b21302449017b7b94acc2083bb1f905af4251ea50d0c414c7c856",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c6-recipe-mutation.wasm": "0cb665fff3c3b27c1780e461b83a35bc017c51e2a70efe7b6032b6d8a2b1fa31",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c7-subject-off/engine/module-1.wasm": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c7-subject-off/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c7-call-six.noble": "22618b8acfae0774012ad3ddc13788557de48cf0b280edf1df201f8fe179f2de",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c7-call-six-off/engine/module-1.wasm": "c154b7d0a1b78f5a7d7d15eea910341802de1552649dc1c60a411b37f68889cd",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c7-call-six-off/engine/module-1.wat": "7f82d1acda8a6c6c5d86d994391ac1daac8b6091b8888aad676ec57705f8d5dd",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c7-call-ne.noble": "7a02df9b009deb363955821a4e2400a27929b5b0e131de39b2275a024799cbb0",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c7-call-ne-off/engine/module-1.wasm": "ddcba3b4a80f77833e6eb7ba357b6a8bfc396a910601d9b07801eefe449368f3",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c7-call-ne-off/engine/module-1.wat": "52a3f210c1125ab71c7274536a79af96840ec65154c5b078d5602367d2a7eb00",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c7-call-unguarded.noble": "609243a4aa0564f6ccae69c953e1cdbd9ea6ec215791801f30f247194286f415",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c7-call-unguarded-off/engine/module-1.wasm": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c7-call-unguarded-off/engine/module-1.wat": "90c8d2145e9f3da552f2ddc8013fd97465b183e3933986727afa8a12960011fa",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c8-subject-off/engine/module-1.wasm": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c8-subject-off/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c8-call.noble": "609243a4aa0564f6ccae69c953e1cdbd9ea6ec215791801f30f247194286f415",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c8-call-off/engine/module-1.wasm": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c8-call-off/engine/module-1.wat": "90c8d2145e9f3da552f2ddc8013fd97465b183e3933986727afa8a12960011fa",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c8-helper-mutation.wat": "233c635c359cf794e98092482cf7cb89fb9342778740a95334ce032cd92d7c9c",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c8-helper-mutation.wasm": "68971f3330d6e151d0fc93676cb2a507ed934df1db9588b455e2177fd4e833e0",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c8-extra-import.wat": "05141b30ab40c81c60c0830ea9201e1c62e7a6d3447d02f76c8692ec6383a05f",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c8-extra-import.wasm": "953ee722a28d77b8766d74a6bc76ffa69f42e096c85dfb33b7bbe93589c2966f",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/pins-off-helper-tree-prepared.json": "42a5e77df0240d6ca1e093f0a2945f9833c1caa17c38fd0ed792ee475c24cc2a",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c9-subject-off/engine/module-1.wasm": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c9-subject-off/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c9-call.noble": "609243a4aa0564f6ccae69c953e1cdbd9ea6ec215791801f30f247194286f415",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c9-call-off/engine/module-1.wasm": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c9-call-off/engine/module-1.wat": "90c8d2145e9f3da552f2ddc8013fd97465b183e3933986727afa8a12960011fa",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c9-replacement-off/engine/module-1.wasm": "6130671a8991339e1c03cf56da285e2496b975414f53443c9b631b9046bb648a",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c9-replacement-off/engine/module-1.wat": "327893830062794293bdb71c546074766f5493f060aefc096bfbdb18422ef402",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c9-plan.json": "d4b3c82911eb6206b7e04bac17d5867d499f739f5799cf386a3015abacbbb142",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c9-inert-plan.json": "2d4a41b38ff30f851ea3df93476f58ee5842b5b03ab3111757926748ab433ec7",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c10-subject-off/engine/module-1.wasm": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c10-subject-off/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c10-call.noble": "609243a4aa0564f6ccae69c953e1cdbd9ea6ec215791801f30f247194286f415",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c10-call-off/engine/module-1.wasm": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c10-call-off/engine/module-1.wat": "90c8d2145e9f3da552f2ddc8013fd97465b183e3933986727afa8a12960011fa",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c10-forged.json": "b7e670fe0fd3d374193e5ad89dd56a374a45e3beaa6ff7aa8470ab8579ff30b0",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c11-proof-edited.lean": "ef3524b80db43706adfe9c8609badc5265b731a457d638c9b5a17263968df3ab",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c11-subject-off-off/engine/module-1.wasm": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c11-subject-off-off/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c11-call-off.noble": "609243a4aa0564f6ccae69c953e1cdbd9ea6ec215791801f30f247194286f415",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c11-call-off-off/engine/module-1.wasm": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c11-call-off-off/engine/module-1.wat": "90c8d2145e9f3da552f2ddc8013fd97465b183e3933986727afa8a12960011fa",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c11-subject-on-on/engine/module-1-optimized.wasm": "ff4d96bb1f864de456964ebb2d945500126617d62331295f1d897ec4555c1501",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c11-subject-on-on/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c11-call-on.noble": "609243a4aa0564f6ccae69c953e1cdbd9ea6ec215791801f30f247194286f415",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c11-call-on-on/engine/module-1-optimized.wasm": "bdad023b1af9d11512e440b9f752b46cb35c070990cf66b33ff32b2392ba75bf",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c11-call-on-on/engine/module-1.wat": "90c8d2145e9f3da552f2ddc8013fd97465b183e3933986727afa8a12960011fa",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c12-subject-off/engine/module-1.wasm": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c12-subject-off/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c12-call.noble": "609243a4aa0564f6ccae69c953e1cdbd9ea6ec215791801f30f247194286f415",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c12-call-off/engine/module-1.wasm": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c12-call-off/engine/module-1.wat": "90c8d2145e9f3da552f2ddc8013fd97465b183e3933986727afa8a12960011fa",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c12-subject-on-on/engine/module-1-optimized.wasm": "ff4d96bb1f864de456964ebb2d945500126617d62331295f1d897ec4555c1501",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c12-subject-on-on/engine/module-1.wat": "d692246a65ca3e6e411890fe103f299683199b5b1d438547e5cfa190905ec2ea",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c12-call-on.noble": "609243a4aa0564f6ccae69c953e1cdbd9ea6ec215791801f30f247194286f415",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c12-call-on-on/engine/module-1-optimized.wasm": "bdad023b1af9d11512e440b9f752b46cb35c070990cf66b33ff32b2392ba75bf",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c12-call-on-on/engine/module-1.wat": "90c8d2145e9f3da552f2ddc8013fd97465b183e3933986727afa8a12960011fa",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/pins-off-pin-mode-prepared.json": "23c72f7637d82e9a35aa78276faabdba145c8031e6996ba23c14cdb25ddb5b0b",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c12-add-two-subject-off/engine/module-1.wasm": "6130671a8991339e1c03cf56da285e2496b975414f53443c9b631b9046bb648a",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c12-add-two-subject-off/engine/module-1.wat": "327893830062794293bdb71c546074766f5493f060aefc096bfbdb18422ef402",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/inputs/c12-add-two-call.noble": "5893d334304025b7bea0465d7b9ce8fa31b07e106054d671443b95bd74266ff9",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c12-add-two-call-off/engine/module-1.wasm": "f4a56615e05f670c911fc860d7a66d024e76cbc57dbe5bdf58650edb5ea9c2c1",
+    "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c12-add-two-call-off/engine/module-1.wat": "d7c638d8d320eb06047f13c8a01397c4f2732b3ff8558cc211267a95d5af7855",
+    "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/acorr/prepare.mjs": "c197378ac37dda45d47f107345579ce0578bf9e4bb9f972eac120b128e865f74"
+  },
+  "gate_sha256": "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/acorr/gate.mjs",
+  "prepare_sha256": "/home/brittonr/.cache/noble-cairn/wt/verify-b1/verification/acorr/prepare.mjs",
+  "commands": 87,
+  "cases": [
+    {
+      "case": "ACORR-CASE-01",
+      "title": "positive `[ 1 + ]` increment law, no guard, off and on",
+      "status": "passed",
+      "variants": [
+        {
+          "name": "off/on off, x=41",
+          "status": "passed",
+          "details": {
+            "opt": "off",
+            "subject_sha256": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+            "call_sha256": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+            "load_buffers_sha256": "5b02b1297ef8c0dbd6acceab82fd93eb7ee2c65d016d6831fa3c1df5602f9e35",
+            "workers": [
+              3192253,
+              3192492
+            ],
+            "report_sha256": "f862953fbb4e353dba1036686a235b8a0555e3ace22d67739cc27e5ed815e00a"
+          }
+        },
+        {
+          "name": "off/on off, x=41 execution",
+          "status": "passed",
+          "details": {
+            "stack": [
+              {
+                "handle": null,
+                "type": "I64",
+                "value": "42"
+              }
+            ]
+          }
+        },
+        {
+          "name": "off/on off, x=9223372036854775807",
+          "status": "passed",
+          "details": {
+            "opt": "off",
+            "subject_sha256": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+            "call_sha256": "7dada604916e9e61c18649a2c45ea05abcbbf15979107fa41091d6c709be9ac9",
+            "load_buffers_sha256": "b5af8bafb51b4fca7cfb1182fe932eeb207f68b5a9ff5335cbfff7f5bf2ca6e2",
+            "workers": [
+              3223976,
+              3224279
+            ],
+            "report_sha256": "fc68f55aa97b41d6913c82963b2387e94a2b8c874b0c19f07e13d36acc80a96a"
+          }
+        },
+        {
+          "name": "off/on off, x=9223372036854775807 execution",
+          "status": "passed",
+          "details": {
+            "stack": [
+              {
+                "handle": null,
+                "type": "I64",
+                "value": "-9223372036854775808"
+              }
+            ]
+          }
+        },
+        {
+          "name": "off/on on, x=41",
+          "status": "passed",
+          "details": {
+            "opt": "on",
+            "subject_sha256": "ff4d96bb1f864de456964ebb2d945500126617d62331295f1d897ec4555c1501",
+            "call_sha256": "bdad023b1af9d11512e440b9f752b46cb35c070990cf66b33ff32b2392ba75bf",
+            "load_buffers_sha256": "16bc82f6aeb0868ec2f99e78e64ddfb7ab09abd48301924a7b7f5717f8b61cad",
+            "workers": [
+              3265526,
+              3265966
+            ],
+            "report_sha256": "fd29084f3f89f63f570501817b3fb3cf363c7dbd0f7e770f3798b821d0a0b926"
+          }
+        },
+        {
+          "name": "off/on on, x=41 execution",
+          "status": "passed",
+          "details": {
+            "stack": [
+              {
+                "handle": null,
+                "type": "I64",
+                "value": "42"
+              }
+            ]
+          }
+        },
+        {
+          "name": "off/on on, x=9223372036854775807",
+          "status": "passed",
+          "details": {
+            "opt": "on",
+            "subject_sha256": "ff4d96bb1f864de456964ebb2d945500126617d62331295f1d897ec4555c1501",
+            "call_sha256": "40ba2f4b6fcbb63bfa0014a27c4e17c1da7cd7d7b31e00482a0780090d24a724",
+            "load_buffers_sha256": "ee1799bd63969567dc2865d9d9b3a01decd92dddbe37a49239b331fcde787af1",
+            "workers": [
+              3303127,
+              3303800
+            ],
+            "report_sha256": "8a9aef9f47b6a42dd67167fc43dff42b2a2207f997b8e2da3638bbe04d92684e"
+          }
+        },
+        {
+          "name": "off/on on, x=9223372036854775807 execution",
+          "status": "passed",
+          "details": {
+            "stack": [
+              {
+                "handle": null,
+                "type": "I64",
+                "value": "-9223372036854775808"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "case": "ACORR-CASE-02",
+      "title": "guarded `[ 1 + ]` with the LtI64Max wrapper",
+      "status": "passed",
+      "variants": [
+        {
+          "name": "MAX-1 admits",
+          "status": "passed",
+          "details": {
+            "opt": "off",
+            "subject_sha256": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+            "call_sha256": "6d610d9280e9cb914f47d15a4ee55f7fff0afcf2a11d9a40bf0e10efde1875c3",
+            "load_buffers_sha256": "d29d9bd6a6b1e3070b8fd20756a1899f080c07a805c40d6866628ec120114c4e",
+            "workers": [
+              3341416,
+              3341723
+            ],
+            "report_sha256": "d8245e5628d26b776029931aaddbdcc2f62ecc5fc70254cf0e010d4ec89ab508"
+          }
+        },
+        {
+          "name": "MAX-1 admits: guard and result",
+          "status": "passed",
+          "details": {
+            "stack": [
+              {
+                "handle": 42,
+                "type": "Sum",
+                "value": {
+                  "handle": 41,
+                  "type": "I64",
+                  "value": "9223372036854775807"
+                },
+                "variant": "right"
+              }
+            ]
+          }
+        },
+        {
+          "name": "MAX refuses",
+          "status": "passed",
+          "details": {
+            "opt": "off",
+            "subject_sha256": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+            "call_sha256": "8c39ad3bc19d7098280c13cbcac744145b52b06002cc4c08331332a2f0e0cbfc",
+            "load_buffers_sha256": "1c61a00805c71cc63b057001ff6ba19cd75fd4795da9d7c3f907369e4d9f52f3",
+            "workers": [
+              3391220,
+              3391532
+            ],
+            "report_sha256": "6a63b55dfe7ece61e53a132e67ca21e78d9057638db9619d591fbd007cc92bdd"
+          }
+        },
+        {
+          "name": "MAX refuses: guard and result",
+          "status": "passed",
+          "details": {
+            "stack": [
+              {
+                "handle": 42,
+                "type": "Sum",
+                "value": {
+                  "handle": 41,
+                  "type": "I64",
+                  "value": "1"
+                },
+                "variant": "left"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "case": "ACORR-CASE-03",
+      "title": "correct proof with a wrong body",
+      "status": "passed",
+      "variants": [
+        {
+          "name": "candidate and SOURCE `[ 2 + ]`: subject binding",
+          "status": "passed",
+          "details": {
+            "code": "subject-mismatch",
+            "report_sha256": "3770048503e59a5447e75e41d8773fa59aab56fb0a20f568e7dc9c5d5e4312c7"
+          }
+        },
+        {
+          "name": "candidate `[ 2 + ]` bytes with SOURCE `[ 1 + ]`",
+          "status": "passed",
+          "details": {
+            "code": "correspondence-reject",
+            "report_sha256": "0be7be365ecca384f4d527dff27a8ee0a9322114ca6ff35519f3b917e11e6d5e"
+          }
+        },
+        {
+          "name": "valid pair after the wrong-body refusals",
+          "status": "passed",
+          "details": {
+            "opt": "off",
+            "subject_sha256": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+            "call_sha256": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+            "load_buffers_sha256": "5b02b1297ef8c0dbd6acceab82fd93eb7ee2c65d016d6831fa3c1df5602f9e35",
+            "workers": [
+              3510604,
+              3510827
+            ],
+            "report_sha256": "92536b2b49ddae6ed87a6b8a9d6425ab99dda10e0638b0f8953d8c1013948b0d"
+          }
+        }
+      ]
+    },
+    {
+      "case": "ACORR-CASE-04",
+      "title": "stale dependency, tool and helper versions",
+      "status": "passed",
+      "variants": [
+        {
+          "name": "SOURCE with a definition",
+          "status": "passed",
+          "details": {
+            "code": "unsupported-profile",
+            "report_sha256": "927b40d5975bf62d7f843f582a336341a43539e359c90657559689950e304c23"
+          }
+        },
+        {
+          "name": "pin with an older helper set",
+          "status": "passed",
+          "details": {
+            "code": "tool-pin-reject",
+            "report_sha256": "0115db365658cb7d8377e35abbb6381de2f32207348b19d6c7b8661595b6beda"
+          }
+        },
+        {
+          "name": "pin with an older CLI",
+          "status": "passed",
+          "details": {
+            "code": "tool-pin-reject",
+            "report_sha256": "d8da2d26d86971188c2378a02f35e8fffa17b99ede08ba73e750b490b59874b8"
+          }
+        }
+      ]
+    },
+    {
+      "case": "ACORR-CASE-05",
+      "title": "weakened claim against the frozen increment law",
+      "status": "passed",
+      "variants": [
+        {
+          "name": "weakened precondition",
+          "status": "passed",
+          "details": {
+            "code": "law-mismatch",
+            "report_sha256": "d6a94e89bd22de0a5462d30fe1c143dbf90ef5de4aff1e63ae80d5385bff2776"
+          }
+        },
+        {
+          "name": "different ensures",
+          "status": "passed",
+          "details": {
+            "code": "law-mismatch",
+            "report_sha256": "e93d98fdcf191fd88cc4224fd2af6f28ffa8e1f0086b90f7b321a7037f220424"
+          }
+        }
+      ]
+    },
+    {
+      "case": "ACORR-CASE-06",
+      "title": "code and recipe divergence from the consumer rebuild",
+      "status": "passed",
+      "variants": [
+        {
+          "name": "targeted code mutation",
+          "status": "passed",
+          "details": {
+            "code": "correspondence-reject",
+            "report_sha256": "5d3084e280d1224e0cf19e3022cc5455d78418b56be7365396cfe683cc114b62"
+          }
+        },
+        {
+          "name": "recipe-atom-only mutation",
+          "status": "passed",
+          "details": {
+            "code": "correspondence-reject",
+            "report_sha256": "16912a82ad50519476718dcbb297f51d6ab75ccb7d936ece33e3f4bee0a39579"
+          }
+        }
+      ]
+    },
+    {
+      "case": "ACORR-CASE-07",
+      "title": "changed, substituted and omitted guard wrappers",
+      "status": "passed",
+      "variants": [
+        {
+          "name": "EqI64Literal 6 wrapper for a k=5 contract",
+          "status": "passed",
+          "details": {
+            "code": "guard-mismatch",
+            "report_sha256": "ad98964e90c3a637044f11447ca9d4983da34ea57bb9b5425d238952cf71f615"
+          }
+        },
+        {
+          "name": "NeI64Min wrapper substituted for LtI64Max",
+          "status": "passed",
+          "details": {
+            "code": "guard-mismatch",
+            "report_sha256": "997e7686ee54d003acc29502c9f2785e54211201354623ac7a84a0b55e95ef4e"
+          }
+        },
+        {
+          "name": "no recognized template for a non-`true` precondition",
+          "status": "passed",
+          "details": {
+            "code": "guard-mismatch",
+            "report_sha256": "f8bf401b23509b11ad2f5f61bde24febeba25e59e709aab7d0baf540e66e14af"
+          }
+        },
+        {
+          "name": "certified call without the bound wrapper",
+          "status": "passed",
+          "details": {
+            "code": "guard-mismatch",
+            "report_sha256": "957dfab92f46bf8dc9b595f7e21ef9b0d347d59975f71d07d57b39bb2c2090c1"
+          }
+        }
+      ]
+    },
+    {
+      "case": "ACORR-CASE-08",
+      "title": "altered helper implementation, extra import and helper-tree pin",
+      "status": "passed",
+      "variants": [
+        {
+          "name": "altered add implementation",
+          "status": "passed",
+          "details": {
+            "code": "correspondence-reject",
+            "report_sha256": "6402896c29df40107e151ee617119bd20104e3d75debf01a9731c5a3e96deb7d"
+          }
+        },
+        {
+          "name": "extra effect import",
+          "status": "passed",
+          "details": {
+            "code": "correspondence-reject",
+            "report_sha256": "d8249e36c7457121505ef301fc2e7bd1515e7f911197725d2cae00eeccc0665a"
+          }
+        },
+        {
+          "name": "pinned helper tree of another size",
+          "status": "passed",
+          "details": {
+            "code": "tool-pin-reject",
+            "report_sha256": "0115db365658cb7d8377e35abbb6381de2f32207348b19d6c7b8661595b6beda"
+          }
+        }
+      ]
+    },
+    {
+      "case": "ACORR-CASE-09",
+      "title": "file replacement between comparison and instantiation",
+      "status": "passed",
+      "variants": [
+        {
+          "name": "replacement after comparison keeps the compared buffer",
+          "status": "passed",
+          "details": {
+            "opt": "off",
+            "subject_sha256": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+            "call_sha256": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+            "load_buffers_sha256": "5b02b1297ef8c0dbd6acceab82fd93eb7ee2c65d016d6831fa3c1df5602f9e35",
+            "workers": [
+              3924696,
+              3924928
+            ],
+            "report_sha256": "d73c38bfe56742db473fda67deafdeab4b050e3ab8f96fdb660190ae61ba1b43"
+          }
+        },
+        {
+          "name": "post-check replacement observation",
+          "status": "passed",
+          "details": {
+            "barrier": {
+              "compared_candidate_sha256": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+              "compared_module_sha256": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+              "replaced": [
+                {
+                  "path": "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c9-candidate.wasm",
+                  "sha256": "6130671a8991339e1c03cf56da285e2496b975414f53443c9b631b9046bb648a"
+                },
+                {
+                  "path": "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c9-call-candidate.wasm",
+                  "sha256": "6130671a8991339e1c03cf56da285e2496b975414f53443c9b631b9046bb648a"
+                },
+                {
+                  "path": "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c9-build-temp-module-1.wasm",
+                  "sha256": "6130671a8991339e1c03cf56da285e2496b975414f53443c9b631b9046bb648a"
+                }
+              ],
+              "replacement": "/home/brittonr/.cache/noble-cairn/scratch/acorr-b2r/candidates/c9-replacement-off/engine/module-1.wasm",
+              "replacement_sha256": "6130671a8991339e1c03cf56da285e2496b975414f53443c9b631b9046bb648a",
+              "test_only": true
+            },
+            "replacement_sha256": "6130671a8991339e1c03cf56da285e2496b975414f53443c9b631b9046bb648a"
+          }
+        },
+        {
+          "name": "production build has no barrier",
+          "status": "passed",
+          "details": {
+            "opt": "off",
+            "subject_sha256": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+            "call_sha256": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+            "load_buffers_sha256": "5b02b1297ef8c0dbd6acceab82fd93eb7ee2c65d016d6831fa3c1df5602f9e35",
+            "workers": [
+              3952832,
+              3953104
+            ],
+            "report_sha256": "da08a060bb76765e9ab8594366d92db295fd13af7dc3ddc8eb1d1307c51eb0e4"
+          }
+        },
+        {
+          "name": "production environment is inert",
+          "status": "passed",
+          "details": {}
+        },
+        {
+          "name": "replacement before comparison refuses",
+          "status": "passed",
+          "details": {
+            "code": "correspondence-reject",
+            "report_sha256": "0be7be365ecca384f4d527dff27a8ee0a9322114ca6ff35519f3b917e11e6d5e"
+          }
+        }
+      ]
+    },
+    {
+      "case": "ACORR-CASE-10",
+      "title": "producer metadata forgery is discarded",
+      "status": "passed",
+      "variants": [
+        {
+          "name": "forged manifest still admits the valid pair",
+          "status": "passed",
+          "details": {
+            "opt": "off",
+            "subject_sha256": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+            "call_sha256": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+            "load_buffers_sha256": "5b02b1297ef8c0dbd6acceab82fd93eb7ee2c65d016d6831fa3c1df5602f9e35",
+            "workers": [
+              4019339,
+              4019606
+            ],
+            "report_sha256": "1b0ecbfb6038fb990e8453444344124d3e88e9bc5768f9fd3d8e048977edf546"
+          }
+        },
+        {
+          "name": "identical outcome and identities with and without metadata",
+          "status": "passed",
+          "details": {
+            "forged_report_sha256": "1b0ecbfb6038fb990e8453444344124d3e88e9bc5768f9fd3d8e048977edf546",
+            "plain_report_sha256": "77f5782015625023ddc6be7adf765543975960c77b56cc5563ae3371504ee14e"
+          }
+        }
+      ]
+    },
+    {
+      "case": "ACORR-CASE-11",
+      "title": "proof-only edits change no executable byte, off and on",
+      "status": "passed",
+      "variants": [
+        {
+          "name": "original/off",
+          "status": "passed",
+          "details": {
+            "opt": "off",
+            "subject_sha256": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+            "call_sha256": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+            "load_buffers_sha256": "5b02b1297ef8c0dbd6acceab82fd93eb7ee2c65d016d6831fa3c1df5602f9e35",
+            "workers": [
+              4077993,
+              4078231
+            ],
+            "report_sha256": "91fb0ef5363aca0a48a6486bb9eb01d6e117ba8ac981101f886635a01d56646b"
+          }
+        },
+        {
+          "name": "proof-only edit/off",
+          "status": "passed",
+          "details": {
+            "opt": "off",
+            "subject_sha256": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+            "call_sha256": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+            "load_buffers_sha256": "5b02b1297ef8c0dbd6acceab82fd93eb7ee2c65d016d6831fa3c1df5602f9e35",
+            "workers": [
+              4106484,
+              4106722
+            ],
+            "report_sha256": "7f51109d858102031b508e2433a7f20a76252fcdf5d834f9706a4704f4b3e535"
+          }
+        },
+        {
+          "name": "original/on",
+          "status": "passed",
+          "details": {
+            "opt": "on",
+            "subject_sha256": "ff4d96bb1f864de456964ebb2d945500126617d62331295f1d897ec4555c1501",
+            "call_sha256": "bdad023b1af9d11512e440b9f752b46cb35c070990cf66b33ff32b2392ba75bf",
+            "load_buffers_sha256": "16bc82f6aeb0868ec2f99e78e64ddfb7ab09abd48301924a7b7f5717f8b61cad",
+            "workers": [
+              4143081,
+              4143602
+            ],
+            "report_sha256": "5c45596725092e590f075da3f42684b82a96f9513293f237800e4ce32adc4b77"
+          }
+        },
+        {
+          "name": "proof-only edit/on",
+          "status": "passed",
+          "details": {
+            "opt": "on",
+            "subject_sha256": "ff4d96bb1f864de456964ebb2d945500126617d62331295f1d897ec4555c1501",
+            "call_sha256": "bdad023b1af9d11512e440b9f752b46cb35c070990cf66b33ff32b2392ba75bf",
+            "load_buffers_sha256": "16bc82f6aeb0868ec2f99e78e64ddfb7ab09abd48301924a7b7f5717f8b61cad",
+            "workers": [
+              4181873,
+              4182298
+            ],
+            "report_sha256": "0583b1eb850212cda5149767c6b65702f24c9c545b0722e8c0a47d128767cc3c"
+          }
+        },
+        {
+          "name": "the executable bytes are unchanged by the proof edit",
+          "status": "passed",
+          "details": {
+            "original/off": {
+              "subject": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+              "call": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+              "proof": "a0cad534eb68a1797dcb402837d82df87b70e47e19d66b9fc9cfae1fe46ad891"
+            },
+            "proof-only edit/off": {
+              "subject": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+              "call": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+              "proof": "ef3524b80db43706adfe9c8609badc5265b731a457d638c9b5a17263968df3ab"
+            },
+            "original/on": {
+              "subject": "ff4d96bb1f864de456964ebb2d945500126617d62331295f1d897ec4555c1501",
+              "call": "bdad023b1af9d11512e440b9f752b46cb35c070990cf66b33ff32b2392ba75bf",
+              "proof": "a0cad534eb68a1797dcb402837d82df87b70e47e19d66b9fc9cfae1fe46ad891"
+            },
+            "proof-only edit/on": {
+              "subject": "ff4d96bb1f864de456964ebb2d945500126617d62331295f1d897ec4555c1501",
+              "call": "bdad023b1af9d11512e440b9f752b46cb35c070990cf66b33ff32b2392ba75bf",
+              "proof": "ef3524b80db43706adfe9c8609badc5265b731a457d638c9b5a17263968df3ab"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "ACORR-CASE-12",
+      "title": "mode, policy, law and pin changes force full revalidation",
+      "status": "passed",
+      "variants": [
+        {
+          "name": "first off admission",
+          "status": "passed",
+          "details": {
+            "opt": "off",
+            "subject_sha256": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+            "call_sha256": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+            "load_buffers_sha256": "5b02b1297ef8c0dbd6acceab82fd93eb7ee2c65d016d6831fa3c1df5602f9e35",
+            "workers": [
+              28937,
+              29167
+            ],
+            "report_sha256": "d5e86c3b541758b2ba798d2039a96525be90f947eb70dfd2dd1eb07640c96d4d"
+          }
+        },
+        {
+          "name": "mode change revalidates and uses a new selection",
+          "status": "passed",
+          "details": {
+            "opt": "on",
+            "subject_sha256": "ff4d96bb1f864de456964ebb2d945500126617d62331295f1d897ec4555c1501",
+            "call_sha256": "bdad023b1af9d11512e440b9f752b46cb35c070990cf66b33ff32b2392ba75bf",
+            "load_buffers_sha256": "16bc82f6aeb0868ec2f99e78e64ddfb7ab09abd48301924a7b7f5717f8b61cad",
+            "workers": [
+              71659,
+              72217
+            ],
+            "report_sha256": "96d3d8ba0e2cc4b166a430abccd814728211acea9666c57b9d09e366a9f0bec2"
+          }
+        },
+        {
+          "name": "mode change observations",
+          "status": "passed",
+          "details": {
+            "off_workers": [
+              28937,
+              29167
+            ],
+            "on_workers": [
+              71659,
+              72217
+            ]
+          }
+        },
+        {
+          "name": "pin mode change forces revalidation",
+          "status": "passed",
+          "details": {
+            "code": "tool-pin-reject",
+            "report_sha256": "3d0c997676d70b445258e99eb573be5c777e29cfa400cb3104c15c7a46a4441d"
+          }
+        },
+        {
+          "name": "policy revision change revalidates",
+          "status": "passed",
+          "details": {
+            "opt": "off",
+            "subject_sha256": "5e06728595d903e58d3de2ccb20a0e2b97ce64b7983c9f52a516c070b18f8581",
+            "call_sha256": "c480550d758487243a11c991680d62c1a3d00e869f51ae3567e6670fb6ecc0d6",
+            "load_buffers_sha256": "5b02b1297ef8c0dbd6acceab82fd93eb7ee2c65d016d6831fa3c1df5602f9e35",
+            "workers": [
+              146956,
+              147215
+            ],
+            "report_sha256": "38e7c1fc9d14eedcdd9b7de0a3b28ddcd2e684a9bba4383092a2a585c08bc2af"
+          }
+        },
+        {
+          "name": "policy revision observations",
+          "status": "passed",
+          "details": {
+            "workers": [
+              146956,
+              147215
+            ]
+          }
+        },
+        {
+          "name": "law revision change revalidates",
+          "status": "passed",
+          "details": {
+            "opt": "off",
+            "subject_sha256": "6130671a8991339e1c03cf56da285e2496b975414f53443c9b631b9046bb648a",
+            "call_sha256": "f4a56615e05f670c911fc860d7a66d024e76cbc57dbe5bdf58650edb5ea9c2c1",
+            "load_buffers_sha256": "c8ba1fccb89f903a31d6bc62b7cc814bd4f6d8ea050f9721812f0ab394df9aa8",
+            "workers": [
+              174725,
+              174919
+            ],
+            "report_sha256": "0b3f85cfa80497deae66644f39a630bda4ed165e4e94097d5f275bdc82a15d5d"
+          }
+        },
+        {
+          "name": "law revision observations",
+          "status": "passed",
+          "details": {
+            "revision": "owner-law-v2-owner-approved-revision"
+          }
+        },
+        {
+          "name": "the v1 contract under the v2 law refuses",
+          "status": "passed",
+          "details": {
+            "code": "law-mismatch",
+            "report_sha256": "bd3d1cd43e7b80072d96c47095ffa8ff3062a81ea9b57fc2d2dd7f01c99a99d6"
+          }
+        }
+      ]
+    }
+  ],
+  "result": "passed",
+  "receipt_sha256": "d7f3e6cda4eb037c744d7e80c231b384b3f2324f4b4ea7a456112efb40a8fd16"
+}

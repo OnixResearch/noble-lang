@@ -2244,7 +2244,8 @@
         "LIVE-02",
         "LIVE-05",
         "LIVE-06",
-        "LIVE-10"
+        "LIVE-10",
+        "OWN-CASE-07"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -3093,8 +3094,7 @@
       ],
       "scenarios": [
         "CORE-15",
-        "OWN-CASE-04",
-        "OWN-CASE-09"
+        "OWN-CASE-04"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -3108,7 +3108,7 @@
         "review"
       ],
       "scenarios": [
-        "OWN-CASE-09"
+        "OWN-CASE-12"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -4733,6 +4733,7 @@
         "review"
       ],
       "scenarios": [
+        "OWN-CASE-09",
         "RA-CASE-02"
       ],
       "test_design": "scenario-described-not-executed"
@@ -5348,6 +5349,12 @@
         "review"
       ],
       "scenarios": [
+        "ACORR-CASE-01",
+        "ACORR-CASE-03",
+        "ACORR-CASE-06",
+        "ACORR-CASE-08",
+        "ACORR-CASE-09",
+        "ACORR-CASE-10",
         "CORE-10",
         "S-CASE-07"
       ],
@@ -5390,6 +5397,66 @@
         "S-CASE-15"
       ],
       "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "SMERGE-CHECK-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "SMERGE-EVIDENCE-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "SMERGE-GATE-01",
+      "document": "../.cairn/specs/verification/spec.md",
+      "document_id": "SPEC-V001",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "SMERGE-REL-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "SMERGE-SCOPE-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "experiment-test",
+        "model-proof",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
     },
     {
       "id": "TCRANK-01",
@@ -5957,6 +6024,11 @@
         "review"
       ],
       "scenarios": [
+        "ACORR-CASE-01",
+        "ACORR-CASE-03",
+        "ACORR-CASE-04",
+        "ACORR-CASE-05",
+        "ACORR-CASE-09",
         "CONTRACT-08",
         "CONTRACT-13"
       ],
@@ -5971,8 +6043,11 @@
         "implementation-test",
         "review"
       ],
-      "scenarios": [],
-      "test_design": "test-design-open"
+      "scenarios": [
+        "ACORR-CASE-05",
+        "ACORR-CASE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
     },
     {
       "id": "VC-ADMIT-03",
@@ -5984,6 +6059,14 @@
         "review"
       ],
       "scenarios": [
+        "ACORR-CASE-01",
+        "ACORR-CASE-02",
+        "ACORR-CASE-03",
+        "ACORR-CASE-06",
+        "ACORR-CASE-07",
+        "ACORR-CASE-08",
+        "ACORR-CASE-09",
+        "ACORR-CASE-11",
         "CONTRACT-13",
         "CONTRACT-16"
       ],
@@ -5999,6 +6082,9 @@
         "review"
       ],
       "scenarios": [
+        "ACORR-CASE-04",
+        "ACORR-CASE-08",
+        "ACORR-CASE-12",
         "CONTRACT-02"
       ],
       "test_design": "scenario-described-not-executed"
@@ -6013,6 +6099,8 @@
         "review"
       ],
       "scenarios": [
+        "ACORR-CASE-02",
+        "ACORR-CASE-07",
         "ADAPT-15",
         "CONTRACT-07"
       ],
@@ -6830,6 +6918,7 @@
         "review"
       ],
       "scenarios": [
+        "ACORR-CASE-12",
         "CONTRACT-02",
         "CONTRACT-06"
       ],
@@ -6860,6 +6949,7 @@
         "review"
       ],
       "scenarios": [
+        "ACORR-CASE-11",
         "CONTRACT-10"
       ],
       "test_design": "scenario-described-not-executed"
@@ -8190,6 +8280,7 @@
         "review"
       ],
       "scenarios": [
+        "OWN-CASE-09",
         "WI-05"
       ],
       "test_design": "scenario-described-not-executed"

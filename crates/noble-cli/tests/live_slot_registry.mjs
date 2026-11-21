@@ -213,6 +213,38 @@ const frame = (address, parent, handle, pairs) => {
   assert.throws(() => registry.rootEpoch(trapped), /inactive/);
 }
 
+// The per-root frame-pin ledger is observable: normal frames are counted as they are left, and an
+// abnormal exit reports the pins the failed root still held instead of silently clearing its frame
+// stack. The abort path does not release those pins (the instance is discarded); per-frame release
+// accounting belongs to live-reference-lifetimes (decision 6, r[LREF-EXIT-01]).
+{
+  const registry = host(4);
+  const b = admit(registry, 'pins-B', 701);
+  grants('publish', 'B', true); grants('dispatch', 'B', true);
+  assert.equal(registry.publish({ slotId: 'B', expectedEpoch: 0n, interface: descriptor(),
+    version: b }).outcome, 'published');
+  const module = registry.registerModule(digest, [site(['I64'], ['I64'], [])]);
+  const root = registry.pinRoot(950, module);
+  registry.bindRef(root, 1, 7, 'B', descriptor());
+  assert.equal(registry.validateBorrowBinding(root, module, 1, 7), 1);
+  view.setUint32(ROOT_BINDING_COUNT, 1, true);
+  frame(FRAME, 0, 950, [[1, 7]]);
+  registry.enterFrame(root, module, -1, FRAME, 950, memory);
+  assert.deepEqual(registry.framePinCounts(root), { entered: 1, released: 0, active: 1 });
+  assert.equal(registry.dispatch(root, 7, module, 3).handle, 701);
+  frame(FRAME + 64, FRAME, 701, []);
+  const inner = registry.enterFrame(root, module, 3, FRAME + 64, 701, memory);
+  assert.deepEqual(registry.framePinCounts(root), { entered: 2, released: 0, active: 2 });
+  registry.leaveFrame(root, inner);
+  assert.deepEqual(registry.framePinCounts(root), { entered: 2, released: 1, active: 1 });
+  assert.throws(() => registry.finishRoot(root), /active frame/,
+    'a root with a live frame cannot finish normally');
+  assert.deepEqual(registry.abortRoot(root), { entered: 2, released: 1, active: 1 },
+    'an abnormal exit reports the pins it still held instead of assigning a release');
+  assert.throws(() => registry.framePinCounts(root), /inactive/,
+    'the aborted root has no live pin ledger left');
+}
+
 // A→B→C forwards independently issued root borrows through checked frame
 // positions. Publishing C-v2 after A starts cannot change old-root C-v1.
 {

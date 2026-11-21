@@ -1957,6 +1957,13 @@ export class CoreEngine {
     if (rebuilt.length > MAX_FRAME || !bytes.equals(rebuilt)) {
       return refusal('correspondence-reject', 'final artifact bytes differ from independent host-selected compilation', actualImports);
     }
+    // A test-only barrier for the PAA-1 post-check replacement control: it runs
+    // exactly between the byte comparison and instantiation. Only the
+    // paa1-test-barrier feature build defines the function; every other build
+    // leaves it undefined and nothing is read from the environment.
+    if (typeof paa1CompareBarrier === 'function') {
+      this.paa1Barrier = paa1CompareBarrier({ candidate: bytes, module: rebuilt });
+    }
     // All candidate checks precede instantiation. Even a module with no start
     // function may mutate imported memory/table through active segments.
     // The admitted bytes are independently rebuilt and this engine is fresh.
@@ -1972,7 +1979,7 @@ export class CoreEngine {
     return { ...this.execute(), admission: {
       actual_imports: actualImports, claimed_effects: claimedEffects,
       allowed_effects: allowedEffects, correspondence: 'byte-exact',
-      optimized: this.optimized,
+      optimized: this.optimized, test_barrier: this.paa1Barrier ?? null,
     } };
   }
 

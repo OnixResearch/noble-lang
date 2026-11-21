@@ -1,0 +1,128 @@
+{"operation":"define","id":"definition-variable","name":"builder","source":"def builder [ quote [ + ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-subtract","name":"subtract","source":"def subtract [ quote [ - ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-renamed","name":"renamed","source":"def renamed [ quote [ + ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-fixed","name":"fixed","source":"def fixed [ 2 quote [ + ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-fixed3","name":"fixed3","source":"def fixed3 [ 3 quote [ + ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-computed","name":"computed","source":"def computed [ 1 1 + quote [ + ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-computed3","name":"computed3","source":"def computed3 [ 1 2 + quote [ + ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-ambiguous","name":"ambiguous","source":"def ambiguous [ 1 + quote [ + ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-dual","name":"dual","source":"def dual [ quote swap quote ]","inputs":[]}
+{"operation":"define","id":"definition-copy","name":"copy","source":"def copy [ dup quote swap quote ]","inputs":[]}
+{"operation":"define","id":"definition-aliased","name":"aliased","source":"def aliased [ drop dup quote swap quote compose [ + + + ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-renamed-alias","name":"otheralias","source":"def otheralias [ swap swap drop dup quote swap quote compose [ + + + ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-independent","name":"independent","source":"def independent [ quote swap quote compose [ + + + ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-fixed-pair","name":"fixedpair","source":"def fixedpair [ drop 2 quote 2 quote compose [ + + + ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-shared-program","name":"sharedprogram","source":"def sharedprogram [ quote [ + ] compose let q q q compose [ 0 + ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-repeat-root","name":"repeatroot","source":"def repeatroot [ dup quote [ + ] compose swap quote [ + ] compose compose [ 0 + ] compose ]","inputs":[]}
+{"operation":"define","id":"definition-nested-program","name":"nestedprogram","source":"def nestedprogram [ quote let q q quote [ run + ] compose ]","inputs":[]}
+{"operation":"install","id":"variable","source":"builder","selected_name":"builder","inputs":["I64"]}
+{"operation":"install","id":"subtract","source":"subtract","selected_name":"subtract","inputs":["I64"]}
+{"operation":"install","id":"renamed","source":"renamed","selected_name":"renamed","inputs":["I64"]}
+{"operation":"install","id":"fixed","source":"fixed","selected_name":"fixed","inputs":["I64"]}
+{"operation":"install","id":"fixed3","source":"fixed3","selected_name":"fixed3","inputs":["I64"]}
+{"operation":"install","id":"computed","source":"computed","selected_name":"computed","inputs":["I64"]}
+{"operation":"install","id":"computed3","source":"computed3","selected_name":"computed3","inputs":["I64"]}
+{"operation":"install","id":"ambiguous","source":"ambiguous","selected_name":"ambiguous","inputs":["I64"]}
+{"operation":"install","id":"dual","source":"dual","selected_name":"dual","inputs":["I64","I64"]}
+{"operation":"install","id":"copy","source":"copy","selected_name":"copy","inputs":["I64"]}
+{"operation":"install","id":"aliased","source":"aliased","selected_name":"aliased","inputs":["I64","I64"]}
+{"operation":"install","id":"renamed-alias","source":"otheralias","selected_name":"otheralias","inputs":["I64","I64"]}
+{"operation":"install","id":"independent","source":"independent","selected_name":"independent","inputs":["I64","I64"]}
+{"operation":"install","id":"fixed-pair","source":"fixedpair","selected_name":"fixedpair","inputs":["I64","I64"]}
+{"operation":"install","id":"shared-program","source":"sharedprogram","selected_name":"sharedprogram","inputs":["I64"]}
+{"operation":"install","id":"repeat-root","source":"repeatroot","selected_name":"repeatroot","inputs":["I64"]}
+{"operation":"install","id":"nested-program","source":"nestedprogram","selected_name":"nestedprogram","inputs":["I64"]}
+{"operation":"install","id":"misbound","source":"fixed","selected_name":"builder","inputs":["I64"]}
+{"operation":"install","id":"misdigest","source":"builder","selected_name":"builder","inputs":["I64"]}
+{"operation":"install","id":"runner","source":"run","inputs":["I64","Program<I64,I64,pure>"]}
+{"operation":"install","id":"runner2","source":"run","inputs":["I64","I64","Program<I64+I64,I64,pure>"]}
+{"operation":"install","id":"generic","source":"slot.invoke","inputs":["I64","I64","LiveRef<I64+I64,I64,pure>"]}
+{"operation":"define","id":"definition-renamed-alias","name":"aliased","source":"def otheralias [ swap swap drop dup quote swap quote compose [ + + + ] compose ]","inputs":[]}
+{"operation":"invoke","id":"variable","inputs":[{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-1"}],"refs":[]}
+{"operation":"invoke","id":"variable","inputs":[{"kind":"i64","value":"3"}],"refs":[]}
+{"operation":"invoke","id":"renamed","inputs":[{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"invoke","id":"variable","inputs":[{"kind":"i64","value":"0"}],"refs":[]}
+{"operation":"invoke","id":"variable","inputs":[{"kind":"i64","value":"-0"}],"refs":[]}
+{"operation":"publish","slot":"ordinary-control","owner":"program-1","expected_epoch":"0"}
+{"operation":"publish","slot":"proof-required","owner":"program-1","expected_epoch":"0"}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-2"}],"refs":[]}
+{"operation":"invoke","id":"subtract","inputs":[{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"9"},{"kind":"program","owner":"program-6"}],"refs":[]}
+{"operation":"invoke","id":"fixed","inputs":[{"kind":"i64","value":"3"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-7"}],"refs":[]}
+{"operation":"invoke","id":"computed","inputs":[{"kind":"i64","value":"3"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-8"}],"refs":[]}
+{"operation":"invoke","id":"fixed3","inputs":[{"kind":"i64","value":"3"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-9"}],"refs":[]}
+{"operation":"invoke","id":"computed3","inputs":[{"kind":"i64","value":"3"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-10"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-7"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-9"}],"refs":[]}
+{"operation":"invoke","id":"fixed","inputs":[{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"invoke","id":"computed","inputs":[{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"invoke","id":"dual","inputs":[{"kind":"i64","value":"2"},{"kind":"i64","value":"3"}],"refs":[]}
+{"operation":"invoke","id":"copy","inputs":[{"kind":"i64","value":"7"}],"refs":[]}
+{"operation":"invoke","id":"shared-program","inputs":[{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"invoke","id":"repeat-root","inputs":[{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-17"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-18"}],"refs":[]}
+{"operation":"invoke","id":"nested-program","inputs":[{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-19"}],"refs":[]}
+{"operation":"invoke","id":"nested-program","inputs":[{"kind":"i64","value":"3"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-20"}],"refs":[]}
+{"operation":"invoke","id":"aliased","inputs":[{"kind":"i64","value":"2"},{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"invoke","id":"renamed-alias","inputs":[{"kind":"i64","value":"2"},{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"invoke","id":"independent","inputs":[{"kind":"i64","value":"2"},{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"discard","id":"variable"}
+{"operation":"discard","id":"aliased"}
+{"operation":"invoke","id":"runner2","inputs":[{"kind":"i64","value":"1"},{"kind":"i64","value":"4"},{"kind":"program","owner":"program-21"}],"refs":[]}
+{"operation":"invoke","id":"runner2","inputs":[{"kind":"i64","value":"1"},{"kind":"i64","value":"4"},{"kind":"program","owner":"program-23"}],"refs":[]}
+{"operation":"invoke","id":"independent","inputs":[{"kind":"i64","value":"2"},{"kind":"i64","value":"3"}],"refs":[]}
+{"operation":"invoke","id":"runner2","inputs":[{"kind":"i64","value":"1"},{"kind":"i64","value":"4"},{"kind":"program","owner":"program-24"}],"refs":[]}
+{"operation":"invoke","id":"fixed-pair","inputs":[{"kind":"i64","value":"2"},{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"invoke","id":"runner2","inputs":[{"kind":"i64","value":"1"},{"kind":"i64","value":"4"},{"kind":"program","owner":"program-25"}],"refs":[]}
+{"operation":"publish","slot":"alias-target","owner":"program-21","expected_epoch":"0","target_manifest":{"artifact_sha256":"7a4e41b8c0de4f8b06dea99e055b737f1e07e28729ee55a084c9ff6f63104fb2"}}
+{"operation":"publish","slot":"alias-proof-required","owner":"program-25","expected_epoch":"0"}
+{"operation":"publish","slot":"alias-target","owner":"program-21","expected_epoch":"1"}
+{"operation":"invoke","id":"generic","inputs":[{"kind":"i64","value":"1"},{"kind":"i64","value":"4"}],"refs":[{"position":2,"ordinal":0,"slot":"alias-target"}],"record":true}
+{"operation":"invoke","id":"aliased","inputs":[{"kind":"i64","value":"3"},{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"publish","slot":"alias-target","owner":"program-26","expected_epoch":"2","expected_incarnation":"1","expected_generation":"1"}
+{"operation":"publish","slot":"alias-target","owner":"program-21","expected_epoch":"2","expected_incarnation":"1","expected_generation":"2"}
+{"operation":"release-program","owner":"program-21"}
+{"operation":"invoke","id":"generic","inputs":[{"kind":"i64","value":"1"},{"kind":"i64","value":"4"}],"refs":[{"position":2,"ordinal":0,"slot":"alias-target"}]}
+{"operation":"replay","token":"replay-1","inputs":[{"kind":"i64","value":"1"},{"kind":"i64","value":"4"}],"refs":[{"position":2,"ordinal":0,"slot":"alias-target"}],"expected_identity":{"caller":{"artifactSha256":"9a31e6fe0c8d0b9bc1d4f26e06d6c4ac9a60388eac57f66dcea3e2a2f84ab363","handle":4415,"id":"generic","sourceSha256":"c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"},"slots":[{"artifactSha256":"12cc123f77bab275d24bbeecb7fd255733522b1c0ef2650374008a33a4d0fd10","captures":["I64:2"],"definitionId":"anonymous-template-experimental-v4-sha256:e3af0b4ada0aacc8b1001458fcbd8a06c9dc0e20c66456760622f996d6ce02bb","effects":[],"generation":"1","incarnation":"1","input":["I64","I64"],"output":["I64"],"programValueId":"anonymous-program-experimental-v4-sha256:74e04f34c1d4618f767a403109f97dd2a993b90a0b61d13f52c1ac041c8f705e","recipeSha256":"5412d0d80b96f0f260c5f50eba7a0ef9bd219da2e3ea77ef6c736e61c4aca539","semanticContext":"returned-target:d109beac468fdeff853b83e237da6208eae36a7f9c29a154d1707ec5c5b06d85:graph:408729d66e07a3cdf5ccea52e42e094733c81c460dfc6acd1d9824028af7d4ed","slotId":"alias-target"},{"artifactSha256":"e0059dbd81c163e2c7fc5a9f6f72ddf5881f7d83b90247cbad9038d29b395b1f","captures":["I64:2"],"definitionId":"anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9","effects":[],"generation":"1","incarnation":"1","input":["I64"],"output":["I64"],"programValueId":"anonymous-program-experimental-v4-sha256:c4e177bf59286b19080dc9aea870186a6e53d28f32a69c40cb78dd33feaac5bc","recipeSha256":"39b4c2b87d79e3abcc5936d50d019a5b0ee1a9222c5783b02469342f4dc81e03","semanticContext":"returned-target:e0059dbd81c163e2c7fc5a9f6f72ddf5881f7d83b90247cbad9038d29b395b1f:graph:6ba79fb0d8f84dc89e2f8456983e9e6b936de13cda91df13635ced999e5b4e27","slotId":"ordinary-control"}]},"expected_trace":[{"artifactSha256":"d109beac468fdeff853b83e237da6208eae36a7f9c29a154d1707ec5c5b06d85","captures":["I64:2"],"definitionId":"anonymous-template-experimental-v4-sha256:e3af0b4ada0aacc8b1001458fcbd8a06c9dc0e20c66456760622f996d6ce02bb","generation":"1","incarnation":"1","operation":"dispatch","outcome":"allowed","policyAllowed":true,"policyInput":{"operation":"dispatch","rootEpoch":"2","slotId":"alias-target","version":{"artifactSha256":"d109beac468fdeff853b83e237da6208eae36a7f9c29a154d1707ec5c5b06d85","assumptions":"unverified","captures":["I64:2"],"claim":"unverified","definitionId":"anonymous-template-experimental-v4-sha256:e3af0b4ada0aacc8b1001458fcbd8a06c9dc0e20c66456760622f996d6ce02bb","effects":[],"handle":4534,"input":["I64","I64"],"output":["I64"],"programValueId":"anonymous-program-experimental-v4-sha256:00b102e939692226d237e43eb32d7af65d09f6dbae42dfb1d38e5328f1f4d500","recipeSha256":"5412d0d80b96f0f260c5f50eba7a0ef9bd219da2e3ea77ef6c736e61c4aca539","semanticContext":"returned-target:d109beac468fdeff853b83e237da6208eae36a7f9c29a154d1707ec5c5b06d85:graph:408729d66e07a3cdf5ccea52e42e094733c81c460dfc6acd1d9824028af7d4ed"}},"programValueId":"anonymous-program-experimental-v4-sha256:00b102e939692226d237e43eb32d7af65d09f6dbae42dfb1d38e5328f1f4d500","recipeSha256":"5412d0d80b96f0f260c5f50eba7a0ef9bd219da2e3ea77ef6c736e61c4aca539","rootEpoch":"2","semanticContext":"returned-target:d109beac468fdeff853b83e237da6208eae36a7f9c29a154d1707ec5c5b06d85:graph:408729d66e07a3cdf5ccea52e42e094733c81c460dfc6acd1d9824028af7d4ed","slotId":"alias-target"}],"expected_stack":[{"kind":1,"value":"9"}]}
+{"operation":"replay","token":"replay-1","inputs":[{"kind":"i64","value":"1"},{"kind":"i64","value":"4"}],"refs":[{"position":2,"ordinal":0,"slot":"alias-target"}],"expected_identity":{"caller":{"artifactSha256":"9a31e6fe0c8d0b9bc1d4f26e06d6c4ac9a60388eac57f66dcea3e2a2f84ab363","handle":4415,"id":"generic","sourceSha256":"c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"},"slots":[{"artifactSha256":"d109beac468fdeff853b83e237da6208eae36a7f9c29a154d1707ec5c5b06d85","captures":["I64:2"],"definitionId":"anonymous-template-experimental-v4-sha256:e3af0b4ada0aacc8b1001458fcbd8a06c9dc0e20c66456760622f996d6ce02bb","effects":[],"generation":"1","incarnation":"1","input":["I64","I64"],"output":["I64"],"programValueId":"anonymous-program-experimental-v4-sha256:00b102e939692226d237e43eb32d7af65d09f6dbae42dfb1d38e5328f1f4d500","recipeSha256":"5412d0d80b96f0f260c5f50eba7a0ef9bd219da2e3ea77ef6c736e61c4aca539","semanticContext":"returned-target:d109beac468fdeff853b83e237da6208eae36a7f9c29a154d1707ec5c5b06d85:graph:408729d66e07a3cdf5ccea52e42e094733c81c460dfc6acd1d9824028af7d4ed","slotId":"alias-target"},{"artifactSha256":"e0059dbd81c163e2c7fc5a9f6f72ddf5881f7d83b90247cbad9038d29b395b1f","captures":["I64:2"],"definitionId":"anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9","effects":[],"generation":"1","incarnation":"1","input":["I64"],"output":["I64"],"programValueId":"anonymous-program-experimental-v4-sha256:c4e177bf59286b19080dc9aea870186a6e53d28f32a69c40cb78dd33feaac5bc","recipeSha256":"39b4c2b87d79e3abcc5936d50d019a5b0ee1a9222c5783b02469342f4dc81e03","semanticContext":"returned-target:e0059dbd81c163e2c7fc5a9f6f72ddf5881f7d83b90247cbad9038d29b395b1f:graph:6ba79fb0d8f84dc89e2f8456983e9e6b936de13cda91df13635ced999e5b4e27","slotId":"ordinary-control"}]},"expected_trace":[{"artifactSha256":"d109beac468fdeff853b83e237da6208eae36a7f9c29a154d1707ec5c5b06d85","captures":["I64:2"],"definitionId":"anonymous-template-experimental-v4-sha256:e3af0b4ada0aacc8b1001458fcbd8a06c9dc0e20c66456760622f996d6ce02bb","generation":"1","incarnation":"1","operation":"dispatch","outcome":"allowed","policyAllowed":true,"policyInput":{"operation":"dispatch","rootEpoch":"2","slotId":"alias-target","version":{"artifactSha256":"d109beac468fdeff853b83e237da6208eae36a7f9c29a154d1707ec5c5b06d85","assumptions":"unverified","captures":["I64:2"],"claim":"unverified","definitionId":"anonymous-template-experimental-v4-sha256:e3af0b4ada0aacc8b1001458fcbd8a06c9dc0e20c66456760622f996d6ce02bb","effects":[],"handle":4534,"input":["I64","I64"],"output":["I64"],"programValueId":"anonymous-program-experimental-v4-sha256:00b102e939692226d237e43eb32d7af65d09f6dbae42dfb1d38e5328f1f4d500","recipeSha256":"5412d0d80b96f0f260c5f50eba7a0ef9bd219da2e3ea77ef6c736e61c4aca539","semanticContext":"returned-target:d109beac468fdeff853b83e237da6208eae36a7f9c29a154d1707ec5c5b06d85:graph:408729d66e07a3cdf5ccea52e42e094733c81c460dfc6acd1d9824028af7d4ed"}},"programValueId":"anonymous-program-experimental-v4-sha256:00b102e939692226d237e43eb32d7af65d09f6dbae42dfb1d38e5328f1f4d500","recipeSha256":"5412d0d80b96f0f260c5f50eba7a0ef9bd219da2e3ea77ef6c736e61c4aca539","rootEpoch":"2","semanticContext":"returned-target:d109beac468fdeff853b83e237da6208eae36a7f9c29a154d1707ec5c5b06d85:graph:408729d66e07a3cdf5ccea52e42e094733c81c460dfc6acd1d9824028af7d4ed","slotId":"alias-target"}],"expected_stack":[{"kind":1,"value":"9"}]}
+{"operation":"release-replay","token":"replay-1"}
+{"operation":"publish","slot":"alias-proof-required","owner":"program-26","expected_epoch":"3"}
+{"operation":"invoke","id":"ambiguous","inputs":[{"kind":"i64","value":"2"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-27"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-999999"}],"refs":[]}
+{"operation":"release-program","owner":"program-1"}
+{"operation":"release-program","owner":"program-2"}
+{"operation":"release-program","owner":"program-3"}
+{"operation":"release-program","owner":"program-4"}
+{"operation":"release-program","owner":"program-5"}
+{"operation":"release-program","owner":"program-6"}
+{"operation":"release-program","owner":"program-7"}
+{"operation":"release-program","owner":"program-8"}
+{"operation":"release-program","owner":"program-9"}
+{"operation":"release-program","owner":"program-10"}
+{"operation":"release-program","owner":"program-11"}
+{"operation":"release-program","owner":"program-12"}
+{"operation":"release-program","owner":"program-13"}
+{"operation":"release-program","owner":"program-14"}
+{"operation":"release-program","owner":"program-15"}
+{"operation":"release-program","owner":"program-16"}
+{"operation":"release-program","owner":"program-17"}
+{"operation":"release-program","owner":"program-18"}
+{"operation":"release-program","owner":"program-19"}
+{"operation":"release-program","owner":"program-20"}
+{"operation":"release-program","owner":"program-22"}
+{"operation":"release-program","owner":"program-23"}
+{"operation":"release-program","owner":"program-24"}
+{"operation":"release-program","owner":"program-25"}
+{"operation":"release-program","owner":"program-26"}
+{"operation":"release-program","owner":"program-27"}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"1"},{"kind":"program","owner":"program-1"}],"refs":[]}
+{"operation":"publish","slot":"alias-target","owner":"program-21","expected_epoch":"3","expected_incarnation":"1","expected_generation":"2"}

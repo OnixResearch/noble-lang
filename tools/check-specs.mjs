@@ -111,6 +111,7 @@ const ROUTES = {
   WIT: ['boundary-test', 'model-proof', 'review'],
   H: ['boundary-test', 'correspondence', 'review'],
   S: ['boundary-test', 'correspondence', 'review'],
+  ACORR: ['admission-test', 'correspondence', 'review'],
   WIT: ['boundary-test', 'model-proof', 'review'],
   WI: ['boundary-test', 'correspondence', 'review'],
   RA: ['boundary-test', 'correspondence', 'review'],
@@ -127,6 +128,7 @@ const ROUTES = {
   FXORACLE: ['experiment-test', 'correspondence', 'review'],
   EPROTO: ['boundary-test', 'model-proof', 'review'],
   FSUB: ['experiment-test', 'model-proof', 'review'],
+  SMERGE: ['experiment-test', 'model-proof', 'review'],
 };
 
 // Document scope only. This discovery is not the compiler/source inventory.

@@ -42,6 +42,8 @@ Legend:
 
 **Artifact identity is not semantic preservation.** Rows 6–7 can authenticate *which bytes* run relative to a trusted compiler. Only rows 5, 8 and 9 obligations (PO-17, PO-18, PO-14, PO-21) could establish *what those bytes mean*, and none is discharged.
 
+Row 1 records the state when this design was written. Since then (2026-11-20) the owner-frozen laws (`verification/owner-law/laws/`) and the separate `noble release` consumer exist, and CONTRACT-16 is `implemented`/`passed` with proof open (`verification/owner-law/acceptance.json`). The PAA-1 admission takes an owner-law input (ACORR-CASE-01 and -05). Ordinary `build` still takes an invoker-selected `--contract`, and CONTRACT-20/23 remain `absent`/`not-run`.
+
 ## Decisions
 
 ### Decision: Select one extension: a proof-bound artifact admission envelope for the MC2 pure quotation profile

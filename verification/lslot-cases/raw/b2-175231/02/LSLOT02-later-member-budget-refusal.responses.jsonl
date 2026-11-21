@@ -1,0 +1,8 @@
+{"epoch":"0","guest_requests":0,"outcome":"configured","protected_operations":0,"retire_code_spans":[],"schema":"noble-live-slot-report/v1","stage":"slot"}
+{"artifact_sha256":"25e28d943b9fd2f609e59530f58107d0587a06070fa4834143db73e56e86172c","generation":"1","guest_requests":0,"handle":4099,"id":"B1","outcome":"installed","protected_operations":0,"retire_code_spans":[],"schema":"noble-live-slot-report/v1","stage":"slot"}
+{"artifact_sha256":"288fde49c3d2895ea30338f7183d72494b87d31c8648ba79d397654f09123205","generation":"2","guest_requests":0,"handle":4103,"id":"A1","outcome":"installed","protected_operations":0,"retire_code_spans":[],"schema":"noble-live-slot-report/v1","stage":"slot"}
+{"epoch":"0","guest_requests":0,"outcome":"retention-budget-refused","protected_operations":0,"retire_code_spans":[],"schema":"noble-live-slot-report/v1","stage":"slot"}
+{"epoch":"0","guest_requests":0,"outcome":"stale-reject","protected_operations":0,"retire_code_spans":[],"schema":"noble-live-slot-report/v1","stage":"slot"}
+{"epoch":"0","guest_requests":0,"outcome":"stale-reject","protected_operations":0,"retire_code_spans":[],"schema":"noble-live-slot-report/v1","stage":"slot"}
+{"frame_pins":{"omitted":0,"roots":0,"rows":[]},"guest_requests":0,"outcome":"trace-observed","protected_operations":0,"retire_code_spans":[],"schema":"noble-live-slot-report/v1","stage":"slot","trace":[]}
+{"epoch":"0","guest_requests":0,"outcome":"retention-budget-refused","protected_operations":0,"retire_code_spans":[],"schema":"noble-live-slot-report/v1","stage":"slot"}

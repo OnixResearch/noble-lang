@@ -22,6 +22,10 @@ pub(super) struct Options {
     pub(super) library_tree: Option<std::path::PathBuf>,
     /// `--report-schema v4` compares every observed identity to this document.
     pub(super) pins: Option<std::path::PathBuf>,
+    /// The policy revision the companion core admits evidence under. The build
+    /// command keeps the pinned default; the opt-in PAA-1 consumer selects it
+    /// explicitly so a revision change forces full revalidation.
+    pub(super) policy_revision: u32,
 }
 
 fn usage() -> crate::workflow::output::Failure {
@@ -167,6 +171,7 @@ pub(super) fn parse(
         lean_binary,
         library_tree,
         pins,
+        policy_revision: super::report::POLICY_REVISION,
     })
 }
 

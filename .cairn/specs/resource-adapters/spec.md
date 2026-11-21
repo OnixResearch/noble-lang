@@ -137,6 +137,14 @@ An imported interface can mention a borrowed parameter without exposing that bor
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: OWN-CASE-09 for RA-TYPE-02
+
+- GIVEN the `Ownership-Lifetime-Design` profile and every field of `input` in [OWN-CASE-09](../../../specs/conformance/ownership-cases.json)
+- WHEN the `runtime` procedure for case `OWN-CASE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `OWN-CASE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ## State and authority

@@ -103,8 +103,8 @@ Optional calculator proof claims additionally require applicable MC1/MC2 support
 
 ## Numeric-Graph-v1 (bounded active opt-in profile)
 
-The selected [Numeric-Graph-v1 change](../.cairn/changes/numeric-graph-v1/design.md)
-is active, not archived. Only explicit `noble ngraph` and the `noble-ngraph`
+The selected [Numeric-Graph-v1 change](../.cairn/archive/2026-11-21-numeric-graph-v1/design.md)
+is archived (2026-11-21). Only explicit `noble ngraph` and the `noble-ngraph`
 library select it: exact `ngraph-i64/0` extraction and directly authored
 `ngraph-f32/0` graphs, checked CPU evaluation, immutable training snapshots
 and same-platform replay. Ordinary entry points, K-NUM-01 and the kernel
@@ -1538,16 +1538,22 @@ requires a pinned sandbox and separately checked source/C/ELF admission.
 Only restricted inert checked I64/Bool/Unit/Text-result C11 source emission
 is present in this isolated source-only integration, including internal
 Pair/Sum/List construction/elimination, exact checked value-shape preflights
-and bounded immutable aggregate/Program captures. Pair/Sum/List/Syntax/Program
-final results, reflect, runtime inputs and host mediation remain unsupported.
+and bounded immutable aggregate/Program captures, plus one checked
+Pair/Sum/List result rendered as bounded value text. Inputs are read through
+descriptor-anchored sealed snapshots and outputs are written through the
+created directory descriptor; trusted-anchor selection, in-place rewrite
+detection and native admission remain absent. Syntax/Program final results,
+reflect, runtime inputs and host mediation remain unsupported.
 An optional exact supplied `limits.list_length` from 0 to 255 (default 255)
 is accepted, retained in the manifest and emitted as the effective
 `LIST_LIMIT` with a pre-`cons` check that has not been executed, so the field
 cannot be silently dropped or advertised as an unenforced no-op; the internal
 List ceiling stays 255. This is not CB-CASE-01/06 admission. The held
-canonical CB-BUILD-01 does not describe the source-only route; the reconciled
-delta's disclosure needs independent owner review and legal sync, and the
-eleven-block reconciliation is recorded in the change's `reconciliation.md`.
+canonical CB-BUILD-01 carries the source-only paragraph that the
+`8c6ab3d0` mid-change sync applied; the later aggregate-result and
+input-integrity disclosures are dated delta insertions awaiting their
+reviewed sync, and the eleven-block reconciliation is recorded in the
+change's `reconciliation.md`.
 `--native` and `execute --target c` refuse. CB-CASE-01
 supplies `limits.list_length` and remains open because no native runtime or
 selected-Wasm comparison has run, not because the exact source-only policy
@@ -1564,9 +1570,12 @@ reload, LIVE-05 forced overlap, LIVE-06 explicit host revoke and general
 LIVE-10 cancellation/retirement assurance remain open in those historical
 receipts; source-only LIVE03 integration is not a new JS-instance receipt.
 Neither complete opt-in backend profile is accepted: all
-[LIVE](conformance/live-wasm-cases.json) and
-[CB](conformance/c-backend-cases.json) cases are absent/not-run and proofs
-open. A guarded partial live REPL implementation is not LIVE acceptance.
+[CB](conformance/c-backend-cases.json) cases and
+[LIVE](conformance/live-wasm-cases.json) cases LIVE-02 to LIVE-05 and LIVE-08
+to LIVE-10 are absent/not-run, LIVE-01, LIVE-06 and LIVE-07 passed from one
+source-bound receipt (`verification/live-cases/acceptance.json`, 2026-11-20),
+and every proof is open. A guarded partial live REPL implementation is not
+LIVE acceptance.
 Ordinary Core `run`/`session`, selected Wasm/Node-V8 and historical M4
 evidence remain unchanged; these designs inherit no M4 execution claim.
 

@@ -5,13 +5,20 @@
 /// module bytes only after they re-hash to the identity the worker reported. A
 /// refusal returns the worker diagnostic unchanged: an assembled module is tool
 /// correspondence evidence, never a verified backend.
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; selected-worker startup, assembly, artifact reads and the re-read identity check return typed failures. External tool and I/O failures must not become assertion panics."
-)]
 pub(crate) fn assemble_wat(
     directory: &std::path::Path,
     wat: &[u8],
+) -> Result<Assembly, std::string::String> {
+    assemble_wat_optimized(directory, wat, false)
+}
+
+/// Assemble one accepted WAT module in the selected mode. The optimizer runs
+/// only when `optimized` selects it, and the emitted module file is the one
+/// that mode produces.
+pub(crate) fn assemble_wat_optimized(
+    directory: &std::path::Path,
+    wat: &[u8],
+    optimized: bool,
 ) -> Result<Assembly, std::string::String> {
     let options = super::super::arguments::Options {
         source: None,
@@ -30,7 +37,7 @@ pub(crate) fn assemble_wat(
         bindings: None,
         manifest: None,
         framed: false,
-        optimized: false,
+        optimized,
         type_directed_experimental: false,
         lowering_selected: false,
         emit: Some(directory.to_path_buf()),
@@ -43,7 +50,11 @@ pub(crate) fn assemble_wat(
     if report.outcome != "ready" {
         return Err(report.json);
     }
-    let module = directory.join("engine").join("module-1.wasm");
+    let module = directory.join("engine").join(if optimized {
+        "module-1-optimized.wasm"
+    } else {
+        "module-1.wasm"
+    });
     let bytes = attempt!(read_artifact(&module, MODULE_LIMIT, "assembled module"));
     // The worker reported the identities of the bytes it assembled, validated
     // and compiled. Re-reading `module-1.wasm` is only evidence while the file

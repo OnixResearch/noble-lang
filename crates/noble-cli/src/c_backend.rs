@@ -3,10 +3,10 @@
 //! Core submission. The emitted C executes typed instructions and immutable
 //! captured Program values; it never parses Noble source or recipe text.
 
+mod inputs;
+
 use std::fmt::Write as _;
-use std::io::{Read, Write};
-use std::os::unix::fs::OpenOptionsExt;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use noble_kernel::contracts::{Behavior, Definition};
 use noble_kernel::types::Ty;
@@ -26,7 +26,8 @@ const FRAME_MAX: usize = 512;
 const RECIPE_MAX: usize = 256;
 const PROGRAM_DEPTH_MAX: usize = 256;
 const EMITTER_SOURCE: &str = include_str!("c_backend.rs");
-const USAGE: &str = "usage: noble build SOURCE --target c --out NEW_DIR --contract CONTRACT_JSON --policy POLICY_JSON (C source only; no native execution)";
+const INPUTS_SOURCE: &str = include_str!("c_backend/inputs.rs");
+const USAGE: &str = "usage: noble build SOURCE --target c --out NEW_DIR --contract CONTRACT_JSON --policy POLICY_JSON (C source only; no native execution; absolute normalized paths)";
 const RUNTIME_HEADER: &str = r#"/* Noble nonselected C11 source; requires separately admitted native execution. */
 #include <limits.h>
 #include <stdint.h>
@@ -480,23 +481,55 @@ static void emit_text(uint64_t id) {
     }
     APPEND_LITERAL("\"}");
 }
+static void emit_value(Value value, size_t depth) {
+    if (depth > AGGREGATE_SLOTS) fail("program depth exhausted");
+    check_value(value);
+    if (value.tag == TAG_I64) {
+        APPEND_LITERAL("{\"type\":\"I64\",\"value\":\"");
+        decimal(value.bits);
+        APPEND_LITERAL("\"}");
+    } else if (value.tag == TAG_BOOL) {
+        if (value.bits == 0) APPEND_LITERAL("{\"type\":\"Bool\",\"value\":false}");
+        else if (value.bits == 1) APPEND_LITERAL("{\"type\":\"Bool\",\"value\":true}");
+        else fail("invalid Bool output");
+    } else if (value.tag == TAG_UNIT) {
+        APPEND_LITERAL("{\"type\":\"Unit\",\"value\":null}");
+    } else if (value.tag == TAG_TEXT) {
+        emit_text(value.bits);
+    } else if (value.tag == TAG_PAIR) {
+        const Aggregate *item = aggregate(value, TAG_PAIR);
+        APPEND_LITERAL("{\"type\":\"Pair\",\"value\":[");
+        emit_value(item->left, depth + 1);
+        APPEND_LITERAL(",");
+        emit_value(item->right, depth + 1);
+        APPEND_LITERAL("]}");
+    } else if (value.tag == TAG_SUM_LEFT || value.tag == TAG_SUM_RIGHT) {
+        const Aggregate *item = aggregate(value, value.tag);
+        APPEND_LITERAL("{\"type\":\"Sum\",\"variant\":");
+        if (value.tag == TAG_SUM_LEFT) APPEND_LITERAL("\"left\",\"value\":");
+        else APPEND_LITERAL("\"right\",\"value\":");
+        emit_value(item->left, depth + 1);
+        APPEND_LITERAL("}");
+    } else if (value.tag == TAG_LIST) {
+        APPEND_LITERAL("{\"type\":\"List\",\"value\":[");
+        Value tail = value;
+        int first = 1;
+        for (;;) {
+            const Aggregate *item = list(tail);
+            if (item->kind == AGG_LIST_NIL) break;
+            if (!first) APPEND_LITERAL(",");
+            first = 0;
+            emit_value(item->left, depth + 1);
+            tail = item->right;
+        }
+        APPEND_LITERAL("]}");
+    } else fail("invalid output tag");
+}
 static void emit_stack(void) {
     APPEND_LITERAL("{\"stage\":\"native-runtime\",\"outcome\":\"normal\",\"stack\":[");
     for (size_t i = 0; i < height; ++i) {
         if (i) APPEND_LITERAL(",");
-        if (stack[i].tag == TAG_I64) {
-            APPEND_LITERAL("{\"type\":\"I64\",\"value\":\"");
-            decimal(stack[i].bits);
-            APPEND_LITERAL("\"}");
-        } else if (stack[i].tag == TAG_BOOL) {
-            if (stack[i].bits == 0) APPEND_LITERAL("{\"type\":\"Bool\",\"value\":false}");
-            else if (stack[i].bits == 1) APPEND_LITERAL("{\"type\":\"Bool\",\"value\":true}");
-            else fail("invalid Bool output");
-        } else if (stack[i].tag == TAG_UNIT) {
-            APPEND_LITERAL("{\"type\":\"Unit\"}");
-        } else if (stack[i].tag == TAG_TEXT) {
-            emit_text(stack[i].bits);
-        } else fail("invalid output tag");
+        emit_value(stack[i], 1);
     }
     APPEND_LITERAL("]}");
     if (fputs(output, stdout) == EOF || fputc('\n', stdout) == EOF || fflush(stdout) == EOF) fail("output stream");
@@ -504,28 +537,6 @@ static void emit_stack(void) {
 int main(void) {
     run_program();
 "#;
-
-fn read_bounded(path: &Path, max: usize) -> Result<Vec<u8>, String> {
-    let file = std::fs::OpenOptions::new()
-        .read(true)
-        .custom_flags(libc::O_NONBLOCK | libc::O_NOFOLLOW)
-        .open(path)
-        .map_err(|error| format!("{}: {error}", path.display()))?;
-    let metadata = file
-        .metadata()
-        .map_err(|error| format!("{}: {error}", path.display()))?;
-    if !metadata.file_type().is_file() || metadata.len() > max as u64 {
-        return Err(format!("{} must be a bounded regular file", path.display()));
-    }
-    let mut bytes = Vec::new();
-    file.take((max + 1) as u64)
-        .read_to_end(&mut bytes)
-        .map_err(|error| format!("{}: {error}", path.display()))?;
-    if bytes.len() > max {
-        return Err(format!("{} exceeds {max} bytes", path.display()));
-    }
-    Ok(bytes)
-}
 
 struct Options {
     source: PathBuf,
@@ -669,6 +680,22 @@ fn unique_json(bytes: &[u8]) -> Result<Value, String> {
     Ok(value)
 }
 
+/// The exact interface spelling for one supported C result type. It refuses
+/// every checked form the source-only emitter cannot encode: an inert
+/// `Syntax` value and any `Program` value, including nested occurrences.
+fn result_text(ty: &Ty) -> Option<String> {
+    Some(match ty {
+        Ty::I64 => "I64".to_owned(),
+        Ty::Bool => "Bool".to_owned(),
+        Ty::Unit => "Unit".to_owned(),
+        Ty::Text => "Text".to_owned(),
+        Ty::List(item) => format!("List<{}>", result_text(item)?),
+        Ty::Pair(left, right) => format!("Pair<{},{}>", result_text(left)?, result_text(right)?),
+        Ty::Sum(left, right) => format!("Sum<{},{}>", result_text(left)?, result_text(right)?),
+        _ => return None,
+    })
+}
+
 fn controls(
     contract: &[u8],
     policy: &[u8],
@@ -693,11 +720,8 @@ fn controls(
     if !expected.stack_in.is_empty() || expected.stack_out.len() != 1 {
         return Err("C slice requires no runtime input and one output".into());
     }
-    if !matches!(
-        expected.stack_out.as_slice(),
-        [Ty::I64 | Ty::Bool | Ty::Unit | Ty::Text]
-    ) {
-        return Err("checked aggregate, Syntax or Program C output is unsupported".into());
+    if result_text(&expected.stack_out[0]).is_none() {
+        return Err("checked Syntax or Program C output is unsupported".into());
     }
     let fields = policy.as_object().ok_or("policy must be an object")?;
     if fields.len() != 4
@@ -1187,27 +1211,17 @@ fn emit(
         .position(|ty| *ty == &expected.stack_out[0])
         .ok_or("checked C output shape was not produced")?
         + 1;
-    let output_tag = match expected.stack_out.as_slice() {
-        [Ty::I64] => "TAG_I64",
-        [Ty::Bool] => "TAG_BOOL",
-        [Ty::Unit] => "TAG_UNIT",
-        [Ty::Text] => "TAG_TEXT",
-        _ => return Err("unsupported C result type".into()),
-    };
     c.push_str(&format!(
-        "    if (height != 1 || stack[0].tag != {output_tag} || stack[0].shape != {output_shape}) fail(\"output interface\");\n",
+        "    if (height != 1 || !shape_kind(stack[0].tag, {output_shape}) || stack[0].shape != {output_shape}) fail(\"output interface\");\n",
     ));
     c.push_str("    emit_stack();\n    return 0;\n}\n");
     if c.len() > C_MAX {
         return Err("C source output exhausted".into());
     }
-    let interface = match expected.stack_out.as_slice() {
-        [Ty::I64] => "-- I64",
-        [Ty::Bool] => "-- Bool",
-        [Ty::Unit] => "-- Unit",
-        [Ty::Text] => "-- Text",
-        _ => return Err("unsupported C result type".into()),
-    };
+    let interface = format!(
+        "-- {}",
+        result_text(&expected.stack_out[0]).ok_or("unsupported C result type")?
+    );
     let recipes = programs
         .into_iter()
         .map(|program| program.map(|item| item.recipe))
@@ -1222,9 +1236,9 @@ fn emit(
 
 fn build(arguments: &[std::ffi::OsString]) -> Result<Value, String> {
     let options = options(arguments)?;
-    let source = read_bounded(&options.source, SOURCE_MAX)?;
-    let contract = read_bounded(&options.contract, CONTROL_MAX)?;
-    let policy = read_bounded(&options.policy, CONTROL_MAX)?;
+    let source = inputs::snapshot(&options.source, SOURCE_MAX)?;
+    let contract = inputs::snapshot(&options.contract, CONTROL_MAX)?;
+    let policy = inputs::snapshot(&options.policy, CONTROL_MAX)?;
     let (expected, limits) = controls(&contract, &policy)?;
     let (c, recipe, candidate, environment) = emit(&source, &expected, &limits)?;
     let digest = crate::workflow::intrinsic::sha256;
@@ -1239,6 +1253,7 @@ fn build(arguments: &[std::ffi::OsString]) -> Result<Value, String> {
         candidate.as_bytes(),
         environment.as_bytes(),
         EMITTER_SOURCE.as_bytes(),
+        INPUTS_SOURCE.as_bytes(),
         c.as_bytes(),
     ] {
         subject.extend_from_slice(&(bytes.len() as u64).to_le_bytes());
@@ -1252,6 +1267,7 @@ fn build(arguments: &[std::ffi::OsString]) -> Result<Value, String> {
         "checked_candidate_sha256":digest(candidate.as_bytes()),
         "resolved_environment_sha256":digest(environment.as_bytes()),
         "emitter_source_sha256":digest(EMITTER_SOURCE.as_bytes()),
+        "input_integrity_source_sha256":digest(INPUTS_SOURCE.as_bytes()),
         "semantic_recipe_sha256":digest(&semantic_recipe),
         "build_key":digest(&subject), "native_artifact":null,
         "runtime_limits":{"stack_slots":limits.slots, "steps":limits.steps,
@@ -1262,21 +1278,12 @@ fn build(arguments: &[std::ffi::OsString]) -> Result<Value, String> {
             "recipe_leaves":RECIPE_MAX,
             "program_depth":PROGRAM_DEPTH_MAX},
         "source_to_elf_admitted":false, "native_execution":"blocked-no-pinned-sandbox"});
-    std::fs::create_dir(&options.out).map_err(|error| format!("new output directory: {error}"))?;
-    let write_new = |name: &str, bytes: &[u8]| -> Result<(), String> {
-        let path = options.out.join(name);
-        std::fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&path)
-            .and_then(|mut file| file.write_all(bytes))
-            .map_err(|error| format!("{}: {error}", path.display()))
-    };
-    write_new("source.noble", &source)?;
-    write_new("contract.json", &contract)?;
-    write_new("policy.json", &policy)?;
-    write_new("artifact.c", c.as_bytes())?;
-    write_new(
+    let out = inputs::create_output(&options.out)?;
+    out.write_new("source.noble", &source)?;
+    out.write_new("contract.json", &contract)?;
+    out.write_new("policy.json", &policy)?;
+    out.write_new("artifact.c", c.as_bytes())?;
+    out.write_new(
         "manifest.json",
         serde_json::to_string_pretty(&manifest)
             .map_err(|error| error.to_string())?

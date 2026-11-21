@@ -1,0 +1,11 @@
+{"operation":"install","id":"seed","source":"1 +","inputs":["I64"]}
+{"operation":"publish","slot":"seed0","id":"seed","expected_epoch":"0"}
+{"operation":"publish","slot":"seed1","id":"seed","expected_epoch":"1"}
+{"operation":"publish","slot":"seed2","id":"seed","expected_epoch":"2"}
+{"operation":"publish","slot":"seed3","id":"seed","expected_epoch":"3"}
+{"operation":"trace"}
+{"operation":"install","id":"reversed-input","source":"swap \"admit\" test.emit drop","inputs":["I64","Account@1"]}
+{"operation":"publish","slot":"account","id":"reversed-input","expected_epoch":"4"}
+{"operation":"trace"}
+{"operation":"install","id":"exact","source":"\"admit\" test.emit drop","inputs":["Account@1","I64"]}
+{"operation":"publish","slot":"account","id":"exact","expected_epoch":"4"}
