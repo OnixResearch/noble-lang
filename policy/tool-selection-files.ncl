@@ -112,7 +112,7 @@
   "verification/intrinsic-proofs/collect-build.mjs" = "981f75ee6e816690deb9f573ded8787a0ca025f6c85683b9799748e3833d20e0",
   "verification/intrinsic-proofs/plan.mjs" = "f98c91dc790df6d7a9e46ebdb0c356806e1bd37fac558f9a17acac597d9a03fa",
   "verification/intrinsic-proofs/peer/Cargo.lock" = "0fb144cbc8c5a96dd2b1c6d91ecfd74e4dd5268e53a273e96d148ea4ee356feb",
-  "verification/m4/accounting.mjs" = "81b887ce4c7bf9cb3834bef10577ccc4f28b2843b981417756f31edf042f60e6",
+  "verification/m4/accounting.mjs" = "cb73d0d85e3b55fc6185c4e9c2ba83b8f67a7198485275be0c88baf4316010a5",
   "verification/m4/documentation.mjs" = "7a0cb970a34ae325a702494c171ad7a92468fff9fda37f6af48fa8a800176970",
   "verification/m4/gate.mjs" = "f65c516f592ae9e8885a4be9f75bf2924bc9da0f7183e83aeb99549a274b148b",
   "verification/m4/implementation.mjs" = "a708a6777b68e8791749ffe6ae4d18cac8f69ff210b93e8a331f65d5a301545c",
