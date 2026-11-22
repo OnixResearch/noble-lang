@@ -30,3 +30,10 @@ the gate's scope, the design rows, the binary digest before and after the run,
 every fixture, command line and raw report. It promotes nothing by itself.
 Registration in `specs/conformance` and the requirement sync stay with the
 change's review task.
+
+## Retained runs
+
+- [`runs/20261122-388fa4c6/acceptance.json`](runs/20261122-388fa4c6/acceptance.json)
+  (`sha256:50c8fd78…`): clean commit `388fa4c6`, verdict `all-passed`,
+  PAUTO-CASE-02..06 promotable, with the raw reports, fixtures and the honest
+  increment build the release step used.

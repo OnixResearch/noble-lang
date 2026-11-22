@@ -380,7 +380,7 @@ Approaches are compared on coverage (rows proved or refuted), median and p95 lat
 
 ### Refutation template accounting (PAUTO-FO-4)
 
-Status 2026-11-20: the tactic-free template and two instances are landed in `proofs/mc1/NobleContracts/Refutation.lean`; their statements are pinned by `proofs/mc1/ContractGate.lean`. Independent review, the compiled-replay harness (PAUTO-FO-5) and PAUTO-CASE-02 to 06 remain open. This subsection is the PO-15/PO-19 accounting the obligation requires; it is not a review record.
+Status 2026-11-22: the tactic-free template and two instances are landed in `proofs/mc1/NobleContracts/Refutation.lean`; their statements are pinned by `proofs/mc1/ContractGate.lean` and were reviewed in `review-refutation-template-2026-11-20.md`. The compiled-replay harness (PAUTO-FO-5) is `noble verify --counterexample`, and PAUTO-CASE-02 to 06 were executed with receipt `verification/proof-automation-cases/runs/20261122-388fa4c6/acceptance.json` (tasks.md task 4). This subsection is the PO-15/PO-19 accounting the obligation requires; it is not a review record.
 
 **Shape and surface.** One template lemma,
 `exportedClaim_unaryI64_refutation`, takes a checked normal-return execution
