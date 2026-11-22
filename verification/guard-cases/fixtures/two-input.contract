@@ -1,0 +1,6 @@
+(contract 1 two-input
+  (input (xs (List I64)) (y I64))
+  (output (z I64))
+  (program [ 0 + drop (block () (I64) [ 0 ]) (block (I64 (List I64)) (I64) [ drop ]) list.case ])
+  (requires (not (is-nil (in xs))))
+  (ensures true))

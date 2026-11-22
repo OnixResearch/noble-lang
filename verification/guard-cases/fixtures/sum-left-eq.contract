@@ -1,0 +1,6 @@
+(contract 1 sum-left-eq
+  (input (s (Sum I64 I64)))
+  (output (y I64))
+  (program [ (block (I64) (I64) [ 1 + ]) (block (I64) (I64) [ 2 + ]) case ])
+  (requires (eq (left (in s)) 1))
+  (ensures true))

@@ -1,0 +1,6 @@
+(contract 1 list-producer
+  (input)
+  (output (xs (List I64)))
+  (program [ 5 nil cons ])
+  (requires true)
+  (ensures (not (is-nil (out xs)))))
