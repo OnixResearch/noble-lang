@@ -350,6 +350,25 @@ fn contract(
     ))
 }
 
+/// Consume the optional `infer` elaboration opt-in after the proof name.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; recognizing the opt-in compares the token bytes through the non-const slice PartialEq, so the const suggestion does not apply"
+)]
+fn opt_in(mut cursor: super::Cursor<'_>) -> Result<(bool, super::Cursor<'_>), crate::Diagnostic> {
+    let is_infer = matches!(
+        cursor.tokens.get(cursor.at),
+        Some(crate::source::lexer::Token {
+            kind: crate::source::lexer::TokenKind::Word(bytes),
+            ..
+        }) if bytes.as_slice() == b"infer"
+    );
+    if is_infer {
+        cursor.at += 1;
+    }
+    Ok((is_infer, cursor))
+}
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
@@ -359,7 +378,8 @@ fn proof(
     span: crate::Span,
 ) -> Result<(super::Cursor<'_>, super::Member), crate::Diagnostic> {
     let (cursor, revision) = attempt!(revision(cursor));
-    let (mut cursor, name) = attempt!(cursor.logical_ident());
+    let (cursor, name) = attempt!(cursor.logical_ident());
+    let (elaboration, mut cursor) = attempt!(opt_in(cursor));
     let Some(head) = cursor.tokens.get(cursor.at) else {
         return Err(super::parse_diagnostic(span, "missing proof claim"));
     };
@@ -394,7 +414,7 @@ fn proof(
         _ => {
             return Err(super::parse_diagnostic(
                 head.span,
-                "expected proof for or : claim",
+                "expected proof for, : or infer opt-in",
             ))
         }
     };
@@ -412,6 +432,7 @@ fn proof(
             name,
             claim,
             term,
+            elaboration,
             span: crate::Span {
                 start: span.start,
                 end,

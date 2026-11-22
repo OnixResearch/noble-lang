@@ -90,6 +90,8 @@ pub(super) struct Proof {
     pub name: alloc::string::String,
     pub claim: ProofClaim,
     pub term: crate::intrinsic::Form,
+    /// The declaration selected elaborator revision `implicit-args/v1`.
+    pub elaboration: bool,
     pub span: crate::Span,
 }
 
@@ -359,6 +361,7 @@ enum ScanContext {
     ContractLogical,
     ProofVersion,
     ProofName,
+    ProofOptIn,
     ProofHeader,
     ProofTarget,
     ProofProposition,
@@ -435,9 +438,14 @@ fn scan_context(
         C::ContractBody => C::ContractBody,
         C::ContractLogical => C::ContractBody,
         C::ProofVersion if logical_revision(token).is_some() => C::ProofName,
-        C::ProofName if matches!(&token.kind, TokenKind::Word(_)) => C::ProofHeader,
+        C::ProofName if matches!(&token.kind, TokenKind::Word(_)) => C::ProofOptIn,
+        C::ProofOptIn if word_is(token, b"infer") => C::ProofHeader,
+        C::ProofOptIn if matches!(&token.kind, TokenKind::ProofColon) => C::ProofProposition,
+        C::ProofOptIn if word_is(token, b"for") => C::ProofTarget,
+        C::ProofOptIn => C::ProofHeader,
         C::ProofHeader if matches!(&token.kind, TokenKind::ProofColon) => C::ProofProposition,
         C::ProofHeader if word_is(token, b"for") => C::ProofTarget,
+        C::ProofHeader => C::ProofHeader,
         C::ProofTarget if matches!(&token.kind, TokenKind::Word(_)) => C::ProofTerm,
         C::ProofProposition => C::ProofTerm,
         C::ProofTerm => C::Member,
@@ -501,7 +509,9 @@ fn scan(
             ScanContext::ContractLogical
             | ScanContext::ProofProposition
             | ScanContext::ProofTerm => scanner.next_logical_body(&mut meter).map(Some),
-            ScanContext::ProofHeader => scanner.next_proof_head(&mut meter),
+            ScanContext::ProofOptIn | ScanContext::ProofHeader => {
+                scanner.next_proof_head(&mut meter)
+            }
             _ => scanner.next(&mut meter),
         };
     }

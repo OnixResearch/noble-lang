@@ -16,6 +16,8 @@
 mod bindings;
 #[path = "declared/cases.rs"]
 mod cases;
+#[path = "declared/implicit.rs"]
+mod implicit;
 #[path = "declared/named.rs"]
 mod named;
 #[path = "declared/origin.rs"]

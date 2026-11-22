@@ -7,8 +7,38 @@
 
 ## Phase 2: Future implementation and evidence gates (not undertaken by this change)
 
-- [ ] [serial] Select a non-colliding placeholder spelling and an opt-in elaboration revision in a reviewed grammar change. Implement the elaborator inside the shared proof meter, reusing the checker's rebasing substitution. r[IMPL-ELAB-01] r[IMPL-TRUST-01]
-- [ ] [serial] Emit `noble-elaboration/v1` records, copy-expanded output and source maps. Feed the goal view's inserted-arguments row. r[IMPL-EXPOSE-01]
+- [x] [serial] Select a non-colliding placeholder spelling and an opt-in elaboration revision in a reviewed grammar change. Implement the elaborator inside the shared proof meter, reusing the checker's rebasing substitution. r[IMPL-ELAB-01] r[IMPL-TRUST-01]
+  Progress (2026-11-20): OWNER DECISION 2026-11-20 (decision 13) selects `(infer)`; the
+  `IMPL-GRAMMAR-01` delta records the `proof 1 NAME infer :` opt-in. `intrinsic/elaborate.rs`
+  implements A1-A3 (Robinson unification, occurs check, depth restriction, value-metacode rule,
+  shared `Meter`) and runs at staging before the unchanged explicit checker; `tests/declared/implicit.rs`
+  covers accepted positions, every other position by name, P1/P2, A3, underconstrained,
+  premise candidates, wrong-code clash, under/over-application, budget exhaustion, determinism and
+  the unchanged explicit refusal. The box stays open: the grammar change still needs the independent
+  review owner decision 1 schedules, and no IMPL-CASE receipt exists yet (task 3).
+  Ticked 2026-11-22 on the integrator review
+  [`review-integrator-2026-11-22.md`](review-integrator-2026-11-22.md) (owner decision 28;
+  ACCEPT-WITH-NOTES). Two gaps were closed first: the checker now resumes from the elaboration's
+  work, so elaboration and checking share one request budget (F1,
+  `elaboration_and_checking_share_one_request_budget`, red on the old checker), and the Octet
+  deny-all findings were cleared. Note F4: substitution uses a metavariable-aware analogue of the
+  checker's `replace_prop`, pinned by `instantiation_rebases_like_the_checker`; soundness does not
+  depend on it because the unchanged checker and the pinned Lean consumer recheck every
+  expansion. IMPL-CASE receipts stay with task 3.
+- [x] [serial] Emit `noble-elaboration/v1` records, copy-expanded output and source maps. Feed the goal view's inserted-arguments row. r[IMPL-EXPOSE-01]
+  Progress (2026-11-20): records, copy-expanded text and per-node source spans are implemented and
+  tested (`ProofBatch::elaborations`, `verify-module`'s `elaboration` object with binder, position,
+  head, solution, constraint spans, digests and explicit text). Feeding the goal view's
+  inserted-arguments row remains open: `workflow/obligations.rs` still projects only prepared
+  statements, so PAUTO must consume `ProofBatch::elaborations`.
+  Ticked 2026-11-22 on the same review (F2, F3). The goal view and obligation map carry an
+  `inserted` row per site from `ProofBatch::elaborations` (empty for an explicit proof;
+  `goal_view_lists_the_arguments_the_elaborator_inserted`). The `verify-module` record names its
+  schema `noble-elaboration/v1` and adds a pre-order source map from every explicit node to the
+  abbreviated span that produced it (inserted nodes at their `(infer)` span), the checked claim's
+  SHA-256, the model and checker revisions and the consumer policy
+  (`elaboration_record_maps_every_explicit_node_to_the_abbreviated_source`, on a real staged and
+  checked module).
 - [ ] [serial] Execute IMPL-CASE-01 to IMPL-CASE-20 with source-bound receipts, checking explicit expansions through the source checker and the pinned Lean consumer. r[IMPL-ELAB-01] r[IMPL-TRUST-01] r[IMPL-EXPOSE-01]
 - [ ] [serial] Prove first-order unification uniqueness and fragment completeness for the constraint algebra in reviewed Lean. Pursue Rust elaborator refinement under the existing Charon/Aeneas policy. Keep source-to-Lean translation correctness as its separate open obligation. r[IMPL-ELAB-01]
   Progress (2026-10-31): the Lean half is proved at model level in

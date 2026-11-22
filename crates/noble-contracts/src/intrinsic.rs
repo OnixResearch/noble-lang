@@ -12,6 +12,10 @@ use alloc::{boxed::Box, string::String, vec::Vec};
 
 mod named_v2;
 pub use named_v2::prepare_named_contract;
+mod elaborate;
+pub use elaborate::{
+    elaborate_obligations, Elaborated, ElaborationRecord, InsertedArgument, ELABORATION_REVISION,
+};
 
 #[derive(Debug, Eq)]
 pub struct Form {
@@ -375,6 +379,8 @@ pub struct ProofObligation {
     pub goal: PendingGoal,
     pub term: Form,
     pub span: Span,
+    /// The declaration opted into elaborator revision `implicit-args/v1`.
+    pub elaboration: bool,
 }
 pub struct ProofDependency {
     pub name: String,
@@ -534,6 +540,10 @@ pub struct ProofBatch {
     pub generation: u64,
     pub dependencies: Vec<ProofDependency>,
     pub obligations: Vec<ProofObligation>,
+    /// Elaboration records for abbreviated proofs, in obligation order.
+    pub elaborations: Vec<elaborate::ElaborationRecord>,
+    /// Work charged to the shared elaboration meter.
+    pub elaboration_work: ProofWork,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ProofKind {
@@ -3341,11 +3351,14 @@ pub fn check_batch_with_budgets(
         limits,
         tree_bounds: TreeBounds::new(limits).ok_or_else(|| exhausted(Span { start: 0, end: 0 }))?,
     };
+    // Elaboration and checking share one request budget (r[IMPL-TRUST-01]):
+    // the checker resumes from the work staging already charged to the
+    // `implicit-args/v1` elaborator, which is zero for a fully explicit batch.
     let mut meter = Meter {
         nodes: 0,
-        work: 0,
-        normalization: 0,
-        substitution: 0,
+        work: batch.elaboration_work.total,
+        normalization: batch.elaboration_work.normalization,
+        substitution: batch.elaboration_work.substitution,
         config: &config,
     };
     // Each accepted obligation has already consumed a visited node. Do not
@@ -4950,6 +4963,7 @@ mod form_impl_tests {
                 },
                 term: list(vec![atom("t", 2)], 2),
                 span: crate::Span { start: 0, end: 4 },
+                elaboration: false,
             },
             exported: name.len().is_multiple_of(2),
             dependencies,
@@ -5167,6 +5181,10 @@ mod proposition_impl_tests {
     }
 
     /// One pure obligation `p` proving `reflexive_goal` by `term`.
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; the fixture builder only constructs a proof batch; the tests that consume it assert on the checker's outcome"
+    )]
     fn pure_batch(term: super::Form) -> super::ProofBatch {
         let proposition = reflexive_goal();
         super::ProofBatch {
@@ -5181,7 +5199,14 @@ mod proposition_impl_tests {
                 goal: super::PendingGoal::Pure { proposition },
                 term,
                 span: crate::Span { start: 0, end: 18 },
+                elaboration: false,
             }],
+            elaborations: Vec::new(),
+            elaboration_work: super::ProofWork {
+                normalization: 0,
+                substitution: 0,
+                total: 0,
+            },
         }
     }
 
