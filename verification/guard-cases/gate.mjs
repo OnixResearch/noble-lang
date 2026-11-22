@@ -419,7 +419,9 @@ observations['GUARD-CASE-03'] = await observe('GUARD-CASE-03', async () => {
       fixture('nested.proof.lean'));
     const { report, preserved } = await invokeOnList(session, companion, 'nested', input.nested.argument);
     const value = typeof report.output === 'string' ? JSON.parse(report.output) : report.output;
-    return { report, preserved, output_type: value?.type ?? null, output_items: value?.items?.length ?? null };
+    // A list value is reported as `{type: "List", value: [items]}`.
+    return { report, preserved, output_type: value?.type ?? null,
+      output_items: Array.isArray(value?.value) ? value.value.length : null };
   });
   // A rejection reports its `inl` payload as the output and starts no body.
   expectValue('outcomes', main.rows, expected.outcomes);
@@ -585,7 +587,9 @@ observations['GUARD-CASE-09'] = await observe('GUARD-CASE-09', async () => {
     for (const [index, literal] of input.arguments.entries()) {
       await session.push(`argument-${index}`, `[ ${literal} ] dip dup`);
       const plain = await session.call(`plain ${await session.source(`erased-${index}`, `[ ${wrapper} run ] dip`)}`);
-      const value = plain.stack?.[0] ?? null;
+      // A stack cell carries its value as the JSON text of `detail`.
+      const cell = plain.stack?.[0] ?? null;
+      const value = typeof cell?.detail === 'string' ? JSON.parse(cell.detail) : null;
       rows.push({ argument: literal, runtime_return: value?.variant ?? null,
         output: value?.value?.value ?? null, behavioral_certification_claimed: plain.behavioral_certification_claimed,
         outcome: plain.outcome });
