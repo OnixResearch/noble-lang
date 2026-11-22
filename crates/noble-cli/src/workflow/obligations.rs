@@ -1107,14 +1107,7 @@ fn module_report(
     let mut entries = std::vec::Vec::new();
     for goal in prepared.contract_goals() {
         let proof = batch.and_then(|batch| contract_proof(batch, goal));
-        let mut entry = contract_entry(
-            goal,
-            proof,
-            source,
-            &versions,
-            digest.as_deref(),
-            limits,
-        );
+        let mut entry = contract_entry(goal, proof, source, &versions, digest.as_deref(), limits);
         entry.inserted = inserted_arguments(batch, entry.proof.as_deref());
         entries.push(entry);
     }
@@ -1626,9 +1619,10 @@ mod tests {
             .collect();
         assert_eq!(pairs, [("A", "I64"), ("x", "x")], "{view}");
         assert!(
-            inserted.iter().all(|argument| argument["revision"]
-                == "implicit-args/v1"
-                && argument["head"] == "logic@1/poly-refl"),
+            inserted
+                .iter()
+                .all(|argument| argument["revision"] == "implicit-args/v1"
+                    && argument["head"] == "logic@1/poly-refl"),
             "every row names the elaborator revision and the exact head: {view}"
         );
         assert_eq!(parsed["acceptance"], false, "the view stays a projection");
