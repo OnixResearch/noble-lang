@@ -73,18 +73,20 @@ for (const [id, digest] of Object.entries(projections))
 // LIVE-05's `missing-import` variant is dropped as inapplicable (owner decision
 // 30: the live profiles have no import grammar); its remaining variants are
 // observed below.
-const promoted = ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-06', 'LIVE-07', 'LIVE-09',
-  'LIVE-10'];
+const promoted = ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-06', 'LIVE-07', 'LIVE-08',
+  'LIVE-09', 'LIVE-10'];
 
 
 // ---------------------------------------------------------------------------
 // Source scope, clean tree and manifest.
-const scope = ['crates', 'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'policy/tool-selection.json', 'verification/live-cases'];
+// `proofs/mc1` is the contract library LIVE-08's Lean consumer rebuilds.
+const scope = ['crates', 'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'policy/tool-selection.json', 'proofs/mc1',
+  'verification/live-cases'];
 // The gate never binds any retained receipt: committing an old or new receipt
 // must not change the source revision this run records. Every
 // `verification/live-cases/acceptance*.json` file is excluded from the source
 // manifest, and `tools/check-specs.mjs` checks each cited receipt digest.
-const receiptName = 'acceptance-2026-11-21-r3.json';
+const receiptName = 'acceptance-2026-11-22-b6.json';
 const git = args => {
   const result = spawnSync('git', args, { cwd: root, maxBuffer: 64 * 1024 * 1024 });
   assert.equal(result.status, 0, `git ${args.join(' ')} failed: ${result.stderr}`);
@@ -301,10 +303,10 @@ class LiveChild {
   }
 
   async report(timeout) { return JSON.parse(await this.raw(timeout)); }
-  async submit(command) {
+  async submit(command, timeout) {
     this.script.push(command);
     this.child.stdin.write(`${command}\n`);
-    return this.report();
+    return this.report(timeout);
   }
   async silent(milliseconds) {
     try { return { report: await this.raw(milliseconds) }; }
@@ -2017,6 +2019,244 @@ async function observeLive10(feature) {
   });
 }
 
+// LIVE-08: proof-required admission (integrator decision 42). Under
+// `--require-proof addone` every admission of `addone` consumes one staged
+// `:evidence` offer. The consumer route of `noble build --require-proof`
+// rechecks it in Lean; the core binds the accepted claim to the candidate's own
+// body and the host binds the admission to exactly the bytes it emitted for the
+// candidate. The old accepted proof presented for the new subject, and the old
+// source's valid bytes replayed as the new candidate's bytecode (served through
+// the feature build's existing byte seam), are both refused at admission before
+// staging; fresh evidence then publishes, and the retained old Program keeps
+// its old definition. The Lean consumer uses the reviewed sandbox tools and the
+// tested tree's own `proofs/mc1` sources, which it rebuilds in its sandbox.
+const live08Consumer = {
+  NOBLE_LEAN: '/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean',
+  NOBLE_BWRAP: '/nix/store/y0ra9qr3rz81d9wl7dfrldv3j25dc98q-bubblewrap-0.12.0/bin/bwrap',
+  NOBLE_PRLIMIT: '/nix/store/mqvbf0flamqaq9c3ihb496aahag897n0-util-linux-2.42.3-bin/bin/prlimit',
+  NOBLE_SYSTEMD_RUN: '/nix/store/baxgs06659w4i6ggsfr56srjrb52v1h8-systemd-261.2/bin/systemd-run',
+  NOBLE_CONTRACT_LIBRARY: path.join(root, 'proofs/mc1'),
+};
+// One sandboxed Lean recheck takes about a minute on the reference host.
+const live08ProofTimeout = 600_000;
+// The contract states the case's claim exactly: input 20, result `result`.
+const live08Contract = (name, body, input, result) => `(contract 1 ${name}
+  (input (x I64))
+  (output (y I64))
+  (program ${body})
+  (requires (eq (in x) ${input}))
+  (ensures (eq (out y) ${result})))
+`;
+const live08Proof = (input, result) => `import MC1Obligation
+import NobleContracts
+import NobleContracts.Expression
+
+open NobleContracts
+
+namespace MC1Proof
+
+theorem proof : MC1Obligation.claim := by
+  intro tail before params hi _hp hpre final he
+  obtain ⟨n, rfl⟩ := (stackTyped_i64_iff before).mp hi
+  have hn : n = ${input} := by
+    simpa [MC1Obligation.precondition, MC1Obligation.expression_2, MC1Obligation.expression_0,
+      MC1Obligation.expression_1, Holds, evaluate] using hpre
+  subst hn
+  have hfinal : final = tail ++ [.i64 ${result}] := by
+    simpa [MC1Obligation.program, MC1Obligation.node_0, MC1Obligation.node_1, Exec] using he
+  refine ⟨[.i64 ${result}], hfinal, .cons .i64 .nil, ?_⟩
+  simp [MC1Obligation.postcondition, MC1Obligation.expression_5, MC1Obligation.expression_3,
+    MC1Obligation.expression_4, Holds, evaluate]
+
+end MC1Proof
+`;
+async function observeLive08(feature) {
+  const { input, expected } = cases.get('LIVE-08');
+  assert.equal(input.proof_policy, 'proof-required-for-selected-new-subject');
+  const bodyOf = definition => /^def addone (\[ .* \])$/.exec(definition)?.[1];
+  const oldBody = bodyOf(input.initial_definition);
+  const newBody = bodyOf(input.new_definition);
+  assert.ok(oldBody && newBody, 'LIVE-08 definitions are `def addone [ BODY ]`');
+  assert.equal(input.old_claim.subject, 'old-resolved-definition-identity');
+  assert.equal(input.new_claim.subject, 'new-resolved-definition-identity');
+  const initialBytes = `${input.initial_definition}\n`;
+  const newBytes = `${input.new_definition}\n`;
+  const files = namedFixture('LIVE-08', 'addone.noble', initialBytes);
+  const evidence = (name, text) => {
+    const file = path.join(files.directory, name);
+    fs.writeFileSync(file, text, { flag: 'wx', mode: 0o600 });
+    return file;
+  };
+  const oldContract = live08Contract('live08-old', oldBody, input.old_claim.input, input.old_claim.result);
+  const newContract = live08Contract('live08-new', newBody, input.new_claim.input, input.new_claim.result);
+  const oldOffer = `${evidence('old.contract', oldContract)} ${evidence('old.lean', live08Proof(input.old_claim.input, input.old_claim.result))}`;
+  const newOffer = `${evidence('new.contract', newContract)} ${evidence('new.lean', live08Proof(input.new_claim.input, input.new_claim.result))}`;
+  const args = ['live', 'repl', '--require-proof', 'addone'];
+  const oldResult = `I64:${input.old_claim.result}`;
+  const newResult = `I64:${input.new_claim.result}`;
+  const arenaSame = (before, after) => after.arena.memory_sha256 === before.arena.memory_sha256
+    && after.arena.table_sha256 === before.arena.table_sha256
+    && JSON.stringify(after.arena.globals) === JSON.stringify(before.arena.globals)
+    && after.arena.compilations === before.arena.compilations
+    && after.arena.guest_executions === before.arena.guest_executions
+    && after.arena.host_requests === before.arena.host_requests
+    && after.arena.protected_operations === before.arena.protected_operations
+    && after.arena.source_generation === before.arena.source_generation;
+
+  // Variant 1 and the fresh-evidence publication, on the default binary.
+  const live = start('LIVE-08-proof', args, live08Consumer);
+  const missing = await live.submit(`:reload ${files.source}`);
+  const stagedOld = await live.submit(`:evidence ${oldOffer}`);
+  const initial = await live.submit(`:reload ${files.source}`, live08ProofTimeout);
+  const saved = await live.submit(input.retained_old_program);
+  const oldBefore = await live.submit(`dup ${input.old_claim.input} swap run`);
+  await live.submit('drop');
+  const arenaBefore = await live.submit(':arena');
+  replace(files.source, newBytes);
+  const stagedReplay = await live.submit(`:evidence ${oldOffer}`);
+  const replayed = await live.submit(`:reload ${files.source}`, live08ProofTimeout);
+  const arenaAfter = await live.submit(':arena');
+  const namespace = await live.submit(`${input.old_claim.input} addone`);
+  await live.submit('drop');
+  const oldAfterRefusal = await live.submit(`dup ${input.old_claim.input} swap run`);
+  await live.submit('drop');
+  const consumed = await live.submit(`:reload ${files.source}`);
+  const stagedFresh = await live.submit(`:evidence ${newOffer}`);
+  const published = await live.submit(`:reload ${files.source}`, live08ProofTimeout);
+  const fresh = await live.submit(`${input.new_claim.input} addone`);
+  await live.submit('drop');
+  const oldAfterPublication = await live.submit(`dup ${input.old_claim.input} swap run`);
+  const optional = await live.submit('def other [ 3 + ]');
+  await live.close(0);
+  keep('LIVE-08', 'proof-required', {
+    missing, stagedOld, initial, saved, oldBefore, arenaBefore, stagedReplay, replayed, arenaAfter, namespace,
+    oldAfterRefusal, consumed, stagedFresh, published, fresh, oldAfterPublication, optional,
+  });
+
+  // Variant 2: capture the bytes emitted for the old source in one feature
+  // child, then serve them for the new candidate in a second one that also
+  // stages fresh, valid evidence for the new subject.
+  const seamDirectory = path.join(temporary, 'live08-seam');
+  fs.mkdirSync(seamDirectory, { mode: 0o700 });
+  const capturePath = path.join(seamDirectory, 'old-source.wasm');
+  const captureFiles = namedFixture('LIVE-08-capture', 'addone.noble', initialBytes);
+  const capture = start('LIVE-08-capture', args, {
+    ...live08Consumer,
+    NOBLE_LIVE_TEST_BINARY_CAPTURE: capturePath,
+    NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE_SHA256: sha256(initialBytes),
+  }, feature.binary);
+  await capture.submit(`:evidence ${oldOffer}`);
+  const captured = await capture.submit(`:reload ${captureFiles.source}`, live08ProofTimeout);
+  await capture.close(0);
+  const capturedBytes = fs.readFileSync(capturePath);
+  seam('LIVE-08-capture', captured.outcome === 'reload-committed' && capturedBytes.length > 0
+    && captured.proof_admission?.emitted_sha256 === sha256(capturedBytes), {
+    captured_sha256: sha256(capturedBytes), emitted_sha256: captured.proof_admission?.emitted_sha256,
+  });
+  const replayFiles = namedFixture('LIVE-08-replay', 'addone.noble', initialBytes);
+  const replay = start('LIVE-08-replay', args, {
+    ...live08Consumer,
+    NOBLE_LIVE_TEST_BINARY_REPLACE: capturePath,
+    NOBLE_LIVE_TEST_BINARY_REPLACE_SOURCE_SHA256: sha256(newBytes),
+  }, feature.binary);
+  await replay.submit(`:evidence ${oldOffer}`);
+  const replayInitial = await replay.submit(`:reload ${replayFiles.source}`, live08ProofTimeout);
+  const replaySaved = await replay.submit(input.retained_old_program);
+  const replayArenaBefore = await replay.submit(':arena');
+  replace(replayFiles.source, newBytes);
+  await replay.submit(`:evidence ${newOffer}`);
+  const bytecode = await replay.submit(`:reload ${replayFiles.source}`, live08ProofTimeout);
+  const replayArenaAfter = await replay.submit(':arena');
+  const replayNamespace = await replay.submit(`${input.old_claim.input} addone`);
+  await replay.submit('drop');
+  const replayOld = await replay.submit(`dup ${input.old_claim.input} swap run`);
+  await replay.close(0);
+  keep('LIVE-08', 'artifact-replay', {
+    captured, replayInitial, replaySaved, replayArenaBefore, bytecode, replayArenaAfter, replayNamespace, replayOld,
+  });
+
+  const committedAt = (report, generation) => report.outcome === 'reload-committed' && report.generation === generation
+    && report.proof_admission?.decision === 'admitted' && report.proof_admission?.claim_outcome === 'proved';
+  const refusedAt = (report, generation, refusal) => report.outcome === 'reload-refused' && report.stage === 'admission'
+    && report.generation === generation && report.session_state === 'retained'
+    && report.proof_admission?.decision === 'refused' && report.proof_admission?.refusal === refusal;
+  observe('LIVE-08', 'input.harness', committedAt(initial, 1) && committedAt(replayInitial, 1)
+    && refusedAt(replayed, 1, 'correspondence-mismatch') && refusedAt(bytecode, 1, 'artifact-replay'), {
+    initial: initial.proof_admission, replayed: replayed.proof_admission, bytecode: bytecode.proof_admission,
+  });
+  observe('LIVE-08', 'input.proof_policy', refusedAt(missing, 0, 'evidence-missing')
+    && refusedAt(consumed, 1, 'evidence-missing') && committedAt(published, 2)
+    && optional.outcome === 'defined' && optional.proof_admission === undefined, {
+    missing: missing.proof_admission, consumed: consumed.proof_admission, published: published.proof_admission,
+    optional: optional.outcome,
+  });
+  observe('LIVE-08', 'input.initial_definition', committedAt(initial, 1)
+    && initial.source_sha256 === sha256(initialBytes) && isStack(oldBefore, ['Program:', oldResult]), {
+    source_sha256: initial.source_sha256, old_before: stackOf(oldBefore),
+  });
+  observe('LIVE-08', 'input.new_definition', committedAt(published, 2) && published.source_sha256 === sha256(newBytes)
+    && isStack(fresh, ['Program:', newResult]), { source_sha256: published.source_sha256, fresh: stackOf(fresh) });
+  observe('LIVE-08', 'input.retained_old_program', isStack(saved, ['Program:']) && isStack(replaySaved, ['Program:']), {
+    saved: stackOf(saved),
+  });
+  observe('LIVE-08', 'input.old_claim', stagedOld.outcome === 'evidence-staged'
+    && initial.proof_admission.contract_sha256 === sha256(oldContract) && isStack(oldBefore, ['Program:', oldResult]), {
+    contract_sha256: initial.proof_admission.contract_sha256, core_subject: initial.proof_admission.core_subject,
+  });
+  observe('LIVE-08', 'input.new_claim', stagedFresh.outcome === 'evidence-staged'
+    && published.proof_admission.contract_sha256 === sha256(newContract) && isStack(fresh, ['Program:', newResult])
+    && published.proof_admission.core_subject !== initial.proof_admission.core_subject, {
+    contract_sha256: published.proof_admission.contract_sha256, core_subject: published.proof_admission.core_subject,
+  });
+  observe('LIVE-08', 'input.variants.old-subject-accepted-proof-presented-for-new-subject',
+    stagedReplay.contract_sha256 === stagedOld.contract_sha256 && stagedReplay.proof_sha256 === stagedOld.proof_sha256
+      && refusedAt(replayed, 1, 'correspondence-mismatch') && replayed.proof_admission.claim_outcome === 'proved'
+      && replayed.proof_admission.served_sha256 === replayed.proof_admission.emitted_sha256, {
+      refusal: replayed.proof_admission, diagnostic: replayed.diagnostic,
+    });
+  observe('LIVE-08', 'input.variants.old-source-matched-valid-Wasm-replayed-as-new-bytecode',
+    refusedAt(bytecode, 1, 'artifact-replay') && bytecode.proof_admission.claim_outcome === 'proved'
+      && bytecode.proof_admission.served_sha256 === sha256(capturedBytes)
+      && bytecode.proof_admission.emitted_sha256 !== bytecode.proof_admission.served_sha256, {
+      refusal: bytecode.proof_admission, diagnostic: bytecode.diagnostic,
+    });
+  const refusals = [replayed, bytecode];
+  observe('LIVE-08', 'expected.stage', refusals.every(report => report.stage === expected.stage), {
+    stages: refusals.map(report => report.stage),
+  });
+  observe('LIVE-08', 'expected.outcome', expected.outcome === 'all-replay-variants-reject-before-publication'
+    && refusals.every(report => report.outcome === 'reload-refused' && report.generation === 1)
+    && arenaSame(arenaBefore, arenaAfter) && arenaSame(replayArenaBefore, replayArenaAfter), {
+    generations: refusals.map(report => report.generation),
+  });
+  observe('LIVE-08', 'expected.old_proof_inherited', expected.old_proof_inherited === false
+    && refusedAt(replayed, 1, 'correspondence-mismatch') && refusedAt(consumed, 1, 'evidence-missing'), {
+    replayed: replayed.proof_admission.refusal, consumed: consumed.proof_admission.refusal,
+  });
+  observe('LIVE-08', 'expected.guest_requests', refusals.every(report => report.guest_requests === expected.guest_requests)
+    && arenaAfter.arena.host_requests === arenaBefore.arena.host_requests, {
+    guest_requests: refusals.map(report => report.guest_requests),
+  });
+  observe('LIVE-08', 'expected.protected_operations',
+    refusals.every(report => report.protected_operations === expected.protected_operations)
+      && arenaAfter.arena.protected_operations === arenaBefore.arena.protected_operations, {
+      protected_operations: refusals.map(report => report.protected_operations),
+    });
+  observe('LIVE-08', 'expected.namespace_stack_and_host_authorizations_unchanged',
+    expected.namespace_stack_and_host_authorizations_unchanged === true
+      && arenaSame(arenaBefore, arenaAfter) && arenaSame(replayArenaBefore, replayArenaAfter)
+      && isStack(replayed, ['Program:']) && isStack(bytecode, ['Program:'])
+      && isStack(namespace, ['Program:', oldResult]) && isStack(replayNamespace, ['Program:', oldResult]), {
+      namespace: stackOf(namespace), replay_namespace: stackOf(replayNamespace),
+    });
+  observe('LIVE-08', 'expected.old_saved_program_still_uses_old_definition',
+    expected.old_saved_program_still_uses_old_definition === true
+      && isStack(oldAfterRefusal, ['Program:', oldResult]) && isStack(oldAfterPublication, ['Program:', oldResult])
+      && isStack(replayOld, ['Program:', oldResult]), {
+      after_refusal: stackOf(oldAfterRefusal), after_publication: stackOf(oldAfterPublication),
+    });
+}
+
 // LIVE-05: watched saves publish only complete checked bytes.
 async function observeLive05() {
   const partial = fixture('LIVE-05-partial', 'math.noble', 'def addone [ 1 + ]');
@@ -2270,6 +2510,7 @@ await observeLive02(feature);
 await observeLive04(feature);
 await observeLive09();
 await observeLive10(feature);
+await observeLive08(feature);
 await observeLive05();
 await observeSeamAbsence();
 const barrierTests = await observeBarrierSeams(feature);
@@ -2290,7 +2531,7 @@ const fieldCoverage = id => {
         continue;
       }
       for (const variant of packetCase[section].variants) {
-        const name = variant.name ?? variant.case;
+        const name = typeof variant === 'string' ? variant : variant.name ?? variant.case;
         const matches = rows.filter(row => row.field === `${section}.${key}.${name}` || row.field.startsWith(`${section}.${key}.${name}.`));
         fields.push({ field: `${section}.${key}.${name}`, observed: matches.length > 0 && matches.every(row => row.observed),
           detail: matches.length > 0 ? matches.map(row => row.detail) : [{ reason: 'no observation row' }] });
@@ -2300,7 +2541,7 @@ const fieldCoverage = id => {
   return { fields, unobserved: fields.filter(row => !row.observed).map(row => row.field) };
 };
 const verdicts = {};
-const exercised = ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-06', 'LIVE-07',
+const exercised = ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-06', 'LIVE-07', 'LIVE-08',
   'LIVE-09', 'LIVE-10'];
 const fullyObserved = [];
 for (const id of ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-06', 'LIVE-07', 'LIVE-08', 'LIVE-09', 'LIVE-10']) {
@@ -2319,9 +2560,6 @@ for (const id of ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-0
 assert.deepEqual(fullyObserved.sort(), [...promoted].sort(),
   `promotion set must equal the fully observed exercised cases: fully observed ${fullyObserved}, declared ${promoted}`);
 for (const id of promoted) verdicts[id].promoted = true;
-record('LIVE-08', 'case', {
-  reason: 'needs a REPL proof policy and an independent checker receipt; not exercised by this gate',
-});
 
 // No source may move under the gate.
 for (const [file, digest] of Object.entries(manifest)) assert.equal(sha256(content(file)), digest, `source changed during gate: ${file}`);
@@ -2332,7 +2570,7 @@ const receipt = {
   kind: 'test',
   result: 'passed',
 
-  claim: `The promoted LIVE cases (${promoted.join(', ')}) are exercised against the production ${'`'}noble live repl${'`'} child built from this committed tree. LIVE-01: a resident V8 reload whose ACK precedes a fresh next top-level stack, with the same worker child PID observed before the first submission and after the ACK. LIVE-02: Decision 21a's post-ACK script derives the declared [24, 21] from the retained old Program's captured 21 and the rebuilt dependent's 24, and the same source, flags and ${'`'}[ addone ]${'`'} submission are additionally held in flight at the feature seam so the reload ACK is observed only after that frame returns on its old generation. LIVE-03: every declared replacement is refused at admission with the old definition still callable, including the host-binding-mismatch variant run as written (startup manifest binding, replacement module, admission refusal, generation and stack preserved, next ${'`'}addone${'`'} = 8). LIVE-04: ten canonical-section-edited variants of the captured emission each stop at an exact expected class - the four Noble-policy and three invalid variants in the worker's own byte validator or V8 at stage ${'`'}wasm${'`'}, the forged-digest, independent-digest and oversized variants at shipped host byte admission - with the worker's memory, table, globals, guest-execution and host-request witness unchanged and the installed ${'`'}base${'`'} still returning 7. LIVE-05: a resident V8 ${'`'}noble live watch${'`'} child publishes only the complete atomic save (the next call returns 22) and leaves the prior generation unchanged for a partial in-place write, a symlink escape and the retained-generation budget refusal, and the shipped ${'`'}noble live repl --allow-effects test.emit,test.abort${'`'} trap keeps the request prefix [test.emit:A, test.abort] and terminates the session; its ${'`'}missing-import${'`'} variant is dropped as inapplicable (owner decision 30). LIVE-06: a retained old Program whose request is denied under the revoked current host policy. LIVE-07: an explicit interpreter choice refused at startup without a V8 fallback. LIVE-09: two real V8 guests that observe generation 1, queue a typed pure Program during the callback, publish input-dependent derived definitions at generation 2 whose committed source digests are the re-accepted derived texts, show the worker's cumulative guest-execution counter identical across invocation, pending and committed receipts, show the grant still selected after two refused dependents and null after the successful publication, and refuse an effect-increasing file restore. Byte substitution, the in-flight hold and proposal tampering are named ${'`'}live-test-barrier${'`'} seams; their default-binary absence is observed separately. LIVE-10: under integrator decision 41 every remaining origin, rearm, callback-denial, post-return-refusal and terminal-trap variant is observed: with a grant for another name the self words are refused at source admission, a foreign-session grant is not representable (dropped), and the shadow-stage failure and the generation change between enqueue and publication run under one-shot ${"`"}live-test-barrier${"`"} fault models, each refusing before publication with the grant and stack kept and the next proposal committing. No proof and no case outside the promoted set is claimed.`,
+  claim: `The promoted LIVE cases (${promoted.join(', ')}) are exercised against the production ${'`'}noble live repl${'`'} child built from this committed tree. LIVE-01: a resident V8 reload whose ACK precedes a fresh next top-level stack, with the same worker child PID observed before the first submission and after the ACK. LIVE-02: Decision 21a's post-ACK script derives the declared [24, 21] from the retained old Program's captured 21 and the rebuilt dependent's 24, and the same source, flags and ${'`'}[ addone ]${'`'} submission are additionally held in flight at the feature seam so the reload ACK is observed only after that frame returns on its old generation. LIVE-03: every declared replacement is refused at admission with the old definition still callable, including the host-binding-mismatch variant run as written (startup manifest binding, replacement module, admission refusal, generation and stack preserved, next ${'`'}addone${'`'} = 8). LIVE-04: ten canonical-section-edited variants of the captured emission each stop at an exact expected class - the four Noble-policy and three invalid variants in the worker's own byte validator or V8 at stage ${'`'}wasm${'`'}, the forged-digest, independent-digest and oversized variants at shipped host byte admission - with the worker's memory, table, globals, guest-execution and host-request witness unchanged and the installed ${'`'}base${'`'} still returning 7. LIVE-05: a resident V8 ${'`'}noble live watch${'`'} child publishes only the complete atomic save (the next call returns 22) and leaves the prior generation unchanged for a partial in-place write, a symlink escape and the retained-generation budget refusal, and the shipped ${'`'}noble live repl --allow-effects test.emit,test.abort${'`'} trap keeps the request prefix [test.emit:A, test.abort] and terminates the session; its ${'`'}missing-import${'`'} variant is dropped as inapplicable (owner decision 30). LIVE-06: a retained old Program whose request is denied under the revoked current host policy. LIVE-07: an explicit interpreter choice refused at startup without a V8 fallback. LIVE-08: under integrator decision 42's ${'`'}--require-proof addone${'`'} policy, the old definition's accepted evidence presented for ${'`'}def addone [ 2 + ]${'`'} is refused by the core's correspondence check and the old source's emitted bytes replayed for the new candidate are refused against the host's own emission, both at admission with generation 1, the stack and the worker arena unchanged, after which fresh evidence publishes generation 2 (${'`'}20 addone${'`'} = 22) while the retained ${'`'}[ addone ]${'`'} still returns 21; staged evidence is consumed by each attempt and other definitions stay proof-optional. LIVE-09: two real V8 guests that observe generation 1, queue a typed pure Program during the callback, publish input-dependent derived definitions at generation 2 whose committed source digests are the re-accepted derived texts, show the worker's cumulative guest-execution counter identical across invocation, pending and committed receipts, show the grant still selected after two refused dependents and null after the successful publication, and refuse an effect-increasing file restore. Byte substitution, the in-flight hold and proposal tampering are named ${'`'}live-test-barrier${'`'} seams; their default-binary absence is observed separately. LIVE-10: under integrator decision 41 every remaining origin, rearm, callback-denial, post-return-refusal and terminal-trap variant is observed: with a grant for another name the self words are refused at source admission, a foreign-session grant is not representable (dropped), and the shadow-stage failure and the generation change between enqueue and publication run under one-shot ${"`"}live-test-barrier${"`"} fault models, each refusing before publication with the grant and stack kept and the next proposal committing. No proof and no case outside the promoted set is claimed.`,
 
   tested_commit: studiedCommit,
   source_revision: sourceRevision,
@@ -2362,7 +2600,7 @@ const receipt = {
     'LIVE-04 observations use the `live-test-barrier` byte seam only to serve the mutated bytes and, for the independent-digest variant, to present a digest; the decisions are the shipped worker byte validator/Noble policy checks and the shipped host source/binding/frame admission compiled into every binary. A default binary with every seam variable set executed normally and wrote no capture (observed absence).',
     'LIVE-09\'s ordinary `run`/`session` rows are the same committed default binary and Core-Bootstrap profile; they observe that the live self-edit words remain unbound outside the live REPL, not a temporal comparison with an older binary.',
     'LIVE-10\'s shadow-stage failure and generation change between enqueue and publication are test-only fault models of the feature build (integrator decision 41): the serial live host admits a proposal right after the invocation returns, so no CLI input reaches either; the shipped binary has neither selection. A foreign-session grant is not representable and is dropped; with a grant for another name the self words are refused at source admission.',
-    'LIVE-08 is not exercised by this gate.',
+    'LIVE-08 runs the bounded proof-required profile of integrator decision 42 (`--require-proof NAME`, one dependency-free `def NAME [ BODY ]` subject, evidence staged by `:evidence`): the Lean recheck is the shared `noble build --require-proof` consumer with the reviewed sandbox tools and the tested tree\'s `proofs/mc1` library, the claim is about the candidate body as a closed quotation subject, and its replayed-bytecode variant serves the old source\'s emitted bytes through the existing `live-test-barrier` byte seam. It is not a translation, refinement or Wasm-correspondence proof.',
     'The interpreter refusal is an observed refusal, not a proof that no custom bytecode ISA exists anywhere.',
     'The gate observes single bounded child sessions; it does not claim filesystem-watch completeness or V8 garbage collection. Binaries are retained under `bin/`: build hashes depend on the output path, so `binary_sha256` is confirmable against the retained copy rather than by rebuilding elsewhere.',
   ],

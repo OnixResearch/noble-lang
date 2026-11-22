@@ -389,6 +389,19 @@ including the case's own `[ addone ]` submission held in flight at the
 
 - [ ] [serial] Implement resident live CLI/reload/watch, complete dependent rebuild, atomic safepoint publication, stable typed stack and bounded code retirement. r[K-LIVE-01] r[H-LIVE-01] r[H-LIVE-02] r[H-LIVE-03] r[DX-LIVE-01]
 - [ ] [serial] Exercise every LIVE case against actual source, selected VM and hostile controls with source-bound receipts and separately classify proof/assumptions before acceptance. r[V-LIVE-01] r[EV-LIVE-01]
+  Progress 2026-11-22 (integrator decision 42): LIVE-08's proof-required admission is implemented
+  as a bounded live profile. `noble live repl --require-proof NAME` makes every admission of
+  `NAME` consume one offer staged by `:evidence ABS_CONTRACT ABS_PROOF`. The offer is rechecked by
+  the consumer route of `noble build --require-proof`; the core binds the accepted claim to the
+  candidate's own body, checked again as a closed single-quotation subject, and the host binds the
+  admission to exactly the bytes it emitted for the candidate (`crates/noble-cli/src/core/live/proof.rs`).
+  In a manual drive of the built CLI, evidence was required before the first admission, the old
+  definition's accepted evidence presented for `def addone [ 2 + ]` was refused at admission with
+  `correspondence-mismatch` (generation and stack unchanged), the retained `[ addone ]` still
+  returned 21, and fresh evidence published the new definition. The LIVE gate gains a lane for every
+  LIVE-08 field, including the old source's emitted bytes served for the new candidate through the
+  existing byte seam (expected refusal: `artifact-replay`). The task is ticked when the batch-6 gate
+  receipt promoting LIVE-01..10 is retained.
 - [ ] [serial] Complete host-granted guest self-edit with compiler-bound originating identity, effectful generation observation, typed pure Program proposal during actual Wasm invocation, bounded enqueue, post-return independent admission and one-use generation CAS; exercise LIVE-09/10 including retained-old-Program denial, rearm, traps, effects and guest/file provenance. Keep both cases absent/not-run until executed. r[K-LIVE-02] r[H-LIVE-04]
 
   Progress (live-seams, 2026-11-20): LIVE-09 is executed and promoted by the receipt above (two real children, generations 1→2, derived `[ 2 + ]`/`[ 3 + ]`, refused effect-increasing file restore, grant retention, file/compiler provenance). LIVE-10 is executed for every representable variant (old-Program owner-mismatch denial, rearm, stale generation, replayed proposal, work-quota trap, retained-generation budget, unsupported `[ ]` recipe, snapshot tamper, tampered candidate bytes, static refusals, positive B commit) and remains `absent`/`not-run` because `foreign-session-grant` has no cross-session grant input and `shadow-stage-failure` plus the enqueue/publication generation CAS need host seams this slice did not add. Task 4 stays open for those two case variants or a separately owner-approved case amendment.
