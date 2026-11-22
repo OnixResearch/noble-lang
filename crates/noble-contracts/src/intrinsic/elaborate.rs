@@ -49,7 +49,20 @@ use super::{
     tigerstyle::non_trait_imports,
     reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
 )]
-use alloc::{boxed::Box, format, string::String, vec::Vec};
+use alloc::{boxed::Box, string::String, vec::Vec};
+
+/// `text![a, b, …]`: the concatenation of its `&str` parts, one `push_str`
+/// each. Diagnostic and record text is built this way, never with `format!`:
+/// the pinned Aeneas erases `format!`'s arguments, so the M4 extraction
+/// refuses it (FORMAT-ERASURE), and a slice of borrowed parts is a nested
+/// borrow the pinned Aeneas refuses in a loop.
+macro_rules! text {
+    ($first:expr $(, $part:expr)* $(,)?) => {{
+        let mut text = String::from($first);
+        $(text.push_str($part);)*
+        text
+    }};
+}
 
 /// The selected elaborator revision. Any behavior change that could alter an
 /// expansion or a refusal must select a new revision.
@@ -183,7 +196,6 @@ pub fn elaborate_obligations(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
-#[charon::opaque]
 fn stage_obligation<'m>(
     module: &str,
     version: u32,
@@ -224,9 +236,10 @@ fn stage_obligation<'m>(
         // resolves `use`; the declaration name only enters the identity.
         push_available(
             &mut available,
-            format!(
-                "{}@{}/{}",
-                dependency.module, dependency.version, dependency.declaration.name
+            identity_text(
+                &dependency.module,
+                dependency.version,
+                &dependency.declaration.name,
             ),
             dependency.name.clone(),
             &dependency.declaration.goal,
@@ -237,7 +250,7 @@ fn stage_obligation<'m>(
     while prior < at {
         push_available(
             &mut available,
-            format!("{module}@{version}/{}", obligations[prior].name),
+            identity_text(module, version, &obligations[prior].name),
             obligations[prior].name.clone(),
             &obligations[prior].goal,
         );
@@ -358,7 +371,6 @@ fn pure<'m>(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
-#[charon::opaque]
 fn contract_rule(
     obligation: &ProofObligation,
     contract: &ContractGoal,
@@ -377,9 +389,10 @@ fn contract_rule(
             "exec-literal inference requires an exact subject literal",
         )
     })?;
-    let head = format!(
-        "{}@{}/{}",
-        contract.subject.module, contract.subject.version, contract.contract_name
+    let head = identity_text(
+        &contract.subject.module,
+        contract.subject.version,
+        &contract.contract_name,
     );
     let mut inserted = Vec::new();
     let explicit = rewrite_exec_literal(
@@ -428,7 +441,6 @@ fn contract_rule(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
-#[charon::opaque]
 fn rewrite_exec_literal(
     form: &Form,
     literal: i64,
@@ -445,7 +457,7 @@ fn rewrite_exec_literal(
         FormKind::Atom(_) => Ok(form.clone()),
         FormKind::List(items) => {
             if is_exec_literal_infer(items) {
-                let text = format!("{literal}");
+                let text = signed_text(literal);
                 inserted.push(InsertedArgument {
                     span: items[1].span,
                     binder: String::from("exec-literal"),
@@ -589,6 +601,157 @@ enum Out {
     Infer(u32, Span),
 }
 
+/// One frame of finishing an `Out` forest (the deferred premise forms, then
+/// the root). Every frame carries the forest, so every borrow a step schedules
+/// derives from the popped frame alone, as in the scans: the pinned Aeneas
+/// refuses a loop that schedules borrows taken from a separate parameter.
+#[octet::sealed_enum]
+enum FinishFrame<'o> {
+    /// The forest, the entry at a position in it, its depth and the span that
+    /// asked for it.
+    Entry(&'o [Out], usize, u32, Span),
+    /// The forest and a node to finish at its depth.
+    Enter(&'o [Out], &'o Out, u32),
+    /// The forest, a list's items, the next item, the items' depth and the
+    /// list's span.
+    Children(&'o [Out], &'o [Out], usize, u32, Span),
+}
+
+/// The source span an output node reports.
+const fn out_span(out: &Out) -> Span {
+    match out {
+        Out::Done(form) => form.span,
+        Out::List(_, span) | Out::Hole(_, span) | Out::Infer(_, span) => *span,
+    }
+}
+
+/// Finish the forest from its root, the entry just past the deferred forms.
+/// A frame walk with a value stack and no elaborator: the pinned Aeneas
+/// refuses a recursion inside a loop, and a loop whose frames mix the
+/// elaborator's borrows with the walk's.
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+fn finish_forest(
+    forest: &[Out],
+    deferred: usize,
+    solutions: &[Result<Form, Diagnostic>],
+    bound: usize,
+    depth: u32,
+    span: Span,
+) -> Result<Form, Diagnostic> {
+    let mut pending = WorkStack::new();
+    let mut values = Vec::new();
+    pending
+        .push_bounded(FinishFrame::Entry(forest, deferred, depth, span), bound)
+        .map_err(|()| stage_exhausted(span, "tree frame"))?;
+    let mut outcome = Ok(());
+    while let Some(frame) = pending.pop_bounded() {
+        outcome = finish_step(frame, deferred, solutions, bound, &mut pending, &mut values);
+        if outcome.is_err() {
+            break;
+        }
+    }
+    outcome?;
+    match values.pop() {
+        Some(form) => Ok(form),
+        None => Err(internal(span, "finishing produced no explicit term")),
+    }
+}
+
+/// Finish one frame. A complete subterm or a solved argument becomes one
+/// value; an entry or a hole schedules its forest form; a list schedules its
+/// next item, or gathers its finished items into one value once every item is
+/// finished.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+fn finish_step<'o>(
+    frame: FinishFrame<'o>,
+    deferred: usize,
+    solutions: &[Result<Form, Diagnostic>],
+    bound: usize,
+    pending: &mut WorkStack<FinishFrame<'o>>,
+    values: &mut Vec<Form>,
+) -> Result<(), Diagnostic> {
+    match frame {
+        FinishFrame::Entry(forest, position, depth, span) => {
+            let Some(form) = forest.get(position) else {
+                return Err(internal(span, "unresolved deferred premise"));
+            };
+            pending
+                .push_bounded(FinishFrame::Enter(forest, form, depth), bound)
+                .map_err(|()| stage_exhausted(span, "tree frame"))
+        }
+        FinishFrame::Enter(_, Out::Done(form), _) => {
+            values.push(form.clone());
+            Ok(())
+        }
+        FinishFrame::Enter(forest, Out::List(items, span), depth) => {
+            let next = deeper(depth, *span)?;
+            pending
+                .push_bounded(FinishFrame::Children(forest, items, 0, next, *span), bound)
+                .map_err(|()| stage_exhausted(*span, "tree frame"))
+        }
+        // A hole names a deferred premise form, never the root past them.
+        FinishFrame::Enter(forest, Out::Hole(position, span), depth) => {
+            if *position >= deferred {
+                return Err(internal(*span, "unresolved deferred premise"));
+            }
+            pending
+                .push_bounded(FinishFrame::Entry(forest, *position, depth, *span), bound)
+                .map_err(|()| stage_exhausted(*span, "tree frame"))
+        }
+        FinishFrame::Enter(_, Out::Infer(meta, span), _) => {
+            let index = meta_index(*meta, *span)?;
+            let Some(solution) = solutions.get(index) else {
+                return Err(internal(*span, "unknown metavariable"));
+            };
+            match solution {
+                Ok(form) => {
+                    values.push(form.clone());
+                    Ok(())
+                }
+                Err(error) => Err(error.clone()),
+            }
+        }
+        // `index` is the next item; past the last, the list's finished items
+        // are the top of the value stack, in order.
+        FinishFrame::Children(forest, items, index, depth, span) => {
+            if let Some(item) = items.get(index) {
+                pending
+                    .push_bounded(
+                        FinishFrame::Children(forest, items, index.saturating_add(1), depth, span),
+                        bound,
+                    )
+                    .map_err(|()| stage_exhausted(span, "tree frame"))?;
+                return pending
+                    .push_bounded(FinishFrame::Enter(forest, item, depth), bound)
+                    .map_err(|()| stage_exhausted(span, "tree frame"));
+            }
+            let Some(at) = values.len().checked_sub(items.len()) else {
+                return Err(internal(span, "finished list lost its items"));
+            };
+            let forms = values.split_off(at);
+            values.push(Form {
+                kind: FormKind::List(forms),
+                span,
+            });
+            Ok(())
+        }
+    }
+}
+
 /// A term whose proposition was inferred.
 struct Inferred {
     prop: PropTerm,
@@ -605,7 +768,6 @@ struct Head {
 
 impl Head {
     /// The next telescope binder's name and position.
-    #[charon::opaque]
     fn binder(&self) -> (String, u32) {
         let position = self.next;
         // Aeneas refuses function-definition types with regions; avoid
@@ -613,9 +775,9 @@ impl Head {
         let name = match usize::try_from(position) {
             Ok(index) => match self.names.get(index) {
                 Some(name) => name.clone(),
-                None => format!("#{position}"),
+                None => text!["#", &u32_text(position)],
             },
-            Err(_) => format!("#{position}"),
+            Err(_) => text!["#", &u32_text(position)],
         };
         (name, position)
     }
@@ -656,7 +818,7 @@ impl Elaborator<'_, '_> {
         let out = self.check(term, goal, 0)?;
         self.finish_deferred()?;
         self.verify_ground()?;
-        let explicit = self.finish_out(&out, 0)?;
+        let explicit = self.finish_out(out, 0)?;
         let mut inserted = Vec::with_capacity(self.metas.len());
         let mut index = 0usize;
         let mut outcome: Result<(), Diagnostic> = Ok(());
@@ -698,19 +860,24 @@ impl Elaborator<'_, '_> {
 
     /// Refuse unless every metavariable is solved by a ground, well-scoped
     /// term; a value metavariable must be a level below its depth.
-    #[charon::opaque]
-    fn verify_ground(&self) -> Result<(), Diagnostic> {
+    ///
+    /// The receiver is exclusive although nothing is written: the pinned
+    /// Aeneas fails internally on a loop that calls a method through a shared
+    /// borrow of the elaborator, whose own fields hold borrows.
+    fn verify_ground(&mut self) -> Result<(), Diagnostic> {
         let mut index = 0usize;
         let mut outcome: Result<(), Diagnostic> = Ok(());
         while outcome.is_ok() && index < self.metas.len() {
-            outcome = self.ground_step(index);
+            match self.ground_step(index) {
+                Ok(()) => {}
+                Err(error) => outcome = Err(error),
+            }
             index = index.saturating_add(1);
         }
         outcome
     }
 
     /// One metavariable's groundness and scope check.
-    #[charon::opaque]
     fn ground_step(&self, index: usize) -> Result<(), Diagnostic> {
         let meta = &self.metas[index];
         let level = u32_level(index, meta.span)?;
@@ -730,10 +897,14 @@ impl Elaborator<'_, '_> {
                         if found >= meta.depth {
                             return Err(ill_scoped(
                                 meta.span,
-                                &format!(
-                                    "solution for `{}` names level {found} at depth {}",
-                                    meta.binder, meta.depth
-                                ),
+                                &text![
+                                    "solution for `",
+                                    &meta.binder,
+                                    "` names level ",
+                                    &u32_text(found),
+                                    " at depth ",
+                                    &u32_text(meta.depth),
+                                ],
                             ));
                         }
                         Ok(())
@@ -768,15 +939,16 @@ impl Elaborator<'_, '_> {
     }
 
     /// The refusal for a metavariable no constraint solves.
-    #[charon::opaque]
     fn underconstrained(&self, index: usize) -> Diagnostic {
         let meta = &self.metas[index];
-        let detail = format!(
-            "binder `{}` (position {}) of {} has no constraint; any PureTyCode or code-fixing argument applies and none is chosen",
-            meta.binder,
-            meta.position.saturating_add(1),
-            meta.head
-        );
+        let detail =
+            text!["binder `",
+        &meta.binder,
+        "` (position ",
+        &u32_text(meta.position.saturating_add(1)),
+        ") of ",
+        &meta.head,
+        " has no constraint; any PureTyCode or code-fixing argument applies and none is chosen",];
         infer_diagnostic(
             DiagnosticKind::Invalid,
             meta.span,
@@ -853,27 +1025,8 @@ impl Elaborator<'_, '_> {
     }
 
     /// The current proof-context binder names and sorts, by level.
-    #[charon::opaque]
     fn binder_snapshot(&self) -> (Vec<String>, Vec<Sort>) {
-        let mut names = Vec::with_capacity(self.context.total);
-        let mut sorts = Vec::with_capacity(self.context.total);
-        let mut level = 0usize;
-        let mut is_complete = true;
-        while is_complete && level < self.context.total {
-            let binder = match u32_level(level, Span { start: 0, end: 0 }) {
-                Ok(value) => self.context_at(value),
-                Err(_) => None,
-            };
-            match binder {
-                Some(binder) => {
-                    names.push(binder.name.clone());
-                    sorts.push(binder.sort.clone());
-                }
-                None => is_complete = false,
-            }
-            level = level.saturating_add(1);
-        }
-        (names, sorts)
+        context_snapshot(&self.context)
     }
 
     /// Charge one meter operation, naming the stage when it exhausts.
@@ -900,17 +1053,6 @@ impl Elaborator<'_, '_> {
         }
     }
 
-    /// The binder at a concrete proof-context level.
-    fn context_at(&self, level: u32) -> Option<&Binder> {
-        let index = usize::try_from(level).ok()?;
-        let inline = self.context.inline_len;
-        if index < inline {
-            self.context.inline[index].as_ref()
-        } else {
-            self.context.spill.get(index.saturating_sub(inline))
-        }
-    }
-
     fn push_binder(&mut self, binder: Binder, span: Span) -> Result<(), Diagnostic> {
         let bound = self.meter.tree_bounds.frames;
         self.context
@@ -926,6 +1068,45 @@ impl Elaborator<'_, '_> {
 /// Render a level index as the metavariable identifier.
 fn u32_level(index: usize, span: Span) -> Result<u32, Diagnostic> {
     u32::try_from(index).map_err(|_| internal(span, "metavariable index exceeds 32 bits"))
+}
+
+/// The binder at level `index` of a proof context. Free functions over the
+/// context, not methods of the elaborator, and owned copies out of them: the
+/// pinned Aeneas refuses a borrow returned through the elaborator, whose own
+/// fields hold borrows, and a borrow that a loop body keeps.
+fn binder_at(context: &WorkStack<Binder>, index: usize) -> Option<&Binder> {
+    let inline = context.inline_len;
+    if index < inline {
+        context.inline[index].as_ref()
+    } else {
+        context.spill.get(index.saturating_sub(inline))
+    }
+}
+
+/// An owned copy of the name and sort of the binder at level `index`.
+fn binder_parts(context: &WorkStack<Binder>, index: usize) -> Option<(String, Sort)> {
+    let binder = binder_at(context, index)?;
+    Some((binder.name.clone(), binder.sort.clone()))
+}
+
+/// Every binder name and sort of a proof context, by level, up to the first
+/// missing level.
+fn context_snapshot(context: &WorkStack<Binder>) -> (Vec<String>, Vec<Sort>) {
+    let mut names = Vec::with_capacity(context.total);
+    let mut sorts = Vec::with_capacity(context.total);
+    let mut level = 0usize;
+    let mut is_complete = true;
+    while is_complete && level < context.total {
+        match binder_parts(context, level) {
+            Some((name, sort)) => {
+                names.push(name);
+                sorts.push(sort);
+            }
+            None => is_complete = false,
+        }
+        level = level.saturating_add(1);
+    }
+    (names, sorts)
 }
 
 /// Resolve a metavariable index.
@@ -945,12 +1126,11 @@ fn stage_error(error: Diagnostic, stage: &'static str, span: Span) -> Diagnostic
     }
 }
 
-#[charon::opaque]
 fn stage_exhausted(span: Span, stage: &'static str) -> Diagnostic {
     Diagnostic::new(
         DiagnosticKind::Exhausted,
         span,
-        &format!("exhausted: elaboration {stage} budget"),
+        &text!["exhausted: elaboration ", stage, " budget"],
     )
 }
 
@@ -958,14 +1138,105 @@ fn stage_exhausted(span: Span, stage: &'static str) -> Diagnostic {
     tigerstyle::ambiguous_params,
     reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
 )]
-#[charon::opaque]
 fn infer_diagnostic(
     kind: DiagnosticKind,
     span: Span,
     category: &'static str,
     detail: &str,
 ) -> Diagnostic {
-    Diagnostic::new(kind, span, &format!("{category}: {detail}"))
+    Diagnostic::new(kind, span, &text![category, ": ", detail])
+}
+
+/// `{module}@{version}/{name}`, the identity of an available proof or of a
+/// contract head.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the module and declaration names are positional in the identity's print order and named at every call site"
+)]
+fn identity_text(module: &str, version: u32, name: &str) -> String {
+    text![module, "@", &u32_text(version), "/", name]
+}
+
+/// The decimal digits of `value`, exactly as `{value}` renders them.
+fn u32_text(value: u32) -> String {
+    // The digits, least significant first; there is always at least one.
+    let mut reversed = String::new();
+    let mut rest = value;
+    reversed.push(char::from(u32_digit(rest % 10)));
+    rest /= 10;
+    while rest > 0 {
+        reversed.push(char::from(u32_digit(rest % 10)));
+        rest /= 10;
+    }
+    reversed_text(&reversed)
+}
+
+/// The decimal text of `value`, exactly as `{value}` renders it. The digits
+/// come from the remainders, which lie in -9..=9, so `i64::MIN`, whose
+/// magnitude is not an `i64`, never overflows.
+fn signed_text(value: i64) -> String {
+    let mut reversed = String::new();
+    let mut rest = value;
+    let mut more = true;
+    while more {
+        let remainder = rest % 10;
+        let digit = if remainder < 0 {
+            0 - remainder
+        } else {
+            remainder
+        };
+        reversed.push(char::from(i64_digit(digit)));
+        rest /= 10;
+        more = rest != 0;
+    }
+    if value < 0 {
+        reversed.push('-');
+    }
+    reversed_text(&reversed)
+}
+
+/// `reversed`, an ASCII text, in the opposite order.
+fn reversed_text(reversed: &str) -> String {
+    let bytes = reversed.as_bytes();
+    let mut text = String::with_capacity(bytes.len());
+    let mut index = bytes.len();
+    while index > 0 {
+        index -= 1;
+        text.push(char::from(bytes[index]));
+    }
+    text
+}
+
+/// The ASCII digit for `digit`, which is below ten; the last arm is nine.
+const fn u32_digit(digit: u32) -> u8 {
+    match digit {
+        0 => b'0',
+        1 => b'1',
+        2 => b'2',
+        3 => b'3',
+        4 => b'4',
+        5 => b'5',
+        6 => b'6',
+        7 => b'7',
+        8 => b'8',
+        _ => b'9',
+    }
+}
+
+/// The ASCII digit for `digit`, which lies in 0..=9; the last arm is nine.
+const fn i64_digit(digit: i64) -> u8 {
+    match digit {
+        0 => b'0',
+        1 => b'1',
+        2 => b'2',
+        3 => b'3',
+        4 => b'4',
+        5 => b'5',
+        6 => b'6',
+        7 => b'7',
+        8 => b'8',
+        _ => b'9',
+    }
 }
 
 fn unsupported(span: Span, detail: &str) -> Diagnostic {
@@ -1202,7 +1473,6 @@ impl Elaborator<'_, '_> {
         tigerstyle::no_recursion,
         reason = "Owner: noble-contracts; unification follows the two finite term trees, and every binding is occurs-checked"
     )]
-    #[charon::opaque]
     fn unify_ty(&mut self, left: &Ty, right: &Ty, span: Span) -> Result<(), Diagnostic> {
         self.meter_step(MeterStep::Normalize(1), "unification", span)?;
         let left = self.resolve_ty(left, span)?;
@@ -1235,17 +1505,17 @@ impl Elaborator<'_, '_> {
             (Ty::List(first), Ty::List(second)) => self.unify_ty(first, second, span),
             _ => Err(invalid(
                 span,
-                &format!(
-                    "code {} does not match code {}",
-                    describe_ty(&left),
-                    describe_ty(&right)
-                ),
+                &text![
+                    "code ",
+                    &describe_ty(&left),
+                    " does not match code ",
+                    &describe_ty(&right),
+                ],
             )),
         }
     }
 
     /// Unify two value positions.
-    #[charon::opaque]
     fn unify_val(&mut self, left: Val, right: Val, span: Span) -> Result<(), Diagnostic> {
         self.meter_step(MeterStep::Normalize(1), "unification", span)?;
         let left = self.resolve_val(left, span)?;
@@ -1271,7 +1541,12 @@ impl Elaborator<'_, '_> {
                 } else {
                     Err(invalid(
                         span,
-                        &format!("value {first} does not match value {second}"),
+                        &text![
+                            "value ",
+                            &u32_text(first),
+                            " does not match value ",
+                            &u32_text(second),
+                        ],
                     ))
                 }
             }
@@ -1282,9 +1557,8 @@ impl Elaborator<'_, '_> {
     /// is structural identity.
     #[expect(
         tigerstyle::missing_const_fn,
-        reason = "Owner: noble-contracts; a sort clash builds its diagnostic with format!, so the const suggestion does not apply"
+        reason = "Owner: noble-contracts; a sort clash builds its diagnostic text at run time, so the const suggestion does not apply"
     )]
-    #[charon::opaque]
     fn unify_sort(
         &mut self,
         left: &SortTerm,
@@ -1299,11 +1573,12 @@ impl Elaborator<'_, '_> {
             }
             _ => Err(invalid(
                 span,
-                &format!(
-                    "sort {} does not match sort {}",
-                    describe_sort(left),
-                    describe_sort(right)
-                ),
+                &text![
+                    "sort ",
+                    &describe_sort(left),
+                    " does not match sort ",
+                    &describe_sort(right),
+                ],
             )),
         }
     }
@@ -1313,7 +1588,6 @@ impl Elaborator<'_, '_> {
         tigerstyle::no_recursion,
         reason = "Owner: noble-contracts; unification follows the two finite proposition trees"
     )]
-    #[charon::opaque]
     fn unify_prop(
         &mut self,
         left: &PropTerm,
@@ -1328,9 +1602,12 @@ impl Elaborator<'_, '_> {
                 if left_index != right_index {
                     return Err(invalid(
                         span,
-                        &format!(
-                            "dependent Pi binder {left_index} does not match binder {right_index}"
-                        ),
+                        &text![
+                            "dependent Pi binder ",
+                            &u32_text(*left_index),
+                            " does not match binder ",
+                            &u32_text(*right_index),
+                        ],
                     ));
                 }
                 self.unify_sort(left_sort, right_sort, span)?;
@@ -1346,29 +1623,36 @@ impl Elaborator<'_, '_> {
             }
             _ => Err(invalid(
                 span,
-                &format!(
-                    "proposition {} does not match {}",
-                    describe_prop(left),
-                    describe_prop(right)
-                ),
+                &text![
+                    "proposition ",
+                    &describe_prop(left),
+                    " does not match ",
+                    &describe_prop(right),
+                ],
             )),
         }
     }
 
     /// Bind one code metavariable after an occurs check.
-    #[charon::opaque]
     fn bind_code(&mut self, meta: u32, solution: Ty, span: Span) -> Result<(), Diagnostic> {
         if occurs_code(meta, &solution) {
             return Err(invalid(
                 span,
-                &format!("occurs check: ?{meta} occurs in {}", describe_ty(&solution)),
+                &text![
+                    "occurs check: ?",
+                    &u32_text(meta),
+                    " occurs in ",
+                    &describe_ty(&solution),
+                ],
             ));
         }
         let index = meta_index(meta, span)?;
-        let entry = self
-            .metas
-            .get_mut(index)
-            .ok_or_else(|| internal(span, "unknown code metavariable"))?;
+        // A `let`-`else` rather than `ok_or_else` on the mutable borrow: the
+        // pinned Aeneas models `Option::ok_or_else` without the backward
+        // function a `&mut` payload needs.
+        let Some(entry) = self.metas.get_mut(index) else {
+            return Err(internal(span, "unknown code metavariable"));
+        };
         if entry.code.is_some() {
             return Err(internal(span, "code metavariable bound twice"));
         }
@@ -1440,14 +1724,18 @@ impl Elaborator<'_, '_> {
         tigerstyle::no_recursion,
         reason = "Owner: noble-contracts; the scope check follows the finite ground term"
     )]
-    #[charon::opaque]
     fn scope_ty(&self, ty: &Ty, depth: u32, span: Span) -> Result<(), Diagnostic> {
         match ty {
             Ty::Var(level) => {
                 if *level >= depth {
                     return Err(ill_scoped(
                         span,
-                        &format!("solution names code level {level} at depth {depth}"),
+                        &text![
+                            "solution names code level ",
+                            &u32_text(*level),
+                            " at depth ",
+                            &u32_text(depth),
+                        ],
                     ));
                 }
                 Ok(())
@@ -1541,15 +1829,19 @@ impl Elaborator<'_, '_> {
 )]
 impl Elaborator<'_, '_> {
     /// Check `term` against `goal`, the checker's check-mode rule set.
-    #[charon::opaque]
     fn check(&mut self, form: &Form, goal: &PropTerm, depth: u32) -> Result<Out, Diagnostic> {
         self.meter_step(MeterStep::Visit(depth), "work", form.span)?;
-        if matches!(goal, PropTerm::Pi(..)) {
-            if let Ok(args) = operation(form, "intro", 2) {
-                return self.intro(form, args, goal, depth);
+        match goal {
+            PropTerm::Pi(..) => {
+                if let Ok(args) = operation(form, "intro", 2) {
+                    return self.intro(form, args, goal, depth);
+                }
             }
-        } else if let Ok(parts) = operation(form, "subst", 3) {
-            return self.subst(form, parts, goal, depth);
+            PropTerm::Eq(..) => {
+                if let Ok(parts) = operation(form, "subst", 3) {
+                    return self.subst(form, parts, goal, depth);
+                }
+            }
         }
         let child = deeper(depth, form.span)?;
         let inferred = self.infer(form, child)?;
@@ -1613,7 +1905,6 @@ impl Elaborator<'_, '_> {
 
     /// Check a `subst` against a goal: the motive is explicit, the evidence is
     /// inferred, and the premise is checked against the substituted motive.
-    #[charon::opaque]
     fn subst(
         &mut self,
         form: &Form,
@@ -1673,12 +1964,12 @@ impl Elaborator<'_, '_> {
         self.meter = next;
         self.pop_binder();
         let body = parsed?;
-        if !matches!(body, Proposition::Eq(..)) {
+        let Proposition::Eq(..) = &body else {
             return Err(super::reject(
                 motive[1].span,
                 "subst motive must be a total Eq proposition",
             ));
-        }
+        };
         let before = super::replace_prop(
             &body,
             index,
@@ -1941,8 +2232,8 @@ impl Elaborator<'_, '_> {
     }
 
     /// Refuse a premise placeholder, listing candidates without choosing.
-    #[charon::opaque]
-    fn premise_refusal(&self, span: Span, expected: &PropTerm) -> Diagnostic {
+    /// The receiver is exclusive for the pinned Aeneas, as `verify_ground`'s.
+    fn premise_refusal(&mut self, span: Span, expected: &PropTerm) -> Diagnostic {
         const MAX_CANDIDATES: usize = 8;
         let mut detail = String::from(
             "premise inference; write the explicit witness (witness identity is never chosen)",
@@ -1953,14 +2244,14 @@ impl Elaborator<'_, '_> {
         if let Some(ground) = ground {
             let mut level = 0usize;
             while level < self.context.total {
-                if let Some(binder) = self.context_at(u32_level(level, span).unwrap_or(0)) {
-                    if let Sort::Premise(prop) = &binder.sort {
-                        if super::proposition_equal(prop, &ground) {
-                            total = total.saturating_add(1);
-                            if listed < MAX_CANDIDATES {
-                                detail.push_str(&format!("; local premise `{}`", binder.name));
-                                listed = listed.saturating_add(1);
-                            }
+                if let Some((name, Sort::Premise(prop))) = binder_parts(&self.context, level) {
+                    if super::proposition_equal(&prop, &ground) {
+                        total = total.saturating_add(1);
+                        if listed < MAX_CANDIDATES {
+                            detail.push_str("; local premise `");
+                            detail.push_str(&name);
+                            detail.push('`');
+                            listed = listed.saturating_add(1);
                         }
                     }
                 }
@@ -1972,10 +2263,9 @@ impl Elaborator<'_, '_> {
                     if super::proposition_equal(&prop, &ground) {
                         total = total.saturating_add(1);
                         if listed < MAX_CANDIDATES {
-                            detail.push_str(&format!(
-                                "; accepted `{}`",
-                                self.available[candidate].identity
-                            ));
+                            detail.push_str("; accepted `");
+                            detail.push_str(&self.candidate_identity(candidate));
+                            detail.push('`');
                             listed = listed.saturating_add(1);
                         }
                     }
@@ -1984,9 +2274,19 @@ impl Elaborator<'_, '_> {
             }
         }
         if total > listed {
-            detail.push_str(&format!("; and {} more", total.saturating_sub(listed)));
+            detail.push_str("; and ");
+            detail.push_str(&super::decimal(total.saturating_sub(listed)));
+            detail.push_str(" more");
         }
         unsupported(span, &detail)
+    }
+
+    /// An owned copy of the identity of available proof `position`.
+    fn candidate_identity(&self, position: usize) -> String {
+        match self.available.get(position) {
+            Some(candidate) => candidate.identity.clone(),
+            None => String::new(),
+        }
     }
 
     /// Parse one available proof's goal for candidate listing, under its own
@@ -2005,7 +2305,6 @@ impl Elaborator<'_, '_> {
     }
 
     /// Elaborate the A2 explicit spine `(app H a1 … an)`.
-    #[charon::opaque]
     fn app(&mut self, form: &Form, depth: u32) -> Result<Inferred, Diagnostic> {
         let items = list(form)?;
         if items.len() < 3 {
@@ -2015,10 +2314,7 @@ impl Elaborator<'_, '_> {
             ));
         }
         let head_form = &items[1];
-        let is_supported = operation(head_form, "use", 1).is_ok()
-            || operation(head_form, "apply", 2).is_ok()
-            || super::list_head_atom(head_form) == Some("app");
-        if !is_supported {
+        if !is_app_head(head_form) {
             return Err(unsupported(
                 head_form.span,
                 "app head must be a use, app or apply spine",
@@ -2102,62 +2398,70 @@ impl Elaborator<'_, '_> {
     }
 
     /// Resolve one constructed term after solving, mapping inserted nodes to
-    /// their abbreviation spans.
-    #[expect(
-        tigerstyle::no_recursion,
-        reason = "Owner: noble-contracts; assembly follows the finite constructed term under the caller's depth budget"
-    )]
-    #[charon::opaque]
-    fn finish_out(&self, out: &Out, depth: u32) -> Result<Form, Diagnostic> {
-        match out {
-            Out::Done(form) => Ok(form.clone()),
-            Out::List(items, span) => {
-                let next = deeper(depth, *span)?;
-                let mut forms = Vec::with_capacity(items.len());
-                let mut index = 0usize;
-                let mut outcome: Result<(), Diagnostic> = Ok(());
-                while outcome.is_ok() && index < items.len() {
-                    match self.finish_out(&items[index], next) {
-                        Ok(form) => forms.push(form),
-                        Err(error) => outcome = Err(error),
-                    }
-                    index = index.saturating_add(1);
-                }
-                outcome?;
+    /// their abbreviation spans. A frame walk with a value stack, as the
+    /// checker assembles its terms: the pinned Aeneas refuses a recursion
+    /// inside a loop. The receiver is exclusive for the pinned Aeneas, as
+    /// `verify_ground`'s.
+    ///
+    /// The deferred premise forms move into one owned forest with the root
+    /// last, and every frame borrows it only through the free step function's
+    /// one forest parameter (the root too is a forest entry the step looks
+    /// up): the pinned Aeneas refuses frames whose borrows come from different
+    /// loans. A solved argument is handed back to this loop, which renders it.
+    /// Finishing is the last use of the deferred forms.
+    fn finish_out(&mut self, out: Out, depth: u32) -> Result<Form, Diagnostic> {
+        let span = out_span(&out);
+        let bound = self.meter.tree_bounds.frames;
+        let solutions = self.solutions();
+        let mut forest = self.deferred_forms.split_off(0);
+        let root = forest.len();
+        forest.push(out);
+        finish_forest(&forest, root, &solutions, bound, depth, span)
+    }
+
+    /// The explicit form of every metavariable's solution, by index, or the
+    /// refusal its rendering meets. Each inserted node carries its
+    /// metavariable's allocation span, so the rendering is the one the node
+    /// would get; the walk reports a refusal only when it reaches the node.
+    /// The receiver is exclusive for the pinned Aeneas, as `verify_ground`'s.
+    fn solutions(&mut self) -> Vec<Result<Form, Diagnostic>> {
+        let mut solutions = Vec::with_capacity(self.metas.len());
+        let mut index = 0usize;
+        while index < self.metas.len() {
+            solutions.push(self.solution_at(index));
+            index = index.saturating_add(1);
+        }
+        solutions
+    }
+
+    /// The explicit form of metavariable `index`'s solution.
+    fn solution_at(&self, index: usize) -> Result<Form, Diagnostic> {
+        let span = self.metas[index].span;
+        let meta = u32_level(index, span)?;
+        self.finish_infer(meta, span)
+    }
+
+    /// The explicit form of one solved argument, rendered with the binder
+    /// names at its allocation.
+    fn finish_infer(&self, meta: u32, span: Span) -> Result<Form, Diagnostic> {
+        let index = meta_index(meta, span)?;
+        let Some(entry) = self.metas.get(index) else {
+            return Err(internal(span, "unknown metavariable"));
+        };
+        let kind = entry.kind;
+        let names = entry.names.clone();
+        match kind {
+            MetaKind::Code => {
+                let solved = self.resolve_ty(&Ty::Meta(meta), span)?;
+                self.ty_form(&solved, span, &names)
+            }
+            MetaKind::Value => {
+                let solved = self.resolve_val(Val::Meta(meta), span)?;
+                let name = self.render_val(solved, span, &names)?;
                 Ok(Form {
-                    kind: FormKind::List(forms),
-                    span: *span,
+                    kind: FormKind::Atom(name),
+                    span,
                 })
-            }
-            Out::Hole(position, span) => {
-                let form = self
-                    .deferred_forms
-                    .get(*position)
-                    .ok_or_else(|| internal(*span, "unresolved deferred premise"))?;
-                self.finish_out(form, depth)
-            }
-            Out::Infer(meta, span) => {
-                let index = meta_index(*meta, *span)?;
-                let entry = self
-                    .metas
-                    .get(index)
-                    .ok_or_else(|| internal(*span, "unknown metavariable"))?;
-                let kind = entry.kind;
-                let names = entry.names.clone();
-                match kind {
-                    MetaKind::Code => {
-                        let solved = self.resolve_ty(&Ty::Meta(*meta), *span)?;
-                        self.ty_form(&solved, *span, &names)
-                    }
-                    MetaKind::Value => {
-                        let solved = self.resolve_val(Val::Meta(*meta), *span)?;
-                        let name = self.render_val(solved, *span, &names)?;
-                        Ok(Form {
-                            kind: FormKind::Atom(name),
-                            span: *span,
-                        })
-                    }
-                }
             }
         }
     }
@@ -2215,7 +2519,6 @@ impl Elaborator<'_, '_> {
         tigerstyle::no_recursion,
         reason = "Owner: noble-contracts; rendering follows the finite ground code"
     )]
-    #[charon::opaque]
     fn render_ty(&self, ty: &Ty, span: Span, names: &[String]) -> Result<String, Diagnostic> {
         match ty {
             Ty::Unit => Ok(String::from("Unit")),
@@ -2223,17 +2526,20 @@ impl Elaborator<'_, '_> {
             Ty::I64 => Ok(String::from("I64")),
             Ty::Text => Ok(String::from("Text")),
             Ty::Var(level) => level_name(names, *level, span),
-            Ty::Pair(left, right) => Ok(format!(
-                "(Pair {} {})",
-                self.render_ty(left, span, names)?,
-                self.render_ty(right, span, names)?
-            )),
-            Ty::Sum(left, right) => Ok(format!(
-                "(Sum {} {})",
-                self.render_ty(left, span, names)?,
-                self.render_ty(right, span, names)?
-            )),
-            Ty::List(item) => Ok(format!("(List {})", self.render_ty(item, span, names)?)),
+            Ty::Pair(left, right) => {
+                let left = self.render_ty(left, span, names)?;
+                let right = self.render_ty(right, span, names)?;
+                Ok(text!["(Pair ", &left, " ", &right, ")"])
+            }
+            Ty::Sum(left, right) => {
+                let left = self.render_ty(left, span, names)?;
+                let right = self.render_ty(right, span, names)?;
+                Ok(text!["(Sum ", &left, " ", &right, ")"])
+            }
+            Ty::List(item) => {
+                let item = self.render_ty(item, span, names)?;
+                Ok(text!["(List ", &item, ")"])
+            }
             Ty::Meta(_) => Err(internal(span, "unresolved code metavariable in a solution")),
         }
     }
@@ -2338,45 +2644,73 @@ fn is_inferable(form: &Form) -> bool {
         || super::list_head_atom(form) == Some("app")
 }
 
+/// Whether `form` can head an `app` spine: a `use`, an `apply` or an `app`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper calls the non-const operation recognizer and compares Option<&str> through PartialEq, so the const suggestion does not apply"
+)]
+fn is_app_head(form: &Form) -> bool {
+    operation(form, "use", 1).is_ok()
+        || operation(form, "apply", 2).is_ok()
+        || super::list_head_atom(form) == Some("app")
+}
+
 /// Whether a term contains `(infer)` or an `app` spine.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
-#[charon::opaque]
 fn scan_abbreviation(form: &Form, limits: Limits) -> Result<Abbreviation, Diagnostic> {
+    let bound = scan_bound(limits, form.span)?;
     let mut abbreviation = Abbreviation {
         infer: false,
         app: false,
     };
-    let mut pending = Vec::new();
-    pending.push((form, 0u32));
     let mut visited = 0u32;
-    let mut outcome: Result<(), Diagnostic> = Ok(());
-    let mut current = pending.pop();
-    while outcome.is_ok() && current.is_some() {
-        if let Some((node, depth)) = current {
-            outcome = abbreviation_step(
-                node,
-                depth,
-                limits,
-                &mut abbreviation,
-                &mut visited,
-                &mut pending,
-            );
+    let mut pending = WorkStack::new();
+    pending
+        .push_bounded(ScanFrame::Enter(form, 0), bound)
+        .map_err(|()| stage_exhausted(form.span, "tree frame"))?;
+    let mut outcome = Ok(());
+    while let Some(frame) = pending.pop_bounded() {
+        outcome = abbreviation_step(
+            frame,
+            limits,
+            bound,
+            &mut abbreviation,
+            &mut visited,
+            &mut pending,
+        );
+        if outcome.is_err() {
+            break;
         }
-        current = pending.pop();
     }
     outcome?;
     Ok(abbreviation)
 }
 
-/// Visit one abbreviation-scan node: record the abbreviation and schedule its
-/// children. The loop only accumulates this helper's verdict.
-#[expect(
-    tigerstyle::borrowed_argument_types,
-    reason = "Owner: noble-contracts; unseen children are appended to the walk's worklist with Vec::push, so it needs the growable vector."
-)]
+/// One frame of a read-only proof-term scan, in the checker's
+/// `ValidationFrame` shape: a node to visit, or the children of a list still to
+/// schedule, one per step. The pinned Aeneas extracts this shape; a loop that
+/// pushes every borrowed child at once it refuses.
+#[octet::sealed_enum]
+enum ScanFrame<'a> {
+    Enter(&'a Form, u32),
+    /// A list's items, the index of the next item and the items' depth.
+    Children(&'a [Form], usize, u32),
+}
+
+/// The frame bound of a scan over `limits`-bounded terms: the checker's.
+fn scan_bound(limits: Limits, span: Span) -> Result<usize, Diagnostic> {
+    match TreeBounds::new(limits) {
+        Some(bounds) => Ok(bounds.frames),
+        None => Err(stage_exhausted(span, "tree frame")),
+    }
+}
+
+/// Visit one abbreviation-scan frame: record the abbreviation or schedule a
+/// list's next child. Children are visited from the last, as the scan always
+/// has; the loop stops at this helper's first refusal.
 #[expect(
     tigerstyle::too_many_parameters,
     reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
@@ -2389,71 +2723,88 @@ fn scan_abbreviation(form: &Form, limits: Limits) -> Result<Abbreviation, Diagno
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
-#[charon::opaque]
 fn abbreviation_step<'a>(
-    current: &'a Form,
-    depth: u32,
+    frame: ScanFrame<'a>,
     limits: Limits,
+    bound: usize,
     abbreviation: &mut Abbreviation,
     visited: &mut u32,
-    pending: &mut Vec<(&'a Form, u32)>,
+    pending: &mut WorkStack<ScanFrame<'a>>,
 ) -> Result<(), Diagnostic> {
-    if depth > limits.depth {
-        return Err(stage_exhausted(current.span, "depth"));
-    }
-    *visited = visited.saturating_add(1);
-    if *visited > limits.nodes {
-        return Err(stage_exhausted(current.span, "node"));
-    }
-    match &current.kind {
-        FormKind::Atom(_) => Ok(()),
-        FormKind::List(items) => {
-            if is_infer_form(current) {
-                abbreviation.infer = true;
+    match frame {
+        ScanFrame::Enter(current, depth) => {
+            if depth > limits.depth {
+                return Err(stage_exhausted(current.span, "depth"));
+            }
+            *visited = visited.saturating_add(1);
+            if *visited > limits.nodes {
+                return Err(stage_exhausted(current.span, "node"));
+            }
+            match &current.kind {
+                FormKind::Atom(_) => Ok(()),
+                FormKind::List(items) => {
+                    if is_infer_form(current) {
+                        abbreviation.infer = true;
+                        return Ok(());
+                    }
+                    if head_atom(items) == Some("app") {
+                        abbreviation.app = true;
+                    }
+                    if items.is_empty() {
+                        return Ok(());
+                    }
+                    let frame = ScanFrame::Children(items, items.len(), depth.saturating_add(1));
+                    pending
+                        .push_bounded(frame, bound)
+                        .map_err(|()| stage_exhausted(current.span, "tree frame"))
+                }
+            }
+        }
+        // `remaining` items are left; the last of them is visited next.
+        ScanFrame::Children(items, remaining, depth) => {
+            let Some(index) = remaining.checked_sub(1) else {
                 return Ok(());
+            };
+            let Some(item) = items.get(index) else {
+                return Ok(());
+            };
+            if index > 0 {
+                pending
+                    .push_bounded(ScanFrame::Children(items, index, depth), bound)
+                    .map_err(|()| stage_exhausted(item.span, "tree frame"))?;
             }
-            if head_atom(items) == Some("app") {
-                abbreviation.app = true;
-            }
-            let next = depth.saturating_add(1);
-            let mut index = 0usize;
-            while index < items.len() {
-                pending.push((&items[index], next));
-                index = index.saturating_add(1);
-            }
-            Ok(())
+            pending
+                .push_bounded(ScanFrame::Enter(item, depth), bound)
+                .map_err(|()| stage_exhausted(item.span, "tree frame"))
         }
     }
 }
 
 /// The span of the first `(infer)` placeholder, in walk order.
-#[charon::opaque]
 fn find_infer_span(form: &Form, limits: Limits) -> Result<Option<Span>, Diagnostic> {
-    let mut pending = Vec::new();
-    pending.push((form, 0u32));
+    let bound = scan_bound(limits, form.span)?;
     let mut visited = 0u32;
-    let mut outcome: Result<(), Diagnostic> = Ok(());
     let mut found = None;
-    let mut current = pending.pop();
-    while outcome.is_ok() && found.is_none() && current.is_some() {
-        if let Some((node, depth)) = current {
-            match infer_span_step(node, depth, limits, &mut visited, &mut pending) {
-                Ok(span) => found = span,
-                Err(error) => outcome = Err(error),
-            }
+    let mut pending = WorkStack::new();
+    pending
+        .push_bounded(ScanFrame::Enter(form, 0), bound)
+        .map_err(|()| stage_exhausted(form.span, "tree frame"))?;
+    let mut outcome = Ok(());
+    while let Some(frame) = pending.pop_bounded() {
+        match infer_span_step(frame, limits, bound, &mut visited, &mut pending) {
+            Ok(span) => found = span,
+            Err(error) => outcome = Err(error),
         }
-        current = pending.pop();
+        if outcome.is_err() || found.is_some() {
+            break;
+        }
     }
     outcome?;
     Ok(found)
 }
 
-/// Visit one infer-span node: report the first placeholder or schedule its
-/// children in reverse so the leftmost form is visited first.
-#[expect(
-    tigerstyle::borrowed_argument_types,
-    reason = "Owner: noble-contracts; unseen children are appended to the walk's worklist with Vec::push, so it needs the growable vector."
-)]
+/// Visit one infer-span frame: report a placeholder or schedule a list's next
+/// child, from the first, so the leftmost placeholder is found first.
 #[expect(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
@@ -2462,33 +2813,53 @@ fn find_infer_span(form: &Form, limits: Limits) -> Result<Option<Span>, Diagnost
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
-#[charon::opaque]
 fn infer_span_step<'a>(
-    current: &'a Form,
-    depth: u32,
+    frame: ScanFrame<'a>,
     limits: Limits,
+    bound: usize,
     visited: &mut u32,
-    pending: &mut Vec<(&'a Form, u32)>,
+    pending: &mut WorkStack<ScanFrame<'a>>,
 ) -> Result<Option<Span>, Diagnostic> {
-    if depth > limits.depth {
-        return Err(stage_exhausted(current.span, "depth"));
-    }
-    *visited = visited.saturating_add(1);
-    if *visited > limits.nodes {
-        return Err(stage_exhausted(current.span, "node"));
-    }
-    match &current.kind {
-        FormKind::Atom(_) => Ok(None),
-        FormKind::List(items) => {
-            if is_infer_form(current) {
-                return Ok(Some(current.span));
+    match frame {
+        ScanFrame::Enter(current, depth) => {
+            if depth > limits.depth {
+                return Err(stage_exhausted(current.span, "depth"));
             }
-            let next = depth.saturating_add(1);
-            let mut remaining = items.len();
-            while remaining > 0 {
-                remaining -= 1;
-                pending.push((&items[remaining], next));
+            *visited = visited.saturating_add(1);
+            if *visited > limits.nodes {
+                return Err(stage_exhausted(current.span, "node"));
             }
+            match &current.kind {
+                FormKind::Atom(_) => Ok(None),
+                FormKind::List(items) => {
+                    if is_infer_form(current) {
+                        return Ok(Some(current.span));
+                    }
+                    if items.is_empty() {
+                        return Ok(None);
+                    }
+                    let frame = ScanFrame::Children(items, 0, depth.saturating_add(1));
+                    pending
+                        .push_bounded(frame, bound)
+                        .map_err(|()| stage_exhausted(current.span, "tree frame"))?;
+                    Ok(None)
+                }
+            }
+        }
+        // `index` is the next item to visit, from the first.
+        ScanFrame::Children(items, index, depth) => {
+            let Some(item) = items.get(index) else {
+                return Ok(None);
+            };
+            let next = index.saturating_add(1);
+            if next < items.len() {
+                pending
+                    .push_bounded(ScanFrame::Children(items, next, depth), bound)
+                    .map_err(|()| stage_exhausted(item.span, "tree frame"))?;
+            }
+            pending
+                .push_bounded(ScanFrame::Enter(item, depth), bound)
+                .map_err(|()| stage_exhausted(item.span, "tree frame"))?;
             Ok(None)
         }
     }
@@ -2548,36 +2919,35 @@ impl Position {
 }
 
 /// Refuse every `(infer)` outside the three specified abbreviation positions.
-#[charon::opaque]
 fn scan_positions(form: &Form, limits: Limits) -> Result<(), Diagnostic> {
-    let mut pending = Vec::new();
-    pending.push((form, Position::Root, 0u32));
+    let bound = scan_bound(limits, form.span)?;
     let mut visited = 0u32;
-    let mut outcome: Result<(), Diagnostic> = Ok(());
-    let mut current = pending.pop();
-    while outcome.is_ok() && current.is_some() {
-        if let Some((node, position, depth)) = current {
-            outcome = position_step(node, position, depth, limits, &mut visited, &mut pending);
+    let mut pending = WorkStack::new();
+    pending
+        .push_bounded(PositionFrame::Enter(form, Position::Root, 0), bound)
+        .map_err(|()| stage_exhausted(form.span, "tree frame"))?;
+    let mut outcome = Ok(());
+    while let Some(frame) = pending.pop_bounded() {
+        outcome = position_step(frame, limits, bound, &mut visited, &mut pending);
+        if outcome.is_err() {
+            break;
         }
-        current = pending.pop();
     }
     outcome
 }
 
-/// Visit one position-scan node: refuse a misplaced placeholder or schedule
-/// the node's children. The loop only accumulates this helper's verdict.
-#[expect(
-    tigerstyle::borrowed_argument_types,
-    reason = "Owner: noble-contracts; unseen children are appended to the walk's worklist with Vec::push, so it needs the growable vector."
-)]
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-contracts; scheduling children pushes onto the caller's growable worklist, so the const suggestion does not apply"
-)]
-#[expect(
-    tigerstyle::too_many_parameters,
-    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
-)]
+/// One frame of the position scan: a node to visit at its position, or the
+/// children of a list still to schedule, from the first, one per step.
+#[octet::sealed_enum]
+enum PositionFrame<'a> {
+    Enter(&'a Form, Position, u32),
+    /// A list's items, the list's position, the next item and the items'
+    /// depth.
+    Children(&'a [Form], Position, usize, u32),
+}
+
+/// Visit one position-scan frame: refuse a misplaced placeholder or schedule
+/// a list's next child. The loop stops at this helper's first refusal.
 #[expect(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
@@ -2587,65 +2957,63 @@ fn scan_positions(form: &Form, limits: Limits) -> Result<(), Diagnostic> {
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
 fn position_step<'a>(
-    current: &'a Form,
-    position: Position,
-    depth: u32,
+    frame: PositionFrame<'a>,
     limits: Limits,
+    bound: usize,
     visited: &mut u32,
-    pending: &mut Vec<(&'a Form, Position, u32)>,
+    pending: &mut WorkStack<PositionFrame<'a>>,
 ) -> Result<(), Diagnostic> {
-    if depth > limits.depth {
-        return Err(stage_exhausted(current.span, "depth"));
-    }
-    *visited = visited.saturating_add(1);
-    if *visited > limits.nodes {
-        return Err(stage_exhausted(current.span, "node"));
-    }
-    match &current.kind {
-        FormKind::Atom(_) => Ok(()),
-        FormKind::List(items) => {
-            if is_infer_form(current) {
-                match position {
-                    Position::ApplyArgument | Position::AppArgument | Position::ExecLiteral => {
-                        Ok(())
+    match frame {
+        PositionFrame::Enter(current, position, depth) => {
+            if depth > limits.depth {
+                return Err(stage_exhausted(current.span, "depth"));
+            }
+            *visited = visited.saturating_add(1);
+            if *visited > limits.nodes {
+                return Err(stage_exhausted(current.span, "node"));
+            }
+            match &current.kind {
+                FormKind::Atom(_) => Ok(()),
+                FormKind::List(items) => {
+                    if is_infer_form(current) {
+                        return match position {
+                            Position::ApplyArgument
+                            | Position::AppArgument
+                            | Position::ExecLiteral => Ok(()),
+                            other => Err(unsupported(current.span, other.refusal())),
+                        };
                     }
-                    other => Err(unsupported(current.span, other.refusal())),
+                    if items.is_empty() {
+                        return Ok(());
+                    }
+                    let frame =
+                        PositionFrame::Children(items, position, 0, depth.saturating_add(1));
+                    pending
+                        .push_bounded(frame, bound)
+                        .map_err(|()| stage_exhausted(current.span, "tree frame"))
                 }
-            } else {
-                let next = depth.saturating_add(1);
-                push_positions(pending, items, position, next);
-                Ok(())
             }
         }
-    }
-}
-
-/// Schedule the children of one proof form with their positions.
-#[expect(
-    tigerstyle::borrowed_argument_types,
-    reason = "Owner: noble-contracts; unseen children are appended to the walk's worklist with Vec::push, so it needs the growable vector."
-)]
-#[expect(
-    tigerstyle::mutating_input_in_pure,
-    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
-)]
-#[charon::opaque]
-fn push_positions<'a>(
-    pending: &mut Vec<(&'a Form, Position, u32)>,
-    items: &'a [Form],
-    position: Position,
-    depth: u32,
-) {
-    let head = head_atom(items);
-    // Push in reverse so the leftmost form is visited first.
-    let mut remaining = items.len();
-    while remaining > 0 {
-        remaining -= 1;
-        let is_head =
-            remaining == 0 && !matches!(position, Position::IntroBinder | Position::SubstBinder);
-        if !is_head {
-            let child = child_position(head, position, remaining);
-            pending.push((&items[remaining], child, depth));
+        // The list's head atom is no subterm, except a binder list's name.
+        PositionFrame::Children(items, position, index, depth) => {
+            let Some(item) = items.get(index) else {
+                return Ok(());
+            };
+            let next = index.saturating_add(1);
+            if next < items.len() {
+                pending
+                    .push_bounded(PositionFrame::Children(items, position, next, depth), bound)
+                    .map_err(|()| stage_exhausted(item.span, "tree frame"))?;
+            }
+            let is_head =
+                index == 0 && !matches!(position, Position::IntroBinder | Position::SubstBinder);
+            if is_head {
+                return Ok(());
+            }
+            let child = child_position(head_atom(items), position, index);
+            pending
+                .push_bounded(PositionFrame::Enter(item, child, depth), bound)
+                .map_err(|()| stage_exhausted(item.span, "tree frame"))
         }
     }
 }
@@ -2687,53 +3055,44 @@ fn child_position(head: Option<&str>, position: Position, index: usize) -> Posit
 }
 
 /// The binder names of a proposition's leading dependent `Pi` telescope.
+fn pi_names(form: &Form) -> Vec<String> {
+    let mut names = Vec::new();
+    push_pi_names(form, 64, &mut names);
+    names
+}
+
+/// Push the binder names of the `Pi` telescope at `form`, at most
+/// `remaining`. A bounded recursion, one `Pi` per call: the pinned Aeneas
+/// refuses a loop that re-borrows its cursor into the telescope.
 #[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
-)]
-#[expect(
-    tigerstyle::nested_conditionals,
-    reason = "Owner: noble-contracts; the walk mirrors the Pi binder grammar one nested match per form level, so each exit names the exact form that ends the telescope"
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the walk descends one Pi binder per call and stops after 64 calls"
 )]
 #[expect(
     tigerstyle::unbounded_collection_growth,
-    reason = "Owner: noble-contracts; the walk pushes at most one name per iteration of its 64-step loop"
+    reason = "Owner: noble-contracts; the walk pushes at most one name per call of its 64-call descent"
 )]
-#[charon::opaque]
-fn pi_names(form: &Form) -> Vec<String> {
-    let mut names = Vec::new();
-    let mut current = form;
-    let mut remaining = 64usize;
-    let mut is_running = true;
-    while is_running && remaining > 0 {
-        remaining -= 1;
-        match &current.kind {
-            FormKind::List(items) => {
-                if items.len() != 3 || head_atom(items) != Some("Pi") {
-                    is_running = false;
-                } else {
-                    match &items[1].kind {
-                        FormKind::List(binding) => {
-                            if binding.len() != 2 {
-                                is_running = false;
-                            } else {
-                                match &binding[0].kind {
-                                    FormKind::Atom(name) => {
-                                        names.push(name.clone());
-                                        current = &items[2];
-                                    }
-                                    FormKind::List(_) => is_running = false,
-                                }
-                            }
-                        }
-                        FormKind::Atom(_) => is_running = false,
-                    }
-                }
-            }
-            FormKind::Atom(_) => is_running = false,
-        }
+fn push_pi_names(form: &Form, remaining: u32, names: &mut Vec<String>) {
+    if remaining == 0 {
+        return;
     }
-    names
+    let FormKind::List(items) = &form.kind else {
+        return;
+    };
+    if items.len() != 3 || head_atom(items) != Some("Pi") {
+        return;
+    }
+    let FormKind::List(binding) = &items[1].kind else {
+        return;
+    };
+    if binding.len() != 2 {
+        return;
+    }
+    let FormKind::Atom(name) = &binding[0].kind else {
+        return;
+    };
+    names.push(name.clone());
+    push_pi_names(&items[2], remaining - 1, names);
 }
 
 /// Convert a parsed code into a metavariable term.
@@ -2916,27 +3275,29 @@ fn prop_size_of(prop: &PropTerm) -> usize {
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; the rendering follows the finite term tree"
 )]
-#[charon::opaque]
 fn describe_ty(ty: &Ty) -> String {
     match ty {
         Ty::Unit => String::from("Unit"),
         Ty::Bool => String::from("Bool"),
         Ty::I64 => String::from("I64"),
         Ty::Text => String::from("Text"),
-        Ty::Var(index) => format!("#{index}"),
-        Ty::Meta(meta) => format!("?{meta}"),
-        Ty::Pair(left, right) => format!("(Pair {} {})", describe_ty(left), describe_ty(right)),
-        Ty::Sum(left, right) => format!("(Sum {} {})", describe_ty(left), describe_ty(right)),
-        Ty::List(item) => format!("(List {})", describe_ty(item)),
+        Ty::Var(index) => text!["#", &u32_text(*index)],
+        Ty::Meta(meta) => text!["?", &u32_text(*meta)],
+        Ty::Pair(left, right) => {
+            text!["(Pair ", &describe_ty(left), " ", &describe_ty(right), ")"]
+        }
+        Ty::Sum(left, right) => {
+            text!["(Sum ", &describe_ty(left), " ", &describe_ty(right), ")"]
+        }
+        Ty::List(item) => text!["(List ", &describe_ty(item), ")"],
     }
 }
 
 /// Render a value for a clash diagnostic.
-#[charon::opaque]
 fn describe_val(value: Val) -> String {
     match value {
-        Val::Level(level) => format!("#{level}"),
-        Val::Meta(meta) => format!("?{meta}"),
+        Val::Level(level) => text!["#", &u32_text(level)],
+        Val::Meta(meta) => text!["?", &u32_text(meta)],
     }
 }
 
@@ -2954,37 +3315,53 @@ fn describe_sort(sort: &SortTerm) -> String {
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; the rendering follows the finite term tree"
 )]
-#[charon::opaque]
 fn describe_prop(prop: &PropTerm) -> String {
     match prop {
-        PropTerm::Pi(index, sort, body) => {
-            format!(
-                "(Pi #{index} {} {})",
-                describe_sort(sort),
-                describe_prop(body)
-            )
-        }
-        PropTerm::Eq(code, left, right) => format!(
-            "(Eq {} {} {})",
-            describe_ty(code),
-            describe_val(*left),
-            describe_val(*right)
-        ),
+        PropTerm::Pi(index, sort, body) => text![
+            "(Pi #",
+            &u32_text(*index),
+            " ",
+            &describe_sort(sort),
+            " ",
+            &describe_prop(body),
+            ")",
+        ],
+        PropTerm::Eq(code, left, right) => text![
+            "(Eq ",
+            &describe_ty(code),
+            " ",
+            &describe_val(*left),
+            " ",
+            &describe_val(*right),
+            ")",
+        ],
     }
 }
 
 /// Render one proof form as core source text.
 fn render_form(form: &Form, limits: Limits) -> Result<String, Diagnostic> {
+    let bound = scan_bound(limits, form.span)?;
     let mut text = String::new();
-    render_into(form, limits, 0, &mut text)?;
+    let mut pending = WorkStack::new();
+    pending
+        .push_bounded(ScanFrame::Enter(form, 0), bound)
+        .map_err(|()| stage_exhausted(form.span, "tree frame"))?;
+    let mut outcome = Ok(());
+    while let Some(frame) = pending.pop_bounded() {
+        outcome = render_step(frame, limits, bound, &mut text, &mut pending);
+        if outcome.is_err() {
+            break;
+        }
+    }
+    outcome?;
     Ok(text)
 }
 
-/// Append `form`'s core source text.
-#[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-contracts; the rendering follows the finite proof term under the depth budget"
-)]
+/// Render one frame: append an atom or a list's opening parenthesis, or a
+/// list's next item separator and child, or its closing parenthesis. A frame
+/// walk, not a recursion inside a loop: the pinned Aeneas emits that loop
+/// through its `loop` combinator, whose `partial_fixpoint` the pinned Lean
+/// cannot prove monotone in the recursive call.
 #[expect(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-contracts; appending a type rendering requires the caller's growable String, not a fixed str slice."
@@ -2997,39 +3374,50 @@ fn render_form(form: &Form, limits: Limits) -> Result<String, Diagnostic> {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
-#[charon::opaque]
-fn render_into(
-    form: &Form,
+fn render_step<'a>(
+    frame: ScanFrame<'a>,
     limits: Limits,
-    depth: u32,
+    bound: usize,
     text: &mut String,
+    pending: &mut WorkStack<ScanFrame<'a>>,
 ) -> Result<(), Diagnostic> {
-    if depth > limits.depth {
-        return Err(stage_exhausted(form.span, "depth"));
-    }
-    match &form.kind {
-        FormKind::Atom(atom) => {
-            text.push_str(atom);
-            Ok(())
-        }
-        FormKind::List(items) => {
-            text.push('(');
-            let next = deeper(depth, form.span)?;
-            let mut index = 0usize;
-            let mut outcome: Result<(), Diagnostic> = Ok(());
-            while outcome.is_ok() && index < items.len() {
-                if index > 0 {
-                    text.push(' ');
-                }
-                match render_into(&items[index], limits, next, text) {
-                    Ok(()) => {}
-                    Err(error) => outcome = Err(error),
-                }
-                index = index.saturating_add(1);
+    match frame {
+        ScanFrame::Enter(form, depth) => {
+            if depth > limits.depth {
+                return Err(stage_exhausted(form.span, "depth"));
             }
-            outcome?;
-            text.push(')');
-            Ok(())
+            match &form.kind {
+                FormKind::Atom(atom) => {
+                    text.push_str(atom);
+                    Ok(())
+                }
+                FormKind::List(items) => {
+                    text.push('(');
+                    let next = deeper(depth, form.span)?;
+                    pending
+                        .push_bounded(ScanFrame::Children(items, 0, next), bound)
+                        .map_err(|()| stage_exhausted(form.span, "tree frame"))
+                }
+            }
+        }
+        // `index` is the next item; past the last, the list closes.
+        ScanFrame::Children(items, index, depth) => {
+            let Some(item) = items.get(index) else {
+                text.push(')');
+                return Ok(());
+            };
+            if index > 0 {
+                text.push(' ');
+            }
+            pending
+                .push_bounded(
+                    ScanFrame::Children(items, index.saturating_add(1), depth),
+                    bound,
+                )
+                .map_err(|()| stage_exhausted(item.span, "tree frame"))?;
+            pending
+                .push_bounded(ScanFrame::Enter(item, depth), bound)
+                .map_err(|()| stage_exhausted(item.span, "tree frame"))
         }
     }
 }
@@ -3308,5 +3696,64 @@ mod tests {
         let instantiated =
             inst_prop(&body, 0, &ArgTerm::Code(Ty::I64), span).expect("substitution");
         assert_eq!(describe_prop(&instantiated), "(Pi #0 I64 (Eq I64 #1 #1))");
+    }
+
+    /// The digit helpers render exactly as `{value}` does, at every boundary.
+    #[test]
+    fn decimal_texts_match_the_display_rendering() {
+        for value in [0u32, 1, 9, 10, 11, 99, 100, 4_096, 65_535, 4_294_967_295] {
+            assert_eq!(u32_text(value), alloc::format!("{value}"));
+        }
+        for value in [
+            0i64,
+            1,
+            -1,
+            9,
+            -9,
+            10,
+            -10,
+            1_000_000,
+            -1_000_000,
+            i64::MAX,
+            i64::MIN,
+            i64::MIN + 1,
+        ] {
+            assert_eq!(signed_text(value), alloc::format!("{value}"));
+        }
+    }
+
+    /// The format-free diagnostic renderings are byte for byte the `format!`
+    /// texts they replaced.
+    #[test]
+    fn clash_renderings_match_the_format_texts() {
+        let code = Ty::Pair(
+            Box::new(Ty::List(Box::new(Ty::Var(12)))),
+            Box::new(Ty::Sum(Box::new(Ty::Meta(3)), Box::new(Ty::I64))),
+        );
+        assert_eq!(describe_ty(&code), "(Pair (List #12) (Sum ?3 I64))");
+        assert_eq!(describe_val(Val::Level(7)), "#7");
+        assert_eq!(describe_val(Val::Meta(70)), "?70");
+        let prop = PropTerm::Pi(
+            4,
+            SortTerm::Premise(Box::new(PropTerm::Eq(
+                Ty::Text,
+                Val::Meta(1),
+                Val::Level(0),
+            ))),
+            Box::new(PropTerm::Eq(code, Val::Level(2), Val::Meta(9))),
+        );
+        assert_eq!(
+            describe_prop(&prop),
+            "(Pi #4 (Eq Text ?1 #0) (Eq (Pair (List #12) (Sum ?3 I64)) #2 ?9))"
+        );
+        assert_eq!(
+            identity_text("logic", 12, "poly-refl"),
+            "logic@12/poly-refl"
+        );
+        assert_eq!(
+            stage_exhausted(one_span(), "work").message,
+            "exhausted: elaboration work budget"
+        );
+        assert_eq!(invalid(one_span(), "x").message, "invalid-constraint: x");
     }
 }
