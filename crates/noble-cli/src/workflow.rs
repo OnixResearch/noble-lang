@@ -320,6 +320,8 @@ fn search(
             }
         };
     let ensures = prepared.ensures();
+    let semantic_evaluation =
+        counterexample::evaluation(prepared, ensures, candidate.input, Some(candidate.output));
     let observed_evaluation = match (observation.completed, observation.output) {
         (true, Some(observed)) => {
             counterexample::evaluation(prepared, ensures, candidate.input, Some(observed))
@@ -336,23 +338,24 @@ fn search(
             encoding::string("two's-complement 64-bit wrapping; values are signed"),
         ),
         ("candidate", counterexample::candidate_json(candidate)),
+        // Named only when the host evaluator reads the postcondition as false
+        // at the semantic output; a supplied model may not violate it at all.
         (
             "violated",
+            if semantic_evaluation == "false" {
+                encoding::string("postcondition")
+            } else {
+                encoding::Json::Null
+            },
+        ),
+        (
+            "postcondition",
             encoding::object([
-                ("predicate", encoding::string("postcondition")),
                 (
                     "declared",
                     counterexample::declared(prepared, ensures, report.source.as_deref()),
                 ),
-                (
-                    "semantic_evaluation",
-                    encoding::string(counterexample::evaluation(
-                        prepared,
-                        ensures,
-                        candidate.input,
-                        Some(candidate.output),
-                    )),
-                ),
+                ("semantic_evaluation", encoding::string(semantic_evaluation)),
                 ("observed_evaluation", encoding::string(observed_evaluation)),
                 (
                     "evaluator",

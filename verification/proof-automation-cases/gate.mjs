@@ -273,10 +273,10 @@ observations['PAUTO-CASE-03'] = await observe(async () => {
   expectValue('arithmetic shown', record.arithmetic, "two's-complement 64-bit wrapping; values are signed");
   expectValue('candidate', record.candidate,
     { input: '9223372036854775807', semantic_output: '-9223372036854775808', wrapped: true });
-  expectValue('violated predicate', record.violated?.predicate, 'postcondition');
-  expectValue('violated text', record.violated?.declared?.text, '(lt (in x) (out y))');
-  expectValue('semantic evaluation', record.violated?.semantic_evaluation, 'false');
-  expectValue('observed evaluation', record.violated?.observed_evaluation, 'false');
+  expectValue('violated predicate', record.violated, 'postcondition');
+  expectValue('postcondition text', record.postcondition?.declared?.text, '(lt (in x) (out y))');
+  expectValue('semantic evaluation', record.postcondition?.semantic_evaluation, 'false');
+  expectValue('observed evaluation', record.postcondition?.observed_evaluation, 'false');
   const observation = record.observation ?? {};
   expectValue('evidence class', observation.evidence_class, 'observed-execution');
   expectValue('observed outcome', observation.outcome, 'normal');
@@ -304,7 +304,8 @@ observations['PAUTO-CASE-04'] = await observe(async () => {
   expectValue('category', record.category, 'candidate-model-only');
   expectValue('advertised as', record.advertised_as, 'candidate');
   expectValue('candidate', record.candidate, { input: '5', semantic_output: '6', wrapped: false });
-  expectValue('semantic evaluation', record.violated?.semantic_evaluation, 'true');
+  expectValue('no violated predicate', record.violated, null);
+  expectValue('semantic evaluation', record.postcondition?.semantic_evaluation, 'true');
   expectValue('consumer refusal', diagnosticCodes(report).includes('proof-rejected'), true);
   return { candidate: record.candidate, diagnostics: diagnosticCodes(report) };
 });
