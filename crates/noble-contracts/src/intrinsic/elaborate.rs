@@ -975,7 +975,8 @@ impl Elaborator<'_, '_> {
                 }
                 match self.scope_ty(&solved, meta.depth, meta.span) {
                     Ok(()) => Ok(()),
-                    Err(error) => Err(scope_refusal(meta, error)),
+                    // A fresh borrow: none is held across the call's match.
+                    Err(error) => Err(scope_refusal(&self.metas[index], error)),
                 }
             }
             MetaKind::Value => {
@@ -1032,30 +1033,7 @@ impl Elaborator<'_, '_> {
 
     /// The refusal for a metavariable no constraint solves.
     fn underconstrained(&self, index: usize) -> Diagnostic {
-        let meta = &self.metas[index];
-        let mut detail = text![
-            "binder `",
-            &meta.binder,
-            "` (position ",
-            &u32_text(meta.position.saturating_add(1)),
-            ") of ",
-            &meta.head,
-        ];
-        if meta.constraints.is_empty() {
-            detail.push_str(" has no constraint");
-        } else {
-            // Constraints that only relate it to other unsolved arguments
-            // never fix it; they are listed, not chosen from.
-            detail.push_str(" is not fixed by its constraints at");
-            meta_constraints(meta, &mut detail);
-        }
-        detail.push_str("; any PureTyCode or code-fixing argument applies and none is chosen");
-        infer_diagnostic(
-            DiagnosticKind::Invalid,
-            meta.span,
-            "underconstrained",
-            &detail,
-        )
+        underconstrained_refusal(&self.metas[index])
     }
 
     /// Allocate a fresh code metavariable for the head's next binder.
@@ -1314,10 +1292,10 @@ const MAX_LISTED_CONSTRAINTS: usize = 16;
 /// The cut stops early at the first non-ASCII byte, so it never splits a
 /// character; the count still names every byte not shown.
 fn capped(text: String, limit: usize) -> String {
-    let bytes = text.as_bytes();
-    if bytes.len() <= limit {
+    if text.len() <= limit {
         return text;
     }
+    let bytes = text.as_bytes();
     let mut kept = String::with_capacity(limit.saturating_add(32));
     let mut index = 0usize;
     while index < limit && bytes[index] < 0x80 {
@@ -1357,67 +1335,117 @@ fn binder_origin(role: &str, binder: &str, position: u32, head: &str) -> String 
     ]
 }
 
-/// Append the originating constraint spans of one metavariable, at most
-/// `MAX_LISTED_CONSTRAINTS`, counting the rest explicitly.
-fn meta_constraints(meta: &Meta, detail: &mut String) {
+/// The originating constraint spans of one metavariable, at most
+/// `MAX_LISTED_CONSTRAINTS`, counting the rest explicitly. Owned texts, not
+/// a `&mut String` parameter: the pinned Aeneas cannot join a loop that
+/// conditionally reborrows one.
+fn constraint_spans(meta: &Meta) -> String {
+    let mut text = String::new();
     let mut at = 0usize;
     while at < meta.constraints.len() && at < MAX_LISTED_CONSTRAINTS {
         if at > 0 {
-            detail.push(',');
+            text.push(',');
         }
-        detail.push(' ');
-        detail.push_str(&span_text(meta.constraints[at]));
+        text.push(' ');
+        text.push_str(&span_text(meta.constraints[at]));
         at = at.saturating_add(1);
     }
     if meta.constraints.len() > at {
-        detail.push_str("; and ");
-        detail.push_str(&super::decimal(meta.constraints.len().saturating_sub(at)));
-        detail.push_str(" more constraint spans");
+        text.push_str("; and ");
+        text.push_str(&super::decimal(meta.constraints.len().saturating_sub(at)));
+        text.push_str(" more constraint spans");
     }
+    text
 }
 
-/// Append every metavariable the failed constraint at `span` mentions (each
-/// one's latest recorded origin is that constraint): its binder, position,
-/// head identity and originating constraint spans, at most
+/// `none` when the metavariable has no recorded constraint, otherwise `some`
+/// followed by its originating spans. Early returns rather than a branch
+/// join, which the pinned Aeneas does not match for a borrowed metavariable.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the two clause texts are positional (absent, present) and named at every call site"
+)]
+fn constraint_clause(meta: &Meta, none: &str, some: &str) -> String {
+    if meta.constraints.is_empty() {
+        return String::from(none);
+    }
+    let mut clause = String::from(some);
+    clause.push_str(&constraint_spans(meta));
+    clause
+}
+
+/// Metavariable `index`'s binder, position, head identity and originating
+/// spans when its latest origin is the failed constraint at `span` (empty
+/// otherwise), listing spans while fewer than `MAX_LISTED_CONSTRAINTS` are
+/// listed in total, with the updated listed and total counts. The test is
+/// here, not in the caller's loop: the pinned Aeneas cannot join a loop body
+/// that branches on a borrowed table entry.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the index and the two running counts are positional and named at the single call site"
+)]
+fn meta_origin(
+    meta: &Meta,
+    index: usize,
+    span: Span,
+    listed: usize,
+    total: usize,
+) -> (String, usize, usize) {
+    // The comparison `note_ty` uses; a match on the borrowed last entry is an
+    // internal error in the pinned Aeneas.
+    if meta.constraints.last() != Some(&span) {
+        return (String::new(), listed, total);
+    }
+    let mut text = String::from("; ?");
+    text.push_str(&super::decimal(index));
+    text.push_str(" is ");
+    text.push_str(&binder_origin(
+        "the argument",
+        &meta.binder,
+        meta.position,
+        &meta.head,
+    ));
+    text.push_str(", constrained at");
+    let mut listed = listed;
+    let mut total = total;
+    let mut at = 0usize;
+    while at < meta.constraints.len() {
+        total = total.saturating_add(1);
+        if listed < MAX_LISTED_CONSTRAINTS {
+            if at > 0 {
+                text.push(',');
+            }
+            text.push(' ');
+            text.push_str(&span_text(meta.constraints[at]));
+            listed = listed.saturating_add(1);
+        }
+        at = at.saturating_add(1);
+    }
+    (text, listed, total)
+}
+
+/// Every metavariable the failed constraint at `span` mentions (each one's
+/// latest recorded origin is that constraint): its binder, position, head
+/// identity and originating constraint spans, at most
 /// `MAX_LISTED_CONSTRAINTS` spans in total, counting the rest explicitly.
-fn constraint_origins(metas: &[Meta], span: Span, detail: &mut String) {
+fn constraint_origins(metas: &[Meta], span: Span) -> String {
+    let mut origins = String::new();
     let mut listed = 0usize;
     let mut total = 0usize;
     let mut index = 0usize;
     while index < metas.len() {
-        let meta = &metas[index];
-        if meta.constraints.last() == Some(&span) {
-            detail.push_str("; ?");
-            detail.push_str(&super::decimal(index));
-            detail.push_str(" is ");
-            detail.push_str(&binder_origin(
-                "the argument",
-                &meta.binder,
-                meta.position,
-                &meta.head,
-            ));
-            detail.push_str(", constrained at");
-            let mut at = 0usize;
-            while at < meta.constraints.len() {
-                total = total.saturating_add(1);
-                if listed < MAX_LISTED_CONSTRAINTS {
-                    if at > 0 {
-                        detail.push(',');
-                    }
-                    detail.push(' ');
-                    detail.push_str(&span_text(meta.constraints[at]));
-                    listed = listed.saturating_add(1);
-                }
-                at = at.saturating_add(1);
-            }
-        }
+        let (text, now_listed, now_total) = meta_origin(&metas[index], index, span, listed, total);
+        origins.push_str(&text);
+        listed = now_listed;
+        total = now_total;
         index = index.saturating_add(1);
     }
     if total > listed {
-        detail.push_str("; and ");
-        detail.push_str(&super::decimal(total.saturating_sub(listed)));
-        detail.push_str(" more constraint spans");
+        origins.push_str("; and ");
+        origins.push_str(&super::decimal(total.saturating_sub(listed)));
+        origins.push_str(" more constraint spans");
     }
+    origins
 }
 
 /// The refusal of a failed constraint: the clash, what it was checking and
@@ -1429,10 +1457,10 @@ fn explain_constraint(metas: &[Meta], error: Diagnostic, span: Span, origin: &st
     }
     let kind = error.kind;
     let at = error.span;
-    let mut detail = error.message;
+    let mut detail = error.message.clone();
     detail.push_str("; checking ");
     detail.push_str(origin);
-    constraint_origins(metas, span, &mut detail);
+    detail.push_str(&constraint_origins(metas, span));
     Diagnostic::new(kind, at, &capped(detail, MAX_DIAGNOSTIC_BYTES))
 }
 
@@ -1444,7 +1472,7 @@ fn scope_refusal(meta: &Meta, error: Diagnostic) -> Diagnostic {
     }
     let kind = error.kind;
     let at = error.span;
-    let mut detail = error.message;
+    let mut detail = error.message.clone();
     detail.push_str("; ");
     detail.push_str(&binder_origin(
         "solving",
@@ -1452,13 +1480,39 @@ fn scope_refusal(meta: &Meta, error: Diagnostic) -> Diagnostic {
         meta.position,
         &meta.head,
     ));
-    if meta.constraints.is_empty() {
-        detail.push_str(", with no constraint");
-    } else {
-        detail.push_str(", constrained at");
-        meta_constraints(meta, &mut detail);
-    }
+    detail.push_str(&constraint_clause(
+        meta,
+        ", with no constraint",
+        ", constrained at",
+    ));
     Diagnostic::new(kind, at, &capped(detail, MAX_DIAGNOSTIC_BYTES))
+}
+
+/// The refusal for a metavariable no constraint solves: its binder, position
+/// and head identity, and the constraints that did not fix it, if any.
+fn underconstrained_refusal(meta: &Meta) -> Diagnostic {
+    let mut detail = text![
+        "binder `",
+        &meta.binder,
+        "` (position ",
+        &u32_text(meta.position.saturating_add(1)),
+        ") of ",
+        &meta.head,
+    ];
+    // Constraints that only relate it to other unsolved arguments never fix
+    // it; they are listed, not chosen from.
+    detail.push_str(&constraint_clause(
+        meta,
+        " has no constraint",
+        " is not fixed by its constraints at",
+    ));
+    detail.push_str("; any PureTyCode or code-fixing argument applies and none is chosen");
+    infer_diagnostic(
+        DiagnosticKind::Invalid,
+        meta.span,
+        "underconstrained",
+        &detail,
+    )
 }
 
 #[expect(
