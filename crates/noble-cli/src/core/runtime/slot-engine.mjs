@@ -472,9 +472,14 @@ class SlotEngine {
       const program = instance.exports.module_program_handle(index) >>> 0;
       const metadata = request.program_metadata[index];
       const runtime = instance.exports;
+      // An empty quotation compiles to the session's shared core empty entry (table slot 0, which
+      // the first module's `core_empty` element fills and nothing ever clears), not to code in
+      // this module's span. It has no recipe leaf, and no module retirement touches it.
+      const sharedEmpty = metadata?.entry === 0 && metadata.recipe_leaves === 0
+        && typeof this.table.get(0) === 'function';
       if (!program || this.handles.has(program) || runtime.cell_kind(program) !== 4
         || metadata?.program_index !== index
-        || metadata.entry < span.start || metadata.entry >= span.start + span.length
+        || !sharedEmpty && (metadata.entry < span.start || metadata.entry >= span.start + span.length)
         || runtime.cell_x(program) !== metadata.entry
         || runtime.cell_y(program) !== metadata.input_signature
         || runtime.cell_z(program) !== metadata.output_signature

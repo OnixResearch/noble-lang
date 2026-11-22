@@ -15,7 +15,8 @@
 //! once from the host ledger, and the designed `test.abort` escape trap is measured as refused by
 //! the live-slot source profile (OWN-CASE-05). After an abnormal root exit the session continues
 //! only when that release is provably exact, and is poisoned otherwise (LREF-CASE-01). Behavioral
-//! evidence, not a proof.
+//! evidence, not a proof. An empty quotation, whose entry is the shared core empty entry rather
+//! than code in its module's span, installs, runs and is saved like any other Program.
 
 #[test]
 fn direct_quote_owner_can_run_and_release_without_retaining_code() {
@@ -132,6 +133,26 @@ fn an_abnormal_root_exit_releases_its_pins_exactly_once() {
     assert!(
         output.status.success(),
         "checked CLI abnormal root exit lane failed: stdout={} stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+}
+
+#[test]
+fn an_empty_quotation_installs_runs_and_is_saved() {
+    let output = std::process::Command::new(
+        "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    )
+    .arg(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/live_slot_empty_quotation.mjs"
+    ))
+    .arg(env!("CARGO_BIN_EXE_noble"))
+    .output()
+    .expect("launch selected Node/V8 empty quotation child");
+    assert!(
+        output.status.success(),
+        "checked CLI empty quotation lane failed: stdout={} stderr={}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );
