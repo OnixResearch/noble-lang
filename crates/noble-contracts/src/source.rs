@@ -1688,10 +1688,10 @@ impl Session {
         }
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
-    )]
+    // The effect universe the session may name: an explicit live-slot or
+    // declared environment comes first, then component bindings, then the
+    // host-selected Core test hosts (with the live session's two self-edit
+    // identities).
     fn effect_universe(&self) -> u64 {
         if let Some(profile) = &self.live_slots {
             return effect_mask(&profile.environment.effects);
@@ -2945,7 +2945,10 @@ mod tests {
         let submission = prepared.submission().expect("checked submission");
         assert_eq!(
             submission.request.expected.allowed_effects.as_slice(),
-            [noble_kernel::contracts::TEST_EMIT, noble_kernel::types::EffId(1)]
+            [
+                noble_kernel::contracts::TEST_EMIT,
+                noble_kernel::types::EffId(1)
+            ]
         );
         // An operation outside the host-selected environment stays unbound.
         assert!(granted.prepare(b"test.clock", &[], limits).is_err());
