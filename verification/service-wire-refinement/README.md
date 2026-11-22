@@ -137,6 +137,18 @@ theorems are checked again against the selected new subject and trusted models.
 
 ## Retained runs
 
+### `ba22f835`: [receipt-ba22f835.json](receipt-ba22f835.json)
+
+The combined Cairn campaign batch (batch 2 plus the third LIVE round) regenerated
+the kernel subject this profile consumes: the live test-host rule changed the
+kernel's contract validation, so `Types.lean` (`405faa8b…`) and `Funs.lean`
+(`a31dddcb…`) were rebound, with `NobleKernel.lean` and the handwritten externals
+byte-identical, and the lock and receipt were renewed (discovery `8755e534`,
+check `f79f608f`). This clean run at `ba22f835` re-elaborates the refinement
+proofs against the new bodies with the same 61 theorems and the same refusals of
+all eleven mutation controls (8, 8, 9, 9, 8, 10, 8, 3, 3, 3 and 3 strict theorems
+lost); all eleven mutation anchors stay unique in the new `Funs.lean`.
+
 ### `05bac95a`: [receipt-05bac95a.json](receipt-05bac95a.json)
 
 Cairn campaign batch 1 regenerated the contracts and Wasm subjects, and the lock

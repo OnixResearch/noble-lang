@@ -1,0 +1,2692 @@
+{
+  "schema_version": 1,
+  "result": "passed",
+  "scope": "mc1-statement-export-v1",
+  "source_revision": "sha256:81807d1957593df6130475195687fec0a3d908205e8edbd5b2a17783978cbf26",
+  "source_files": {
+    ".pre-commit-config.yaml": "548cb1a1e56a47c8154dd20e58256033f4fa4d6f94fc20445ff5af45f9c1bdf4",
+    "Cargo.lock": "582a7c91d10c3a6cbdaec2968b61e878821acc9781dfb84d53df096a778a862c",
+    "Cargo.toml": "28f50596ae329c104c28d0c4ae10c35b2ef1f20e95662356e69affda47e13bf9",
+    "crates/noble-cli/Cargo.toml": "7bb0618a2207272cefa6b6f7f74ecc742db820141aa438612e9ac4221e295748",
+    "crates/noble-cli/src/backend/vocabulary.noble": "f8d7a7e587cf85bcc36fe21c75506dd0c58a4c7e18baa8ddb1e11fde8aeb23e3",
+    "crates/noble-cli/src/build.rs": "0863667ffb29cdc6c9cbfe16349239d1bb79b032559cfed980fd4a3c80bc9112",
+    "crates/noble-cli/src/c_backend.rs": "61b6bb9280cbcd604e298d3d6816726e2db3b1ba8e32e7582afcc073ad5fe97d",
+    "crates/noble-cli/src/component.rs": "1136e05fd6d5a7d230f59af75aa8705769d3072ae105d9c8ace0c479453760ff",
+    "crates/noble-cli/src/component/artifacts.rs": "584dbd064218b304fa0d0e174e0b7b5fef129265c950a0793b14b93dd9c29610",
+    "crates/noble-cli/src/component/report.rs": "2ef03ca0f1e0f83d2a037fd9a1b945419974348526f7d47a9298433eafa43b01",
+    "crates/noble-cli/src/core.rs": "119e87afb5b849ba5635accd392a18c0716b57f9fce27327918450cf152e9fcb",
+    "crates/noble-cli/src/core/arguments.rs": "36dbe2f5c58c1f1efbbf9364ad100e027a99f2239d4bb62c418a486b99a5ddce",
+    "crates/noble-cli/src/core/arguments/bindings.rs": "9ebc866815018f2ca74b15aa2e6377ce979a1912d83e0b5b90183c9400f6051a",
+    "crates/noble-cli/src/core/arguments/bindings/adapter.rs": "6a41ba2f57d9dd274a404d0994894ea38ac3d32d389d7c93449681b88d2a942e",
+    "crates/noble-cli/src/core/companions/session.rs": "1a775caacebf73133ef8603c39868b35957577f6c5f88438235c1d3927df27f1",
+    "crates/noble-cli/src/core/entry.rs": "20d7bd84e431e91d6b616f9a356fe154168876a4a49af8e5220f3cf0f2207d24",
+    "crates/noble-cli/src/core/entry/compilation.rs": "803b9848159cf0e798b407ecc9ad733df0149a91733218bc6f41886d38f969df",
+    "crates/noble-cli/src/core/framing.rs": "d9a2dd72588c6f16970717efe64ca09053760de717f6d5a3f96148d617b5c907",
+    "crates/noble-cli/src/core/inspect.rs": "dd070004f022fb9bf4c95b8eb87b34ecb958ceb00940041deff66b1057d2bffe",
+    "crates/noble-cli/src/core/live.rs": "fda91350780d2efd644d4ef6b1f0cebe298e99a78f8f46751699a0547973daa0",
+    "crates/noble-cli/src/core/live/declared.rs": "40f2c3ba2ad623b1df23304df871fcb13e6192e09c43ee43e1e0123f5743b441",
+    "crates/noble-cli/src/core/live/encoding.rs": "e1b442cd8f2dda75c7ba968c72a73b4dab0c7c0922194c000536982fd563981a",
+    "crates/noble-cli/src/core/live/watch.rs": "dfd0f32d85f4c80fa9455e9bc01a1580b4a158702a7b1cfde15ed51a4ed70a57",
+    "crates/noble-cli/src/core/live_slot.rs": "8cf7aa908c2c594115c7ba1df7540c1c6b84188786afd33f6ae6002e4c823bf1",
+    "crates/noble-cli/src/core/live_slot_origin.rs": "b173f1649587d94d846acf1cf9119c268f9673202dc4133990f67ae5ebc3c0cb",
+    "crates/noble-cli/src/core/live_slot_returned_dag.rs": "bb4fad9de54b38bd49f7ab3d3c96f3bedb928364014064827809fe10eedf0a3e",
+    "crates/noble-cli/src/core/output.rs": "95e6c5530ab86448db67adc5707e0886bd7948cf0dbea1fae083bbb3792f1a90",
+    "crates/noble-cli/src/core/preview.rs": "51c772e74768ec895b4ae6eb78c6f33d4e1047ecb07d56be76027f910c9b0554",
+    "crates/noble-cli/src/core/runtime/abi.json": "fea51903d9155f31cb27be173ca96644adb67c7ca08e9bd0898f206ff4faa589",
+    "crates/noble-cli/src/core/runtime/config.json": "400365e6de281bbde84cbde772dde705fdf97e7e8ee534884fa029c627fb2be8",
+    "crates/noble-cli/src/core/runtime/declared-abi.json": "6927b379477ee6318d292e7aa09b2103f488349931a89ed84e2e3bf7dac3eb0d",
+    "crates/noble-cli/src/core/runtime/engine-host.mjs": "35a04eec6ea0e218908a1a8e4316201a343162723049c3815700d26a1265bf5d",
+    "crates/noble-cli/src/core/runtime/engine.mjs": "ca783d3e08e9ce71fea0d7420eb2c4a2410dd35c08690e55176bb22b64e53900",
+    "crates/noble-cli/src/core/runtime/host.mjs": "271d8add2c5ab940fec867d822cbb68fed9b0c57e98f9243ffed879065d59494",
+    "crates/noble-cli/src/core/runtime/live-test-barrier.mjs": "b6cf88aaaa0e6f81343e27b24b46e708fb97deb768b72f2af3ef6852fb26d22b",
+    "crates/noble-cli/src/core/runtime/preamble.mjs": "5736053747fc9f7fd84e8c098769fbb213f2908ea7ad06a47ef5174502ac4086",
+    "crates/noble-cli/src/core/runtime/protocol.mjs": "3d040b9ba3fc7219b82ffb90656a45b79a19389e75b166c23d3a0fe1235a6cf9",
+    "crates/noble-cli/src/core/runtime/slot-engine.mjs": "1657fd073733214e1137dc8fd290b4bfcf5e6b5979e8ca9c143e02192cfd62b2",
+    "crates/noble-cli/src/core/runtime/values.mjs": "1b305dd458b50a8b7eb4390f39938e8087b699d16b295024b0d68aff835ca1c3",
+    "crates/noble-cli/src/core/worker.rs": "ec88a85104698056cc8c2d120e02d1fa80e7058d3491005ed3d3a7ca84029bda",
+    "crates/noble-cli/src/core/worker/assembly.rs": "ada590e9cd1da2a358a6f8165722b8a0a8b1a68b52364a6f7e3b3cc9edeb5987",
+    "crates/noble-cli/src/core/worker/configuration.rs": "12a966a66e3df4314f6794595965fb5287d9590930ce5ea05a41703b589583d0",
+    "crates/noble-cli/src/core/worker/process.rs": "6fd43083f07a66330e91568d59a21f0c954d1e688d9b65787729b6b949356267",
+    "crates/noble-cli/src/core/worker/protocol.rs": "2f411ae83f9e8d2fbab3e42534d9efd7a99d7c2ca8f26093c78dc80d711ddfa9",
+    "crates/noble-cli/src/core/worker_package.rs": "f832a38f58002c5939ff25f7d61b257f223683628b8d85ddf7c03e2411d57c97",
+    "crates/noble-cli/src/core/worker_program.rs": "be3b5bbfac2d0934f744238efeecbde505d132885bbb894e93c586e29cc15fe4",
+    "crates/noble-cli/src/core/worker_program_guest.rs": "59039ce2b168292738c502781ca90fc0481a86190d144073bdec8ef57238cc0e",
+    "crates/noble-cli/src/core/worker_shell.rs": "9b422363e0dc67543e6bf9c1c5e6023bc185b346a9bf4df2fbc1d1a6885825dc",
+    "crates/noble-cli/src/core/worker_typed.rs": "e6d4567c39fbae6f7e643952f9e0c0bbaf587b111f8cd31f949e5292d033c9cc",
+    "crates/noble-cli/src/core/worker_value.rs": "129d960b389e1f122ea0224e43a7050111fcfaeddfe6d5c8f839faaa8b2c294f",
+    "crates/noble-cli/src/main.rs": "d45ef035de74fb841f77fdaf6ffd5fb48422a5aaace32c817d3447eab9bfef2e",
+    "crates/noble-cli/src/workflow/intrinsic.rs": "51f9c59c0f76a51053ecb03639d4019a6ada7ee1dc010f30b7b30a2917e8eec3",
+    "crates/noble-cli/tests/c_backend.rs": "17c4c66f4df79743a4e224da39649abd57e96c8c3641ed23c639998d3119367f",
+    "crates/noble-cli/tests/fixtures/worker-send-dispatch.noble": "0bb7e63ef292cfa871f15b6f154a9426cb739fe5185a7098e324c653de84f65e",
+    "crates/noble-cli/tests/live_repl.rs": "9541ef7588f541a94647c3a320d0a0ffa644642d46bb628a6bd1d71e60ec8a15",
+    "crates/noble-cli/tests/live_slot_selected_origin.mjs": "1a3ae8a348c93e63792d200fc1e4ee9a13868c88cb8bb1709267fce68dba90d4",
+    "crates/noble-cli/tests/live_slot_selected_retention.rs": "c3d570334884cbda25ed5b7822ff76aefba3cf8f3e3f36699c49e98cb38d6fa0",
+    "crates/noble-cli/tests/smoke.rs": "aa84d34aa6ffef7293e07531264b3626390f704243686dcd19306700ff1ee1d4",
+    "crates/noble-cli/tests/worker_host_child.rs": "b684f43d88297bb029fb1aac25a41ea9dc52dab0e669f9723c8c3c874fa0866a",
+    "crates/noble-contracts/Cargo.toml": "4d3fb9854611e8e3329562d3cd9235d9f53e5a0e4f5818fca998916240f769ec",
+    "crates/noble-contracts/src/companion/admit/accept.rs": "68cbce40ed372652718641ada7ef8db2a057c33abaf65e8a31f1a177d8980729",
+    "crates/noble-contracts/src/companion/admit/mod.rs": "264818198e36f98e032fb955d0a0dd9b9bed05bfc609efc6f43262e3f974b767",
+    "crates/noble-contracts/src/companion/admit/observation.rs": "d17cec93d48e322f408c4b3ce1e26e410529be8e6911b19746796dfee2f97979",
+    "crates/noble-contracts/src/companion/admit/program.rs": "3c27a6d3d482d88d56fbd6892e6de8f958dce8baf581c84f4ebb9b0af98c203b",
+    "crates/noble-contracts/src/companion/admit/recognize.rs": "c7f6e3d895920832a254e49fc4f1871ba0b7d16fb6b13d9af95e3a455cc70d4f",
+    "crates/noble-contracts/src/companion/admit/statement.rs": "2213e9b145621ad3221993918c34a2b7561ebd207207fb71075bef0db7c24562",
+    "crates/noble-contracts/src/companion/admit/types.rs": "eb9c4e2fbf549857c61d79cfc6d8fbbde3e9e8aa08c6f930ea99079fc34c1164",
+    "crates/noble-contracts/src/companion/core.rs": "d6a0488205d2b14a5d7f3ae72501726da5b5488c686fc58822c9dbd59b97ef97",
+    "crates/noble-contracts/src/companion/core/context.rs": "42bef7e1ffbea8e5c7861a780125dfcded0d531d28e085894562976d158abb5c",
+    "crates/noble-contracts/src/companion/core/refusal.rs": "c017b814c14c317bd13fea0417fd3338aea83d3e9f13533f0c1192898a5a58bc",
+    "crates/noble-contracts/src/companion/digest.rs": "3ddf1d465af4e905034bb939dcfbab0c98d99744607e6b37295eb4122ace3201",
+    "crates/noble-contracts/src/companion/guard.rs": "6949b5aa42530b351f1ae4496fd5a056d8fe7bc7cca30d21c0eac7acfb750ac2",
+    "crates/noble-contracts/src/companion/guard_v2.rs": "d3f9b441f8c74339b7c3eef2e0c8e84ef0582aca8dd0169d6e312e083824bd9f",
+    "crates/noble-contracts/src/companion/mod.rs": "ecdc0f43926334329e0dc4a515e3894ce23252ab7b402750cbc5cd3409ec6e2b",
+    "crates/noble-contracts/src/companion/registry/application.rs": "1eb48dcae96bec1db4ef53c2c42ee8ee50b1a29e9c4e7b18ac09299a655695c6",
+    "crates/noble-contracts/src/companion/registry/entries.rs": "c30d7f1848d8919ee03851d3b9f8a3bb8046fdd7e9fd0971a79802a436aa4174",
+    "crates/noble-contracts/src/companion/registry/mod.rs": "d39b7d3dceadef71296e9a8a3eccbf82410457b5509275fef4eb94f7e0580955",
+    "crates/noble-contracts/src/companion/release.rs": "d85bbf9befcf6285222d1fb2577d4a2eb7cc043719b121d0dc29a3afca7e5f0b",
+    "crates/noble-contracts/src/companion/rules/derive.rs": "75bfc9465eec7d1687c96c7927460e6003794bc0470e05c390f8909d908f1d47",
+    "crates/noble-contracts/src/companion/rules/mod.rs": "deaadd1a3336593cc00260f18520eb368ebdb614887452a266848e09e0d61188",
+    "crates/noble-contracts/src/companion/rules/premises.rs": "f7dfd0dab43d1838bcb9b70c3073b3d7d32f747aa43a1e1af92974f8723bb731",
+    "crates/noble-contracts/src/companion/rules/premises/step.rs": "d3a55001f4537a8306790b6b11c8900a1845d6d1e4b1cb373fb9345eeb59e93d",
+    "crates/noble-contracts/src/companion/subject.rs": "3624b0d64fd9415cc3342ac478aa9f9755ce36d155513164caa53f3a90dafd84",
+    "crates/noble-contracts/src/component/bindings.rs": "efe70cdc9f001e5e220b22f34f276dcbc55eff405db867d8e61213fad039f73b",
+    "crates/noble-contracts/src/component/context.rs": "da5e61943ff960e3d186bb524980c2773aaebdc2c5058a6d44b008d77a01568c",
+    "crates/noble-contracts/src/component/mod.rs": "cee80e12b30f753cdabb4b512c184dc9afee4994ed4329edb68570b0bf1b3175",
+    "crates/noble-contracts/src/component/parser.rs": "5ae80cbc6bb43ab3ca63e94f6a9a9ea90535790ad24d5bb93925ab4539b716d0",
+    "crates/noble-contracts/src/component/parser/cursor.rs": "e8a72d4906ee630d4e18bac3838a238ed34b3a9147752d9f543b2aea1c15962c",
+    "crates/noble-contracts/src/component/parser/function.rs": "fe1876958d27f7200ae7728c726e11bb6cb1b357adcab68565b0d52bc5f9f318",
+    "crates/noble-contracts/src/component/parser/lexer.rs": "02a6a79dd164ba1df57ea37cf8b9264c87ea9c1eca0695da99e0ac07a486b51e",
+    "crates/noble-contracts/src/component/parser/resolve.rs": "91470699c5f5b12ed35a078d897ac0935ec9085ea6e726967bf0f2f092c06056",
+    "crates/noble-contracts/src/component/parser/resolve/declarations.rs": "c7b46ba3f704c33016f126f5ca97d9e71e76c143d291d8bd0d066b0e8b16073b",
+    "crates/noble-contracts/src/component/parser/resolve/signature.rs": "7e637e1da90e7dcf10c0de93c129a495d3483dcf688c79f5ea265bd5baa9d642",
+    "crates/noble-contracts/src/component/parser/resolve/traversal.rs": "31dcb21770f4403ca60ad6f72be0c52dc86d1227bb45a6231119691ab2d9a8d1",
+    "crates/noble-contracts/src/component/parser/resolve/types.rs": "4b6583b1814fc316b7359b90714880473ede21d06c5e92cf886c183462f433b2",
+    "crates/noble-contracts/src/component/parser/world.rs": "b01379989ec611e661659f14f208e6c22ea2043b15e728a76025853d1ffbce82",
+    "crates/noble-contracts/src/component/preparation.rs": "d967e20ea3c7cacdef6c74d75ee77660d1f06d6ae56cf7c1447bec65715cd383",
+    "crates/noble-contracts/src/fixtures/calc-errors.noble": "319efe57c1044d650d356744aa94b783205f56d3b65b3383a753dfc26115aa3d",
+    "crates/noble-contracts/src/fixtures/calculator-bigint.noble": "ff93762aba8f2e9a14853f1c258f23fd6ed7b93dbe2f5963c1dc4083aadbcade",
+    "crates/noble-contracts/src/fixtures/calculator-bindings.noble": "d35ec885d16df3b880867e2fd1c57cb16d7dc5cdb8cb48793f9e88913e580166",
+    "crates/noble-contracts/src/fixtures/calculator-bits.noble": "8b9ad75b3b19d180732f348d27497ce60fbcc6c9922e32e102e5e137f46ade7a",
+    "crates/noble-contracts/src/fixtures/calculator-decimal.noble": "a7664741535f30a36befa428d4626befdd3e29a042f896d5bc67f6ca773cb7ea",
+    "crates/noble-contracts/src/fixtures/calculator-definitions.noble": "da61b1eebc4bec5270a88f4b7dfe560e5641a7b05212dc352dc89d5a0678f7ab",
+    "crates/noble-contracts/src/fixtures/calculator-display.noble": "f3976f0ded740f45a666ebfa81b8b1f85a094bbc91be9db7b2eb69a1724a98f7",
+    "crates/noble-contracts/src/fixtures/calculator-expression.noble": "4245ebcc3fe68db00e52509024aff5136852e7466c1ee8d9a32b0362705c44ca",
+    "crates/noble-contracts/src/fixtures/calculator-lexical.noble": "4c9f9d80528ff4ba2cff6d22181b34f684b5de3e2e4a3f2c029c4be8a4979dcf",
+    "crates/noble-contracts/src/fixtures/calculator-numeric.noble": "0e8cb62321d32314e181c81160708567795da3cf77ff8020a76c9134f454a176",
+    "crates/noble-contracts/src/fixtures/capture-family.noble": "730d8f2f40fde9d0e0a1b4a8d0e1855d3e86707b94e8bcbc6be445d6a3595f3f",
+    "crates/noble-contracts/src/fixtures/increment.noble": "7300303dadacfc6392122f72ef8f36ebe107a58172a2eec47bf13bbd3cf6c670",
+    "crates/noble-contracts/src/fixtures/result.noble": "6efdbbffe55379b6e05160b1ebd6cbd01a51000b1747777c5be610debca2fb80",
+    "crates/noble-contracts/src/fixtures/structural-map.noble": "43185ec76a74d195f3a74974f27b78201bd8261249db6527ad3db8c617274f17",
+    "crates/noble-contracts/src/fixtures/structural.noble": "81d08ba64328de03b44ea1669b051d76a07d59cb8a213c2220e90c21998a7550",
+    "crates/noble-contracts/src/fixtures/wire.noble": "96a5a269a5d227ac16f2e71b0d2aa7846576c4a11b2ff1bb2eefb49ceed9db28",
+    "crates/noble-contracts/src/frontend.rs": "d22c64b8098d40a95b0d4a076466974507f8f15cbee089dc0fc4c0f35a610206",
+    "crates/noble-contracts/src/frontend/bindings.rs": "5b034788036e9863f75324baf8a1cb2040f3def8c5fb1df9904346f499e1cb26",
+    "crates/noble-contracts/src/frontend/fields.rs": "94aef56657221833ebe16795fdc68a224f734432699d90eea7d42f6a97f1f166",
+    "crates/noble-contracts/src/frontend/logic.rs": "c3d41fd2ca6671119483e783f0addf6295c31fe6cf42f481b90f2bb3e7762079",
+    "crates/noble-contracts/src/inference/build/mod.rs": "76ca12e4a10e7e426863035d237f4ddd4ed5e987e07638147632679faf605776",
+    "crates/noble-contracts/src/inference/build/stack.rs": "eeb7e2686cf8207cac213ae5dfe26b17e0e86b38b23bed404eb41bdb969a3222",
+    "crates/noble-contracts/src/inference/construct.rs": "1b1b35217e4ffe7cbc9550542f683e5e391833af2a3efe6ffbdda7fdb63fed89",
+    "crates/noble-contracts/src/inference/effects.rs": "82b75957534cdffbee495ec6ff15e2a9b4390d70000ae8376d0ecaba3358bcca",
+    "crates/noble-contracts/src/inference/effects/oracle.rs": "86514112d02e3e5ef2025d1260265ae3542263bd64760aed422ee2296cd24cfa",
+    "crates/noble-contracts/src/inference/effects/solve.rs": "0d1ddc0942256ee65d3225985a712ca23f2cc73291391ea6d43e2c14e7bc391d",
+    "crates/noble-contracts/src/inference/finish.rs": "00fdcc03c407e08aec0d43ea6982cb6d4b8f3e88ee830b6fd92e672023cf14c8",
+    "crates/noble-contracts/src/inference/materialize.rs": "b35c86c7d7d0027a0161894876ff7ac3c211ad882fc035a12c6c0f33631e0db5",
+    "crates/noble-contracts/src/inference/materialize/rendering.rs": "a2d95d5274123d03929b890dd921a01ae8f0607e9483a3ad67520636dcb751b1",
+    "crates/noble-contracts/src/inference/mod.rs": "3f4e059c487775c40072ba78815a7f80a31cce029b7b76a20f8914943b9c77f2",
+    "crates/noble-contracts/src/inference/unify.rs": "29b2dcbe29fe370f791c15922d924136b79da637a68d78c77f36b223d34b2298",
+    "crates/noble-contracts/src/intrinsic.rs": "1841ffacb526fa1339caa704a15f805fad2ddd8ad1ec437075294e82fd9d2895",
+    "crates/noble-contracts/src/intrinsic/named_v2.rs": "8d2b571c2c9bdc9d884e7cc8408a4a38bb174acf50be349216de2d2860b4fdb6",
+    "crates/noble-contracts/src/lib.rs": "a41dcf4d89c773bcd49589a5adb8d6d682a5d0beb0c1b9120e08edb7a9bef8d2",
+    "crates/noble-contracts/src/metering.rs": "5fce289771b93293f9b5f7dd74ac74ef06e8408bc57173f9efa143b880ea03c4",
+    "crates/noble-contracts/src/predicate.rs": "e34974b713220f5dc1b5b2668f074df32ec85ac2f5070d07c63bf2cbfeaad6be",
+    "crates/noble-contracts/src/predicate/application.rs": "c4f474dff30b9cb371976e81cadea1d511a5cf2056632f30b18ef53997047837",
+    "crates/noble-contracts/src/predicate/binary.rs": "aca1ed942b2a5129847ee08041a7ccada760b3c1fbfa27ecad9c9f796f6cad8c",
+    "crates/noble-contracts/src/predicate/mapping.rs": "82ba11cc31fee185423c8f913fc1a5f042128bad25a769964ef97e76d341b723",
+    "crates/noble-contracts/src/predicate/references.rs": "5b92e8e2f25b62d6ac6aa697c5899b101b3a4fa13bbf1e0914efc9f45b9f8723",
+    "crates/noble-contracts/src/predicate/resolving.rs": "25134ed3bf8fd1c53ddfc2d63247faafb7ca782bbfc2bf9c3d201daef637eced",
+    "crates/noble-contracts/src/predicate/structural.rs": "4926b58a9799c3422c4d158572c5390077524ea38e76ca997aaf040d280ce0c7",
+    "crates/noble-contracts/src/predicate/unary.rs": "7ec8714ea9e55d6190467794095bff445f4905124fd5b83c78b1eef44eef3e88",
+    "crates/noble-contracts/src/program.rs": "15260a2fe64702bb9bfe12616895abb5ed1894c618e6137c993ef155e38d2a9c",
+    "crates/noble-contracts/src/program/bindings.rs": "99465f2d28d08d43d036550c9207e2b7117804934f701c1307f257980d9f70f7",
+    "crates/noble-contracts/src/program/forms.rs": "c73952856ef8a607ad6dc3fd25536be588fe6e2207e442539ea954b3f9128e2e",
+    "crates/noble-contracts/src/program/traversal.rs": "95fe8cc2bb07a954ee3507913d757053a3da4470523271ca791672a676d9ea37",
+    "crates/noble-contracts/src/program/witness.rs": "fb8beba233061d81b771b73ed6c1cdf3fafbb5e488ff06a056489fba3ed9f763",
+    "crates/noble-contracts/src/program/words.rs": "4ba6b7d12f5deaabe128263f79f95988d7956118da8b3240ce44f0c37e6628d3",
+    "crates/noble-contracts/src/rendering/expression.rs": "25523deba0bd5df66b5fb9b6f86685c1b5064a219a41335b0bcd50a9c50c86f5",
+    "crates/noble-contracts/src/rendering/mod.rs": "7b2cfcd5271ce19bb4c39067bf2ce62cda4fe218201228173bf67a6be7770590",
+    "crates/noble-contracts/src/rendering/subject.rs": "d47c830314d77fe2efa81d52af3060baf98e480262df356af745a2b900bf8748",
+    "crates/noble-contracts/src/rendering/types.rs": "51fcc6f5bbce837388464a9d61fbc6a734074e7f7eebde78733cebbc265c0cb4",
+    "crates/noble-contracts/src/source.rs": "da73d32089f9055172152b8102a258d9584b720c6b3d173703fd0d52063f2e00",
+    "crates/noble-contracts/src/source/chunks.rs": "0085eb7d8340a09d776710a1488adb56e7c84ac4c30f0e714bae4e90878d2198",
+    "crates/noble-contracts/src/source/declared.rs": "fa30c64b49d0b574d8de0a456b56ad3435eadbd73685437d3abf5e2dda53bac3",
+    "crates/noble-contracts/src/source/declared/links.rs": "7922725f885f36cd978cf6278c857b981c77fa1c02409476e1169ac1568946ba",
+    "crates/noble-contracts/src/source/declared/parsing.rs": "5849ba7aff2118ef1e42dbbde1b50c81773d8ca41da26b0e97e6c9fea2a01aa9",
+    "crates/noble-contracts/src/source/declared/parsing/body.rs": "d50df129bbd23b22fd416e156149f791c2696f210e5437586c1ea6ed17ebfe1d",
+    "crates/noble-contracts/src/source/declared/parsing/imports.rs": "e08bcbdac420e2d633229566976f2537a6f0388df71474f27be890c361907a68",
+    "crates/noble-contracts/src/source/declared/parsing/logic.rs": "2c9c166cc88b583c252b56934972a2e82abb04bb058b406a9c72b73f9208494f",
+    "crates/noble-contracts/src/source/declared/parsing/members.rs": "1c7b107d23b9780b8f7a1787b976de74e0497c346a059345eb82fa2386fe53f5",
+    "crates/noble-contracts/src/source/declared/signatures.rs": "035c5a0eef31f9cc03d7d047f4cccf160ff694dfe917a2020dcdfd0ff4fad240",
+    "crates/noble-contracts/src/source/declared/state.rs": "35c41abd8206a208a056c5f615b1697a581d2f30e19ef5b8149794bf795498bc",
+    "crates/noble-contracts/src/source/declared/state/namespace.rs": "252ea8666f1302604265a655a6490aabfa500d795d2cc015769870810f13991c",
+    "crates/noble-contracts/src/source/declared/state/namespace/words.rs": "9137f0e04cda02d6400436407d2be55d0cb5e97c605ebed7d9bcabef9afc0d46",
+    "crates/noble-contracts/src/source/declared/state/prepare.rs": "0293d4f5dd5ed4db5d2ca6cd9f8c291c53b689817e5aade480a3a9381ffb8a9a",
+    "crates/noble-contracts/src/source/declared/state/proof.rs": "d2b291f0236b4fb26bad45d5c3161a1df92dc216f4849a014f37d7fbc53a3f00",
+    "crates/noble-contracts/src/source/declared/state/rebind.rs": "b570a5e81504064ac35c2fa26e51a9ea1685a37aceeb57178ace8cd0e2116ebf",
+    "crates/noble-contracts/src/source/declared/state/register.rs": "a7f339d5456ad8312ef6716dba270224ba2a94acb6d55ef645144bdb59efde1d",
+    "crates/noble-contracts/src/source/declared/state/register/adapter.rs": "003111578dfbd493f27948d1000166e7002259bcc858e8723ba25e7a039309a4",
+    "crates/noble-contracts/src/source/declared/state/register/collection.rs": "c66be43ec8cda7852ff336d86a36696e94ffe75fe005065f8988600ffadf630b",
+    "crates/noble-contracts/src/source/declared/state/register/definitions.rs": "154452202ee8e2476b7122ee65fffd6f80d7da4741ecf1373bd4a4dc101173df",
+    "crates/noble-contracts/src/source/declared/state/register/definitions/graph.rs": "e0275f7db4595b812d7ea3a66d8cf2ab9e836713f2518ff427f42560173bede4",
+    "crates/noble-contracts/src/source/declared/state/register/definitions/scheduling.rs": "88fd9f914990e817264fbf88428db314f9dffa0ef9d62046d65b25ac93087d4a",
+    "crates/noble-contracts/src/source/declared/state/register/exports.rs": "2dd5115a459e2b9586753f643f3e181f278e8b31dd640ba6eec6a612f6b647ed",
+    "crates/noble-contracts/src/source/declared/state/register/logical.rs": "49447bbe8710e56a21acb6500319dd067ef2a64bca7bf76aa0d8343ba7282bb4",
+    "crates/noble-contracts/src/source/declared/state/register/logical/origin.rs": "5dd5da8722bcc95d7f5b11322a2560541df357eddfbc248cfa528c52f18a9e7a",
+    "crates/noble-contracts/src/source/declared/state/register/publication.rs": "ff1032c3efecffb35fe0720798dc0cdb370df901a575f805807c7e258749e632",
+    "crates/noble-contracts/src/source/declared/state/register/schema.rs": "0cc134b1d9179be5bfb4d7f3e5cdeb53f70b5cd3f47d221fa57b2d87b3eb8b2a",
+    "crates/noble-contracts/src/source/declared/state/register/schema/names.rs": "9fac21419b1ffa44e30821ed98f2acfef0eda06ab0ddde50a08cc84d936e1b30",
+    "crates/noble-contracts/src/source/declared/state/register/schema/nominals.rs": "5d4d739934501d364d34181245f14fe6991937a1947235f990f507cf51470d58",
+    "crates/noble-contracts/src/source/declared/state/register/schema/types.rs": "8dc1ee64cf75b28584c6bcf5509b2855fc2424487e4463acc4e1a83e4bec0f15",
+    "crates/noble-contracts/src/source/declared/types.rs": "7561c06c4287daa92772fc0b66ea60a88dd3272fae7e1f8d18e1c0f3b2043889",
+    "crates/noble-contracts/src/source/editor.rs": "8fc06695acb2f62c54341100087897155d23ae7ebefb004eb5e1ee302689bb68",
+    "crates/noble-contracts/src/source/emission/contracts.rs": "a328d895c524a3d3ac97b067575336bba603af8f956ab085db67bb777de77986",
+    "crates/noble-contracts/src/source/emission/contracts/patterns.rs": "b9d0935ab4d35e1db7f176a6a0c5dfca790df02b6b0c22237a2735f3fdeed029",
+    "crates/noble-contracts/src/source/emission/identity.rs": "11b416ee0d85a5bd81f9b23c73422b855656c8a98db75302165d2a73d797696c",
+    "crates/noble-contracts/src/source/emission/interfaces.rs": "7a3b59365d43012980d65e49da597dada574094625e61bb668a9c6dab0803387",
+    "crates/noble-contracts/src/source/emission/materialization.rs": "5acdd981cadefa166563e27c91b1632911526f3e264ce466b343aca64952f87b",
+    "crates/noble-contracts/src/source/emission/mod.rs": "cc973812dd8dbca5f3977556b12ece0ef1a80685a8c07958c6b9bf3fcaecaa16",
+    "crates/noble-contracts/src/source/inference/completion.rs": "221136f12a06adc95697c517449593873fad523e4e573ffc26a6338d4d1921d0",
+    "crates/noble-contracts/src/source/inference/mod.rs": "32eaba30aec764b8bc697e17d14d73c753c060c0ab0899baaabd7fdaf37dde98",
+    "crates/noble-contracts/src/source/inference/operations.rs": "0dd73888bc261f7e4f55213135f3e71af039118d5e782651c6dddbbd6576b1af",
+    "crates/noble-contracts/src/source/inference/traversal.rs": "304bcfcc6ace484d8cefb7d3238dd7b4bbc5b0aecee1198f5ea0ca0ba37651a5",
+    "crates/noble-contracts/src/source/inference/validation.rs": "4a083bb8e1855a768cf2e3e8f92dee6d951fb621b04655de634f50be79186509",
+    "crates/noble-contracts/src/source/lexer.rs": "a1e9285f755cda7c8b5db2af487413b26636d0317ece430dd60cddb74df35d5e",
+    "crates/noble-contracts/src/source/lexer/text.rs": "f3b0b9bbccf2cc7b5d0978e8973054916b1013e9f416ed6a740b8c2fca6df952",
+    "crates/noble-contracts/src/source/lexer/tokens.rs": "4ecfd1dfbb17417dc4f7bb40e23ff1299057a8c6ee51c7607669f4bdaee28b0a",
+    "crates/noble-contracts/src/source/locals.rs": "ba674feceaec9a11c04d54f9a29c6ec1b641ae989733d96995eb1a4865a091aa",
+    "crates/noble-contracts/src/source/parsing.rs": "9901cf476e24cf3f365c2f2bf50b1d15e5f71e092f296c8fb94fad578c9d50c4",
+    "crates/noble-contracts/src/source/preflight.rs": "c34d8a4df9251e67756593ee69f6dbdffa4d80fa2ee527bc9d8e533f66a2c90e",
+    "crates/noble-contracts/src/source/preflight/paths.rs": "9c8352025e6bd3defe4fbd9a3d216746bc2ef06a2678b98cef034d571f5bab54",
+    "crates/noble-contracts/src/source/preparation.rs": "30bfb679703ac4573da61cc600019cac3962f010af59dbfb658caac9e383aa1a",
+    "crates/noble-contracts/src/source/preparation/symbolic.rs": "524e6180c423ca5019eef2baaa97392b60f5c5bff4fb1cd1d2d73de1f42b972a",
+    "crates/noble-contracts/src/source/procedures.rs": "24e8e1e40ee25e8442119bdbb3f8dec9ed6953a704df327a2d925445542cea4c",
+    "crates/noble-contracts/src/source/procedures/acceptance.rs": "76def74c472f190d9f25b28730180032d588ef69e7b54968002d3e02eadf0e8f",
+    "crates/noble-contracts/src/source/procedures/alias.rs": "cad04c12a60cff15526bf2679f1a585b67acd0de755f258300658493f753e27e",
+    "crates/noble-contracts/src/source/procedures/composition.rs": "75abf1bb8bc2af295a0ef859dd6d5b849c49d2e3f6bd6e5d394f1e11e4062ecc",
+    "crates/noble-contracts/src/source/procedures/persistence.rs": "4f73fc3f2ada3d2ec05d7502a5c6f6ec8b67d072be8981c954e417e6e8fef479",
+    "crates/noble-contracts/src/source/procedures/persistence/history.rs": "35cb6b000c945b5bb28277525fda400bf9c36795fc39d8a1919685ad6054d60c",
+    "crates/noble-contracts/src/source/procedures/retrieval.rs": "6fd3f38f40ab446a9d29cabbc096a5d7fb155bd21b829b77948e72d108c87728",
+    "crates/noble-contracts/src/source/proof.rs": "d093f4baf559bf309add326f73905868827d371833a3e4f2019185be3d2a8582",
+    "crates/noble-contracts/src/source/replacement.rs": "eb913e0f0a54ce719ca5738bfcdb818872a90fb44fcac41781f038e51f91ca98",
+    "crates/noble-contracts/src/source/resolution.rs": "e23f8f71a67893f933c8d73de54d99e410dd8499e5f5f904b0b7d5b6866d3611",
+    "crates/noble-contracts/src/source/resolution/comparison.rs": "ef6bd9b570fba7ca8b63fa46037e65c4acd7694db4c2c8795d7779e8b93d0e1e",
+    "crates/noble-contracts/src/source/sizechange.rs": "044579e5b6d392ff5b6fd1bed6b036cd6e9811b5aebba5052c0f119719ac9818",
+    "crates/noble-contracts/src/syntax/constructors.rs": "70eb27a6805caf5c230bed99cd0f49ab1925f6fa80b7124eb4fc811e7aa6a06e",
+    "crates/noble-contracts/src/syntax/identifiers.rs": "32bf4e675bd54f497a2448bfdfbb9fdd0f7b2a846dfac50b0c7e250b0442de97",
+    "crates/noble-contracts/src/syntax/integer.rs": "fa33fe5666b9e372ad49a9d816b207a78f71485caec7d90fcb3fa7446e1924c7",
+    "crates/noble-contracts/src/syntax/mod.rs": "35e9667c7171a593fabbf645d77c0d4e6d4317f4535cde554ef4e407fc51f860",
+    "crates/noble-contracts/src/syntax/parsing.rs": "d7f8e9cf2691323dffd559c65080b9c26473e2014f5fb60b56ee2373148b3aca",
+    "crates/noble-contracts/src/syntax/typing.rs": "655b289ae1076d45d2b1e532b5c316039d779916abd5678a2ad0a87e55ede3e4",
+    "crates/noble-contracts/src/wire.rs": "f55b69c075fffcc7babaa560092128edbeb296c53f69d391281fbaad16445410",
+    "crates/noble-contracts/tests/component.rs": "7fc004caf7669ad1cdff54df0cb17324e9fbd01f59715d9e69dd9fc5323ee7d4",
+    "crates/noble-contracts/tests/declared.rs": "283858463321b3d2fa73bc6e4b89d6602b102e33dd4531e71224b56dc2705f03",
+    "crates/noble-contracts/tests/declared/bindings.rs": "2c5336c794e854d20526cf3c880e48770b8fd8c253a0a10c793762ef9a9e3396",
+    "crates/noble-contracts/tests/declared/cases.rs": "19e48d3346804fe8186ae6b43ffa9c6082c724792a273e4238b133c501ee2a8e",
+    "crates/noble-contracts/tests/declared/named.rs": "cff6e4d0ed2d0a1c6315bce239feab5acd8c2129032828a67a6b5bb4f1a4f192",
+    "crates/noble-contracts/tests/declared/origin.rs": "cddf070687d9ef8430ce63049faa0ea70f99a0b5e78ed9bd94b2a6b67eb2c74e",
+    "crates/noble-contracts/tests/named_v2.rs": "cbdfdbb01860e8e6aff2e0a5aa821d952b9a64b4476adade5582317bab2334aa",
+    "crates/noble-contracts/tests/publication.rs": "47e49b6cf822750d0fc509082378ad276b4a9770f0fe5648cd0bb78837f894ed",
+    "crates/noble-contracts/tests/source.rs": "c0b90a80d0a822f39fddfb51da9437eefe303fb80482b7285068c1b9dae92511",
+    "crates/noble-contracts/tests/source_proof.rs": "5ef30f24a8669b16699cc023776ffd4df2ffa249b201f1e66453bdd34104a92a",
+    "crates/noble-kernel/Cargo.toml": "19e6c70441ef5d51b9caf828ecb4a7432c8bd7efc40bfdafa158d4d95efc949b",
+    "crates/noble-kernel/src/acceptance/frames.rs": "eda1a811d8eb4decdf4f8da213e610ec6e1e3663d85c017aa66371ca5e9d5e28",
+    "crates/noble-kernel/src/acceptance/mod.rs": "3b50b0439710e1913932731e7e7160cbade6ad6f894ff30707492f39b12a655f",
+    "crates/noble-kernel/src/acceptance/nodes.rs": "c4cef486a7a28cb26dbc84013ce1573634f0c578a548426eccb3fafca224bc03",
+    "crates/noble-kernel/src/acceptance/nodes/visibility.rs": "2af47d240b0275c94ee3b7d82a35cf79c85cc7bb4cd2daf918bf481523fda7dc",
+    "crates/noble-kernel/src/acceptance/parts.rs": "67fbd907c1d0882539353eb2fb5ee63249e4187528fd5e4de1eb77bec3b40920",
+    "crates/noble-kernel/src/acceptance/parts/effects.rs": "a9a7f5727bfe231deca57c3220db00320ae35d0c9990b07b11a351538b40e5ce",
+    "crates/noble-kernel/src/acceptance/parts/instantiate.rs": "a04c9092e51a77d8948431c326143698c6707239389ca0103475251e5e0902ab",
+    "crates/noble-kernel/src/acceptance/parts/multiset.rs": "2c4f39f5fc40624c677a7321ca18e37ccb464d80886ece22da696fa385bdb1eb",
+    "crates/noble-kernel/src/acceptance/preflight.rs": "e3423b10be776efb1520eb441b4272116bb5e7cd13668438ef08a833986ca433",
+    "crates/noble-kernel/src/acceptance/schemes.rs": "eff565f9ed0300ba649ba9202337b5e3d84c9c4b230ddd49e0ced81e18a4b1fd",
+    "crates/noble-kernel/src/acceptance/validate.rs": "389341e5eba101a702a33ca65db86d3b2075dfa5811047bcba00ac01f3dbb34e",
+    "crates/noble-kernel/src/async_tasks/accounting.rs": "1f5ad623385fc49613fba5f6cbfe564126b556d57ca0817cb175e692b85dc9f3",
+    "crates/noble-kernel/src/async_tasks/bounds.rs": "0d4399f7778bbb8ae11ee9d59f896660743db607a81ed13126071b91d7305899",
+    "crates/noble-kernel/src/async_tasks/domain.rs": "ad7291c0b2d16f67e065369a490b5657fa7bc76e22f34dc2e28fb6444f0d9115",
+    "crates/noble-kernel/src/async_tasks/mod.rs": "e6555dce4344e36839dede79efde3b87b8e8240aba8f21a00fa944a909d80d40",
+    "crates/noble-kernel/src/async_tasks/schema.rs": "3ebc3d67c0bfa8ee5ddf23b87b05f038bfd774a57a9207a91ff4130a7f3a9f24",
+    "crates/noble-kernel/src/async_tasks/schema/coverage.rs": "ddd74ea7eb19a32618eb37b89cfc7a09bb58698bc650f67f5761cf67becbde01",
+    "crates/noble-kernel/src/async_tasks/table.rs": "2fd40027c437cebf8beb3b396bf438defab1d7d5176a1b1709f3955c1c67b54b",
+    "crates/noble-kernel/src/async_tasks/table/admission.rs": "0f8fa1db0a91df899c5241c295678b2639090027e61adebeba1d4ac8ea4eb512",
+    "crates/noble-kernel/src/async_tasks/table/callbacks.rs": "d60510a9cb329fea57c3a227a32690941c24f8646dc79d5f059df48abc262856",
+    "crates/noble-kernel/src/async_tasks/table/inspection.rs": "acb126a14d2b4decb4c55cc7be46fe8340b170523972f3a44adc3b0447df982a",
+    "crates/noble-kernel/src/async_tasks/table/ownership.rs": "35f9bc998377527b8633adbdf3ffef527eaf1d56ce53156ac2e7c00f63493d4e",
+    "crates/noble-kernel/src/async_tasks/transition.rs": "82618f6878188ab86d915a666ee94d883cfcbc9621f620a40ed372f7f10be7e6",
+    "crates/noble-kernel/src/async_tasks/transition/cleanup.rs": "5d766b0655bfe95e7ba133075eda597ecf9345823b3adf074bf971533aca532f",
+    "crates/noble-kernel/src/async_tasks/transition/completion.rs": "76e6790bcfb6fd51b9e85840e435e3754b3872749878af68c8ca34290d3c3fea",
+    "crates/noble-kernel/src/async_tasks/transition/lifecycle.rs": "73fc27318d81b4fb90cf24a26907fe1a1d0183188f93fb8f30ac458d3279517c",
+    "crates/noble-kernel/src/async_tasks/transition/validation.rs": "3f0b78edac2a575bcadd2bf64e22cac6fffee52d26fc61b3782b526f61a79e14",
+    "crates/noble-kernel/src/authority/admission.rs": "fc9ecd0c744680c392380f1b140aca6f8861dd88b400d3a659ae599bb65aa26a",
+    "crates/noble-kernel/src/authority/facts.rs": "8f8812cf68385d3d6e02bad49f3a48a5efc908507407c2d5d525d981b16d044e",
+    "crates/noble-kernel/src/authority/mod.rs": "b2d5c908480706a7d061771ce00359d82ea431f963856063593910f61ffc839c",
+    "crates/noble-kernel/src/authority/observation.rs": "c966bf9265551b1f9f352ab6c945a371b4123e4024465ed67eb237a68be20b20",
+    "crates/noble-kernel/src/authority/permit.rs": "d85558ed22d47483ed65e5955086efe4f545500b1f4292291278ecb1743e5c8d",
+    "crates/noble-kernel/src/authority/receipts.rs": "7a4cb2ddc5e9bb4c9316343a38554d159fcca06edc7ac04c6c6229fe55fa84eb",
+    "crates/noble-kernel/src/authority/report.rs": "0b56bc438c3543e56b97d5e3d2a7ba8b0304452be9d5fc9103a4da0def380859",
+    "crates/noble-kernel/src/capacity/mod.rs": "d823bc8d9e40fdecd77f67186a50af9acec6a46db523232a6de9958eeeef5038",
+    "crates/noble-kernel/src/contracts.rs": "bf418d5de7a45d5574a034c6047d9a86fed99aa50fecbe4f49429bc24d6ff505",
+    "crates/noble-kernel/src/contracts/bootstrap.rs": "e89181ecf00623d6bb366c13e6e705eb704ee66f8fde8aaa18bc7808364cecd4",
+    "crates/noble-kernel/src/contracts/bootstrap/data.rs": "c41941d104412cde0169ea34d28d79e01c0c8a1d41fdd9981f19fc6280d77807",
+    "crates/noble-kernel/src/contracts/clone_budget.rs": "c09cfb56a32915877cef3a8965d9f12d88d1ba2a6d645520233479b946d8e7f9",
+    "crates/noble-kernel/src/contracts/live.rs": "4451260f569f08deb3950691680b1547f9c7179b65627ad2f03818692e2a63b0",
+    "crates/noble-kernel/src/contracts/nominal.rs": "f7195a457c27a0aa7ac3559ad776a12118cb7a006327524b4d0291b2377b602e",
+    "crates/noble-kernel/src/contracts/nominal/inspection.rs": "21442ea2e7277c6edbd2d490af60c58606897a8c2377b0329749cea4accd3520",
+    "crates/noble-kernel/src/contracts/nominal/payload.rs": "7df82d3d53ab149238f88c863acc3ee42065212b70a863be7a17d14bca174d2f",
+    "crates/noble-kernel/src/contracts/nominal/schemes.rs": "3becbc1be0a84b66bc3c6da71c19814e2123489c8f492e51aee196ba7d6dcdbd",
+    "crates/noble-kernel/src/contracts/nominal/type/walk.rs": "0345a0d11eb95bec85fae7c78f8d345d4b1fee923746528f933e502d3555de3a",
+    "crates/noble-kernel/src/contracts/nominal/type/walk/work.rs": "12bf9ff38a87d8d61296de12b215f4cdba8a5dc7f3fd29d4be5c171b779e2c25",
+    "crates/noble-kernel/src/contracts/nominal/validation.rs": "9decba0c33a08f274ed549090c5d60bd094f473c3d35c0e4476c38274b919d9b",
+    "crates/noble-kernel/src/dataspace/mod.rs": "5ba97535f38318bc3a11ba0c6c0122a8fac7f42d22d92e0dba5c5b948c40fd6f",
+    "crates/noble-kernel/src/dataspace/table.rs": "568bb6249883a3dd4821b8adbc00d28f690933868805019147a0d06a832771de",
+    "crates/noble-kernel/src/dataspace/table/actions.rs": "ab02f1a631cb1958c38bed12bbd3ad417380193012de5c30322329b74850d1a2",
+    "crates/noble-kernel/src/dataspace/wire.rs": "38b722dcbe36f6d986be105a76fd17472e5c8d72a126c1db813c7878d1915d08",
+    "crates/noble-kernel/src/execution/mod.rs": "ffd9d557bc3a8717372ad1ad59b4e7366d01d8d40317ece80e5fb7b1a4230ef4",
+    "crates/noble-kernel/src/integer.rs": "0cf0762c5c227e3277ac6407459a3b0fd3c18656238ab77f4cfa385e352df24d",
+    "crates/noble-kernel/src/lib.rs": "7f81d6e0f0e6a772ea956e6c40db10ec8775ef268cb0786cfbb07ecc91a9b04f",
+    "crates/noble-kernel/src/region/read.rs": "5310805705afc7c411ee022df7feb82b37574a5f11d765661b361b73042e0437",
+    "crates/noble-kernel/src/resources/mod.rs": "8669397e41d886c4b795a1a76df08c4e8665669dc533586d1587191b9577b0e3",
+    "crates/noble-kernel/src/resources/table.rs": "e4a7c7add3fedae1b590601e12f13daa169da6a5d625ccae1ad51c75d27adc35",
+    "crates/noble-kernel/src/resources/table/access.rs": "8fb0aa1c1b7c53407ac56238923b4b9a6a75e149dd781c36322183b13e84421b",
+    "crates/noble-kernel/src/resources/table/inspection.rs": "ea6c0522621552be0d2eaa0528035dd88e08913cf5901cf57c7d7df860da4a58",
+    "crates/noble-kernel/src/resources/table/transfer.rs": "2a380ae1f469d3153e1a09a297d8da51d8d871098285021adbeebe3e99e74cff",
+    "crates/noble-kernel/src/resources/transition.rs": "f1afba83433c04ae07a4ac165b3ef614af1c12c31336ef80736add52268bdc6f",
+    "crates/noble-kernel/src/shapes.rs": "41464df352e62a137978d133931372e82587e11276d24c31f3dd57c713b7cdf8",
+    "crates/noble-kernel/src/shapes/impls.rs": "c5e01ec491af3ac46488e567ff2d3c0b9531a22e11cc842ecab7604544620413",
+    "crates/noble-kernel/src/shapes/impls/equality.rs": "7e3d08465933a2117ff97413a13363c82587512183132633452073f936483d0f",
+    "crates/noble-kernel/src/types.rs": "6c198899a6d15761ef488ae86ad143dd65dfc7264c79a6083170002ca1520f3f",
+    "crates/noble-kernel/src/types/data.rs": "0fffcf9b76ae56fd88b5bd9c93252312cf793041c9d9479b0cad642d663852a2",
+    "crates/noble-kernel/src/types/impls.rs": "479761e9371a17ac9695e89a729a28dadfd20e2b106a985a1e405af7145a17df",
+    "crates/noble-kernel/src/types/physical.rs": "437b0d4f49cf881b8febed06aa29fc298e13c01313f9136b689865c21119516a",
+    "crates/noble-kernel/src/types/size.rs": "c767475ce6797950b7fd7f76d204d69fc2cb4cfa09f2525dc1f342cee377b001",
+    "crates/noble-kernel/src/untrusted.rs": "248c2a4a0bab52da79af79937c7c77b96397d5214c5da954217088e32e03dd1e",
+    "crates/noble-kernel/src/words.rs": "d1f593ba85770a758b0d4df692b868095649be1538429a7166820a5d5c662941",
+    "crates/noble-kernel/src/words/bounds.rs": "f966e4fa5618ec03a9013cd9a068d0f6438fd053041ae4dba07d9dcb57b166c8",
+    "crates/noble-kernel/src/words/resolve.rs": "96dcfc57f837e3b1a11c62b8f348c5f8806d3dcf6c63d7d619bbb2a9902e766d",
+    "crates/noble-kernel/src/words/segments.rs": "58433562c4c2cbce4956284153405cedbc03d1bbeb1f2e4ccc38daf96bacd6bf",
+    "crates/noble-kernel/src/words/subst.rs": "744e42758ca3c39f5274b68413ad338e6cd04a67a2a14d10ef05d9612e5fc143",
+    "crates/noble-kernel/src/words/subst/finish.rs": "4582543010bfbe34f7ee47f4eedc3f7f8b11c7b64dc39848737cc94a77402254",
+    "crates/noble-kernel/src/words/subst/schedule.rs": "aa002bbe003739fa07cde5164c62acfea147ac817956c30fd79ce37b79e7be00",
+    "crates/noble-kernel/tests/acceptance/nominal/forgery.rs": "b4a7db38a3c10cb4b474f45057aec11c356e47e228b1855f1945a6d06ffdaa0c",
+    "crates/noble-ngraph-experiment/Cargo.toml": "f68a81759c47060dea67e16ef68c80a7a960dbba8cd5ce7996bbd976cc535348",
+    "crates/noble-ngraph/Cargo.toml": "9fdaf8bf88be311b40962fbedf4af3349ff1f1768c89785a1ea21ff39202138d",
+    "crates/noble-syndicate/Cargo.toml": "111546759bcc1665f5575e63f08f9f464ba1ce28d1cf6596aaf49cda659f78f2",
+    "crates/noble-wasm/Cargo.toml": "7f369eb31795dc375df3d752cf1f63f64efcdde89d6614832d0d4aeece41a666",
+    "crates/noble-wasm/runtime/accounting.wat": "e23e4fad5985ca7a6e62c3825827be4b87032c4cc31b7cbaf35966ecbc945b4a",
+    "crates/noble-wasm/runtime/common.wat": "4645cd1a9fe249627a757311c04c9f105831e304dd766a27b12993ee6216dd96",
+    "crates/noble-wasm/runtime/data.wat": "72baabb36852306f177211920bfd6af318d5c8dffa880db2f3de826cecd1377e",
+    "crates/noble-wasm/runtime/experiment.wat": "8fb13ca3686e356dd392cab41ebfd7bb4ff930093c8bbcc54d019e4fe94ed0c3",
+    "crates/noble-wasm/runtime/gc-storage.wat": "10f03f88ef8f250d69e88a0f8297f8a0bfc9a6d54b7b94a6bce2621060cc5c17",
+    "crates/noble-wasm/runtime/linear-address.wat": "6938ce872bda9eaca8238c2e67efe5366a4cdcea384784c741cea0e079dc7ad5",
+    "crates/noble-wasm/runtime/linear-storage.wat": "0db9a4088c0bc36502f04db40e2b6d8f5ce420c00a911dd9a7dd5ba750995305",
+    "crates/noble-wasm/runtime/operations.wat": "ed8b474eaf8209030a7fa53f249c5743da6edb67887d94a32dfaef08f7c2897d",
+    "crates/noble-wasm/runtime/programs.wat": "ef6432e7f40e619494a65de802add69b3376185bfd802579364410ee5c6af3be",
+    "crates/noble-wasm/runtime/reflection.wat": "ca6a9f1b6c31caf83edbc8868d7f0c0c9792c4fe2bfb11deb50a225eb54cd01d",
+    "crates/noble-wasm/runtime/source.wat": "9e55ac86abfde1bc7e9865ee50bc7e66942dc2fd7a0fb07351981c75871d4440",
+    "crates/noble-wasm/runtime/stack.wat": "6abc22e80a016b4f6f0f263e696bf401d370c3685e732606e388636d9f230db0",
+    "crates/noble-wasm/src/component/abi.rs": "46a44b62d7214859fefcf36d7fe5a1312bd8670c935c6204dcc9d1a25ffd9864",
+    "crates/noble-wasm/src/component/async.wat": "053a71122f287f857d15f890e0ddcdbabefd3277abaceb73acccd8206f653f58",
+    "crates/noble-wasm/src/component/lower.rs": "4f19452ad332c1a58a6d5969b14affa9f3a0e3d1cc6baf0b972b2f3d40240b7f",
+    "crates/noble-wasm/src/component/lower/inputs.rs": "48007268243f5c7843b9e496bfc80c8ae2afc750d456750f49eab556cf6b61eb",
+    "crates/noble-wasm/src/component/lower/operations.rs": "ce12410ae915d645489f49036c1b82d228f0a1ea2bae0d5c3121a9a4fe2f0318",
+    "crates/noble-wasm/src/component/mod.rs": "16ad0590e4fd374a4874f52e7ef01b8ed332688e7163d0272a07ea8cc823d109",
+    "crates/noble-wasm/src/component/runtime.wat": "c1a21dd7573c87235d176722b3cdd0f7319c896912be564bb210c8cc41eb5754",
+    "crates/noble-wasm/src/source/admission.rs": "7ce415e8a771c073d28e25593d473b3878d5da1ffa8476406c9031893f9402aa",
+    "crates/noble-wasm/src/source/admission/environment.rs": "39f4d1a51f0268e805dde45062f4604b7767435329c566a5daf9882901c9f8ab",
+    "crates/noble-wasm/src/source/admission/environment/replay.rs": "32821a75721b6c0cb54d786b0a47c8fb2c529b03856047303f555bb1372c5880",
+    "crates/noble-wasm/src/source/admission/identity.rs": "683e55bd6df511f85b41b63e01dda4e06ffa123e1d779a0a8e66a4db7d5e478d",
+    "crates/noble-wasm/src/source/emit.rs": "3d8479e8a76ae20a47c779694aa2b6a534e9d69c8fbb0b2ed5409329865aff0b",
+    "crates/noble-wasm/src/source/emit/functions.rs": "74b7a5cfe3b004f15e888ce579f112b2ae97a999db5b44e8cf37530b86bd95a1",
+    "crates/noble-wasm/src/source/emit/imports.rs": "1c427b1c9ed01f7ac978d761c936b21c1f3e18f089137395619d852975c17937",
+    "crates/noble-wasm/src/source/emit/initialize.rs": "696929e93b4b2def17ef7d9be9ef37aa7b98d258805aa17d7ab46815801fdd13",
+    "crates/noble-wasm/src/source/emit/metadata.rs": "bdbf2e091028c61bb03fe6ebb0acf5d8d25fb5fa91f8a10a800b9c12f3c65333",
+    "crates/noble-wasm/src/source/emit/reflection.rs": "5743e7c38b72a23d32434762f477fd41584661e5cf4be4b7c29c15963db3a0dd",
+    "crates/noble-wasm/src/source/emit/worker.rs": "6dee8c6e18bd7f903e9adf53381c7e9b32c7827d879baaab1b9eab8bd5d54c22",
+    "crates/noble-wasm/src/source/mod.rs": "d1440951838d14bc47a66123c1743855fcb8eaa3dbe49f505263b23575328f9c",
+    "crates/noble-wasm/src/source/origin.rs": "3c0591267e262aa895356812b4fb2caa45473c14194399202af8221ec91ab146",
+    "crates/noble-wasm/src/source/plan.rs": "b8f11229dc40c3cbcf2fa0f42d2cebb708bdd200256bb788525ea9567d02b6c5",
+    "crates/noble-wasm/src/source/plan/allocation.rs": "369d45e8f0fe8917a6b5ef1d751e96e807baf81d693257bba4fdc7b25f11c8a2",
+    "crates/noble-wasm/src/source/plan/operations.rs": "b4d3c868c1044e258a16b1342ff16657f8d0b4504d11f730bb6e742cfa883695",
+    "crates/noble-wasm/src/source/plan/operations/nominal.rs": "e731c21f37ea39da26fa0f6d968fe85465a324f3d1a6477879f4db1b3c93e14d",
+    "crates/noble-wasm/src/source/preflight.rs": "6be2b3071655396aea02cf735215f79b38ce1eca9beace3d26f0fd06143a403d",
+    "crates/noble-wasm/src/source/preflight/concrete.rs": "67afc8ded1a83e55d2de4aa05162b5ec6eeb035e1cc876b925296f65f1870f7d",
+    "crates/noble-wasm/src/source/transaction.rs": "d870e238ec8797b8778d53fdecd3ff3dbfe173dcc6af97b646f71d7c8c80e77d",
+    "crates/noble-wasm/tests/declared_text.rs": "75e58a4b31d5f348842d6d6e9d47bd0a1323a44d371f6736774a5c2b5b9dec74",
+    "crates/noble-wasm/tests/live_slot_artifact.rs": "50acfa0f7b4508fb4005ddbd1d2acf688f7922dd60ff5cb9081ebc089264b49b",
+    "crates/noble-wasm/tests/nominal.rs": "d892f1c59f8676c95976d407564e68b80935414bbbb11ee434cb78fb9c6c1448",
+    "crates/noble-wasm/tests/signed_self.rs": "9f715f208d11b0ab11245d0bb78f1ab666885e70e8930ee1533c886ccb9460d7",
+    "crates/noble-wasm/wit/async.wit": "c39188a9900f23c1eb4905ea1d6504c93c735b0d9214f1497b968315d2a505d0",
+    "crates/noble-wasm/wit/bootstrap.wit": "d1928908b21d1d63be477fdf2226a6547db7d6efa5ef905635498d1d1e43bc68",
+    "crates/noble-wasm/wit/syndicate.wit": "ac3ef5e4db79abf387bd6950451675e998202f0adc02f8e6340e26446f230762",
+    "crates/noble-wasm/wit/worker-program.wit": "14355143ac13e7d299f35f2fe3756cda5412a4344ec20cb7eb6c4b1efc1acf95",
+    "crates/noble-wasm/wit/worker-send.wit": "3963a55c7f98c248f5e9f9f72ccd93c985139f04c04433a89f578c0a42d85d93",
+    "crates/noble-wasm/wit/worker-transition.wit": "f788988352acbccfe9a9f4fd6811551b1b3e4d4b43f1436b7a8c5e702e7652f0",
+    "dylint.toml": "265d16c2a5bba73d011ce460e1e9d15ce04dca24cdf6e7bc0cf4e66a9040a88b",
+    "flake.lock": "a95c2c8aecf2169bc1f8aff45aabab06e17a559a0e7cf86570d6b936b25b3671",
+    "flake.nix": "cf1ee180a3798b4b334df5a37815fcc356c16c35cea5453176c192fbf1c20aca",
+    "nix/aeneas-string-escaping.patch": "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
+    "nix/boundary-controls.nix": "4cbff5ead9fcb6e4c8fae0712bbc190f00a9284eb9fd3d86cd447c0a2c593476",
+    "nix/boundary-fixture-tests.nix": "9d008b1cafac6c076c9fb1e58933b476efa0ac31a9569d09f887c1a9be8aa26f",
+    "nix/boundary-fixture.nix": "e92570b9285b61096ee72016954d9298313ffd519eaf320b89c930ea2822c935",
+    "nix/boundary-observation-tests.nix": "2a9408d322a2724b4c642cb2bb37df5dfb4dd80110cd8335d0d081cc37ec382e",
+    "nix/boundary-observation.nix": "a8001fd134498e90256f9d0630ee84401bd9f31ac01338b9cf77a789cf3097a7",
+    "nix/boundary-read-observation.nix": "2f741c1285a7754131898ada36c9f7f189a18d219cd8bba1762daa2e1b516701",
+    "nix/extract-kernel-app.nix": "824e2caa52c02e9458bfaf920c8e78c489222ddd673107e9e37df62bfbc52cda",
+    "nix/lean-dependency-check.nix": "92390712899ed9e248c5032924ec0d3242e64c45abc3c6fbd7984b9f9164ed40",
+    "nix/lean-release.nix": "7d88aa27b4f8a5d1c0036ed98a1e2db1f5485b782b462eaaae51b8b7b6c46485",
+    "nix/m3-wasm-app.nix": "a83a2ea157787803e0fabdf089a7549ffd5737f42a657bf1df383d1908676ad5",
+    "nix/native-assurance-app.nix": "dacb83263d3d384fec40cff87c5d0495fbb4e10d17dd4c00821c26f16151303b",
+    "nix/native-assurance-derive.nix": "2e7e89532e703ad0a8e68291357948a493b5d1652664f781506e44e36314f083",
+    "nix/native-assurance-tests.nix": "5c28ef324a778af8771938640eeb21bc1daa5e5dbfb6cf751ee72c6e202084eb",
+    "nix/native-assurance.nix": "d34dcd4db0e47d3c26f7b1725b3f712ef137dcf265679a79628a3faa41c93908",
+    "nix/octet-controls-tests.nix": "284c10aea394e58b723dbb7144aeb28973ca5b9f27bf3bb7b110e5199ab3047a",
+    "nix/octet-controls.nix": "5152989c19793e9ef22cfc0099ca9c741c556472618365827ec2eabf864353da",
+    "nix/octet-dynamic-trait-ufcs.patch": "ea2822d321cd11a4839ae7e8201b7116e8ab71eccf00b300809ea5c6072ad498",
+    "nix/octet-patched-source.nix": "6d8ace72aa19c49166133fa24560c7b47603e5bc2dab2d84d5fb381d7a6b3c68",
+    "nix/octet-path-engine-only.patch": "94d224b22edc2cdef761af90bceb8f1ae2bb840394abef54ca044a3ec360153d",
+    "nix/octet-path-libc-only.patch": "d2869b1b8912c57a294aefc82d4dfa54b17bd1cb645ecf819d9613122c999519",
+    "nix/octet-path-metadata-locked.patch": "706770a709bb9d3fc4df77fcc6c2d628fb7e927b71abbf9f052369d42c876026",
+    "nix/octet-path-resolved-plan-only.patch": "36b37afc68179c3bda13d33a234dd2a5aed268f4afe9a456ef1e5c7a7c9a7fa4",
+    "nix/octet-path-test-lock-fixtures.patch": "27e6649ad2838412c0e89c42f3b76462ddee3a0e3835c19ed71c3ed682fcc1e8",
+    "nix/octet-trait-body-resolver.patch": "cfd4454d9cc4844a8ca0d0884c7ae3aaa10ad32e550bd35dc48d6ecc40869902",
+    "nix/octet-typed-call-collector.patch": "aaccd1b6d1fb9dfe6568856093b318bb3f9b6875bdfcb3ed3a8b5e14bc113429",
+    "nix/offline-inputs.nix": "642b3d1aec4009eeafce107d923a7bec166b18541a369d06c33072903d92f493",
+    "nix/reviewed-vendor.nix": "e9580a6704fbf31eb4f12538ab11ecae48a49751b8fa74b7fbcc995473ed83a7",
+    "nix/site.nix": "56160fcfc9608a24f64cdbec77a5a604643224da883160514cbd2cc7be7cea24",
+    "nix/source-inventory-app.nix": "1dd64568be5dd46eee3d4200ba653f2341e1a5024d731c3e965cf798e3e0504e",
+    "nix/source-inventory-derive.nix": "0b995253daa90d53c0028745fddacb577af0575ee1794c07003004ff35c1fd0d",
+    "nix/source-inventory-tests.nix": "68cb117f575fc639150026b2cd38ba6822e39b2a9eb032a3bf2c5f3e03323567",
+    "nix/source-inventory.nix": "cfe6a4ad827bdb4400b32103920e85b7b29528d621be933c8cfabb7f4623ff49",
+    "nix/tool-selection-app.nix": "ecce946f78bc030d179ffb7f16d4ca15bcfb19c682af49d49b7611a734be2f05",
+    "nix/tool-selection-files.nix": "109e721fc0510974140e5543c4353ab6faa53330367bbaa39c103b8c26f44185",
+    "nix/tool-selection-observation.nix": "1913777df366e807602e9c6879d9a3dc1167584007e62ebacd601d07fac678b8",
+    "nix/tool-selection-tests.nix": "b8cafabfebc1ced9d3b37fa33a165311919e016fb34b9b56555d8e4dcce12648",
+    "nix/tool-selection.nix": "2ceb0c072d20f89185c1d0b4a4799b8ef059780c3ddd9f961d6a390b1b8bd44e",
+    "nix/vendor-only.nix": "d7743c80ac4fc913be61aa54629c75fd7182eaa6b7d0a9b289c08a210dde1546",
+    "policy/architecture-export-spec.ncl": "e32a2c75f975e768b292702500ca902bb944f07a5ce156bcbfa00bff576681bd",
+    "policy/architecture.contracts.ncl": "9cbbe9437d789e2ed7cdf1cfda992616fd3de18af169e23e1e8e9652a8c1571e",
+    "policy/architecture.json": "36311029dcd8bee41cb3dafb43c5e76a7353b04f500920f0a6c76e6cf4431354",
+    "policy/architecture.manifest.json": "90cfdd5cdb07cb4aecd2ba45701b2d92b993b7113d5fce413a3dee695a49b6f6",
+    "policy/architecture.ncl": "68b398ca5903f28ad59f1e9c8a71056952c4f43806f91e58408347c90ad426c7",
+    "policy/tool-selection.json": "7bea050bcfb234fc4cea5a7e13a2542613f5f4201e06c8497c132b7bcbc566b8",
+    "proofs/m1/lake-manifest.json": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
+    "proofs/m1/lakefile.toml": "730ddfc7c1bd7435ed7f84f5b797f6eea30eee60b9a53f44eed874e4d3657944",
+    "proofs/m1/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "proofs/m2/lake-manifest.json": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
+    "proofs/m2/lakefile.toml": "4b611d536648e6ca4e2e546ec84204bbb3e7e1aeac001db40c8da18c581352e3",
+    "proofs/m2/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "proofs/m3-wasm/lake-manifest.json": "454e917dbf837e571ac1ce4c9fb603fa4995cc53eed2fc7aa06a814ac7698bed",
+    "proofs/m3-wasm/lakefile.toml": "c33eeb51f42b37d7e3af32cb349aa9080aaa96dff6b3096c0b1191c407c57f4f",
+    "proofs/m3-wasm/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "proofs/m3/NobleKernel.lean": "bd411e329236cb36c38920ca57b4c810a40a30a71a7954f2529225ef0966d9ec",
+    "proofs/m3/NobleKernel/Funs.lean": "a31dddcb77a46bc3fb7423108df1d4d4a0e5e78b6be898138b0c00a4654e3835",
+    "proofs/m3/NobleKernel/FunsExternal.lean": "34bed5cb58eb8c879732e27235efff52a3844380a93190b88291623b95dd48b1",
+    "proofs/m3/NobleKernel/Types.lean": "405faa8b512ef78ae210c46f260f73ef6cfbba8f1c26f8131ea1c2fca699f41e",
+    "proofs/m3/NobleKernel/TypesExternal.lean": "816e8689319559c016245838f8a6524ccbb660de9e85a5b8a87b4ebf6826ee6f",
+    "proofs/m3/lake-manifest.json": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
+    "proofs/m3/lakefile.toml": "7bd32a80677ab7009efacc86c1c90b8da0f686e5269af0d27ed384902c60093e",
+    "proofs/m3/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "proofs/m4/lake-manifest.json": "1b5dfe9b7a3d666b293e318fccd323074dde6144dd8b274dd0ff6dce3a048c7a",
+    "proofs/m4/lakefile.toml": "190ccab9d5fe7832c60086ff5ff6a13745e1d341d211115e50a6f999910ce369",
+    "proofs/m4/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "proofs/m5/lake-manifest.json": "88b20dc276ffc63ed44b5963a80000ba09731ab2e88a104e9a266efda436afd3",
+    "proofs/m5/lakefile.toml": "6b7cf011301f1f09974ea74ddaeb177cb7b8726a5699e8639a07185e22e53f04",
+    "proofs/m5/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "proofs/m6/lake-manifest.json": "1fb93a9e79a0dfb749e514f9dddd276f2b4e8d9e858716ef807a7dad2ec8857b",
+    "proofs/m6/lakefile.toml": "36ba12f46859762f85b19cd9064e90eb342b9a382e962fe7482311b8a8bf6526",
+    "proofs/m6/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "proofs/m7/lake-manifest.json": "1fb93a9e79a0dfb749e514f9dddd276f2b4e8d9e858716ef807a7dad2ec8857b",
+    "proofs/m7/lakefile.toml": "d4ca45d5d1f589d19e4fea345afc932efd455eba26918e07daeeee11977fe097",
+    "proofs/m7/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "proofs/mc1/ContractGate.lean": "42e93f9c204fb6b7cf54fe1169d9f92b68cbf9194ac04319c117c21896693203",
+    "proofs/mc1/ImplementationGate.lean": "df2d20f1af0c556eee7d032008678e0b35b3c2588d51470378db9cba0487e73b",
+    "proofs/mc1/IntrinsicTypeWitness.lean": "127a3910e2acdffa1d97b175054ad83b59aeb84c03b748e58aa2cbafbd1156e1",
+    "proofs/mc1/NobleContractImpl.lean": "f7d87ff90835b6394f671aa103afb4d45975ffcec307626ddfe22b8578e39320",
+    "proofs/mc1/NobleContractImpl/Funs.lean": "f8423fa1dbdbd522c6fad2e1ce8e801a53478d9d166f030f8481164bd5bc8398",
+    "proofs/mc1/NobleContractImpl/FunsExternal.lean": "77f15ee60bbdf9da648643ae0df4b91f9706e142366c28917bee430e3f13e23a",
+    "proofs/mc1/NobleContractImpl/KernelBridge.lean": "d4143812a0357ba3b09ffceecb4bcddcfca4b06eb0b8ac26432c0610252a8384",
+    "proofs/mc1/NobleContractImpl/Projection.lean": "fbd3137052b47bd6656cff1b2a2199519bb54e05a51747d99beb60214354c5b2",
+    "proofs/mc1/NobleContractImpl/Statement.lean": "bc97483e5bf942e9d7039df2b135b61f8901a71a40a2bee70d94f32a6cc1b818",
+    "proofs/mc1/NobleContractImpl/StdModels.lean": "8a697ac0267519c7c7231352b2aef3a8687428f9ff0796f460924bba7ea52165",
+    "proofs/mc1/NobleContractImpl/Types.lean": "6faeb98f8f5a2fce780f5df0d143f17ac40e7a9d4558abdadf6d2ffe911b9bd2",
+    "proofs/mc1/NobleContractImpl/TypesExternal.lean": "d15cdbd8c70d38e3de36b30662d3d827495ad9455a45d21d22a50c9c1fa25d63",
+    "proofs/mc1/NobleContracts.lean": "f975ac8220689ea0e9937480d60ad2c252d1cce2b151874c18ee618930981fc2",
+    "proofs/mc1/NobleContracts/Composition.lean": "baae47050f6d445dc7b85ebff72a6bfe40a1f96de92c310ad6ae507bcb0b1d89",
+    "proofs/mc1/NobleContracts/Examples.lean": "280088bedaac3432addc18cb03ec97659c71dca7507fd112623844a09f4ae549",
+    "proofs/mc1/NobleContracts/Expression.lean": "4638c9b146da69b5d0a545734fd5bdc690288f86d1c3a2a40a235007a70561db",
+    "proofs/mc1/NobleContracts/Merge.lean": "e806bf2d1fdb9898cb3e9563354a7a698a3e5d7c23d2b97012938054306f4f77",
+    "proofs/mc1/NobleContracts/Model.lean": "368cad7d6d86db4b182bd6b9e2bd0d3a354559c04579e3e27b789bb69313a7c3",
+    "proofs/mc1/NobleContracts/NamedSubject.lean": "ab1a1a3e46c60fb8179f714806a2c5f3e6005d201f9e0943d340bcf571aa3d26",
+    "proofs/mc1/NobleContracts/NamedSubjectConservative.lean": "6687488747d13f13c881a81b38d9b2e94ec3b42a7247a038ee9ad98a45066ea5",
+    "proofs/mc1/NobleContracts/NamedSubjectTests.lean": "6d8ce097c124512935d48cc1ba22cffea13676f9f799c597944eed0b408ab739",
+    "proofs/mc1/NobleContracts/NamedV2.lean": "7bf6a15f6f5da56861a284ad41eae4a2957926f35e2f96437293e65cce8adaf9",
+    "proofs/mc1/NobleContracts/NamedV2Examples.lean": "4370fb90cbe3b2244683cc119574ce63515c0fa7d880188e2ad3971f8280bb7e",
+    "proofs/mc1/NobleContracts/NamedV3.lean": "2b5811d310be15fac8dd817f8b5947aa8c6ef0ffabf0e2efc263171268e4e87b",
+    "proofs/mc1/NobleContracts/Obligation.lean": "13dddb8d47346ba648eb2dd372031ccd2f2e090f3312f1797a1ca567ab9cd616",
+    "proofs/mc1/NobleContracts/Refutation.lean": "c2f1b76379a380ff266120989c0106c9bb7b96882a74a26957710e88f361c9e7",
+    "proofs/mc1/NobleContracts/Rules.lean": "1d5802ddec13fcfcbba70e6c75f46ab051ea569e6f30fe92d61e3b5dec8d877b",
+    "proofs/mc1/NobleContracts/SpecQuality.lean": "5068de2a817aa0311381aa68852c1f0c9c30aed96d5a5d709809d6c448a15372",
+    "proofs/mc1/NobleContracts/Wire.lean": "403e8e662d079f92b08d4debf82ca3f7e8ab82e6ae6acd9b15188957b84d98ff",
+    "proofs/mc1/lake-manifest.json": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
+    "proofs/mc1/lakefile.toml": "bfdaff457407ecdac364c998fd76a678e3c8cb2e05e0205b3cb995e7222dc164",
+    "proofs/mc1/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "proofs/mc2/lake-manifest.json": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
+    "proofs/mc2/lakefile.toml": "bb890bca99fcca2653d933fe87aca3a0a988eb5d9fe252a24321f20843938198",
+    "proofs/mc2/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "rust-toolchain.toml": "7bfd3ca943dcce5b34de4c5f57414eae7496a698034208cf026690ada5130271",
+    "tools/m3-wasm-policy.mjs": "28207a928261cd3a6dbc8ab75105380689aa79f34161f8d489e9714a17edb498",
+    "tools/m3-wasm-worker.mjs": "8bdbde4fd444dc8a74ff8e020c2d10c613b7a517809d6927c8e5e5cf2dff7035",
+    "tools/m3-wasm.mjs": "681957b2b136cc4cec1648d457b52c51d43b304c8ca2f54900803a7994b636ca",
+    "verification/current-source-replay/diagnostic-check.rs": "c0a3e2c3ed4f1c791e1452969bcd33ea3c4e1cebccd4dfde4879726b81d086fa",
+    "verification/declared-modules-v1/peer/Cargo.lock": "bf925f1c8c9d73f29571c5d63995ae0c93424cd9386ea334ab57882f4cb332b7",
+    "verification/declared-modules-v1/peer/src/main.rs": "8d36f2807858a756115d52311747f04c2744feb5d2cf15e27ee956242831f206",
+    "verification/fixtures/randomness.Cargo.lock": "74145a59317884daa6f3be7afc356a66dcb2330c346135cd9379d99db45c2331",
+    "verification/intrinsic-named-v2/gate.mjs": "04ada0e7ed5f52f9b26ee8a1863cb1ac54907e2560a6a9c0056313a9a45527c8",
+    "verification/intrinsic-named-v2/peer/Cargo.lock": "64a919d5caefef95e0b4cf1c545a7808161b0299e3f22cfb3aba03a22cc3ba75",
+    "verification/intrinsic-named-v2/peer/src/main.rs": "90aa7c2c682a097bba14aeb3a149a1a0b1202040a5a7d559929de34f3cdb9ddb",
+    "verification/intrinsic-proofs/build.mjs": "e51fa3fe46e38295ad860d3a38ee9f849f46a9031df6f4742507cf0f8bec46a4",
+    "verification/intrinsic-proofs/collect-build.mjs": "981f75ee6e816690deb9f573ded8787a0ca025f6c85683b9799748e3833d20e0",
+    "verification/intrinsic-proofs/peer/Cargo.lock": "0fb144cbc8c5a96dd2b1c6d91ecfd74e4dd5268e53a273e96d148ea4ee356feb",
+    "verification/intrinsic-proofs/peer/src/main.rs": "68c44855dc018c2ad26c42a42f1cce4c9df104c5ea79a5146ad33f3717397930",
+    "verification/intrinsic-proofs/plan.mjs": "f98c91dc790df6d7a9e46ebdb0c356806e1bd37fac558f9a17acac597d9a03fa",
+    "verification/m4/accounting.mjs": "ccb35e0c31e6adb4eb4c2f22341b125382606a4e1a5c4c4f4553b59e92f46526",
+    "verification/m4/documentation.mjs": "7a0cb970a34ae325a702494c171ad7a92468fff9fda37f6af48fa8a800176970",
+    "verification/m4/gate.mjs": "f65c516f592ae9e8885a4be9f75bf2924bc9da0f7183e83aeb99549a274b148b",
+    "verification/m4/implementation.mjs": "f9043de4533809d78ffbd169164a80306924194a4bb5a9c98fff0f2d6bb80a37",
+    "verification/m4/inherited-boundaries.json": "0724a876b1e337aec268aea9b6dafbcd910cdc450d58e0af9e6564c17737acc8",
+    "verification/m4/opaque-model-review.test.mjs": "0bdf28e4769825b986700b91745e5e021f21047fed287960618db3c1819fe021",
+    "verification/m4/property.mjs": "406faa4e99cbc9b02a122a476797428fb38b49f2506754bf428f0cb7e77ff02f",
+    "verification/m4/refusals.mjs": "a38f862c05702270966db10de320d79a8b31d72ee984e68e09888d8d93de9d21",
+    "verification/m5/borrow-boundary.rs": "a8e8a1b60deba800ee37d8ac87143a5740028ea518540021c560180c070b1843",
+    "verification/m5/build.mjs": "d95298b2be624869a361ec31e51e0f4fd03a378438d8f01b0d0c359667a54d82",
+    "verification/m5/core-boundary.mjs": "ba686e18fed847dd144535b3019c9bd3ff541159148ff8855155770bf0f32196",
+    "verification/m5/extraction.mjs": "c40fa022c85546c991f1788505a8d5e0b1d97c948abb6ed147c6a9a18fb05557",
+    "verification/m5/gate.mjs": "fe500e6b5a843459e7c7fa075715e71f47b20a07762db8ca8aef48330956a276",
+    "verification/m5/identity-boundary.rs": "f3c1e3e94bb39024450f044e34099872a1604975e6249d4b240af14468a734a7",
+    "verification/m5/peer/Cargo.lock": "0d5f4ffc5f42646cc25c539e46c565b95903813ef4cc0fe5256358b3cbf42435",
+    "verification/m5/peer/Cargo.toml": "e9bace4245a7c9bff6b5a6afc972f6f91ecba6ff1250d447f116ee5108860a8a",
+    "verification/m5/pins.json": "3b71f0f8203fd35bfa757ac8da921b47fbb2c5e00fc9227c9d59d0f2d80a7dce",
+    "verification/m6/build.mjs": "91bfdc62509741ae7eb9c8fd2fb0b1ba14b4d256e246bd9c3e7ac9b6a056653f",
+    "verification/m6/extraction.mjs": "39950c3465f879f64e609bb05e840058b58725f60e941c1f4c17f3b654f8a8c2",
+    "verification/m6/gate.mjs": "6d582fd4f307f0495da88f3c00a86b1cc2d92f49bddbec504235116313bb1289",
+    "verification/m6/peer/Cargo.lock": "1280a5944c2a3cd3c37cddd660ac789cfadf165d863a3c71d67e46fad8eb8fd5",
+    "verification/m6/peer/Cargo.toml": "17c97e76022f164c397a7380eafc89d75ed3079d54c0cba413487823af402a12",
+    "verification/m6/pins.json": "6f5646a71f56faae50e4f3de3255c6be6092f0d686c3f1a26a07cd21fd1f6ec5",
+    "verification/m7/peer/Cargo.lock": "6a90a8cccc740d6c6f8d4126ee3ca7190cdb948d13b364ed91f7af8c300b8b80",
+    "verification/m7/peer/Cargo.toml": "66c48fc7ca574cc69d8f545a676f579b3d2c07a00fbf5d6cf136b50d6d884831",
+    "verification/m8/assurance.mjs": "8a6ddb6051b85b5017f4b89bcc0da0de84f0c5c2d341b06f814300dcd08702d0",
+    "verification/m8/peer/Cargo.toml": "4e18fb85bc469b42cc01860b7a7e7c76e417af3fe1a5cf08f1d070e61edfec06",
+    "verification/mc1/composed-proof.lean": "a390c7e3c955a8bb9f91f7ec164acd9809d3979224a099c486e50c9b6a543cf5",
+    "verification/mc1/composed.noble-contract": "70a1bcd13c67c6b0f4b9b9b4e1728445e34314f4b33d15a053b1f974b718a687",
+    "verification/mc1/family-proof.lean": "4b32cf9d1897bef6fdac0c3555dc553a3ce5ce2e4f90cac0515eff70e1e50f88",
+    "verification/mc1/family.noble-contract": "05ed84dd8e89e233218065e2a292e7796240082bc9b3603b4c7c079a3d198c19",
+    "verification/mc1/implementation.mjs": "b3bb39541489873e18fb3e325ccfd9347092ae3ce858f11d2963dc9a138ee778",
+    "verification/mc1/increment-proof.lean": "a0cad534eb68a1797dcb402837d82df87b70e47e19d66b9fc9cfae1fe46ad891",
+    "verification/mc1/increment.noble-contract": "db1f896543b105864c12ada50ada35318e0f7babfda35723d5884a92a9149190",
+    "verification/mc1/intrinsic-feasibility-proof.lean": "470c210c69dee005265d8939c4b0de5048653a1d3ffe45edf4407c10ca9efcdb",
+    "verification/mc1/monotonic-refutation.lean": "eb41bfa283fef0df5988f642b3ffb8dc05e7b108aa6cd9db3d798eba1578e726",
+    "verification/mc1/monotonic.noble-contract": "862adc84aa469b7ba3b51156a51f94de61a08fe258bac432487e1cafcc3f74b1",
+    "verification/mc1/structural-proof.lean": "2062ac1fe66c03f36a8e2db742646cdd07b85b8545c5cb226668c1dca6742c05",
+    "verification/mc1/structural.noble-contract": "253be3ba9311b4ed09979dd6dac0b80ecaf7ceb0424ce4327d77c0cc31d979a4",
+    "verification/mc1/syntax-proof.lean": "79864637758632957d8aa96425739b8493cb25d4756b96717fd3b5c3bb8cf7bc",
+    "verification/mc1/syntax.noble-contract": "aca16ba78255fe600e9f52f73b9cf317e0124bf2fdccb5c275db95d0806db23b",
+    "verification/mc1/wrap-proof.lean": "13300bbf5e64ca9da83863b4b931db71459e24098f54ec6e2360ae2d862e5bd5",
+    "verification/mc1/wrap.noble-contract": "8735662f9c1cade637867b53688b3e107ed1f47f40aa2cb611150f6dea5353fa",
+    "verification/mc2/extraction.mjs": "a0998dd5d1c8bdc4171fef190d6d352df34c4cbb6576d6e1c1a6b68c2efd286e",
+    "verification/mc2/gate.mjs": "5bbb55304ef614b4bc2db67cd58cab64baa542511a2b5eebc20e16d9701e42c8",
+    "verification/mc2/implementation.mjs": "3b16c42cb91d764373af9276e053782ed2749e90acef562b69ab7ab7d4f120d0",
+    "verification/mc2/runtime-controls.mjs": "a0beaedb546006d5c65eaf1903ca5bd8ebf8275125f4cce9a224b23a14a17ead",
+    "verification/result-library/collect-build.mjs": "9be1bcb535c68fd847260bf227c391ec43050f1fc7c5ff3f1f9b20fb7a669277",
+    "verification/result-library/gate.mjs": "e44b159297cc72f516e879017913ba3dff14039b36777d11aed1b1ec0a9456cb",
+    "verification/result-library/peer/Cargo.lock": "576bd4877d45d0ba2e305d31ff05a38d030f82d14bf4a45df06f405658115260",
+    "verification/result-library/peer/src/main.rs": "bcac8c70cbec3585c050baec53d16a468e9011839d624c3dee0ec299c1a4c572",
+    "verification/result-library/plan.mjs": "e969e0b8e7c3656a62d9c52ce2346db30592f8335111a4677222d32385ef530b",
+    "verification/selected-vendor.mjs": "da20d74af3549fa71889a0427ed9f58ae38d3dcd0df5b0cd20a38194058cf0da",
+    "verification/wi03-final/gate.mjs": "77f5d05a7362de5282fa2188fb68e2aa4aa32a76d3c3d85f9845ae2ac166e560",
+    "verification/wi03/gate.mjs": "603f2c0aef61d932a77f51e5b80026fe19d924fd637594f4e5985990c69b2d42",
+    "verification/worker-send/peer/Cargo.lock": "91e75cfc90112d55765e7598527f151677076902c2b3434cc5af77069931f7c2",
+    "verification/worker-send/peer/Cargo.toml": "ba48d3ca72bdbb07ff0a0302e4b47d147e10025a327b6c346d9b69da4cc57cd6",
+    "verification/worker-send/peer/src/host.rs": "af4f3a03ad5b08a426691ffc4e98bb69b1e1f1d5aee0cfd00a26415b15dbc8f3",
+    "verification/worker-send/peer/src/main.rs": "457d268a4a26cb3db3a83fb6d32af71e69f71a0439eb054b7707c72caa8b24ca",
+    "verification/worker-send/peer/src/verified.rs": "cbc51b675b3d8e5c52d0e3075a5ee7549994aa2f3af3031e8ad8ac1dbe9ba8a3",
+    "verification/worker-send/start-missing-dispatch.wat": "63eb31db34c62101ff6303f3199cc37e8fe17c27aa47abce5813cacd92ed6b7a",
+    "verification/worker-send/start-trap.wat": "8dc503b17d4ce170f00cfdf83c8a390afddc83b79fbdd43daf1f472475691d7b",
+    "verification/worker-send/test.mjs": "ffaf91eff8c3d2422312a91755dd2aa7342c3fcbad312eb775c8df44bf8e1dc4"
+  },
+  "versions": {
+    "rust": "rustc 1.100.0-nightly (923c95cdf 2026-09-16)\nbinary: rustc\ncommit-hash: 923c95cdf5ba65cea505aa2ea829f578e1506ed8\ncommit-date: 2026-09-16\nhost: x86_64-unknown-linux-gnu\nrelease: 1.100.0-nightly\nLLVM version: 23.1.1\n",
+    "charon": "0.1.291 (9e95cf318e3a2964fcf5e03104cde5b718f98ea5)\n",
+    "aeneas": "aeneas 1238879\n",
+    "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)\n"
+  },
+  "commands": [
+    {
+      "label": "rust-version",
+      "binary": "/nix/store/hwnilj8cghz1kjkz7f636kz2clla03vr-rust-default-1.100.0-nightly-2026-09-17/bin/rustc",
+      "args": [
+        "--version",
+        "--verbose"
+      ],
+      "cwd": ".",
+      "exit": 0,
+      "signal": null,
+      "output_sha256": "d0649b01a781d86379bb1a715fa52307742c27f4b2529c2cd3a1922d9563b6b8"
+    },
+    {
+      "label": "charon-version",
+      "binary": "/nix/store/dg8i5s1hl2lncdcjmi6iq98iq1dji5x3-charon/bin/charon",
+      "args": [
+        "version"
+      ],
+      "cwd": ".",
+      "exit": 0,
+      "signal": null,
+      "output_sha256": "618a15a4a7c2eab90ae6f027ecef92458e78c4673533f69800c7e763b0a6b484"
+    },
+    {
+      "label": "aeneas-version",
+      "binary": "/nix/store/mx4siwxnwb74avq1sq971h5i55bwxwzq-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-version"
+      ],
+      "cwd": ".",
+      "exit": 0,
+      "signal": null,
+      "output_sha256": "6089464751cbb76d9d7544172b49cfbd3df5cb4ca123c6558a11105649b57f82"
+    },
+    {
+      "label": "lean-version",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+      "args": [
+        "--version"
+      ],
+      "cwd": ".",
+      "exit": 0,
+      "signal": null,
+      "output_sha256": "eb22144228dd41cd51a0c84af4f976cd0cef473102dcf99b60be756b11f2b95a"
+    },
+    {
+      "label": "kernel-charon",
+      "binary": "/nix/store/dg8i5s1hl2lncdcjmi6iq98iq1dji5x3-charon/bin/charon",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--inline-anon-consts",
+        "--dest-file",
+        "/dev/shm/noble-iss/lanes-b3/mc1/kernel/noble_kernel.llbc",
+        "--",
+        "--manifest-path",
+        "crates/noble-kernel/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "cwd": ".",
+      "exit": 0,
+      "signal": null,
+      "output_sha256": "8b3cd35de32203659ad91ae97a8192043d56a876010b5e657fb5c93550732ee2"
+    },
+    {
+      "label": "kernel-aeneas",
+      "binary": "/nix/store/mx4siwxnwb74avq1sq971h5i55bwxwzq-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-split-files",
+        "-gen-lib-entry",
+        "-all-computable",
+        "-dest",
+        "/dev/shm/noble-iss/lanes-b3/mc1/kernel/generated",
+        "/dev/shm/noble-iss/lanes-b3/mc1/kernel/noble_kernel.llbc"
+      ],
+      "cwd": ".",
+      "exit": 0,
+      "signal": null,
+      "output_sha256": "6c630893ce910a74e8cd693f86c823be006b3a92db354b0ca07cfc40f50f09b0"
+    },
+    {
+      "label": "contracts-charon",
+      "binary": "/nix/store/dg8i5s1hl2lncdcjmi6iq98iq1dji5x3-charon/bin/charon",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--inline-anon-consts",
+        "--dest-file",
+        "/dev/shm/noble-iss/lanes-b3/mc1/contracts/noble_contract_impl.llbc",
+        "--",
+        "--manifest-path",
+        "crates/noble-contracts/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "cwd": ".",
+      "exit": 0,
+      "signal": null,
+      "output_sha256": "fd26bdc287313b6203474f0df6b682ae3ecaa9cbb092592a6fb45dbf27cee26e"
+    },
+    {
+      "label": "contracts-aeneas",
+      "binary": "/nix/store/mx4siwxnwb74avq1sq971h5i55bwxwzq-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-split-files",
+        "-gen-lib-entry",
+        "-all-computable",
+        "-dest",
+        "/dev/shm/noble-iss/lanes-b3/mc1/contracts/generated",
+        "/dev/shm/noble-iss/lanes-b3/mc1/contracts/noble_contract_impl.llbc"
+      ],
+      "cwd": ".",
+      "exit": 0,
+      "signal": null,
+      "output_sha256": "e791b5f19855b5499a1e3d9f7c039c0d57fa8ac4fa36a63fe4a74077e44e2ac5"
+    },
+    {
+      "label": "lean-build",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "build",
+        "NobleContracts",
+        "NobleContractImpl",
+        "NobleContractImpl.Projection",
+        "NobleContractImpl.Statement"
+      ],
+      "cwd": "proofs/mc1",
+      "exit": 0,
+      "signal": null,
+      "output_sha256": "13984a5ea624d6b9c31e71eb540e90b6226369e557ed55f9fa7979a75c60107d"
+    },
+    {
+      "label": "intrinsic-type-witness",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "env",
+        "lean",
+        "IntrinsicTypeWitness.lean"
+      ],
+      "cwd": "proofs/mc1",
+      "exit": 0,
+      "signal": null,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "contract-library",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "env",
+        "lean",
+        "ContractGate.lean"
+      ],
+      "cwd": "proofs/mc1",
+      "exit": 0,
+      "signal": null,
+      "output_sha256": "bbfff3e73a8d1bf5f141cbcda011ff05a5b202552950af7b84b152d2b94f7e37"
+    },
+    {
+      "label": "implementation-audit",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "env",
+        "lean",
+        "ImplementationGate.lean"
+      ],
+      "cwd": "proofs/mc1",
+      "exit": 0,
+      "signal": null,
+      "output_sha256": "85d185bffcd29c096e30dba5b3f006fa295f8de9c3b28b73de168d486f093a0e"
+    }
+  ],
+  "kernel": {
+    "llbc_sha256": "95de9eb2d35891034a219adc2fd356c3826fcef3ced6d1c2458578d948c7bb01",
+    "translation_sha256": "638d6ce0c5e7c25511b74fb95f5fbfc945c68196bc1f2c2bb0b1e48d6f6b4bd2",
+    "generated": {
+      "Types.lean": "405faa8b512ef78ae210c46f260f73ef6cfbba8f1c26f8131ea1c2fca699f41e",
+      "Funs.lean": "a31dddcb77a46bc3fb7423108df1d4d4a0e5e78b6be898138b0c00a4654e3835",
+      "NobleKernel.lean": "bd411e329236cb36c38920ca57b4c810a40a30a71a7954f2529225ef0966d9ec"
+    },
+    "local_functions": 1451,
+    "local_opaque_functions": [
+      "noble_kernel::shapes::impls::clone_parts",
+      "noble_kernel::shapes::impls::debug_parts",
+      "noble_kernel::shapes::impls::debug_slots",
+      "noble_kernel::types::impls::clone_stack",
+      "noble_kernel::types::impls::debug_stack"
+    ],
+    "external_functions": [
+      {
+        "rust": "core::array::equality::{impl core::cmp::PartialEq<[U; N]> for &'_0 [T]}::eq",
+        "lean": "Shared0Slice.Insts.CoreCmpPartialEqArray.eq"
+      },
+      {
+        "rust": "core::array::equality::{impl core::cmp::PartialEq<[U; N]> for &'_0 [T]}::ne",
+        "lean": "Shared0Slice.Insts.CoreCmpPartialEqArray.ne"
+      },
+      {
+        "rust": "core::array::iter::{impl core::iter::traits::collect::IntoIterator<T, core::array::iter::IntoIter<T, N>> for [T; N]}::into_iter",
+        "lean": "Array.Insts.CoreIterTraitsCollectIntoIteratorTIntoIter.into_iter"
+      },
+      {
+        "rust": "core::array::iter::{impl core::iter::traits::iterator::Iterator<T> for core::array::iter::IntoIter<T, N>}::next",
+        "lean": "core.array.iter.IntoIter.Insts.CoreIterTraitsIteratorIterator.next"
+      },
+      {
+        "rust": "core::bool::{bool}::then_some",
+        "lean": "core.bool.Bool.then_some"
+      },
+      {
+        "rust": "core::cmp::impls::{impl core::cmp::PartialEq<bool> for bool}::ne",
+        "lean": "Bool.Insts.CoreCmpPartialEqBool.ne"
+      },
+      {
+        "rust": "core::convert::num::ptr_try_from_impls::{impl core::convert::TryFrom<u32, core::num::error::TryFromIntError> for usize}::try_from",
+        "lean": "Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from"
+      },
+      {
+        "rust": "core::convert::num::ptr_try_from_impls::{impl core::convert::TryFrom<usize, core::num::error::TryFromIntError> for u64}::try_from",
+        "lean": "U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from"
+      },
+      {
+        "rust": "core::convert::num::ptr_try_from_impls::{impl core::convert::TryFrom<i64, core::num::error::TryFromIntError> for usize}::try_from",
+        "lean": "Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from"
+      },
+      {
+        "rust": "core::convert::num::{impl core::convert::TryFrom<u64, core::num::error::TryFromIntError> for u32}::try_from",
+        "lean": "U32.Insts.CoreConvertTryFromU64TryFromIntError.try_from"
+      },
+      {
+        "rust": "core::fmt::{core::fmt::Formatter<'a>}::debug_tuple_field2_finish",
+        "lean": "core.fmt.Formatter.debug_tuple_field2_finish"
+      },
+      {
+        "rust": "core::fmt::{impl core::fmt::Debug for str}::fmt",
+        "lean": "Str.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "core::iter::sources::repeat_n::repeat_n",
+        "lean": "core.iter.sources.repeat_n.repeat_n"
+      },
+      {
+        "rust": "core::iter::sources::repeat_n::{impl core::iter::traits::iterator::Iterator<A> for core::iter::sources::repeat_n::RepeatN<A>}::next",
+        "lean": "core.iter.sources.repeat_n.RepeatN.Insts.CoreIterTraitsIteratorIterator.next"
+      },
+      {
+        "rust": "core::iter::sources::repeat_with::repeat_with",
+        "lean": "core.iter.sources.repeat_with.repeat_with"
+      },
+      {
+        "rust": "core::iter::sources::repeat_with::{impl core::iter::traits::iterator::Iterator<A> for core::iter::sources::repeat_with::RepeatWith<F>}::next",
+        "lean": "core.iter.sources.repeat_with.RepeatWith.Insts.CoreIterTraitsIteratorIterator.next"
+      },
+      {
+        "rust": "core::mem::size_of",
+        "lean": "core.mem.size_of"
+      },
+      {
+        "rust": "core::num::{u8}::is_ascii_alphanumeric",
+        "lean": "core.num.U8.is_ascii_alphanumeric"
+      },
+      {
+        "rust": "core::num::{u64}::count_ones",
+        "lean": "core.num.U64.count_ones"
+      },
+      {
+        "rust": "core::num::{usize}::saturating_mul",
+        "lean": "core.num.Usize.saturating_mul"
+      },
+      {
+        "rust": "core::option::{impl core::fmt::Debug for core::option::Option<T>}::fmt",
+        "lean": "core.option.Option.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "core::option::{core::option::Option<T>}::is_none_or",
+        "lean": "core.option.Option.is_none_or"
+      },
+      {
+        "rust": "core::option::{core::option::Option<T>}::as_ref",
+        "lean": "core.option.Option.as_ref"
+      },
+      {
+        "rust": "core::option::{core::option::Option<T>}::and_then",
+        "lean": "core.option.Option.and_then"
+      },
+      {
+        "rust": "core::option::{core::option::Option<T>}::zip",
+        "lean": "core.option.Option.zip"
+      },
+      {
+        "rust": "core::option::{core::option::Option<&'_0 T>}::copied",
+        "lean": "core.option.OptionShared0T.copied"
+      },
+      {
+        "rust": "core::option::{impl core::clone::Clone for core::option::Option<T>}::clone",
+        "lean": "core.option.Option.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "core::option::{impl core::default::Default for core::option::Option<T>}::default",
+        "lean": "core.option.Option.Insts.CoreDefaultDefault.default"
+      },
+      {
+        "rust": "core::option::{impl core::cmp::PartialEq<core::option::Option<T>> for core::option::Option<T>}::eq",
+        "lean": "core.option.Option.Insts.CoreCmpPartialEqOption.eq"
+      },
+      {
+        "rust": "core::option::{impl core::ops::try_trait::Try for core::option::Option<T>}::branch",
+        "lean": "core.option.Option.Insts.CoreOpsTry_traitTry.branch"
+      },
+      {
+        "rust": "core::option::{impl core::ops::try_trait::FromResidual<core::option::Option<!>> for core::option::Option<T>}::from_residual",
+        "lean": "core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual"
+      },
+      {
+        "rust": "core::result::{impl core::fmt::Debug for core::result::Result<T, E>}::fmt",
+        "lean": "core.result.Result.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "core::result::{impl core::cmp::PartialEq<core::result::Result<T, E>> for core::result::Result<T, E>}::eq",
+        "lean": "core.result.Result.Insts.CoreCmpPartialEqResult.eq"
+      },
+      {
+        "rust": "core::result::{core::result::Result<T, E>}::is_ok_and",
+        "lean": "core.result.Result.is_ok_and"
+      },
+      {
+        "rust": "core::result::{core::result::Result<T, E>}::is_err",
+        "lean": "core.result.Result.is_err"
+      },
+      {
+        "rust": "core::result::{core::result::Result<T, E>}::ok",
+        "lean": "core.result.Result.ok"
+      },
+      {
+        "rust": "core::result::{core::result::Result<T, E>}::map_or",
+        "lean": "core.result.Result.map_or"
+      },
+      {
+        "rust": "core::slice::{[T]}::first",
+        "lean": "core.slice.Slice.first"
+      },
+      {
+        "rust": "core::slice::{[T]}::last",
+        "lean": "core.slice.Slice.last"
+      },
+      {
+        "rust": "core::str::converts::from_utf8",
+        "lean": "core.str.converts.from_utf8"
+      },
+      {
+        "rust": "core::str::{str}::len",
+        "lean": "core.str.Str.len"
+      },
+      {
+        "rust": "core::str::{str}::is_empty",
+        "lean": "core.str.Str.is_empty"
+      },
+      {
+        "rust": "core::str::{str}::as_bytes",
+        "lean": "core.str.Str.as_bytes"
+      },
+      {
+        "rust": "core::str::traits::{impl core::cmp::PartialEq<str> for str}::eq",
+        "lean": "Str.Insts.CoreCmpPartialEqStr.eq"
+      },
+      {
+        "rust": "alloc::boxed::{impl core::cmp::PartialEq<alloc::boxed::Box<T>> for alloc::boxed::Box<T>}::ne",
+        "lean": "Box.Insts.CoreCmpPartialEqBox.ne"
+      },
+      {
+        "rust": "alloc::boxed::{impl core::fmt::Debug for alloc::boxed::Box<T>}::fmt",
+        "lean": "Box.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "alloc::boxed::{impl core::convert::AsRef<T> for alloc::boxed::Box<T>}::as_ref",
+        "lean": "Box.Insts.CoreConvertAsRef.as_ref"
+      },
+      {
+        "rust": "alloc::string::{impl core::cmp::PartialEq<alloc::string::String> for alloc::string::String}::eq",
+        "lean": "alloc.string.String.Insts.CoreCmpPartialEqString.eq"
+      },
+      {
+        "rust": "alloc::string::{alloc::string::String}::is_empty",
+        "lean": "alloc.string.String.is_empty"
+      },
+      {
+        "rust": "alloc::string::{impl core::clone::Clone for alloc::string::String}::clone",
+        "lean": "alloc.string.String.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "alloc::string::{impl core::cmp::PartialEq<&'_0 str> for alloc::string::String}::eq",
+        "lean": "alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq"
+      },
+      {
+        "rust": "alloc::string::{impl core::fmt::Debug for alloc::string::String}::fmt",
+        "lean": "alloc.string.String.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "alloc::string::{impl core::ops::deref::Deref<str> for alloc::string::String}::deref",
+        "lean": "alloc.string.String.Insts.CoreOpsDerefDerefStr.deref"
+      },
+      {
+        "rust": "alloc::string::{impl core::convert::From<&'_0 str> for alloc::string::String}::from",
+        "lean": "alloc.string.String.Insts.CoreConvertFromShared0Str.from"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::reserve",
+        "lean": "alloc.vec.Vec.reserve"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::try_reserve_exact",
+        "lean": "alloc.vec.Vec.try_reserve_exact"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::truncate",
+        "lean": "alloc.vec.Vec.truncate"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::as_slice",
+        "lean": "alloc.vec.Vec.as_slice"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::swap_remove",
+        "lean": "alloc.vec.Vec.swap_remove"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::remove",
+        "lean": "alloc.vec.Vec.remove"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::pop",
+        "lean": "alloc.vec.Vec.pop"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::clear",
+        "lean": "alloc.vec.Vec.clear"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::is_empty",
+        "lean": "alloc.vec.Vec.is_empty"
+      },
+      {
+        "rust": "alloc::vec::{impl core::iter::traits::collect::Extend<T> for alloc::vec::Vec<T>}::extend",
+        "lean": "alloc.vec.Vec.Insts.CoreIterTraitsCollectExtend.extend"
+      },
+      {
+        "rust": "alloc::vec::{impl core::default::Default for alloc::vec::Vec<T>}::default",
+        "lean": "alloc.vec.Vec.Insts.CoreDefaultDefault.default"
+      }
+    ]
+  },
+  "contracts": {
+    "llbc_sha256": "bb42e9c9dbc57c8c95089cb45a06dcf3aaa890cb4c55b4fec3078f4d29aaed8b",
+    "translation_sha256": "fa655d353a5488e20d877cfd7ae70e77813723f285ef3036005e8f8cd83ed45d",
+    "generated": {
+      "Types.lean": "6faeb98f8f5a2fce780f5df0d143f17ac40e7a9d4558abdadf6d2ffe911b9bd2",
+      "Funs.lean": "f8423fa1dbdbd522c6fad2e1ce8e801a53478d9d166f030f8481164bd5bc8398",
+      "NobleContractImpl.lean": "f7d87ff90835b6394f671aa103afb4d45975ffcec307626ddfe22b8578e39320"
+    },
+    "local_functions": 5684,
+    "local_opaque_functions": [
+      "noble_contracts::intrinsic::debug_form_kind",
+      "noble_contracts::intrinsic::debug_proof_dependency",
+      "noble_contracts::source::chunks::{noble_contracts::source::chunks::MonotonicClock}::now_ns",
+      "noble_contracts::source::chunks::{noble_contracts::source::chunks::ObserverHandle<'_0>}::observe",
+      "noble_contracts::source::chunks::{noble_contracts::source::chunks::RankerHandle<'_0>}::model_identity",
+      "noble_contracts::source::chunks::{noble_contracts::source::chunks::RankerHandle<'_0>}::provenance_matches",
+      "noble_contracts::source::chunks::{noble_contracts::source::chunks::RankerHandle<'_0>}::score",
+      "noble_contracts::source::editor::debug_node",
+      "noble_contracts::source::procedures::acceptance::{impl core::fmt::Debug for noble_contracts::source::procedures::acceptance::OwnerVerifier}::fmt",
+      "noble_contracts::source::procedures::acceptance::{noble_contracts::source::procedures::acceptance::OwnerVerifier}::verify"
+    ],
+    "external_functions": [
+      {
+        "rust": "core::array::equality::{impl core::cmp::PartialEq<[U; N]> for [T]}::ne",
+        "lean": "Slice.Insts.CoreCmpPartialEqArray.ne"
+      },
+      {
+        "rust": "core::array::equality::{impl core::cmp::PartialEq<[U; N]> for [T]}::eq",
+        "lean": "Slice.Insts.CoreCmpPartialEqArray.eq"
+      },
+      {
+        "rust": "core::array::equality::{impl core::cmp::PartialEq<[U; N]> for &'_0 [T]}::eq",
+        "lean": "Shared0Slice.Insts.CoreCmpPartialEqArray.eq"
+      },
+      {
+        "rust": "core::array::equality::{impl core::cmp::PartialEq<[U; N]> for &'_0 [T]}::ne",
+        "lean": "Shared0Slice.Insts.CoreCmpPartialEqArray.ne"
+      },
+      {
+        "rust": "core::array::iter::{impl core::iter::traits::collect::IntoIterator<T, core::array::iter::IntoIter<T, N>> for [T; N]}::into_iter",
+        "lean": "Array.Insts.CoreIterTraitsCollectIntoIteratorTIntoIter.into_iter"
+      },
+      {
+        "rust": "core::array::iter::{impl core::iter::traits::iterator::Iterator<T> for core::array::iter::IntoIter<T, N>}::next",
+        "lean": "core.array.iter.IntoIter.Insts.CoreIterTraitsIteratorIterator.next"
+      },
+      {
+        "rust": "core::array::from_fn",
+        "lean": "core.array.from_fn"
+      },
+      {
+        "rust": "core::array::{impl core::cmp::PartialOrd<[T; N]> for [T; N]}::ge",
+        "lean": "Array.Insts.CoreCmpPartialOrdArray.ge"
+      },
+      {
+        "rust": "core::array::{impl core::cmp::PartialOrd<[T; N]> for [T; N]}::partial_cmp",
+        "lean": "Array.Insts.CoreCmpPartialOrdArray.partial_cmp"
+      },
+      {
+        "rust": "core::array::{impl core::cmp::Ord for [T; N]}::cmp",
+        "lean": "Array.Insts.CoreCmpOrd.cmp"
+      },
+      {
+        "rust": "core::bool::{bool}::then_some",
+        "lean": "core.bool.Bool.then_some"
+      },
+      {
+        "rust": "core::borrow::{impl core::borrow::Borrow<T> for T}::borrow",
+        "lean": "core.borrow.Borrow.Blanket.borrow"
+      },
+      {
+        "rust": "core::cell::{core::cell::Cell<T>}::new",
+        "lean": "core.cell.Cell.new"
+      },
+      {
+        "rust": "core::cell::{core::cell::Cell<T>}::set",
+        "lean": "core.cell.Cell.set"
+      },
+      {
+        "rust": "core::cell::{core::cell::Cell<T>}::get",
+        "lean": "core.cell.Cell.get"
+      },
+      {
+        "rust": "core::char::convert::{impl core::convert::From<u8> for char}::from",
+        "lean": "Char.Insts.CoreConvertFromU8.from"
+      },
+      {
+        "rust": "core::char::methods::{char}::from_u32",
+        "lean": "core.char.methods.Char.from_u32"
+      },
+      {
+        "rust": "core::char::methods::{char}::len_utf8",
+        "lean": "core.char.methods.Char.len_utf8"
+      },
+      {
+        "rust": "core::char::methods::{char}::encode_utf8",
+        "lean": "core.char.methods.Char.encode_utf8"
+      },
+      {
+        "rust": "core::clone::impls::{impl core::clone::Clone for f32}::clone",
+        "lean": "F32.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "core::cmp::{impl core::cmp::PartialEq<core::cmp::Ordering> for core::cmp::Ordering}::eq",
+        "lean": "core.cmp.Ordering.Insts.CoreCmpPartialEqOrdering.eq"
+      },
+      {
+        "rust": "core::cmp::{core::cmp::Ordering}::then_with",
+        "lean": "core.cmp.Ordering.then_with"
+      },
+      {
+        "rust": "core::cmp::impls::{impl core::cmp::PartialEq<bool> for bool}::ne",
+        "lean": "Bool.Insts.CoreCmpPartialEqBool.ne"
+      },
+      {
+        "rust": "core::cmp::impls::{impl core::cmp::PartialEq<f32> for f32}::ne",
+        "lean": "F32.Insts.CoreCmpPartialEqF32.ne"
+      },
+      {
+        "rust": "core::cmp::impls::{impl core::cmp::PartialEq<f32> for f32}::eq",
+        "lean": "F32.Insts.CoreCmpPartialEqF32.eq"
+      },
+      {
+        "rust": "core::cmp::impls::{impl core::cmp::PartialOrd<f32> for f32}::partial_cmp",
+        "lean": "F32.Insts.CoreCmpPartialOrdF32.partial_cmp"
+      },
+      {
+        "rust": "core::cmp::impls::{impl core::cmp::Ord for bool}::cmp",
+        "lean": "Bool.Insts.CoreCmpOrd.cmp"
+      },
+      {
+        "rust": "core::convert::{impl core::convert::TryFrom<U, !> for T}::try_from",
+        "lean": "core.convert.TryFromTUNever.Blanket.try_from"
+      },
+      {
+        "rust": "core::convert::num::{impl core::convert::From<u8> for f32}::from",
+        "lean": "F32.Insts.CoreConvertFromU8.from"
+      },
+      {
+        "rust": "core::convert::num::{impl core::convert::From<u16> for f32}::from",
+        "lean": "F32.Insts.CoreConvertFromU16.from"
+      },
+      {
+        "rust": "core::convert::num::{impl core::convert::From<u8> for i64}::from",
+        "lean": "I64.Insts.CoreConvertFromU8.from"
+      },
+      {
+        "rust": "core::convert::num::{impl core::convert::From<bool> for f32}::from",
+        "lean": "F32.Insts.CoreConvertFromBool.from"
+      },
+      {
+        "rust": "core::convert::num::ptr_try_from_impls::{impl core::convert::TryFrom<usize, core::num::error::TryFromIntError> for u64}::try_from",
+        "lean": "U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from"
+      },
+      {
+        "rust": "core::convert::num::ptr_try_from_impls::{impl core::convert::TryFrom<u32, core::num::error::TryFromIntError> for usize}::try_from",
+        "lean": "Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from"
+      },
+      {
+        "rust": "core::convert::num::ptr_try_from_impls::{impl core::convert::TryFrom<usize, core::num::error::TryFromIntError> for u16}::try_from",
+        "lean": "U16.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from"
+      },
+      {
+        "rust": "core::convert::num::{impl core::convert::TryFrom<u64, core::num::error::TryFromIntError> for u8}::try_from",
+        "lean": "U8.Insts.CoreConvertTryFromU64TryFromIntError.try_from"
+      },
+      {
+        "rust": "core::convert::num::{impl core::convert::TryFrom<u64, core::num::error::TryFromIntError> for u32}::try_from",
+        "lean": "U32.Insts.CoreConvertTryFromU64TryFromIntError.try_from"
+      },
+      {
+        "rust": "core::convert::num::ptr_try_from_impls::{impl core::convert::TryFrom<usize, core::num::error::TryFromIntError> for u8}::try_from",
+        "lean": "U8.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from"
+      },
+      {
+        "rust": "core::convert::num::{impl core::convert::TryFrom<u32, core::num::error::TryFromIntError> for u8}::try_from",
+        "lean": "U8.Insts.CoreConvertTryFromU32TryFromIntError.try_from"
+      },
+      {
+        "rust": "core::convert::num::{impl core::convert::TryFrom<u16, core::num::error::TryFromIntError> for u8}::try_from",
+        "lean": "U8.Insts.CoreConvertTryFromU16TryFromIntError.try_from"
+      },
+      {
+        "rust": "core::convert::num::{impl core::convert::TryFrom<i64, core::num::error::TryFromIntError> for u32}::try_from",
+        "lean": "U32.Insts.CoreConvertTryFromI64TryFromIntError.try_from"
+      },
+      {
+        "rust": "core::fmt::float::{impl core::fmt::Debug for f32}::fmt",
+        "lean": "F32.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "core::fmt::{core::fmt::Formatter<'a>}::debug_tuple_field2_finish",
+        "lean": "core.fmt.Formatter.debug_tuple_field2_finish"
+      },
+      {
+        "rust": "core::fmt::{core::fmt::Formatter<'a>}::debug_tuple_field3_finish",
+        "lean": "core.fmt.Formatter.debug_tuple_field3_finish"
+      },
+      {
+        "rust": "core::fmt::{impl core::fmt::Debug for str}::fmt",
+        "lean": "Str.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "core::fmt::{impl core::fmt::Debug for (U, T)}::fmt",
+        "lean": "Pair.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "core::fmt::{impl core::fmt::Debug for core::cell::Cell<T>}::fmt",
+        "lean": "core.cell.Cell.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "core::mem::size_of",
+        "lean": "core.mem.size_of"
+      },
+      {
+        "rust": "core::mem::take",
+        "lean": "core.mem.take"
+      },
+      {
+        "rust": "core::num::error::{impl core::cmp::PartialEq<core::num::error::ParseIntError> for core::num::error::ParseIntError}::eq",
+        "lean": "core.num.error.ParseIntError.Insts.CoreCmpPartialEqParseIntError.eq"
+      },
+      {
+        "rust": "core::f32::{f32}::is_finite",
+        "lean": "core.f32.F32.is_finite"
+      },
+      {
+        "rust": "core::num::{i64}::unsigned_abs",
+        "lean": "core.num.I64.unsigned_abs"
+      },
+      {
+        "rust": "core::num::{i64}::to_ne_bytes",
+        "lean": "core.num.I64.to_ne_bytes"
+      },
+      {
+        "rust": "core::num::{i64}::from_ne_bytes",
+        "lean": "core.num.I64.from_ne_bytes"
+      },
+      {
+        "rust": "core::num::{u8}::is_ascii",
+        "lean": "core.num.U8.is_ascii"
+      },
+      {
+        "rust": "core::num::{u8}::is_ascii_alphabetic",
+        "lean": "core.num.U8.is_ascii_alphabetic"
+      },
+      {
+        "rust": "core::num::{u8}::is_ascii_lowercase",
+        "lean": "core.num.U8.is_ascii_lowercase"
+      },
+      {
+        "rust": "core::num::{u8}::is_ascii_alphanumeric",
+        "lean": "core.num.U8.is_ascii_alphanumeric"
+      },
+      {
+        "rust": "core::num::{u8}::is_ascii_digit",
+        "lean": "core.num.U8.is_ascii_digit"
+      },
+      {
+        "rust": "core::num::{u8}::is_ascii_graphic",
+        "lean": "core.num.U8.is_ascii_graphic"
+      },
+      {
+        "rust": "core::num::{u8}::is_ascii_whitespace",
+        "lean": "core.num.U8.is_ascii_whitespace"
+      },
+      {
+        "rust": "core::num::{impl core::str::traits::FromStr<core::num::error::ParseIntError> for i64}::from_str",
+        "lean": "I64.Insts.CoreStrTraitsFromStrParseIntError.from_str"
+      },
+      {
+        "rust": "core::num::{impl core::str::traits::FromStr<core::num::error::ParseIntError> for u32}::from_str",
+        "lean": "U32.Insts.CoreStrTraitsFromStrParseIntError.from_str"
+      },
+      {
+        "rust": "core::num::{impl core::str::traits::FromStr<core::num::error::ParseIntError> for usize}::from_str",
+        "lean": "Usize.Insts.CoreStrTraitsFromStrParseIntError.from_str"
+      },
+      {
+        "rust": "core::num::{u64}::count_ones",
+        "lean": "core.num.U64.count_ones"
+      },
+      {
+        "rust": "core::num::{usize}::ilog10",
+        "lean": "core.num.Usize.ilog10"
+      },
+      {
+        "rust": "core::num::{u64}::checked_shl",
+        "lean": "core.num.U64.checked_shl"
+      },
+      {
+        "rust": "core::num::{u32}::saturating_mul",
+        "lean": "core.num.U32.saturating_mul"
+      },
+      {
+        "rust": "core::num::{usize}::saturating_mul",
+        "lean": "core.num.Usize.saturating_mul"
+      },
+      {
+        "rust": "core::num::{u64}::saturating_mul",
+        "lean": "core.num.U64.saturating_mul"
+      },
+      {
+        "rust": "core::num::{u64}::wrapping_neg",
+        "lean": "core.num.U64.wrapping_neg"
+      },
+      {
+        "rust": "core::num::{u64}::to_ne_bytes",
+        "lean": "core.num.U64.to_ne_bytes"
+      },
+      {
+        "rust": "core::num::{u64}::from_ne_bytes",
+        "lean": "core.num.U64.from_ne_bytes"
+      },
+      {
+        "rust": "core::ops::arith::{impl core::ops::arith::Add<f32, f32> for f32}::add",
+        "lean": "F32.Insts.CoreOpsArithAddF32F32.add"
+      },
+      {
+        "rust": "core::ops::arith::{impl core::ops::arith::Mul<f32, f32> for f32}::mul",
+        "lean": "F32.Insts.CoreOpsArithMulF32F32.mul"
+      },
+      {
+        "rust": "core::ops::arith::{impl core::ops::arith::Div<f32, f32> for f32}::div",
+        "lean": "F32.Insts.CoreOpsArithDivF32F32.div"
+      },
+      {
+        "rust": "core::ops::range::{impl core::clone::Clone for core::ops::range::Range<Idx>}::clone",
+        "lean": "core.ops.range.Range.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "core::ops::range::{core::ops::range::Range<Idx>}::contains",
+        "lean": "core.ops.range.Range.contains"
+      },
+      {
+        "rust": "core::ops::range::{core::ops::range::RangeInclusive<Idx>}::contains",
+        "lean": "core.ops.range.RangeInclusive.contains"
+      },
+      {
+        "rust": "core::ops::range::{impl core::ops::range::RangeBounds<T> for core::ops::range::RangeToInclusive<T>}::end_bound",
+        "lean": "core.ops.range.RangeToInclusive.Insts.CoreOpsRangeRangeBounds.end_bound"
+      },
+      {
+        "rust": "core::ops::range::{impl core::ops::range::RangeBounds<T> for core::ops::range::RangeToInclusive<T>}::start_bound",
+        "lean": "core.ops.range.RangeToInclusive.Insts.CoreOpsRangeRangeBounds.start_bound"
+      },
+      {
+        "rust": "core::option::{impl core::clone::Clone for core::option::Option<T>}::clone_from",
+        "lean": "core.option.Option.Insts.CoreCloneClone.clone_from"
+      },
+      {
+        "rust": "core::option::{impl core::clone::Clone for core::option::Option<T>}::clone",
+        "lean": "core.option.Option.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "core::option::{impl core::fmt::Debug for core::option::Option<T>}::fmt",
+        "lean": "core.option.Option.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "core::option::Option::Some",
+        "lean": "core.option.Option.Some.constructor"
+      },
+      {
+        "rust": "core::option::Option::{impl core::ops::function::FnOnce<(T,), core::option::Option<T>> for core::option::Option::Some<T>}::call_once",
+        "lean": "P.Insts.CoreOpsFunctionFnOnceTupleTOption.call_once"
+      },
+      {
+        "rust": "core::option::{core::option::Option<T>}::is_none_or",
+        "lean": "core.option.Option.is_none_or"
+      },
+      {
+        "rust": "core::option::{core::option::Option<T>}::as_ref",
+        "lean": "core.option.Option.as_ref"
+      },
+      {
+        "rust": "core::option::{core::option::Option<T>}::as_mut",
+        "lean": "core.option.Option.as_mut"
+      },
+      {
+        "rust": "core::option::{core::option::Option<T>}::map_or",
+        "lean": "core.option.Option.map_or"
+      },
+      {
+        "rust": "core::option::{core::option::Option<T>}::ok_or_else",
+        "lean": "core.option.Option.ok_or_else"
+      },
+      {
+        "rust": "core::option::{core::option::Option<T>}::as_deref",
+        "lean": "core.option.Option.as_deref"
+      },
+      {
+        "rust": "core::option::{core::option::Option<T>}::and_then",
+        "lean": "core.option.Option.and_then"
+      },
+      {
+        "rust": "core::option::{core::option::Option<T>}::filter",
+        "lean": "core.option.Option.filter"
+      },
+      {
+        "rust": "core::option::{core::option::Option<T>}::or",
+        "lean": "core.option.Option.or"
+      },
+      {
+        "rust": "core::option::{core::option::Option<T>}::zip",
+        "lean": "core.option.Option.zip"
+      },
+      {
+        "rust": "core::option::{core::option::Option<&'_0 T>}::copied",
+        "lean": "core.option.OptionShared0T.copied"
+      },
+      {
+        "rust": "core::option::{core::option::Option<&'_0 T>}::cloned",
+        "lean": "core.option.OptionShared0T.cloned"
+      },
+      {
+        "rust": "core::option::{core::option::Option<core::result::Result<T, E>>}::transpose",
+        "lean": "core.option.OptionResult.transpose"
+      },
+      {
+        "rust": "core::option::{impl core::default::Default for core::option::Option<T>}::default",
+        "lean": "core.option.Option.Insts.CoreDefaultDefault.default"
+      },
+      {
+        "rust": "core::option::{impl core::cmp::PartialEq<core::option::Option<T>> for core::option::Option<T>}::eq",
+        "lean": "core.option.Option.Insts.CoreCmpPartialEqOption.eq"
+      },
+      {
+        "rust": "core::option::{impl core::ops::try_trait::Try for core::option::Option<T>}::branch",
+        "lean": "core.option.Option.Insts.CoreOpsTry_traitTry.branch"
+      },
+      {
+        "rust": "core::option::{impl core::ops::try_trait::FromResidual<core::option::Option<!>> for core::option::Option<T>}::from_residual",
+        "lean": "core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual"
+      },
+      {
+        "rust": "core::option::{core::option::Option<core::option::Option<T>>}::flatten",
+        "lean": "core.option.OptionOption.flatten"
+      },
+      {
+        "rust": "core::result::{impl core::cmp::PartialEq<core::result::Result<T, E>> for core::result::Result<T, E>}::eq",
+        "lean": "core.result.Result.Insts.CoreCmpPartialEqResult.eq"
+      },
+      {
+        "rust": "core::result::{core::result::Result<T, E>}::is_ok_and",
+        "lean": "core.result.Result.is_ok_and"
+      },
+      {
+        "rust": "core::result::{core::result::Result<T, E>}::is_err",
+        "lean": "core.result.Result.is_err"
+      },
+      {
+        "rust": "core::result::{core::result::Result<T, E>}::ok",
+        "lean": "core.result.Result.ok"
+      },
+      {
+        "rust": "core::result::{core::result::Result<T, E>}::map",
+        "lean": "core.result.Result.map"
+      },
+      {
+        "rust": "core::result::{core::result::Result<T, E>}::map_or",
+        "lean": "core.result.Result.map_or"
+      },
+      {
+        "rust": "core::result::{core::result::Result<T, E>}::and_then",
+        "lean": "core.result.Result.and_then"
+      },
+      {
+        "rust": "core::slice::{[T]}::first",
+        "lean": "core.slice.Slice.first"
+      },
+      {
+        "rust": "core::slice::{[T]}::first_mut",
+        "lean": "core.slice.Slice.first_mut"
+      },
+      {
+        "rust": "core::slice::{[T]}::split_first",
+        "lean": "core.slice.Slice.split_first"
+      },
+      {
+        "rust": "core::slice::{[T]}::last",
+        "lean": "core.slice.Slice.last"
+      },
+      {
+        "rust": "core::slice::{[T]}::last_mut",
+        "lean": "core.slice.Slice.last_mut"
+      },
+      {
+        "rust": "core::slice::{[T]}::starts_with",
+        "lean": "core.slice.Slice.starts_with"
+      },
+      {
+        "rust": "core::slice::{[T]}::ends_with",
+        "lean": "core.slice.Slice.ends_with"
+      },
+      {
+        "rust": "core::slice::{[T]}::binary_search",
+        "lean": "core.slice.Slice.binary_search"
+      },
+      {
+        "rust": "core::slice::{[T]}::binary_search_by_key",
+        "lean": "core.slice.Slice.binary_search_by_key"
+      },
+      {
+        "rust": "core::slice::{[T]}::sort_unstable",
+        "lean": "core.slice.Slice.sort_unstable"
+      },
+      {
+        "rust": "core::slice::{[T]}::sort_unstable_by",
+        "lean": "core.slice.Slice.sort_unstable_by"
+      },
+      {
+        "rust": "core::slice::{[T]}::sort_unstable_by_key",
+        "lean": "core.slice.Slice.sort_unstable_by_key"
+      },
+      {
+        "rust": "core::slice::raw::from_ref",
+        "lean": "core.slice.raw.from_ref"
+      },
+      {
+        "rust": "core::str::converts::from_utf8",
+        "lean": "core.str.converts.from_utf8"
+      },
+      {
+        "rust": "core::str::error::{core::str::error::Utf8Error}::valid_up_to",
+        "lean": "core.str.error.Utf8Error.valid_up_to"
+      },
+      {
+        "rust": "core::str::error::{core::str::error::Utf8Error}::error_len",
+        "lean": "core.str.error.Utf8Error.error_len"
+      },
+      {
+        "rust": "core::str::{str}::len",
+        "lean": "core.str.Str.len"
+      },
+      {
+        "rust": "core::str::{str}::is_empty",
+        "lean": "core.str.Str.is_empty"
+      },
+      {
+        "rust": "core::str::{str}::as_bytes",
+        "lean": "core.str.Str.as_bytes"
+      },
+      {
+        "rust": "core::str::{str}::get",
+        "lean": "core.str.Str.get"
+      },
+      {
+        "rust": "core::str::{str}::parse",
+        "lean": "core.str.Str.parse"
+      },
+      {
+        "rust": "core::str::traits::{impl core::cmp::Ord for str}::cmp",
+        "lean": "Str.Insts.CoreCmpOrd.cmp"
+      },
+      {
+        "rust": "core::str::traits::{impl core::cmp::PartialEq<str> for str}::eq",
+        "lean": "Str.Insts.CoreCmpPartialEqStr.eq"
+      },
+      {
+        "rust": "core::str::traits::{impl core::ops::index::Index<I, Clause0_Output> for str}::index",
+        "lean": "Str.Insts.CoreOpsIndexIndex.index"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::Range<usize>}::index_mut",
+        "lean": "core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.index_mut"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::Range<usize>}::index",
+        "lean": "core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.index"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::Range<usize>}::get_unchecked_mut",
+        "lean": "core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked_mut"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::Range<usize>}::get_unchecked",
+        "lean": "core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::Range<usize>}::get_mut",
+        "lean": "core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_mut"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::Range<usize>}::get",
+        "lean": "core.ops.range.RangeUsize.Insts.CoreSliceIndexSliceIndexStrStr.get"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeTo<usize>}::index_mut",
+        "lean": "core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.index_mut"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeTo<usize>}::index",
+        "lean": "core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.index"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeTo<usize>}::get_unchecked_mut",
+        "lean": "core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked_mut"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeTo<usize>}::get_unchecked",
+        "lean": "core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeTo<usize>}::get_mut",
+        "lean": "core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_mut"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeTo<usize>}::get",
+        "lean": "core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexStrStr.get"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeFrom<usize>}::index_mut",
+        "lean": "core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexStrStr.index_mut"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeFrom<usize>}::index",
+        "lean": "core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexStrStr.index"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeFrom<usize>}::get_unchecked_mut",
+        "lean": "core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked_mut"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeFrom<usize>}::get_unchecked",
+        "lean": "core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_unchecked"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeFrom<usize>}::get_mut",
+        "lean": "core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexStrStr.get_mut"
+      },
+      {
+        "rust": "core::str::traits::{impl core::slice::index::SliceIndex<str, str> for core::ops::range::RangeFrom<usize>}::get",
+        "lean": "core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexStrStr.get"
+      },
+      {
+        "rust": "core::tuple::{impl core::cmp::PartialEq<(U, T)> for (U, T)}::ne",
+        "lean": "Pair.Insts.CoreCmpPartialEqPair.ne"
+      },
+      {
+        "rust": "core::tuple::{impl core::cmp::PartialEq<(U, T)> for (U, T)}::eq",
+        "lean": "Pair.Insts.CoreCmpPartialEqPair.eq"
+      },
+      {
+        "rust": "alloc::borrow::{impl alloc::borrow::ToOwned<T> for T}::to_owned",
+        "lean": "alloc.borrow.ToOwned.Blanket.to_owned"
+      },
+      {
+        "rust": "alloc::boxed::{impl core::clone::Clone for alloc::boxed::Box<T>}::clone_from",
+        "lean": "Box.Insts.CoreCloneClone.clone_from"
+      },
+      {
+        "rust": "alloc::boxed::{impl core::cmp::PartialEq<alloc::boxed::Box<T>> for alloc::boxed::Box<T>}::ne",
+        "lean": "Box.Insts.CoreCmpPartialEqBox.ne"
+      },
+      {
+        "rust": "alloc::boxed::{impl core::fmt::Debug for alloc::boxed::Box<T>}::fmt",
+        "lean": "Box.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "alloc::boxed::{impl core::convert::AsRef<T> for alloc::boxed::Box<T>}::as_ref",
+        "lean": "Box.Insts.CoreConvertAsRef.as_ref"
+      },
+      {
+        "rust": "alloc::collections::btree::set::{alloc::collections::btree::set::BTreeSet<T, alloc::alloc::Global>}::new",
+        "lean": "alloc.collections.btree.set.BTreeSetTGlobal.new"
+      },
+      {
+        "rust": "alloc::collections::btree::set::{alloc::collections::btree::set::BTreeSet<T, A>}::insert",
+        "lean": "alloc.collections.btree.set.BTreeSet.insert"
+      },
+      {
+        "rust": "alloc::rc::{alloc::rc::Rc<T>}::new",
+        "lean": "alloc.rc.Rc.new"
+      },
+      {
+        "rust": "alloc::rc::{impl core::ops::deref::Deref<T> for alloc::rc::Rc<T>}::deref",
+        "lean": "alloc.rc.Rc.Insts.CoreOpsDerefDeref.deref"
+      },
+      {
+        "rust": "alloc::rc::{impl core::clone::Clone for alloc::rc::Rc<T>}::clone",
+        "lean": "alloc.rc.Rc.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "alloc::rc::{impl core::fmt::Debug for alloc::rc::Rc<T>}::fmt",
+        "lean": "alloc.rc.Rc.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "alloc::slice::{[T]}::sort_by",
+        "lean": "alloc.slice.Slice.sort_by"
+      },
+      {
+        "rust": "alloc::string::{impl core::cmp::PartialEq<alloc::string::String> for alloc::string::String}::eq",
+        "lean": "alloc.string.String.Insts.CoreCmpPartialEqString.eq"
+      },
+      {
+        "rust": "alloc::string::{impl core::cmp::PartialOrd<alloc::string::String> for alloc::string::String}::partial_cmp",
+        "lean": "alloc.string.String.Insts.CoreCmpPartialOrdString.partial_cmp"
+      },
+      {
+        "rust": "alloc::string::{impl core::cmp::Eq for alloc::string::String}::assert_fields_are_eq",
+        "lean": "alloc.string.String.Insts.CoreCmpEq.assert_fields_are_eq"
+      },
+      {
+        "rust": "alloc::string::{impl core::cmp::Ord for alloc::string::String}::cmp",
+        "lean": "alloc.string.String.Insts.CoreCmpOrd.cmp"
+      },
+      {
+        "rust": "alloc::string::{alloc::string::String}::new",
+        "lean": "alloc.string.String.new"
+      },
+      {
+        "rust": "alloc::string::{alloc::string::String}::with_capacity",
+        "lean": "alloc.string.String.with_capacity"
+      },
+      {
+        "rust": "alloc::string::{alloc::string::String}::from_utf8",
+        "lean": "alloc.string.String.from_utf8"
+      },
+      {
+        "rust": "alloc::string::{alloc::string::String}::into_bytes",
+        "lean": "alloc.string.String.into_bytes"
+      },
+      {
+        "rust": "alloc::string::{alloc::string::String}::as_str",
+        "lean": "alloc.string.String.as_str"
+      },
+      {
+        "rust": "alloc::string::{alloc::string::String}::push_str",
+        "lean": "alloc.string.String.push_str"
+      },
+      {
+        "rust": "alloc::string::{alloc::string::String}::push",
+        "lean": "alloc.string.String.push"
+      },
+      {
+        "rust": "alloc::string::{alloc::string::String}::as_bytes",
+        "lean": "alloc.string.String.as_bytes"
+      },
+      {
+        "rust": "alloc::string::{alloc::string::String}::len",
+        "lean": "alloc.string.String.len"
+      },
+      {
+        "rust": "alloc::string::{alloc::string::String}::is_empty",
+        "lean": "alloc.string.String.is_empty"
+      },
+      {
+        "rust": "alloc::string::{alloc::string::String}::replace_range",
+        "lean": "alloc.string.String.replace_range"
+      },
+      {
+        "rust": "alloc::string::{impl core::clone::Clone for alloc::string::String}::clone_from",
+        "lean": "alloc.string.String.Insts.CoreCloneClone.clone_from"
+      },
+      {
+        "rust": "alloc::string::{impl core::clone::Clone for alloc::string::String}::clone",
+        "lean": "alloc.string.String.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "alloc::string::{impl core::cmp::PartialEq<str> for alloc::string::String}::ne",
+        "lean": "alloc.string.String.Insts.CoreCmpPartialEqStr.ne"
+      },
+      {
+        "rust": "alloc::string::{impl core::cmp::PartialEq<str> for alloc::string::String}::eq",
+        "lean": "alloc.string.String.Insts.CoreCmpPartialEqStr.eq"
+      },
+      {
+        "rust": "alloc::string::{impl core::cmp::PartialEq<&'_0 str> for alloc::string::String}::eq",
+        "lean": "alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq"
+      },
+      {
+        "rust": "alloc::string::{impl core::cmp::PartialEq<&'_0 str> for alloc::string::String}::ne",
+        "lean": "alloc.string.String.Insts.CoreCmpPartialEqShared0Str.ne"
+      },
+      {
+        "rust": "alloc::string::{impl core::cmp::PartialEq<alloc::string::String> for &'_0 str}::eq",
+        "lean": "Shared0Str.Insts.CoreCmpPartialEqString.eq"
+      },
+      {
+        "rust": "alloc::string::{impl core::cmp::PartialEq<alloc::string::String> for &'_0 str}::ne",
+        "lean": "Shared0Str.Insts.CoreCmpPartialEqString.ne"
+      },
+      {
+        "rust": "alloc::string::{impl core::default::Default for alloc::string::String}::default",
+        "lean": "alloc.string.String.Insts.CoreDefaultDefault.default"
+      },
+      {
+        "rust": "alloc::string::{impl core::fmt::Debug for alloc::string::String}::fmt",
+        "lean": "alloc.string.String.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "alloc::string::{impl core::ops::index::Index<I, Clause0_Output> for alloc::string::String}::index",
+        "lean": "alloc.string.String.Insts.CoreOpsIndexIndex.index"
+      },
+      {
+        "rust": "alloc::string::{impl core::ops::deref::Deref<str> for alloc::string::String}::deref",
+        "lean": "alloc.string.String.Insts.CoreOpsDerefDerefStr.deref"
+      },
+      {
+        "rust": "alloc::string::{impl core::convert::From<&'_0 str> for alloc::string::String}::from",
+        "lean": "alloc.string.String.Insts.CoreConvertFromShared0Str.from"
+      },
+      {
+        "rust": "alloc::sync::{alloc::sync::Arc<T>}::new",
+        "lean": "alloc.sync.Arc.new"
+      },
+      {
+        "rust": "alloc::sync::{alloc::sync::Arc<T>}::ptr_eq",
+        "lean": "alloc.sync.Arc.ptr_eq"
+      },
+      {
+        "rust": "alloc::sync::{impl core::clone::Clone for alloc::sync::Arc<T>}::clone",
+        "lean": "alloc.sync.Arc.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "alloc::sync::{impl core::fmt::Debug for alloc::sync::Arc<T>}::fmt",
+        "lean": "alloc.sync.Arc.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::reserve",
+        "lean": "alloc.vec.Vec.reserve"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::truncate",
+        "lean": "alloc.vec.Vec.truncate"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::as_slice",
+        "lean": "alloc.vec.Vec.as_slice"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::remove",
+        "lean": "alloc.vec.Vec.remove"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::retain",
+        "lean": "alloc.vec.Vec.retain"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::pop",
+        "lean": "alloc.vec.Vec.pop"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::append",
+        "lean": "alloc.vec.Vec.append"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::clear",
+        "lean": "alloc.vec.Vec.clear"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::is_empty",
+        "lean": "alloc.vec.Vec.is_empty"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::split_off",
+        "lean": "alloc.vec.Vec.split_off"
+      },
+      {
+        "rust": "alloc::vec::{alloc::vec::Vec<T>}::resize_with",
+        "lean": "alloc.vec.Vec.resize_with"
+      },
+      {
+        "rust": "alloc::vec::{impl core::clone::Clone for alloc::vec::Vec<T>}::clone_from",
+        "lean": "alloc.vec.Vec.Insts.CoreCloneClone.clone_from"
+      },
+      {
+        "rust": "alloc::vec::{impl core::iter::traits::collect::IntoIterator<&'a T, core::slice::iter::Iter<'a, T>> for &'a alloc::vec::Vec<T>}::into_iter",
+        "lean": "SharedAVec.Insts.CoreIterTraitsCollectIntoIteratorSharedATIter.into_iter"
+      },
+      {
+        "rust": "alloc::vec::{impl core::iter::traits::collect::Extend<T> for alloc::vec::Vec<T>}::extend",
+        "lean": "alloc.vec.Vec.Insts.CoreIterTraitsCollectExtend.extend"
+      },
+      {
+        "rust": "alloc::vec::{impl core::cmp::Ord for alloc::vec::Vec<T>}::cmp",
+        "lean": "alloc.vec.Vec.Insts.CoreCmpOrd.cmp"
+      },
+      {
+        "rust": "alloc::vec::{impl core::default::Default for alloc::vec::Vec<T>}::default",
+        "lean": "alloc.vec.Vec.Insts.CoreDefaultDefault.default"
+      },
+      {
+        "rust": "alloc::vec::partial_eq::{impl core::cmp::PartialEq<[U; N]> for alloc::vec::Vec<T>}::ne",
+        "lean": "alloc.vec.Vec.Insts.CoreCmpPartialEqArray.ne"
+      },
+      {
+        "rust": "alloc::vec::partial_eq::{impl core::cmp::PartialEq<[U; N]> for alloc::vec::Vec<T>}::eq",
+        "lean": "alloc.vec.Vec.Insts.CoreCmpPartialEqArray.eq"
+      },
+      {
+        "rust": "alloc::vec::partial_eq::{impl core::cmp::PartialEq<[U]> for alloc::vec::Vec<T>}::ne",
+        "lean": "alloc.vec.Vec.Insts.CoreCmpPartialEqSlice.ne"
+      },
+      {
+        "rust": "alloc::vec::partial_eq::{impl core::cmp::PartialEq<[U]> for alloc::vec::Vec<T>}::eq",
+        "lean": "alloc.vec.Vec.Insts.CoreCmpPartialEqSlice.eq"
+      },
+      {
+        "rust": "alloc::vec::partial_eq::{impl core::cmp::PartialEq<alloc::vec::Vec<U>> for &'_0 [T]}::ne",
+        "lean": "Shared0Slice.Insts.CoreCmpPartialEqVec.ne"
+      },
+      {
+        "rust": "alloc::vec::partial_eq::{impl core::cmp::PartialEq<&'_0 [U]> for alloc::vec::Vec<T>}::ne",
+        "lean": "alloc.vec.Vec.Insts.CoreCmpPartialEqShared0Slice.ne"
+      },
+      {
+        "rust": "noble_kernel::acceptance::check",
+        "lean": "noble_kernel.acceptance.check"
+      },
+      {
+        "rust": "noble_kernel::acceptance::check_with_work",
+        "lean": "noble_kernel.acceptance.check_with_work"
+      },
+      {
+        "rust": "noble_kernel::acceptance::check_signed_structure_with_work",
+        "lean": "noble_kernel.acceptance.check_signed_structure_with_work"
+      },
+      {
+        "rust": "noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget",
+        "lean": "noble_kernel.contracts.clone_budget.Env.calculator_clone_budget"
+      },
+      {
+        "rust": "noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Definition}::clone",
+        "lean": "noble_kernel.contracts.Definition.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Definition}::fmt",
+        "lean": "noble_kernel.contracts.Definition.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Definition> for noble_kernel::contracts::Definition}::eq",
+        "lean": "noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq"
+      },
+      {
+        "rust": "noble_kernel::contracts::{impl core::cmp::PartialEq<noble_kernel::contracts::Behavior> for noble_kernel::contracts::Behavior}::eq",
+        "lean": "noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq"
+      },
+      {
+        "rust": "noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::GenericVariantDecl}::clone",
+        "lean": "noble_kernel.contracts.GenericVariantDecl.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::contracts::{impl core::clone::Clone for noble_kernel::contracts::Env}::clone",
+        "lean": "noble_kernel.contracts.Env.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::contracts::{impl core::fmt::Debug for noble_kernel::contracts::Env}::fmt",
+        "lean": "noble_kernel.contracts.Env.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::contracts::{impl core::default::Default for noble_kernel::contracts::Env}::default",
+        "lean": "noble_kernel.contracts.Env.Insts.CoreDefaultDefault.default"
+      },
+      {
+        "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::enable_live_test_hosts",
+        "lean": "noble_kernel.contracts.Env.enable_live_test_hosts"
+      },
+      {
+        "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::nominal",
+        "lean": "noble_kernel.contracts.Env.nominal"
+      },
+      {
+        "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_variant",
+        "lean": "noble_kernel.contracts.Env.generic_variant"
+      },
+      {
+        "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_instance",
+        "lean": "noble_kernel.contracts.Env.generic_instance"
+      },
+      {
+        "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::valid_generic_instance",
+        "lean": "noble_kernel.contracts.Env.valid_generic_instance"
+      },
+      {
+        "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_nominal",
+        "lean": "noble_kernel.contracts.Env.declare_nominal"
+      },
+      {
+        "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_generic_variant",
+        "lean": "noble_kernel.contracts.Env.declare_generic_variant"
+      },
+      {
+        "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_emit",
+        "lean": "noble_kernel.contracts.Env.declare_bound_emit"
+      },
+      {
+        "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_clock",
+        "lean": "noble_kernel.contracts.Env.declare_bound_clock"
+      },
+      {
+        "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_code_export",
+        "lean": "noble_kernel.contracts.Env.declare_bound_code_export"
+      },
+      {
+        "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_send",
+        "lean": "noble_kernel.contracts.Env.declare_bound_send"
+      },
+      {
+        "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::scheme",
+        "lean": "noble_kernel.contracts.Env.scheme"
+      },
+      {
+        "rust": "noble_kernel::contracts::{noble_kernel::contracts::Env}::kind",
+        "lean": "noble_kernel.contracts.Env.kind"
+      },
+      {
+        "rust": "noble_kernel::contracts::environment",
+        "lean": "noble_kernel.contracts.environment"
+      },
+      {
+        "rust": "noble_kernel::contracts::text_cursor_environment",
+        "lean": "noble_kernel.contracts.text_cursor_environment"
+      },
+      {
+        "rust": "noble_kernel::contracts::checked_i64_environment",
+        "lean": "noble_kernel.contracts.checked_i64_environment"
+      },
+      {
+        "rust": "noble_kernel::contracts::calculator_environment",
+        "lean": "noble_kernel.contracts.calculator_environment"
+      },
+      {
+        "rust": "noble_kernel::contracts::declared_text_environment",
+        "lean": "noble_kernel.contracts.declared_text_environment"
+      },
+      {
+        "rust": "noble_kernel::execution::{impl core::clone::Clone for noble_kernel::execution::Submission}::clone",
+        "lean": "noble_kernel.execution.Submission.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::execution::{impl core::fmt::Debug for noble_kernel::execution::Submission}::fmt",
+        "lean": "noble_kernel.execution.Submission.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::shapes::impls::{impl core::clone::Clone for noble_kernel::shapes::Pattern}::clone",
+        "lean": "noble_kernel.shapes.Pattern.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::shapes::impls::{impl core::cmp::PartialEq<noble_kernel::shapes::Pattern> for noble_kernel::shapes::Pattern}::eq",
+        "lean": "noble_kernel.shapes.Pattern.Insts.CoreCmpPartialEqPattern.eq"
+      },
+      {
+        "rust": "noble_kernel::shapes::{noble_kernel::shapes::Pattern}::program",
+        "lean": "noble_kernel.shapes.Pattern.program"
+      },
+      {
+        "rust": "noble_kernel::shapes::{impl core::cmp::PartialEq<noble_kernel::shapes::EffectSlot> for noble_kernel::shapes::EffectSlot}::eq",
+        "lean": "noble_kernel.shapes.EffectSlot.Insts.CoreCmpPartialEqEffectSlot.eq"
+      },
+      {
+        "rust": "noble_kernel::types::data::{noble_kernel::types::Ty}::is_data",
+        "lean": "noble_kernel.types.data.Ty.is_data"
+      },
+      {
+        "rust": "noble_kernel::types::impls::{impl core::clone::Clone for noble_kernel::types::Ty}::clone",
+        "lean": "noble_kernel.types.Ty.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::types::impls::{impl core::cmp::PartialEq<noble_kernel::types::Ty> for noble_kernel::types::Ty}::eq",
+        "lean": "noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq"
+      },
+      {
+        "rust": "noble_kernel::types::impls::{impl core::fmt::Debug for noble_kernel::types::Ty}::fmt",
+        "lean": "noble_kernel.types.Ty.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::ResourceKind}::clone",
+        "lean": "noble_kernel.types.ResourceKind.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::ResourceKind}::fmt",
+        "lean": "noble_kernel.types.ResourceKind.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::ResourceKind> for noble_kernel::types::ResourceKind}::eq",
+        "lean": "noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq"
+      },
+      {
+        "rust": "noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::NominalTypeId}::clone",
+        "lean": "noble_kernel.types.NominalTypeId.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::NominalTypeId}::fmt",
+        "lean": "noble_kernel.types.NominalTypeId.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::NominalTypeId> for noble_kernel::types::NominalTypeId}::eq",
+        "lean": "noble_kernel.types.NominalTypeId.Insts.CoreCmpPartialEqNominalTypeId.eq"
+      },
+      {
+        "rust": "noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::NominalShape}::clone",
+        "lean": "noble_kernel.types.NominalShape.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::NominalShape> for noble_kernel::types::NominalShape}::eq",
+        "lean": "noble_kernel.types.NominalShape.Insts.CoreCmpPartialEqNominalShape.eq"
+      },
+      {
+        "rust": "noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffId}::clone",
+        "lean": "noble_kernel.types.EffId.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffId}::fmt",
+        "lean": "noble_kernel.types.EffId.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffId> for noble_kernel::types::EffId}::eq",
+        "lean": "noble_kernel.types.EffId.Insts.CoreCmpPartialEqEffId.eq"
+      },
+      {
+        "rust": "noble_kernel::types::{impl core::clone::Clone for noble_kernel::types::EffSet}::clone",
+        "lean": "noble_kernel.types.EffSet.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::types::{impl core::fmt::Debug for noble_kernel::types::EffSet}::fmt",
+        "lean": "noble_kernel.types.EffSet.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::types::{impl core::cmp::PartialEq<noble_kernel::types::EffSet> for noble_kernel::types::EffSet}::eq",
+        "lean": "noble_kernel.types.EffSet.Insts.CoreCmpPartialEqEffSet.eq"
+      },
+      {
+        "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::empty",
+        "lean": "noble_kernel.types.EffSet.empty"
+      },
+      {
+        "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::from_ids",
+        "lean": "noble_kernel.types.EffSet.from_ids"
+      },
+      {
+        "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::union",
+        "lean": "noble_kernel.types.EffSet.union"
+      },
+      {
+        "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::is_subset_of",
+        "lean": "noble_kernel.types.EffSet.is_subset_of"
+      },
+      {
+        "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::as_slice",
+        "lean": "noble_kernel.types.EffSet.as_slice"
+      },
+      {
+        "rust": "noble_kernel::types::{noble_kernel::types::EffSet}::is_empty",
+        "lean": "noble_kernel.types.EffSet.is_empty"
+      },
+      {
+        "rust": "noble_kernel::types::{noble_kernel::types::Ty}::program",
+        "lean": "noble_kernel.types.Ty.program"
+      },
+      {
+        "rust": "noble_kernel::types::{noble_kernel::types::Ty}::size",
+        "lean": "noble_kernel.types.Ty.size"
+      },
+      {
+        "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::NodeId}::clone",
+        "lean": "noble_kernel.untrusted.NodeId.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::NodeId}::fmt",
+        "lean": "noble_kernel.untrusted.NodeId.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::NodeId> for noble_kernel::untrusted::NodeId}::eq",
+        "lean": "noble_kernel.untrusted.NodeId.Insts.CoreCmpPartialEqNodeId.eq"
+      },
+      {
+        "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Lit}::clone",
+        "lean": "noble_kernel.untrusted.Lit.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Lit}::fmt",
+        "lean": "noble_kernel.untrusted.Lit.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::untrusted::{impl core::cmp::PartialEq<noble_kernel::untrusted::Lit> for noble_kernel::untrusted::Lit}::eq",
+        "lean": "noble_kernel.untrusted.Lit.Insts.CoreCmpPartialEqLit.eq"
+      },
+      {
+        "rust": "noble_kernel::untrusted::{noble_kernel::untrusted::Lit}::ty",
+        "lean": "noble_kernel.untrusted.Lit.ty"
+      },
+      {
+        "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Candidate}::clone",
+        "lean": "noble_kernel.untrusted.Candidate.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Candidate}::fmt",
+        "lean": "noble_kernel.untrusted.Candidate.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Expected}::clone",
+        "lean": "noble_kernel.untrusted.Expected.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Request}::clone",
+        "lean": "noble_kernel.untrusted.Request.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Request}::fmt",
+        "lean": "noble_kernel.untrusted.Request.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::untrusted::{impl core::clone::Clone for noble_kernel::untrusted::Checked}::clone",
+        "lean": "noble_kernel.untrusted.Checked.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::untrusted::{impl core::fmt::Debug for noble_kernel::untrusted::Checked}::fmt",
+        "lean": "noble_kernel.untrusted.Checked.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::words::resolve::bindings",
+        "lean": "noble_kernel.words.resolve.bindings"
+      },
+      {
+        "rust": "noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::Variable> for noble_kernel::words::Variable}::eq",
+        "lean": "noble_kernel.words.Variable.Insts.CoreCmpPartialEqVariable.eq"
+      },
+      {
+        "rust": "noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::VariableKind}::clone",
+        "lean": "noble_kernel.words.VariableKind.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::VariableKind}::fmt",
+        "lean": "noble_kernel.words.VariableKind.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::words::{impl core::cmp::PartialEq<noble_kernel::words::VariableKind> for noble_kernel::words::VariableKind}::eq",
+        "lean": "noble_kernel.words.VariableKind.Insts.CoreCmpPartialEqVariableKind.eq"
+      },
+      {
+        "rust": "noble_kernel::words::{impl core::clone::Clone for noble_kernel::words::Scheme}::clone",
+        "lean": "noble_kernel.words.Scheme.Insts.CoreCloneClone.clone"
+      },
+      {
+        "rust": "noble_kernel::words::{impl core::fmt::Debug for noble_kernel::words::Scheme}::fmt",
+        "lean": "noble_kernel.words.Scheme.Insts.CoreFmtDebug.fmt"
+      },
+      {
+        "rust": "noble_kernel::words::{noble_kernel::words::Scheme}::validate",
+        "lean": "noble_kernel.words.Scheme.validate"
+      }
+    ]
+  },
+  "local_opaque_reviews": [
+    {
+      "rust": "noble_contracts::intrinsic::debug_form_kind",
+      "model": "proofs/mc1/NobleContractImpl/FunsExternal.lean intrinsic.debug_form_kind",
+      "reason": "Derived-Debug rendering of FormKind, opaque only to break the Form/FormKind trait-impl cycle Aeneas refuses; in the formatter model every write and every composed leaf Debug succeeds and returns the formatter, so the model is that successful step (as the five kernel debug helpers)."
+    },
+    {
+      "rust": "noble_contracts::intrinsic::debug_proof_dependency",
+      "model": "proofs/mc1/NobleContractImpl/FunsExternal.lean intrinsic.debug_proof_dependency",
+      "reason": "Derived-Debug rendering of ProofDependency, opaque only because a transparent body formats Vec<ProofDependency> through the instance it defines; same formatter-model step."
+    },
+    {
+      "rust": "noble_contracts::source::editor::debug_node",
+      "model": "proofs/mc1/NobleContractImpl/FunsExternal.lean source.editor.debug_node",
+      "reason": "Derived-Debug rendering of editor Node, opaque only because Quotation formats nested nodes through the instance it defines; same formatter-model step."
+    },
+    {
+      "rust": "noble_contracts::source::chunks::{noble_contracts::source::chunks::ObserverHandle<'_0>}::observe",
+      "model": "proofs/mc1/NobleContractImpl/FunsExternal.lean source.chunks.ObserverHandle.observe",
+      "reason": "Calls the caller-owned dyn FnMut observer, which the Rust source does not determine; the handle carries the host as a prophecy sequence of call results, so every observer is represented."
+    },
+    {
+      "rust": "noble_contracts::source::chunks::{noble_contracts::source::chunks::RankerHandle<'_0>}::model_identity",
+      "model": "proofs/mc1/NobleContractImpl/FunsExternal.lean source.chunks.RankerHandle.model_identity",
+      "reason": "Calls the host dyn CandidateRanker (&self); the handle carries the answer for each scorer state."
+    },
+    {
+      "rust": "noble_contracts::source::chunks::{noble_contracts::source::chunks::RankerHandle<'_0>}::provenance_matches",
+      "model": "proofs/mc1/NobleContractImpl/FunsExternal.lean source.chunks.RankerHandle.provenance_matches",
+      "reason": "Calls the host dyn CandidateRanker (&self); the handle carries the answer as a function of the scorer state and of an injective image of the RankingIdentity."
+    },
+    {
+      "rust": "noble_contracts::source::chunks::{noble_contracts::source::chunks::RankerHandle<'_0>}::score",
+      "model": "proofs/mc1/NobleContractImpl/FunsExternal.lean source.chunks.RankerHandle.score",
+      "reason": "Calls the host dyn CandidateRanker (&mut self); the handle carries the prophecy sequence of replies, so every scorer is represented."
+    },
+    {
+      "rust": "noble_contracts::source::chunks::{noble_contracts::source::chunks::MonotonicClock}::now_ns",
+      "model": "proofs/mc1/NobleContractImpl/FunsExternal.lean source.chunks.MonotonicClock.now_ns",
+      "reason": "Calls the host fn() -> u64 clock, whose readings the Rust source does not determine; the handle carries the prophecy sequence of readings."
+    },
+    {
+      "rust": "noble_contracts::source::procedures::acceptance::{noble_contracts::source::procedures::acceptance::OwnerVerifier}::verify",
+      "model": "proofs/mc1/NobleContractImpl/FunsExternal.lean source.procedures.acceptance.OwnerVerifier.verify",
+      "reason": "Calls the owner's dyn EvidenceVerifier (&self); the handle carries the answer as a function of injective images of the record and the claim."
+    },
+    {
+      "rust": "noble_contracts::source::procedures::acceptance::{impl core::fmt::Debug for noble_contracts::source::procedures::acceptance::OwnerVerifier}::fmt",
+      "model": "proofs/mc1/NobleContractImpl/FunsExternal.lean source.procedures.acceptance.OwnerVerifier.Insts.CoreFmtDebug.fmt",
+      "reason": "Formats through the owner's boxed verifier; the handle carries that Debug result under the abstract formatter."
+    }
+  ],
+  "implementation": {
+    "literal_size_axioms": [],
+    "literal_size_controls": {
+      "admitted_kernel_axiom": "_private.NobleKernel.Funs.0.noble_kernel.contracts.GenericVariantDecl.Insts.CoreFmtDebug.fmt._native.decide.ax_7",
+      "refused_contracts_owner": "_private.NobleContractImpl.Funs.0.noble_contracts.source.declared.signatures.delimited_step._native.decide.ax_5",
+      "refused_non_literal_type": true,
+      "refused_u64_bound_type": true
+    },
+    "native_axioms": [
+      "NobleContractImpl.Statement.composed_source_statement._native.decide.ax_1",
+      "NobleContractImpl.Statement.composed_source_statement._native.native_decide.ax_1_1",
+      "NobleContractImpl.Statement.family_source_statement._native.decide.ax_1",
+      "NobleContractImpl.Statement.family_source_statement._native.native_decide.ax_1_1",
+      "NobleContractImpl.Statement.increment_source_statement._native.decide.ax_1",
+      "NobleContractImpl.Statement.increment_source_statement._native.native_decide.ax_1_1",
+      "NobleContractImpl.Statement.structural_source_statement._native.decide.ax_1",
+      "NobleContractImpl.Statement.structural_source_statement._native.native_decide.ax_1_1",
+      "NobleContractImpl.Statement.syntax_source_statement._native.decide.ax_1",
+      "NobleContractImpl.Statement.syntax_source_statement._native.native_decide.ax_1_1",
+      "NobleContractImpl.Statement.wrap_source_statement._native.decide.ax_1",
+      "NobleContractImpl.Statement.wrap_source_statement._native.native_decide.ax_1_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.companion.admit.CODE_OUTCOME_UNKNOWN._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.companion.admit.EvidencePayload.Insts.CoreFmtDebug.fmt._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.argument._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.bindings.binding._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.bindings.fresh._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.bindings.types._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.fields.record._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.fields.record._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.fields.unique._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.header._native.decide.ax_2",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.header._native.decide.ax_6",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.header._native.decide.ax_8",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.logic.definition._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.logic.definition._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.logic.fresh._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.logic.kind._native.decide.ax_2",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.logic.precondition._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.logic.precondition._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.logic.resolve._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.prepare._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.prepare._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.frontend.prepare._native.decide.ax_7",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.index._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.construct.Arena.build_pattern._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.construct.Arena.build_pattern._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.construct.Arena.build_pattern._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.construct.Arena.build_pattern._native.decide.ax_7",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.construct.Arena.build_ty._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.construct.Arena.build_ty._native.decide.ax_11",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.construct.Arena.build_ty._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.construct.Arena.build_ty._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.construct.Arena.build_ty._native.decide.ax_7",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.construct.Arena.build_ty._native.decide.ax_9",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.effects.Arena.effect_slot._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.finish.node_limit._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.finish.push._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.finish.type_size._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.Arena.visit._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.Arena.visit._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.step._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.step._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_11",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_13",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_15",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_17",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_23",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_25",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_27",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_29",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_31",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_33",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_35",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_7",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.materialize.rendering.Traversal.term._native.decide.ax_9",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.pure_effect._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.unify.Arena.occurs_step._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.unify.Arena.unify_step._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.unify.Arena.unify_step._native.decide.ax_388",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.inference.variable_at._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.internal._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.metering.Meter.charge.closure.Insts.CoreOpsFunctionFnTupleDiagnostic.call._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.metering.Meter.depth._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.metering.Meter.node._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.offset._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.Arena.push._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.Arena.push._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.binary.cons._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.mapping.apply._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.mapping.apply._native.decide.ax_13",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.mapping.apply._native.decide.ax_15",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.operation._native.decide.ax_24",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.operation._native.decide.ax_26",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.references.bindings._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.references.definitions._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.resolving.literal._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.resolving.queue_operator._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.resolving.round._native.decide.ax_2",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.resolving.visit._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.same._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.structural.step._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.unary.list._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.unary.pair._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.predicate.unary.sum._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.bindings.binding._native.decide.ax_10",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.bindings.binding._native.decide.ax_4",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.bindings.binding._native.decide.ax_6",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.bindings.binding._native.decide.ax_8",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.bindings.natural._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.bindings.natural._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.check_with_owner._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.check_with_owner._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_effects._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_effects._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_effects_loop.body._native.decide.ax_2",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_nominal_id._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_nominal_id._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_nominal_id._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_shape._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_shape._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_ty._native.decide.ax_11",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_ty._native.decide.ax_13",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_ty._native.decide.ax_15",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_ty._native.decide.ax_17",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_ty._native.decide.ax_19",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_ty._native.decide.ax_22",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_ty._native.decide.ax_25",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.debug_ty._native.decide.ax_9",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.forms.block._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.forms.round._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.forms.round._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.forms.word._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.forms.word._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.rejection_message._native.decide.ax_15",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.rejection_message._native.decide.ax_17",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.rejection_message._native.decide.ax_19",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.rejection_message._native.decide.ax_21",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.rejection_message._native.decide.ax_23",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.rejection_message._native.decide.ax_25",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.rejection_message._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.rejection_message._native.decide.ax_6",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.rejection_message._native.decide.ax_8",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.traversal.step._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.with_eligibility._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.with_eligibility._native.decide.ax_11",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.with_eligibility._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.with_eligibility._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.with_eligibility._native.decide.ax_8",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.witness.apply._native.decide.ax_13",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.witness.apply._native.decide.ax_15",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.witness.apply._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.witness.apply_binding._native.decide.ax_17",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.witness.apply_binding._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.apply._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.host_error._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.identity._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_11",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_13",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_15",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_17",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_19",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_21",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_23",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_25",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_27",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_29",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_31",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_33",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_35",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_37",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_39",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_41",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_43",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_45",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_47",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_49",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_7",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.program.words.spelling._native.decide.ax_9",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.export_lean._native.decide.ax_10",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.export_lean._native.decide.ax_12",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.export_lean._native.decide.ax_14",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.export_lean._native.decide.ax_16",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.export_lean._native.decide.ax_18",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.export_lean._native.decide.ax_2",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.export_lean._native.decide.ax_20",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.export_lean._native.decide.ax_4",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.export_lean._native.decide.ax_6",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.export_lean._native.decide.ax_8",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.emit_loop.body._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.emit_loop.body._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.reference._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_10",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_12",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_14",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_16",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_22",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_24",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_26",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_28",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_30",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_32",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_34",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_36",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_38",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_40",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_42",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_45",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_47",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_49",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_51",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_53",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_55",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_57",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_59",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_61",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_63",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_65",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_67",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_69",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_7",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.expression.term._native.decide.ax_71",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.rejected._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.subject.body_loop.body._native.decide.ax_2",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.subject.emit._native.decide.ax_4",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.subject.node._native.decide.ax_11",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.subject.node._native.decide.ax_13",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.subject.node._native.decide.ax_15",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.subject.node._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.subject.node._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.subject.node._native.decide.ax_7",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.subject.node._native.decide.ax_9",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.subject.resolved._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.subject.resolved._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.subject.resolved_loop.body._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.subject.resolved_loop.body._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.named_stack._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.named_stack._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.named_stack._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.stack_entries._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_12",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_15",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_17",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_19",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_21",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_23",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_25",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_27",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_29",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_31",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_33",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_35",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_37",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_7",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.rendering.types.value._native.decide.ax_9",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.source.inference.operations.contextualize._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.source.inference.operations.contextualize._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.source.inference.operations.contextualize._native.decide.ax_7",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.source.inference.operations.contextualize._native.decide.ax_9",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.source.lexer.Scanner.new._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.source.lexer.Scanner.new._native.decide.ax_4",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.Tree.atom._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.Tree.round._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.Tree.square._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.child._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.constructors.program._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.constructors.program._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.constructors.schedule._native.decide.ax_11",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.constructors.schedule._native.decide.ax_14",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.constructors.schedule._native.decide.ax_16",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.constructors.schedule._native.decide.ax_9",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.identifier._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.identifier._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.identifiers.byte._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.integer.Accumulator.digit._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.integer.Accumulator.digit._native.decide.ax_4",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.parsing.atom_byte._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.parsing.close._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.parsing.close._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.parsing.finish._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.parsing.finish._native.decide.ax_5",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.parsing.step._native.decide.ax_1",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.parsing.step._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.typing.atom_type._native.decide.ax_18",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.typing.atom_type._native.decide.ax_20",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.typing.step._native.decide.ax_3",
+      "_private.NobleContractImpl.Funs.0.noble_contracts.syntax.typing.visit._native.decide.ax_1"
+    ],
+    "scope": "mc1-statement-export-v1; not universal frontend correctness",
+    "source_equations": 6,
+    "strict_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "strict_theorems": 71
+  },
+  "literal_size": [],
+  "statements": [
+    {
+      "case": "increment",
+      "source": "(contract 1 increment\n  (input (x I64))\n  (output (y I64))\n  (program [ 1 + ])\n  (requires true)\n  (ensures (eq (out y) (add (in x) 1))))\n",
+      "statement": "import NobleContracts\nimport NobleContracts.Expression\n\nopen NobleContracts\nnamespace MC1Obligation\n\ndef irRevision : Nat := 1\ndef semanticRevision : Nat := 0\ndef node_0 : Op := .lit (.i64 (BitVec.ofInt 64 (1)))\ndef node_1 : Op := .word 4\ndef program : List Op := [node_0, node_1]\n\ndef inputTypes : List Ty := [.i64]\ndef outputTypes : List Ty := [.i64]\ndef paramTypes : List Ty := []\ndef expression_0 : Term := .bool true\ndef expression_1 : Term := .output 0\ndef expression_2 : Term := .input 0\ndef expression_3 : Term := .i64 (1)\ndef expression_4 : Term := .add expression_2 expression_3\ndef expression_5 : Term := .eq expression_1 expression_4\ndef precondition : Term := expression_0\ndef postcondition : Term := expression_5\ndef claim : Prop := exportedClaim program inputTypes outputTypes paramTypes\n  (Holds precondition) (Holds postcondition)\n\nend MC1Obligation\n",
+      "theorem": "NobleContractImpl.Statement.increment_source_statement"
+    },
+    {
+      "case": "composed",
+      "source": "(contract 1 composed-increments\n  (input (x I64))\n  (output (y I64))\n  (program [\n    (block (I64) (I64) [ 1 + ])\n    (block (I64) (I64) [ 1 + ])\n    compose run ])\n  (requires true)\n  (ensures (eq (out y) (add (add (in x) 1) 1))))\n",
+      "statement": "import NobleContracts\nimport NobleContracts.Expression\n\nopen NobleContracts\nnamespace MC1Obligation\n\ndef irRevision : Nat := 1\ndef semanticRevision : Nat := 0\ndef node_0 : Op := .lit (.i64 (BitVec.ofInt 64 (1)))\ndef node_1 : Op := .word 4\ndef node_2 : Op := .block [node_0, node_1]\ndef node_3 : Op := .lit (.i64 (BitVec.ofInt 64 (1)))\ndef node_4 : Op := .word 4\ndef node_5 : Op := .block [node_3, node_4]\ndef node_6 : Op := .word 9\ndef node_7 : Op := .word 10\ndef program : List Op := [node_2, node_5, node_6, node_7]\n\ndef inputTypes : List Ty := [.i64]\ndef outputTypes : List Ty := [.i64]\ndef paramTypes : List Ty := []\ndef expression_0 : Term := .bool true\ndef expression_1 : Term := .output 0\ndef expression_2 : Term := .input 0\ndef expression_3 : Term := .i64 (1)\ndef expression_4 : Term := .add expression_2 expression_3\ndef expression_5 : Term := .i64 (1)\ndef expression_6 : Term := .add expression_4 expression_5\ndef expression_7 : Term := .eq expression_1 expression_6\ndef precondition : Term := expression_0\ndef postcondition : Term := expression_7\ndef claim : Prop := exportedClaim program inputTypes outputTypes paramTypes\n  (Holds precondition) (Holds postcondition)\n\nend MC1Obligation\n",
+      "theorem": "NobleContractImpl.Statement.composed_source_statement"
+    },
+    {
+      "case": "family",
+      "source": "(contract 1 addition-builder-family\n  (input (n I64))\n  (output (p (Program (I64) (I64))))\n  (params (x I64))\n  (program [ quote (block (I64 I64) (I64) [ + ]) compose ])\n  (requires true)\n  (ensures (maps (out p) (param x) (add (param x) (in n)))))\n",
+      "statement": "import NobleContracts\nimport NobleContracts.Expression\n\nopen NobleContracts\nnamespace MC1Obligation\n\ndef irRevision : Nat := 1\ndef semanticRevision : Nat := 0\ndef node_0 : Op := .word 8\ndef node_1 : Op := .word 4\ndef node_2 : Op := .block [node_1]\ndef node_3 : Op := .word 9\ndef program : List Op := [node_0, node_2, node_3]\n\ndef inputTypes : List Ty := [.i64]\ndef outputTypes : List Ty := [(.program [.i64] [.i64])]\ndef paramTypes : List Ty := [.i64]\ndef expression_0 : Term := .bool true\ndef expression_1 : Term := .output 0\ndef expression_2 : Term := .param 0\ndef expression_3 : Term := .param 0\ndef expression_4 : Term := .input 0\ndef expression_5 : Term := .add expression_3 expression_4\ndef expression_6 : Term := .maps expression_1 expression_2 expression_5\ndef precondition : Term := expression_0\ndef postcondition : Term := expression_6\ndef claim : Prop := exportedClaim program inputTypes outputTypes paramTypes\n  (Holds precondition) (Holds postcondition)\n\nend MC1Obligation\n",
+      "theorem": "NobleContractImpl.Statement.family_source_statement"
+    },
+    {
+      "case": "structural",
+      "source": "(contract 1 structural-roundtrip\n  (input (xs (List I64)) (a I64))\n  (output (p (Pair (List I64) I64)))\n  (define identity Bool true)\n  (program [ pair ])\n  (requires (def identity))\n  (ensures (and (eq (first (out p)) (in xs))\n                (eq (second (out p)) (in a)))))\n",
+      "statement": "import NobleContracts\nimport NobleContracts.Expression\n\nopen NobleContracts\nnamespace MC1Obligation\n\ndef irRevision : Nat := 1\ndef semanticRevision : Nat := 0\ndef node_0 : Op := .word 13\ndef program : List Op := [node_0]\n\ndef inputTypes : List Ty := [(.list .i64), .i64]\ndef outputTypes : List Ty := [(.pair (.list .i64) .i64)]\ndef paramTypes : List Ty := []\ndef expression_0 : Term := .bool true\ndef expression_1 : Term := .definition 0 expression_0\ndef expression_2 : Term := .output 0\ndef expression_3 : Term := .first expression_2\ndef expression_4 : Term := .input 0\ndef expression_5 : Term := .eq expression_3 expression_4\ndef expression_6 : Term := .output 0\ndef expression_7 : Term := .second expression_6\ndef expression_8 : Term := .input 1\ndef expression_9 : Term := .eq expression_7 expression_8\ndef expression_10 : Term := .and expression_5 expression_9\ndef precondition : Term := expression_1\ndef postcondition : Term := expression_10\ndef claim : Prop := exportedClaim program inputTypes outputTypes paramTypes\n  (Holds precondition) (Holds postcondition)\n\nend MC1Obligation\n",
+      "theorem": "NobleContractImpl.Statement.structural_source_statement"
+    },
+    {
+      "case": "syntax",
+      "source": "(contract 1 reflected-syntax (input (p (Program (I64) (I64)))) (output (s Syntax)) (program [ reflect ]) (requires true) (ensures true))\n",
+      "statement": "import NobleContracts\nimport NobleContracts.Expression\n\nopen NobleContracts\nnamespace MC1Obligation\n\ndef irRevision : Nat := 1\ndef semanticRevision : Nat := 0\ndef node_0 : Op := .word 11\ndef program : List Op := [node_0]\n\ndef inputTypes : List Ty := [(.program [.i64] [.i64])]\ndef outputTypes : List Ty := [.«syntax»]\ndef paramTypes : List Ty := []\ndef expression_0 : Term := .bool true\ndef expression_1 : Term := .bool true\ndef precondition : Term := expression_0\ndef postcondition : Term := expression_1\ndef claim : Prop := exportedClaim program inputTypes outputTypes paramTypes\n  (Holds precondition) (Holds postcondition)\n\nend MC1Obligation\n",
+      "theorem": "NobleContractImpl.Statement.syntax_source_statement"
+    },
+    {
+      "case": "wrap",
+      "source": "(contract 1 signed-wrap (input) (output (y I64)) (program [ 9223372036854775807 1 + ]) (requires true) (ensures (eq (out y) -9223372036854775808)))\n",
+      "statement": "import NobleContracts\nimport NobleContracts.Expression\n\nopen NobleContracts\nnamespace MC1Obligation\n\ndef irRevision : Nat := 1\ndef semanticRevision : Nat := 0\ndef node_0 : Op := .lit (.i64 (BitVec.ofInt 64 (9223372036854775807)))\ndef node_1 : Op := .lit (.i64 (BitVec.ofInt 64 (1)))\ndef node_2 : Op := .word 4\ndef program : List Op := [node_0, node_1, node_2]\n\ndef inputTypes : List Ty := []\ndef outputTypes : List Ty := [.i64]\ndef paramTypes : List Ty := []\ndef expression_0 : Term := .bool true\ndef expression_1 : Term := .output 0\ndef expression_2 : Term := .i64 (-9223372036854775808)\ndef expression_3 : Term := .eq expression_1 expression_2\ndef precondition : Term := expression_0\ndef postcondition : Term := expression_3\ndef claim : Prop := exportedClaim program inputTypes outputTypes paramTypes\n  (Holds precondition) (Holds postcondition)\n\nend MC1Obligation\n",
+      "theorem": "NobleContractImpl.Statement.wrap_source_statement"
+    }
+  ],
+  "assumptions": [
+    "Pinned Charon/Aeneas translation and handwritten standard-library models are explicit trust boundaries.",
+    "Inherited local opaque copy/format helpers are exactly the five enumerated kernel boundaries.",
+    "The contracts subject has exactly the ten reviewed local opaque functions: three derived-Debug helpers modelled in the formatter abstraction, and seven host plug-in calls answered by host behaviour the handle carries (prophecy sequences for &mut calls, functions of injective argument images for &self calls).",
+    "Allocation identity, spare capacity, allocator failure, and formatting layout are abstracted by the inherited models.",
+    "Models without a faithful value fail rather than guess: core::mem::size_of, Cell::set (shared mutation) and Arc::ptr_eq (allocation identity); no ok result is derived through them.",
+    "Generated string-bound proofs and six closed source equations use the separately listed native-evaluation axioms.",
+    "The 71 universal bridge/projection theorems use strict standard axioms, except that check_from_inputs also uses the separately listed generated literal-size axioms of the linked kernel checker; the 43 application/rule theorems use strict standard axioms only.",
+    "This is a named source-export fragment, not universal frontend/exporter or runtime correctness."
+  ]
+}
