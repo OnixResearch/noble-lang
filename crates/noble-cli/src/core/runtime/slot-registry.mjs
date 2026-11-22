@@ -313,7 +313,12 @@ export class SlotRegistry {
     this.#retire('candidate-discard');
   }
 
-  #candidate(version, required, evidence) {
+  // Admission (`attested`) also demands the host's one-shot attestation of the
+  // evidence for the publication in progress. A dispatch re-checks a version the
+  // map already admitted: its retained record must still bind the version
+  // exactly, but the publication's attestation was consumed and is not asked
+  // for again.
+  #candidate(version, required, evidence, attested = true) {
     if (!version || this.#versions.get(this.#versionKey(version)) !== version) {
       return 'unadmitted-target';
     }
@@ -323,7 +328,7 @@ export class SlotRegistry {
     if (version.effects.some(effect => !required.ceiling.includes(effect))) return 'effect-ceiling-widened';
     if (required.proofRequired && (version.definitionId === null
       || !exactEvidence(evidence, version)
-      || !this.#verifyEvidence || this.#verifyEvidence(evidence, version) !== true)) {
+      || attested && (!this.#verifyEvidence || this.#verifyEvidence(evidence, version) !== true))) {
       return 'selected-target-evidence-refused';
     }
     return null;
@@ -710,7 +715,7 @@ export class SlotRegistry {
       version: selected.version, rootEpoch: root.state.epoch }) : false;
     const reason = !selected ? 'slot-absent'
       : !authorized ? 'policy-denied'
-        : this.#candidate(selected.version, selected.contract, selected.evidence);
+        : this.#candidate(selected.version, selected.contract, selected.evidence, false);
     this.#trace(root, { operation: 'dispatch', rootEpoch: root.state.epoch.toString(),
       slotId: ref.slotId, incarnation: selected?.incarnation?.toString() ?? null,
       generation: selected?.generation?.toString() ?? null,
