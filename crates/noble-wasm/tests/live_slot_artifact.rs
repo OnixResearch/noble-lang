@@ -450,16 +450,82 @@ fn selected_template(
     Ok(output.template.clone())
 }
 
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; the harness helper borrows a checked class list and scans it linearly, which is not const-compatible; it asserts only fixture observations."
-)]
+/// The canonical spelling of every class with its occurrences, ordered by
+/// spelling, rendered independently of the host from the template rows.
+fn spelled(template: &noble_wasm::source::OriginTemplate) -> Vec<(String, u32)> {
+    use noble_wasm::source::{
+        OriginBinding, OriginFixedArithmetic, OriginRecipe, OriginStaticOperation,
+    };
+    let row = |spellings: &[String], at: u32| spellings[at as usize].clone();
+    let mut recipes = Vec::new();
+    for recipe in &template.recipes {
+        let spelling = match *recipe {
+            OriginRecipe::Literal(value) => format!("#{value}"),
+            OriginRecipe::Arithmetic { kind, left, right } => {
+                let kind = match kind {
+                    OriginFixedArithmetic::Add => "add",
+                    OriginFixedArithmetic::Sub => "sub",
+                    OriginFixedArithmetic::Mul => "mul",
+                };
+                format!("{kind}({},{})", row(&recipes, left), row(&recipes, right))
+            }
+        };
+        recipes.push(spelling);
+    }
+    let mut statics = Vec::new();
+    for body in &template.statics {
+        let operations = body
+            .operations
+            .iter()
+            .map(|operation| match *operation {
+                OriginStaticOperation::I64(value) => format!("#{value}"),
+                OriginStaticOperation::Add => "add".to_owned(),
+                OriginStaticOperation::Sub => "sub".to_owned(),
+                OriginStaticOperation::Mul => "mul".to_owned(),
+                OriginStaticOperation::Dup => "dup".to_owned(),
+                OriginStaticOperation::Drop => "drop".to_owned(),
+                OriginStaticOperation::Swap => "swap".to_owned(),
+                OriginStaticOperation::Dip => "dip".to_owned(),
+                OriginStaticOperation::Run => "run".to_owned(),
+                OriginStaticOperation::Compose => "compose".to_owned(),
+                OriginStaticOperation::Quote => "quote".to_owned(),
+                OriginStaticOperation::Static(child) => row(&statics, child),
+            })
+            .collect::<Vec<_>>();
+        statics.push(format!(
+            "p{}:{}[{}]",
+            body.input_signature,
+            body.output_signature,
+            operations.join(";")
+        ));
+    }
+    let mut classes = Vec::<String>::new();
+    for class in &template.classes {
+        let spelling = match class.binding {
+            OriginBinding::Named => "p:named".to_owned(),
+            OriginBinding::Static(body) => row(&statics, body),
+            OriginBinding::QuoteRoot(position) => format!("q(r{position})"),
+            OriginBinding::QuoteFixed(recipe) => format!("q({})", row(&recipes, recipe)),
+            OriginBinding::QuoteProgram(child) => format!("q({})", row(&classes, child)),
+            OriginBinding::Compose { left, right } => {
+                format!("c({},{})", row(&classes, left), row(&classes, right))
+            }
+        };
+        classes.push(spelling);
+    }
+    let mut spelled = classes
+        .into_iter()
+        .zip(template.classes.iter().map(|class| class.occurrences))
+        .collect::<Vec<_>>();
+    spelled.sort();
+    spelled
+}
+
 fn class_occurrences(template: &noble_wasm::source::OriginTemplate, binding: &str) -> Option<u32> {
-    template
-        .classes
-        .iter()
-        .find(|class| class.binding == binding)
-        .map(|class| class.occurrences)
+    spelled(template)
+        .into_iter()
+        .find(|(spelling, _)| spelling == binding)
+        .map(|(_, occurrences)| occurrences)
 }
 
 #[test]
@@ -488,13 +554,15 @@ fn selected_target_projection_classifies_fixed_computed_and_root_bindings() -> R
     if varying.captures != [0] || class_occurrences(&varying, "q(r0)") != Some(1) {
         return Err(format!(
             "varying root input lost its ordered capture slot: {:?} {:?}",
-            varying.captures, varying.classes
+            varying.captures,
+            spelled(&varying)
         ));
     }
     if !fixed2.captures.is_empty() || class_occurrences(&fixed2, "q(#2)") != Some(1) {
         return Err(format!(
             "fixed literal 2 became a capture or lost its binding: {:?} {:?}",
-            fixed2.captures, fixed2.classes
+            fixed2.captures,
+            spelled(&fixed2)
         ));
     }
     if class_occurrences(&fixed3, "q(#3)") != Some(1)
@@ -504,20 +572,19 @@ fn selected_target_projection_classifies_fixed_computed_and_root_bindings() -> R
     {
         return Err(format!(
             "checked computed constants lost their exact binding: {:?} {:?}",
-            computed2.classes, computed3.classes
+            spelled(&computed2),
+            spelled(&computed3)
         ));
     }
-    if fixed2.classes == fixed3.classes || computed2.classes == computed3.classes {
+    if spelled(&fixed2) == spelled(&fixed3) || spelled(&computed2) == spelled(&computed3) {
         return Err("fixed or computed 2->3 kept one binding class".into());
     }
     // The root-input projection cannot contain the runtime value: ordered
     // positions are the capture slots and the host binds the exact values.
     for template in [&varying, &fixed2, &computed2] {
         if template.owner != OriginOwner::Absent
-            || template.classes.iter().any(|class| {
-                class.binding.contains(' ')
-                    || class.binding.contains('\n')
-                    || class.binding.contains("builder")
+            || spelled(template).iter().any(|(binding, _)| {
+                binding.contains(' ') || binding.contains('\n') || binding.contains("builder")
             })
         {
             return Err("selected template projection leaked source text or an owner".into());
@@ -545,10 +612,9 @@ fn selected_template_projection_separates_logical_bindings_from_vm_sharing() -> 
         &[Ty::I64, Ty::I64],
     )?)?;
     let bindings = |template: &noble_wasm::source::OriginTemplate| {
-        template
-            .classes
-            .iter()
-            .map(|class| class.binding.clone())
+        spelled(template)
+            .into_iter()
+            .map(|(binding, _)| binding)
             .collect::<Vec<_>>()
     };
     // Reusing one immutable Program cell and re-executing the same binding
@@ -557,10 +623,11 @@ fn selected_template_projection_separates_logical_bindings_from_vm_sharing() -> 
     if bindings(&shared) != bindings(&fresh) || shared.captures != fresh.captures {
         return Err(format!(
             "physical Program sharing changed the logical bindings: {:?} {:?}",
-            shared.classes, fresh.classes
+            spelled(&shared),
+            spelled(&fresh)
         ));
     }
-    if shared.classes == fresh.classes {
+    if spelled(&shared) == spelled(&fresh) {
         return Err("physical Program sharing was not observed distinctly".into());
     }
     // The same root binding quoted twice is one class with two cells; two
@@ -573,7 +640,8 @@ fn selected_template_projection_separates_logical_bindings_from_vm_sharing() -> 
     {
         return Err(format!(
             "logical alias and independent binding classes were conflated: {:?} {:?}",
-            aliased.classes, independent.classes
+            spelled(&aliased),
+            spelled(&independent)
         ));
     }
     if bindings(&aliased) == bindings(&independent) {
@@ -608,7 +676,8 @@ fn selected_template_projection_refuses_absent_forged_truncated_and_stale_metada
         return Err("forged capture slot acquired a verified projection".into());
     }
     let mut forged_binding = origin.clone();
-    forged_binding.outputs[0].template.classes[0].binding = "q(#2)".to_owned();
+    forged_binding.outputs[0].template.classes[0].binding =
+        noble_wasm::source::OriginBinding::QuoteRoot(7);
     if !refused(&forged_binding) {
         return Err("forged binding class acquired a verified projection".into());
     }

@@ -711,13 +711,68 @@ pub struct OriginOutput {
     pub template: OriginTemplate,
 }
 
-/// One verified logical source-binding class of a returned template. `binding`
-/// is the canonical structural spelling of the checked source binding (root
-/// input position, fixed I64 recipe, static quotation index, quotation or
-/// composition of those); it never contains a source span or a NodeId.
-#[derive(Clone, Debug, PartialEq, Eq)]
+/// The checked source binding of one template class, as a structural row. A
+/// child class, a static quotation body or a fixed recipe is named by its
+/// index into the same template's `classes`, `statics` or `recipes`, so equal
+/// bindings have equal rows; no row holds a source span or a NodeId. The host
+/// renders the canonical spelling (`q(r0)`, `c(…,…)`, …) from these rows.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OriginBinding {
+    /// The enclosing named definition: a required lexical recursive owner.
+    Named,
+    /// A static definition quotation body, by content (a `statics` row).
+    Static(u32),
+    /// `quote` of the root input at this position.
+    QuoteRoot(u32),
+    /// `quote` of a fixed I64 recipe (a `recipes` row).
+    QuoteFixed(u32),
+    /// `quote` of a Program class.
+    QuoteProgram(u32),
+    /// `compose` of two Program classes.
+    Compose { left: u32, right: u32 },
+}
+
+/// One operation of a static quotation body; a nested static quotation is
+/// resolved by content to a `statics` row.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OriginStaticOperation {
+    I64(i64),
+    Add,
+    Sub,
+    Mul,
+    Dup,
+    Drop,
+    Swap,
+    Dip,
+    Run,
+    Compose,
+    Quote,
+    Static(u32),
+}
+
+/// A static quotation body by content: its signature pair and operations.
+#[derive(Clone, Debug)]
+pub struct OriginStaticBody {
+    pub input_signature: u32,
+    pub output_signature: u32,
+    pub operations: alloc::vec::Vec<OriginStaticOperation>,
+}
+
+/// A fixed I64 recipe: a literal, or checked arithmetic over two earlier rows.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OriginRecipe {
+    Literal(i64),
+    Arithmetic {
+        kind: OriginFixedArithmetic,
+        left: u32,
+        right: u32,
+    },
+}
+
+/// One verified logical source-binding class of a returned template.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct OriginClass {
-    pub binding: alloc::string::String,
+    pub binding: OriginBinding,
     /// Distinct retained VM cells that currently instantiate this binding. This
     /// count is observation data: physical sharing may change it without
     /// changing the binding, the captures or the target template identity.
@@ -738,13 +793,18 @@ pub enum OriginOwner {
 
 /// Exact checked template projection of one returned Program. Identity-bearing
 /// admission binds it to the actual retained graph and installed code; it is
-/// not a `DefinitionId`.
+/// not a `DefinitionId`. Rows appear in derivation order: every row a class,
+/// body or recipe names comes before it.
 #[derive(Clone, Debug)]
 pub struct OriginTemplate {
     /// Ordered distinct root-input positions a reachable `quote` consumes.
     pub captures: alloc::vec::Vec<u32>,
-    /// Logical binding classes, ordered by canonical binding spelling.
+    /// Distinct logical binding classes.
     pub classes: alloc::vec::Vec<OriginClass>,
+    /// Distinct static quotation bodies the classes name.
+    pub statics: alloc::vec::Vec<OriginStaticBody>,
+    /// Distinct fixed recipe nodes the classes name.
+    pub recipes: alloc::vec::Vec<OriginRecipe>,
     pub owner: OriginOwner,
 }
 
