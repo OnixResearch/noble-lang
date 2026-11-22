@@ -3,10 +3,13 @@ struct Completed {
     /// The selected template's stable code, from either set version.
     template: &'static str,
     wrapper: std::string::String,
-    /// The session prelude that removes the companion operand cell so the
-    /// wrapper's `run` sees exactly the contract's declared input. The v1 path
-    /// parks the frame instead and has none.
+    /// The v2 prelude that replays the copied list argument below the
+    /// injected subject, so the wrapper's `run` sees exactly the contract's
+    /// declared input. The v1 path injects its `I64` argument directly and has
+    /// none.
     prelude: Option<&'static str>,
+    /// The v2 session text that copied the list argument out of its slot.
+    argument_copy: Option<std::string::String>,
     /// The template-set version. `None` keeps the frozen v1 report fields.
     set_version: Option<u32>,
     companion: crate::core::companions::CertifiedSlot,
@@ -37,7 +40,7 @@ pub(in crate::core::companions) fn op_invoke(
     // its own message, so v1 behaviour stays identical.
     if let Ok(templates) = driver.core.evidence_guard_templates_v2(companion.evidence) {
         if templates.contains(&noble_contracts::companion::GuardTemplateV2::NonEmptyList) {
-            return invoke_list(driver, args, companion, program);
+            return invoke_list(driver, args, index, companion, program);
         }
     }
     let templates = attempt!(driver
@@ -71,24 +74,37 @@ pub(in crate::core::companions) fn op_invoke(
         template: template.code(),
         wrapper,
         prelude: None,
+        argument_copy: None,
         set_version: None,
         companion,
         has_changed_identity,
     })
 }
 
-/// The v2 `NonEmptyList` invocation path.
+/// The prelude that runs the injected argument copy below the subject.
+const LIST_PRELUDE: &str = "[ run ] dip";
+
+/// The copy text nests one `[ … ] dip swap` per cell above the list slot;
+/// half of the frontend's 64-level nesting bound leaves room for the
+/// session's own frames, and a deeper slot is refused before any execution.
+const MAX_CELLS_ABOVE_LIST: usize = 32;
+
+/// The v2 `NonEmptyList` invocation path, at parity with the v1 path.
 ///
-/// The argument is a typed `List A` taken from a live session slot, never a CLI
-/// literal: it cannot be reconstructed as an `I64` injection. The subject's
-/// declared input is exactly that one value, and `run` types only when the
-/// whole stack matches it, so the session stack must be the argument with the
-/// companion operand cell directly above it (`[list, Certified]`). The prelude
-/// `swap drop` removes that companion cell from the operand stack; the wrapper
-/// text itself is then exactly the fixed live text and consumes the argument.
+/// The argument is the typed `List A` in a live session slot, never a CLI
+/// literal. The guest exposes no cell-copy injection, so the slot's value is
+/// copied into a Program cell by `dup quote` (K-PROG-07: `quote` captures only
+/// data, immutably), moved to the top through one `dip`/`swap` per cell above
+/// the slot. Then, exactly as on the v1 path, the whole frame is parked, the
+/// copy and the retained subject are injected into a fresh frame, the prelude
+/// replays the copy below the subject and the fixed live wrapper text runs on
+/// `[list, Program]`. Restoring the frame preserves every session cell,
+/// including any tail below the argument and the companion itself, whose
+/// identity is re-checked; the copy cell is dropped afterwards on every path.
 fn invoke_list(
     driver: &mut crate::core::companions::Driver,
     args: &[&str],
+    index: usize,
     companion: crate::core::companions::CertifiedSlot,
     program: crate::core::companions::ProgramSlot,
 ) -> crate::core::companions::Attempt<crate::workflow::encoding::Json> {
@@ -96,21 +112,11 @@ fn invoke_list(
         args[1],
         driver.stack.len()
     ));
-    if driver.stack.len() != 2 || list_slot != 0 {
-        return Err(crate::core::companions::Refused::new(
-            "refused",
-            "stack-type",
-            std::format!(
-                "the list argument must be the bottom of a two-slot session stack, found slot {list_slot} of {}",
-                driver.stack.len()
-            ),
-        ));
-    }
-    let list_ty = attempt!(driver.stack.first().cloned().ok_or_else(|| {
+    let list_ty = attempt!(driver.stack.get(list_slot).cloned().ok_or_else(|| {
         crate::core::companions::Refused::new(
             "malformed",
-            "stack-type",
-            std::string::String::from("the session stack has no list slot"),
+            "stack-index",
+            std::format!("stack has no slot {list_slot}"),
         )
     }));
     let expected = attempt!(driver
@@ -126,16 +132,42 @@ fn invoke_list(
             ),
         ));
     }
+    let above = driver
+        .stack
+        .len()
+        .saturating_sub(list_slot.saturating_add(1));
+    if above > MAX_CELLS_ABOVE_LIST {
+        return Err(crate::core::companions::Refused::new(
+            "refused",
+            "stack-depth",
+            std::format!(
+                "the list slot is {above} cells below the stack top; at most {MAX_CELLS_ABOVE_LIST} are supported"
+            ),
+        ));
+    }
+    let copy = copy_to_top(above);
+    let input = driver.stack.clone();
+    let copied = attempt!(driver.execute(copy.as_bytes(), &input, &[]));
+    if copied
+        .member("outcome")
+        .and_then(crate::core::report::Value::text)
+        != Some("normal")
+    {
+        return Err(crate::core::companions::Refused::new(
+            "refused",
+            "argument-copy",
+            std::string::String::from("the list argument could not be copied out of its slot"),
+        ));
+    }
     let wrapper = driver
         .core
         .invocation_wrapper_v2(noble_contracts::companion::GuardTemplateV2::NonEmptyList);
-    const PRELUDE: &str = "swap drop";
-    let source = std::format!("{PRELUDE} {wrapper} run");
-    let report = attempt!(driver.execute(
-        source.as_bytes(),
-        &[list_ty, noble_kernel::types::Ty::Certified, program.ty,],
-        &[crate::core::companions::reporting::inputs::program_injection(companion.subject)],
-    ));
+    let guarded = run_list_guard(driver, &wrapper, &program);
+    // The copy cell is the restored top slot; it is released on every path,
+    // after the frame (or its refusal) is settled.
+    let released = release_copy(driver);
+    let report = attempt!(guarded);
+    attempt!(released);
     let outcome = report
         .member("outcome")
         .and_then(crate::core::report::Value::text)
@@ -147,18 +179,70 @@ fn invoke_list(
             std::format!("the v2 guard invocation did not return normally: {outcome}"),
         ));
     }
-    // The frame injected the observed subject handle itself, so the wrapper
-    // never reconstructs or replaces code.
-    let has_changed_identity = program.handle != companion.subject;
+    let again = attempt!(driver.certified_at(index));
+    let has_changed_identity = again.subject != companion.subject;
     render(&Completed {
         report,
         template: noble_contracts::companion::GuardTemplateV2::NonEmptyList.code(),
         wrapper,
-        prelude: Some(PRELUDE),
+        prelude: Some(LIST_PRELUDE),
+        argument_copy: Some(copy),
         set_version: Some(noble_contracts::companion::GUARD_SET_VERSION_V2),
         companion,
         has_changed_identity,
     })
+}
+
+/// `dup quote` at the list slot, carried to the top past `above` cells.
+fn copy_to_top(above: usize) -> std::string::String {
+    let mut source = std::string::String::from("dup quote");
+    let mut level = 0usize;
+    while level < above {
+        source = std::format!("[ {source} ] dip swap");
+        level = level.saturating_add(1);
+    }
+    source
+}
+
+/// Park the session, run the guard on `[copy, subject]` and restore the frame.
+/// The copy is the session's top Program slot; the subject is the companion's
+/// retained handle, never a reconstruction.
+fn run_list_guard(
+    driver: &mut crate::core::companions::Driver,
+    wrapper: &str,
+    program: &crate::core::companions::ProgramSlot,
+) -> crate::core::companions::Attempt<crate::core::report::Value> {
+    let top = driver.stack.len().saturating_sub(1);
+    let (copy_ty, copy) = attempt!(driver.program_slot(top));
+    let source = std::format!("{LIST_PRELUDE} {wrapper} run");
+    let parked = attempt!(driver.park());
+    let outcome = driver.execute(
+        source.as_bytes(),
+        &[copy_ty, program.ty.clone()],
+        &[
+            crate::core::companions::reporting::inputs::program_injection(copy),
+            crate::core::companions::reporting::inputs::program_injection(program.handle),
+        ],
+    );
+    driver.restore_frame(parked, outcome)
+}
+
+/// Drop the argument copy from the top of the restored session stack.
+fn release_copy(
+    driver: &mut crate::core::companions::Driver,
+) -> crate::core::companions::Attempt<()> {
+    let input = driver.stack.clone();
+    let report = attempt!(driver.execute(b"drop", &input, &[]));
+    if report
+        .member("outcome")
+        .and_then(crate::core::report::Value::text)
+        != Some("normal")
+    {
+        return Err(crate::core::companions::Refused::script(
+            "could not release the list argument copy",
+        ));
+    }
+    Ok(())
 }
 
 #[expect(
@@ -225,6 +309,12 @@ fn render(
         fields.push((
             "invocation_prelude",
             crate::workflow::encoding::string(prelude),
+        ));
+    }
+    if let Some(copy) = &invocation.argument_copy {
+        fields.push((
+            "invocation_argument_copy",
+            crate::workflow::encoding::string(copy),
         ));
     }
     if let Some(version) = invocation.set_version {
