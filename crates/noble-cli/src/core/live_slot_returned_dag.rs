@@ -1755,6 +1755,10 @@ impl Plan<'_> {
     /// Append the code of one template node: a composition is its left code
     /// followed by its right code, a quoted I64 pushes that value, a quoted
     /// Program pushes that Program, and a static Program is its checked body.
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-maintainers; the renderer appends to the caller's growing subject text, which requires String growth rather than a &str."
+    )]
     fn subject_node(&self, node: &Value, depth: usize, out: &mut String) -> Result<(), String> {
         if depth > 32 {
             return Err(denied("returned template is too deep to render"));
@@ -1795,6 +1799,10 @@ impl Plan<'_> {
 }
 
 /// Append the words of one checked static body.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; the renderer appends to the caller's growing subject text, which requires String growth rather than a &str."
+)]
 fn subject_body(body: &Value, depth: usize, out: &mut String) -> Result<(), String> {
     if depth > 32 {
         return Err(denied("returned template is too deep to render"));
