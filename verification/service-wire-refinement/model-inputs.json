@@ -1,13 +1,13 @@
 {
   "schema": "noble-service-wire-refinement-inputs/v2",
   "extraction_receipt": "verification/m4/implementation.json.gz",
-  "extraction_receipt_sha256": "a38385663de19739cda2b81943ef3a5e520036db6e7de136f07538774956d383",
+  "extraction_receipt_sha256": "2a70b1332697f31f991254726078a04f3ab58cddedfd0b84cf4a6bb1ef763218",
   "extraction_lock": "verification/m4/extraction-lock.json.gz",
-  "extraction_lock_sha256": "99cd4d63ffd8ada37dccc2af8fe697efd750680d092b82b8adf0c00054f0b18d",
+  "extraction_lock_sha256": "5ed09c74f73bc08703fe06c740663c29580fa86540636b1e91e866b698e239c2",
   "generated_inputs": {
     "proofs/m3/NobleKernel.lean": "bd411e329236cb36c38920ca57b4c810a40a30a71a7954f2529225ef0966d9ec",
-    "proofs/m3/NobleKernel/Types.lean": "efeb1adc8c8e3988fa63a8c81136bbe726eba63cc36e8a39a43f7021fa016612",
-    "proofs/m3/NobleKernel/Funs.lean": "b455d0ef470788b94955e272fcf85ba187543fab2030db890f8b8e4346ed1400"
+    "proofs/m3/NobleKernel/Types.lean": "405faa8b512ef78ae210c46f260f73ef6cfbba8f1c26f8131ea1c2fca699f41e",
+    "proofs/m3/NobleKernel/Funs.lean": "a31dddcb77a46bc3fb7423108df1d4d4a0e5e78b6be898138b0c00a4654e3835"
   },
   "handwritten_inputs": {
     "proofs/m3/NobleKernel/TypesExternal.lean": "816e8689319559c016245838f8a6524ccbb660de9e85a5b8a87b4ebf6826ee6f",
