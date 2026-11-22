@@ -9,6 +9,20 @@
       "changed": "the 8-leaf left-deep and right-deep variants now expect the refusal at compose 5 under the reviewed 32-node/4096-byte summary bound, and 4-leaf balanced, left-deep and right-deep variants (10, with 6 releases before the root) are added so shape independence is observed within the bound; deep chains release every leaf and intermediate except the root, as the balanced tree does",
       "reason": "The registered 8-leaf deep chains cannot execute under the host observation bound the live-slot profile reviewed (the receipt records the refusal at compose 5 and the session terminating), and the earlier deep-chain lane released 7 owners where the design names every leaf and intermediate (14). The bound is a live-slot observation limit unrelated to ownership; raising it would only move the cliff.",
       "decision": "OWNER DECISION 2026-11-22 (decision 35, delegated: \"do what is most correct/best long term\"): amend OWN-CASE-03 rather than raise the bound; keep the 8-leaf balanced tree, record the 8-leaf deep chains' refusal, add 4-leaf variants of all three shapes."
+    },
+    {
+      "date": "2026-11-22",
+      "case": "OWN-CASE-03",
+      "changed": "the 8-leaf left-deep and right-deep refusals and the 40-leaf control now expect an exact release (`exit_release` exact) with the session retained, after which every owner saved before the refusal is released (12 for the 8-leaf chains, 44 for the control) and a new root executes",
+      "reason": "The summary-bound refusal happens while saving the root's output, after the guest settled. With LREF-EXIT-01 implemented, the host's release of that root is provably exact, so owner decision 6 continues the session instead of terminating it. Releasing every earlier owner and running one more root makes a leaked owner or a poisoned session observable. The batch-4 promotion observed the earlier termination, so its evidence is withdrawn until the amended case runs.",
+      "decision": "INTEGRATOR DECISION 2026-11-22 (decision 39, under the owner's case-design delegation of decisions 32-35, \"do what is most correct/best long term\"; owner veto at the push): implement owner decision 6 as LREF-EXIT-01 specifies and amend the cases whose observations change with it."
+    },
+    {
+      "date": "2026-11-22",
+      "case": "OWN-CASE-05",
+      "changed": "the frame-pin release is now registered as observed (2 entered, 2 released, 0 active, 0 released on abort for the CLI root; 2 released on abort for the in-process root aborted inside both frames), the exit release as not exact for the stated reason, and no retained owner reaching the failed root's cell; the withholding reason is removed",
+      "reason": "The case was withheld (review N-01) because the host neither released nor counted frame pins on an abnormal exit. LREF-EXIT-01 now releases every frame pin and the map pin from the host ledger, exactly once, and the reply reports how many the host released itself. The session still terminates on this mechanism, now for a stated and observable reason: the guest's recorded failure is terminal for the shared guest state.",
+      "decision": "INTEGRATOR DECISION 2026-11-22 (decision 39, under the owner's case-design delegation of decisions 32-35, \"do what is most correct/best long term\"; owner veto at the push): implement owner decision 6 as LREF-EXIT-01 specifies and amend the cases whose observations change with it."
     }
   ],
   "cases": [
@@ -172,12 +186,22 @@
           "left-deep-8": {
             "refused_at_compose": 5,
             "diagnostic": "Error: checked captured value exceeds host observation bound",
-            "session_state": "terminated-after-guest-failure"
+            "exit_release": {
+              "exact": true
+            },
+            "session_state": "retained",
+            "released_after_refusal": 12,
+            "root_after_refusal": "executed"
           },
           "right-deep-8": {
             "refused_at_compose": 5,
             "diagnostic": "Error: checked captured value exceeds host observation bound",
-            "session_state": "terminated-after-guest-failure"
+            "exit_release": {
+              "exact": true
+            },
+            "session_state": "retained",
+            "released_after_refusal": 12,
+            "root_after_refusal": "executed"
           },
           "balanced-4": {
             "result_before": 10,
@@ -200,45 +224,22 @@
           "leaves": 40,
           "refused_at_compose": 5,
           "diagnostic": "Error: checked captured value exceeds host observation bound",
-          "session_state": "terminated-after-guest-failure"
+          "exit_release": {
+            "exact": true
+          },
+          "session_state": "retained",
+          "released_after_refusal": 44,
+          "root_after_refusal": "executed"
         },
         "reclamation": "every intermediate is reclaimed only when unreferenced; no leaf is reclaimed while the root lives (not-directly-observable: the runtime exposes no live-cell count)"
       },
       "state": {
         "implementation": "implemented",
-        "execution": "passed",
+        "execution": "not-run",
         "proof": "open",
-        "trust": "explicit"
+        "trust": "unassessed"
       },
-      "evidence": [
-        {
-          "kind": "test",
-          "subject": "OWN-CASE-03",
-          "claim": "Executed against captured-I64 leaves (`quote [ + ] compose`) as amended by owner decision 35: the balanced 8-leaf tree returns 36 before and after all 14 owners other than the root are released; the 4-leaf balanced, left-deep and right-deep trees each return 10 before and after their 6 non-root owners are released; and the left-deep and right-deep 8-leaf chains are refused at compose 5 by the anonymous summary's 32-node per-child bound (`checked captured value exceeds host observation bound`, session terminated-after-guest-failure), as registered. Every released owner is refused. Shape independence is observed for 4 leaves; for 8 leaves only the balanced tree fits the bound.",
-          "revision": "0.1.0-draft.5",
-          "result": "passed",
-          "source_revision": "sha256:50617810385cf5c624fc183bf89faeff59b8ea12de1f09dfbacb69f8560d6581",
-          "configuration": {
-            "profile": "Ownership-Lifetime-Design",
-            "receipt": "../../verification/own-cases/runs/20261122-b4/acceptance.json",
-            "receipt_sha256": "1a5abea4bb710a8fed168ad0a25c781bbd17993fd6bdd0409d1fd1257bad1319",
-            "gate": "../../verification/own-cases/gate.mjs",
-            "gate_sha256": "65c49dc8a3f85a800c4cb46124adca926261be9d3de1d2c70a912c63043e5667",
-            "tested_commit": "88e90add9f6446dddfc2040bd0cafc54e0c61a29",
-            "binary_sha256": "ca120a2e7334064a5bdd3efe17a396dc59a54e33b093669943734f2eec8aaeb5",
-            "binary_sha256_after": "ca120a2e7334064a5bdd3efe17a396dc59a54e33b093669943734f2eec8aaeb5",
-            "source_revision": "sha256:50617810385cf5c624fc183bf89faeff59b8ea12de1f09dfbacb69f8560d6581",
-            "projection_sha256": "946d97ab3c86c2049e31456fc9768cfdf2053cf2ee59f245bfad308cf9f79583",
-            "case_id": "OWN-CASE-03",
-            "lane": "crates/noble-cli/tests/live_slot_ownership_cases.mjs"
-          },
-          "assumptions": [
-            "Executed through `noble live slot` on the binary built from the recorded clean commit.",
-            "The registered 8-leaf deep-chain refusal is a representation bound on the anonymous capture summary, not a reclamation failure; the 40-leaf control is refused at the same compose 5.",
-            "Reclamation is observable only through owner refusal; the runtime exposes no live-cell count."
-          ]
-        }
-      ]
+      "evidence": []
     },
     {
       "id": "OWN-CASE-04",
@@ -343,23 +344,38 @@
         "root": "a root that saves a Program, then traps before return",
         "mechanism": "a policy-denied effect inside a dispatched frame after the Program is produced (the target source `quote \"x\" test.emit drop` captures an I64 Program and then has its `test.emit` grant revoked before the invocation)",
         "unavailable_mechanism": "`test.abort` is not installable in this profile (the kernel bootstrap table has no abort row for declared-module profiles); its refusal is recorded as a frontend-defect witness, tracked by the integrator",
-        "owner_decision": "OWNER DECISION 2026-11-20 (decision 6): continue the host session when the pin ledger proves an exact release; poison otherwise. This runtime selects the poison branch because the host does not release or count backend frame pins on an abnormal exit.",
-        "withheld_reason": "independent review N-01: on the abnormal path the host forgets the failed root's frame records and neither releases nor counts the backend frame pins, so \"frame pins are released exactly once\" is not observable; real per-frame release accounting belongs to `live-reference-lifetimes` (decision 6, r[LREF-EXIT-01])"
+        "owner_decision": "OWNER DECISION 2026-11-20 (decision 6): continue the host session when the pin ledger proves an exact release; poison otherwise. LREF-EXIT-01 releases every frame pin and the map pin from the host ledger, exactly once; a recorded guest failure is terminal for the shared guest state, so this root takes the poison branch."
       },
       "expected": {
         "stage": "live-slot-root",
         "outcome": "abnormal-exit-without-a-saved-owner",
         "saved_owner_tokens_issued": 0,
-        "frame_pins_released": "not-directly-observable: the host abandons the failed root's frame pins without releasing or counting them (live-reference-lifetimes, r[LREF-EXIT-01])",
-        "frame_pins_reported": "host entry/exit counts, not a release measurement: the CLI root unwinds its frames on the policy-denied effect (entered 2, released 2, active 0); only the in-process abandoned-pin abort reports the pins it still held (entered 2, released 0, active 2)",
+        "saved_owners_before_root": 0,
+        "retained_owner_reaches_failed_root_cell": false,
+        "frame_pins_released": "exactly once through the host ledger: the guest's unwinding releases both frame pins through `leaveFrame`, and the host's abnormal-exit release finds none left",
+        "frame_pins": {
+          "entered": 2,
+          "released": 2,
+          "active": 0,
+          "released_on_abort": 0
+        },
+        "abandoned_frame_pins": {
+          "entered": 2,
+          "released": 2,
+          "active": 0,
+          "released_on_abort": 2
+        },
+        "exit_release": {
+          "exact": false,
+          "reason": "the guest recorded a failure, which is terminal for the shared guest state"
+        },
         "guest_instance": "terminated-after-guest-failure",
         "session_state": {
           "observed_rule": "terminated-after-guest-failure",
           "owner_decision_6": "OWNER DECISION 2026-11-20 (decision 6): continue the host session when the pin ledger proves an exact release; poison otherwise",
           "branch": "poison",
-          "reason": "the host ledger does not prove an exact release: it neither releases nor counts the backend frame pins on an abnormal exit"
-        },
-        "retained_owner_reaches_failed_root_cell": "not-directly-observable: no saved owner is issued for the failed root, but reachability of its cells is not exposed"
+          "reason": "the guest recorded a failure, which is terminal for the shared guest state: its operand roots, including the produced Program, can never be released, so the release is not provably exact"
+        }
       },
       "state": {
         "implementation": "absent",

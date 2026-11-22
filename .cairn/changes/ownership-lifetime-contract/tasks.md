@@ -145,6 +145,12 @@
   amendment (decision 28) accepted it. The amendment changed the projection digest and the gate,
   so every promoted record now cites this run, as the batch-2 move did. The task stays open for
   OWN-CASE-05 (observable frame-pin release, LREF-EXIT-01) and the round-1 commit identity.
+  Progress 2026-11-22 (integrator decision 39): LREF-EXIT-01 now releases every frame pin and the
+  map pin from the host ledger and reports `released_on_abort`, so OWN-CASE-05's frame-pin release
+  is observable; the case is amended (no longer withheld) and stays on the poison branch, because
+  its guest's recorded failure is terminal for the shared guest state. OWN-CASE-03's save-time
+  refusals now keep the session (an exact release), so its deep-chain and control expectations are
+  amended and its batch-4 evidence is withdrawn until the gate re-runs.
 - [x] [serial] If a borrow profile is selected, specify syntax separately, implement the checker escape test and obtain checker-refinement evidence for OWN-PO-2. r[OWN-BORROW-01] OWNER DECISION 2026-11-20: no borrow profile is selected, so the condition does not hold and the task closes with that recorded outcome (owner rule: a recorded negative outcome completes a conditional task). Noble keeps only the WIT `own`/`borrow` adapter forms; it has no `borrow` word. OWN-CASE-04's borrow variants are therefore inapplicable, OWN-PO-2 is not applicable, and no checker escape test or refinement evidence is claimed. Selecting a borrow profile later needs a new change carrying its syntax, escape test and OWN-PO-2 evidence.
 - [ ] [serial] Mechanize OWN-PO-1/3 in the abstract model, then obtain separate lowering, runtime and host-ledger correspondence for OWN-PO-4..7. r[OWN-EV-01]
   Progress (2026-10-30): `proofs/foundation/NobleFoundation/Effects.lean` proved OWN-PO-1 for

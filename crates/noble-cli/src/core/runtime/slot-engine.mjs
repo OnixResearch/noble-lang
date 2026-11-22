@@ -10,6 +10,10 @@ const TRACE_ROWS = 4096;
 // Per-root frame-pin rows retained for the `trace` operation. Every root enters its own frame, so
 // this ring cannot be charged against request trace rows; each root's invoke reply is exact.
 const FRAME_PIN_ROWS = 256;
+// Guest runtime words the host reads, never writes, after an abnormal root exit (live-stack.wat,
+// live-borrows.wat): the dispatch-in-progress flag and the current borrowed-frame pointer.
+const GUEST_DISPATCH_FLAG = 57352;
+const GUEST_CURRENT_FRAME = 1050624;
 
 function slotDecimal(value, label) {
   if (typeof value !== 'string' || !/^(0|[1-9][0-9]{0,19})$/.test(value)
@@ -2242,13 +2246,19 @@ class SlotEngine {
     const runtime = module.instance.exports;
     const createdOwners = [];
     let replayToken = null;
+    // A guest call that throws (a trap, or a host import's error rethrown through the guest) may
+    // stop the backend between two of its own updates, without any flag recording it.
+    let guestFaulted = false;
+    const guest = call => {
+      try { return call(); } catch (fault) { guestFaulted = true; throw fault; }
+    };
     try {
       for (const ref of request.refs) this.registry.bindSelectedRef(root,
         ref.position, ref.ordinal, ref.slot);
-      const begin = runtime.begin_live(...SLOT_LIMITS);
+      const begin = guest(() => runtime.begin_live(...SLOT_LIMITS));
       if (begin !== 0) throw Error(`live begin returned status ${begin}`);
       for (const input of request.inputs) {
-        const status = this.inject(runtime, input);
+        const status = guest(() => this.inject(runtime, input));
         if (status !== 0) throw Error(`host root injection returned status ${status}`);
       }
       const originInputs = module.selected_origin ? request.inputs.map((input, index) => {
@@ -2259,10 +2269,10 @@ class SlotEngine {
         return { kind: 'i64', value: runtime.stack_value(index).toString() };
       }) : null;
       for (const ref of request.refs) {
-        const status = runtime.bind_live_ref(ref.position, ref.ordinal);
+        const status = guest(() => runtime.bind_live_ref(ref.position, ref.ordinal));
         if (status !== 0) throw Error(`checked root ref binding returned status ${status}`);
       }
-      const status = runtime.invoke_live();
+      const status = guest(() => runtime.invoke_live());
       const trace = this.registry.trace(root);
       if (this.poisoned || status !== 0 || this.traceFailure) {
         throw Error(this.traceFailure
@@ -2284,7 +2294,9 @@ class SlotEngine {
           stack.push(saved);
         } else stack.push({ kind, value: runtime.stack_value(index).toString() });
       }
-      if (runtime.clear_stack() !== 0) throw Error('backend could not release actual operand roots');
+      if (guest(() => runtime.clear_stack()) !== 0) {
+        throw Error('backend could not release actual operand roots');
+      }
       const rootEpoch = this.registry.rootEpoch(root).toString();
       if (request.record === true) {
         if (trace.some(item => item.operation === 'effect' && item.outcome !== 'performed')
@@ -2292,18 +2304,18 @@ class SlotEngine {
           throw Error('frozen replay requires completed effect responses and scalar outputs');
         }
         if (this.nextReplay === Number.MAX_SAFE_INTEGER
-          || runtime.retain_target(module.handle) !== 0) {
+          || guest(() => runtime.retain_target(module.handle)) !== 0) {
           throw Error('cannot retain actual frozen caller Program owner');
         }
         let snapshot;
         try { snapshot = this.registry.freezeRoot(root, request.inputs, request.refs); }
         catch (error) {
-          if (runtime.release_target(module.handle) !== 0) this.poisoned = true;
+          if (guest(() => runtime.release_target(module.handle)) !== 0) this.poisoned = true;
           throw error;
         }
         const slots = this.registry.frozenIdentity(root);
         if (slots.some(row => row.definitionId === null)) {
-          if (runtime.release_target(module.handle) !== 0) this.poisoned = true;
+          if (guest(() => runtime.release_target(module.handle)) !== 0) this.poisoned = true;
           this.registry.releaseFrozen(snapshot);
           throw Error('frozen replay requires an independently checked selected DefinitionId');
         }
@@ -2330,23 +2342,45 @@ class SlotEngine {
         protected_operations: this.replaying ? 0 : trace.filter(item =>
           item.operation === 'effect' && item.outcome === 'performed').length });
     } catch (error) {
+      // r[LREF-EXIT-01], decision 6: release everything the failed root holds, from the host's own
+      // ledger and without resuming the guest, then continue the session only when that release is
+      // provably exact, and poison it otherwise. Performed effects are never rolled back.
+      let unproven = null;
       if (replayToken !== null) {
         try { this.releaseReplay(replayToken); }
-        catch (retired) { error = retired; }
+        catch (retired) { error = retired; unproven = 'the frozen replay owner release failed'; }
       }
       for (const owner of createdOwners) {
-        try { this.releaseProgram(owner); } catch (retired) { error = retired; }
+        try { this.releaseProgram(owner); }
+        catch (retired) { error = retired; unproven = 'a provisional saved owner release failed'; }
       }
       let trace = [];
       try { trace = this.registry.trace(root); }
-      catch (inspection) { error = inspection; }
+      catch (inspection) { error = inspection; unproven = 'the root trace was unavailable'; }
       let traceSize = { bytes: 0, rows: 0 };
       try { traceSize = this.registry.traceSize(root); }
-      catch (inspection) { error = inspection; }
+      catch (inspection) { error = inspection; unproven = 'the root trace was unavailable'; }
+      // The failed root's operand roots are released through the backend only when the guest itself
+      // settled; a failed or interrupted guest is never entered again.
+      unproven ??= this.unsettledGuest(guestFaulted);
+      if (unproven === null) {
+        try {
+          if (runtime.clear_stack() !== 0) unproven = 'the backend refused to release the operand roots';
+        } catch (release) { error = release; unproven = 'the operand-root release trapped'; }
+      }
       let framePins = null;
-      try { framePins = this.registry.abortRoot(root); } catch (retired) { error = retired; }
+      try { framePins = this.registry.abortRoot(root); }
+      catch (retired) { error = retired; unproven = 'the frame-pin ledger did not release'; }
       this.active = null;
-      this.poisoned = true;
+      if (unproven === null && framePins.released_on_abort !== 0) {
+        unproven = 'frame pins released on abort keep their backend references';
+      }
+      if (unproven === null && this.poisoned) unproven = 'the session was poisoned during the root';
+      if (unproven === null) {
+        try { for (const candidate of this.modules.values()) this.sweepRetirement(candidate); }
+        catch (retired) { error = retired; unproven = 'the retirement sweep failed'; }
+      }
+      if (unproven !== null) this.poisoned = true;
       this.appendRootTrace(trace, traceSize);
       // Never fabricate a zero row for a failed ledger: record that the counts are unavailable.
       this.retainFramePins(framePins === null
@@ -2359,8 +2393,30 @@ class SlotEngine {
         guest_requests: trace.length,
         protected_operations: this.replaying ? 0 : trace.filter(item =>
           item.operation === 'effect' && item.outcome === 'performed').length,
-        session_state: 'terminated-after-guest-failure' });
+        exit_release: unproven === null ? { exact: true } : { exact: false, reason: unproven },
+        session_state: unproven === null ? 'retained' : 'terminated-after-guest-failure' });
     }
+  }
+
+  // Decision 6: the backend holds nothing for a failed root only when the guest settled. No trap
+  // interrupted a guest call, no guest failure was recorded (failure is terminal for the shared
+  // guest state, so its operand and continuation roots can never be released), and no
+  // continuation, reflection walk, dispatch or borrowed frame is still open. Returns why the
+  // release cannot be proved exact, or null. Reads the host-owned globals and memory only.
+  unsettledGuest(faulted) {
+    if (faulted) return 'a guest call was interrupted';
+    if (this.shared.failure.value !== 0) {
+      return 'the guest recorded a failure, which is terminal for the shared guest state';
+    }
+    const word = address => new DataView(this.memory.buffer).getUint32(address, true);
+    if (this.shared.cp.value !== 0 || this.shared.rp.value !== 0
+      || word(GUEST_DISPATCH_FLAG) !== 0) {
+      return 'the guest stopped with continuation, reflection or dispatch work open';
+    }
+    if (word(GUEST_CURRENT_FRAME) !== 0 || this.shared.live_frame.value !== 0) {
+      return 'the guest stopped inside a borrowed frame';
+    }
+    return null;
   }
 
   request(request, binary) {
