@@ -6,7 +6,7 @@
 
 ## Phase 2: Future implementation and evidence gates (open; not undertaken here)
 
-- [ ] [serial] Implement abnormal-exit pin release with exact ledger accounting for a continuing host, and execute LREF-CASE-01. r[LREF-EXIT-01]
+- [x] [serial] Implement abnormal-exit pin release with exact ledger accounting for a continuing host, and execute LREF-CASE-01. r[LREF-EXIT-01]
   Progress 2026-11-22 (implemented; integrator decision 39, owner decision 6):
   - **Release.** `SlotRegistry.abortRoot` releases every frame pin the failed root still holds from
     the host ledger, innermost first and each exactly once, then the root's map pin; the root's
@@ -26,6 +26,13 @@
     quota variant (poison, with no pin left), and aborts an in-process root inside both frames
     (2 pins released on abort). Host abort and worker cancellation are not executable through the
     shipped CLI. The receipt tool is `verification/abnormal-exit/receipt.mjs`.
+  Ticked 2026-11-22 (Cairn batch 5). [`verification/abnormal-exit/receipt.json`](../../../verification/abnormal-exit/receipt.json)
+  (sha256 `70d03b18…`, clean source `8b62827a`): the fixed CLI `7f32e4e1…` passes the lane, and the
+  CLI `38d1e33d…` declared built from the commit before the change (`b4c63a1e`) fails at the
+  save-time root, terminating a session whose release was exact. The OWN gate run
+  `verification/own-cases/runs/20261122-b5` observed OWN-CASE-03/05 as amended. The review is the
+  integrator self-review `review-integrator-2026-11-22-lref-exit.md` under owner decision 40 (owner
+  veto at the push). No LREF case is registered or promoted; LREF-CASE-02, 04, 05 and 06 stay open.
 - [x] [serial] Implement package-level version retention, resolve #3 `OWN-CASE-06`, and execute LREF-CASE-03 through slot replacement. r[LREF-PKG-01]
   Ticked 2026-11-09. `crates/noble-cli/tests/live_slot_package_retention.mjs` runs LREF-CASE-03,
   hosted by a third test in `live_slot_direct_quote.rs`.

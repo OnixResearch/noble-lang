@@ -1,0 +1,1 @@
+{"variant":"save-time","observation":"failed-root","outcome":"execution-failed","diagnostic":"Error: checked captured value exceeds host observation bound","epoch":null,"request_trace":[["dispatch","allowed"],["effect","performed"]],"frame_pins":{"active":0,"entered":2,"released":2},"exit_release":null,"session_state":"terminated-after-guest-failure","retire_code_spans":[]}

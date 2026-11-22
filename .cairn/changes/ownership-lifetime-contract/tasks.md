@@ -151,6 +151,14 @@
   its guest's recorded failure is terminal for the shared guest state. OWN-CASE-03's save-time
   refusals now keep the session (an exact release), so its deep-chain and control expectations are
   amended and its batch-4 evidence is withdrawn until the gate re-runs.
+  Executed 2026-11-22 (Cairn batch 5): the OWN gate ran at `8b62827a`
+  ([`runs/20261122-b5`](../../../verification/own-cases/runs/20261122-b5/acceptance.json), sha256
+  `c9bbeb56…`, source revision `sha256:897a5ebf…`, binary `7f32e4e1…` before and after, projection
+  `3130b4c6…`): verdict `all-passed`, OWN-CASE-01..07 promotable. OWN-CASE-05 is promoted and
+  OWN-CASE-03 re-promoted to implemented/passed (proof open); every other promoted record moved to
+  this run because the amendments changed the projection and the gate. The task stays open only
+  for the owner's decision on review finding F-05 (14 round-1 commits authored as `brittonr`,
+  already on `main`, so they cannot be re-authored without rewriting published history).
 - [x] [serial] If a borrow profile is selected, specify syntax separately, implement the checker escape test and obtain checker-refinement evidence for OWN-PO-2. r[OWN-BORROW-01] OWNER DECISION 2026-11-20: no borrow profile is selected, so the condition does not hold and the task closes with that recorded outcome (owner rule: a recorded negative outcome completes a conditional task). Noble keeps only the WIT `own`/`borrow` adapter forms; it has no `borrow` word. OWN-CASE-04's borrow variants are therefore inapplicable, OWN-PO-2 is not applicable, and no checker escape test or refinement evidence is claimed. Selecting a borrow profile later needs a new change carrying its syntax, escape test and OWN-PO-2 evidence.
 - [ ] [serial] Mechanize OWN-PO-1/3 in the abstract model, then obtain separate lowering, runtime and host-ledger correspondence for OWN-PO-4..7. r[OWN-EV-01]
   Progress (2026-10-30): `proofs/foundation/NobleFoundation/Effects.lean` proved OWN-PO-1 for
