@@ -42,6 +42,9 @@ export const declaredAllowlist = {
     'input.transitive_variant.root_A_entry.borrow_pass_through'],
   'LSLOT-03': ['input.harness', 'input.variant_protocol', 'expected.stage'],
   'LSLOT-04': ['input.harness', 'expected.stage'],
+  'LSLOT-05': ['input.harness', 'input.target.program_value_id', 'input.target.definition_id',
+    'input.target.context', 'input.target.claim', 'input.target.assumptions',
+    'input.target.artifact', 'expected.stage'],
   'LSLOT-06': ['input.harness', 'input.issued_ref', 'expected.stage'],
   'LSLOT-07': ['input.harness', 'input.old_target', 'expected.stage'],
   'LSLOT-09': ['input.harness', 'input.attempt', 'input.profiles', 'input.controls',
@@ -853,8 +856,94 @@ export function project09({ fixture, lane }) {
 }
 
 export const projectors = { 'LSLOT-01': project01, 'LSLOT-02': project02,
-  'LSLOT-03': project03, 'LSLOT-04': project04, 'LSLOT-06': project06,
-  'LSLOT-07': project07, 'LSLOT-09': project09 };
+  'LSLOT-03': project03, 'LSLOT-04': project04, 'LSLOT-05': project05,
+  'LSLOT-06': project06, 'LSLOT-07': project07, 'LSLOT-09': project09 };
+
+// LSLOT-05: one proof-required slot selects the claim; every refused variant
+// changes exactly its named field of the exact record and is refused at the
+// selected-target evidence stage before publication, the two consumer
+// controls show the declared-field checks are not the only binding, and the
+// exact record publishes without changing the target's identity.
+export function project05({ fixture, lane }) {
+  const { summary } = lane;
+  const target = summary.target;
+  const refusedAt = (row, code) => row?.outcome === 'refused'
+    && row.stage === 'selected-target-evidence' && row.refusal === code
+    && row.guest_requests === 0 && row.protected_operations === 0
+    && row.evidence_admission?.decision === 'refused';
+  const variantRow = name => {
+    const row = summary.variants[name];
+    assert.ok(row, `missing LSLOT-05 ${name}`);
+    return row;
+  };
+  const expectations = {
+    'old-version-proof': row => refusedAt(row, 'subject-mismatch'),
+    'same-recipe-different-capture': row => refusedAt(row, 'capture-mismatch')
+      && refusedAt(summary.controls.capture_one_binding, 'correspondence-mismatch'),
+    'wrong-context': row => refusedAt(row, 'context-mismatch'),
+    'wrong-claim': row => refusedAt(row, 'claim-mismatch'),
+    'wrong-assumption': row => refusedAt(row, 'assumption-mismatch'),
+    'right-recipe-wrong-artifact': row => refusedAt(row, 'artifact-mismatch'),
+    'generic-wrapper-proof-only': row => refusedAt(row, 'subject-mismatch'),
+    'exact-selected-subject': row => row?.outcome === 'published' && row.epoch === '1'
+      && row.evidence_admission?.decision === 'admitted'
+      && row.evidence_admission?.program_value_id === target.program_value_id,
+  };
+  const entries = fixture.input.variants.map(variant => {
+    const predicate = expectations[variant.name];
+    assert.ok(predicate, `LSLOT-05 variant ${variant.name} has a runtime predicate`);
+    return measured('variant', variant.name, variant.result,
+      predicate(variantRow(variant.name)) ? variant.result : { failed: variantRow(variant.name) });
+  });
+  const refusedRows = Object.entries(summary.variants)
+    .filter(([name]) => name !== 'exact-selected-subject').map(([, row]) => row)
+    .concat(Object.values(summary.controls));
+  const exact = variantRow('exact-selected-subject');
+  const captures = target.captures.map(capture => `${capture.type}:${capture.value}`);
+  const sum = key => refusedRows.reduce((total, row) => total + (row[key] ?? 0), 0);
+  return entries.concat([
+    declared('input', 'harness', fixture.input.harness,
+      'the gate runs the selected-target evidence lane against the selected CLI'),
+    measured('input', 'policy', fixture.input.policy,
+      summary.no_evidence?.outcome === 'refused' && exact.evidence_admission?.policy
+        === 'proof-required-for-this-slot' ? fixture.input.policy : summary.no_evidence ?? null,
+      'publication without evidence is refused; the admitted record names the slot policy'),
+    declared('input', 'target.program_value_id', fixture.input.target.program_value_id,
+      'symbolic name for the selected target ProgramValueId', target.program_value_id),
+    declared('input', 'target.definition_id', fixture.input.target.definition_id,
+      'symbolic name for the selected target DefinitionId', target.definition_id),
+    measured('input', 'target.captures', fixture.input.target.captures, captures),
+    declared('input', 'target.context', fixture.input.target.context,
+      'symbolic name for the host semantic context', exact.evidence_admission?.context ?? null),
+    declared('input', 'target.claim', fixture.input.target.claim,
+      'symbolic name for the claim the slot authority selects',
+      exact.evidence_admission?.claim_sha256 ?? null),
+    declared('input', 'target.assumptions', fixture.input.target.assumptions,
+      'symbolic name for the consumer assumption set', summary.assumptions ?? null),
+    declared('input', 'target.artifact', fixture.input.target.artifact,
+      'symbolic name for the composite code-donor manifest', target.artifact_sha256),
+    measured('input', 'variants', fixture.input.variants.map(variant => variant.name),
+      Object.keys(summary.variants)),
+    stageEntry(refusedRows.map(row => row.stage).concat(['selected-target-evidence']),
+      { 'selected-target-evidence': 'selected-target-evidence' }, 'selected-target-evidence'),
+    measured('expected', 'outcome', fixture.expected.outcome,
+      fixture.input.variants.every(variant => expectations[variant.name](variantRow(variant.name)))
+        && refusedAt(summary.controls.forged_record, summary.controls.forged_record?.refusal)
+        ? 'only-exact-applicable-evidence-admitted' : 'other'),
+    measured('expected', 'proof_transfer_from_old_or_wrapper', false,
+      !(refusedAt(variantRow('old-version-proof'), 'subject-mismatch')
+        && refusedAt(variantRow('generic-wrapper-proof-only'), 'subject-mismatch'))),
+    measured('expected', 'failed_variants_publish_or_execute', false,
+      !(refusedRows.every(row => row.outcome === 'refused' && row.guest_requests === 0)
+        && exact.epoch === '1')),
+    measured('expected', 'selected_version_identity_not_altered_by_proof', true,
+      summary.after_publication.program_value_id === target.program_value_id
+        && summary.after_publication.definition_id === target.definition_id
+        && exact.evidence_admission?.program_value_id === target.program_value_id),
+    measured('expected', 'guest_requests', 0, sum('guest_requests')),
+    measured('expected', 'protected_operations', 0, sum('protected_operations')),
+  ]);
+}
 
 export function pending(id, reason) {
   return { id, reason, entries: [], promotable: false };

@@ -84,10 +84,13 @@ const explicitInputs = [fixtureFile, liveWasmFile, 'Cargo.toml', 'Cargo.lock',
   'crates/noble-cli/tests/live_slot_cas_policy.mjs',
   'crates/noble-cli/tests/live_slot_cas_policy_authority.json',
   'crates/noble-cli/tests/live_slot_legacy_refusal.mjs',
-  'crates/noble-cli/tests/live_repl_slot_exclusion.mjs'];
+  'crates/noble-cli/tests/live_slot_selected_target_evidence.mjs',
+  'crates/noble-cli/tests/live_repl_slot_exclusion.mjs', 'proofs/mc1/NobleContracts.lean'];
+// `proofs/mc1/NobleContracts` holds the contract library sources LSLOT-05's
+// Lean consumer rebuilds; its `.lake` build products are outside this tree.
 const selectedTrees = ['crates/noble-kernel/src', 'crates/noble-contracts/src',
   'crates/noble-wasm/src', 'crates/noble-wasm/runtime', 'crates/noble-wasm/wit',
-  'crates/noble-cli/src'];
+  'crates/noble-cli/src', 'proofs/mc1/NobleContracts'];
 
 const config = JSON.parse(fs.readFileSync(path.join(root,
   'crates/noble-cli/src/core/runtime/config.json')));
@@ -232,7 +235,7 @@ function privateDirectory(label, prefix = `noble-lslot-resource-${label}-`) {
   return directory;
 }
 const evidenceDirectories = [];
-function lane(label, script) {
+function lane(label, script, extraEnvironment = {}) {
   const directory = privateDirectory(label);
   evidenceDirectories.push(directory);
   const authorityRoot = privateDirectory(label,
@@ -240,7 +243,8 @@ function lane(label, script) {
   evidenceDirectories.push(authorityRoot);
   const result = run(`lane-${label}`, node,
     [path.join(root, 'crates/noble-cli/tests', script), binary],
-    { NOBLE_SLOT_EVIDENCE_DIR: directory, NOBLE_SLOT_AUTHORITY_ROOT: authorityRoot });
+    { NOBLE_SLOT_EVIDENCE_DIR: directory, NOBLE_SLOT_AUTHORITY_ROOT: authorityRoot,
+      ...extraEnvironment });
   const mirror = path.join(output, 'raw', label);
   fs.mkdirSync(mirror, { recursive: true, mode: 0o700 });
   for (const name of fs.readdirSync(directory)) {
@@ -420,6 +424,19 @@ const variantFacts = steps => {
 
 // LSLOT-04 and LSLOT-07: CAS, rollback and current host policy.
 const lane0407 = lane('0407', 'live_slot_cas_policy.mjs');
+// LSLOT-05: selected-target evidence. The Lean consumer runs with the reviewed
+// sandbox tools, the tested tree's contract library and the user session the
+// sandbox's `systemd-run --user` needs.
+const lane05 = lane('05', 'live_slot_selected_target_evidence.mjs', {
+  NOBLE_LEAN: '/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean',
+  NOBLE_BWRAP: '/nix/store/y0ra9qr3rz81d9wl7dfrldv3j25dc98q-bubblewrap-0.12.0/bin/bwrap',
+  NOBLE_PRLIMIT: '/nix/store/mqvbf0flamqaq9c3ihb496aahag897n0-util-linux-2.42.3-bin/bin/prlimit',
+  NOBLE_SYSTEMD_RUN: '/nix/store/baxgs06659w4i6ggsfr56srjrb52v1h8-systemd-261.2/bin/systemd-run',
+  NOBLE_CONTRACT_LIBRARY: path.join(root, 'proofs/mc1'),
+  XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR ?? '',
+  DBUS_SESSION_BUS_ADDRESS: process.env.DBUS_SESSION_BUS_ADDRESS ?? '',
+});
+const summary05 = summaryFile(lane05.directory, 'LSLOT05-summary.json');
 const casNames = ['LSLOT04-same-slot-writers', 'LSLOT04-unrelated-slot-race',
   'LSLOT04-delete-recreate-ABA', 'LSLOT04-authorized-rollback', 'LSLOT04-rollback-denied',
   'LSLOT07-publication-without-grant', 'LSLOT07-static-dispatch-without-grant',
@@ -583,6 +600,7 @@ const lanes = {
     stageSteps: steps03.map(step => step.row.stage) },
   'LSLOT-04': { cases: cas, baseline: casBaseline,
     stageSteps: casSteps.map(step => step.row.stage) },
+  'LSLOT-05': { summary: summary05 },
   'LSLOT-06': { summary: summary06,
     authority: authorityOf(path.join(lane06.directory, 'LSLOT06-valid-borrow.jsonl')),
     variants: summary06.results.map(result => {
@@ -885,11 +903,16 @@ const acceptance = {
   integrity_issues: issues,
   limitations: [
     'This receipt executes behavior; it is not a proof. Every promoted case keeps `proof: open`.',
-    'LSLOT-05 and LSLOT-08 are not executed by this gate: it carries no projector for the'
-      + ' positive selected-target proof or the exact replay case, so it neither observes nor'
-      + ' refuses them.',
-    'LSLOT-04 and LSLOT-07 remain refused on evidence-carrying publication, the same capability'
-      + ' LSLOT-05 waits for; their other fields are recorded.',
+    'LSLOT-05 runs the bounded selected-target evidence profile (integrator decision 43): the'
+      + ' slot authority selects one exact MC2 contract, the record must declare the target\'s'
+      + ' P/D, captures, context, claim digest, assumptions and code-donor manifest, and the'
+      + ' proof is rechecked by the `noble build --require-proof` consumer against the target\'s'
+      + ' closed subject rendered from its verified template. This is execution evidence for'
+      + ' that consumer route, not a translation or refinement proof.',
+    'LSLOT-08 is not executed by this gate: it carries no projector for the exact replay case.',
+    'LSLOT-04 and LSLOT-07 remain refused on their evidence-carrying variants: their lane does'
+      + ' not yet publish with LSLOT-05\'s selected-target evidence; their other fields are'
+      + ' recorded.',
     '`verification/live-slot-current-source/gate.mjs` and `verification/live-update-corpus` are'
       + ' historical: they replay only at their recorded source states and are not re-run here.',
   ],

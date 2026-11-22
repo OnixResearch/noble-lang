@@ -96,8 +96,10 @@ export async function cli(binary, variant, authority) {
       }
     }
   });
-  const next = () => queued.length ? Promise.resolve(queued.shift()) : new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => { awaiting = undefined; reject(Error(`CLI receipt timeout for ${variant}: ${stderr}`)); }, 30000);
+  // A selected-target evidence recheck runs a sandboxed Lean consumer, so its
+  // publication may name a longer receipt wait than the default 30 seconds.
+  const next = (wait = 30000) => queued.length ? Promise.resolve(queued.shift()) : new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => { awaiting = undefined; reject(Error(`CLI receipt timeout for ${variant}: ${stderr}`)); }, wait);
     awaiting = row => { clearTimeout(timeout); resolve(row); };
   });
   const send = request => {
@@ -106,7 +108,7 @@ export async function cli(binary, variant, authority) {
     fs.appendFileSync(requests, line);
     child.stdin.write(line);
   };
-  const issue = async request => { send(request); return next(); };
+  const issue = async (request, wait) => { send(request); return next(wait); };
   const close = async () => {
     child.stdin.end();
     const code = child.exitCode === null ? await new Promise(resolve => child.once('exit', resolve)) : child.exitCode;
