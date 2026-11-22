@@ -1668,6 +1668,8 @@ fn execute(
         .expect("legacy verify-module retained source budget");
     let mut session = noble_contracts::source::ModuleSession::new(&[], retained)
         .map_err(|error| source_error(&error))?;
+    // Elaboration and checking draw on the same requested proof budgets.
+    session.share_proof_budgets(budgets);
     let target = std::path::PathBuf::from(path);
     for module in modules.iter().chain(core::iter::once(&target)) {
         let source = super::artifacts::read_bounded(module, super::SOURCE_LIMIT, "module-source")?;

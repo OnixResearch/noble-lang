@@ -125,14 +125,20 @@ pub(super) fn stage(request: Request<'_>) -> Result<Staged, crate::source::Error
     }
     // Elaboration is untrusted: it rewrites opted-in abbreviations into the
     // explicit core before any proof is checked or published. A refusal here
-    // rejects only the opted-in submission; it never accepts or assumes.
+    // rejects only the opted-in submission; it never accepts or assumes. It
+    // runs under the host-selected proof budgets when the host shared them,
+    // the same budgets the elaborated explicit terms are checked under.
+    let budgets = match request.session.proof_budgets {
+        Some(budgets) => budgets,
+        None => crate::intrinsic::ProofBudgets::from_limits(request.limits),
+    };
     let elaborated = attempt!(crate::intrinsic::elaborate_obligations(
         request.name,
         request.version,
         &obligations,
         &dependencies,
         request.limits,
-        crate::intrinsic::ProofBudgets::from_limits(request.limits),
+        budgets,
     )
     .map_err(|problem| crate::source::declared::diagnostic(crate::source::Stage::Check, problem)));
     Ok(Staged {

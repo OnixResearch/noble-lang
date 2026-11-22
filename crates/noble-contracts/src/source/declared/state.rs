@@ -37,6 +37,11 @@ pub struct ModuleSession {
         reason = "Owner: noble-contracts; the field stores RetainedSourceLimit::bytes(), so its unit is source bytes as documented on that type."
     )]
     retained_source_limit: u32,
+    /// The host-selected proof request budgets the untrusted elaborator runs
+    /// under, so elaboration and the explicit checker draw on one request
+    /// (IMPL-TRUST-01). Absent unless a host opts in; elaboration then runs
+    /// under the limits' own work ceiling.
+    proof_budgets: Option<crate::intrinsic::ProofBudgets>,
     pub(super) source: crate::source::Session,
 }
 
@@ -1750,6 +1755,7 @@ impl ModuleSession {
             next_module_identity: 1,
             generation: 0,
             retained_source_limit: retained_source_limit_bytes,
+            proof_budgets: None,
         })
     }
 
@@ -1798,6 +1804,13 @@ impl ModuleSession {
         }
     }
 
+    /// Bound the proof elaboration of every module this session prepares by
+    /// the host-selected proof request budgets, the same budgets the host
+    /// checks the elaborated explicit terms under.
+    pub fn share_proof_budgets(&mut self, budgets: crate::intrinsic::ProofBudgets) {
+        self.proof_budgets = Some(budgets);
+    }
+
     /// Remaining shared request work, if the host opted in.
     pub fn remaining_request_work(&self) -> Option<u32> {
         self.source.request_work().map(|remaining| remaining.get())
@@ -1824,6 +1837,7 @@ impl ModuleSession {
             next_module_identity: self.next_module_identity,
             generation: self.generation,
             retained_source_limit: self.retained_source_limit,
+            proof_budgets: self.proof_budgets,
         }
     }
 }

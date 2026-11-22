@@ -450,43 +450,178 @@ const TWICE_REFL: &str = "proof 1 twice-refl : [ (Pi (x I64) (Pi (h (Eq I64 x x)
 /// chosen, even though both candidates have the identical proposition.
 #[test]
 fn premise_placeholder_lists_candidates_without_choosing() {
-    let message = refuse(&module(
+    let source = module(
         TWICE_REFL,
         "proof 1 bad infer : [ (Pi (x I64) (Pi (h1 (Eq I64 x x)) (Pi (h2 (Eq I64 x x)) (Eq I64 x x)))) ] [ (intro (x I64) (intro (h1 (Eq I64 x x)) (intro (h2 (Eq I64 x x)) (app (use twice-refl) x (infer))))) ]",
-    ));
+    );
+    let message = refuse(&source);
     assert!(
-        message.starts_with("unsupported: premise inference"),
+        message.starts_with(
+            "unsupported: premise inference for binder `h` (position 2) of logic@1/twice-refl;"
+        ),
         "{message}"
     );
-    assert!(message.contains("local premise `h1`"), "{message}");
-    assert!(message.contains("local premise `h2`"), "{message}");
+    // Each candidate row points at its intro binder in the submitted source.
+    for (name, next) in [("h1", "(intro"), ("h2", "(app")] {
+        let binder = format!("({name} (Eq I64 x x))");
+        let start = source
+            .rfind(&format!("{binder} {next}"))
+            .expect("intro binder in the term");
+        let row = format!(
+            "local premise `{name}` at {start}..{}",
+            start + binder.len()
+        );
+        assert!(message.contains(&row), "{row}: {message}");
+    }
 }
 
-/// IMPL-2: a value of the wrong code is a constraint clash, not a guess.
+/// IMPL-2: a value of the wrong code is a constraint clash, not a guess. The
+/// refusal names the argument it was checking and the unresolved binder, head
+/// identity and originating constraint spans (IMPL-ELAB-01).
 #[test]
 fn wrong_value_code_is_invalid_constraint() {
-    let message = refuse(&module(
+    let source = module(
         DEPENDENT_BASE,
         "proof 1 bad infer : [ (Pi (x I64) (Pi (w Bool) (Eq Bool w w))) ] [ (intro (x I64) (intro (w Bool) (app (use base) x (refl x) w))) ]",
-    ));
-    assert!(message.starts_with("invalid-constraint:"), "{message}");
-    assert!(message.contains("Pair"), "{message}");
-    assert!(message.contains("Bool"), "{message}");
+    );
+    let message = refuse(&source);
+    let w = source.rfind(" w)))").expect("the clashing argument") + 1;
+    assert_eq!(
+        message,
+        format!(
+            "invalid-constraint: code (Pair (List ?0) I64) does not match code Bool; checking the argument for binder `y` (position 4) of logic@1/base; ?0 is the argument for binder `A` (position 3) of logic@1/base, constrained at {w}..{}",
+            w + 1
+        )
+    );
 }
 
-/// IMPL-2: app spines do not admit under- or over-application.
+/// IMPL-EXPOSE-01: one refusal lists at most sixteen originating constraint
+/// spans and counts the rest; its category is unchanged.
+#[test]
+fn constraint_spans_are_capped_with_a_count() {
+    let count = 20;
+    let names: Vec<String> = (1..=count).map(|at| format!("x{at}")).collect();
+    let mut claim = String::from("(Eq A x1 x1)");
+    let mut term = String::from("(refl x1)");
+    for name in names.iter().rev() {
+        claim = format!("(Pi ({name} A) {claim})");
+        term = format!("(intro ({name} A) {term})");
+    }
+    let many = format!("proof 1 many : [ (Pi (A Type0) {claim}) ] [ (intro (A Type0) {term}) ]");
+    // Nineteen I64 arguments fix and re-constrain A; the twentieth is Bool.
+    let values: Vec<String> = (1..count).map(|at| format!("y{at}")).collect();
+    let mut goal = String::from("(Pi (w Bool) (Eq I64 y1 y1))");
+    let mut proof = format!("(intro (w Bool) (app (use many) {} w))", values.join(" "));
+    for name in values.iter().rev() {
+        goal = format!("(Pi ({name} I64) {goal})");
+        proof = format!("(intro ({name} I64) {proof})");
+    }
+    let message = refuse(&module(
+        &many,
+        &format!("proof 1 bad infer : [ {goal} ] [ {proof} ]"),
+    ));
+    assert!(
+        message.starts_with("invalid-constraint: code I64 does not match code Bool;"),
+        "{message}"
+    );
+    // Every listed span renders as `start..end`.
+    assert_eq!(message.matches("..").count(), 16, "{message}");
+    assert!(
+        message.ends_with("; and 4 more constraint spans"),
+        "{message}"
+    );
+}
+
+/// IMPL-EXPOSE-01: a rendered term is cut at 1 KiB with the cut bytes counted,
+/// so a refusal stays within 16 KiB whatever the size of its codes.
+#[test]
+fn rendered_terms_are_capped_with_a_count() {
+    fn tree(depth: u32) -> String {
+        if depth == 0 {
+            String::from("I64")
+        } else {
+            let child = tree(depth - 1);
+            format!("(Pair {child} {child})")
+        }
+    }
+    let wide = tree(8);
+    let (pair, sum) = (format!("(Pair {wide} I64)"), format!("(Sum {wide} I64)"));
+    let message = refuse(&module(
+        "proof 1 t2 : [ (Pi (A Type0) (Pi (x A) (Pi (y A) (Eq A x x)))) ] [ (intro (A Type0) (intro (x A) (intro (y A) (refl x)))) ]",
+        &format!(
+            "proof 1 bad infer : [ (Pi (u {pair}) (Pi (v {sum}) (Eq {pair} u u))) ] [ (intro (u {pair}) (intro (v {sum}) (app (use t2) u v))) ]"
+        ),
+    ));
+    assert!(
+        message.starts_with("invalid-constraint: code (Pair (Pair"),
+        "{message}"
+    );
+    assert_eq!(message.matches(" more bytes]").count(), 2, "{message}");
+    assert!(message.len() < 3 * 1024, "{}", message.len());
+    assert!(message.contains("of logic@1/t2"), "{message}");
+}
+
+/// IMPL-2: app spines do not admit under- or over-application; the refusal
+/// names the head and the binder or argument that does not fit.
 #[test]
 fn app_spines_refuse_under_and_over_application() {
     let under = refuse(&module(
         TWICE_REFL,
         "proof 1 bad infer : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (app (use twice-refl) x)) ]",
     ));
-    assert_eq!(under, "unsupported: app under-application");
+    assert_eq!(
+        under,
+        "unsupported: app under-application: no argument for binder `h` (position 2) of logic@1/twice-refl"
+    );
     let over = refuse(&module(
         TWICE_REFL,
         "proof 1 bad infer : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (app (use twice-refl) x (refl x) x)) ]",
     ));
-    assert_eq!(over, "unsupported: app over-application");
+    assert_eq!(
+        over,
+        "unsupported: app over-application of logic@1/twice-refl: argument 3 has no binder"
+    );
+}
+
+/// IMPL-TRUST-01: the host's requested proof budgets bound elaboration itself;
+/// a budget below the elaborator's own need exhausts there, naming the stage
+/// and the exceeded budget, and nothing is accepted or refuted.
+#[test]
+fn shared_proof_budgets_bound_elaboration() {
+    let source = module(
+        POLY_REFL,
+        "proof 1 short infer : [ (Pi (x (List I64)) (Eq (List I64) x x)) ] [ (intro (x (List I64)) (app (use poly-refl) x)) ]",
+    );
+    for (budgets, expected) in [
+        (
+            ProofBudgets {
+                normalization_work: 0,
+                substitution_work: super::LIMITS.work,
+            },
+            "exhausted: elaboration unification step exceeded the normalization budget",
+        ),
+        (
+            ProofBudgets {
+                normalization_work: super::LIMITS.work,
+                substitution_work: 0,
+            },
+            "exhausted: elaboration substitution step exceeded the substitution budget",
+        ),
+    ] {
+        let mut session = noble_contracts::source::ModuleSession::new(&[], super::retained())
+            .expect("module session");
+        session.share_proof_budgets(budgets);
+        let error = session
+            .prepare(source.as_bytes(), &[], super::LIMITS)
+            .expect_err("the shared budget bounds elaboration");
+        assert_eq!(
+            error.diagnostic().kind,
+            noble_contracts::DiagnosticKind::Exhausted
+        );
+        assert_eq!(error.diagnostic().message, expected);
+    }
+    // Under the limits' own budgets the same source elaborates.
+    assert_eq!(records(&batch(&source)).len(), 1);
 }
 
 /// IMPL-1/IMPL-2: A3 takes the structural literal from the exact subject.

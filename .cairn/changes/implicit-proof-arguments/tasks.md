@@ -40,6 +40,26 @@
   (`elaboration_record_maps_every_explicit_node_to_the_abbreviated_source`, on a real staged and
   checked module).
 - [ ] [serial] Execute IMPL-CASE-01 to IMPL-CASE-20 with source-bound receipts, checking explicit expansions through the source checker and the pinned Lean consumer. r[IMPL-ELAB-01] r[IMPL-TRUST-01] r[IMPL-EXPOSE-01]
+  Progress (2026-11-22): every case input was first run through the production `verify-module`
+  (and, for IMPL-CASE-20, `session --declared-modules`) to check the designs before writing the
+  gate. That run found three gaps against the requirements, now closed in the elaborator:
+  refusals did not name the unresolved binder, head identity and originating constraints
+  (IMPL-ELAB-01; only `underconstrained` did), diagnostics had no byte caps (a clash between two
+  5.6 KiB codes produced an 11 KiB refusal; IMPL-EXPOSE-01), and the elaborator ignored the requested
+  `--normalization-work`/`--substitution-work` budgets, so exhaustion below its own need was
+  reported by the checker afterwards (IMPL-TRUST-01). See the design's implementation notes;
+  controls: `wrong_value_code_is_invalid_constraint` (exact message),
+  `constraint_spans_are_capped_with_a_count`, `rendered_terms_are_capped_with_a_count`,
+  `premise_placeholder_lists_candidates_without_choosing` (binder spans),
+  `app_spines_refuse_under_and_over_application`, `shared_proof_budgets_bound_elaboration` and
+  the in-crate `exhaustion_names_the_exceeded_budget_and_caps_count_cut_bytes`. Design inputs
+  that cannot run as written are listed for amendment: IMPL-CASE-18's 200 nested binders exceed
+  the frontend depth limit (64; the deepest elaborable head has 20 `Type0` and 20 value binders,
+  whose explicit apply chain fits the elaboration depth bound), IMPL-CASE-13's off-by-two term is
+  refused at the application (`apply value has wrong code`) before any claim comparison,
+  IMPL-CASE-14's module-version change is a different head identity (`logic@2/poly-refl`), not a
+  changed revision, and IMPL-CASE-16's `?` holes are tokenized as atoms and refused where they
+  stand.
 - [ ] [serial] Prove first-order unification uniqueness and fragment completeness for the constraint algebra in reviewed Lean. Pursue Rust elaborator refinement under the existing Charon/Aeneas policy. Keep source-to-Lean translation correctness as its separate open obligation. r[IMPL-ELAB-01]
   Progress (2026-10-31): the Lean half is proved at model level in
   `proofs/foundation/NobleFoundation/ImplicitUnification.lean`.

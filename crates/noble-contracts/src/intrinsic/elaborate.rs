@@ -343,6 +343,7 @@ fn pure<'m>(
         meter,
         available,
         context: WorkStack::new(),
+        context_spans: WorkStack::new(),
         metas: Vec::new(),
         deferred: Vec::new(),
         deferred_forms: Vec::new(),
@@ -871,6 +872,8 @@ struct Elaborator<'m, 'a> {
     meter: Meter<'m>,
     available: &'a [Available],
     context: WorkStack<Binder>,
+    /// The source span of each proof-context binder, by level.
+    context_spans: WorkStack<Span>,
     metas: Vec<Meta>,
     deferred: Vec<Option<Deferred>>,
     deferred_forms: Vec<Out>,
@@ -970,7 +973,10 @@ impl Elaborator<'_, '_> {
                 if let Ty::Meta(_) = solved {
                     return Err(self.underconstrained(index));
                 }
-                self.scope_ty(&solved, meta.depth, meta.span)
+                match self.scope_ty(&solved, meta.depth, meta.span) {
+                    Ok(()) => Ok(()),
+                    Err(error) => Err(scope_refusal(meta, error)),
+                }
             }
             MetaKind::Value => {
                 let solved = self.resolve_val(Val::Meta(level), meta.span)?;
@@ -978,16 +984,19 @@ impl Elaborator<'_, '_> {
                     Val::Meta(_) => Err(self.underconstrained(index)),
                     Val::Level(found) => {
                         if found >= meta.depth {
-                            return Err(ill_scoped(
-                                meta.span,
-                                &text![
-                                    "solution for `",
-                                    &meta.binder,
-                                    "` names level ",
-                                    &u32_text(found),
-                                    " at depth ",
-                                    &u32_text(meta.depth),
-                                ],
+                            return Err(scope_refusal(
+                                meta,
+                                ill_scoped(
+                                    meta.span,
+                                    &text![
+                                        "solution for `",
+                                        &meta.binder,
+                                        "` names level ",
+                                        &u32_text(found),
+                                        " at depth ",
+                                        &u32_text(meta.depth),
+                                    ],
+                                ),
                             ));
                         }
                         Ok(())
@@ -1024,14 +1033,23 @@ impl Elaborator<'_, '_> {
     /// The refusal for a metavariable no constraint solves.
     fn underconstrained(&self, index: usize) -> Diagnostic {
         let meta = &self.metas[index];
-        let detail =
-            text!["binder `",
-        &meta.binder,
-        "` (position ",
-        &u32_text(meta.position.saturating_add(1)),
-        ") of ",
-        &meta.head,
-        " has no constraint; any PureTyCode or code-fixing argument applies and none is chosen",];
+        let mut detail = text![
+            "binder `",
+            &meta.binder,
+            "` (position ",
+            &u32_text(meta.position.saturating_add(1)),
+            ") of ",
+            &meta.head,
+        ];
+        if meta.constraints.is_empty() {
+            detail.push_str(" has no constraint");
+        } else {
+            // Constraints that only relate it to other unsolved arguments
+            // never fix it; they are listed, not chosen from.
+            detail.push_str(" is not fixed by its constraints at");
+            meta_constraints(meta, &mut detail);
+        }
+        detail.push_str("; any PureTyCode or code-fixing argument applies and none is chosen");
         infer_diagnostic(
             DiagnosticKind::Invalid,
             meta.span,
@@ -1112,10 +1130,11 @@ impl Elaborator<'_, '_> {
         context_snapshot(&self.context)
     }
 
-    /// Charge one meter operation, naming the stage when it exhausts.
+    /// Charge one meter operation, naming the stage and the exceeded budget
+    /// when it exhausts.
     #[expect(
         tigerstyle::missing_const_fn,
-        reason = "Owner: noble-contracts; the helper calls the non-const meter transitions and stage_error, so the const suggestion does not apply"
+        reason = "Owner: noble-contracts; the helper calls the non-const meter transitions and meter_exhausted, so the const suggestion does not apply"
     )]
     fn meter_step(
         &mut self,
@@ -1132,7 +1151,14 @@ impl Elaborator<'_, '_> {
         self.meter = next;
         match result {
             Ok(()) => Ok(()),
-            Err(error) => Err(stage_error(error, stage, span)),
+            Err(error) => {
+                if error.kind == DiagnosticKind::Exhausted {
+                    let budget = exceeded_budget(&self.meter, step);
+                    Err(meter_exhausted(span, stage, budget))
+                } else {
+                    Err(error)
+                }
+            }
         }
     }
 
@@ -1140,11 +1166,16 @@ impl Elaborator<'_, '_> {
         let bound = self.meter.tree_bounds.frames;
         self.context
             .push_bounded(binder, bound)
+            .map_err(|()| stage_exhausted(span, "tree frame"))?;
+        // The binder's source span, at the same level, for candidate rows.
+        self.context_spans
+            .push_bounded(span, bound)
             .map_err(|()| stage_exhausted(span, "tree frame"))
     }
 
     fn pop_binder(&mut self) {
         self.context.pop_bounded();
+        self.context_spans.pop_bounded();
     }
 }
 
@@ -1172,6 +1203,21 @@ fn binder_parts(context: &WorkStack<Binder>, index: usize) -> Option<(String, So
     Some((binder.name.clone(), binder.sort.clone()))
 }
 
+/// The source span of the binder at level `index`, if recorded.
+fn span_at(spans: &WorkStack<Span>, index: usize) -> Option<Span> {
+    let inline = spans.inline_len;
+    if index < inline {
+        return spans.inline[index];
+    }
+    // A plain assignment rather than `Option::copied`/`map`, which the
+    // pinned Aeneas models without the region-free function type it needs.
+    let mut found = None;
+    if let Some(span) = spans.spill.get(index.saturating_sub(inline)) {
+        found = Some(*span);
+    }
+    found
+}
+
 /// Every binder name and sort of a proof context, by level, up to the first
 /// missing level.
 fn context_snapshot(context: &WorkStack<Binder>) -> (Vec<String>, Vec<Sort>) {
@@ -1197,16 +1243,56 @@ fn meta_index(value: u32, span: Span) -> Result<usize, Diagnostic> {
     usize::try_from(value).map_err(|_| internal(span, "metavariable index exceeds the host"))
 }
 
+/// The budget a failed meter step exceeded. Each transition fails only after
+/// it has counted its own step, so the counters above their ceilings name it;
+/// a visit that exceeds neither the node nor the work ceiling exceeded depth.
 #[expect(
     tigerstyle::missing_const_fn,
-    reason = "Owner: noble-contracts; the helper compares DiagnosticKind through its non-const PartialEq and builds the exhaustion diagnostic with format!, so the const suggestion does not apply"
+    reason = "Owner: noble-contracts; the meter's ceilings are read through its non-const Deref to the shared configuration, so the const suggestion does not apply"
 )]
-fn stage_error(error: Diagnostic, stage: &'static str, span: Span) -> Diagnostic {
-    if error.kind == DiagnosticKind::Exhausted {
-        stage_exhausted(span, stage)
-    } else {
-        error
+fn exceeded_budget(meter: &Meter<'_>, step: MeterStep) -> &'static str {
+    match step {
+        MeterStep::Normalize(_) => {
+            if meter.normalization > meter.budgets.normalization_work {
+                "normalization"
+            } else {
+                "work"
+            }
+        }
+        MeterStep::Substitute(_) => {
+            if meter.substitution > meter.budgets.substitution_work {
+                "substitution"
+            } else {
+                "work"
+            }
+        }
+        MeterStep::Visit(_) => {
+            if meter.nodes > meter.limits.nodes {
+                "node"
+            } else if meter.work > meter.limits.work {
+                "work"
+            } else {
+                "depth"
+            }
+        }
+        MeterStep::Charge(_) => "work",
     }
+}
+
+/// The exhaustion of a metered elaboration step: the stage that charged it
+/// and the request budget it exceeded. Never acceptance, never refutation.
+fn meter_exhausted(span: Span, stage: &'static str, budget: &'static str) -> Diagnostic {
+    Diagnostic::new(
+        DiagnosticKind::Exhausted,
+        span,
+        &text![
+            "exhausted: elaboration ",
+            stage,
+            " step exceeded the ",
+            budget,
+            " budget",
+        ],
+    )
 }
 
 fn stage_exhausted(span: Span, stage: &'static str) -> Diagnostic {
@@ -1215,6 +1301,164 @@ fn stage_exhausted(span: Span, stage: &'static str) -> Diagnostic {
         span,
         &text!["exhausted: elaboration ", stage, " budget"],
     )
+}
+
+/// The most bytes one rendered term contributes to a refusal.
+const MAX_TERM_BYTES: usize = 1024;
+/// The most bytes of one refusal message, category included.
+const MAX_DIAGNOSTIC_BYTES: usize = 16 * 1024;
+/// The most originating constraint spans one refusal lists.
+const MAX_LISTED_CONSTRAINTS: usize = 16;
+
+/// `text` cut to at most `limit` bytes with the number of cut bytes named.
+/// The cut stops early at the first non-ASCII byte, so it never splits a
+/// character; the count still names every byte not shown.
+fn capped(text: String, limit: usize) -> String {
+    let bytes = text.as_bytes();
+    if bytes.len() <= limit {
+        return text;
+    }
+    let mut kept = String::with_capacity(limit.saturating_add(32));
+    let mut index = 0usize;
+    while index < limit && bytes[index] < 0x80 {
+        kept.push(char::from(bytes[index]));
+        index = index.saturating_add(1);
+    }
+    kept.push_str("...[");
+    kept.push_str(&super::decimal(bytes.len().saturating_sub(index)));
+    kept.push_str(" more bytes]");
+    kept
+}
+
+/// One rendered term of a refusal, bounded by `MAX_TERM_BYTES`.
+fn capped_term(text: String) -> String {
+    capped(text, MAX_TERM_BYTES)
+}
+
+/// `start..end`, the byte range of a source span.
+fn span_text(span: Span) -> String {
+    text![&u32_text(span.start), "..", &u32_text(span.end)]
+}
+
+/// `ROLE for binder `NAME` (position P) of HEAD`, with the 1-based position.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the role, binder and head texts are positional in the rendered order and named at every call site"
+)]
+fn binder_origin(role: &str, binder: &str, position: u32, head: &str) -> String {
+    text![
+        role,
+        " for binder `",
+        binder,
+        "` (position ",
+        &u32_text(position.saturating_add(1)),
+        ") of ",
+        head,
+    ]
+}
+
+/// Append the originating constraint spans of one metavariable, at most
+/// `MAX_LISTED_CONSTRAINTS`, counting the rest explicitly.
+fn meta_constraints(meta: &Meta, detail: &mut String) {
+    let mut at = 0usize;
+    while at < meta.constraints.len() && at < MAX_LISTED_CONSTRAINTS {
+        if at > 0 {
+            detail.push(',');
+        }
+        detail.push(' ');
+        detail.push_str(&span_text(meta.constraints[at]));
+        at = at.saturating_add(1);
+    }
+    if meta.constraints.len() > at {
+        detail.push_str("; and ");
+        detail.push_str(&super::decimal(meta.constraints.len().saturating_sub(at)));
+        detail.push_str(" more constraint spans");
+    }
+}
+
+/// Append every metavariable the failed constraint at `span` mentions (each
+/// one's latest recorded origin is that constraint): its binder, position,
+/// head identity and originating constraint spans, at most
+/// `MAX_LISTED_CONSTRAINTS` spans in total, counting the rest explicitly.
+fn constraint_origins(metas: &[Meta], span: Span, detail: &mut String) {
+    let mut listed = 0usize;
+    let mut total = 0usize;
+    let mut index = 0usize;
+    while index < metas.len() {
+        let meta = &metas[index];
+        if meta.constraints.last() == Some(&span) {
+            detail.push_str("; ?");
+            detail.push_str(&super::decimal(index));
+            detail.push_str(" is ");
+            detail.push_str(&binder_origin(
+                "the argument",
+                &meta.binder,
+                meta.position,
+                &meta.head,
+            ));
+            detail.push_str(", constrained at");
+            let mut at = 0usize;
+            while at < meta.constraints.len() {
+                total = total.saturating_add(1);
+                if listed < MAX_LISTED_CONSTRAINTS {
+                    if at > 0 {
+                        detail.push(',');
+                    }
+                    detail.push(' ');
+                    detail.push_str(&span_text(meta.constraints[at]));
+                    listed = listed.saturating_add(1);
+                }
+                at = at.saturating_add(1);
+            }
+        }
+        index = index.saturating_add(1);
+    }
+    if total > listed {
+        detail.push_str("; and ");
+        detail.push_str(&super::decimal(total.saturating_sub(listed)));
+        detail.push_str(" more constraint spans");
+    }
+}
+
+/// The refusal of a failed constraint: the clash, what it was checking and
+/// every metavariable the constraint mentions. Exhaustion and internal
+/// failures pass through unchanged.
+fn explain_constraint(metas: &[Meta], error: Diagnostic, span: Span, origin: &str) -> Diagnostic {
+    if error.kind != DiagnosticKind::Invalid {
+        return error;
+    }
+    let kind = error.kind;
+    let at = error.span;
+    let mut detail = error.message;
+    detail.push_str("; checking ");
+    detail.push_str(origin);
+    constraint_origins(metas, span, &mut detail);
+    Diagnostic::new(kind, at, &capped(detail, MAX_DIAGNOSTIC_BYTES))
+}
+
+/// An ill-scoped solution's refusal, with the metavariable's binder, head
+/// identity and originating constraints.
+fn scope_refusal(meta: &Meta, error: Diagnostic) -> Diagnostic {
+    if error.kind != DiagnosticKind::Invalid {
+        return error;
+    }
+    let kind = error.kind;
+    let at = error.span;
+    let mut detail = error.message;
+    detail.push_str("; ");
+    detail.push_str(&binder_origin(
+        "solving",
+        &meta.binder,
+        meta.position,
+        &meta.head,
+    ));
+    if meta.constraints.is_empty() {
+        detail.push_str(", with no constraint");
+    } else {
+        detail.push_str(", constrained at");
+        meta_constraints(meta, &mut detail);
+    }
+    Diagnostic::new(kind, at, &capped(detail, MAX_DIAGNOSTIC_BYTES))
 }
 
 #[expect(
@@ -1227,7 +1471,11 @@ fn infer_diagnostic(
     category: &'static str,
     detail: &str,
 ) -> Diagnostic {
-    Diagnostic::new(kind, span, &text![category, ": ", detail])
+    Diagnostic::new(
+        kind,
+        span,
+        &capped(text![category, ": ", detail], MAX_DIAGNOSTIC_BYTES),
+    )
 }
 
 /// `{module}@{version}/{name}`, the identity of an available proof or of a
@@ -1593,9 +1841,9 @@ impl Elaborator<'_, '_> {
                 span,
                 &text![
                     "code ",
-                    &describe_ty(&left),
+                    &capped_term(describe_ty(&left)),
                     " does not match code ",
-                    &describe_ty(&right),
+                    &capped_term(describe_ty(&right)),
                 ],
             )),
         }
@@ -1661,9 +1909,9 @@ impl Elaborator<'_, '_> {
                 span,
                 &text![
                     "sort ",
-                    &describe_sort(left),
+                    &capped_term(describe_sort(left)),
                     " does not match sort ",
-                    &describe_sort(right),
+                    &capped_term(describe_sort(right)),
                 ],
             )),
         }
@@ -1711,9 +1959,9 @@ impl Elaborator<'_, '_> {
                 span,
                 &text![
                     "proposition ",
-                    &describe_prop(left),
+                    &capped_term(describe_prop(left)),
                     " does not match ",
-                    &describe_prop(right),
+                    &capped_term(describe_prop(right)),
                 ],
             )),
         }
@@ -1728,7 +1976,7 @@ impl Elaborator<'_, '_> {
                     "occurs check: ?",
                     &u32_text(meta),
                     " occurs in ",
-                    &describe_ty(&solution),
+                    &capped_term(describe_ty(&solution)),
                 ],
             ));
         }
@@ -1916,7 +2164,7 @@ impl Elaborator<'_, '_> {
 impl Elaborator<'_, '_> {
     /// Check `term` against `goal`, the checker's check-mode rule set.
     fn check(&mut self, form: &Form, goal: &PropTerm, depth: u32) -> Result<Out, Diagnostic> {
-        self.meter_step(MeterStep::Visit(depth), "work", form.span)?;
+        self.meter_step(MeterStep::Visit(depth), "traversal", form.span)?;
         match goal {
             PropTerm::Pi(..) => {
                 if let Ok(args) = operation(form, "intro", 2) {
@@ -1931,7 +2179,14 @@ impl Elaborator<'_, '_> {
         }
         let child = deeper(depth, form.span)?;
         let inferred = self.infer(form, child)?;
-        self.constrain_prop(&inferred.prop, goal, form.span)?;
+        if let Err(error) = self.constrain_prop(&inferred.prop, goal, form.span) {
+            return Err(explain_constraint(
+                &self.metas,
+                error,
+                form.span,
+                "the expected claim",
+            ));
+        }
         Ok(inferred.out)
     }
 
@@ -1970,7 +2225,8 @@ impl Elaborator<'_, '_> {
             ));
         }
         let body_depth = deeper(depth, args[1].span)?;
-        self.push_binder(Binder { name, sort: actual }, args[1].span)?;
+        // The binder form's span: candidate rows point at it.
+        self.push_binder(Binder { name, sort: actual }, args[0].span)?;
         let body = self.check(&args[1], rest, body_depth);
         self.pop_binder();
         // Propagated before `vec!`: a `?` inside its elements lowers to an
@@ -2111,7 +2367,7 @@ impl Elaborator<'_, '_> {
         reason = "Owner: noble-contracts; inference follows the finite application spine under the caller's depth budget"
     )]
     fn infer(&mut self, form: &Form, depth: u32) -> Result<Inferred, Diagnostic> {
-        self.meter_step(MeterStep::Visit(depth), "work", form.span)?;
+        self.meter_step(MeterStep::Visit(depth), "traversal", form.span)?;
         if let Ok(args) = operation(form, "use", 1) {
             return self.use_term(form, &args[0]);
         }
@@ -2289,7 +2545,14 @@ impl Elaborator<'_, '_> {
                     return Err(super::reject(argument.span, "apply value has wrong code"));
                 };
                 let actual = ty_of_code(actual, argument.span)?;
-                self.constrain_ty(expected, &actual, argument.span)?;
+                if let Err(error) = self.constrain_ty(expected, &actual, argument.span) {
+                    return Err(explain_constraint(
+                        &self.metas,
+                        error,
+                        argument.span,
+                        &binder_origin("the argument", &binder, position, &identity),
+                    ));
+                }
                 let level = u32_level(index, argument.span)?;
                 Ok((
                     Out::Done(argument.clone()),
@@ -2298,12 +2561,21 @@ impl Elaborator<'_, '_> {
             }
             SortTerm::Premise(expected) => {
                 if is_infer_form(argument) {
-                    return Err(self.premise_refusal(argument.span, expected));
+                    let origin = binder_origin("premise inference", &binder, position, &identity);
+                    return Err(self.premise_refusal(argument.span, expected, &origin));
                 }
                 if is_inferable(argument) {
                     let child = deeper(depth, argument.span)?;
                     let inferred = self.infer(argument, child)?;
-                    self.constrain_prop(&inferred.prop, expected, argument.span)?;
+                    if let Err(error) = self.constrain_prop(&inferred.prop, expected, argument.span)
+                    {
+                        return Err(explain_constraint(
+                            &self.metas,
+                            error,
+                            argument.span,
+                            &binder_origin("the witness", &binder, position, &identity),
+                        ));
+                    }
                     return Ok((inferred.out, ArgTerm::Premise));
                 }
                 let position = self.deferred.len();
@@ -2319,11 +2591,11 @@ impl Elaborator<'_, '_> {
 
     /// Refuse a premise placeholder, listing candidates without choosing.
     /// The receiver is exclusive for the pinned Aeneas, as `verify_ground`'s.
-    fn premise_refusal(&mut self, span: Span, expected: &PropTerm) -> Diagnostic {
+    /// `origin` names the premise binder, its position and the head.
+    fn premise_refusal(&mut self, span: Span, expected: &PropTerm, origin: &str) -> Diagnostic {
         const MAX_CANDIDATES: usize = 8;
-        let mut detail = String::from(
-            "premise inference; write the explicit witness (witness identity is never chosen)",
-        );
+        let mut detail = String::from(origin);
+        detail.push_str("; write the explicit witness (witness identity is never chosen)");
         let mut listed = 0usize;
         let mut total = 0usize;
         let ground = self.ground_prop(expected, span).ok();
@@ -2337,6 +2609,10 @@ impl Elaborator<'_, '_> {
                             detail.push_str("; local premise `");
                             detail.push_str(&name);
                             detail.push('`');
+                            if let Some(binder_span) = span_at(&self.context_spans, level) {
+                                detail.push_str(" at ");
+                                detail.push_str(&span_text(binder_span));
+                            }
                             listed = listed.saturating_add(1);
                         }
                     }
@@ -2362,7 +2638,7 @@ impl Elaborator<'_, '_> {
         if total > listed {
             detail.push_str("; and ");
             detail.push_str(&super::decimal(total.saturating_sub(listed)));
-            detail.push_str(" more");
+            detail.push_str(" more candidates");
         }
         unsupported(span, &detail)
     }
@@ -2457,7 +2733,16 @@ impl Elaborator<'_, '_> {
             }
             _ => {
                 if argument_at < items.len() {
-                    return Err(unsupported(form.span, "app over-application"));
+                    return Err(unsupported(
+                        form.span,
+                        &text![
+                            "app over-application of ",
+                            &inferred.head.identity,
+                            ": argument ",
+                            &super::decimal(argument_at.saturating_sub(1)),
+                            " has no binder",
+                        ],
+                    ));
                 }
                 return Ok((argument_at, true));
             }
@@ -2481,7 +2766,14 @@ impl Elaborator<'_, '_> {
             let (arg_out, arg_term) = self.argument(&sort, argument, &mut inferred.head, child)?;
             (arg_out, arg_term, argument_at.saturating_add(1))
         } else {
-            return Err(unsupported(form.span, "app under-application"));
+            let (binder, position) = inferred.head.binder();
+            return Err(unsupported(
+                form.span,
+                &text![
+                    "app under-application: ",
+                    &binder_origin("no argument", &binder, position, &inferred.head.identity,),
+                ],
+            ));
         };
         let nodes = prop_size_of(&body);
         self.meter_step(MeterStep::Substitute(nodes), "substitution", form.span)?;
@@ -3659,6 +3951,7 @@ mod tests {
             },
             available: &[],
             context: WorkStack::new(),
+            context_spans: WorkStack::new(),
             metas: Vec::new(),
             deferred: Vec::new(),
             deferred_forms: Vec::new(),
@@ -3853,5 +4146,71 @@ mod tests {
             "exhausted: elaboration work budget"
         );
         assert_eq!(invalid(one_span(), "x").message, "invalid-constraint: x");
+    }
+
+    /// A metered exhaustion names the budget its step exceeded, and a bounded
+    /// rendering counts every byte it cuts.
+    #[test]
+    fn exhaustion_names_the_exceeded_budget_and_caps_count_cut_bytes() {
+        let limits = crate::Limits::default();
+        let config = MeterConfig {
+            budgets: ProofBudgets {
+                normalization_work: 1,
+                substitution_work: 1,
+            },
+            limits,
+            tree_bounds: TreeBounds::new(limits).expect("default limits bound a tree"),
+        };
+        let meter = |nodes: u32, work: u32, normalization: u32, substitution: u32| Meter {
+            nodes,
+            work,
+            normalization,
+            substitution,
+            config: &config,
+        };
+        let over = limits.work + 1;
+        for (state, step, expected) in [
+            (meter(0, 0, 2, 0), MeterStep::Normalize(1), "normalization"),
+            (meter(0, over, 1, 0), MeterStep::Normalize(1), "work"),
+            (meter(0, 0, 0, 2), MeterStep::Substitute(1), "substitution"),
+            (meter(0, over, 0, 1), MeterStep::Substitute(1), "work"),
+            (
+                meter(limits.nodes + 1, 0, 0, 0),
+                MeterStep::Visit(0),
+                "node",
+            ),
+            (meter(1, over, 0, 0), MeterStep::Visit(0), "work"),
+            (
+                meter(1, 1, 0, 0),
+                MeterStep::Visit(limits.depth + 1),
+                "depth",
+            ),
+            (meter(0, over, 0, 0), MeterStep::Charge(1), "work"),
+        ] {
+            assert_eq!(exceeded_budget(&state, step), expected);
+        }
+        assert_eq!(
+            meter_exhausted(one_span(), "unification", "normalization").message,
+            "exhausted: elaboration unification step exceeded the normalization budget"
+        );
+        assert_eq!(capped(String::from("abcd"), 4), "abcd");
+        assert_eq!(capped(String::from("abcdef"), 4), "abcd...[2 more bytes]");
+        // The cut never splits a character: it stops before the first
+        // non-ASCII byte and still counts every byte not shown.
+        assert_eq!(
+            capped(String::from("ab\u{e9}cdef"), 4),
+            "ab...[6 more bytes]"
+        );
+        let detail = "x".repeat(20_000);
+        let long = infer_diagnostic(
+            DiagnosticKind::Invalid,
+            one_span(),
+            "invalid-constraint",
+            &detail,
+        );
+        let cut = "invalid-constraint: ".len() + detail.len() - MAX_DIAGNOSTIC_BYTES;
+        let notice = alloc::format!("...[{cut} more bytes]");
+        assert_eq!(long.message.len(), MAX_DIAGNOSTIC_BYTES + notice.len());
+        assert!(long.message.ends_with(&notice));
     }
 }
