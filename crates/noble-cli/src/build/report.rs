@@ -11,7 +11,7 @@ mod release;
 pub(super) mod toolchain;
 
 /// The consumer-selected policy revision this build checks evidence against.
-pub(super) const POLICY_REVISION: u32 = 1;
+pub(crate) const POLICY_REVISION: u32 = 1;
 
 /// The report revision the caller selected. `V1` is the default and its exact
 /// field set never changes; `V3` adds the caller-selected Lean toolchain;

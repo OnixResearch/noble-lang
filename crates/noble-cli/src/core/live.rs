@@ -6,6 +6,7 @@
 
 mod declared;
 mod encoding;
+mod proof;
 #[cfg(target_os = "linux")]
 mod watch;
 
@@ -39,6 +40,8 @@ struct LiveOptions {
     watch: bool,
     retained_generation_limit: Option<u64>,
     guest_step_budget: Option<u32>,
+    /// The one definition name whose every admission needs fresh evidence.
+    proof_subject: Option<std::string::String>,
 }
 
 enum ReloadDecision {
@@ -54,6 +57,9 @@ enum ReloadDecision {
     SelectedSourceRefused(noble_contracts::source::Error),
     SourceChanged(super::output::Report),
     HostEffect(std::string::String),
+    /// The proof-required policy refused the candidate before staging: the
+    /// diagnostic and the policy's admission record.
+    ProofRefused(std::string::String, serde_json::Value),
 }
 
 #[derive(Clone, Copy)]
@@ -162,6 +168,7 @@ struct Live {
     accepted_watch_seal: Option<watch::SealedSnapshot>,
     #[cfg(target_os = "linux")]
     watch: Option<watch::Watcher>,
+    proof: Option<proof::Policy>,
 }
 
 pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
@@ -175,6 +182,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         watch,
         retained_generation_limit,
         guest_step_budget,
+        proof_subject,
     } = match parse(arguments) {
         Ok(options) => options,
         Err(message) => {
@@ -280,6 +288,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         accepted_watch_seal: None,
         #[cfg(target_os = "linux")]
         watch: watcher,
+        proof: proof_subject.map(proof::Policy::new),
     };
     if let Some(source) = source {
         if !live.respond_reload(&source) {
@@ -375,6 +384,10 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             if !live.respond_reload(std::path::Path::new(path)) {
                 return std::process::ExitCode::from(2);
             }
+            continue;
+        }
+        if let Some(terms) = line.strip_prefix(":evidence ") {
+            emit(&live.stage_evidence(terms));
             continue;
         }
         if line == ":release-observed-roots" {
@@ -560,6 +573,7 @@ fn parse(arguments: &[std::ffi::OsString]) -> Result<LiveOptions, std::string::S
     let mut allow_effects = None;
     let mut retained_generation_limit = None;
     let mut guest_step_budget = None;
+    let mut proof_subject = None;
     let mut at = 2;
     while at < arguments.len() {
         let flag = arguments[at].to_str().ok_or("invalid live option")?;
@@ -623,6 +637,16 @@ fn parse(arguments: &[std::ffi::OsString]) -> Result<LiveOptions, std::string::S
                 })
             }
             "--self-edit" if grant_name.is_none() => grant_name = Some(value.to_owned()),
+            "--require-proof" if proof_subject.is_none() => {
+                if value.is_empty()
+                    || !value
+                        .bytes()
+                        .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
+                {
+                    return Err("invalid proof-required definition name".into());
+                }
+                proof_subject = Some(value.to_owned());
+            }
             "--expect-generation" if grant_generation.is_none() => {
                 grant_generation = Some(
                     value
@@ -650,6 +674,18 @@ fn parse(arguments: &[std::ffi::OsString]) -> Result<LiveOptions, std::string::S
     }
     if declared_modules && (grant_name.is_some() || grant_generation.is_some()) {
         return Err("declared live modules do not support guest self-edit grants".into());
+    }
+    // The bounded proof-required profile admits only explicitly selected Core
+    // definitions: its evidence is staged before the source is selected, and
+    // no guest proposal, watched save or host test effect reaches it.
+    if proof_subject.is_some()
+        && (source.is_some()
+            || watch
+            || declared_modules
+            || grant_name.is_some()
+            || allow_effects.is_some_and(|mask| mask != 0))
+    {
+        return Err("--require-proof selects a Core live repl without --source, --watch, declared modules, self-edit or host test effects; stage :evidence, then :reload".into());
     }
     let grant = match (grant_name, grant_generation) {
         (Some(name), Some(expected_generation)) if source.is_some() && !name.is_empty() => {
@@ -681,6 +717,7 @@ fn parse(arguments: &[std::ffi::OsString]) -> Result<LiveOptions, std::string::S
         watch,
         retained_generation_limit,
         guest_step_budget,
+        proof_subject,
     })
 }
 
@@ -1152,6 +1189,13 @@ impl Live {
                     Some(&proposal),
                     Some(&problem),
                 ),
+            Ok(ReloadDecision::ProofRefused(problem, _)) => self.proposal_receipt(
+                "proposal-refused",
+                &invocation,
+                Some(&recipe_digest),
+                Some(&proposal),
+                Some(&problem),
+            ),
             Ok(ReloadDecision::SourceChanged(report)) => self.proposal_receipt(
                 "proposal-refused",
                 &invocation,
@@ -1629,6 +1673,17 @@ impl Live {
                 ReloadDecision::Refused(problem) => {
                     Ok(self.admission_refusal(&problem, "definition-refused"))
                 }
+                ReloadDecision::ProofRefused(problem, record) => Ok(super::output::Report {
+                    outcome: "definition-refused".into(),
+                    json: proof_refusal(
+                        self.generation,
+                        &self.last_stack,
+                        &problem,
+                        record,
+                        "definition-refused",
+                    )
+                    .to_string(),
+                }),
                 ReloadDecision::SourceChanged(report) => Ok(report),
                 ReloadDecision::SelectedSourceRefused(_) => Err(fatal_failure(
                     "direct definition reported a selected-file source error",
@@ -2149,6 +2204,13 @@ impl Live {
             Ok(ReloadDecision::HostEffect(problem)) => {
                 refusal(self.generation, &self.last_stack, &problem)
             }
+            Ok(ReloadDecision::ProofRefused(problem, record)) => proof_refusal(
+                self.generation,
+                &self.last_stack,
+                &problem,
+                record,
+                "reload-refused",
+            ),
             Ok(ReloadDecision::SourceChanged(_)) => {
                 return Err(fatal_failure(
                     "file-backed reload reported an unrelated source-change refusal",
@@ -2522,6 +2584,10 @@ impl Live {
         if let Some(problem) = self.retained_generation_budget_refusal() {
             return Ok(ReloadDecision::Refused(problem));
         }
+        let definition_name = definition
+            .definition_name()
+            .ok_or_else(|| fatal_failure("missing checked definition name"))?
+            .to_owned();
         if self
             .session
             .frontend
@@ -2597,6 +2663,24 @@ impl Live {
             std::borrow::Cow::Borrowed(binary.as_slice()),
             binding.wat_sha256.clone(),
         );
+        // Proof-required admission (H-LIVE-02): the selected subject needs
+        // fresh evidence binding this exact candidate and exactly the bytes
+        // emitted for it, decided before anything reaches the worker.
+        let artifact = proof::Artifact {
+            emitted: &binary,
+            served: served.as_ref(),
+        };
+        let proof_record = match self
+            .proof
+            .as_mut()
+            .map(|policy| policy.admit(&definition_name, source, &artifact))
+        {
+            None | Some(proof::Decision::Optional) => None,
+            Some(proof::Decision::Admitted(record)) => Some(record),
+            Some(proof::Decision::Refused(diagnostic, record)) => {
+                return Ok(ReloadDecision::ProofRefused(diagnostic, record));
+            }
+        };
         // Shipped byte admission: an over-limit reload candidate is refused
         // before it is written to the worker, and the prior generation stays.
         if served.len() > super::worker::MAX_LIVE_BINARY {
@@ -2717,7 +2801,7 @@ impl Live {
             },
             None => "not-file-backed",
         };
-        Ok(ReloadDecision::Committed(serde_json::json!({
+        let mut report = serde_json::json!({
             "schema": "noble-live-report/v1", "stage": "wasm-live", "outcome": "reload-committed",
             "generation": self.generation, "stack": stack,
             "watch_sequence": watch_sequence,
@@ -2733,7 +2817,32 @@ impl Live {
             "guest_executions": publication["guest_executions"].clone(),
             "shadow_preflight": publication["shadow_preflight"].clone(),
             "guest_requests": 0, "protected_operations": 0,
-        })))
+        });
+        if let Some(record) = proof_record {
+            report["proof_admission"] = record;
+        }
+        Ok(ReloadDecision::Committed(report))
+    }
+
+    /// `:evidence ABS_CONTRACT ABS_PROOF`: stage one offer for the selected
+    /// proof-required subject. It runs no checker and changes no generation.
+    fn stage_evidence(&mut self, terms: &str) -> serde_json::Value {
+        let generation = self.generation;
+        let outcome = match self.proof.as_mut() {
+            Some(policy) => policy.stage(terms),
+            None => Err("no proof-required definition is selected".into()),
+        };
+        let mut report = match outcome {
+            Ok(report) => report,
+            Err(problem) => serde_json::json!({
+                "schema": "noble-live-report/v1", "stage": "evidence",
+                "outcome": "evidence-refused", "diagnostic": problem,
+                "guest_requests": 0, "protected_operations": 0,
+            }),
+        };
+        report["generation"] = serde_json::json!(generation);
+        report["stack"] = self.last_stack.clone();
+        report
     }
 }
 
@@ -2991,6 +3100,22 @@ fn refusal(generation: u64, stack: &serde_json::Value, diagnostic: &str) -> serd
     serde_json::json!({"schema":"noble-live-report/v1", "stage":"admission", "outcome":"reload-refused",
         "generation":generation, "stack":stack, "diagnostic":diagnostic,
         "guest_requests":0, "protected_operations":0})
+}
+
+/// A proof-policy refusal: decided before staging, so the session keeps its
+/// generation, stack and authorizations, and no candidate body ran.
+fn proof_refusal(
+    generation: u64,
+    stack: &serde_json::Value,
+    diagnostic: &str,
+    record: serde_json::Value,
+    outcome: &str,
+) -> serde_json::Value {
+    let mut report = refusal(generation, stack, diagnostic);
+    report["outcome"] = serde_json::json!(outcome);
+    report["session_state"] = serde_json::json!("retained");
+    report["proof_admission"] = record;
+    report
 }
 
 fn fatal(diagnostic: &str) -> serde_json::Value {

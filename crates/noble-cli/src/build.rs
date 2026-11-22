@@ -15,6 +15,10 @@ pub(crate) mod paa1;
 mod release;
 mod report;
 
+/// The live proof-required admission checks evidence against the same policy
+/// revision as a proof-required build.
+pub(crate) use report::POLICY_REVISION;
+
 pub const USAGE: &str = "usage:
   noble build --require-proof SOURCE --contract FILE [--proof FILE | --refutation FILE]
               [--out NEW_DIR] [--timeout-ms N]
