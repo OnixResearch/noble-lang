@@ -213,8 +213,8 @@ fn imported_proof_elaborates_under_its_alias() -> Result<(), String> {
     assert_eq!(recorded[0].inserted.len(), 1);
     assert_eq!(recorded[0].inserted[0].head, "logic@1/poly-refl");
     assert_eq!(recorded[0].inserted[0].solution, "(List I64)");
-    let checked = check_batch(obligations(&prepared), super::LIMITS)
-        .map_err(|error| format!("{error:?}"))?;
+    let checked =
+        check_batch(obligations(&prepared), super::LIMITS).map_err(|error| format!("{error:?}"))?;
     assert_eq!(checked[0].claim, "(∀ (v0 : El (.list .i64)), v0 = v0)");
     Ok(())
 }
