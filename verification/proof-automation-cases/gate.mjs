@@ -65,7 +65,9 @@ const DESIGNS = {
 const REV1_PROOF = '(export-unary-I64 (intro (tail Stack) (intro (x I64) (pc-sequence (pc-exact (exec-literal 1)) (pc-exact (exec-add)) (bridge (by-exact-append-assoc)) (join (by-exact-result))))) (mc1-true-eq-wrap))';
 const TWO_INPUT_CONTRACT = 'contract 1 add-law [ subject add input [ a I64 b I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in a) (in b))) ] ]';
 const SOURCES = {
-  'vacuous.noble-contract': '(contract 1 vacuous-increment\n  (input (x I64))\n  (output (y I64))\n  (program [ 1 + ])\n  (requires false)\n  (ensures (eq (out y) (add (in x) 1))))\n',
+  // Named `increment` with the law's postcondition, so the owner-law release
+  // reaches its precondition comparison rather than refusing the declaration.
+  'vacuous.noble-contract': '(contract 1 increment\n  (input (x I64))\n  (output (y I64))\n  (program [ 1 + ])\n  (requires false)\n  (ensures (eq (out y) (add (in x) 1))))\n',
   'vacuous-proof.lean': 'import MC1Obligation\nopen NobleContracts\nnamespace MC1Proof\ntheorem proof : MC1Obligation.claim :=\n  fun _tail _before _params _inputs _parameters hpre => absurd hpre (holds_false _ _ _)\nend MC1Proof\n',
   'text.noble-contract': '(contract 1 text-goal\n  (input (x I64))\n  (output (y I64))\n  (program [ 1 + ])\n  (requires true)\n  (ensures (eq (out y) "one")))\n',
   'rev1-vacuous.noble': `module arithmetic@1 [ export increment def increment [ 1 + ] contract 1 increment-law [ subject increment input [ x I64 ] output [ y I64 ] requires [ false ] ensures [ (eq (out y) (add (in x) 1)) ] ] proof 1 increment-correct for increment-law [ ${REV1_PROOF} ] ]\n`,
