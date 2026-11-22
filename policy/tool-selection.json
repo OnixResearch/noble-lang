@@ -186,7 +186,7 @@
     "crates/noble-cli/src/core/runtime/live-test-barrier.mjs": "bc176bdc0da32b323a56b3da32a4f1423e53a6faa5ecdb0d34992c806a9d9408",
     "crates/noble-cli/src/core/runtime/preamble.mjs": "5736053747fc9f7fd84e8c098769fbb213f2908ea7ad06a47ef5174502ac4086",
     "crates/noble-cli/src/core/runtime/protocol.mjs": "3d040b9ba3fc7219b82ffb90656a45b79a19389e75b166c23d3a0fe1235a6cf9",
-    "crates/noble-cli/src/core/runtime/slot-engine.mjs": "e12e9a6bd3a488b6975f9267802141aa4852bcceefcd031847895c6db3addc16",
+    "crates/noble-cli/src/core/runtime/slot-engine.mjs": "3da9ca762873384065d9e563710bdfea7df7349efbd49b205e03c8b5a55ca5c0",
     "crates/noble-cli/src/core/runtime/values.mjs": "1b305dd458b50a8b7eb4390f39938e8087b699d16b295024b0d68aff835ca1c3",
     "crates/noble-cli/src/core/worker.rs": "418d539d13381108a1055c58fe2e09d4adc001089d7140ee2a70572d59b4c9d4",
     "crates/noble-cli/src/core/worker/assembly.rs": "ada590e9cd1da2a358a6f8165722b8a0a8b1a68b52364a6f7e3b3cc9edeb5987",
