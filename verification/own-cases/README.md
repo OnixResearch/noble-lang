@@ -19,18 +19,22 @@ It promotes nothing by itself.
 | [`runs/20261121-b1`](runs/20261121-b1) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `05bac95a` (Cairn batch-1 tree) | `completed` / `unmet-cases`; the same verdicts as r3: OWN-CASE-01, 02, 04, 06, 07 promotable, OWN-CASE-03 failed, OWN-CASE-05 withheld |
 | [`runs/20261121-b2`](runs/20261121-b2) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `b088cfc7` (Cairn batch-2 tree, after review round-3 notes R3-1 and R3-4) | `completed` / `unmet-cases`; the same verdicts: OWN-CASE-01, 02, 04, 06, 07 promotable, OWN-CASE-03 failed, OWN-CASE-05 withheld |
 | [`runs/20261121-b3`](runs/20261121-b3) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `c9343972` (combined Cairn tree: batch 2 plus LIVE round 3) | `completed` / `unmet-cases`; the same verdicts, projection `7aa15017…` and gate `828ff88e…` as b2; the case records keep citing b2 |
+| [`runs/20261122-b4`](runs/20261122-b4) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `88e90add` (Cairn batch-4 tree, with the OWN-CASE-03 amendment of owner decision 35) | `completed` / `all-passed`; OWN-CASE-01, 02, 03, 04, 06, 07 promotable, OWN-CASE-05 withheld |
 
 [`acceptance.json`](acceptance.json) is the **first** run's receipt (`sha256 e873df58…`, tested
 commit `5c9e38f4`), kept byte-for-byte as the immutable path the first OWN promotions cite. Later
 runs live under `runs/` and are cited by their own paths; superseded receipts stay immutable and
 rework receipts are added beside them, never edited. The current promotion facts come from
+[`runs/20261122-b4/acceptance.json`](runs/20261122-b4/acceptance.json) (`sha256 1a5abea4…`,
+`source_revision sha256:50617810…`, binary `ca120a2e…` before and after, tested commit
+`88e90add`, projection digest `946d97ab…`, gate `65c49dc8…`). The OWN-CASE-03 amendment (owner
+decision 35) changed the projection and the gate, so every case record moved to this run, and
+OWN-CASE-03 is promoted on it: every amended variant was observed as registered. The batch-2 run
 [`runs/20261121-b2/acceptance.json`](runs/20261121-b2/acceptance.json) (`sha256 f5c2d53a…`,
-`source_revision sha256:0feaed54…`, binary `8c0844c8…` before and after, tested commit
-`b088cfc7`, projection digest `7aa15017…`, gate `828ff88e…`). Review round-3 notes R3-1 and R3-4
-changed the projection and the gate, so the case records moved to this run; its verdicts and
-observations match r3 except for the binary digests and OWN-CASE-05's policy-denied
-`1 test.abort` command, which the frontend now refuses as `word test.abort is not available in
-this environment` instead of an internal error. The r3 receipt (`sha256 3d7666bf…`, tested commit
+tested commit `b088cfc7`) was the previous current run; its verdicts matched r3 except for the
+binary digests and OWN-CASE-05's policy-denied `1 test.abort` command, which the frontend refuses
+as `word test.abort is not available in this environment` instead of an internal error. The r3
+receipt (`sha256 3d7666bf…`, tested commit
 `33318b7c`), the r2 receipt (`sha256 ae533fdd…`, tested commit `81139111`) and the batch-1 re-run
 [`runs/20261121-b1/acceptance.json`](runs/20261121-b1/acceptance.json) (`sha256 3d311f50…`, tested
 commit `05bac95a`) remain beside it.

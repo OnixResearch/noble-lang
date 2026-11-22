@@ -136,6 +136,15 @@
   from the batch-4 branch): balanced-8 36/14, left- and right-deep-8 refused at compose 5,
   balanced-, left-deep- and right-deep-4 all 10/6. Promotion waits for the gate's run on the
   merged tree and an integrator review (decision 28).
+  Progress (2026-11-22, batch 4): the gate ran on the batch-4 tree `88e90add`
+  ([`runs/20261122-b4`](../../../verification/own-cases/runs/20261122-b4/acceptance.json),
+  sha256 `1a5abea4…`, source revision `sha256:50617810…`, binary `ca120a2e…` before and after,
+  projection digest `946d97ab…`, gate `65c49dc8…`): verdict `all-passed`, promotable
+  OWN-CASE-01/02/03/04/06/07, withheld OWN-CASE-05. OWN-CASE-03 observed every amended variant
+  as registered and is promoted to implemented/passed (proof open); the integrator review of the
+  amendment (decision 28) accepted it. The amendment changed the projection digest and the gate,
+  so every promoted record now cites this run, as the batch-2 move did. The task stays open for
+  OWN-CASE-05 (observable frame-pin release, LREF-EXIT-01) and the round-1 commit identity.
 - [x] [serial] If a borrow profile is selected, specify syntax separately, implement the checker escape test and obtain checker-refinement evidence for OWN-PO-2. r[OWN-BORROW-01] OWNER DECISION 2026-11-20: no borrow profile is selected, so the condition does not hold and the task closes with that recorded outcome (owner rule: a recorded negative outcome completes a conditional task). Noble keeps only the WIT `own`/`borrow` adapter forms; it has no `borrow` word. OWN-CASE-04's borrow variants are therefore inapplicable, OWN-PO-2 is not applicable, and no checker escape test or refinement evidence is claimed. Selecting a borrow profile later needs a new change carrying its syntax, escape test and OWN-PO-2 evidence.
 - [ ] [serial] Mechanize OWN-PO-1/3 in the abstract model, then obtain separate lowering, runtime and host-ledger correspondence for OWN-PO-4..7. r[OWN-EV-01]
   Progress (2026-10-30): `proofs/foundation/NobleFoundation/Effects.lean` proved OWN-PO-1 for
