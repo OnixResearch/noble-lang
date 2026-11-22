@@ -450,57 +450,140 @@ fn rewrite_exec_literal(
     limits: Limits,
     depth: u32,
 ) -> Result<Form, Diagnostic> {
-    if depth > limits.depth {
-        return Err(stage_exhausted(form.span, "depth"));
+    let bound = scan_bound(limits, form.span)?;
+    let rule = LiteralRule {
+        literal,
+        origin,
+        limits,
+        bound,
+    };
+    let mut pending = WorkStack::new();
+    let mut values = Vec::new();
+    pending
+        .push_bounded(RewriteFrame::Enter(form, depth), bound)
+        .map_err(|()| stage_exhausted(form.span, "tree frame"))?;
+    let mut outcome = Ok(());
+    while let Some(frame) = pending.pop_bounded() {
+        outcome = rewrite_step(frame, rule, head, inserted, &mut pending, &mut values);
+        if outcome.is_err() {
+            break;
+        }
     }
-    match &form.kind {
-        FormKind::Atom(_) => Ok(form.clone()),
-        FormKind::List(items) => {
-            if is_exec_literal_infer(items) {
-                let text = signed_text(literal);
-                inserted.push(InsertedArgument {
-                    span: items[1].span,
-                    binder: String::from("exec-literal"),
-                    position: 1,
-                    head: String::from(head),
-                    solution: text.clone(),
-                    constraints: alloc::vec![origin],
-                });
-                return Ok(Form {
-                    kind: FormKind::List(alloc::vec![
-                        items[0].clone(),
-                        Form {
-                            kind: FormKind::Atom(text),
-                            span: items[1].span,
-                        },
-                    ]),
-                    span: form.span,
-                });
+    outcome?;
+    match values.pop() {
+        Some(rewritten) => Ok(rewritten),
+        None => Err(internal(form.span, "exec-literal rewrite produced no term")),
+    }
+}
+
+/// The fixed inputs of one exec-literal rewrite: the subject literal, the
+/// contract span the inserted argument names, and the bounds.
+#[derive(Clone, Copy)]
+struct LiteralRule {
+    literal: i64,
+    origin: Span,
+    limits: Limits,
+    bound: usize,
+}
+
+/// One frame of the exec-literal rewrite: a form to rewrite at its depth, or a
+/// list's items with the next item, the items' depth and the list's span.
+#[octet::sealed_enum]
+enum RewriteFrame<'a> {
+    Enter(&'a Form, u32),
+    Children(&'a [Form], usize, u32, Span),
+}
+
+/// Rewrite one frame: an atom or a placeholder site becomes one value; a list
+/// schedules its next item, or gathers its rewritten items into one value once
+/// every item is rewritten. A frame walk, not a recursion inside a loop, which
+/// the pinned Lean cannot prove monotone.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+fn rewrite_step<'a>(
+    frame: RewriteFrame<'a>,
+    rule: LiteralRule,
+    head: &str,
+    inserted: &mut Vec<InsertedArgument>,
+    pending: &mut WorkStack<RewriteFrame<'a>>,
+    values: &mut Vec<Form>,
+) -> Result<(), Diagnostic> {
+    match frame {
+        RewriteFrame::Enter(form, depth) => {
+            if depth > rule.limits.depth {
+                return Err(stage_exhausted(form.span, "depth"));
             }
-            let mut rewritten = Vec::with_capacity(items.len());
-            let next = deeper(depth, form.span)?;
-            let mut index = 0usize;
-            let mut outcome: Result<(), Diagnostic> = Ok(());
-            while outcome.is_ok() && index < items.len() {
-                match rewrite_exec_literal(
-                    &items[index],
-                    literal,
-                    origin,
-                    head,
-                    inserted,
-                    limits,
-                    next,
-                ) {
-                    Ok(child) => rewritten.push(child),
-                    Err(error) => outcome = Err(error),
+            match &form.kind {
+                FormKind::Atom(_) => {
+                    values.push(form.clone());
+                    Ok(())
                 }
-                index = index.saturating_add(1);
+                FormKind::List(items) => {
+                    if is_exec_literal_infer(items) {
+                        let text = signed_text(rule.literal);
+                        inserted.push(InsertedArgument {
+                            span: items[1].span,
+                            binder: String::from("exec-literal"),
+                            position: 1,
+                            head: String::from(head),
+                            solution: text.clone(),
+                            constraints: alloc::vec![rule.origin],
+                        });
+                        values.push(Form {
+                            kind: FormKind::List(alloc::vec![
+                                items[0].clone(),
+                                Form {
+                                    kind: FormKind::Atom(text),
+                                    span: items[1].span,
+                                },
+                            ]),
+                            span: form.span,
+                        });
+                        return Ok(());
+                    }
+                    let next = deeper(depth, form.span)?;
+                    pending
+                        .push_bounded(
+                            RewriteFrame::Children(items, 0, next, form.span),
+                            rule.bound,
+                        )
+                        .map_err(|()| stage_exhausted(form.span, "tree frame"))
+                }
             }
-            outcome?;
-            Ok(Form {
+        }
+        // `index` is the next item; past the last, the list's rewritten items
+        // are the top of the value stack, in order.
+        RewriteFrame::Children(items, index, depth, span) => {
+            if let Some(item) = items.get(index) {
+                pending
+                    .push_bounded(
+                        RewriteFrame::Children(items, index.saturating_add(1), depth, span),
+                        rule.bound,
+                    )
+                    .map_err(|()| stage_exhausted(span, "tree frame"))?;
+                return pending
+                    .push_bounded(RewriteFrame::Enter(item, depth), rule.bound)
+                    .map_err(|()| stage_exhausted(span, "tree frame"));
+            }
+            let Some(at) = values.len().checked_sub(items.len()) else {
+                return Err(internal(span, "rewritten list lost its items"));
+            };
+            let rewritten = values.split_off(at);
+            values.push(Form {
                 kind: FormKind::List(rewritten),
-                span: form.span,
-            })
+                span,
+            });
+            Ok(())
         }
     }
 }
@@ -1479,10 +1562,13 @@ impl Elaborator<'_, '_> {
         let right = self.resolve_ty(right, span)?;
         match (&left, &right) {
             (Ty::Meta(first), Ty::Meta(second)) => {
-                if first == second {
+                // By value: `<` on the shared references would select
+                // `PartialOrd for &u32`, whose `lt` the pinned library models
+                // only through the unmodelled array instance.
+                if *first == *second {
                     return Ok(());
                 }
-                let (early, late) = if first < second {
+                let (early, late) = if *first < *second {
                     (*first, *second)
                 } else {
                     (*second, *first)
@@ -2322,20 +2408,32 @@ impl Elaborator<'_, '_> {
         }
         let head_depth = deeper(depth, head_form.span)?;
         let mut inferred = self.infer(head_form, head_depth)?;
-        let mut argument_at = 2usize;
-        let mut outcome: Result<(), Diagnostic> = Ok(());
-        let mut is_spine_complete = false;
-        while outcome.is_ok() && !is_spine_complete {
-            match Self::app_step(self, form, items, &mut inferred, argument_at, depth) {
-                Ok((next_argument, is_complete)) => {
-                    argument_at = next_argument;
-                    is_spine_complete = is_complete;
-                }
-                Err(error) => outcome = Err(error),
-            }
-        }
-        outcome?;
+        self.app_spine(form, items, &mut inferred, 2, depth)?;
         Ok(inferred)
+    }
+
+    /// Fill the spine's binders from `argument_at` until it completes, one
+    /// telescope step per call. A recursion, not a loop: the spine is part of
+    /// the elaborator's own recursion (check, infer, app), and the pinned Lean
+    /// cannot prove a loop inside that recursion monotone.
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-contracts; one call per telescope binder of the finite, depth-bounded head proposition"
+    )]
+    fn app_spine(
+        &mut self,
+        form: &Form,
+        items: &[Form],
+        inferred: &mut Inferred,
+        argument_at: usize,
+        depth: u32,
+    ) -> Result<(), Diagnostic> {
+        let (next_argument, is_complete) =
+            self.app_step(form, items, inferred, argument_at, depth)?;
+        if is_complete {
+            return Ok(());
+        }
+        self.app_spine(form, items, inferred, next_argument, depth)
     }
 
     /// One telescope step of an A2 spine: fill one binder, or report that the
