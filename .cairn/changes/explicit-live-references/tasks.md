@@ -128,3 +128,13 @@
   a positive target plus proof-carrying publication (template identity T1/T2 is merged). No case
   inherits LIVE acceptance, and no promoted case claims more than `proof: open` /
   `trust: explicit`. This task stays open.
+  Progress 2026-11-22 (integrator decision 43): LSLOT-05 is implemented and projected. A
+  proof-required slot's authority selects one exact MC2 contract; a publication of a checked
+  returned target carries one evidence record whose declared P/D, captures, semantic context,
+  claim digest, assumptions and code-donor manifest must equal the target's, and whose proof the
+  `noble build --require-proof` consumer rechecks before the core binds it to the target's closed
+  subject (its verified template with the captured values). A development run of the new lane
+  refused all seven mismatch variants at `selected-target-evidence`, rejected an exact record whose
+  proof is about another subject (`proof-rejected`) and the slot's valid proof offered for the
+  capture-1 target (`correspondence-mismatch`), and published the exact record at epoch 1. LSLOT-05
+  is promoted only from a retained gate receipt. LSLOT-04/07/08 stay as recorded above.
