@@ -336,8 +336,7 @@ fn elaboration_and_checking_share_one_request_budget() {
         ..super::LIMITS
     };
     let error = check_batch_with_budgets(staged, short, ProofBudgets::from_limits(short))
-        .err()
-        .expect("one unit below the combined work exhausts");
+        .expect_err("one unit below the combined work exhausts");
     assert_eq!(error.kind, noble_contracts::DiagnosticKind::Exhausted);
     check_batch_with_budgets(&alone, short, ProofBudgets::from_limits(short))
         .expect("checking alone fits the same limit");

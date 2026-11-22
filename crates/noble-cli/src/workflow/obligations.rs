@@ -313,7 +313,8 @@ fn arithmetic() -> encoding::Json {
     ])
 }
 
-fn consumer_policy() -> encoding::Json {
+/// The pinned Lean consumer policy every checker result is bound to.
+pub(super) fn consumer_policy() -> encoding::Json {
     encoding::object([
         ("lean_release", encoding::string(LEAN_RELEASE)),
         ("allowed_axioms", encoding::strings(&ALLOWED_AXIOMS)),

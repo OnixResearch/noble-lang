@@ -913,7 +913,7 @@ fn accepted_report(
         ),
     ]);
     if !batch.elaborations.is_empty() {
-        fields.push(("elaboration", elaboration_evidence(batch)));
+        fields.push(("elaboration", elaboration_evidence(batch, proofs)));
     }
     fields.extend(super::diagnostics::classification_fields(
         schema,
@@ -922,8 +922,13 @@ fn accepted_report(
     encoding::Json::Object(fields)
 }
 
-/// The inspect/copy-expanded record of every abbreviated proof in `batch`.
-fn elaboration_evidence(batch: &ProofBatch) -> encoding::Json {
+/// The `noble-elaboration/v1` record of every abbreviated proof in `batch`:
+/// the inserted arguments, the copy-expanded explicit term, a pre-order source
+/// map from every explicit node to the abbreviated span that produced it, and
+/// the claim, revisions and consumer policy the explicit term was checked
+/// under. The record restates an untrusted producer; only the explicit term
+/// was checked.
+fn elaboration_evidence(batch: &ProofBatch, checked: &[CheckedProof]) -> encoding::Json {
     let mut proofs = std::vec::Vec::with_capacity(batch.elaborations.len());
     for record in &batch.elaborations {
         let mut inserted = std::vec::Vec::with_capacity(record.inserted.len());
@@ -949,6 +954,12 @@ fn elaboration_evidence(batch: &ProofBatch) -> encoding::Json {
                 ),
             ]));
         }
+        let claim = checked.iter().find(|proof| proof.name == record.proof);
+        let explicit_term = batch
+            .obligations
+            .iter()
+            .find(|obligation| obligation.name == record.proof)
+            .map(|obligation| &obligation.term);
         proofs.push(encoding::object([
             ("proof", encoding::string(&record.proof)),
             ("revision", encoding::string(&record.revision)),
@@ -962,9 +973,28 @@ fn elaboration_evidence(batch: &ProofBatch) -> encoding::Json {
             ),
             ("inserted", encoding::Json::Array(inserted)),
             ("explicit", encoding::string(&record.explicit)),
+            (
+                "source_map",
+                encoding::Json::Array(explicit_term.map(source_map).unwrap_or_default()),
+            ),
+            (
+                "claim_sha256",
+                encoding::optional_string(
+                    claim.map(|proof| sha256(proof.claim.as_bytes())).as_deref(),
+                ),
+            ),
+            (
+                "model_revision",
+                encoding::optional_string(claim.map(|proof| proof.model_revision.as_str())),
+            ),
+            (
+                "checker_revision",
+                encoding::optional_string(claim.map(|proof| proof.checker_revision.as_str())),
+            ),
         ]));
     }
     encoding::object([
+        ("schema", encoding::string("noble-elaboration/v1")),
         (
             "revision",
             encoding::string(noble_contracts::intrinsic::ELABORATION_REVISION),
@@ -986,8 +1016,24 @@ fn elaboration_evidence(batch: &ProofBatch) -> encoding::Json {
                 ),
             ]),
         ),
+        ("consumer_policy", super::obligations::consumer_policy()),
         ("proofs", encoding::Json::Array(proofs)),
     ])
+}
+
+/// The span of every node of an explicit term, in pre-order. A node the
+/// elaborator inserted carries its `(infer)` or `app` span, so each entry
+/// points back into the author's abbreviated text.
+fn source_map(term: &noble_contracts::intrinsic::Form) -> std::vec::Vec<encoding::Json> {
+    let mut spans = std::vec::Vec::new();
+    let mut pending = std::vec::Vec::from([term]);
+    while let Some(node) = pending.pop() {
+        spans.push(span_evidence(node.span));
+        if let noble_contracts::intrinsic::FormKind::List(items) = &node.kind {
+            pending.extend(items.iter().rev());
+        }
+    }
+    spans
 }
 
 /// Standalone, opt-in module source proof check, never a release decision.
@@ -1694,63 +1740,57 @@ fn execute(
 #[cfg(test)]
 mod tests {
     #[test]
-    fn elaboration_evidence_lists_inserted_arguments_and_digests() {
-        use noble_contracts::intrinsic::{
-            ElaborationRecord, InsertedArgument, ProofBatch, ProofWork, ELABORATION_REVISION,
-        };
-
-        let span = |start: u32, end: u32| noble_contracts::Span { start, end };
-        let batch = ProofBatch {
-            module: "logic".into(),
-            version: 1,
-            source: b"module logic@1 [ ]".to_vec(),
-            generation: 0,
-            dependencies: std::vec::Vec::new(),
-            obligations: std::vec::Vec::new(),
-            elaborations: std::vec![ElaborationRecord {
-                proof: "refl-list".into(),
-                revision: ELABORATION_REVISION.into(),
-                inserted: std::vec![InsertedArgument {
-                    span: span(10, 17),
-                    binder: "A".into(),
-                    position: 0,
-                    head: "logic@1/poly-refl".into(),
-                    solution: "(List I64)".into(),
-                    constraints: std::vec![span(30, 48)],
-                }],
-                abbreviated: "(intro (x (List I64)) (app (use poly-refl) x))".into(),
-                explicit: "(intro (x (List I64)) (apply (apply (use poly-refl) (List I64)) x))"
-                    .into(),
-            }],
-            elaboration_work: ProofWork {
-                normalization: 3,
-                substitution: 7,
-                total: 11,
-            },
-        };
-        let report = super::elaboration_evidence(&batch).encode();
-        for expected in [
-            "\"revision\":\"implicit-args/v1\"",
-            "\"binder\":\"A\"",
-            "\"position\":0",
-            "\"head\":\"logic@1/poly-refl\"",
-            "\"solution\":\"(List I64)\"",
-            "\"start\":30",
-            "\"start\":10",
-            "\"normalization\":3",
-            "\"substitution\":7",
-            "\"explicit\":\"(intro (x (List I64)) (apply (apply (use poly-refl) (List I64)) x))\"",
-        ] {
-            assert!(
-                report.contains(expected),
-                "elaboration evidence lost {expected}: {report}"
-            );
-        }
+    fn elaboration_record_maps_every_explicit_node_to_the_abbreviated_source() {
+        let source = b"module logic@1 [ proof 1 poly-refl : [ (Pi (A Type0) (Pi (x A) (Eq A x x))) ] [ (intro (A Type0) (intro (x A) (refl x))) ] proof 1 refl-type infer : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (apply (use poly-refl) (infer)) (infer))) ] ]";
+        let limits = noble_contracts::Limits::default();
+        let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("retained source budget");
+        let session =
+            noble_contracts::source::ModuleSession::new(&[], retained).expect("module session");
+        let prepared = session.prepare(source, &[], limits).expect("prepares");
+        let batch = prepared.proof_obligations().expect("staged proofs");
+        let checked = noble_contracts::intrinsic::check_batch(batch, limits).expect("checks");
+        let report: serde_json::Value =
+            serde_json::from_str(&super::elaboration_evidence(batch, &checked).encode())
+                .expect("record JSON");
+        assert_eq!(report["schema"], "noble-elaboration/v1");
         assert_eq!(
-            report.matches("\"explicit_sha256\":").count(),
-            1,
-            "one record must carry exactly one explicit digest"
+            report["consumer_policy"]["allowed_axioms"],
+            serde_json::json!(["propext", "Classical.choice", "Quot.sound"])
         );
+        let proofs = report["proofs"].as_array().expect("records");
+        assert_eq!(proofs.len(), 1, "only the abbreviated proof has a record");
+        let record = &proofs[0];
+        let claim = checked
+            .iter()
+            .find(|proof| proof.name == "refl-type")
+            .expect("checked claim");
+        assert_eq!(
+            record["claim_sha256"],
+            super::sha256(claim.claim.as_bytes())
+        );
+        assert_eq!(record["checker_revision"], claim.checker_revision.as_str());
+        let text = std::str::from_utf8(source).expect("utf-8 source");
+        let slice = |span: &serde_json::Value| {
+            let start = usize::try_from(span["start"].as_u64().expect("start")).expect("start");
+            let end = usize::try_from(span["end"].as_u64().expect("end")).expect("end");
+            &text[start..end]
+        };
+        // Every explicit node maps into the abbreviated proof term, and the two
+        // inserted nodes map to the `(infer)` placeholders that produced them.
+        let map = record["source_map"].as_array().expect("source map");
+        assert_eq!(
+            slice(&map[0]),
+            "(intro (x I64) (apply (apply (use poly-refl) (infer)) (infer)))"
+        );
+        let inserted: std::vec::Vec<&str> = map
+            .iter()
+            .map(slice)
+            .filter(|fragment| *fragment == "(infer)")
+            .collect();
+        assert_eq!(inserted.len(), 2, "both inserted arguments map to (infer)");
+        let rows = record["inserted"].as_array().expect("inserted rows");
+        assert!(rows.iter().all(|row| slice(&row["span"]) == "(infer)"));
     }
 
     #[test]
