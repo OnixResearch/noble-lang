@@ -597,6 +597,11 @@
 #   cargo graph 37fef23bf53da9de35c5a4ebbc5cf5d8291b91cff98a47bb8842237d0f86422b; collector policy ae88c99a5ef000dd928d115463d4be05d8193916d475604d2ee86b8f26d4eb17.
 #   25198 production paths = 12617 body/open + 7924 generated + 4657 structural;
 #   16798 test-only paths; 93 macro origins. Earlier header counts are historical.
+# Renewed Cairn batch 5: the transparent implicit-argument elaborator, its refusal content, the IMPL-CASE registration and the abnormal-exit pin release (LREF-EXIT-01). from a complete 110-unit selected collection:
+#   IR ad86cc98c0ad3b5691459ad531c3fdf711f44a1cabacc83740b3fa571d972276; coverage d3dcf70268324ffaa494f9a7be66bc603e95469245301b725543758306a8765a;
+#   cargo graph 37fef23bf53da9de35c5a4ebbc5cf5d8291b91cff98a47bb8842237d0f86422b; collector policy ae88c99a5ef000dd928d115463d4be05d8193916d475604d2ee86b8f26d4eb17.
+#   25198 production paths = 12617 body/open + 7924 generated + 4657 structural;
+#   16800 test-only paths; 93 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
@@ -32837,6 +32842,7 @@ let
     "live_slot_direct_quote::a_dispatched_result_keeps_and_is_charged_for_its_package",
     "live_slot_direct_quote::a_failed_root_issues_no_saved_owner_and_poisons_the_session",
     "live_slot_direct_quote::a_saved_named_caller_survives_module_root_retirement",
+    "live_slot_direct_quote::an_abnormal_root_exit_releases_its_pins_exactly_once",
     "live_slot_direct_quote::direct_quote_owner_can_run_and_release_without_retaining_code",
     "live_slot_direct_quote::main",
     "live_slot_direct_quote::main::test",
@@ -34465,11 +34471,12 @@ let
     "noble-cli::closure@crates/noble-cli/tests/live_slot_capture_legacy.rs:440:1140",
     "noble-cli::closure@crates/noble-cli/tests/live_slot_cas_policy.rs:351:1011",
     "noble-cli::closure@crates/noble-cli/tests/live_slot_coherent_maps.rs:955:1592",
-    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:1184:1860",
-    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:1870:2527",
-    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:2537:3186",
-    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:3196:3819",
-    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:3829:4466",
+    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:1346:2022",
+    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:2032:2689",
+    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:2699:3348",
+    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:3358:3981",
+    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:3991:4628",
+    "noble-cli::closure@crates/noble-cli/tests/live_slot_direct_quote.rs:4638:5278",
     "noble-cli::closure@crates/noble-cli/tests/live_slot_late_control.rs:440:1114",
     "noble-cli::closure@crates/noble-cli/tests/live_slot_quota_replay.rs:521:1150",
     "noble-cli::closure@crates/noble-cli/tests/live_slot_relocation_witness.rs:604:1243",
