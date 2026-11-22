@@ -17,6 +17,10 @@
 //! only when that release is provably exact, and is poisoned otherwise (LREF-CASE-01). Behavioral
 //! evidence, not a proof. An empty quotation, whose entry is the shared core empty entry rather
 //! than code in its module's span, installs, runs and is saved like any other Program.
+//! A Program escaped from a slot dispatch keeps its own recipe after publication (LREF-CASE-04),
+//! one installed generic caller selects the version each root pinned (LREF-CASE-05), and a root
+//! held across a publication selects its pinned version for every dispatch while an older saved
+//! Program it receives runs its own code (LREF-CASE-06).
 
 #[test]
 fn direct_quote_owner_can_run_and_release_without_retaining_code() {
@@ -153,6 +157,66 @@ fn an_empty_quotation_installs_runs_and_is_saved() {
     assert!(
         output.status.success(),
         "checked CLI empty quotation lane failed: stdout={} stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+}
+
+#[test]
+fn an_escaped_result_never_follows_publication() {
+    let output = std::process::Command::new(
+        "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    )
+    .arg(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/live_slot_escaped_result.mjs"
+    ))
+    .arg(env!("CARGO_BIN_EXE_noble"))
+    .output()
+    .expect("launch selected Node/V8 escaped result child");
+    assert!(
+        output.status.success(),
+        "checked CLI escaped result lane failed: stdout={} stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+}
+
+#[test]
+fn a_saved_generic_caller_selects_the_version_each_root_pinned() {
+    let output = std::process::Command::new(
+        "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    )
+    .arg(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/live_slot_generic_caller_roots.mjs"
+    ))
+    .arg(env!("CARGO_BIN_EXE_noble"))
+    .output()
+    .expect("launch selected Node/V8 generic caller child");
+    assert!(
+        output.status.success(),
+        "checked CLI generic caller lane failed: stdout={} stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+}
+
+#[test]
+fn a_held_root_keeps_its_map_and_runs_an_older_program() {
+    let output = std::process::Command::new(
+        "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    )
+    .arg(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/live_slot_held_root_mixing.mjs"
+    ))
+    .arg(env!("CARGO_BIN_EXE_noble"))
+    .output()
+    .expect("launch selected Node/V8 held root child");
+    assert!(
+        output.status.success(),
+        "checked CLI held root lane failed: stdout={} stderr={}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );
