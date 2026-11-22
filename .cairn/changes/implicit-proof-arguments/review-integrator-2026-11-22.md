@@ -23,9 +23,8 @@ Read the design and every diff above; ran on the branch:
 - `cargo clippy -p noble-cli -p noble-contracts --all-targets -- -D warnings` and `cargo fmt
   --all --check`: clean;
 - the flake `octet` check through probes on the merged tree: 309 deny-all findings at first,
-  then 6, then 2 (test-only `missing_const_fn` false positives), then a clean lint phase at
-  `5536bde0` (no finding, no unfulfilled expectation); the architecture phase and the final
-  batch run are the authority.
+  then 6, then 2 (test-only `missing_const_fn` false positives), then a clean run at `5536bde0`
+  (lint and architecture phases, status clean, 0 findings); the final batch run is the authority.
 
 ## Findings
 
