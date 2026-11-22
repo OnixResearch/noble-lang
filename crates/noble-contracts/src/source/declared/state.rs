@@ -1807,6 +1807,10 @@ impl ModuleSession {
     /// Bound the proof elaboration of every module this session prepares by
     /// the host-selected proof request budgets, the same budgets the host
     /// checks the elaborated explicit terms under.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; the only mutable input is the host-selected proof request budget this session's elaboration runs under; no source, published compiler state or caller value is mutated."
+    )]
     pub fn share_proof_budgets(&mut self, budgets: crate::intrinsic::ProofBudgets) {
         self.proof_budgets = Some(budgets);
     }
