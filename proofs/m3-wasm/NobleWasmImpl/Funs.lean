@@ -36275,7 +36275,7 @@ def source.CompileMetrics.Insts.CoreCmpEq : core.cmp.Eq source.CompileMetrics
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::Identity}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 756:9-756:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 863:9-863:14
     Visibility: public -/
 def source.Identity.Insts.CoreCloneClone.clone
   (self : source.Identity) : Result source.Identity := do
@@ -36284,7 +36284,7 @@ def source.Identity.Insts.CoreCloneClone.clone
   ok { id := i, recipe := v }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::Identity}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 756:9-756:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 863:9-863:14 -/
 @[reducible]
 def source.Identity.Insts.CoreCloneClone : core.clone.Clone source.Identity
   := {
@@ -36292,14 +36292,14 @@ def source.Identity.Insts.CoreCloneClone : core.clone.Clone source.Identity
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::FreeCode}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 750:9-750:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 857:9-857:14
     Visibility: public -/
 def source.FreeCode.Insts.CoreCloneClone.clone
   (self : source.FreeCode) : Result source.FreeCode := do
   ok self
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::FreeCode}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 750:9-750:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 857:9-857:14 -/
 @[reducible]
 def source.FreeCode.Insts.CoreCloneClone : core.clone.Clone source.FreeCode
   := {
@@ -36393,7 +36393,7 @@ def source.Compiler.Insts.CoreCloneClone : core.clone.Clone source.Compiler
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::Identity}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 756:16-756:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 863:16-863:21
     Visibility: public -/
 def source.Identity.Insts.CoreFmtDebug.fmt
   (self : source.Identity) (f : core.fmt.Formatter) :
@@ -36407,14 +36407,14 @@ def source.Identity.Insts.CoreFmtDebug.fmt
     "id") dyn (toStr "recipe") dyn1
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::Identity}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 756:16-756:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 863:16-863:21 -/
 @[reducible]
 def source.Identity.Insts.CoreFmtDebug : core.fmt.Debug source.Identity := {
   fmt := source.Identity.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::FreeCode}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 750:22-750:27
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 857:22-857:27
     Visibility: public -/
 def source.FreeCode.Insts.CoreFmtDebug.fmt
   (self : source.FreeCode) (f : core.fmt.Formatter) :
@@ -36426,7 +36426,7 @@ def source.FreeCode.Insts.CoreFmtDebug.fmt
     "start") dyn (toStr "slots") dyn1
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::FreeCode}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 750:22-750:27 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 857:22-857:27 -/
 @[reducible]
 def source.FreeCode.Insts.CoreFmtDebug : core.fmt.Debug source.FreeCode := {
   fmt := source.FreeCode.Insts.CoreFmtDebug.fmt
@@ -36937,6 +36937,99 @@ def source.ProgramMetadata.Insts.CoreFmtDebug : core.fmt.Debug
   fmt := source.ProgramMetadata.Insts.CoreFmtDebug.fmt
 }
 
+/-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginOwner}::clone]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 783:9-783:14
+    Visibility: public -/
+def source.OriginOwner.Insts.CoreCloneClone.clone
+  (self : source.OriginOwner) : Result source.OriginOwner := do
+  ok self
+
+/-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginClass}::clone]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 773:9-773:14
+    Visibility: public -/
+def source.OriginClass.Insts.CoreCloneClone.clone
+  (self : source.OriginClass) : Result source.OriginClass := do
+  ok self
+
+/-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginClass}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 773:9-773:14 -/
+@[reducible]
+def source.OriginClass.Insts.CoreCloneClone : core.clone.Clone
+  source.OriginClass := {
+  clone := source.OriginClass.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginRecipe}::clone]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 762:9-762:14
+    Visibility: public -/
+def source.OriginRecipe.Insts.CoreCloneClone.clone
+  (self : source.OriginRecipe) : Result source.OriginRecipe := do
+  ok self
+
+/-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginRecipe}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 762:9-762:14 -/
+@[reducible]
+def source.OriginRecipe.Insts.CoreCloneClone : core.clone.Clone
+  source.OriginRecipe := {
+  clone := source.OriginRecipe.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginStaticOperation}::clone]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:9-737:14
+    Visibility: public -/
+def source.OriginStaticOperation.Insts.CoreCloneClone.clone
+  (self : source.OriginStaticOperation) :
+  Result source.OriginStaticOperation
+  := do
+  ok self
+
+/-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginStaticOperation}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:9-737:14 -/
+@[reducible]
+def source.OriginStaticOperation.Insts.CoreCloneClone : core.clone.Clone
+  source.OriginStaticOperation := {
+  clone := source.OriginStaticOperation.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginStaticBody}::clone]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 754:9-754:14
+    Visibility: public -/
+def source.OriginStaticBody.Insts.CoreCloneClone.clone
+  (self : source.OriginStaticBody) : Result source.OriginStaticBody := do
+  let i ← lift (core.clone.impls.CloneU32.clone self.input_signature)
+  let i1 ← lift (core.clone.impls.CloneU32.clone self.output_signature)
+  let v ←
+    alloc.vec.CloneVec.clone source.OriginStaticOperation.Insts.CoreCloneClone
+      self.operations
+  ok { input_signature := i, output_signature := i1, operations := v }
+
+/-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginStaticBody}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 754:9-754:14 -/
+@[reducible]
+def source.OriginStaticBody.Insts.CoreCloneClone : core.clone.Clone
+  source.OriginStaticBody := {
+  clone := source.OriginStaticBody.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginTemplate}::clone]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 798:9-798:14
+    Visibility: public -/
+def source.OriginTemplate.Insts.CoreCloneClone.clone
+  (self : source.OriginTemplate) : Result source.OriginTemplate := do
+  let v ← alloc.vec.CloneVec.clone core.clone.CloneU32 self.captures
+  let v1 ←
+    alloc.vec.CloneVec.clone source.OriginClass.Insts.CoreCloneClone
+      self.classes
+  let v2 ←
+    alloc.vec.CloneVec.clone source.OriginStaticBody.Insts.CoreCloneClone
+      self.statics
+  let v3 ←
+    alloc.vec.CloneVec.clone source.OriginRecipe.Insts.CoreCloneClone
+      self.recipes
+  let oo ← source.OriginOwner.Insts.CoreCloneClone.clone self.owner
+  ok
+    { captures := v, classes := v1, statics := v2, recipes := v3, owner := oo }
+
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginOutput}::clone]:
     Source: 'crates/noble-wasm/src/source/mod.rs', lines 705:9-705:14
     Visibility: public -/
@@ -36946,7 +37039,8 @@ def source.OriginOutput.Insts.CoreCloneClone.clone
   let r ←
     alloc.rc.Rc.Insts.CoreCloneClone.clone
       alloc.alloc.Global.Insts.CoreAllocAllocatorClone self.result
-  ok { stack_position := i, result := r }
+  let ot ← source.OriginTemplate.Insts.CoreCloneClone.clone self.template
+  ok { stack_position := i, result := r, template := ot }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginOutput}]
     Source: 'crates/noble-wasm/src/source/mod.rs', lines 705:9-705:14 -/
@@ -37091,6 +37185,236 @@ def source.SelectedOriginMetadata.Insts.CoreCloneClone : core.clone.Clone
   clone := source.SelectedOriginMetadata.Insts.CoreCloneClone.clone
 }
 
+/-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginOwner}::fmt]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 783:22-783:27
+    Visibility: public -/
+def source.OriginOwner.Insts.CoreFmtDebug.fmt
+  (self : source.OriginOwner) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | source.OriginOwner.Absent =>
+    core.fmt.Formatter.write_str f (toStr "Absent")
+  | source.OriginOwner.SelfNamed =>
+    core.fmt.Formatter.write_str f (toStr "SelfNamed")
+
+/-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginOwner}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 783:22-783:27 -/
+@[reducible]
+def source.OriginOwner.Insts.CoreFmtDebug : core.fmt.Debug source.OriginOwner
+  := {
+  fmt := source.OriginOwner.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginBinding}::fmt]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 719:22-719:27
+    Visibility: public -/
+def source.OriginBinding.Insts.CoreFmtDebug.fmt
+  (self : source.OriginBinding) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | source.OriginBinding.Named =>
+    core.fmt.Formatter.write_str f (toStr "Named")
+  | source.OriginBinding.Static __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Static") __self_01
+  | source.OriginBinding.QuoteRoot __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "QuoteRoot")
+      __self_01
+  | source.OriginBinding.QuoteFixed __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "QuoteFixed")
+      __self_01
+  | source.OriginBinding.QuoteProgram __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "QuoteProgram")
+      __self_01
+  | source.OriginBinding.Compose __self_0 __self_1 =>
+    let __self_01 := Dyn.mk _ core.fmt.DebugU32 __self_0
+    let __self_11 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_1
+    core.fmt.Formatter.debug_struct_field2_finish f (toStr "Compose") (toStr
+      "left") __self_01 (toStr "right") __self_11
+
+/-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginBinding}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 719:22-719:27 -/
+@[reducible]
+def source.OriginBinding.Insts.CoreFmtDebug : core.fmt.Debug
+  source.OriginBinding := {
+  fmt := source.OriginBinding.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginClass}::fmt]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 773:22-773:27
+    Visibility: public -/
+def source.OriginClass.Insts.CoreFmtDebug.fmt
+  (self : source.OriginClass) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ source.OriginBinding.Insts.CoreFmtDebug self.binding
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self.occurrences
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "OriginClass") (toStr
+    "binding") dyn (toStr "occurrences") dyn1
+
+/-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginClass}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 773:22-773:27 -/
+@[reducible]
+def source.OriginClass.Insts.CoreFmtDebug : core.fmt.Debug source.OriginClass
+  := {
+  fmt := source.OriginClass.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginFixedArithmetic}::fmt]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 474:22-474:27
+    Visibility: public -/
+def source.OriginFixedArithmetic.Insts.CoreFmtDebug.fmt
+  (self : source.OriginFixedArithmetic) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | source.OriginFixedArithmetic.Add =>
+    core.fmt.Formatter.write_str f (toStr "Add")
+  | source.OriginFixedArithmetic.Sub =>
+    core.fmt.Formatter.write_str f (toStr "Sub")
+  | source.OriginFixedArithmetic.Mul =>
+    core.fmt.Formatter.write_str f (toStr "Mul")
+
+/-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginFixedArithmetic}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 474:22-474:27 -/
+@[reducible]
+def source.OriginFixedArithmetic.Insts.CoreFmtDebug : core.fmt.Debug
+  source.OriginFixedArithmetic := {
+  fmt := source.OriginFixedArithmetic.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginRecipe}::fmt]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 762:22-762:27
+    Visibility: public -/
+def source.OriginRecipe.Insts.CoreFmtDebug.fmt
+  (self : source.OriginRecipe) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | source.OriginRecipe.Literal __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugI64) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Literal") __self_01
+  | source.OriginRecipe.Arithmetic __self_0 __self_1 __self_2 =>
+    let __self_01 :=
+      Dyn.mk _ source.OriginFixedArithmetic.Insts.CoreFmtDebug __self_0
+    let __self_11 := Dyn.mk _ core.fmt.DebugU32 __self_1
+    let __self_21 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_2
+    core.fmt.Formatter.debug_struct_field3_finish f (toStr "Arithmetic") (toStr
+      "kind") __self_01 (toStr "left") __self_11 (toStr "right") __self_21
+
+/-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginRecipe}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 762:22-762:27 -/
+@[reducible]
+def source.OriginRecipe.Insts.CoreFmtDebug : core.fmt.Debug source.OriginRecipe
+  := {
+  fmt := source.OriginRecipe.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginStaticOperation}::fmt]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:22-737:27
+    Visibility: public -/
+def source.OriginStaticOperation.Insts.CoreFmtDebug.fmt
+  (self : source.OriginStaticOperation) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | source.OriginStaticOperation.I64 __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugI64) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "I64") __self_01
+  | source.OriginStaticOperation.Add =>
+    core.fmt.Formatter.write_str f (toStr "Add")
+  | source.OriginStaticOperation.Sub =>
+    core.fmt.Formatter.write_str f (toStr "Sub")
+  | source.OriginStaticOperation.Mul =>
+    core.fmt.Formatter.write_str f (toStr "Mul")
+  | source.OriginStaticOperation.Dup =>
+    core.fmt.Formatter.write_str f (toStr "Dup")
+  | source.OriginStaticOperation.Drop =>
+    core.fmt.Formatter.write_str f (toStr "Drop")
+  | source.OriginStaticOperation.Swap =>
+    core.fmt.Formatter.write_str f (toStr "Swap")
+  | source.OriginStaticOperation.Dip =>
+    core.fmt.Formatter.write_str f (toStr "Dip")
+  | source.OriginStaticOperation.Run =>
+    core.fmt.Formatter.write_str f (toStr "Run")
+  | source.OriginStaticOperation.Compose =>
+    core.fmt.Formatter.write_str f (toStr "Compose")
+  | source.OriginStaticOperation.Quote =>
+    core.fmt.Formatter.write_str f (toStr "Quote")
+  | source.OriginStaticOperation.Static __self_0 =>
+    let __self_01 := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Static") __self_01
+
+/-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginStaticOperation}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:22-737:27 -/
+@[reducible]
+def source.OriginStaticOperation.Insts.CoreFmtDebug : core.fmt.Debug
+  source.OriginStaticOperation := {
+  fmt := source.OriginStaticOperation.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginStaticBody}::fmt]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 754:16-754:21
+    Visibility: public -/
+def source.OriginStaticBody.Insts.CoreFmtDebug.fmt
+  (self : source.OriginStaticBody) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU32 self.input_signature
+  let dyn1 := Dyn.mk _ core.fmt.DebugU32 self.output_signature
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.fmt.DebugVec
+      source.OriginStaticOperation.Insts.CoreFmtDebug)) self.operations
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "OriginStaticBody")
+    (toStr "input_signature") dyn (toStr "output_signature") dyn1 (toStr
+    "operations") dyn2
+
+/-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginStaticBody}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 754:16-754:21 -/
+@[reducible]
+def source.OriginStaticBody.Insts.CoreFmtDebug : core.fmt.Debug
+  source.OriginStaticBody := {
+  fmt := source.OriginStaticBody.Insts.CoreFmtDebug.fmt
+}
+
+/-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginTemplate}::fmt]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 798:16-798:21
+    Visibility: public -/
+def source.OriginTemplate.Insts.CoreFmtDebug.fmt
+  (self : source.OriginTemplate) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugVec core.fmt.DebugU32) self.captures
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugVec source.OriginClass.Insts.CoreFmtDebug)
+      self.classes
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugVec source.OriginStaticBody.Insts.CoreFmtDebug)
+      self.statics
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugVec source.OriginRecipe.Insts.CoreFmtDebug)
+      self.recipes
+  let dyn4 :=
+    Dyn.mk _ (core.fmt.DebugShared source.OriginOwner.Insts.CoreFmtDebug)
+      self.owner
+  core.fmt.Formatter.debug_struct_field5_finish f (toStr "OriginTemplate")
+    (toStr "captures") dyn (toStr "classes") dyn1 (toStr "statics") dyn2 (toStr
+    "recipes") dyn3 (toStr "owner") dyn4
+
+/-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginTemplate}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 798:16-798:21 -/
+@[reducible]
+def source.OriginTemplate.Insts.CoreFmtDebug : core.fmt.Debug
+  source.OriginTemplate := {
+  fmt := source.OriginTemplate.Insts.CoreFmtDebug.fmt
+}
+
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginProgramValue}::fmt]:
     Source: 'crates/noble-wasm/src/source/mod.rs', lines 608:4-610:5
     Visibility: public -/
@@ -37117,10 +37441,13 @@ def source.OriginOutput.Insts.CoreFmtDebug.fmt
   := do
   let dyn := Dyn.mk _ core.fmt.DebugUsize self.stack_position
   let dyn1 :=
-    Dyn.mk _ (core.fmt.DebugShared (alloc.rc.Rc.Insts.CoreFmtDebug Global
-      source.OriginProgramValue.Insts.CoreFmtDebug)) self.result
-  core.fmt.Formatter.debug_struct_field2_finish f (toStr "OriginOutput") (toStr
-    "stack_position") dyn (toStr "result") dyn1
+    Dyn.mk _ (alloc.rc.Rc.Insts.CoreFmtDebug Global
+      source.OriginProgramValue.Insts.CoreFmtDebug) self.result
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared source.OriginTemplate.Insts.CoreFmtDebug)
+      self.template
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "OriginOutput") (toStr
+    "stack_position") dyn (toStr "result") dyn1 (toStr "template") dyn2
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginOutput}]
     Source: 'crates/noble-wasm/src/source/mod.rs', lines 705:16-705:21 -/
@@ -37725,29 +38052,6 @@ def source.OriginFixedArithmetic.Insts.CoreMarkerCopy : core.marker.Copy
   cloneInst := source.OriginFixedArithmetic.Insts.CoreCloneClone
 }
 
-/-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginFixedArithmetic}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 474:22-474:27
-    Visibility: public -/
-def source.OriginFixedArithmetic.Insts.CoreFmtDebug.fmt
-  (self : source.OriginFixedArithmetic) (f : core.fmt.Formatter) :
-  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
-  := do
-  match self with
-  | source.OriginFixedArithmetic.Add =>
-    core.fmt.Formatter.write_str f (toStr "Add")
-  | source.OriginFixedArithmetic.Sub =>
-    core.fmt.Formatter.write_str f (toStr "Sub")
-  | source.OriginFixedArithmetic.Mul =>
-    core.fmt.Formatter.write_str f (toStr "Mul")
-
-/-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginFixedArithmetic}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 474:22-474:27 -/
-@[reducible]
-def source.OriginFixedArithmetic.Insts.CoreFmtDebug : core.fmt.Debug
-  source.OriginFixedArithmetic := {
-  fmt := source.OriginFixedArithmetic.Insts.CoreFmtDebug.fmt
-}
-
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::StructuralPartialEq for noble_wasm::source::OriginFixedArithmetic}]
     Source: 'crates/noble-wasm/src/source/mod.rs', lines 474:29-474:38 -/
 @[reducible]
@@ -37885,8 +38189,1727 @@ def source.OriginRendering.Insts.CoreMarkerCopy : core.marker.Copy
   cloneInst := source.OriginRendering.Insts.CoreCloneClone
 }
 
+/-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginBinding}::clone]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 719:9-719:14
+    Visibility: public -/
+def source.OriginBinding.Insts.CoreCloneClone.clone
+  (self : source.OriginBinding) : Result source.OriginBinding := do
+  ok self
+
+/-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginBinding}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 719:9-719:14 -/
+@[reducible]
+def source.OriginBinding.Insts.CoreCloneClone : core.clone.Clone
+  source.OriginBinding := {
+  clone := source.OriginBinding.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::OriginBinding}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 719:16-719:20 -/
+@[reducible]
+def source.OriginBinding.Insts.CoreMarkerCopy : core.marker.Copy
+  source.OriginBinding := {
+  cloneInst := source.OriginBinding.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_wasm::source::{impl core::marker::StructuralPartialEq for noble_wasm::source::OriginBinding}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 719:29-719:38 -/
+@[reducible]
+def source.OriginBinding.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq source.OriginBinding := {
+}
+
+/-- [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginBinding> for noble_wasm::source::OriginBinding}::eq]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 719:29-719:38
+    Visibility: public -/
+def source.OriginBinding.Insts.CoreCmpPartialEqOriginBinding.eq
+  (self : source.OriginBinding) (other : source.OriginBinding) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | source.OriginBinding.Named => ok true
+    | source.OriginBinding.Static __self_0 =>
+      match other with
+      | source.OriginBinding.Named => ok true
+      | source.OriginBinding.Static __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU32.eq __self_0 __arg1_0)
+      | source.OriginBinding.QuoteRoot _ => ok true
+      | source.OriginBinding.QuoteFixed _ => ok true
+      | source.OriginBinding.QuoteProgram _ => ok true
+      | source.OriginBinding.Compose _ _ => ok true
+    | source.OriginBinding.QuoteRoot __self_0 =>
+      match other with
+      | source.OriginBinding.Named => ok true
+      | source.OriginBinding.Static _ => ok true
+      | source.OriginBinding.QuoteRoot __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU32.eq __self_0 __arg1_0)
+      | source.OriginBinding.QuoteFixed _ => ok true
+      | source.OriginBinding.QuoteProgram _ => ok true
+      | source.OriginBinding.Compose _ _ => ok true
+    | source.OriginBinding.QuoteFixed __self_0 =>
+      match other with
+      | source.OriginBinding.Named => ok true
+      | source.OriginBinding.Static _ => ok true
+      | source.OriginBinding.QuoteRoot _ => ok true
+      | source.OriginBinding.QuoteFixed __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU32.eq __self_0 __arg1_0)
+      | source.OriginBinding.QuoteProgram _ => ok true
+      | source.OriginBinding.Compose _ _ => ok true
+    | source.OriginBinding.QuoteProgram __self_0 =>
+      match other with
+      | source.OriginBinding.Named => ok true
+      | source.OriginBinding.Static _ => ok true
+      | source.OriginBinding.QuoteRoot _ => ok true
+      | source.OriginBinding.QuoteFixed _ => ok true
+      | source.OriginBinding.QuoteProgram __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU32.eq __self_0 __arg1_0)
+      | source.OriginBinding.Compose _ _ => ok true
+    | source.OriginBinding.Compose __self_0 __self_1 =>
+      match other with
+      | source.OriginBinding.Named => ok true
+      | source.OriginBinding.Static _ => ok true
+      | source.OriginBinding.QuoteRoot _ => ok true
+      | source.OriginBinding.QuoteFixed _ => ok true
+      | source.OriginBinding.QuoteProgram _ => ok true
+      | source.OriginBinding.Compose __arg1_0 __arg1_1 =>
+        let b ← lift (core.cmp.impls.PartialEqU32.eq __self_0 __arg1_0)
+        if b
+        then lift (core.cmp.impls.PartialEqU32.eq __self_1 __arg1_1)
+        else ok false
+  else ok false
+
+/-- Trait implementation: [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginBinding> for noble_wasm::source::OriginBinding}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 719:29-719:38 -/
+@[reducible]
+impl_def source.OriginBinding.Insts.CoreCmpPartialEqOriginBinding :
+  core.cmp.PartialEq source.OriginBinding source.OriginBinding := {
+  eq := source.OriginBinding.Insts.CoreCmpPartialEqOriginBinding.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.OriginBinding.Insts.CoreCmpPartialEqOriginBinding
+}
+
+/-- [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::OriginBinding}::assert_fields_are_eq]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 719:40-719:42
+    Visibility: public -/
+def source.OriginBinding.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : source.OriginBinding) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::OriginBinding}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 719:40-719:42 -/
+@[reducible]
+def source.OriginBinding.Insts.CoreCmpEq : core.cmp.Eq source.OriginBinding
+  := {
+  partialEqInst := source.OriginBinding.Insts.CoreCmpPartialEqOriginBinding
+  assert_fields_are_eq :=
+    source.OriginBinding.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::OriginStaticOperation}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:16-737:20 -/
+@[reducible]
+def source.OriginStaticOperation.Insts.CoreMarkerCopy : core.marker.Copy
+  source.OriginStaticOperation := {
+  cloneInst := source.OriginStaticOperation.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_wasm::source::{impl core::marker::StructuralPartialEq for noble_wasm::source::OriginStaticOperation}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:29-737:38 -/
+@[reducible]
+def source.OriginStaticOperation.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq source.OriginStaticOperation := {
+}
+
+/-- [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginStaticOperation> for noble_wasm::source::OriginStaticOperation}::eq]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:29-737:38
+    Visibility: public -/
+def source.OriginStaticOperation.Insts.CoreCmpPartialEqOriginStaticOperation.eq
+  (self : source.OriginStaticOperation) (other : source.OriginStaticOperation)
+  :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | source.OriginStaticOperation.I64 __self_0 =>
+      match other with
+      | source.OriginStaticOperation.I64 __arg1_0 =>
+        lift (core.cmp.impls.PartialEqI64.eq __self_0 __arg1_0)
+      | source.OriginStaticOperation.Add => ok true
+      | source.OriginStaticOperation.Sub => ok true
+      | source.OriginStaticOperation.Mul => ok true
+      | source.OriginStaticOperation.Dup => ok true
+      | source.OriginStaticOperation.Drop => ok true
+      | source.OriginStaticOperation.Swap => ok true
+      | source.OriginStaticOperation.Dip => ok true
+      | source.OriginStaticOperation.Run => ok true
+      | source.OriginStaticOperation.Compose => ok true
+      | source.OriginStaticOperation.Quote => ok true
+      | source.OriginStaticOperation.Static _ => ok true
+    | source.OriginStaticOperation.Add => ok true
+    | source.OriginStaticOperation.Sub => ok true
+    | source.OriginStaticOperation.Mul => ok true
+    | source.OriginStaticOperation.Dup => ok true
+    | source.OriginStaticOperation.Drop => ok true
+    | source.OriginStaticOperation.Swap => ok true
+    | source.OriginStaticOperation.Dip => ok true
+    | source.OriginStaticOperation.Run => ok true
+    | source.OriginStaticOperation.Compose => ok true
+    | source.OriginStaticOperation.Quote => ok true
+    | source.OriginStaticOperation.Static __self_0 =>
+      match other with
+      | source.OriginStaticOperation.I64 _ => ok true
+      | source.OriginStaticOperation.Add => ok true
+      | source.OriginStaticOperation.Sub => ok true
+      | source.OriginStaticOperation.Mul => ok true
+      | source.OriginStaticOperation.Dup => ok true
+      | source.OriginStaticOperation.Drop => ok true
+      | source.OriginStaticOperation.Swap => ok true
+      | source.OriginStaticOperation.Dip => ok true
+      | source.OriginStaticOperation.Run => ok true
+      | source.OriginStaticOperation.Compose => ok true
+      | source.OriginStaticOperation.Quote => ok true
+      | source.OriginStaticOperation.Static __arg1_0 =>
+        lift (core.cmp.impls.PartialEqU32.eq __self_0 __arg1_0)
+  else ok false
+
+/-- Trait implementation: [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginStaticOperation> for noble_wasm::source::OriginStaticOperation}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:29-737:38 -/
+@[reducible]
+impl_def
+  source.OriginStaticOperation.Insts.CoreCmpPartialEqOriginStaticOperation :
+  core.cmp.PartialEq source.OriginStaticOperation source.OriginStaticOperation
+  := {
+  eq :=
+    source.OriginStaticOperation.Insts.CoreCmpPartialEqOriginStaticOperation.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.OriginStaticOperation.Insts.CoreCmpPartialEqOriginStaticOperation
+}
+
+/-- [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::OriginStaticOperation}::assert_fields_are_eq]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:40-737:42
+    Visibility: public -/
+def source.OriginStaticOperation.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : source.OriginStaticOperation) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::OriginStaticOperation}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:40-737:42 -/
+@[reducible]
+def source.OriginStaticOperation.Insts.CoreCmpEq : core.cmp.Eq
+  source.OriginStaticOperation := {
+  partialEqInst :=
+    source.OriginStaticOperation.Insts.CoreCmpPartialEqOriginStaticOperation
+  assert_fields_are_eq :=
+    source.OriginStaticOperation.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::OriginRecipe}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 762:16-762:20 -/
+@[reducible]
+def source.OriginRecipe.Insts.CoreMarkerCopy : core.marker.Copy
+  source.OriginRecipe := {
+  cloneInst := source.OriginRecipe.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_wasm::source::{impl core::marker::StructuralPartialEq for noble_wasm::source::OriginRecipe}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 762:29-762:38 -/
+@[reducible]
+def source.OriginRecipe.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq source.OriginRecipe := {
+}
+
+/-- [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginRecipe> for noble_wasm::source::OriginRecipe}::eq]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 762:29-762:38
+    Visibility: public -/
+def source.OriginRecipe.Insts.CoreCmpPartialEqOriginRecipe.eq
+  (self : source.OriginRecipe) (other : source.OriginRecipe) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | source.OriginRecipe.Literal __self_0 =>
+      match other with
+      | source.OriginRecipe.Literal __arg1_0 =>
+        lift (core.cmp.impls.PartialEqI64.eq __self_0 __arg1_0)
+      | source.OriginRecipe.Arithmetic _ _ _ => fail panic
+    | source.OriginRecipe.Arithmetic __self_0 __self_1 __self_2 =>
+      match other with
+      | source.OriginRecipe.Literal _ => fail panic
+      | source.OriginRecipe.Arithmetic __arg1_0 __arg1_1 __arg1_2 =>
+        let b ← lift (core.cmp.impls.PartialEqU32.eq __self_1 __arg1_1)
+        if b
+        then
+          let b1 ← lift (core.cmp.impls.PartialEqU32.eq __self_2 __arg1_2)
+          if b1
+          then
+            source.OriginFixedArithmetic.Insts.CoreCmpPartialEqOriginFixedArithmetic.eq
+              __self_0 __arg1_0
+          else ok false
+        else ok false
+  else ok false
+
+/-- Trait implementation: [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginRecipe> for noble_wasm::source::OriginRecipe}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 762:29-762:38 -/
+@[reducible]
+impl_def source.OriginRecipe.Insts.CoreCmpPartialEqOriginRecipe :
+  core.cmp.PartialEq source.OriginRecipe source.OriginRecipe := {
+  eq := source.OriginRecipe.Insts.CoreCmpPartialEqOriginRecipe.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.OriginRecipe.Insts.CoreCmpPartialEqOriginRecipe
+}
+
+/-- [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::OriginRecipe}::assert_fields_are_eq]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 762:40-762:42
+    Visibility: public -/
+def source.OriginRecipe.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : source.OriginRecipe) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::OriginRecipe}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 762:40-762:42 -/
+@[reducible]
+def source.OriginRecipe.Insts.CoreCmpEq : core.cmp.Eq source.OriginRecipe := {
+  partialEqInst := source.OriginRecipe.Insts.CoreCmpPartialEqOriginRecipe
+  assert_fields_are_eq :=
+    source.OriginRecipe.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::OriginClass}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 773:16-773:20 -/
+@[reducible]
+def source.OriginClass.Insts.CoreMarkerCopy : core.marker.Copy
+  source.OriginClass := {
+  cloneInst := source.OriginClass.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_wasm::source::{impl core::marker::StructuralPartialEq for noble_wasm::source::OriginClass}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 773:29-773:38 -/
+@[reducible]
+def source.OriginClass.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq source.OriginClass := {
+}
+
+/-- [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginClass> for noble_wasm::source::OriginClass}::eq]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 773:29-773:38
+    Visibility: public -/
+def source.OriginClass.Insts.CoreCmpPartialEqOriginClass.eq
+  (self : source.OriginClass) (other : source.OriginClass) : Result Bool := do
+  if self.occurrences = other.occurrences
+  then
+    source.OriginBinding.Insts.CoreCmpPartialEqOriginBinding.eq self.binding
+      other.binding
+  else ok false
+
+/-- Trait implementation: [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginClass> for noble_wasm::source::OriginClass}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 773:29-773:38 -/
+@[reducible]
+impl_def source.OriginClass.Insts.CoreCmpPartialEqOriginClass :
+  core.cmp.PartialEq source.OriginClass source.OriginClass := {
+  eq := source.OriginClass.Insts.CoreCmpPartialEqOriginClass.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.OriginClass.Insts.CoreCmpPartialEqOriginClass
+}
+
+/-- [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::OriginClass}::assert_fields_are_eq]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 773:40-773:42
+    Visibility: public -/
+def source.OriginClass.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : source.OriginClass) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::OriginClass}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 773:40-773:42 -/
+@[reducible]
+def source.OriginClass.Insts.CoreCmpEq : core.cmp.Eq source.OriginClass := {
+  partialEqInst := source.OriginClass.Insts.CoreCmpPartialEqOriginClass
+  assert_fields_are_eq :=
+    source.OriginClass.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginOwner}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 783:9-783:14 -/
+@[reducible]
+def source.OriginOwner.Insts.CoreCloneClone : core.clone.Clone
+  source.OriginOwner := {
+  clone := source.OriginOwner.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::OriginOwner}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 783:16-783:20 -/
+@[reducible]
+def source.OriginOwner.Insts.CoreMarkerCopy : core.marker.Copy
+  source.OriginOwner := {
+  cloneInst := source.OriginOwner.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_wasm::source::{impl core::marker::StructuralPartialEq for noble_wasm::source::OriginOwner}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 783:29-783:38 -/
+@[reducible]
+def source.OriginOwner.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq source.OriginOwner := {
+}
+
+/-- [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginOwner> for noble_wasm::source::OriginOwner}::eq]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 783:29-783:38
+    Visibility: public -/
+def source.OriginOwner.Insts.CoreCmpPartialEqOriginOwner.eq
+  (self : source.OriginOwner) (other : source.OriginOwner) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginOwner> for noble_wasm::source::OriginOwner}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 783:29-783:38 -/
+@[reducible]
+impl_def source.OriginOwner.Insts.CoreCmpPartialEqOriginOwner :
+  core.cmp.PartialEq source.OriginOwner source.OriginOwner := {
+  eq := source.OriginOwner.Insts.CoreCmpPartialEqOriginOwner.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    source.OriginOwner.Insts.CoreCmpPartialEqOriginOwner
+}
+
+/-- Trait implementation: [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::OriginOwner}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 783:40-783:42 -/
+@[reducible]
+impl_def source.OriginOwner.Insts.CoreCmpEq : core.cmp.Eq source.OriginOwner
+  := {
+  partialEqInst := source.OriginOwner.Insts.CoreCmpPartialEqOriginOwner
+  assert_fields_are_eq := core.cmp.Eq.assert_fields_are_eq.default
+    source.OriginOwner.Insts.CoreCmpEq
+}
+
+/-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginTemplate}]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 798:9-798:14 -/
+@[reducible]
+def source.OriginTemplate.Insts.CoreCloneClone : core.clone.Clone
+  source.OriginTemplate := {
+  clone := source.OriginTemplate.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_wasm::source::origin::same_static_body]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1349:4-1352:5 -/
+@[rust_loop_body]
+def source.origin.same_static_body_loop.body
+  (v : alloc.vec.Vec source.OriginStaticOperation)
+  (v1 : alloc.vec.Vec source.OriginStaticOperation) («at» : Std.Usize)
+  (is_same : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  if is_same
+  then
+    let i := alloc.vec.Vec.len v
+    if «at» < i
+    then
+      let oso ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.OriginStaticOperation) v «at»
+      let oso1 ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.OriginStaticOperation) v1 «at»
+      let is_same1 ←
+        source.OriginStaticOperation.Insts.CoreCmpPartialEqOriginStaticOperation.eq
+          oso oso1
+      let at1 ← «at» + 1#usize
+      ok (cont (at1, is_same1))
+    else ok (done is_same)
+  else ok (done is_same)
+
+/-- [noble_wasm::source::origin::same_static_body]: loop 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1349:4-1352:5 -/
+@[rust_loop]
+def source.origin.same_static_body_loop
+  (v : alloc.vec.Vec source.OriginStaticOperation)
+  (v1 : alloc.vec.Vec source.OriginStaticOperation) («at» : Std.Usize)
+  (is_same : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (at1, is_same1) => source.origin.same_static_body_loop.body v v1 at1
+      is_same1)
+    («at», is_same)
+
+/-- [noble_wasm::source::origin::same_static_body]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1340:0-1354:1 -/
+def source.origin.same_static_body
+  (left : source.OriginStaticBody) (right : source.OriginStaticBody) :
+  Result Bool
+  := do
+  if left.input_signature != right.input_signature
+  then ok false
+  else
+    if left.output_signature != right.output_signature
+    then ok false
+    else
+      let i := alloc.vec.Vec.len left.operations
+      let i1 := alloc.vec.Vec.len right.operations
+      if i != i1
+      then ok false
+      else
+        source.origin.same_static_body_loop left.operations right.operations
+          0#usize true
+
+/-- [noble_wasm::source::origin::same_template]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1717:4-1720:5 -/
+@[rust_loop_body]
+def source.origin.same_template_loop0.body
+  (v : alloc.vec.Vec Std.U32) (v1 : alloc.vec.Vec Std.U32) (is_same : Bool)
+  («at» : Std.Usize) :
+  Result (ControlFlow (Bool × Std.Usize) Bool)
+  := do
+  if is_same
+  then
+    let i := alloc.vec.Vec.len v
+    if «at» < i
+    then
+      let i1 ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.U32) v
+          «at»
+      let i2 ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.U32) v1
+          «at»
+      let at1 ← «at» + 1#usize
+      ok (cont (i1 = i2, at1))
+    else ok (done is_same)
+  else ok (done is_same)
+
+/-- [noble_wasm::source::origin::same_template]: loop 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1717:4-1720:5 -/
+@[rust_loop]
+def source.origin.same_template_loop0
+  (v : alloc.vec.Vec Std.U32) (v1 : alloc.vec.Vec Std.U32) (is_same : Bool)
+  («at» : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun (is_same1, at1) => source.origin.same_template_loop0.body v v1
+      is_same1 at1)
+    (is_same, «at»)
+
+/-- [noble_wasm::source::origin::same_template]: loop body 1:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1722:4-1725:5 -/
+@[rust_loop_body]
+def source.origin.same_template_loop1.body
+  (v : alloc.vec.Vec source.OriginClass)
+  (v1 : alloc.vec.Vec source.OriginClass) (is_same : Bool) («at» : Std.Usize)
+  :
+  Result (ControlFlow (Bool × Std.Usize) Bool)
+  := do
+  if is_same
+  then
+    let i := alloc.vec.Vec.len v
+    if «at» < i
+    then
+      let oc ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.OriginClass) v «at»
+      let oc1 ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.OriginClass) v1 «at»
+      let is_same1 ←
+        source.OriginClass.Insts.CoreCmpPartialEqOriginClass.eq oc oc1
+      let at1 ← «at» + 1#usize
+      ok (cont (is_same1, at1))
+    else ok (done is_same)
+  else ok (done is_same)
+
+/-- [noble_wasm::source::origin::same_template]: loop 1:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1722:4-1725:5 -/
+@[rust_loop]
+def source.origin.same_template_loop1
+  (v : alloc.vec.Vec source.OriginClass)
+  (v1 : alloc.vec.Vec source.OriginClass) (is_same : Bool) («at» : Std.Usize)
+  :
+  Result Bool
+  := do
+  loop
+    (fun (is_same1, at1) => source.origin.same_template_loop1.body v v1
+      is_same1 at1)
+    (is_same, «at»)
+
+/-- [noble_wasm::source::origin::same_template]: loop body 2:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1727:4-1730:5 -/
+@[rust_loop_body]
+def source.origin.same_template_loop2.body
+  (v : alloc.vec.Vec source.OriginStaticBody)
+  (v1 : alloc.vec.Vec source.OriginStaticBody) (is_same : Bool)
+  («at» : Std.Usize) :
+  Result (ControlFlow (Bool × Std.Usize) Bool)
+  := do
+  if is_same
+  then
+    let i := alloc.vec.Vec.len v
+    if «at» < i
+    then
+      let osb ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.OriginStaticBody) v «at»
+      let osb1 ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.OriginStaticBody) v1 «at»
+      let is_same1 ← source.origin.same_static_body osb osb1
+      let at1 ← «at» + 1#usize
+      ok (cont (is_same1, at1))
+    else ok (done is_same)
+  else ok (done is_same)
+
+/-- [noble_wasm::source::origin::same_template]: loop 2:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1727:4-1730:5 -/
+@[rust_loop]
+def source.origin.same_template_loop2
+  (v : alloc.vec.Vec source.OriginStaticBody)
+  (v1 : alloc.vec.Vec source.OriginStaticBody) (is_same : Bool)
+  («at» : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun (is_same1, at1) => source.origin.same_template_loop2.body v v1
+      is_same1 at1)
+    (is_same, «at»)
+
+/-- [noble_wasm::source::origin::same_template]: loop body 3:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1732:4-1735:5 -/
+@[rust_loop_body]
+def source.origin.same_template_loop3.body
+  (v : alloc.vec.Vec source.OriginRecipe)
+  (v1 : alloc.vec.Vec source.OriginRecipe) (is_same : Bool)
+  («at» : Std.Usize) :
+  Result (ControlFlow (Bool × Std.Usize) Bool)
+  := do
+  if is_same
+  then
+    let i := alloc.vec.Vec.len v
+    if «at» < i
+    then
+      let or ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.OriginRecipe) v «at»
+      let or1 ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.OriginRecipe) v1 «at»
+      let is_same1 ←
+        source.OriginRecipe.Insts.CoreCmpPartialEqOriginRecipe.eq or or1
+      let at1 ← «at» + 1#usize
+      ok (cont (is_same1, at1))
+    else ok (done is_same)
+  else ok (done is_same)
+
+/-- [noble_wasm::source::origin::same_template]: loop 3:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1732:4-1735:5 -/
+@[rust_loop]
+def source.origin.same_template_loop3
+  (v : alloc.vec.Vec source.OriginRecipe)
+  (v1 : alloc.vec.Vec source.OriginRecipe) (is_same : Bool)
+  («at» : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun (is_same1, at1) => source.origin.same_template_loop3.body v v1
+      is_same1 at1)
+    (is_same, «at»)
+
+/-- [noble_wasm::source::origin::same_template]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1710:0-1737:1 -/
+def source.origin.same_template
+  (left : source.OriginTemplate) (right : source.OriginTemplate) :
+  Result Bool
+  := do
+  let b ←
+    source.OriginOwner.Insts.CoreCmpPartialEqOriginOwner.eq left.owner
+      right.owner
+  let is_same ←
+    if b
+    then
+      let i := alloc.vec.Vec.len left.captures
+      let i1 := alloc.vec.Vec.len right.captures
+      if i = i1
+      then
+        let i2 := alloc.vec.Vec.len left.classes
+        let i3 := alloc.vec.Vec.len right.classes
+        if i2 = i3
+        then
+          let i4 := alloc.vec.Vec.len left.statics
+          let i5 := alloc.vec.Vec.len right.statics
+          if i4 = i5
+          then
+            let i6 := alloc.vec.Vec.len left.recipes
+            let i7 := alloc.vec.Vec.len right.recipes
+            ok (i6 = i7)
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  let is_same1 ←
+    source.origin.same_template_loop0 left.captures right.captures is_same
+      0#usize
+  let is_same2 ←
+    source.origin.same_template_loop1 left.classes right.classes is_same1
+      0#usize
+  let is_same3 ←
+    source.origin.same_template_loop2 left.statics right.statics is_same2
+      0#usize
+  source.origin.same_template_loop3 left.recipes right.recipes is_same3 0#usize
+
+/-- [noble_wasm::source::origin::MAX_ORIGIN_PROGRAMS]
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 33:0-33:38 -/
+@[global_simps, irreducible]
+def source.origin.MAX_ORIGIN_PROGRAMS : Std.Usize := 32#usize
+
+/-- [noble_wasm::source::origin::intern_class]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1556:4-1561:5 -/
+@[rust_loop_body]
+def source.origin.intern_class_loop.body
+  (classes : alloc.vec.Vec source.OriginClass) (binding : source.OriginBinding)
+  («at» : Std.Usize) (found : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) Std.Usize)
+  := do
+  let i := alloc.vec.Vec.len classes
+  if found = i
+  then
+    let i1 := alloc.vec.Vec.len classes
+    if «at» < i1
+    then
+      let oc ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.OriginClass) classes «at»
+      let b ←
+        source.OriginBinding.Insts.CoreCmpPartialEqOriginBinding.eq oc.binding
+          binding
+      let found1 ← if b
+                     then ok «at»
+                     else ok found
+      let at1 ← «at» + 1#usize
+      ok (cont (at1, found1))
+    else ok (done found)
+  else ok (done found)
+
+/-- [noble_wasm::source::origin::intern_class]: loop 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1556:4-1561:5 -/
+@[rust_loop]
+def source.origin.intern_class_loop
+  (classes : alloc.vec.Vec source.OriginClass) (binding : source.OriginBinding)
+  («at» : Std.Usize) (found : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (at1, found1) => source.origin.intern_class_loop.body classes binding
+      at1 found1)
+    («at», found)
+
+/-- [noble_wasm::source::origin::intern_class]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1553:0-1578:1 -/
+def source.origin.intern_class
+  (classes : alloc.vec.Vec source.OriginClass) (binding : source.OriginBinding)
+  :
+  Result ((Option Std.U32) × (alloc.vec.Vec source.OriginClass))
+  := do
+  let found := alloc.vec.Vec.len classes
+  let found1 ← source.origin.intern_class_loop classes binding 0#usize found
+  let i := alloc.vec.Vec.len classes
+  if found1 < i
+  then
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut classes)
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+        source.OriginClass) s found1
+    match o with
+    | none =>
+      let s1 := get_mut_back none
+      let classes1 := deref_mut_back s1
+      ok (none, classes1)
+    | some «class» =>
+      let o1 ← lift (U32.checked_add «class».occurrences 1#u32)
+      let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o1
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let r ←
+          core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from found1
+        let o2 ← core.result.Result.ok r
+        let s1 := get_mut_back (some { «class» with occurrences := val })
+        let classes1 := deref_mut_back s1
+        ok (o2, classes1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let o2 ←
+          core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+            Std.U32 residual
+        let s1 := get_mut_back o
+        let classes1 := deref_mut_back s1
+        ok (o2, classes1)
+  else
+    let i1 := alloc.vec.Vec.len classes
+    if i1 >= source.origin.MAX_ORIGIN_PROGRAMS
+    then ok (none, classes)
+    else
+      let i2 := alloc.vec.Vec.len classes
+      let r ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from i2
+      let o ← core.result.Result.ok r
+      let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let classes1 ←
+          alloc.vec.Vec.push classes ({ binding, occurrences := 1#u32 } :
+            source.OriginClass)
+        ok (some val, classes1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let o1 ←
+          core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+            Std.U32 residual
+        ok (o1, classes)
+
+/-- [noble_wasm::source::origin::is_captured]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1539:4-1542:5 -/
+@[rust_loop_body]
+def source.origin.is_captured_loop.body
+  (captures : Slice Std.U32) (position : Std.U32) («at» : Std.Usize)
+  (is_known : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  if is_known
+  then ok (done is_known)
+  else
+    let i := Slice.len captures
+    if «at» < i
+    then
+      let i1 ← Slice.index_usize captures «at»
+      let at1 ← «at» + 1#usize
+      ok (cont (at1, i1 = position))
+    else ok (done is_known)
+
+/-- [noble_wasm::source::origin::is_captured]: loop 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1539:4-1542:5 -/
+@[rust_loop]
+def source.origin.is_captured_loop
+  (captures : Slice Std.U32) (position : Std.U32) («at» : Std.Usize)
+  (is_known : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (at1, is_known1) => source.origin.is_captured_loop.body captures
+      position at1 is_known1)
+    («at», is_known)
+
+/-- [noble_wasm::source::origin::is_captured]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1536:0-1544:1 -/
+@[reducible]
+def source.origin.is_captured
+  (captures : Slice Std.U32) (position : Std.U32) : Result Bool := do
+  source.origin.is_captured_loop captures position 0#usize false
+
+/-- [noble_wasm::source::origin::visited_class]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1526:4-1531:5 -/
+@[rust_loop_body]
+def source.origin.visited_class_loop.body
+  (walk : source.origin.TemplateWalk)
+  (value : alloc.rc.Rc source.OriginProgramValue) («at» : Std.Usize)
+  (found : Option Std.U32) :
+  Result (ControlFlow (Std.Usize × (Option Std.U32)) (Option Std.U32))
+  := do
+  let b := core.option.Option.is_none found
+  if b
+  then
+    let i := alloc.vec.Vec.len walk.cells
+    if «at» < i
+    then
+      let (r, i1) ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          ((alloc.rc.Rc source.OriginProgramValue) × Std.U32)) walk.cells
+          «at»
+      let b1 ← alloc.rc.Rc.ptr_eq Global r value
+      let found1 ← if b1
+                     then ok (some i1)
+                     else ok found
+      let at1 ← «at» + 1#usize
+      ok (cont (at1, found1))
+    else ok (done found)
+  else ok (done found)
+
+/-- [noble_wasm::source::origin::visited_class]: loop 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1526:4-1531:5 -/
+@[rust_loop]
+def source.origin.visited_class_loop
+  (walk : source.origin.TemplateWalk)
+  (value : alloc.rc.Rc source.OriginProgramValue) («at» : Std.Usize)
+  (found : Option Std.U32) :
+  Result (Option Std.U32)
+  := do
+  loop
+    (fun (at1, found1) => source.origin.visited_class_loop.body walk value at1
+      found1)
+    («at», found)
+
+/-- [noble_wasm::source::origin::visited_class]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1523:0-1533:1 -/
+@[reducible]
+def source.origin.visited_class
+  (walk : source.origin.TemplateWalk)
+  (value : alloc.rc.Rc source.OriginProgramValue) :
+  Result (Option Std.U32)
+  := do
+  source.origin.visited_class_loop walk value 0#usize none
+
+/-- [noble_wasm::source::origin::is_pending]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1476:4-1479:5 -/
+@[rust_loop_body]
+def source.origin.is_pending_loop.body
+  (pending : Slice Std.Usize) (index : Std.Usize) («at» : Std.Usize)
+  (is_found : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  if is_found
+  then ok (done is_found)
+  else
+    let i := Slice.len pending
+    if «at» < i
+    then
+      let i1 ← Slice.index_usize pending «at»
+      let at1 ← «at» + 1#usize
+      ok (cont (at1, i1 = index))
+    else ok (done is_found)
+
+/-- [noble_wasm::source::origin::is_pending]: loop 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1476:4-1479:5 -/
+@[rust_loop]
+def source.origin.is_pending_loop
+  (pending : Slice Std.Usize) (index : Std.Usize) («at» : Std.Usize)
+  (is_found : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (at1, is_found1) => source.origin.is_pending_loop.body pending index
+      at1 is_found1)
+    («at», is_found)
+
+/-- [noble_wasm::source::origin::is_pending]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1473:0-1481:1 -/
+@[reducible]
+def source.origin.is_pending
+  (pending : Slice Std.Usize) (index : Std.Usize) : Result Bool := do
+  source.origin.is_pending_loop pending index 0#usize false
+
+/-- [noble_wasm::source::origin::static_operation]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1388:0-1408:1 -/
+def source.origin.static_operation
+  (action : source.OriginAction) (rows : Slice (Option Std.U32)) :
+  Result source.origin.StaticLookup
+  := do
+  match action with
+  | source.OriginAction.I64 value =>
+    ok (source.origin.StaticLookup.Operation (source.OriginStaticOperation.I64
+      value))
+  | source.OriginAction.Add =>
+    ok (source.origin.StaticLookup.Operation source.OriginStaticOperation.Add)
+  | source.OriginAction.Sub =>
+    ok (source.origin.StaticLookup.Operation source.OriginStaticOperation.Sub)
+  | source.OriginAction.Mul =>
+    ok (source.origin.StaticLookup.Operation source.OriginStaticOperation.Mul)
+  | source.OriginAction.Dup =>
+    ok (source.origin.StaticLookup.Operation source.OriginStaticOperation.Dup)
+  | source.OriginAction.Swap =>
+    ok (source.origin.StaticLookup.Operation source.OriginStaticOperation.Swap)
+  | source.OriginAction.Drop =>
+    ok (source.origin.StaticLookup.Operation source.OriginStaticOperation.Drop)
+  | source.OriginAction.Dip =>
+    ok (source.origin.StaticLookup.Operation source.OriginStaticOperation.Dip)
+  | source.OriginAction.Run =>
+    ok (source.origin.StaticLookup.Operation source.OriginStaticOperation.Run)
+  | source.OriginAction.StaticProgram child =>
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice (Option
+        Std.U32)) rows child
+    match o with
+    | none => ok source.origin.StaticLookup.Refuse
+    | some o1 =>
+      match o1 with
+      | none => ok (source.origin.StaticLookup.Need child)
+      | some row =>
+        ok (source.origin.StaticLookup.Operation
+          (source.OriginStaticOperation.Static row))
+  | source.OriginAction.Quote _ _ _ _ =>
+    ok (source.origin.StaticLookup.Operation
+      source.OriginStaticOperation.Quote)
+  | source.OriginAction.Compose =>
+    ok (source.origin.StaticLookup.Operation
+      source.OriginStaticOperation.Compose)
+  | source.OriginAction.CallSelected _ => ok source.origin.StaticLookup.Refuse
+
+/-- [noble_wasm::source::origin::MAX_ORIGIN_OPERATIONS]
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 34:0-34:41 -/
+@[global_simps, irreducible]
+def source.origin.MAX_ORIGIN_OPERATIONS : Std.Usize := 128#usize
+
+/-- [noble_wasm::source::origin::row_index]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1270:0-1275:1 -/
+def source.origin.row_index
+  (row_count : Std.Usize) : Result (Option Std.U32) := do
+  if row_count >= source.origin.MAX_ORIGIN_OPERATIONS
+  then ok none
+  else
+    let r ←
+      core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from row_count
+    core.result.Result.ok r
+
+/-- [noble_wasm::source::origin::intern_static]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1365:4-1370:5 -/
+@[rust_loop_body]
+def source.origin.intern_static_loop.body
+  (statics : alloc.vec.Vec source.OriginStaticBody)
+  (body : source.OriginStaticBody) («at» : Std.Usize) (found : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) Std.Usize)
+  := do
+  let i := alloc.vec.Vec.len statics
+  if found = i
+  then
+    let i1 := alloc.vec.Vec.len statics
+    if «at» < i1
+    then
+      let osb ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.OriginStaticBody) statics «at»
+      let b ← source.origin.same_static_body osb body
+      let found1 ← if b
+                     then ok «at»
+                     else ok found
+      let at1 ← «at» + 1#usize
+      ok (cont (at1, found1))
+    else ok (done found)
+  else ok (done found)
+
+/-- [noble_wasm::source::origin::intern_static]: loop 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1365:4-1370:5 -/
+@[rust_loop]
+def source.origin.intern_static_loop
+  (statics : alloc.vec.Vec source.OriginStaticBody)
+  (body : source.OriginStaticBody) («at» : Std.Usize) (found : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (at1, found1) => source.origin.intern_static_loop.body statics body
+      at1 found1)
+    («at», found)
+
+/-- [noble_wasm::source::origin::intern_static]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1362:0-1377:1 -/
+def source.origin.intern_static
+  (statics : alloc.vec.Vec source.OriginStaticBody)
+  (body : source.OriginStaticBody) :
+  Result ((Option Std.U32) × (alloc.vec.Vec source.OriginStaticBody))
+  := do
+  let found := alloc.vec.Vec.len statics
+  let found1 ← source.origin.intern_static_loop statics body 0#usize found
+  let i := alloc.vec.Vec.len statics
+  if found1 < i
+  then
+    let r ←
+      core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from found1
+    let o ← core.result.Result.ok r
+    ok (o, statics)
+  else
+    let i1 := alloc.vec.Vec.len statics
+    let o ← source.origin.row_index i1
+    let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let statics1 ← alloc.vec.Vec.push statics body
+      ok (some val, statics1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let o1 ←
+        core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+          Std.U32 residual
+      ok (o1, statics)
+
+/-- [noble_wasm::source::origin::static_step]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1444:4-1451:5 -/
+@[rust_loop_body]
+def source.origin.static_step_loop.body
+  (v : alloc.vec.Vec (Option Std.U32))
+  (v1 : alloc.vec.Vec source.OriginOperation)
+  (operations : alloc.vec.Vec source.OriginStaticOperation)
+  (pending : Option source.origin.StaticStep) («at» : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec source.OriginStaticOperation) × (Option
+    source.origin.StaticStep) × Std.Usize) ((alloc.vec.Vec
+    source.OriginStaticOperation) × (Option source.origin.StaticStep)))
+  := do
+  let b := core.option.Option.is_none pending
+  if b
+  then
+    let i := alloc.vec.Vec.len v1
+    if «at» < i
+    then
+      let oo ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.OriginOperation) v1 «at»
+      let s := alloc.vec.Vec.deref v
+      let sl ← source.origin.static_operation oo.action s
+      let (operations1, pending1) ←
+        match sl with
+        | source.origin.StaticLookup.Operation operation =>
+          do
+          let operations2 ← alloc.vec.Vec.push operations operation
+          ok (operations2, pending)
+        | source.origin.StaticLookup.Need child =>
+          ok (operations, some (source.origin.StaticStep.Need child))
+        | source.origin.StaticLookup.Refuse =>
+          ok (operations, some source.origin.StaticStep.Refuse)
+      let at1 ← «at» + 1#usize
+      ok (cont (operations1, pending1, at1))
+    else ok (done (operations, pending))
+  else ok (done (operations, pending))
+
+/-- [noble_wasm::source::origin::static_step]: loop 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1444:4-1451:5 -/
+@[rust_loop]
+def source.origin.static_step_loop
+  (v : alloc.vec.Vec (Option Std.U32))
+  (v1 : alloc.vec.Vec source.OriginOperation)
+  (operations : alloc.vec.Vec source.OriginStaticOperation)
+  (pending : Option source.origin.StaticStep) («at» : Std.Usize) :
+  Result ((alloc.vec.Vec source.OriginStaticOperation) × (Option
+    source.origin.StaticStep))
+  := do
+  loop
+    (fun (operations1, pending1, at1) => source.origin.static_step_loop.body v
+      v1 operations1 pending1 at1)
+    (operations, pending, «at»)
+
+/-- [noble_wasm::source::origin::static_step]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1426:0-1470:1 -/
+def source.origin.static_step
+  (index : Std.Usize) (programs : Slice source.OriginProgram)
+  (walk : source.origin.TemplateWalk) :
+  Result (source.origin.StaticStep × source.origin.TemplateWalk)
+  := do
+  let s := alloc.vec.Vec.deref walk.static_rows
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice (Option
+      Std.U32)) s index
+  match o with
+  | none => ok (source.origin.StaticStep.Refuse, walk)
+  | some o1 =>
+    match o1 with
+    | none =>
+      let o2 ←
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+          source.OriginProgram) programs index
+      match o2 with
+      | none => ok (source.origin.StaticStep.Refuse, walk)
+      | some program =>
+        let b ←
+          core.cmp.PartialEq.ne.trait_default
+            source.OriginSource.Insts.CoreCmpPartialEqOriginSource
+            program.source_artifact source.OriginSource.Definition
+        if b
+        then ok (source.origin.StaticStep.Refuse, walk)
+        else
+          let b1 := core.option.Option.is_none program.body_node
+          if b1
+          then ok (source.origin.StaticStep.Refuse, walk)
+          else
+            let i := alloc.vec.Vec.len program.operations
+            if i > source.origin.MAX_ORIGIN_OPERATIONS
+            then ok (source.origin.StaticStep.Refuse, walk)
+            else
+              let i1 := alloc.vec.Vec.len program.operations
+              let operations :=
+                alloc.vec.Vec.with_capacity source.OriginStaticOperation i1
+              let (operations1, pending) ←
+                source.origin.static_step_loop walk.static_rows
+                  program.operations operations none 0#usize
+              match pending with
+              | none =>
+                let (o3, v) ←
+                  source.origin.intern_static walk.statics
+                    {
+                      input_signature := program.input_signature,
+                      output_signature := program.output_signature,
+                      operations := operations1
+                    }
+                match o3 with
+                | none =>
+                  ok (source.origin.StaticStep.Refuse,
+                    { walk with statics := v })
+                | some row =>
+                  let (s1, deref_mut_back) ←
+                    lift (alloc.vec.Vec.deref_mut walk.static_rows)
+                  let (o4, get_mut_back) ←
+                    core.slice.Slice.get_mut
+                      (core.slice.index.SliceIndexUsizeSlice (Option Std.U32))
+                      s1 index
+                  match o4 with
+                  | none =>
+                    let s2 := get_mut_back none
+                    let v1 := deref_mut_back s2
+                    ok (source.origin.StaticStep.Refuse,
+                      { walk with statics := v, static_rows := v1 })
+                  | some _ =>
+                    let s2 := get_mut_back (some o3)
+                    let v1 := deref_mut_back s2
+                    ok (source.origin.StaticStep.Row row,
+                      { walk with statics := v, static_rows := v1 })
+              | some step => ok (step, walk)
+    | some row => ok (source.origin.StaticStep.Row row, walk)
+
+/-- [noble_wasm::source::origin::MAX_ORIGIN_DEPTH]
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 35:0-35:35 -/
+@[global_simps, irreducible]
+def source.origin.MAX_ORIGIN_DEPTH : Std.Usize := 32#usize
+
+/-- [noble_wasm::source::origin::static_row]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1499:4-1518:5 -/
+@[rust_loop_body]
+def source.origin.static_row_loop.body
+  (programs : Slice source.OriginProgram) (walk : source.origin.TemplateWalk)
+  (pending : alloc.vec.Vec Std.Usize) (current : Std.Usize)
+  (resolved : Option Std.U32) (is_refused : Bool) :
+  Result (ControlFlow (source.origin.TemplateWalk × (alloc.vec.Vec Std.Usize)
+    × Std.Usize × (Option Std.U32) × Bool) ((Option Std.U32) ×
+    source.origin.TemplateWalk))
+  := do
+  if is_refused
+  then ok (done (resolved, walk))
+  else
+    let b := core.option.Option.is_none resolved
+    if b
+    then
+      let (ss, walk1) ← source.origin.static_step current programs walk
+      match ss with
+      | source.origin.StaticStep.Row row =>
+        let (o, pending1) ← alloc.vec.Vec.pop Global pending
+        match o with
+        | none => ok (cont (walk1, pending1, current, some row, is_refused))
+        | some parent =>
+          ok (cont (walk1, pending1, parent, resolved, is_refused))
+      | source.origin.StaticStep.Need child =>
+        let i := alloc.vec.Vec.len pending
+        if i >= source.origin.MAX_ORIGIN_DEPTH
+        then ok (cont (walk1, pending, current, resolved, true))
+        else
+          if child = current
+          then ok (cont (walk1, pending, current, resolved, true))
+          else
+            let s := alloc.vec.Vec.deref pending
+            let b1 ← source.origin.is_pending s child
+            if b1
+            then ok (cont (walk1, pending, current, resolved, true))
+            else
+              let pending1 ← alloc.vec.Vec.push pending current
+              ok (cont (walk1, pending1, child, resolved, is_refused))
+      | source.origin.StaticStep.Refuse =>
+        ok (cont (walk1, pending, current, resolved, true))
+    else ok (done (resolved, walk))
+
+/-- [noble_wasm::source::origin::static_row]: loop 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1499:4-1518:5 -/
+@[rust_loop]
+def source.origin.static_row_loop
+  (programs : Slice source.OriginProgram) (walk : source.origin.TemplateWalk)
+  (pending : alloc.vec.Vec Std.Usize) (current : Std.Usize)
+  (resolved : Option Std.U32) (is_refused : Bool) :
+  Result ((Option Std.U32) × source.origin.TemplateWalk)
+  := do
+  loop
+    (fun (walk1, pending1, current1, resolved1, is_refused1) =>
+      source.origin.static_row_loop.body programs walk1 pending1 current1
+      resolved1 is_refused1)
+    (walk, pending, current, resolved, is_refused)
+
+/-- [noble_wasm::source::origin::static_row]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1492:0-1520:1 -/
+def source.origin.static_row
+  (index : Std.Usize) (programs : Slice source.OriginProgram)
+  (walk : source.origin.TemplateWalk) :
+  Result ((Option Std.U32) × source.origin.TemplateWalk)
+  := do
+  let pending :=
+    alloc.vec.Vec.with_capacity Std.Usize source.origin.MAX_ORIGIN_DEPTH
+  source.origin.static_row_loop programs walk pending index none false
+
+/-- [noble_wasm::source::origin::intern_recipe]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1286:4-1291:5 -/
+@[rust_loop_body]
+def source.origin.intern_recipe_loop.body
+  (recipes : alloc.vec.Vec source.OriginRecipe) (recipe : source.OriginRecipe)
+  («at» : Std.Usize) (found : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) Std.Usize)
+  := do
+  let i := alloc.vec.Vec.len recipes
+  if found = i
+  then
+    let i1 := alloc.vec.Vec.len recipes
+    if «at» < i1
+    then
+      let or ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.OriginRecipe) recipes «at»
+      let b ←
+        source.OriginRecipe.Insts.CoreCmpPartialEqOriginRecipe.eq or recipe
+      let found1 ← if b
+                     then ok «at»
+                     else ok found
+      let at1 ← «at» + 1#usize
+      ok (cont (at1, found1))
+    else ok (done found)
+  else ok (done found)
+
+/-- [noble_wasm::source::origin::intern_recipe]: loop 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1286:4-1291:5 -/
+@[rust_loop]
+def source.origin.intern_recipe_loop
+  (recipes : alloc.vec.Vec source.OriginRecipe) (recipe : source.OriginRecipe)
+  («at» : Std.Usize) (found : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (at1, found1) => source.origin.intern_recipe_loop.body recipes recipe
+      at1 found1)
+    («at», found)
+
+/-- [noble_wasm::source::origin::intern_recipe]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1283:0-1298:1 -/
+def source.origin.intern_recipe
+  (recipes : alloc.vec.Vec source.OriginRecipe) (recipe : source.OriginRecipe)
+  :
+  Result ((Option Std.U32) × (alloc.vec.Vec source.OriginRecipe))
+  := do
+  let found := alloc.vec.Vec.len recipes
+  let found1 ← source.origin.intern_recipe_loop recipes recipe 0#usize found
+  let i := alloc.vec.Vec.len recipes
+  if found1 < i
+  then
+    let r ←
+      core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from found1
+    let o ← core.result.Result.ok r
+    ok (o, recipes)
+  else
+    let i1 := alloc.vec.Vec.len recipes
+    let o ← source.origin.row_index i1
+    let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let recipes1 ← alloc.vec.Vec.push recipes recipe
+      ok (some val, recipes1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let o1 ←
+        core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+          Std.U32 residual
+      ok (o1, recipes)
+
+/-- [noble_wasm::source::origin::recipe_row]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1308:0-1337:1 -/
+def source.origin.recipe_row
+  (recipe : alloc.rc.Rc source.OriginFixedExpression) (depth : Std.Usize)
+  (nodes : Std.Usize) (recipes : alloc.vec.Vec source.OriginRecipe) :
+  Result ((Option Std.U32) × Std.Usize × (alloc.vec.Vec source.OriginRecipe))
+  := do
+  let o ← lift (Usize.checked_add nodes 1#usize)
+  let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    if val > source.origin.MAX_ORIGIN_OPERATIONS
+    then ok (none, val, recipes)
+    else
+      if depth > source.origin.MAX_ORIGIN_DEPTH
+      then ok (none, val, recipes)
+      else
+        let ofe ← alloc.rc.Rc.Insts.CoreConvertAsRef.as_ref Global recipe
+        match ofe with
+        | source.OriginFixedExpression.Literal value =>
+          let (o1, recipes1) ←
+            source.origin.intern_recipe recipes (source.OriginRecipe.Literal
+              value)
+          ok (o1, val, recipes1)
+        | source.OriginFixedExpression.Arithmetic kind left right _ _ =>
+          let o1 ← lift (Usize.checked_add depth 1#usize)
+          let cf1 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o1
+          match cf1 with
+          | core.ops.control_flow.ControlFlow.Continue val1 =>
+            let (o2, val2, recipes1) ←
+              source.origin.recipe_row left val1 val recipes
+            let cf2 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o2
+            match cf2 with
+            | core.ops.control_flow.ControlFlow.Continue val3 =>
+              let o3 ← lift (Usize.checked_add depth 1#usize)
+              let cf3 ←
+                core.option.Option.Insts.CoreOpsTry_traitTry.branch o3
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue val4 =>
+                let (o4, val5, recipes2) ←
+                  source.origin.recipe_row right val4 val2 recipes1
+                let cf4 ←
+                  core.option.Option.Insts.CoreOpsTry_traitTry.branch o4
+                match cf4 with
+                | core.ops.control_flow.ControlFlow.Continue val6 =>
+                  let (o5, recipes3) ←
+                    source.origin.intern_recipe recipes2
+                      (source.OriginRecipe.Arithmetic kind val3 val6)
+                  ok (o5, val5, recipes3)
+                | core.ops.control_flow.ControlFlow.Break residual =>
+                  let o5 ←
+                    core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+                      Std.U32 residual
+                  ok (o5, val5, recipes2)
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let o4 ←
+                  core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+                    Std.U32 residual
+                ok (o4, val2, recipes1)
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let o3 ←
+                core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+                  Std.U32 residual
+              ok (o3, val2, recipes1)
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let o2 ←
+              core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+                Std.U32 residual
+            ok (o2, val, recipes)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let o1 ←
+      core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+        Std.U32 residual
+    ok (o1, nodes, recipes)
+partial_fixpoint
+
+mutual
+
+/-- [noble_wasm::source::origin::cell_binding]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1587:0-1650:1 -/
+def source.origin.cell_binding
+  (value : alloc.rc.Rc source.OriginProgramValue)
+  (programs : Slice source.OriginProgram) (named : Std.Usize)
+  (walk : source.origin.TemplateWalk) (depth : Std.Usize)
+  (fixed_nodes : Std.Usize) :
+  Result ((Option source.OriginBinding) × source.origin.TemplateWalk ×
+    Std.Usize)
+  := do
+  let opv ← alloc.rc.Rc.Insts.CoreConvertAsRef.as_ref Global value
+  match opv with
+  | source.OriginProgramValue.Static _ program_index =>
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        source.OriginProgram) programs program_index
+    let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let b ←
+        core.cmp.PartialEq.ne.trait_default
+          source.OriginSource.Insts.CoreCmpPartialEqOriginSource
+          val.source_artifact source.OriginSource.Definition
+      if b
+      then ok (none, walk, fixed_nodes)
+      else
+        if program_index = named
+        then
+          ok (some source.OriginBinding.Named,
+            { walk with owner := source.OriginOwner.SelfNamed }, fixed_nodes)
+        else
+          let cf1 ←
+            core.option.Option.Insts.CoreOpsTry_traitTry.branch val.body_node
+          match cf1 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            let (o1, walk1) ←
+              source.origin.static_row program_index programs walk
+            let cf2 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o1
+            match cf2 with
+            | core.ops.control_flow.ControlFlow.Continue val1 =>
+              ok (some (source.OriginBinding.Static val1), walk1, fixed_nodes)
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let o2 ←
+                core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+                  source.OriginBinding residual
+              ok (o2, walk1, fixed_nodes)
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let o1 ←
+              core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+                source.OriginBinding residual
+            ok (o1, walk, fixed_nodes)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let o1 ←
+        core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+          source.OriginBinding residual
+      ok (o1, walk, fixed_nodes)
+  | source.OriginProgramValue.Quote _ _ oo =>
+    match oo with
+    | source.OriginOperand.I64 oi =>
+      match oi with
+      | source.OriginI64.RootInput position =>
+        let s := alloc.vec.Vec.deref walk.captures
+        let b ← source.origin.is_captured s position
+        if b
+        then
+          ok (some (source.OriginBinding.QuoteRoot position), walk,
+            fixed_nodes)
+        else
+          let v ← alloc.vec.Vec.push walk.captures position
+          ok (some (source.OriginBinding.QuoteRoot position),
+            { walk with captures := v }, fixed_nodes)
+      | source.OriginI64.Fixed _ recipe =>
+        let (o, fixed_nodes1, v) ←
+          source.origin.recipe_row recipe 0#usize fixed_nodes walk.recipes
+        let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
+        match cf with
+        | core.ops.control_flow.ControlFlow.Continue val =>
+          ok (some (source.OriginBinding.QuoteFixed val),
+            { walk with recipes := v }, fixed_nodes1)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let o1 ←
+            core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+              source.OriginBinding residual
+          ok (o1, { walk with recipes := v }, fixed_nodes1)
+    | source.OriginOperand.Program child =>
+      let o ← lift (Usize.checked_add depth 1#usize)
+      let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let (o1, walk1, fixed_nodes1) ←
+          source.origin.template_class child programs named walk val
+            fixed_nodes
+        let cf1 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue val1 =>
+          ok (some (source.OriginBinding.QuoteProgram val1), walk1,
+            fixed_nodes1)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let o2 ←
+            core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+              source.OriginBinding residual
+          ok (o2, walk1, fixed_nodes1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let o1 ←
+          core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+            source.OriginBinding residual
+        ok (o1, walk, fixed_nodes)
+  | source.OriginProgramValue.Compose _ _ left right =>
+    let o ← lift (Usize.checked_add depth 1#usize)
+    let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (o1, walk1, fixed_nodes1) ←
+        source.origin.template_class left programs named walk val fixed_nodes
+      let cf1 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue val1 =>
+        let (o2, walk2, fixed_nodes2) ←
+          source.origin.template_class right programs named walk1 val
+            fixed_nodes1
+        let cf2 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o2
+        match cf2 with
+        | core.ops.control_flow.ControlFlow.Continue val2 =>
+          ok (some (source.OriginBinding.Compose val1 val2), walk2,
+            fixed_nodes2)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let o3 ←
+            core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+              source.OriginBinding residual
+          ok (o3, walk2, fixed_nodes2)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let o2 ←
+          core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+            source.OriginBinding residual
+        ok (o2, walk1, fixed_nodes1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let o1 ←
+        core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+          source.OriginBinding residual
+      ok (o1, walk, fixed_nodes)
+partial_fixpoint
+
+/-- [noble_wasm::source::origin::template_class]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1660:0-1681:1 -/
+def source.origin.template_class
+  (value : alloc.rc.Rc source.OriginProgramValue)
+  (programs : Slice source.OriginProgram) (named : Std.Usize)
+  (walk : source.origin.TemplateWalk) (depth : Std.Usize)
+  (fixed_nodes : Std.Usize) :
+  Result ((Option Std.U32) × source.origin.TemplateWalk × Std.Usize)
+  := do
+  if depth >= source.origin.MAX_ORIGIN_DEPTH
+  then ok (none, walk, fixed_nodes)
+  else
+    let o ← source.origin.visited_class walk value
+    match o with
+    | none =>
+      let (o1, walk1, fixed_nodes1) ←
+        source.origin.cell_binding value programs named walk depth fixed_nodes
+      let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o1
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let (o2, v) ← source.origin.intern_class walk1.classes val
+        let cf1 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o2
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue val1 =>
+          let i := alloc.vec.Vec.len walk1.cells
+          if i >= source.origin.MAX_ORIGIN_PROGRAMS
+          then ok (none, { walk1 with classes := v }, fixed_nodes1)
+          else
+            let r ←
+              alloc.rc.Rc.Insts.CoreCloneClone.clone
+                alloc.alloc.Global.Insts.CoreAllocAllocatorClone value
+            let v1 ← alloc.vec.Vec.push walk1.cells (r, val1)
+            ok (some val1, { walk1 with cells := v1, classes := v },
+              fixed_nodes1)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let o3 ←
+            core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+              Std.U32 residual
+          ok (o3, { walk1 with classes := v }, fixed_nodes1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let o2 ←
+          core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+            Std.U32 residual
+        ok (o2, walk1, fixed_nodes1)
+    | some _ => ok (o, walk, fixed_nodes)
+partial_fixpoint
+
+end
+
+/-- [noble_wasm::source::origin::template_projection]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1684:0-1707:1 -/
+def source.origin.template_projection
+  (value : alloc.rc.Rc source.OriginProgramValue)
+  (programs : Slice source.OriginProgram) (named : Std.Usize) :
+  Result (Option source.OriginTemplate)
+  := do
+  let v :=
+    alloc.vec.Vec.with_capacity ((alloc.rc.Rc source.OriginProgramValue) ×
+      Std.U32) source.origin.MAX_ORIGIN_PROGRAMS
+  let v1 :=
+    alloc.vec.Vec.with_capacity source.OriginClass
+      source.origin.MAX_ORIGIN_PROGRAMS
+  let i := Slice.len programs
+  let v2 ←
+    alloc.vec.from_elem (core.option.Option.Insts.CoreCloneClone
+      core.clone.CloneU32) none i
+  let (o, walk, _) ←
+    source.origin.template_class value programs named
+      {
+        cells := v,
+        classes := v1,
+        statics := (alloc.vec.Vec.new source.OriginStaticBody),
+        recipes := (alloc.vec.Vec.new source.OriginRecipe),
+        captures := (alloc.vec.Vec.new Std.U32),
+        owner := source.OriginOwner.Absent,
+        static_rows := v2
+      } 0#usize 0#usize
+  let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue _ =>
+    ok (some
+      {
+        captures := walk.captures,
+        classes := walk.classes,
+        statics := walk.statics,
+        recipes := walk.recipes,
+        owner := walk.owner
+      })
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+      source.OriginTemplate residual
+
+/-- [noble_wasm::source::origin::verified_template]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1741:0-1754:1 -/
+def source.origin.verified_template
+  (output : source.OriginOutput) (programs : Slice source.OriginProgram)
+  (named : Std.Usize) :
+  Result Bool
+  := do
+  let b ←
+    core.cmp.PartialEq.ne.trait_default
+      source.OriginOwner.Insts.CoreCmpPartialEqOriginOwner
+      output.template.owner source.OriginOwner.Absent
+  if b
+  then ok false
+  else
+    let i := alloc.vec.Vec.len output.template.captures
+    if i > source.origin.MAX_ORIGIN_OPERATIONS
+    then ok false
+    else
+      let i1 := alloc.vec.Vec.len output.template.classes
+      if i1 > source.origin.MAX_ORIGIN_PROGRAMS
+      then ok false
+      else
+        let o ←
+          source.origin.template_projection output.result programs named
+        match o with
+        | none => ok false
+        | some template =>
+          let b1 ←
+            source.OriginOwner.Insts.CoreCmpPartialEqOriginOwner.eq
+              template.owner source.OriginOwner.Absent
+          if b1
+          then source.origin.same_template template output.template
+          else ok false
+
+/-- [noble_wasm::source::origin::verified_templates]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1767:4-1774:5 -/
+@[rust_loop_body]
+def source.origin.verified_templates_loop.body
+  (i : Std.Usize) (v : alloc.vec.Vec source.OriginProgram)
+  (v1 : alloc.vec.Vec source.OriginOutput) (is_verified : Bool)
+  («at» : Std.Usize) :
+  Result (ControlFlow (Bool × Std.Usize) Bool)
+  := do
+  if is_verified
+  then
+    let i1 := alloc.vec.Vec.len v1
+    if «at» < i1
+    then
+      let oo ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          source.OriginOutput) v1 «at»
+      let s := alloc.vec.Vec.deref v
+      let is_verified1 ← source.origin.verified_template oo s i
+      let at1 ← «at» + 1#usize
+      ok (cont (is_verified1, at1))
+    else ok (done is_verified)
+  else ok (done is_verified)
+
+/-- [noble_wasm::source::origin::verified_templates]: loop 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1767:4-1774:5 -/
+@[rust_loop]
+def source.origin.verified_templates_loop
+  (i : Std.Usize) (v : alloc.vec.Vec source.OriginProgram)
+  (v1 : alloc.vec.Vec source.OriginOutput) (is_verified : Bool)
+  («at» : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun (is_verified1, at1) => source.origin.verified_templates_loop.body i v
+      v1 is_verified1 at1)
+    (is_verified, «at»)
+
+/-- [noble_wasm::source::origin::verified_templates]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1759:0-1776:1 -/
+def source.origin.verified_templates
+  (origin : source.SelectedOriginMetadata) : Result Bool := do
+  let b ← alloc.vec.Vec.is_empty Global origin.outputs
+  if b
+  then ok false
+  else
+    let i := alloc.vec.Vec.len origin.outputs
+    if i > source.origin.MAX_ORIGIN_PROGRAMS
+    then ok false
+    else
+      source.origin.verified_templates_loop origin.named_program_index
+        origin.programs origin.outputs true 0#usize
+
+/-- [noble_wasm::source::verify_selected_origin_template]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 814:0-816:1
+    Visibility: public -/
+def source.verify_selected_origin_template
+  (origin : source.SelectedOriginMetadata) : Result Bool := do
+  source.origin.verified_templates origin
+
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::NamedTargetMetadata}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 715:9-715:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 822:9-822:14
     Visibility: public -/
 def source.NamedTargetMetadata.Insts.CoreCloneClone.clone
   (self : source.NamedTargetMetadata) : Result source.NamedTargetMetadata := do
@@ -37923,7 +39946,7 @@ def source.NamedTargetMetadata.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::NamedTargetMetadata}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 715:9-715:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 822:9-822:14 -/
 @[reducible]
 def source.NamedTargetMetadata.Insts.CoreCloneClone : core.clone.Clone
   source.NamedTargetMetadata := {
@@ -37931,7 +39954,7 @@ def source.NamedTargetMetadata.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::NamedTargetMetadata}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 715:16-715:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 822:16-822:21
     Visibility: public -/
 def source.NamedTargetMetadata.Insts.CoreFmtDebug.fmt
   (self : source.NamedTargetMetadata) (f : core.fmt.Formatter) :
@@ -37974,7 +39997,7 @@ def source.NamedTargetMetadata.Insts.CoreFmtDebug.fmt
     s values
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::NamedTargetMetadata}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 715:16-715:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 822:16-822:21 -/
 @[reducible]
 def source.NamedTargetMetadata.Insts.CoreFmtDebug : core.fmt.Debug
   source.NamedTargetMetadata := {
@@ -37982,7 +40005,7 @@ def source.NamedTargetMetadata.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::SelectedTargetArtifact}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:9-736:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 843:9-843:14
     Visibility: public -/
 def source.SelectedTargetArtifact.Insts.CoreCloneClone.clone
   (self : source.SelectedTargetArtifact) :
@@ -37991,7 +40014,7 @@ def source.SelectedTargetArtifact.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::SelectedTargetArtifact}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:9-736:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 843:9-843:14 -/
 @[reducible]
 def source.SelectedTargetArtifact.Insts.CoreCloneClone : core.clone.Clone
   source.SelectedTargetArtifact := {
@@ -37999,7 +40022,7 @@ def source.SelectedTargetArtifact.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::SelectedTargetArtifact}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:16-736:20 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 843:16-843:20 -/
 @[reducible]
 def source.SelectedTargetArtifact.Insts.CoreMarkerCopy : core.marker.Copy
   source.SelectedTargetArtifact := {
@@ -38007,7 +40030,7 @@ def source.SelectedTargetArtifact.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::SelectedTargetArtifact}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:22-736:27
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 843:22-843:27
     Visibility: public -/
 def source.SelectedTargetArtifact.Insts.CoreFmtDebug.fmt
   (self : source.SelectedTargetArtifact) (f : core.fmt.Formatter) :
@@ -38026,7 +40049,7 @@ def source.SelectedTargetArtifact.Insts.CoreFmtDebug.fmt
     "source_generation") dyn1 (toStr "named_program_index") dyn2
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::SelectedTargetArtifact}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:22-736:27 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 843:22-843:27 -/
 @[reducible]
 def source.SelectedTargetArtifact.Insts.CoreFmtDebug : core.fmt.Debug
   source.SelectedTargetArtifact := {
@@ -38034,14 +40057,14 @@ def source.SelectedTargetArtifact.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::StructuralPartialEq for noble_wasm::source::SelectedTargetArtifact}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:29-736:38 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 843:29-843:38 -/
 @[reducible]
 def source.SelectedTargetArtifact.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.SelectedTargetArtifact := {
 }
 
 /-- [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::SelectedTargetArtifact> for noble_wasm::source::SelectedTargetArtifact}::eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:29-736:38
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 843:29-843:38
     Visibility: public -/
 def
   source.SelectedTargetArtifact.Insts.CoreCmpPartialEqSelectedTargetArtifact.eq
@@ -38060,7 +40083,7 @@ def
   else ok false
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::SelectedTargetArtifact> for noble_wasm::source::SelectedTargetArtifact}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:29-736:38 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 843:29-843:38 -/
 @[reducible]
 impl_def
   source.SelectedTargetArtifact.Insts.CoreCmpPartialEqSelectedTargetArtifact :
@@ -38073,14 +40096,14 @@ impl_def
 }
 
 /-- [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::SelectedTargetArtifact}::assert_fields_are_eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:40-736:42
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 843:40-843:42
     Visibility: public -/
 def source.SelectedTargetArtifact.Insts.CoreCmpEq.assert_fields_are_eq
   (self : source.SelectedTargetArtifact) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::SelectedTargetArtifact}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:40-736:42 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 843:40-843:42 -/
 @[reducible]
 def source.SelectedTargetArtifact.Insts.CoreCmpEq : core.cmp.Eq
   source.SelectedTargetArtifact := {
@@ -38091,7 +40114,7 @@ def source.SelectedTargetArtifact.Insts.CoreCmpEq : core.cmp.Eq
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::ResourceCatalogEntry}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 744:9-744:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 851:9-851:14
     Visibility: public -/
 def source.ResourceCatalogEntry.Insts.CoreCloneClone.clone
   (self : source.ResourceCatalogEntry) :
@@ -38105,7 +40128,7 @@ def source.ResourceCatalogEntry.Insts.CoreCloneClone.clone
   ok { declaration := nd, kind := rk }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::ResourceCatalogEntry}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 744:9-744:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 851:9-851:14 -/
 @[reducible]
 def source.ResourceCatalogEntry.Insts.CoreCloneClone : core.clone.Clone
   source.ResourceCatalogEntry := {
@@ -38113,7 +40136,7 @@ def source.ResourceCatalogEntry.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::ResourceCatalogEntry}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 744:16-744:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 851:16-851:21
     Visibility: public -/
 def source.ResourceCatalogEntry.Insts.CoreFmtDebug.fmt
   (self : source.ResourceCatalogEntry) (f : core.fmt.Formatter) :
@@ -38129,7 +40152,7 @@ def source.ResourceCatalogEntry.Insts.CoreFmtDebug.fmt
     "ResourceCatalogEntry") (toStr "declaration") dyn (toStr "kind") dyn1
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::ResourceCatalogEntry}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 744:16-744:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 851:16-851:21 -/
 @[reducible]
 def source.ResourceCatalogEntry.Insts.CoreFmtDebug : core.fmt.Debug
   source.ResourceCatalogEntry := {
@@ -38137,7 +40160,7 @@ def source.ResourceCatalogEntry.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::FreeCode}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 750:16-750:20 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 857:16-857:20 -/
 @[reducible]
 def source.FreeCode.Insts.CoreMarkerCopy : core.marker.Copy source.FreeCode
   := {
@@ -38145,21 +40168,21 @@ def source.FreeCode.Insts.CoreMarkerCopy : core.marker.Copy source.FreeCode
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::wat]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 786:4-788:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 893:4-895:5
     Visibility: public -/
 def source.Prepared.impl.wat
   (self : source.Prepared) : Result (Slice Std.U8) := do
   ok (alloc.vec.Vec.deref self.wat)
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::metrics]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 791:4-793:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 898:4-900:5
     Visibility: public -/
 def source.Prepared.impl.metrics
   (self : source.Prepared) : Result source.CompileMetrics := do
   ok self.metrics
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_bridge_wat]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 797:4-802:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 904:4-909:5
     Visibility: public -/
 def source.Prepared.runtime_bridge_wat
   (self : source.Prepared) :
@@ -38183,7 +40206,7 @@ def source.Prepared.runtime_bridge_wat
     else ok (core.result.Result.Err Diagnostic.Invalid)
 
 /-- [noble_wasm::source::is_defective_descriptor::{impl core::ops::function::FnOnce<(u32,), bool> for noble_wasm::source::is_defective_descriptor::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1954:24-1954:48 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2061:24-2061:48 -/
 def
   source.is_defective_descriptor.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool.call_once
   (c : source.is_defective_descriptor.closure) (tupled_args : Std.U32) :
@@ -38192,7 +40215,7 @@ def
   ok (tupled_args > source.MEMORY_BYTES)
 
 /-- Trait implementation: [noble_wasm::source::is_defective_descriptor::{impl core::ops::function::FnOnce<(u32,), bool> for noble_wasm::source::is_defective_descriptor::{closure}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1954:24-1954:48 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2061:24-2061:48 -/
 @[reducible]
 def
   source.is_defective_descriptor.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool
@@ -38203,7 +40226,7 @@ def
 }
 
 /-- [noble_wasm::source::is_defective_descriptor]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1949:0-1955:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2056:0-2062:1 -/
 def source.is_defective_descriptor
   (address : Std.U32) (length_bytes : Std.U32) (signature : Slice Std.U8) :
   Result Bool
@@ -38228,7 +40251,7 @@ def source.is_defective_descriptor
         o1 ()
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 815:63-815:95 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 922:63-922:95 -/
 def
   source.Prepared.runtime_signature_catalog.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic.call_once
   (c : source.Prepared.runtime_signature_catalog.closure)
@@ -38238,7 +40261,7 @@ def
   ok Diagnostic.Exhausted
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog::{closure}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 815:63-815:95 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 922:63-922:95 -/
 @[reducible]
 def
   source.Prepared.runtime_signature_catalog.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic
@@ -38249,7 +40272,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 819:8-830:9
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 926:8-937:9
     Visibility: public -/
 @[rust_loop_body]
 def source.Prepared.runtime_signature_catalog_loop0.body
@@ -38289,7 +40312,7 @@ def source.Prepared.runtime_signature_catalog_loop0.body
   else ok (done (bytes, none))
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 819:8-830:9
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 926:8-937:9
     Visibility: public -/
 @[rust_loop]
 def source.Prepared.runtime_signature_catalog_loop0
@@ -38304,7 +40327,7 @@ def source.Prepared.runtime_signature_catalog_loop0
     (bytes, index)
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog]: loop body 1:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 819:8-830:9
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 926:8-937:9
     Visibility: public -/
 @[rust_loop_body]
 def source.Prepared.runtime_signature_catalog_loop1.body
@@ -38344,7 +40367,7 @@ def source.Prepared.runtime_signature_catalog_loop1.body
   else ok (done (bytes, none))
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog]: loop 1:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 819:8-830:9
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 926:8-937:9
     Visibility: public -/
 @[rust_loop]
 def source.Prepared.runtime_signature_catalog_loop1
@@ -38359,7 +40382,7 @@ def source.Prepared.runtime_signature_catalog_loop1
     (bytes, index)
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 806:4-835:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 913:4-942:5
     Visibility: public -/
 def source.Prepared.runtime_signature_catalog
   (self : source.Prepared) :
@@ -38440,20 +40463,20 @@ def source.Prepared.runtime_signature_catalog
     else ok (core.result.Result.Err Diagnostic.Invalid)
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::code_span]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 840:4-842:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 947:4-949:5
     Visibility: public -/
 def source.Prepared.impl.code_span
   (self : source.Prepared) : Result source.CodeSpan := do
   ok self.code_span
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::literal_end]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 845:4-847:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 952:4-954:5
     Visibility: public -/
 def source.Prepared.literal_end (self : source.Prepared) : Result Std.U32 := do
   ok self.next.text_end
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::worker_literal_end]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 850:4-856:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 957:4-963:5
     Visibility: public -/
 def source.Prepared.worker_literal_end
   (self : source.Prepared) : Result (Option Std.U32) := do
@@ -38462,35 +40485,35 @@ def source.Prepared.worker_literal_end
   else ok none
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::live_sites]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 859:4-861:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 966:4-968:5
     Visibility: public -/
 def source.Prepared.impl.live_sites
   (self : source.Prepared) : Result (Slice source.LiveSiteMetadata) := do
   ok (alloc.vec.Vec.deref self.live_sites)
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::target_metadata]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 864:4-866:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 971:4-973:5
     Visibility: public -/
 def source.Prepared.impl.target_metadata
   (self : source.Prepared) : Result (Option source.TargetMetadata) := do
   core.option.Option.as_ref self.target_metadata
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::program_metadata]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 870:4-872:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 977:4-979:5
     Visibility: public -/
 def source.Prepared.impl.program_metadata
   (self : source.Prepared) : Result (Slice source.ProgramMetadata) := do
   ok (alloc.vec.Vec.deref self.program_metadata)
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::named_targets]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 877:4-879:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 984:4-986:5
     Visibility: public -/
 def source.Prepared.impl.named_targets
   (self : source.Prepared) : Result (Slice source.NamedTargetMetadata) := do
   ok (alloc.vec.Vec.deref self.named_targets)
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::selected_target]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 883:4-885:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 990:4-992:5
     Visibility: public -/
 def source.Prepared.impl.selected_target
   (self : source.Prepared) :
@@ -38499,7 +40522,7 @@ def source.Prepared.impl.selected_target
   ok self.selected_target
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::selected_origin]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 889:4-891:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 996:4-998:5
     Visibility: public -/
 def source.Prepared.impl.selected_origin
   (self : source.Prepared) :
@@ -38508,14 +40531,14 @@ def source.Prepared.impl.selected_origin
   core.option.Option.as_ref self.selected_origin
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::resource_catalog]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 895:4-897:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1002:4-1004:5
     Visibility: public -/
 def source.Prepared.impl.resource_catalog
   (self : source.Prepared) : Result (Slice source.ResourceCatalogEntry) := do
   ok (alloc.vec.Vec.deref self.resource_catalog)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::owns_code]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 965:4-967:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1072:4-1074:5 -/
 def source.Compiler.owns_code (self : source.Compiler) : Result Bool := do
   if self.live
   then ok true
@@ -38524,7 +40547,7 @@ def source.Compiler.owns_code (self : source.Compiler) : Result Bool := do
        else ok self.live_slots
 
 /-- [noble_wasm::source::extended_table]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1902:0-1907:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2009:0-2014:1 -/
 def source.extended_table
   (functions : Std.U32) (slots : Std.U32) :
   Result (core.result.Result Std.U32 Diagnostic)
@@ -38538,7 +40561,7 @@ def source.extended_table
     else ok (core.result.Result.Err Diagnostic.Exhausted)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::take_free_code]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 953:4-962:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1060:4-1069:5 -/
 def source.Compiler.take_free_code
   (self : source.Compiler) (index : Std.Usize) (slots : Std.U32) :
   Result (Std.U32 × source.Compiler)
@@ -38558,7 +40581,7 @@ def source.Compiler.take_free_code
     ok (free.start, { self with free_code := v })
 
 /-- [noble_wasm::source::position_of]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1892:4-1897:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1999:4-2004:5 -/
 @[rust_loop_body]
 def source.position_of_loop.body
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleSharedTBoolInst :
@@ -38585,7 +40608,7 @@ def source.position_of_loop.body
   else ok (done found)
 
 /-- [noble_wasm::source::position_of]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1892:4-1897:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1999:4-2004:5 -/
 @[rust_loop]
 def source.position_of_loop
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleSharedTBoolInst :
@@ -38600,7 +40623,7 @@ def source.position_of_loop
     (predicate, index, found)
 
 /-- [noble_wasm::source::position_of]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1889:0-1899:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1996:0-2006:1 -/
 @[reducible]
 def source.position_of
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleShared0TBoolInst :
@@ -38611,7 +40634,7 @@ def source.position_of
     predicate 0#usize none
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 945:37-945:63 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1052:37-1052:63 -/
 def
   source.Compiler.fitting_free_code.closure.Insts.CoreOpsFunctionFnMutTupleShared1FreeCodeBool.call_mut
   (c : source.Compiler.fitting_free_code.closure)
@@ -38621,7 +40644,7 @@ def
   ok (tupled_args.slots >= c, c)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 945:37-945:63 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1052:37-1052:63 -/
 def
   source.Compiler.fitting_free_code.closure.Insts.CoreOpsFunctionFnOnceTupleShared1FreeCodeBool.call_once
   (c : source.Compiler.fitting_free_code.closure) (fc : source.FreeCode) :
@@ -38633,7 +40656,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 945:37-945:63 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1052:37-1052:63 -/
 @[reducible]
 def
   source.Compiler.fitting_free_code.closure.Insts.CoreOpsFunctionFnOnceTupleShared1FreeCodeBool
@@ -38644,7 +40667,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 945:37-945:63 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1052:37-1052:63 -/
 @[reducible]
 def
   source.Compiler.fitting_free_code.closure.Insts.CoreOpsFunctionFnMutTupleShared1FreeCodeBool
@@ -38657,7 +40680,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 941:4-946:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1048:4-1053:5 -/
 def source.Compiler.fitting_free_code
   (self : source.Compiler) (slots : Std.U32) : Result (Option Std.Usize) := do
   if self.live_slots
@@ -38669,7 +40692,7 @@ def source.Compiler.fitting_free_code
   else ok none
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::code_start]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 931:4-938:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1038:4-1045:5 -/
 def source.Compiler.code_start
   (self : source.Compiler) (slots : Std.U32) :
   Result ((core.result.Result Std.U32 Diagnostic) × source.Compiler)
@@ -38688,7 +40711,7 @@ def source.Compiler.code_start
     ok (core.result.Result.Ok i, self1)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::reserve_code]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 905:4-923:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1012:4-1030:5 -/
 def source.Compiler.reserve_code
   (self : source.Compiler) (slots : Std.U32) :
   Result ((core.result.Result source.CodeSpan Diagnostic) × source.Compiler)
@@ -38719,7 +40742,7 @@ def source.Compiler.reserve_code
       ok (core.result.Result.Err failure, self1)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::signature]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 985:8-993:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1092:8-1100:9 -/
 @[rust_loop_body]
 def source.Compiler.signature_loop.body
   (p : signatures.Pool) (work : source.Work) (index : Std.Usize) :
@@ -38750,7 +40773,7 @@ def source.Compiler.signature_loop.body
       p.extended, p.compact, work, none))
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::signature]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 985:8-993:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1092:8-1100:9 -/
 @[rust_loop]
 def source.Compiler.signature_loop
   (p : signatures.Pool) (work : source.Work) (index : Std.Usize) :
@@ -38764,7 +40787,7 @@ def source.Compiler.signature_loop
     (work, index)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::signature]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 973:4-998:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1080:4-1105:5 -/
 def source.Compiler.signature
   (self : source.Compiler) (stack : Slice noble_kernel.types.Ty)
   (work : source.Work) :
@@ -38821,7 +40844,7 @@ def source.Compiler.signature
     ok (core.result.Result.Err failure, self, work1)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1001:4-1025:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1108:4-1132:5
     Visibility: public -/
 def source.Compiler.new : Result source.Compiler := do
   let bm ←
@@ -38854,7 +40877,7 @@ def source.Compiler.new : Result source.Compiler := do
     }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_type_directed_experimental]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1029:4-1035:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1136:4-1142:5
     Visibility: public -/
 def source.Compiler.new_type_directed_experimental
   : Result source.Compiler := do
@@ -38863,56 +40886,56 @@ def source.Compiler.new_type_directed_experimental
     { c with type_directed_experimental := true, experimental_cleanup := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_experimental_baseline]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1038:4-1043:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1145:4-1150:5
     Visibility: public -/
 def source.Compiler.new_experimental_baseline : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with experimental_cleanup := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_live]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1048:4-1053:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1155:4-1160:5
     Visibility: public -/
 def source.Compiler.new_live : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with live := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_declared_live]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1057:4-1062:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1164:4-1169:5
     Visibility: public -/
 def source.Compiler.new_declared_live : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with declared_live := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_live_slots]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1065:4-1070:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1172:4-1177:5
     Visibility: public -/
 def source.Compiler.new_live_slots : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with live_slots := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_text_cursor]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1073:4-1078:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1180:4-1185:5
     Visibility: public -/
 def source.Compiler.new_text_cursor : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with text_cursor := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_checked_i64]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1081:4-1086:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1188:4-1193:5
     Visibility: public -/
 def source.Compiler.new_checked_i64 : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with checked_i64 := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_declared_text]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1089:4-1095:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1196:4-1202:5
     Visibility: public -/
 def source.Compiler.new_declared_text : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with text_cursor := true, declared_text := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_calculator]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1098:4-1105:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1205:4-1212:5
     Visibility: public -/
 def source.Compiler.new_calculator : Result source.Compiler := do
   let compiler ← source.Compiler.new
@@ -38928,14 +40951,14 @@ def source.Compiler.new_calculator : Result source.Compiler := do
     }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_worker]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1108:4-1113:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1215:4-1220:5
     Visibility: public -/
 def source.Compiler.new_worker : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with worker_inputs := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_interruptible_worker]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1118:4-1124:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1225:4-1231:5
     Visibility: public -/
 def source.Compiler.new_interruptible_worker : Result source.Compiler := do
   let c ← source.Compiler.new
@@ -44238,7 +46261,7 @@ def source.plan.lower
     ok (core.result.Result.Err failure, compiler1, work1)
 
 /-- [noble_wasm::source::literal_copy_entries]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1994:4-1996:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2101:4-2103:5 -/
 @[rust_loop_body]
 def source.literal_copy_entries_loop.body
   (iter : alloc.collections.btree.map.Keys (alloc.vec.Vec Std.U8) Std.U32)
@@ -44258,7 +46281,7 @@ def source.literal_copy_entries_loop.body
     ok (cont (iter1, total1))
 
 /-- [noble_wasm::source::literal_copy_entries]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1994:4-1996:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2101:4-2103:5 -/
 @[rust_loop]
 def source.literal_copy_entries_loop
   (iter : alloc.collections.btree.map.Keys (alloc.vec.Vec Std.U8) Std.U32)
@@ -44270,7 +46293,7 @@ def source.literal_copy_entries_loop
     (iter, total)
 
 /-- [noble_wasm::source::literal_copy_entries]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1990:0-1998:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2097:0-2105:1 -/
 def source.literal_copy_entries
   (static_literals : alloc.collections.btree.map.BTreeMap (alloc.vec.Vec
   Std.U8) Std.U32 Global) :
@@ -44282,7 +46305,7 @@ def source.literal_copy_entries
   source.literal_copy_entries_loop iter 0#usize
 
 /-- [noble_wasm::source::identity_copy_charge]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1970:4-1982:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2077:4-2089:5 -/
 @[rust_loop_body]
 def source.identity_copy_charge_loop.body
   (identities : Slice source.Identity) (retained : Std.Usize)
@@ -44307,7 +46330,7 @@ def source.identity_copy_charge_loop.body
   else ok (done (work, identity_charge, none))
 
 /-- [noble_wasm::source::identity_copy_charge]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1970:4-1982:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2077:4-2089:5 -/
 @[rust_loop]
 def source.identity_copy_charge_loop
   (identities : Slice source.Identity) (retained : Std.Usize)
@@ -44321,7 +46344,7 @@ def source.identity_copy_charge_loop
     (work, identity, identity_charge)
 
 /-- [noble_wasm::source::identity_copy_charge]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1962:0-1987:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2069:0-2094:1 -/
 def source.identity_copy_charge
   (identities : Slice source.Identity) (retained : Std.Usize)
   (work : source.Work) :
@@ -44334,7 +46357,7 @@ def source.identity_copy_charge
   | some problem => ok (core.result.Result.Err problem, work1)
 
 /-- [noble_wasm::source::fresh_signature_pool]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1919:0-1927:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2026:0-2034:1 -/
 def source.fresh_signature_pool
   (program_free : Bool) : Result (Option signatures.Pool) := do
   if program_free
@@ -44345,7 +46368,7 @@ def source.fresh_signature_pool
   else ok none
 
 /-- [noble_wasm::source::resource_entry]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2186:0-2201:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2293:0-2308:1 -/
 def source.resource_entry
   (environment : noble_kernel.contracts.Env)
   (id : noble_kernel.types.NominalTypeId) :
@@ -44398,7 +46421,7 @@ def source.resource_entry
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::source::admitted_resource_catalog]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2167:4-2178:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2274:4-2285:5 -/
 @[rust_loop_body]
 def source.admitted_resource_catalog_loop.body
   (environment : noble_kernel.contracts.Env)
@@ -44424,7 +46447,7 @@ def source.admitted_resource_catalog_loop.body
   else ok (done (catalog, none))
 
 /-- [noble_wasm::source::admitted_resource_catalog]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2167:4-2178:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2274:4-2285:5 -/
 @[rust_loop]
 def source.admitted_resource_catalog_loop
   (environment : noble_kernel.contracts.Env)
@@ -44437,7 +46460,7 @@ def source.admitted_resource_catalog_loop
     (catalog, index)
 
 /-- [noble_wasm::source::admitted_resource_catalog]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2161:0-2183:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2268:0-2290:1 -/
 def source.admitted_resource_catalog
   (environment : noble_kernel.contracts.Env) :
   Result (core.result.Result (alloc.vec.Vec source.ResourceCatalogEntry)
@@ -44451,7 +46474,7 @@ def source.admitted_resource_catalog
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::resource_metadata]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1644:4-1652:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1751:4-1759:5 -/
 def source.Compiler.resource_metadata
   (self : source.Compiler) (environment : noble_kernel.contracts.Env) :
   Result (core.result.Result (alloc.vec.Vec source.ResourceCatalogEntry)
@@ -44463,7 +46486,7 @@ def source.Compiler.resource_metadata
     ok (core.result.Result.Ok (alloc.vec.Vec.new source.ResourceCatalogEntry))
 
 /-- [noble_wasm::source::runtime_atoms]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2150:4-2152:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2257:4-2259:5 -/
 @[rust_loop_body]
 def source.runtime_atoms_loop.body
   (text_witness : Std.U32) (iter : core.slice.iter.Iter source.plan.Operation)
@@ -44481,7 +46504,7 @@ def source.runtime_atoms_loop.body
     ok (cont (iter1, atoms1))
 
 /-- [noble_wasm::source::runtime_atoms]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2150:4-2152:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2257:4-2259:5 -/
 @[rust_loop]
 def source.runtime_atoms_loop
   (iter : core.slice.iter.Iter source.plan.Operation) (text_witness : Std.U32)
@@ -44494,7 +46517,7 @@ def source.runtime_atoms_loop
     (iter, atoms)
 
 /-- [noble_wasm::source::runtime_atoms]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2145:0-2154:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2252:0-2261:1 -/
 def source.runtime_atoms
   (operations : Slice source.plan.Operation) (text_witness : Std.U32) :
   Result (alloc.vec.Vec source.ProgramAtomMetadata)
@@ -44507,7 +46530,7 @@ def source.runtime_atoms
   source.runtime_atoms_loop iter text_witness atoms
 
 /-- [noble_wasm::source::program_entry]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2115:0-2142:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2222:0-2249:1 -/
 def source.program_entry
   (program : source.plan.Program) (program_index : Std.Usize)
   (text_witness : Std.U32) (worker_inputs : Bool) :
@@ -44559,7 +46582,7 @@ def source.program_entry
     ok (core.result.Result.Err failure, { program with logical := o1 })
 
 /-- [noble_wasm::source::checked_program_metadata]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2087:4-2103:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2194:4-2210:5 -/
 @[rust_loop_body]
 def source.checked_program_metadata_loop.body
   (worker_inputs : Bool) (text_witness : Std.U32)
@@ -44588,7 +46611,7 @@ def source.checked_program_metadata_loop.body
   else ok (done (v, metadata, none))
 
 /-- [noble_wasm::source::checked_program_metadata]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2087:4-2103:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2194:4-2210:5 -/
 @[rust_loop]
 def source.checked_program_metadata_loop
   (v : alloc.vec.Vec source.plan.Program) (worker_inputs : Bool)
@@ -44603,7 +46626,7 @@ def source.checked_program_metadata_loop
     (v, metadata, index)
 
 /-- [noble_wasm::source::checked_program_metadata]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2079:0-2108:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2186:0-2215:1 -/
 def source.checked_program_metadata
   (plan : source.plan.Layout) (worker_inputs : Bool) :
   Result ((core.result.Result (alloc.vec.Vec source.ProgramMetadata)
@@ -44620,7 +46643,7 @@ def source.checked_program_metadata
     ok (core.result.Result.Err problem, { plan with programs := v })
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::program_metadata]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1633:4-1641:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1740:4-1748:5 -/
 def source.Compiler.program_metadata
   (self : source.Compiler) (plan : source.plan.Layout) :
   Result ((core.result.Result (alloc.vec.Vec source.ProgramMetadata)
@@ -44636,7 +46659,7 @@ def source.Compiler.program_metadata
         plan)
 
 /-- [noble_wasm::source::checked_named_target::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::Identity,), bool> for noble_wasm::source::checked_named_target::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2056:44-2056:68 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2163:44-2163:68 -/
 def
   source.checked_named_target.closure.Insts.CoreOpsFunctionFnMutTupleShared1IdentityBool.call_mut
   (c : source.checked_named_target.closure) (tupled_args : source.Identity) :
@@ -44645,7 +46668,7 @@ def
   ok (tupled_args.id = c, c)
 
 /-- [noble_wasm::source::checked_named_target::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::Identity,), bool> for noble_wasm::source::checked_named_target::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2056:44-2056:68 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2163:44-2163:68 -/
 def
   source.checked_named_target.closure.Insts.CoreOpsFunctionFnOnceTupleShared1IdentityBool.call_once
   (c : source.checked_named_target.closure) (i : source.Identity) :
@@ -44657,7 +46680,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::checked_named_target::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::Identity,), bool> for noble_wasm::source::checked_named_target::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2056:44-2056:68 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2163:44-2163:68 -/
 @[reducible]
 def
   source.checked_named_target.closure.Insts.CoreOpsFunctionFnOnceTupleShared1IdentityBool
@@ -44668,7 +46691,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::checked_named_target::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::Identity,), bool> for noble_wasm::source::checked_named_target::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2056:44-2056:68 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2163:44-2163:68 -/
 @[reducible]
 def
   source.checked_named_target.closure.Insts.CoreOpsFunctionFnMutTupleShared1IdentityBool
@@ -44681,7 +46704,7 @@ def
 }
 
 /-- [noble_wasm::source::checked_named_target]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2033:0-2072:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2140:0-2179:1 -/
 def source.checked_named_target
   (submission : noble_kernel.execution.Submission)
   (checked : source.admission.Accepted) (plan : source.plan.Layout)
@@ -44750,7 +46773,7 @@ def source.checked_named_target
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::source::checked_named_targets]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2014:4-2025:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2121:4-2132:5 -/
 @[rust_loop_body]
 def source.checked_named_targets_loop.body
   (submission : noble_kernel.execution.Submission)
@@ -44774,7 +46797,7 @@ def source.checked_named_targets_loop.body
   else ok (done (targets, none))
 
 /-- [noble_wasm::source::checked_named_targets]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2014:4-2025:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2121:4-2132:5 -/
 @[rust_loop]
 def source.checked_named_targets_loop
   (submission : noble_kernel.execution.Submission)
@@ -44789,7 +46812,7 @@ def source.checked_named_targets_loop
     (targets, index)
 
 /-- [noble_wasm::source::checked_named_targets]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2005:0-2030:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2112:0-2137:1 -/
 def source.checked_named_targets
   (submission : noble_kernel.execution.Submission)
   (checked : source.admission.Accepted) (plan : source.plan.Layout)
@@ -44805,7 +46828,7 @@ def source.checked_named_targets
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::named_metadata]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1615:4-1626:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1722:4-1733:5 -/
 def source.Compiler.named_metadata
   (self : source.Compiler) (submission : noble_kernel.execution.Submission)
   (checked : source.admission.Accepted) (plan : source.plan.Layout)
@@ -44822,7 +46845,7 @@ def source.Compiler.named_metadata
       ok (core.result.Result.Ok (alloc.vec.Vec.new source.NamedTargetMetadata))
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::root_metadata]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1590:4-1612:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1697:4-1719:5 -/
 def source.Compiler.root_metadata
   (self : source.Compiler) (submission : noble_kernel.execution.Submission)
   (checked : source.admission.Accepted) (plan : source.plan.Layout) :
@@ -44890,7 +46913,7 @@ def source.Compiler.root_metadata
     else ok (core.result.Result.Ok none)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retained_descriptors]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1581:4-1587:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1688:4-1694:5 -/
 def source.Compiler.retained_descriptors
   (self : source.Compiler) (program_free : Bool) : Result Std.Usize := do
   if program_free
@@ -44898,7 +46921,7 @@ def source.Compiler.retained_descriptors
   else ok (alloc.vec.Vec.len self.descriptors)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::emitted]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1549:4-1578:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1656:4-1685:5 -/
 def source.Compiler.emitted
   (self : source.Compiler) (plan : source.plan.Layout) (next : source.Compiler)
   (program_free : Bool) (work : source.Work) :
@@ -44961,7 +46984,7 @@ def source.Compiler.emitted
         ok (core.result.Result.Err failure, work)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prospective::{impl core::ops::function::FnOnce<(), noble_wasm::signatures::Pool> for noble_wasm::source::{noble_wasm::source::Compiler}::prospective::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1508:57-1508:83 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1615:57-1615:83 -/
 def
   source.Compiler.prospective.closure.Insts.CoreOpsFunctionFnOnceTuplePool.call_once
   (c : source.Compiler.prospective.closure) (_ : Unit) :
@@ -44970,7 +46993,7 @@ def
   signatures.Pool.Insts.CoreCloneClone.clone c.signatures
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prospective::{impl core::ops::function::FnOnce<(), noble_wasm::signatures::Pool> for noble_wasm::source::{noble_wasm::source::Compiler}::prospective::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1508:57-1508:83 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1615:57-1615:83 -/
 @[reducible]
 def source.Compiler.prospective.closure.Insts.CoreOpsFunctionFnOnceTuplePool :
   core.ops.function.FnOnce source.Compiler.prospective.closure Unit
@@ -44980,7 +47003,7 @@ def source.Compiler.prospective.closure.Insts.CoreOpsFunctionFnOnceTuplePool :
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prospective]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1494:4-1542:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1601:4-1649:5 -/
 def source.Compiler.prospective
   (self : source.Compiler) (functions : Std.U32) (quiescent : Bool)
   (program_free : Bool) (fresh_signatures : Option signatures.Pool) :
@@ -45100,7 +47123,7 @@ def source.reuse.Compiler.canonical_epoch
     b self
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::program_free_epoch]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1484:4-1490:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1591:4-1597:5 -/
 def source.Compiler.program_free_epoch
   (self : source.Compiler) (program_free : Bool) :
   Result (Option source.reuse.CanonicalEpoch)
@@ -45110,7 +47133,7 @@ def source.Compiler.program_free_epoch
   else ok none
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retained_signatures]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1475:4-1481:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1582:4-1588:5 -/
 def source.Compiler.retained_signatures
   (self : source.Compiler) (program_free : Bool) : Result Std.Usize := do
   if program_free
@@ -45118,7 +47141,7 @@ def source.Compiler.retained_signatures
   else signatures.Pool.len self.signatures
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retained_identities]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1466:4-1472:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1573:4-1579:5 -/
 def source.Compiler.retained_identities
   (self : source.Compiler) (quiescent : Bool) : Result Std.Usize := do
   if quiescent
@@ -49439,7 +51462,7 @@ def source.preflight.check
       | core.result.Result.Err _ => ok (r, work1)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::admitted]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1299:4-1357:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1406:4-1464:5 -/
 def source.Compiler.admitted
   (self : source.Compiler) (submission : noble_kernel.execution.Submission)
   (signed : Bool) :
@@ -49610,7 +51633,7 @@ def source.Compiler.admitted
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_layout]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1363:4-1463:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1470:4-1570:5 -/
 def source.Compiler.prepare_layout
   (self : source.Compiler) (submission : noble_kernel.execution.Submission)
   (functions : Std.U32) (quiescent : Bool) (program_free : Bool)
@@ -49787,7 +51810,7 @@ def source.Compiler.prepare_layout
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_from]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1285:4-1296:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1392:4-1403:5 -/
 def source.Compiler.prepare_from
   (self : source.Compiler) (submission : noble_kernel.execution.Submission)
   (functions : Std.U32) (quiescent : Bool) (program_free : Bool)
@@ -49804,7 +51827,7 @@ def source.Compiler.prepare_from
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1127:4-1155:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1234:4-1262:5
     Visibility: public -/
 def source.Compiler.prepare
   (self : source.Compiler) (submission : noble_kernel.execution.Submission) :
@@ -49926,7 +51949,7 @@ def source.Compiler.prepare
             false false
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_signed::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_signed::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1177:50-1177:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1284:50-1284:80 -/
 def
   source.Compiler.prepare_signed.closure.Insts.CoreOpsFunctionFnOnceTupleErrorDiagnostic.call_once
   (c : source.Compiler.prepare_signed.closure)
@@ -49936,7 +51959,7 @@ def
   ok Diagnostic.Invalid
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_signed::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_signed::{closure}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1177:50-1177:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1284:50-1284:80 -/
 @[reducible]
 def
   source.Compiler.prepare_signed.closure.Insts.CoreOpsFunctionFnOnceTupleErrorDiagnostic
@@ -49947,7 +51970,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_signed]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1163:4-1185:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1270:4-1292:5
     Visibility: public -/
 def source.Compiler.prepare_signed
   (self : source.Compiler)
@@ -50001,7 +52024,7 @@ def source.Compiler.prepare_signed
                     source.Prepared (core.convert.FromSame Diagnostic) residual
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_worker_signed::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_worker_signed::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1209:50-1209:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1316:50-1316:80 -/
 def
   source.Compiler.prepare_worker_signed.closure.Insts.CoreOpsFunctionFnOnceTupleErrorDiagnostic.call_once
   (c : source.Compiler.prepare_worker_signed.closure)
@@ -50011,7 +52034,7 @@ def
   ok Diagnostic.Invalid
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_worker_signed::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_worker_signed::{closure}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1209:50-1209:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1316:50-1316:80 -/
 @[reducible]
 def
   source.Compiler.prepare_worker_signed.closure.Insts.CoreOpsFunctionFnOnceTupleErrorDiagnostic
@@ -50022,7 +52045,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_worker_signed]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1195:4-1211:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1302:4-1318:5
     Visibility: public -/
 def source.Compiler.prepare_worker_signed
   (self : source.Compiler)
@@ -50067,7 +52090,7 @@ def source.Compiler.prepare_worker_signed
   else ok (core.result.Result.Err Diagnostic.Unsupported)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{impl core::ops::function::FnMut<(&'_0 noble_kernel::untrusted::Node,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{closure}}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1240:70-1242:13 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1347:70-1349:13 -/
 def
   source.Compiler.prepare_declared_text.closure_1.closure.Insts.CoreOpsFunctionFnMutTupleShared0NodeBool.call_mut
   (c : source.Compiler.prepare_declared_text.closure_1.closure)
@@ -50082,7 +52105,7 @@ def
   | noble_kernel.untrusted.Node.Quotation _ _ => ok (false, c)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::untrusted::Node,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1240:70-1242:13 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1347:70-1349:13 -/
 def
   source.Compiler.prepare_declared_text.closure_1.closure.Insts.CoreOpsFunctionFnOnceTupleShared0NodeBool.call_once
   (c : source.Compiler.prepare_declared_text.closure_1.closure)
@@ -50095,7 +52118,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::untrusted::Node,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{closure}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1240:70-1242:13 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1347:70-1349:13 -/
 @[reducible]
 def
   source.Compiler.prepare_declared_text.closure_1.closure.Insts.CoreOpsFunctionFnOnceTupleShared0NodeBool
@@ -50107,7 +52130,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{impl core::ops::function::FnMut<(&'_0 noble_kernel::untrusted::Node,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{closure}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1240:70-1242:13 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1347:70-1349:13 -/
 @[reducible]
 def
   source.Compiler.prepare_declared_text.closure_1.closure.Insts.CoreOpsFunctionFnMutTupleShared0NodeBool
@@ -50121,7 +52144,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{impl core::ops::function::FnMut<(&'_0 noble_kernel::execution::Definition,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1239:73-1244:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1346:73-1351:9 -/
 def
   source.Compiler.prepare_declared_text.closure_1.Insts.CoreOpsFunctionFnMutTupleShared0DefinitionBool.call_mut
   (c : source.Compiler.prepare_declared_text.closure_1)
@@ -50137,7 +52160,7 @@ def
   ok (b, c)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::execution::Definition,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1239:73-1244:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1346:73-1351:9 -/
 def
   source.Compiler.prepare_declared_text.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared0DefinitionBool.call_once
   (c : source.Compiler.prepare_declared_text.closure_1)
@@ -50150,7 +52173,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::execution::Definition,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1239:73-1244:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1346:73-1351:9 -/
 @[reducible]
 def
   source.Compiler.prepare_declared_text.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared0DefinitionBool
@@ -50161,7 +52184,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{impl core::ops::function::FnMut<(&'_0 noble_kernel::execution::Definition,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1239:73-1244:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1346:73-1351:9 -/
 @[reducible]
 def
   source.Compiler.prepare_declared_text.closure_1.Insts.CoreOpsFunctionFnMutTupleShared0DefinitionBool
@@ -50174,7 +52197,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1235:50-1235:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1342:50-1342:80 -/
 def
   source.Compiler.prepare_declared_text.closure.Insts.CoreOpsFunctionFnOnceTupleErrorDiagnostic.call_once
   (c : source.Compiler.prepare_declared_text.closure)
@@ -50184,7 +52207,7 @@ def
   ok Diagnostic.Invalid
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1235:50-1235:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1342:50-1342:80 -/
 @[reducible]
 def
   source.Compiler.prepare_declared_text.closure.Insts.CoreOpsFunctionFnOnceTupleErrorDiagnostic
@@ -50195,7 +52218,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1220:4-1247:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1327:4-1354:5
     Visibility: public -/
 def source.Compiler.prepare_declared_text
   (self : source.Compiler)
@@ -50256,7 +52279,7 @@ def source.Compiler.prepare_declared_text
   else ok (core.result.Result.Err Diagnostic.Unsupported)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_quiescent]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1258:4-1266:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1365:4-1373:5
     Visibility: public -/
 def source.Compiler.prepare_quiescent
   (self : source.Compiler) (submission : noble_kernel.execution.Submission) :
@@ -50269,7 +52292,7 @@ def source.Compiler.prepare_quiescent
   else ok (core.result.Result.Err Diagnostic.Invalid)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_program_free]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1274:4-1282:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1381:4-1389:5
     Visibility: public -/
 def source.Compiler.prepare_program_free
   (self : source.Compiler) (submission : noble_kernel.execution.Submission) :
@@ -50282,7 +52305,7 @@ def source.Compiler.prepare_program_free
   else ok (core.result.Result.Err Diagnostic.Invalid)
 
 /-- [noble_wasm::source::origin::build::{impl core::ops::function::FnMut<(usize,), core::option::Option<alloc::rc::Rc<noble_wasm::source::OriginProgramValue>>> for noble_wasm::source::origin::build::{closure}}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1271:29-1271:37 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1824:29-1824:37 -/
 def
   source.origin.build.closure.Insts.CoreOpsFunctionFnMutTupleUsizeOptionRcOriginProgramValue.call_mut
   (c : source.origin.build.closure) (tupled_args : Std.Usize) :
@@ -50292,7 +52315,7 @@ def
   ok (none, c)
 
 /-- [noble_wasm::source::origin::build::{impl core::ops::function::FnOnce<(usize,), core::option::Option<alloc::rc::Rc<noble_wasm::source::OriginProgramValue>>> for noble_wasm::source::origin::build::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1271:29-1271:37 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1824:29-1824:37 -/
 def
   source.origin.build.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionRcOriginProgramValue.call_once
   (c : source.origin.build.closure) (i : Std.Usize) :
@@ -50304,7 +52327,7 @@ def
   ok o
 
 /-- Trait implementation: [noble_wasm::source::origin::build::{impl core::ops::function::FnOnce<(usize,), core::option::Option<alloc::rc::Rc<noble_wasm::source::OriginProgramValue>>> for noble_wasm::source::origin::build::{closure}}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1271:29-1271:37 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1824:29-1824:37 -/
 @[reducible]
 def
   source.origin.build.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionRcOriginProgramValue
@@ -50315,7 +52338,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::origin::build::{impl core::ops::function::FnMut<(usize,), core::option::Option<alloc::rc::Rc<noble_wasm::source::OriginProgramValue>>> for noble_wasm::source::origin::build::{closure}}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1271:29-1271:37 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1824:29-1824:37 -/
 @[reducible]
 def
   source.origin.build.closure.Insts.CoreOpsFunctionFnMutTupleUsizeOptionRcOriginProgramValue
@@ -50327,18 +52350,50 @@ def
     source.origin.build.closure.Insts.CoreOpsFunctionFnMutTupleUsizeOptionRcOriginProgramValue.call_mut
 }
 
-/-- [noble_wasm::source::origin::MAX_ORIGIN_DEPTH]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 34:0-34:35 -/
-@[global_simps, irreducible]
-def source.origin.MAX_ORIGIN_DEPTH : Std.Usize := 32#usize
+/-- [noble_wasm::source::origin::ownerless_outputs]: loop body 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1782:4-1785:5 -/
+@[rust_loop_body]
+def source.origin.ownerless_outputs_loop.body
+  (outputs : Slice source.OriginOutput) (is_ownerless : Bool)
+  («at» : Std.Usize) :
+  Result (ControlFlow (Bool × Std.Usize) Bool)
+  := do
+  if is_ownerless
+  then
+    let i := Slice.len outputs
+    if «at» < i
+    then
+      let oo ← Slice.index_usize outputs «at»
+      let is_ownerless1 ←
+        source.OriginOwner.Insts.CoreCmpPartialEqOriginOwner.eq
+          oo.template.owner source.OriginOwner.Absent
+      let at1 ← «at» + 1#usize
+      ok (cont (is_ownerless1, at1))
+    else ok (done is_ownerless)
+  else ok (done is_ownerless)
 
-/-- [noble_wasm::source::origin::MAX_ORIGIN_OPERATIONS]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 33:0-33:41 -/
-@[global_simps, irreducible]
-def source.origin.MAX_ORIGIN_OPERATIONS : Std.Usize := 128#usize
+/-- [noble_wasm::source::origin::ownerless_outputs]: loop 0:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1782:4-1785:5 -/
+@[rust_loop]
+def source.origin.ownerless_outputs_loop
+  (outputs : Slice source.OriginOutput) (is_ownerless : Bool)
+  («at» : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun (is_ownerless1, at1) => source.origin.ownerless_outputs_loop.body
+      outputs is_ownerless1 at1)
+    (is_ownerless, «at»)
+
+/-- [noble_wasm::source::origin::ownerless_outputs]:
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1779:0-1787:1 -/
+@[reducible]
+def source.origin.ownerless_outputs
+  (outputs : Slice source.OriginOutput) : Result Bool := do
+  source.origin.ownerless_outputs_loop outputs true 0#usize
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::fixed_recipe]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1154:4-1170:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1173:4-1189:5 -/
 def source.origin.bounded_graph_cells.fixed_recipe
   (recipe : alloc.rc.Rc source.OriginFixedExpression) (depth : Std.Usize)
   (nodes : Std.Usize) :
@@ -50378,7 +52433,7 @@ def source.origin.bounded_graph_cells.fixed_recipe
 partial_fixpoint
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::scalar_recipe]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1176:4-1181:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1195:4-1200:5 -/
 def source.origin.bounded_graph_cells.scalar_recipe
   (scalar : source.OriginI64) (fixed_nodes : Std.Usize) :
   Result ((Option Unit) × Std.Usize)
@@ -50388,13 +52443,8 @@ def source.origin.bounded_graph_cells.scalar_recipe
   | source.OriginI64.Fixed _ recipe =>
     source.origin.bounded_graph_cells.fixed_recipe recipe 1#usize fixed_nodes
 
-/-- [noble_wasm::source::origin::MAX_ORIGIN_PROGRAMS]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 32:0-32:38 -/
-@[global_simps, irreducible]
-def source.origin.MAX_ORIGIN_PROGRAMS : Std.Usize := 32#usize
-
 /-- [noble_wasm::source::origin::bounded_graph_cells::charge]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1017:4-1020:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1036:4-1039:5 -/
 def source.origin.bounded_graph_cells.charge
   (total : Std.Usize) (cells : Std.Usize) :
   Result ((Option Unit) × Std.Usize)
@@ -50413,7 +52463,7 @@ def source.origin.bounded_graph_cells.charge
     ok (o1, total)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::static_enter]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1101:4-1118:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1120:4-1137:5 -/
 def source.origin.bounded_graph_cells.static_enter
   (index : Std.Usize) (programs : Slice source.OriginProgram)
   (seen : Slice Bool) (total : Std.Usize) :
@@ -50501,7 +52551,7 @@ def source.origin.bounded_graph_cells.static_enter
     ok (o1, seen, total)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::static_step]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1126:4-1148:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1145:4-1167:5 -/
 def source.origin.bounded_graph_cells.static_step
   (programs : Slice source.OriginProgram) (seen : Slice Bool)
   (total : Std.Usize) (frames : source.origin.bounded_graph_cells.StaticFrames)
@@ -50588,7 +52638,7 @@ def source.origin.bounded_graph_cells.static_step
       ok (some true, seen, total, { frames := v })
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::static_body]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1076:8-1084:9 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1095:8-1103:9 -/
 @[rust_loop_body]
 def source.origin.bounded_graph_cells.static_body_loop.body
   (programs : Slice source.OriginProgram) (seen : Slice Bool)
@@ -50608,7 +52658,7 @@ def source.origin.bounded_graph_cells.static_body_loop.body
   else ok (done (seen, total, is_refused))
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::static_body]: loop 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1076:8-1084:9 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1095:8-1103:9 -/
 @[rust_loop]
 def source.origin.bounded_graph_cells.static_body_loop
   (programs : Slice source.OriginProgram) (seen : Slice Bool)
@@ -50623,7 +52673,7 @@ def source.origin.bounded_graph_cells.static_body_loop
     (seen, total, frames, is_walking, is_refused)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::static_body]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1061:4-1089:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1080:4-1108:5 -/
 def source.origin.bounded_graph_cells.static_body
   (index : Std.Usize) (programs : Slice source.OriginProgram)
   (seen : Slice Bool) (total : Std.Usize) :
@@ -50654,7 +52704,7 @@ def source.origin.bounded_graph_cells.static_body
     ok (o1, seen1, total1)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::is_same_cell::{impl core::ops::function::FnOnce<(&'_1 alloc::rc::Rc<noble_wasm::source::OriginProgramValue>,), bool> for noble_wasm::source::origin::bounded_graph_cells::is_same_cell::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1052:35-1052:67 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1071:35-1071:67 -/
 def
   source.origin.bounded_graph_cells.is_same_cell.closure.Insts.CoreOpsFunctionFnOnceTupleShared1RcOriginProgramValueBool.call_once
   (c : source.origin.bounded_graph_cells.is_same_cell.closure)
@@ -50664,7 +52714,7 @@ def
   alloc.rc.Rc.ptr_eq Global tupled_args c
 
 /-- Trait implementation: [noble_wasm::source::origin::bounded_graph_cells::is_same_cell::{impl core::ops::function::FnOnce<(&'_1 alloc::rc::Rc<noble_wasm::source::OriginProgramValue>,), bool> for noble_wasm::source::origin::bounded_graph_cells::is_same_cell::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1052:35-1052:67 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1071:35-1071:67 -/
 @[reducible]
 def
   source.origin.bounded_graph_cells.is_same_cell.closure.Insts.CoreOpsFunctionFnOnceTupleShared1RcOriginProgramValueBool
@@ -50676,7 +52726,7 @@ def
 }
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::is_same_cell]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1048:4-1053:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1067:4-1072:5 -/
 def source.origin.bounded_graph_cells.is_same_cell
   (prior : Option (alloc.rc.Rc source.OriginProgramValue))
   (value : alloc.rc.Rc source.OriginProgramValue) :
@@ -50688,7 +52738,7 @@ def source.origin.bounded_graph_cells.is_same_cell
     o value
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::counted_before]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1033:8-1036:9 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1052:8-1055:9 -/
 @[rust_loop_body]
 def source.origin.bounded_graph_cells.counted_before_loop.body
   (value : alloc.rc.Rc source.OriginProgramValue)
@@ -50710,7 +52760,7 @@ def source.origin.bounded_graph_cells.counted_before_loop.body
     else ok (done is_counted)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::counted_before]: loop 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1033:8-1036:9 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1052:8-1055:9 -/
 @[rust_loop]
 def source.origin.bounded_graph_cells.counted_before_loop
   (value : alloc.rc.Rc source.OriginProgramValue)
@@ -50726,7 +52776,7 @@ def source.origin.bounded_graph_cells.counted_before_loop
     (index, is_counted)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::counted_before]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1026:4-1046:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1045:4-1065:5 -/
 def source.origin.bounded_graph_cells.counted_before
   (value : alloc.rc.Rc source.OriginProgramValue)
   (constructed : Array (Option (alloc.rc.Rc source.OriginProgramValue))
@@ -50759,7 +52809,7 @@ def source.origin.bounded_graph_cells.counted_before
       ok (some false, constructed1, constructed_count1)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1004:0-1234:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1023:0-1253:1 -/
 def source.origin.bounded_graph_cells
   (value : alloc.rc.Rc source.OriginProgramValue)
   (programs : Slice source.OriginProgram)
@@ -50874,7 +52924,7 @@ def source.origin.bounded_graph_cells
 partial_fixpoint
 
 /-- [noble_wasm::source::origin::i64_output]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 990:0-995:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1009:0-1014:1 -/
 def source.origin.i64_output
   (value : source.origin.Value) :
   Result (Option (Option source.OriginOutput))
@@ -50884,9 +52934,10 @@ def source.origin.i64_output
   | source.origin.Value.Program _ _ => ok none
 
 /-- [noble_wasm::source::origin::program_output]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 974:0-987:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 984:0-1006:1 -/
 def source.origin.program_output
-  (value : source.origin.Value) (stack_position : Std.Usize) :
+  (value : source.origin.Value) (stack_position : Std.Usize)
+  (programs : Slice source.OriginProgram) (named_index : Std.Usize) :
   Result (Option (Option source.OriginOutput))
   := do
   match value with
@@ -50896,21 +52947,36 @@ def source.origin.program_output
     match opv with
     | source.OriginProgramValue.Static _ _ => ok none
     | source.OriginProgramValue.Quote _ _ _ =>
-      let r ←
-        alloc.rc.Rc.Insts.CoreCloneClone.clone
-          alloc.alloc.Global.Insts.CoreAllocAllocatorClone result
-      ok (some (some { stack_position, result := r }))
+      let o ← source.origin.template_projection result programs named_index
+      let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let r ←
+          alloc.rc.Rc.Insts.CoreCloneClone.clone
+            alloc.alloc.Global.Insts.CoreAllocAllocatorClone result
+        ok (some (some { stack_position, result := r, template := val }))
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+          (Option source.OriginOutput) residual
     | source.OriginProgramValue.Compose _ _ _ _ =>
-      let r ←
-        alloc.rc.Rc.Insts.CoreCloneClone.clone
-          alloc.alloc.Global.Insts.CoreAllocAllocatorClone result
-      ok (some (some { stack_position, result := r }))
+      let o ← source.origin.template_projection result programs named_index
+      let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let r ←
+          alloc.rc.Rc.Insts.CoreCloneClone.clone
+            alloc.alloc.Global.Insts.CoreAllocAllocatorClone result
+        ok (some (some { stack_position, result := r, template := val }))
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
+          (Option source.OriginOutput) residual
 
 /-- [noble_wasm::source::origin::returned_output]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 965:0-971:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 968:0-980:1 -/
 def source.origin.returned_output
   (ty : noble_kernel.types.Ty) (value : source.origin.Value)
-  (stack_position : Std.Usize) :
+  (stack_position : Std.Usize) (programs : Slice source.OriginProgram)
+  (named_index : Std.Usize) :
   Result (Option (Option source.OriginOutput))
   := do
   match ty with
@@ -50926,14 +52992,14 @@ def source.origin.returned_output
   | noble_kernel.types.Ty.SumType _ _ => ok none
   | noble_kernel.types.Ty.ListType _ => ok none
   | noble_kernel.types.Ty.ProgramType _ _ _ =>
-    source.origin.program_output value stack_position
+    source.origin.program_output value stack_position programs named_index
   | noble_kernel.types.Ty.LiveRefType _ _ _ => ok none
   | noble_kernel.types.Ty.ResourceType _ => ok none
   | noble_kernel.types.Ty.NominalType _ _ => ok none
   | noble_kernel.types.Ty.GenericNominalType _ _ _ => ok none
 
 /-- [noble_wasm::source::origin::program_value]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 516:0-521:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 517:0-522:1 -/
 def source.origin.program_value
   (value : source.origin.Value) :
   Result (Option ((alloc.rc.Rc source.OriginProgramValue) × Std.Usize))
@@ -50943,7 +53009,7 @@ def source.origin.program_value
   | source.origin.Value.Program result depth => ok (some (result, depth))
 
 /-- [noble_wasm::source::origin::quoted_operand]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 858:0-867:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 859:0-868:1 -/
 def source.origin.quoted_operand
   (captured : source.origin.Value) (is_program_operand : Bool) :
   Result (Option (source.OriginOperand × Std.Usize))
@@ -50973,7 +53039,7 @@ def source.origin.quoted_operand
     | source.origin.Value.Program _ _ => ok none
 
 /-- [noble_wasm::source::origin::fixed_arithmetic]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 843:0-855:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 844:0-856:1 -/
 def source.origin.fixed_arithmetic
   (action : source.OriginAction) (left : Std.I64) (right : Std.I64) :
   Result (Option (Std.I64 × source.OriginFixedArithmetic))
@@ -51000,7 +53066,7 @@ def source.origin.fixed_arithmetic
   | source.OriginAction.CallSelected _ => ok none
 
 /-- [noble_wasm::source::origin::apply_operation::{impl core::ops::function::FnOnce<(), alloc::rc::Rc<noble_wasm::source::OriginProgramValue>> for noble_wasm::source::origin::apply_operation::{closure}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 792:36-797:17 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 793:36-798:17 -/
 def
   source.origin.apply_operation.closure.Insts.CoreOpsFunctionFnOnceTupleRcOriginProgramValue.call_once
   (c : source.origin.apply_operation.closure) (_ : Unit) :
@@ -51010,7 +53076,7 @@ def
   alloc.rc.Rc.new (source.OriginProgramValue.Static oo.node i)
 
 /-- Trait implementation: [noble_wasm::source::origin::apply_operation::{impl core::ops::function::FnOnce<(), alloc::rc::Rc<noble_wasm::source::OriginProgramValue>> for noble_wasm::source::origin::apply_operation::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 792:36-797:17 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 793:36-798:17 -/
 @[reducible]
 def
   source.origin.apply_operation.closure.Insts.CoreOpsFunctionFnOnceTupleRcOriginProgramValue
@@ -51021,7 +53087,7 @@ def
 }
 
 /-- [noble_wasm::source::origin::fixed_dimensions]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 523:0-528:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 524:0-529:1 -/
 def source.origin.fixed_dimensions
   (recipe : source.OriginFixedExpression) :
   Result (Std.Usize × Std.Usize)
@@ -51032,7 +53098,7 @@ def source.origin.fixed_dimensions
     ok (nodes, depth)
 
 /-- [noble_wasm::source::origin::{impl core::clone::Clone for noble_wasm::source::origin::Value}::clone]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 40:9-40:14
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 41:9-41:14
     Visibility: public -/
 def source.origin.Value.Insts.CoreCloneClone.clone
   (self : source.origin.Value) : Result source.origin.Value := do
@@ -51048,7 +53114,7 @@ def source.origin.Value.Insts.CoreCloneClone.clone
     ok (source.origin.Value.Program r i)
 
 /-- [noble_wasm::source::origin::apply_operation]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 705:0-840:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 706:0-841:1 -/
 def source.origin.apply_operation
   (plan : source.plan.Layout) (operation : source.OriginOperation)
   (machine : source.origin.Machine) :
@@ -51604,12 +53670,12 @@ def source.origin.apply_operation
   | source.OriginAction.CallSelected _ => ok (none, machine)
 
 /-- [noble_wasm::source::origin::MAX_REPLAY_STEPS]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 38:0-38:37 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 39:0-39:37 -/
 @[global_simps, irreducible]
 def source.origin.MAX_REPLAY_STEPS : Std.Usize := 4096#usize
 
 /-- [noble_wasm::source::origin::execute_operation]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 674:0-692:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 675:0-693:1 -/
 def source.origin.execute_operation
   (plan : source.plan.Layout) (operation : source.OriginOperation)
   (machine : source.origin.Machine) :
@@ -51647,7 +53713,7 @@ def source.origin.execute_operation
     ok (o1, machine)
 
 /-- [noble_wasm::source::origin::close_frame]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 654:0-666:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 655:0-667:1 -/
 def source.origin.close_frame
   (machine : source.origin.Machine) :
   Result ((Option Bool) × source.origin.Machine)
@@ -51666,7 +53732,7 @@ def source.origin.close_frame
       else ok (some true, { machine with stack := v1, frames := v })
 
 /-- [noble_wasm::source::origin::enter_program]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 595:0-616:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 596:0-617:1 -/
 def source.origin.enter_program
   (programs : Slice source.OriginProgram) (index : Std.Usize)
   (level : Std.Usize) (hidden : Option source.origin.Value)
@@ -51698,7 +53764,7 @@ def source.origin.enter_program
         ok (some (), { machine with active := a, frames := v })
 
 /-- [noble_wasm::source::origin::replay_step]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 625:0-645:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 626:0-646:1 -/
 def source.origin.replay_step
   (programs : Slice source.OriginProgram) (plan : source.plan.Layout)
   (machine : source.origin.Machine) :
@@ -51750,7 +53816,7 @@ def source.origin.replay_step
       ok (o1, machine1)
 
 /-- [noble_wasm::source::origin::execute]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 574:4-582:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 575:4-583:5 -/
 @[rust_loop_body]
 def source.origin.execute_loop.body
   (programs : Slice source.OriginProgram) (plan : source.plan.Layout)
@@ -51767,7 +53833,7 @@ def source.origin.execute_loop.body
   else ok (done (machine, is_refused))
 
 /-- [noble_wasm::source::origin::execute]: loop 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 574:4-582:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 575:4-583:5 -/
 @[rust_loop]
 def source.origin.execute_loop
   (programs : Slice source.OriginProgram) (plan : source.plan.Layout)
@@ -51781,7 +53847,7 @@ def source.origin.execute_loop
     (machine, is_running, is_refused)
 
 /-- [noble_wasm::source::origin::execute]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 565:0-587:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 566:0-588:1 -/
 def source.origin.execute
   (programs : Slice source.OriginProgram) (plan : source.plan.Layout)
   (index : Std.Usize) (machine : source.origin.Machine) :
@@ -51804,7 +53870,7 @@ def source.origin.execute
     ok (o1, machine1)
 
 /-- [noble_wasm::source::origin::replay_outputs]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 907:4-918:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 908:4-919:5 -/
 @[rust_loop_body]
 def source.origin.replay_outputs_loop0.body
   (inputs : Slice noble_kernel.types.Ty)
@@ -51828,7 +53894,7 @@ def source.origin.replay_outputs_loop0.body
   else ok (done (stack, false))
 
 /-- [noble_wasm::source::origin::replay_outputs]: loop 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 907:4-918:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 908:4-919:5 -/
 @[rust_loop]
 def source.origin.replay_outputs_loop0
   (inputs : Slice noble_kernel.types.Ty)
@@ -51841,11 +53907,12 @@ def source.origin.replay_outputs_loop0
     (stack, position)
 
 /-- [noble_wasm::source::origin::replay_outputs]: loop body 1:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 936:4-952:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 937:4-955:5 -/
 @[rust_loop_body]
 def source.origin.replay_outputs_loop1.body
-  (outputs : Slice noble_kernel.types.Ty) (is_refused : Bool)
-  (stack : alloc.vec.Vec source.origin.Value)
+  (outputs : Slice noble_kernel.types.Ty)
+  (programs : Slice source.OriginProgram) (named_index : Std.Usize)
+  (is_refused : Bool) (stack : alloc.vec.Vec source.origin.Value)
   (result : alloc.vec.Vec source.OriginOutput) (stack_position : Std.Usize) :
   Result (ControlFlow ((alloc.vec.Vec source.OriginOutput) × Std.Usize) (Bool
     × (alloc.vec.Vec source.OriginOutput)))
@@ -51857,7 +53924,8 @@ def source.origin.replay_outputs_loop1.body
     let v ←
       alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
         source.origin.Value) stack stack_position
-    let o ← source.origin.returned_output t v stack_position
+    let o ←
+      source.origin.returned_output t v stack_position programs named_index
     match o with
     | none => ok (done (true, result))
     | some o1 =>
@@ -51872,21 +53940,22 @@ def source.origin.replay_outputs_loop1.body
   else ok (done (is_refused, result))
 
 /-- [noble_wasm::source::origin::replay_outputs]: loop 1:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 936:4-952:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 937:4-955:5 -/
 @[rust_loop]
 def source.origin.replay_outputs_loop1
-  (outputs : Slice noble_kernel.types.Ty) (is_refused : Bool)
-  (stack : alloc.vec.Vec source.origin.Value)
+  (outputs : Slice noble_kernel.types.Ty)
+  (programs : Slice source.OriginProgram) (named_index : Std.Usize)
+  (is_refused : Bool) (stack : alloc.vec.Vec source.origin.Value)
   (result : alloc.vec.Vec source.OriginOutput) (stack_position : Std.Usize) :
   Result (Bool × (alloc.vec.Vec source.OriginOutput))
   := do
   loop
     (fun (result1, stack_position1) => source.origin.replay_outputs_loop1.body
-      outputs is_refused stack result1 stack_position1)
+      outputs programs named_index is_refused stack result1 stack_position1)
     (result, stack_position)
 
 /-- [noble_wasm::source::origin::replay_outputs]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 896:0-962:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 897:0-965:1 -/
 def source.origin.replay_outputs
   (inputs : Slice noble_kernel.types.Ty)
   (outputs : Slice noble_kernel.types.Ty) (plan : source.plan.Layout)
@@ -51935,8 +54004,9 @@ def source.origin.replay_outputs
         then ok none
         else
           let (is_refused1, result) ←
-            source.origin.replay_outputs_loop1 outputs is_refused machine.stack
-              (alloc.vec.Vec.new source.OriginOutput) 0#usize
+            source.origin.replay_outputs_loop1 outputs programs named_index
+              is_refused machine.stack (alloc.vec.Vec.new source.OriginOutput)
+              0#usize
           if is_refused1
           then ok none
           else
@@ -51952,7 +54022,7 @@ def source.origin.replay_outputs
       (alloc.vec.Vec source.OriginOutput) residual
 
 /-- [noble_wasm::source::origin::returned_outputs::{impl core::ops::function::FnMut<(&'_0 noble_kernel::types::Ty,), bool> for noble_wasm::source::origin::returned_outputs::{closure}}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 883:43-883:62 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 884:43-884:62 -/
 def
   source.origin.returned_outputs.closure.Insts.CoreOpsFunctionFnMutTupleShared0TyBool.call_mut
   (c : source.origin.returned_outputs.closure)
@@ -51966,7 +54036,7 @@ def
   ok (b, c)
 
 /-- [noble_wasm::source::origin::returned_outputs::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::types::Ty,), bool> for noble_wasm::source::origin::returned_outputs::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 883:43-883:62 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 884:43-884:62 -/
 def
   source.origin.returned_outputs.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TyBool.call_once
   (c : source.origin.returned_outputs.closure) (t : noble_kernel.types.Ty) :
@@ -51978,7 +54048,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::origin::returned_outputs::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::types::Ty,), bool> for noble_wasm::source::origin::returned_outputs::{closure}}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 883:43-883:62 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 884:43-884:62 -/
 @[reducible]
 def
   source.origin.returned_outputs.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TyBool
@@ -51989,7 +54059,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::origin::returned_outputs::{impl core::ops::function::FnMut<(&'_0 noble_kernel::types::Ty,), bool> for noble_wasm::source::origin::returned_outputs::{closure}}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 883:43-883:62 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 884:43-884:62 -/
 @[reducible]
 def
   source.origin.returned_outputs.closure.Insts.CoreOpsFunctionFnMutTupleShared0TyBool
@@ -52002,7 +54072,7 @@ def
 }
 
 /-- [noble_wasm::source::origin::returned_outputs]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 873:0-889:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 874:0-890:1 -/
 def source.origin.returned_outputs
   (selected : noble_contracts.source.proof.CheckedSelectedTarget)
   (plan : source.plan.Layout) (programs : Slice source.OriginProgram)
@@ -52036,14 +54106,14 @@ def source.origin.returned_outputs
         else ok none
 
 /-- [noble_wasm::source::origin::names_lexical_node]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 512:0-514:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 513:0-515:1 -/
 def source.origin.names_lexical_node
   (operation : source.OriginOperation) (lexical : Std.U32) : Result Bool := do
   core.option.Option.Insts.CoreCmpPartialEqOption.eq core.cmp.PartialEqU32
     operation.lexical_node (some lexical)
 
 /-- [noble_wasm::source::origin::follows_lexical_body]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 504:4-507:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 505:4-508:5 -/
 @[rust_loop_body]
 def source.origin.follows_lexical_body_loop.body
   (lexical_body : Slice Std.U32) (operations : Slice source.OriginOperation)
@@ -52068,7 +54138,7 @@ def source.origin.follows_lexical_body_loop.body
   else ok (done is_following)
 
 /-- [noble_wasm::source::origin::follows_lexical_body]: loop 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 504:4-507:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 505:4-508:5 -/
 @[rust_loop]
 def source.origin.follows_lexical_body_loop
   (lexical_body : Slice Std.U32) (operations : Slice source.OriginOperation)
@@ -52082,7 +54152,7 @@ def source.origin.follows_lexical_body_loop
     (index, is_following)
 
 /-- [noble_wasm::source::origin::follows_lexical_body]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 501:0-509:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 502:0-510:1 -/
 @[reducible]
 def source.origin.follows_lexical_body
   (lexical_body : Slice Std.U32) (operations : Slice source.OriginOperation) :
@@ -52091,7 +54161,7 @@ def source.origin.follows_lexical_body
   source.origin.follows_lexical_body_loop lexical_body operations 0#usize true
 
 /-- [noble_wasm::source::origin::follows_checked_body]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 493:0-498:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 494:0-499:1 -/
 def source.origin.follows_checked_body
   (lexical_body : Slice Std.U32) (operations : Slice source.OriginOperation) :
   Result (Option Unit)
@@ -52107,7 +54177,7 @@ def source.origin.follows_checked_body
     else ok none
 
 /-- [noble_wasm::source::origin::bind_body]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 463:0-490:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 464:0-491:1 -/
 def source.origin.bind_body
   (selected : noble_contracts.source.proof.CheckedSelectedTarget)
   (plan : source.plan.Layout) (body_nodes : Slice (Option Std.U32))
@@ -52171,7 +54241,7 @@ def source.origin.bind_body
         ok (o1, program)
 
 /-- [noble_wasm::source::origin::bind_bodies]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 444:0-456:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 445:0-457:1 -/
 def source.origin.bind_bodies
   (selected : noble_contracts.source.proof.CheckedSelectedTarget)
   (plan : source.plan.Layout) (body_nodes : Slice (Option Std.U32))
@@ -52198,7 +54268,7 @@ def source.origin.bind_bodies
 partial_fixpoint
 
 /-- [noble_wasm::source::origin::is_quotation]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 435:0-437:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 436:0-438:1 -/
 def source.origin.is_quotation
   (kind : noble_contracts.source.proof.CheckedLexicalKind) : Result Bool := do
   match kind with
@@ -52207,7 +54277,7 @@ def source.origin.is_quotation
   | noble_contracts.source.proof.CheckedLexicalKind.Quotation _ => ok true
 
 /-- [noble_wasm::source::origin::quotation_cursor]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 418:0-432:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 419:0-433:1 -/
 def source.origin.quotation_cursor
   (result : Slice source.OriginProgram) (program : Std.Usize)
   (ordinal : Std.Usize) :
@@ -52255,7 +54325,7 @@ def source.origin.quotation_cursor
         ok source.origin.QuotationCursor.NextOperation
 
 /-- [noble_wasm::source::origin::quotation_bodies]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 376:0-407:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 377:0-408:1 -/
 def source.origin.quotation_bodies
   (selected : noble_contracts.source.proof.CheckedSelectedTarget)
   (result : Slice source.OriginProgram) (program : Std.Usize)
@@ -52312,7 +54382,7 @@ def source.origin.quotation_bodies
 partial_fixpoint
 
 /-- [noble_wasm::source::origin::lowered_operation::{impl core::ops::function::FnOnce<(noble_contracts::source::proof::CheckedOperationSite,), core::option::Option<noble_contracts::source::proof::CheckedGeneratedWitness>> for noble_wasm::source::origin::lowered_operation::{closure#3}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 356:41-356:70 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 357:41-357:70 -/
 def
   source.origin.lowered_operation.closure_3.Insts.CoreOpsFunctionFnOnceTupleCheckedOperationSiteOptionCheckedGeneratedWitness.call_once
   (c : source.origin.lowered_operation.closure_3)
@@ -52322,7 +54392,7 @@ def
   ok tupled_args.generated_witness
 
 /-- Trait implementation: [noble_wasm::source::origin::lowered_operation::{impl core::ops::function::FnOnce<(noble_contracts::source::proof::CheckedOperationSite,), core::option::Option<noble_contracts::source::proof::CheckedGeneratedWitness>> for noble_wasm::source::origin::lowered_operation::{closure#3}}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 356:41-356:70 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 357:41-357:70 -/
 @[reducible]
 def
   source.origin.lowered_operation.closure_3.Insts.CoreOpsFunctionFnOnceTupleCheckedOperationSiteOptionCheckedGeneratedWitness
@@ -52334,7 +54404,7 @@ def
 }
 
 /-- [noble_wasm::source::origin::lowered_operation::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::proof::CheckedOperationSite,), bool> for noble_wasm::source::origin::lowered_operation::{closure#2}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 355:25-355:64 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 356:25-356:64 -/
 def
   source.origin.lowered_operation.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared0CheckedOperationSiteBool.call_once
   (c : source.origin.lowered_operation.closure_2)
@@ -52344,7 +54414,7 @@ def
   ok (core.option.Option.is_some tupled_args.generated_witness)
 
 /-- Trait implementation: [noble_wasm::source::origin::lowered_operation::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::proof::CheckedOperationSite,), bool> for noble_wasm::source::origin::lowered_operation::{closure#2}}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 355:25-355:64 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 356:25-356:64 -/
 @[reducible]
 def
   source.origin.lowered_operation.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared0CheckedOperationSiteBool
@@ -52355,7 +54425,7 @@ def
 }
 
 /-- [noble_wasm::source::origin::lowered_operation::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::proof::CheckedOperationSite,), core::option::Option<noble_contracts::Span>> for noble_wasm::source::origin::lowered_operation::{closure#1}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 352:46-352:71 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 353:46-353:71 -/
 def
   source.origin.lowered_operation.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared0CheckedOperationSiteOptionSpan.call_once
   (c : source.origin.lowered_operation.closure_1)
@@ -52365,7 +54435,7 @@ def
   ok tupled_args.authored_span
 
 /-- Trait implementation: [noble_wasm::source::origin::lowered_operation::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::proof::CheckedOperationSite,), core::option::Option<noble_contracts::Span>> for noble_wasm::source::origin::lowered_operation::{closure#1}}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 352:46-352:71 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 353:46-353:71 -/
 @[reducible]
 def
   source.origin.lowered_operation.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared0CheckedOperationSiteOptionSpan
@@ -52377,7 +54447,7 @@ def
 }
 
 /-- [noble_wasm::source::origin::lowered_operation::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::proof::CheckedOperationSite,), u32> for noble_wasm::source::origin::lowered_operation::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 351:40-351:64 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 352:40-352:64 -/
 def
   source.origin.lowered_operation.closure.Insts.CoreOpsFunctionFnOnceTupleShared0CheckedOperationSiteU32.call_once
   (c : source.origin.lowered_operation.closure)
@@ -52387,7 +54457,7 @@ def
   ok tupled_args.lexical_node
 
 /-- Trait implementation: [noble_wasm::source::origin::lowered_operation::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::proof::CheckedOperationSite,), u32> for noble_wasm::source::origin::lowered_operation::{closure}}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 351:40-351:64 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 352:40-352:64 -/
 @[reducible]
 def
   source.origin.lowered_operation.closure.Insts.CoreOpsFunctionFnOnceTupleShared0CheckedOperationSiteU32
@@ -52398,7 +54468,7 @@ def
 }
 
 /-- [noble_wasm::source::origin::lowered_operation]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 344:0-364:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 345:0-365:1 -/
 def source.origin.lowered_operation
   (shape : source.origin.OperationShape) (action : source.OriginAction)
   (site : Option noble_contracts.source.proof.CheckedOperationSite) :
@@ -52437,7 +54507,7 @@ def source.origin.lowered_operation
     }
 
 /-- [noble_wasm::source::origin::is_selected_call]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 339:0-341:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 340:0-342:1 -/
 def source.origin.is_selected_call
   (node : noble_kernel.untrusted.NodeId) (action : source.OriginAction) :
   Result Bool
@@ -52463,7 +54533,7 @@ def source.origin.is_selected_call
   else ok false
 
 /-- [noble_wasm::source::origin::operation_shape::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::OriginOperation,), bool> for noble_wasm::source::origin::operation_shape::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 319:42-319:72 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 320:42-320:72 -/
 def
   source.origin.operation_shape.closure.Insts.CoreOpsFunctionFnMutTupleShared1OriginOperationBool.call_mut
   (c : source.origin.operation_shape.closure)
@@ -52476,7 +54546,7 @@ def
   ok (b, c)
 
 /-- [noble_wasm::source::origin::operation_shape::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::OriginOperation,), bool> for noble_wasm::source::origin::operation_shape::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 319:42-319:72 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 320:42-320:72 -/
 def
   source.origin.operation_shape.closure.Insts.CoreOpsFunctionFnOnceTupleShared1OriginOperationBool.call_once
   (c : source.origin.operation_shape.closure) (oo : source.OriginOperation) :
@@ -52488,7 +54558,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::origin::operation_shape::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::OriginOperation,), bool> for noble_wasm::source::origin::operation_shape::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 319:42-319:72 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 320:42-320:72 -/
 @[reducible]
 def
   source.origin.operation_shape.closure.Insts.CoreOpsFunctionFnOnceTupleShared1OriginOperationBool
@@ -52499,7 +54569,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::origin::operation_shape::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::OriginOperation,), bool> for noble_wasm::source::origin::operation_shape::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 319:42-319:72 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 320:42-320:72 -/
 @[reducible]
 def
   source.origin.operation_shape.closure.Insts.CoreOpsFunctionFnMutTupleShared1OriginOperationBool
@@ -52512,7 +54582,7 @@ def
 }
 
 /-- [noble_wasm::source::origin::operation_shape]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 306:0-336:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 307:0-337:1 -/
 def source.origin.operation_shape
   (plan : source.plan.Layout) (program_index : Std.Usize) (ordinal : Std.Usize)
   (prior : Slice source.OriginOperation) :
@@ -52570,7 +54640,7 @@ def source.origin.operation_shape
       source.origin.OperationShape residual
 
 /-- [noble_wasm::source::origin::selected_call]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 116:0-123:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 117:0-124:1 -/
 def source.origin.selected_call
   (is_root : Bool) (is_selected : Bool) (is_first_root : Bool)
   (index : Std.Usize) :
@@ -52586,7 +54656,7 @@ def source.origin.selected_call
     index)
 
 /-- [noble_wasm::source::origin::first_root_is::{impl core::ops::function::FnOnce<(&'_1 usize,), bool> for noble_wasm::source::origin::first_root_is::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 112:21-112:44 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 113:21-113:44 -/
 def
   source.origin.first_root_is.closure.Insts.CoreOpsFunctionFnOnceTupleShared1UsizeBool.call_once
   (c : source.origin.first_root_is.closure) (tupled_args : Std.Usize) :
@@ -52595,7 +54665,7 @@ def
   ok (tupled_args = c)
 
 /-- Trait implementation: [noble_wasm::source::origin::first_root_is::{impl core::ops::function::FnOnce<(&'_1 usize,), bool> for noble_wasm::source::origin::first_root_is::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 112:21-112:44 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 113:21-113:44 -/
 @[reducible]
 def
   source.origin.first_root_is.closure.Insts.CoreOpsFunctionFnOnceTupleShared1UsizeBool
@@ -52606,7 +54676,7 @@ def
 }
 
 /-- [noble_wasm::source::origin::first_root_is]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 109:0-113:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 110:0-114:1 -/
 def source.origin.first_root_is
   (definition_roots : Slice Std.Usize) (index : Std.Usize) : Result Bool := do
   let o ← core.slice.Slice.first definition_roots
@@ -52615,7 +54685,7 @@ def source.origin.first_root_is
     o index
 
 /-- [noble_wasm::source::origin::quote_operand]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 100:0-106:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 101:0-107:1 -/
 def source.origin.quote_operand
   (captured : noble_kernel.types.Ty) : Result (Option Bool) := do
   match captured with
@@ -52639,7 +54709,7 @@ def source.origin.quote_operand
   | noble_kernel.types.Ty.GenericNominalType _ _ _ => ok none
 
 /-- [noble_wasm::source::origin::action]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 52:0-97:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 53:0-98:1 -/
 def source.origin.action
   (selected : noble_contracts.source.proof.CheckedSelectedTarget)
   (plan : source.plan.Layout) (program_index : Std.Usize)
@@ -52741,7 +54811,7 @@ def source.origin.action
   | source.plan.Action.SlotInvokeAction _ _ => ok none
 
 /-- [noble_wasm::source::origin::operation_at]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 273:0-290:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 274:0-291:1 -/
 def source.origin.operation_at
   (selected : noble_contracts.source.proof.CheckedSelectedTarget)
   (plan : source.plan.Layout) (program_index : Std.Usize) (ordinal : Std.Usize)
@@ -52786,7 +54856,7 @@ def source.origin.operation_at
       source.OriginOperation residual
 
 /-- [noble_wasm::source::origin::operations_from]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 257:0-270:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 258:0-271:1 -/
 def source.origin.operations_from
   (selected : noble_contracts.source.proof.CheckedSelectedTarget)
   (plan : source.plan.Layout) (program_index : Std.Usize) (ordinal : Std.Usize)
@@ -52814,7 +54884,7 @@ def source.origin.operations_from
 partial_fixpoint
 
 /-- [noble_wasm::source::origin::artifact_of]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 223:0-229:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 224:0-230:1 -/
 def source.origin.artifact_of
   (is_selection : Bool) : Result source.OriginSource := do
   if is_selection
@@ -52822,7 +54892,7 @@ def source.origin.artifact_of
   else ok source.OriginSource.Definition
 
 /-- [noble_wasm::source::origin::lowered_program]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 232:0-250:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 233:0-251:1 -/
 def source.origin.lowered_program
   (plan : source.plan.Layout) (program_index : Std.Usize) (is_selection : Bool)
   (operations : alloc.vec.Vec source.OriginOperation) :
@@ -52845,7 +54915,7 @@ def source.origin.lowered_program
     }
 
 /-- [noble_wasm::source::origin::is_single_call]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 218:0-220:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 219:0-221:1 -/
 def source.origin.is_single_call
   (operations : Slice source.plan.Operation) : Result Bool := do
   let i := Slice.len operations
@@ -52892,7 +54962,7 @@ def source.origin.is_single_call
   else ok false
 
 /-- [noble_wasm::source::origin::program_visit]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 188:0-215:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 189:0-216:1 -/
 def source.origin.program_visit
   (plan : source.plan.Layout) (program_index : Std.Usize) (count : Std.Usize)
   (is_selection : Bool) :
@@ -52939,7 +55009,7 @@ def source.origin.program_visit
                 else ok (source.origin.ProgramVisit.Lower count1)
 
 /-- [noble_wasm::source::origin::programs_from]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 147:0-174:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 148:0-175:1 -/
 def source.origin.programs_from
   (selected : noble_contracts.source.proof.CheckedSelectedTarget)
   (plan : source.plan.Layout) (program_index : Std.Usize) (count : Std.Usize)
@@ -52975,7 +55045,7 @@ def source.origin.programs_from
 partial_fixpoint
 
 /-- [noble_wasm::source::origin::programs]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 127:0-140:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 128:0-141:1 -/
 def source.origin.programs
   (selected : noble_contracts.source.proof.CheckedSelectedTarget)
   (plan : source.plan.Layout) :
@@ -53014,7 +55084,7 @@ def source.origin.programs
           (alloc.vec.Vec source.OriginProgram) residual
 
 /-- [noble_wasm::source::origin::build]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1240:0-1291:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1793:0-1855:1 -/
 def source.origin.build
   (selected : noble_contracts.source.proof.CheckedSelectedTarget)
   (plan : source.plan.Layout) :
@@ -53106,18 +55176,36 @@ def source.origin.build
                             o2
                         match cf2 with
                         | core.ops.control_flow.ControlFlow.Continue _ =>
-                          let i8 ←
-                            noble_contracts.source.proof.CheckedSelectedTarget.source_generation
-                              selected
-                          ok (some
-                            {
-                              definition_id := cdi,
-                              source_generation := i8,
-                              named_program_index,
-                              root_program_index := plan.root,
-                              programs := val,
-                              outputs := val1
-                            })
+                          let s5 := alloc.vec.Vec.deref val1
+                          let b1 ← source.origin.ownerless_outputs s5
+                          if b1
+                          then
+                            let i8 ←
+                              noble_contracts.source.proof.CheckedSelectedTarget.source_generation
+                                selected
+                            let b2 ←
+                              source.origin.verified_templates
+                                {
+                                  definition_id := cdi,
+                                  source_generation := i8,
+                                  named_program_index,
+                                  root_program_index := plan.root,
+                                  programs := val,
+                                  outputs := val1
+                                }
+                            if b2
+                            then
+                              ok (some
+                                {
+                                  definition_id := cdi,
+                                  source_generation := i8,
+                                  named_program_index,
+                                  root_program_index := plan.root,
+                                  programs := val,
+                                  outputs := val1
+                                })
+                            else ok none
+                          else ok none
                         | core.ops.control_flow.ControlFlow.Break residual =>
                           core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual
                             source.SelectedOriginMetadata residual
@@ -53129,7 +55217,7 @@ def source.origin.build
                         source.SelectedOriginMetadata residual
 
 /-- [noble_wasm::source::is_named_selection]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2226:0-2232:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2333:0-2339:1 -/
 def source.is_named_selection
   (named : source.NamedTargetMetadata)
   (definition : noble_kernel.contracts.Definition) (identity : Std.U64) :
@@ -53143,7 +55231,7 @@ def source.is_named_selection
   else ok false
 
 /-- [noble_wasm::source::selected_named_target]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2212:4-2221:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2319:4-2328:5 -/
 @[rust_loop_body]
 def source.selected_named_target_loop.body
   (named_targets : Slice source.NamedTargetMetadata)
@@ -53173,7 +55261,7 @@ def source.selected_named_target_loop.body
     else ok (done (first, has_duplicate))
 
 /-- [noble_wasm::source::selected_named_target]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2212:4-2221:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2319:4-2328:5 -/
 @[rust_loop]
 def source.selected_named_target_loop
   (named_targets : Slice source.NamedTargetMetadata)
@@ -53188,7 +55276,7 @@ def source.selected_named_target_loop
     (first, has_duplicate, index)
 
 /-- [noble_wasm::source::selected_named_target]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2204:0-2223:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2311:0-2330:1 -/
 @[reducible]
 def source.selected_named_target
   (named_targets : Slice source.NamedTargetMetadata)
@@ -53199,7 +55287,7 @@ def source.selected_named_target
     false 0#usize
 
 /-- [noble_wasm::source::selection_mismatch::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::TargetMetadata,), bool> for noble_wasm::source::selection_mismatch::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1941:31-1945:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2048:31-2052:9 -/
 def
   source.selection_mismatch.closure.Insts.CoreOpsFunctionFnOnceTupleShared1TargetMetadataBool.call_once
   (c : source.selection_mismatch.closure) (tupled_args : source.TargetMetadata)
@@ -53224,7 +55312,7 @@ def
   else ok false
 
 /-- Trait implementation: [noble_wasm::source::selection_mismatch::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::TargetMetadata,), bool> for noble_wasm::source::selection_mismatch::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1941:31-1945:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2048:31-2052:9 -/
 @[reducible]
 def
   source.selection_mismatch.closure.Insts.CoreOpsFunctionFnOnceTupleShared1TargetMetadataBool
@@ -53235,7 +55323,7 @@ def
 }
 
 /-- [noble_wasm::source::selection_mismatch]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1930:0-1946:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2037:0-2053:1 -/
 def source.selection_mismatch
   (named : source.NamedTargetMetadata) (has_duplicate : Bool)
   (body : noble_kernel.untrusted.Interface)
@@ -53274,7 +55362,7 @@ def source.selection_mismatch
           ok (¬ b3)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_checked_selected]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1659:4-1699:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1766:4-1806:5
     Visibility: public -/
 def source.Compiler.prepare_checked_selected
   (self : source.Compiler)
@@ -53686,7 +55774,7 @@ def source.transaction.Base.matches
   else ok false
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::can_commit]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1703:4-1708:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1810:4-1815:5
     Visibility: public -/
 def source.Compiler.can_commit
   (self : source.Compiler) (prepared : source.Prepared) : Result Bool := do
@@ -53701,7 +55789,7 @@ def source.Compiler.can_commit
   else ok false
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::commit]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1716:4-1722:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1823:4-1829:5
     Visibility: public -/
 def source.Compiler.commit
   (self : source.Compiler) (prepared : source.Prepared) :
@@ -53713,7 +55801,7 @@ def source.Compiler.commit
   else ok (core.result.Result.Err Diagnostic.Invalid, self)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retire_declared_text_epoch]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1733:4-1761:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1840:4-1868:5
     Visibility: public -/
 def source.Compiler.retire_declared_text_epoch
   (self : source.Compiler) (generation : Std.U32) (code_end : Std.U32) :
@@ -53789,7 +55877,7 @@ def source.Compiler.retire_declared_text_epoch
   else ok (core.result.Result.Err Diagnostic.Invalid, self)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::declared_text_epoch_state]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1764:4-1773:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1871:4-1880:5
     Visibility: public -/
 def source.Compiler.declared_text_epoch_state
   (self : source.Compiler) : Result (Option (Std.U32 × Std.U32)) := do
@@ -53815,7 +55903,7 @@ def source.Compiler.declared_text_epoch_state
   core.bool.Bool.then_some b (self.generation, self.functions)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::release_table_end]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1873:4-1879:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1980:4-1986:5 -/
 def source.Compiler.release_table_end
   (self : source.Compiler) (index : Std.Usize) : Result source.Compiler := do
   let fc ←
@@ -53829,7 +55917,7 @@ def source.Compiler.release_table_end
     ok { self with functions := fc.start, free_code := v }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::touches_right]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1862:4-1866:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1969:4-1973:5 -/
 def source.Compiler.touches_right
   (self : source.Compiler) (index : Std.Usize) : Result Bool := do
   let i ← index + 1#usize
@@ -53847,7 +55935,7 @@ def source.Compiler.touches_right
   else ok false
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::coalesce_right]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1853:4-1859:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1960:4-1966:5 -/
 def source.Compiler.coalesce_right
   (self : source.Compiler) (index : Std.Usize) : Result source.Compiler := do
   let b ← source.Compiler.touches_right self index
@@ -53864,7 +55952,7 @@ def source.Compiler.coalesce_right
   else ok self
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::touches_left]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1842:4-1846:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1949:4-1953:5 -/
 def source.Compiler.touches_left
   (self : source.Compiler) (index : Std.Usize) : Result Bool := do
   if index > 0#usize
@@ -53884,7 +55972,7 @@ def source.Compiler.touches_left
   else ok false
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::coalesce_left]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1832:4-1839:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1939:4-1946:5 -/
 def source.Compiler.coalesce_left
   (self : source.Compiler) (index : Std.Usize) :
   Result (Std.Usize × source.Compiler)
@@ -53903,7 +55991,7 @@ def source.Compiler.coalesce_left
   else ok (index, self)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure#1}<'_0, T0>}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1811:29-1811:59 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1918:29-1918:59 -/
 def
   source.Compiler.retire_code.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1FreeCodeBool.call_mut
   {T0 : Type _} (coreopsfunctionFnOnceT0TupleCodeSpanResultTupleDiagnosticInst
@@ -53915,7 +56003,7 @@ def
   ok (tupled_args.start < c, c)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure#1}<'_0, T0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1811:29-1811:59 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1918:29-1918:59 -/
 def
   source.Compiler.retire_code.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1FreeCodeBool.call_once
   {T0 : Type _} (coreopsfunctionFnOnceT0TupleCodeSpanResultTupleDiagnosticInst
@@ -53930,7 +56018,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure#1}<'_0, T0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1811:29-1811:59 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1918:29-1918:59 -/
 @[reducible]
 def
   source.Compiler.retire_code.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1FreeCodeBool
@@ -53944,7 +56032,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure#1}<'_0, T0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1811:29-1811:59 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1918:29-1918:59 -/
 @[reducible]
 def
   source.Compiler.retire_code.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1FreeCodeBool
@@ -53961,7 +56049,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::CodeSpan,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure}<'_0, T0>}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1798:60-1798:82 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1905:60-1905:82 -/
 def
   source.Compiler.retire_code.closure.Insts.CoreOpsFunctionFnMutTupleShared1CodeSpanBool.call_mut
   {T0 : Type _} (coreopsfunctionFnOnceT0TupleCodeSpanResultTupleDiagnosticInst
@@ -53974,7 +56062,7 @@ def
   ok (b, c)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::CodeSpan,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure}<'_0, T0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1798:60-1798:82 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1905:60-1905:82 -/
 def
   source.Compiler.retire_code.closure.Insts.CoreOpsFunctionFnOnceTupleShared1CodeSpanBool.call_once
   {T0 : Type _} (coreopsfunctionFnOnceT0TupleCodeSpanResultTupleDiagnosticInst
@@ -53989,7 +56077,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::CodeSpan,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure}<'_0, T0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1798:60-1798:82 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1905:60-1905:82 -/
 @[reducible]
 def
   source.Compiler.retire_code.closure.Insts.CoreOpsFunctionFnOnceTupleShared1CodeSpanBool
@@ -54003,7 +56091,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::CodeSpan,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure}<'_0, T0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1798:60-1798:82 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1905:60-1905:82 -/
 @[reducible]
 def
   source.Compiler.retire_code.closure.Insts.CoreOpsFunctionFnMutTupleShared1CodeSpanBool
@@ -54020,7 +56108,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1790:4-1824:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1897:4-1931:5
     Visibility: public -/
 def source.Compiler.retire_code
   {T0 : Type _} (coreopsfunctionFnOnceT0TupleCodeSpanResultTupleDiagnosticInst
@@ -54086,14 +56174,14 @@ def source.Compiler.retire_code
   else ok (core.result.Result.Err Diagnostic.Invalid, self)
 
 /-- [noble_wasm::source::{impl core::default::Default for noble_wasm::source::Compiler}::default]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1883:4-1885:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1990:4-1992:5
     Visibility: public -/
 def source.Compiler.Insts.CoreDefaultDefault.default
   : Result source.Compiler := do
   source.Compiler.new
 
 /-- Trait implementation: [noble_wasm::source::{impl core::default::Default for noble_wasm::source::Compiler}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1882:0-1886:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1989:0-1993:1 -/
 @[reducible]
 def source.Compiler.Insts.CoreDefaultDefault : core.default.Default
   source.Compiler := {
@@ -54101,7 +56189,7 @@ def source.Compiler.Insts.CoreDefaultDefault : core.default.Default
 }
 
 /-- Trait implementation: [noble_wasm::source::origin::{impl core::clone::Clone for noble_wasm::source::origin::Value}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 40:9-40:14 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 41:9-41:14 -/
 @[reducible]
 def source.origin.Value.Insts.CoreCloneClone : core.clone.Clone
   source.origin.Value := {
@@ -54109,7 +56197,7 @@ def source.origin.Value.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_wasm::source::origin::{impl core::clone::Clone for noble_wasm::source::origin::OperationShape}::clone]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 293:9-293:14
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 294:9-294:14
     Visibility: public -/
 def source.origin.OperationShape.Insts.CoreCloneClone.clone
   (self : source.origin.OperationShape) :
@@ -54118,7 +56206,7 @@ def source.origin.OperationShape.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [noble_wasm::source::origin::{impl core::clone::Clone for noble_wasm::source::origin::OperationShape}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 293:9-293:14 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 294:9-294:14 -/
 @[reducible]
 def source.origin.OperationShape.Insts.CoreCloneClone : core.clone.Clone
   source.origin.OperationShape := {
@@ -54126,7 +56214,7 @@ def source.origin.OperationShape.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_wasm::source::origin::{impl core::marker::Copy for noble_wasm::source::origin::OperationShape}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 293:16-293:20 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 294:16-294:20 -/
 @[reducible]
 def source.origin.OperationShape.Insts.CoreMarkerCopy : core.marker.Copy
   source.origin.OperationShape := {
