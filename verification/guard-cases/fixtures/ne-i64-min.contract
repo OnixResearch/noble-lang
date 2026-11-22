@@ -1,0 +1,6 @@
+(contract 1 guard-ne-i64-min
+  (input (x I64))
+  (output (y I64))
+  (program [ 1 + ])
+  (requires (not (eq (in x) -9223372036854775808)))
+  (ensures true))
