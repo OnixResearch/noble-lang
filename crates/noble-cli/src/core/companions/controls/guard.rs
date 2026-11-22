@@ -42,11 +42,15 @@ fn exercise() {
     // Each evidence selects its own literal; the substituted one would admit 6.
     assert_eq!(
         core.evidence_guard_templates(five_evidence),
-        Ok(vec![noble_contracts::companion::GuardTemplate::EqI64Literal(5)])
+        Ok(vec![
+            noble_contracts::companion::GuardTemplate::EqI64Literal(5)
+        ])
     );
     assert_eq!(
         core.evidence_guard_templates(six_evidence),
-        Ok(vec![noble_contracts::companion::GuardTemplate::EqI64Literal(6)])
+        Ok(vec![
+            noble_contracts::companion::GuardTemplate::EqI64Literal(6)
+        ])
     );
     let subject = super::retained_subject(&core, &five_admission, &five);
     assert!(core.bind(five_evidence, &subject).is_ok());
@@ -58,9 +62,18 @@ fn exercise() {
         &mut controls,
         ("GUARD-CASE-02", "substituted-eq-6-binding"),
         crate::workflow::encoding::object([
-            ("contract", crate::workflow::encoding::string("eq-i64-literal-5")),
-            ("evidence", crate::workflow::encoding::string("eq-i64-literal-6")),
-            ("guard_executed", crate::workflow::encoding::Json::Bool(false)),
+            (
+                "contract",
+                crate::workflow::encoding::string("eq-i64-literal-5"),
+            ),
+            (
+                "evidence",
+                crate::workflow::encoding::string("eq-i64-literal-6"),
+            ),
+            (
+                "guard_executed",
+                crate::workflow::encoding::Json::Bool(false),
+            ),
         ]),
         core.correspond(six_evidence, five_contract),
         noble_contracts::companion::Refusal::CorrespondenceMismatch,
