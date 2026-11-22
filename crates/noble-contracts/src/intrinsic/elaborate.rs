@@ -187,7 +187,10 @@ pub fn elaborate_obligations(
 
 /// Stage one obligation: check its abbreviations and elaborate it when it
 /// opted in. Returns the rewritten obligation and record, or the unchanged
-/// pass-through as no staged pair.
+/// pass-through as no staged pair. An imported dependency is available under
+/// its own visible name (alias-qualified for an import, e.g. `alias.poly-refl`),
+/// exactly as the explicit checker resolves `use`; its declaration name only
+/// enters the identity.
 #[expect(
     tigerstyle::too_many_parameters,
     reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
@@ -231,9 +234,6 @@ fn stage_obligation<'m>(
     let mut dependency_at = 0usize;
     while dependency_at < dependencies.len() {
         let dependency = &dependencies[dependency_at];
-        // The visible name is the dependency's own (alias-qualified for an
-        // import, e.g. `alias.poly-refl`), exactly as the explicit checker
-        // resolves `use`; the declaration name only enters the identity.
         push_available(
             &mut available,
             identity_text(
@@ -423,10 +423,6 @@ fn contract_rule(
 
 /// Replace every `(exec-literal (infer))` with the exact subject literal.
 #[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-contracts; the rewrite follows the finite, already parsed proof term under the caller's depth budget"
-)]
-#[expect(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-contracts; the rewrite appends each inserted literal to the caller's record list with Vec::push, so it needs the growable vector, not a slice."
 )]
@@ -508,8 +504,8 @@ enum RewriteFrame<'a> {
     reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
 #[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the step appends inserted literals and finished values with Vec::push, so it needs the caller's growable vectors, not slices."
 )]
 fn rewrite_step<'a>(
     frame: RewriteFrame<'a>,
@@ -717,6 +713,10 @@ const fn out_span(out: &Out) -> Span {
     tigerstyle::too_many_parameters,
     reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the deferred-form count and the frame bound are positional and named at the single call site"
+)]
 fn finish_forest(
     forest: &[Out],
     deferred: usize,
@@ -753,12 +753,16 @@ fn finish_forest(
     reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
 )]
 #[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
-)]
-#[expect(
     tigerstyle::too_many_parameters,
     reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the deferred-form count and the frame bound are positional and named at the single call site"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the step pushes finished forms onto the caller's value stack, so it needs the growable vector, not a slice."
 )]
 fn finish_step<'o>(
     frame: FinishFrame<'o>,
@@ -852,6 +856,10 @@ struct Head {
 
 impl Head {
     /// The next telescope binder's name and position.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper clones a String and renders a decimal text, neither of which is const"
+    )]
     fn binder(&self) -> (String, u32) {
         let position = self.next;
         // Aeneas refuses function-definition types with regions; avoid
@@ -1166,6 +1174,10 @@ fn u32_level(index: usize, span: Span) -> Result<u32, Diagnostic> {
 /// context, not methods of the elaborator, and owned copies out of them: the
 /// pinned Aeneas refuses a borrow returned through the elaborator, whose own
 /// fields hold borrows, and a borrow that a loop body keeps.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads the spill vector through the non-const Vec::get"
+)]
 fn binder_at(context: &WorkStack<Binder>, index: usize) -> Option<&Binder> {
     let inline = context.inline_len;
     if index < inline {
@@ -1182,6 +1194,10 @@ fn binder_parts(context: &WorkStack<Binder>, index: usize) -> Option<(String, So
 }
 
 /// The source span of the binder at level `index`, if recorded.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads the spill vector through the non-const Vec::get"
+)]
 fn span_at(spans: &WorkStack<Span>, index: usize) -> Option<Span> {
     let inline = spans.inline_len;
     if index < inline {
@@ -1259,6 +1275,10 @@ fn exceeded_budget(meter: &Meter<'_>, step: MeterStep) -> &'static str {
 
 /// The exhaustion of a metered elaboration step: the stage that charged it
 /// and the request budget it exceeded. Never acceptance, never refutation.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the stage and budget names are positional in the rendered sentence and named at the single call site"
+)]
 fn meter_exhausted(span: Span, stage: &'static str, budget: &'static str) -> Diagnostic {
     Diagnostic::new(
         DiagnosticKind::Exhausted,
@@ -1288,17 +1308,17 @@ const MAX_DIAGNOSTIC_BYTES: usize = 16 * 1024;
 /// The most originating constraint spans one refusal lists.
 const MAX_LISTED_CONSTRAINTS: usize = 16;
 
-/// `text` cut to at most `limit` bytes with the number of cut bytes named.
+/// `text` cut to at most `limit_bytes` bytes with the number of cut bytes named.
 /// The cut stops early at the first non-ASCII byte, so it never splits a
 /// character; the count still names every byte not shown.
-fn capped(text: String, limit: usize) -> String {
-    if text.len() <= limit {
+fn capped(text: String, limit_bytes: usize) -> String {
+    if text.len() <= limit_bytes {
         return text;
     }
     let bytes = text.as_bytes();
-    let mut kept = String::with_capacity(limit.saturating_add(32));
+    let mut kept = String::with_capacity(limit_bytes.saturating_add(32));
     let mut index = 0usize;
-    while index < limit && bytes[index] < 0x80 {
+    while index < limit_bytes && bytes[index] < 0x80 {
         kept.push(char::from(bytes[index]));
         index = index.saturating_add(1);
     }
@@ -1389,6 +1409,10 @@ fn constraint_clause(meta: &Meta, none: &str, some: &str) -> String {
     tigerstyle::ambiguous_params,
     reason = "Owner: noble-contracts; the index and the two running counts are positional and named at the single call site"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the helper only renders refusal text; the counts it returns are bounded by saturating arithmetic and checked by the crate's cap tests"
+)]
 fn meta_origin(
     meta: &Meta,
     index: usize,
@@ -1456,6 +1480,10 @@ fn constraint_origins(metas: &[Meta], span: Span) -> String {
 /// The refusal of a failed constraint: the clash, what it was checking and
 /// every metavariable the constraint mentions. Exhaustion and internal
 /// failures pass through unchanged.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper clones and extends a String and caps it, none of which is const"
+)]
 fn explain_constraint(metas: &[Meta], error: Diagnostic, span: Span, origin: &str) -> Diagnostic {
     if error.kind != DiagnosticKind::Invalid {
         return error;
@@ -1471,6 +1499,14 @@ fn explain_constraint(metas: &[Meta], error: Diagnostic, span: Span, origin: &st
 
 /// An ill-scoped solution's refusal, with the metavariable's binder, head
 /// identity and originating constraints.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper clones and extends a String and caps it, none of which is const"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the helper only renders refusal text for an already refused solution; the crate's refusal tests check its content"
+)]
 fn scope_refusal(meta: &Meta, error: Diagnostic) -> Diagnostic {
     if error.kind != DiagnosticKind::Invalid {
         return error;
@@ -1495,6 +1531,10 @@ fn scope_refusal(meta: &Meta, error: Diagnostic) -> Diagnostic {
 
 /// The refusal for a metavariable no constraint solves: its binder, position
 /// and head identity, and the constraints that did not fix it, if any.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the helper only renders refusal text for an already unsolved metavariable; the crate's refusal tests check its content"
+)]
 fn underconstrained_refusal(meta: &Meta) -> Diagnostic {
     let mut detail = text![
         "binder `",
@@ -1564,11 +1604,15 @@ fn u32_text(value: u32) -> String {
 /// The decimal text of `value`, exactly as `{value}` renders it. The digits
 /// come from the remainders, which lie in -9..=9, so `i64::MIN`, whose
 /// magnitude is not an `i64`, never overflows.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the rendering is total over i64 and pinned against `{value}` for the extremes by the crate's digit tests"
+)]
 fn signed_text(value: i64) -> String {
     let mut reversed = String::new();
     let mut rest = value;
-    let mut more = true;
-    while more {
+    let mut has_more_digits = true;
+    while has_more_digits {
         let remainder = rest % 10;
         let digit = if remainder < 0 {
             0 - remainder
@@ -1577,7 +1621,7 @@ fn signed_text(value: i64) -> String {
         };
         reversed.push(char::from(i64_digit(digit)));
         rest /= 10;
-        more = rest != 0;
+        has_more_digits = rest != 0;
     }
     if value < 0 {
         reversed.push('-');
@@ -3150,6 +3194,10 @@ enum ScanFrame<'a> {
 }
 
 /// The frame bound of a scan over `limits`-bounded terms: the checker's.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper calls the non-const TreeBounds::new"
+)]
 fn scan_bound(limits: Limits, span: Span) -> Result<usize, Diagnostic> {
     match TreeBounds::new(limits) {
         Some(bounds) => Ok(bounds.frames),
@@ -3167,10 +3215,6 @@ fn scan_bound(limits: Limits, span: Span) -> Result<usize, Diagnostic> {
 #[expect(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
-)]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
 fn abbreviation_step<'a>(
     frame: ScanFrame<'a>,
@@ -3230,6 +3274,10 @@ fn abbreviation_step<'a>(
 }
 
 /// The span of the first `(infer)` placeholder, in walk order.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
 fn find_infer_span(form: &Form, limits: Limits) -> Result<Option<Span>, Diagnostic> {
     let bound = scan_bound(limits, form.span)?;
     let mut visited = 0u32;
@@ -3257,10 +3305,6 @@ fn find_infer_span(form: &Form, limits: Limits) -> Result<Option<Span>, Diagnost
 #[expect(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
-)]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
 fn infer_span_step<'a>(
     frame: ScanFrame<'a>,
@@ -3401,10 +3445,6 @@ enum PositionFrame<'a> {
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
 )]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
-)]
 fn position_step<'a>(
     frame: PositionFrame<'a>,
     limits: Limits,
@@ -3421,17 +3461,12 @@ fn position_step<'a>(
             if *visited > limits.nodes {
                 return Err(stage_exhausted(current.span, "node"));
             }
+            if is_infer_form(current) {
+                return infer_admissible_at(position, current.span);
+            }
             match &current.kind {
                 FormKind::Atom(_) => Ok(()),
                 FormKind::List(items) => {
-                    if is_infer_form(current) {
-                        return match position {
-                            Position::ApplyArgument
-                            | Position::AppArgument
-                            | Position::ExecLiteral => Ok(()),
-                            other => Err(unsupported(current.span, other.refusal())),
-                        };
-                    }
                     if items.is_empty() {
                         return Ok(());
                     }
@@ -3464,6 +3499,15 @@ fn position_step<'a>(
                 .push_bounded(PositionFrame::Enter(item, child, depth), bound)
                 .map_err(|()| stage_exhausted(item.span, "tree frame"))
         }
+    }
+}
+
+/// Whether `(infer)` may stand at `position`: only the three selected
+/// positions admit it, and every other position refuses with its own name.
+fn infer_admissible_at(position: Position, span: Span) -> Result<(), Diagnostic> {
+    match position {
+        Position::ApplyArgument | Position::AppArgument | Position::ExecLiteral => Ok(()),
+        other => Err(unsupported(span, other.refusal())),
     }
 }
 
@@ -3518,8 +3562,20 @@ fn pi_names(form: &Form) -> Vec<String> {
     reason = "Owner: noble-contracts; the walk descends one Pi binder per call and stops after 64 calls"
 )]
 #[expect(
-    tigerstyle::unbounded_collection_growth,
-    reason = "Owner: noble-contracts; the walk pushes at most one name per call of its 64-call descent"
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the walk appends each binder name with Vec::push, so it needs the caller's growable vector, not a slice."
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it appends to an exclusively borrowed, caller-owned name list for this bounded walk; the borrowed form stays immutable."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the walk clones names and pushes onto a Vec, neither of which is const"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; a form that is not a Pi telescope ends the walk without a name; the crate's elaboration tests pin the names it collects"
 )]
 fn push_pi_names(form: &Form, remaining: u32, names: &mut Vec<String>) {
     if remaining == 0 {
@@ -3541,7 +3597,7 @@ fn push_pi_names(form: &Form, remaining: u32, names: &mut Vec<String>) {
         return;
     };
     names.push(name.clone());
-    push_pi_names(&items[2], remaining - 1, names);
+    push_pi_names(&items[2], remaining.saturating_sub(1), names);
 }
 
 /// Convert a parsed code into a metavariable term.
@@ -3764,6 +3820,10 @@ fn describe_sort(sort: &SortTerm) -> String {
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; the rendering follows the finite term tree"
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the rendering builds Strings, which is not const"
+)]
 fn describe_prop(prop: &PropTerm) -> String {
     match prop {
         PropTerm::Pi(index, sort, body) => text![
@@ -3818,10 +3878,6 @@ fn render_form(form: &Form, limits: Limits) -> Result<String, Diagnostic> {
 #[expect(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
-)]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
 fn render_step<'a>(
     frame: ScanFrame<'a>,
@@ -4227,21 +4283,21 @@ mod tests {
             substitution,
             config: &config,
         };
-        let over = limits.work + 1;
+        let over = limits.work.saturating_add(1);
         for (state, step, expected) in [
             (meter(0, 0, 2, 0), MeterStep::Normalize(1), "normalization"),
             (meter(0, over, 1, 0), MeterStep::Normalize(1), "work"),
             (meter(0, 0, 0, 2), MeterStep::Substitute(1), "substitution"),
             (meter(0, over, 0, 1), MeterStep::Substitute(1), "work"),
             (
-                meter(limits.nodes + 1, 0, 0, 0),
+                meter(limits.nodes.saturating_add(1), 0, 0, 0),
                 MeterStep::Visit(0),
                 "node",
             ),
             (meter(1, over, 0, 0), MeterStep::Visit(0), "work"),
             (
                 meter(1, 1, 0, 0),
-                MeterStep::Visit(limits.depth + 1),
+                MeterStep::Visit(limits.depth.saturating_add(1)),
                 "depth",
             ),
             (meter(0, over, 0, 0), MeterStep::Charge(1), "work"),
@@ -4267,9 +4323,15 @@ mod tests {
             "invalid-constraint",
             &detail,
         );
-        let cut = "invalid-constraint: ".len() + detail.len() - MAX_DIAGNOSTIC_BYTES;
+        let cut = "invalid-constraint: "
+            .len()
+            .saturating_add(detail.len())
+            .saturating_sub(MAX_DIAGNOSTIC_BYTES);
         let notice = alloc::format!("...[{cut} more bytes]");
-        assert_eq!(long.message.len(), MAX_DIAGNOSTIC_BYTES + notice.len());
+        assert_eq!(
+            long.message.len(),
+            MAX_DIAGNOSTIC_BYTES.saturating_add(notice.len())
+        );
         assert!(long.message.ends_with(&notice));
     }
 }
