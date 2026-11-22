@@ -816,9 +816,8 @@ export class SlotRegistry {
   }
 
   // Operator-observable per-root frame-pin count: pins the root entered, pins it released through
-  // `leaveFrame`, and the difference. A root that finished normally reports `active: 0`;
-  // `abortRoot` reports the pins the failed root still held (it forgets its frame records and the
-  // poisoned instance is discarded, so it does NOT release or count them as released).
+  // `leaveFrame`, and the difference. A root that finished normally reports `active: 0`; after
+  // `abortRoot` every pin is released and the row also says how many the host released itself.
   framePinCounts(token) {
     const root = this.#root(token);
     return { entered: root.framePins.entered, released: root.framePins.released,
@@ -974,23 +973,35 @@ export class SlotRegistry {
     this.#retire('root-release');
   }
 
-  // Only the trusted worker calls this after a trapped submit has unwound.
-  // A failed guest is not permitted to keep refs or a pinned old map alive.
+  // Only the trusted worker calls this, once a failed root has stopped: a trap, a guest failure, a
+  // refused host import, a cancelled checkpoint or a failure while saving outputs. A failed guest is
+  // not permitted to keep refs or a pinned old map alive (r[LREF-EXIT-01]).
   //
-  // Frame pins are NOT released here. The host forgets the failed root's frame records and the
-  // poisoned instance is discarded, so the returned `active` count is the number of frame pins the
-  // root still held when it was aborted. Reporting them as released would be an assignment, not a
-  // measurement; per-frame release accounting on the abnormal path belongs to
-  // live-reference-lifetimes (decision 6, r[LREF-EXIT-01]).
+  // The host releases, from its own ledger and without resuming the guest, every frame pin the root
+  // still holds, innermost first and each exactly once, then the root's map pin; the root's refs
+  // expire with it. `released_on_abort` counts the pins released here, as distinct from those the
+  // guest's own unwinding released through `leaveFrame`. A ledger that does not balance afterwards
+  // is refused, never repaired. A frame pin released here still holds its backend reference, so a
+  // non-zero `released_on_abort` means the backend instance cannot be reused (decision 6).
   abortRoot(token) {
     const root = this.#root(token);
-    const counts = { entered: root.framePins.entered, released: root.framePins.released,
-      active: root.framePins.entered - root.framePins.released };
+    let releasedOnAbort = 0;
+    while (root.frames.length) {
+      root.frames.pop();
+      if (root.framePins.released >= root.framePins.entered) {
+        throw Error('live-slot frame pin ledger underflow');
+      }
+      root.framePins.released += 1;
+      releasedOnAbort += 1;
+    }
+    if (root.framePins.released !== root.framePins.entered) {
+      throw Error('live-slot frame pin ledger does not balance after the abnormal release');
+    }
     root.pending = null;
-    root.frames.length = 0;
     this.#roots.delete(token);
     this.#retire('aborted-root-release');
-    return counts;
+    return { entered: root.framePins.entered, released: root.framePins.released, active: 0,
+      released_on_abort: releasedOnAbort };
   }
 
   saveProgram(version) {

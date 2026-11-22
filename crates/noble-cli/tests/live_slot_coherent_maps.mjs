@@ -218,9 +218,12 @@ export const run = async binary => {
   assert.equal(halfPublished.diagnostic, 'Error: root reference has no pinned published slot');
   assert.equal((halfPublished.request_trace ?? []).length, 0,
     'a root attempted between the two publications must produce no trace rows');
-  assert.equal(halfPublished.session_state, 'terminated-after-guest-failure',
-    'the half-published root terminates the session rather than mixing maps');
-  await sequentialSession.close();
+  // The root is refused before the guest runs, so the host's release is exact and the session
+  // continues (owner decision 6, r[LREF-EXIT-01]); no map is mixed either way.
+  assert.deepEqual(halfPublished.exit_release, { exact: true });
+  assert.equal(halfPublished.session_state, 'retained',
+    'the half-published root is refused without mixing maps, and the exact release keeps the session');
+  assert.equal(await sequentialSession.close(), 0);
 
   // Omission control: a dispatch to a slot that does not emit keeps the dispatch and produces
   // no effect row, so the count assertion above distinguishes omission from coherence.

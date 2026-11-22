@@ -3,23 +3,19 @@ import { SlotRegistry } from '../src/core/runtime/slot-registry.mjs';
 import { cli, expectOutcome, selectedAuthority } from './live_slot_resource_ref_cli.mjs';
 
 // OWN-CASE-05 (`.cairn/changes/ownership-lifetime-contract`): "a root that saves a Program, then
-// traps before return". OWN-CASE-05 is WITHHELD from promotion: the design's "frame pins are
-// released exactly once" is not observable in this profile, because on an abnormal exit the host
-// forgets the failed root's frame records and neither releases nor counts the backend frame pins
-// (the instance is discarded). Real per-frame release accounting belongs to
-// `live-reference-lifetimes` (OWNER DECISION 2026-11-20 decision 6, r[LREF-EXIT-01]).
-//
-// This lane therefore records only what is measured:
+// traps before return". Every frame pin is released exactly once through the host ledger: the
+// guest's own unwinding releases a frame through `leaveFrame`, and the host's abnormal-exit release
+// (r[LREF-EXIT-01]) releases every frame still entered, counted as `released_on_abort`; a root and
+// each frame token can be released only once.
 //
 // 1. The abnormal exit. The caller dispatches into a target that produces a captured I64 Program
 //    and then performs `test.emit`; the effect grant is revoked first, so the guest fails before
 //    the root returns. The reply reports no stack (no saved-owner token), the request trace
-//    [dispatch allowed, effect denied], the poisoned session state, and the per-root frame-pin
-//    ledger of host entry/exit calls. On this policy-denied-effect mechanism the guest unwinds its
-//    frames, so the reply reports 2 entered / 2 released / 0 active; that is a count of host calls,
-//    not a release measurement, and it does not exercise the abandoned-pin path. The in-process
-//    abort below does: it reports the pins it still held (2 / 0 / 2). No `released_by_host`
-//    field is emitted.
+//    [dispatch allowed, effect denied] and the frame-pin ledger: 2 entered, 2 released by the
+//    guest's unwinding, 0 on abort, 0 active. Owner decision 6 continues a session only when the
+//    release is provably exact; a recorded guest failure is terminal for the shared guest state
+//    (its operand roots, including the produced Program, can never be released), so the host
+//    poisons the session and exits instead of taking further operator work.
 //
 // 2. `test.abort` is not installable in this profile. The live-slot test hosts grant only
 //    `test.emit`, and the environment has no `test.abort` row, so a source containing
@@ -59,27 +55,20 @@ async function abnormalExit() {
     assert.equal(refused.stack, undefined, 'a failed root returns no stack and issues no owner');
     assert.deepEqual(refused.request_trace.map(row => [row.operation, row.outcome]),
       [['dispatch', 'allowed'], ['effect', 'denied']]);
-    // The reply's ledger is a count of host entry/exit calls, not proof of backend pin release.
-    // On this mechanism the guest leaves its frames while unwinding, so the observed triple is
-    // 2 entered / 2 released / 0 active; the abandoned-pin abort is exercised only in-process
-    // below, and it reports the pins it still holds instead of assigning a release.
-    assert.equal(refused.frame_pins.entered, 2, JSON.stringify(refused.frame_pins));
-    assert.equal(refused.frame_pins.released + refused.frame_pins.active, 2,
-      JSON.stringify(refused.frame_pins));
+    assert.deepEqual(refused.frame_pins, { entered: 2, released: 2, active: 0, released_on_abort: 0 },
+      'both frame pins are released exactly once, by the guest\'s unwinding through the host ledger');
+    assert.deepEqual(refused.exit_release, { exact: false,
+      reason: 'the guest recorded a failure, which is terminal for the shared guest state' });
     // The poisoned host exits instead of answering another operator request; the exit status is the
-    // observation that the session did not continue (owner decision 6 selects this branch only
-    // because the backend's own frame-pin counter is still not exposed -- see the receipt notes).
+    // observation that the session did not continue.
     const exit = await live.close();
     assert.equal(exit, 2, 'the failed session exits instead of taking further operator work');
     complete = true;
     return { mechanism: 'policy-denied effect inside a dispatched frame after the Program is produced',
       target_trace: refused.request_trace.map(row => [row.operation, row.outcome]),
       saved_owner_tokens_issued: refused.stack === undefined ? 0 : refused.stack.length,
-      frame_pins: { ...refused.frame_pins,
-        measurement: 'host entry/exit calls during the run; not proof of backend pin release' },
-      frame_pins_unobservable: 'on the abandoned-pin abort path the host neither releases nor '
-        + 'counts the failed root\'s frame pins; real per-frame release accounting belongs to '
-        + 'live-reference-lifetimes',
+      saved_owners_before_root: 0,
+      frame_pins: refused.frame_pins, exit_release: refused.exit_release,
       guest_instance: refused.session_state,
       session_state: refused.session_state, post_exit_session: 'exits without another reply',
       guest_requests: refused.guest_requests,
@@ -112,9 +101,9 @@ async function abortRefusalWitness() {
   } finally { if (!complete) await live.abort(); }
 }
 
-// The in-process ledger half: a root with two entered dispatch frames that is aborted releases the
-// map pin exactly once and reports the one frame pin it still held; the ledger then has no live
-// root left. It does not claim a frame-pin release.
+// The in-process ledger half: a root aborted with two dispatch frames still entered (the trap path,
+// where the guest never unwinds) releases both frame pins from the host ledger, exactly once, and
+// its map pin exactly once; the ledger then has no live root left.
 const digest = 'a'.repeat(64);
 const descriptor = (input = ['I64'], output = ['I64'], effectCeiling = []) =>
   ({ input, output, effectCeiling });
@@ -179,15 +168,17 @@ function ledger() {
   assert.ok(!released.includes('101:P-B1'), 'a live root must pin its captured map version');
   assert.throws(() => registry.finishRoot(root), /still has an active frame/,
     'a normal root finish is refused while the dispatch frames are entered');
-  assert.deepEqual(registry.abortRoot(root), { entered: 2, released: 0, active: 2 },
-    'the aborted root reports the frame pins it still held instead of assigning a release');
+  const pins = registry.abortRoot(root);
+  assert.deepEqual(pins, { entered: 2, released: 2, active: 0, released_on_abort: 2 },
+    'the host releases both entered frame pins itself, exactly once');
   assert.deepEqual(released.filter(row => row === '101:P-B1'), ['101:P-B1'],
     'the aborted root releases its map pin exactly once');
   assert.equal(registry.retainedVersions, 1, 'only the new map version remains retained');
   assert.throws(() => registry.rootEpoch(root), /inactive/,
     'the aborted root is gone; no operation can reach its ledger');
+  assert.throws(() => registry.abortRoot(root), /inactive/, 'the aborted root cannot be released twice');
   return { retired_exactly_once: ['101:P-B1'], retained_versions_after: registry.retainedVersions,
-    normal_finish_refused: true, frame_pins: { entered: 2, released: 0, active: 2 } };
+    normal_finish_refused: true, frame_pins: pins };
 }
 
 const observed = { case: 'OWN-CASE-05', abnormal_exit: await abnormalExit(),

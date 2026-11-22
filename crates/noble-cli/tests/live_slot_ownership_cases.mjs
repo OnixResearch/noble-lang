@@ -13,9 +13,11 @@ import { cli, expectOutcome, selectedAuthority } from './live_slot_resource_ref_
 //       bounded at 32 nodes and 4096 bytes per child (owner decision 35 keeps that bound): the
 //       8-leaf balanced tree and every 4-leaf tree fit, while the 8-leaf left- and right-deep
 //       chains exceed it at compose 5, where the refusal is `execution-failed` with "checked
-//       captured value exceeds host observation bound" and the session terminates, as every failed
-//       root does in this profile. The lane records which variants executed and which were
-//       refused; it never narrows a variant.
+//       captured value exceeds host observation bound". That refusal happens while saving the
+//       root's output, after the guest settled, so the host's release is exact and the session
+//       continues (owner decision 6, r[LREF-EXIT-01]): every owner saved before the refusal is
+//       then released and a new root still runs. The lane records which variants executed and
+//       which were refused; it never narrows a variant.
 //   cross-module: a Program saved by one installed module is duplicated by a second one; both
 //       owners must run the original Program and release independently (issue #106).
 const binary = process.argv[2];
@@ -47,6 +49,23 @@ async function session(variant, body) {
 }
 
 const refused = row => row.outcome === 'refused';
+
+// After an exact save-time refusal the session continues: release every owner saved before it and
+// run one more root, so neither a leaked owner nor a poisoned session can pass.
+async function continueAfterRefusal(row, owners, issue) {
+  assert.equal(row.outcome, 'execution-failed');
+  assert.match(row.diagnostic, /checked captured value exceeds host observation bound/);
+  assert.equal(row.guest_requests, 0);
+  assert.equal(row.stack, undefined, 'the refused root issues no saved owner');
+  assert.deepEqual(row.exit_release, { exact: true });
+  assert.equal(row.session_state, 'retained');
+  for (const owner of owners) await issue({ operation: 'release-program', owner }, 'program-released');
+  const after = await issue({ operation: 'invoke', id: 'leaf', inputs: [i64(1)], refs: [] }, 'executed');
+  await issue({ operation: 'release-program', owner: after.stack[0].owner }, 'program-released');
+  return { diagnostic: row.diagnostic, exit_release: row.exit_release,
+    session_state: row.session_state, frame_pins: row.frame_pins,
+    released_after_refusal: owners.length, root_after_refusal: after.outcome };
+}
 
 async function sharedDuplicates(order) {
   return session(`OWN-CASE-02-${order}`, async ({ issue, run }) => {
@@ -122,11 +141,8 @@ async function deepChain(side, leaves) {
         ? [program(chain), program(leaf)] : [program(leaf), program(chain)];
       const row = await live.issue({ operation: 'invoke', id: 'composer', inputs, refs: [] });
       if (row.outcome !== 'executed') {
-        assert.equal(row.outcome, 'execution-failed');
-        assert.match(row.diagnostic, /checked captured value exceeds host observation bound/);
-        assert.equal(row.session_state, 'terminated-after-guest-failure');
         return { composed: composed.length, refused_at_compose: composed.length + 1,
-          diagnostic: row.diagnostic, session_state: row.session_state,
+          ...await continueAfterRefusal(row, [...captured, ...composed], issue),
           released_before_root: 0, progressing, refused: true };
       }
       chain = row.stack[0].owner;
@@ -158,20 +174,16 @@ async function boundedChain() {
         inputs: [i64(k)], refs: [] }, 'executed')).stack[0].owner);
     }
     let chain = captured[0];
-    let composed = 0;
+    const composed = [];
     for (const leaf of captured.slice(1)) {
       const row = await live.issue({ operation: 'invoke', id: 'composer',
         inputs: [program(chain), program(leaf)], refs: [] });
       if (row.outcome !== 'executed') {
-        assert.equal(row.outcome, 'execution-failed');
-        assert.match(row.diagnostic, /checked captured value exceeds host observation bound/);
-        assert.equal(row.session_state, 'terminated-after-guest-failure');
-        assert.equal(row.guest_requests, 0);
-        return { refused_at_compose: composed + 1, diagnostic: row.diagnostic,
-          session_state: row.session_state, frame_pins: row.frame_pins };
+        return { refused_at_compose: composed.length + 1,
+          ...await continueAfterRefusal(row, [...captured, ...composed], issue) };
       }
-      composed += 1;
       chain = row.stack[0].owner;
+      composed.push(chain);
     }
     assert.fail('the 40-leaf captured chain stayed within the summary node bound');
     return null;
@@ -219,12 +231,13 @@ for (const [side, leaves] of [['left_deep_8', 8], ['right_deep_8', 8], ['left_de
   ['right_deep_4', 4]]) {
   const row = cases['OWN-CASE-03'][side];
   if (row.refused) {
-    assert.equal(row.session_state, 'terminated-after-guest-failure');
-    assert.match(row.diagnostic, /checked captured value exceeds host observation bound/);
+    assert.equal(row.session_state, 'retained');
+    assert.equal(row.exit, 0, 'the session continues after an exact save-time refusal');
   } else {
     assert.equal(row.exit, 0);
     assert.equal(row.released_before_root, 2 * leaves - 2);
   }
 }
-assert.equal(cases['OWN-CASE-03'].bounded_control.exit, 2, 'a failed root terminates the session');
+assert.equal(cases['OWN-CASE-03'].bounded_control.exit, 0,
+  'an exact save-time refusal leaves the session running');
 console.log(JSON.stringify({ cases }));
