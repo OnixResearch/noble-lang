@@ -1,21 +1,24 @@
 #!/usr/bin/env node
 /**
- * Source-bound receipt for LREF-CASE-02, 04, 05 and 06 (`.cairn/changes/live-reference-lifetimes`,
- * r[LREF-CTR-01], r[LREF-ESCAPE-01], r[LREF-EV-01]): non-wrapping counters, escaped results, saved
- * generic callers and held roots. Each case runs its own lane:
+ * Source-bound receipt for live-slot lanes that are not conformance gates: LREF-CASE-02, 04, 05
+ * and 06 (`.cairn/changes/live-reference-lifetimes`, r[LREF-CTR-01], r[LREF-ESCAPE-01],
+ * r[LREF-EV-01]: non-wrapping counters, escaped results, saved generic callers and held roots) and
+ * ID-05's capture change (`.cairn/changes/runtime-program-template-identity`, P-ID-03). Each case
+ * runs its own lane and is recorded separately:
  *   LREF-CASE-02 - crates/noble-cli/tests/live_slot_counter_exhaustion.mjs (in-process registry
  *                  fixtures; the compiler's install generation is the noble-wasm unit test
  *                  `install_generation_refuses_at_its_maximum_without_wrapping`, run by Cargo)
  *   LREF-CASE-04 - crates/noble-cli/tests/live_slot_escaped_result.mjs
  *   LREF-CASE-05 - crates/noble-cli/tests/live_slot_generic_caller_roots.mjs
  *   LREF-CASE-06 - crates/noble-cli/tests/live_slot_held_root_mixing.mjs
+ *   ID-05        - crates/noble-cli/tests/live_slot_capture_identity.mjs
  * The CLI must be built from the clean source tree this receipt names; the receipt binds its
  * digest and the lanes' sources, checks each case's recorded observations and writes them with
  * the case's non-claims. It is execution evidence, not a proof and not a conformance promotion.
  *
  * Usage (pinned Node, from a repository root whose ancestors no other principal can write,
  * because the lanes' authorities live under the tests directory):
- *   node verification/live-reference-cases/receipt.mjs CLI NEW_DIRECTORY
+ *   node verification/live-slot-lanes/receipt.mjs CLI NEW_DIRECTORY
  */
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -49,6 +52,7 @@ const lanes = {
   'LREF-CASE-04': 'crates/noble-cli/tests/live_slot_escaped_result.mjs',
   'LREF-CASE-05': 'crates/noble-cli/tests/live_slot_generic_caller_roots.mjs',
   'LREF-CASE-06': 'crates/noble-cli/tests/live_slot_held_root_mixing.mjs',
+  'ID-05': 'crates/noble-cli/tests/live_slot_capture_identity.mjs',
 };
 const bound = [...Object.values(lanes),
   'crates/noble-cli/tests/live_slot_resource_ref_cli.mjs',
@@ -57,7 +61,7 @@ const bound = [...Object.values(lanes),
   'crates/noble-cli/src/core/runtime/slot-engine.mjs',
   'crates/noble-cli/src/core/runtime/slot-registry.mjs',
   'crates/noble-wasm/src/source/mod.rs',
-  'verification/live-reference-cases/receipt.mjs'].map(bytesOf);
+  'verification/live-slot-lanes/receipt.mjs'].map(bytesOf);
 const binarySha256 = sha(fs.readFileSync(binary));
 
 const runLane = (name, lane) => {
@@ -91,10 +95,14 @@ const case06 = runLane('LREF-CASE-06', lanes['LREF-CASE-06']);
 assert.deepEqual([case06.r1.epoch, case06.r1.stack, case06.publication_while_held.epoch,
   case06.r2.epoch, case06.r2.stack],
 ['2', [{ kind: 1, value: '122' }], '3', '3', [{ kind: 1, value: '124' }]]);
+const id05 = runLane('ID-05', lanes['ID-05']);
+assert.equal(id05.capture_before.definition_id, id05.capture_after.definition_id);
+assert.notEqual(id05.capture_before.program_value_id, id05.capture_after.program_value_id);
+assert.notEqual(id05.fixed_control.fixed2.definition_id, id05.fixed_control.fixed3.definition_id);
 
 save('receipt.json', {
-  schema: 'noble-live-reference-cases-receipt/v1',
-  claim: 'selected host execution evidence for LREF-CASE-02 (in-process registry fixtures), 04, 05 and 06 (against one CLI built from the source below); not a proof and not a conformance promotion',
+  schema: 'noble-live-slot-lanes-receipt/v1',
+  claim: 'selected host execution evidence for LREF-CASE-02 (in-process registry fixtures), LREF-CASE-04, 05 and 06 and ID-05\'s capture change (against one CLI built from the source below); not a proof and not a conformance promotion',
   source: { ...source, bound }, binary_sha256: binarySha256,
   cases: {
     'LREF-CASE-02': { lane: lanes['LREF-CASE-02'], summary: case02,
@@ -116,6 +124,10 @@ save('receipt.json', {
     'LREF-CASE-06': { lane: lanes['LREF-CASE-06'], summary: case06, non_claims: [
       'the serial live host accepts only operator controls during a held checkpoint, so R2 runs after R1 resumes rather than while R1 is held; the publication itself commits while R1 is held',
       'the design numbers R1\'s epoch 1; here S-v0 is published first (epoch 1), so S-v1 and R1 are at epoch 2 and S-v2 at epoch 3',
+    ] },
+    'ID-05': { lane: lanes['ID-05'], summary: id05, non_claims: [
+      'the identities are the live-slot runtime\'s experimental local v4 identities of checked returned targets; ID-05 is registered for ProgramsData-Draft, which this run does not execute, so the case is not promoted',
+      'the fixed-literal control shows the shared template comes from the varying root input; it does not prove the template domain canonical',
     ] },
   },
 });
