@@ -85,6 +85,10 @@ const explicitInputs = [fixtureFile, liveWasmFile, 'Cargo.toml', 'Cargo.lock',
   'crates/noble-cli/tests/live_slot_cas_policy_authority.json',
   'crates/noble-cli/tests/live_slot_legacy_refusal.mjs',
   'crates/noble-cli/tests/live_slot_selected_target_evidence.mjs',
+  'crates/noble-cli/tests/live_slot_evidence_fixture.mjs',
+  'crates/noble-cli/tests/live_slot_evidence_policy.mjs',
+  'crates/noble-cli/tests/live_slot_quota_replay.mjs',
+  'crates/noble-cli/tests/live_slot_quota_replay_authority.json',
   'crates/noble-cli/tests/live_repl_slot_exclusion.mjs', 'proofs/mc1/NobleContracts.lean'];
 // `proofs/mc1/NobleContracts` holds the contract library sources LSLOT-05's
 // Lean consumer rebuilds; its `.lake` build products are outside this tree.
@@ -427,7 +431,7 @@ const lane0407 = lane('0407', 'live_slot_cas_policy.mjs');
 // LSLOT-05: selected-target evidence. The Lean consumer runs with the reviewed
 // sandbox tools, the tested tree's contract library and the user session the
 // sandbox's `systemd-run --user` needs.
-const lane05 = lane('05', 'live_slot_selected_target_evidence.mjs', {
+const consumerEnvironment = {
   NOBLE_LEAN: '/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean',
   NOBLE_BWRAP: '/nix/store/y0ra9qr3rz81d9wl7dfrldv3j25dc98q-bubblewrap-0.12.0/bin/bwrap',
   NOBLE_PRLIMIT: '/nix/store/mqvbf0flamqaq9c3ihb496aahag897n0-util-linux-2.42.3-bin/bin/prlimit',
@@ -435,8 +439,20 @@ const lane05 = lane('05', 'live_slot_selected_target_evidence.mjs', {
   NOBLE_CONTRACT_LIBRARY: path.join(root, 'proofs/mc1'),
   XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR ?? '',
   DBUS_SESSION_BUS_ADDRESS: process.env.DBUS_SESSION_BUS_ADDRESS ?? '',
-});
+};
+const lane05 = lane('05', 'live_slot_selected_target_evidence.mjs', consumerEnvironment);
 const summary05 = summaryFile(lane05.directory, 'LSLOT05-summary.json');
+// LSLOT-04 and LSLOT-07's evidence conjuncts on a proof-required slot
+// (integrator decision 46), with the same consumer route.
+const lane0407Evidence = lane('0407-evidence', 'live_slot_evidence_policy.mjs', consumerEnvironment);
+const summary0407Evidence = summaryFile(lane0407Evidence.directory, 'LSLOT0407-evidence-summary.json');
+// LSLOT-08: retention, reflection and hostile replay from the two baselines of
+// integrator decision 45. The lane selects its committed authority file.
+const lane08 = lane('08', 'live_slot_quota_replay.mjs');
+const summary08 = summaryFile(lane08.directory, 'LSLOT08-summary.json');
+const requests08 = Object.fromEntries(summary08.replay
+  .filter(row => row.name === 'exact-frozen-admitted-and-ordered')
+  .map(row => [row.baseline, jsonLines(path.join(lane08.directory, row.requests))]));
 const casNames = ['LSLOT04-same-slot-writers', 'LSLOT04-unrelated-slot-race',
   'LSLOT04-delete-recreate-ABA', 'LSLOT04-authorized-rollback', 'LSLOT04-rollback-denied',
   'LSLOT07-publication-without-grant', 'LSLOT07-static-dispatch-without-grant',
@@ -599,6 +615,7 @@ const lanes = {
       inputs: callerInstallSteps[0].request.inputs },
     stageSteps: steps03.map(step => step.row.stage) },
   'LSLOT-04': { cases: cas, baseline: casBaseline,
+    evidence: summary0407Evidence.lslot04,
     stageSteps: casSteps.map(step => step.row.stage) },
   'LSLOT-05': { summary: summary05 },
   'LSLOT-06': { summary: summary06,
@@ -641,12 +658,16 @@ const lanes = {
     authorityRefused: ungrantedDispatchDenial !== null,
     stageSteps: steps06.map(step => step.row.stage), installInputs06 },
   'LSLOT-07': { cases: cas, slot: 'emit', pinnedEpoch,
+    evidence: summary0407Evidence.lslot07,
     emit_v1_source: pairedFiles(
       path.join(lane0407.directory, 'LSLOT07-publication-without-grant.requests.jsonl'),
       path.join(lane0407.directory, 'LSLOT07-publication-without-grant.jsonl'))
       .find(step => step.request?.operation === 'install' && step.request.id === 'emit1')
       .request.source,
     stageSteps: casSteps.map(step => step.row.stage) },
+  'LSLOT-08': { summary: summary08, requests: requests08,
+    authority: JSON.parse(fs.readFileSync(path.join(root,
+      'crates/noble-cli/tests/live_slot_quota_replay_authority.json'))) },
   'LSLOT-09': { legacy: summary09Legacy, repl: summary09Repl,
     replProfileLabel: 'guarded Live-Wasm-Draft',
     liveContractsChanged,
@@ -909,10 +930,12 @@ const acceptance = {
       + ' proof is rechecked by the `noble build --require-proof` consumer against the target\'s'
       + ' closed subject rendered from its verified template. This is execution evidence for'
       + ' that consumer route, not a translation or refinement proof.',
-    'LSLOT-08 is not executed by this gate: it carries no projector for the exact replay case.',
-    'LSLOT-04 and LSLOT-07 remain refused on their evidence-carrying variants: their lane does'
-      + ' not yet publish with LSLOT-05\'s selected-target evidence; their other fields are'
-      + ' recorded.',
+    'LSLOT-08 runs its replay variants from the two baselines of integrator decision 45 (a'
+      + ' returned target that captured I64:5, and a named definition that requests test.emit A'
+      + ' then B): no actual target carries both, because the verified returned-target subset is'
+      + ' pure. Exact replay eligibility is neither behavioral proof nor real-effect authority.',
+    'LSLOT-04 and LSLOT-07 observe their evidence conjuncts on a proof-required slot whose claim'
+      + ' is Q2 (integrator decision 46); v1 and v2 there differ only in their artifacts.',
     '`verification/live-slot-current-source/gate.mjs` and `verification/live-update-corpus` are'
       + ' historical: they replay only at their recorded source states and are not re-run here.',
   ],

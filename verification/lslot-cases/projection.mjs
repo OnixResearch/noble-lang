@@ -9,6 +9,7 @@
 // the per-case allowlist below, with the runtime facts recorded as evidence).
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { isDeepStrictEqual } from 'node:util';
 
 export const jsonLines = file => fs.readFileSync(file, 'utf8').trim()
   .split('\n').filter(Boolean).map(line => JSON.parse(line));
@@ -22,9 +23,6 @@ export function leaves(value, prefix) {
 function measured(scope, key, canonical, observed, note = null, evidence = null) {
   return { scope, key, canonical, observed,
     status: same(canonical, observed) ? 'observed' : 'mismatch', note, evidence };
-}
-function unobserved(scope, key, canonical, reason) {
-  return { scope, key, canonical, observed: null, status: 'unobserved', note: reason };
 }
 function declared(scope, key, canonical, basis, evidence = null) {
   return { scope, key, canonical, observed: null, status: 'declared', note: basis, evidence };
@@ -47,6 +45,10 @@ export const declaredAllowlist = {
     'input.target.artifact', 'expected.stage'],
   'LSLOT-06': ['input.harness', 'input.issued_ref', 'expected.stage'],
   'LSLOT-07': ['input.harness', 'input.old_target', 'expected.stage'],
+  'LSLOT-08': ['input.harness', 'input.replay_fixture.independent_from_retention_fixture',
+    ...['captured', 'effectful'].flatMap(name => ['target', 'selected_artifact', 'semantic_context',
+      'host_policy_inputs'].map(key => `input.replay_fixture.baselines.${name}.${key}`)),
+    'input.replay_fixture.variant_protocol', 'expected.stage'],
   'LSLOT-09': ['input.harness', 'input.attempt', 'input.profiles', 'input.controls',
     'expected.stage'],
 };
@@ -613,6 +615,23 @@ export function project04({ fixture, lane }) {
   const refusals = every.map(item => item.refusal ?? item.denied).filter(Boolean);
   const counters = key => refusals.map(row => row[key] ?? 0)
     .reduce((total, value) => total + value, 0);
+  // The evidence conjunct runs on a proof-required slot (integrator decision
+  // 46): v1 and v2 share the template; their composite artifacts differ.
+  const evidence = lane.evidence;
+  // Host-stage refusals carry no epoch; the rollback's later compare-and-swap
+  // from epoch 2 (published at epoch 3) shows nothing changed meanwhile.
+  const unchangedRefusal = (row, outcome) => row.outcome === outcome
+    && (!Object.hasOwn(row, 'epoch') || row.epoch === '2')
+    && row.guest_requests === 0 && row.protected_operations === 0;
+  const evidenceRollback = unchangedRefusal(evidence.without_evidence, 'refused')
+    && /lacks independently checked target evidence/.test(evidence.without_evidence.diagnostic ?? '')
+    && unchangedRefusal(evidence.with_v2_evidence, 'refused')
+    && unchangedRefusal(evidence.without_grant, 'policy-denied')
+    && same([evidence.v2_published.epoch, evidence.v2_published.generation], ['2', '2'])
+    && same([evidence.rolled_back.epoch, evidence.rolled_back.generation], ['3', '3'])
+    && evidence.v1.artifact_sha256 !== evidence.v2.artifact_sha256
+    && evidence.v2_dispatch.request_trace[0].artifactSha256 === evidence.v2.artifact_sha256
+    && evidence.v1_dispatch.request_trace[0].artifactSha256 === evidence.v1.artifact_sha256;
   return [
     declared('input', 'harness', fixture.input.harness,
       'the gate runs the CAS/rollback lane against the selected CLI'),
@@ -654,7 +673,9 @@ export function project04({ fixture, lane }) {
       'authorized-rollback': () => numberValue(rollback.commits[0].epoch) === 19
         && numberValue(rollback.commits[1].epoch) === 20
         && numberValue(rollback.commits[1].generation) === 5,
-      'rollback-denied': () => denied.denied.outcome === 'policy-denied',
+      'rollback-denied': () => denied.denied.outcome === 'policy-denied'
+        && unchangedRefusal(evidence.without_evidence, 'refused')
+        && unchangedRefusal(evidence.with_v2_evidence, 'refused'),
     }[variant.name])),
     stageEntry(lane.stageSteps, { slot: 'slot-publication', command: 'slot-publication',
       'operator-control': 'slot-publication' }, 'slot-publication'),
@@ -671,11 +692,16 @@ export function project04({ fixture, lane }) {
       !(numberValue(rollback.commits[1].epoch) > numberValue(rollback.commits[0].epoch)
         && numberValue(rollback.commits[1].generation)
           > numberValue(rollback.commits[0].generation))),
-    unobserved('expected',
+    measured('expected',
       'successful_rollback_requires_fresh_admission_authorization_and_evidence', true,
-      're-admission and the rollback grant are observed, but the `evidence` conjunct needs'
-      + ' evidence-carrying publication, the capability LSLOT-05 waits for under template'
-      + ' identity.'),
+      numberValue(rollback.commits[1].epoch) === 20 && denied.denied.outcome === 'policy-denied'
+        && evidenceRollback,
+      'the CAS lane re-admits A-v1 and needs the current grant; on a proof-required slot the'
+      + ' rollback that re-publishes v1\'s saved target is refused without evidence, with v2\'s'
+      + ' record and without the grant, and publishes with v1\'s exact record at epoch 3,'
+      + ' generation 3, after which dispatch selects v1\'s artifact',
+      { without_evidence: evidence.without_evidence, with_v2_evidence: evidence.with_v2_evidence,
+        without_grant: evidence.without_grant, rolled_back: evidence.rolled_back }),
     measured('expected', 'failed_candidate_executions', 0,
       refusals.filter(row => row.guest_requests !== 0).length),
     measured('expected', 'guest_requests', 0, counters('guest_requests')),
@@ -756,6 +782,17 @@ export function project07({ fixture, lane }) {
   const effect = byName('LSLOT07-old-version-effect-revoked-after-pin');
   const trace = item => (item.denied?.request_trace ?? []).map(row =>
     [row.operation, row.outcome]);
+  // The evidence half runs on a proof-required slot (integrator decision 46).
+  const evidence = lane.evidence;
+  const evidenceTrace = row => (row.request_trace ?? []).map(step => [step.operation, step.outcome]);
+  const evidenceDenied = evidence.publication_without_grant.outcome === 'policy-denied'
+    && evidence.publication_without_grant.epoch === '0'
+    && evidence.publication_without_grant.guest_requests === 0
+    && evidence.published.outcome === 'published'
+    && same(evidenceTrace(evidence.dispatch_with_grant), [['dispatch', 'allowed']])
+    && same(evidenceTrace(evidence.dispatch_without_grant), [['dispatch', 'policy-denied']])
+    && evidence.dispatch_without_grant.request_trace[0].programValueId
+      === evidence.target.program_value_id;
   return [
     declared('input', 'harness', fixture.input.harness,
       'the gate runs the current-policy lane against the selected CLI'),
@@ -768,7 +805,8 @@ export function project07({ fixture, lane }) {
       fixture.input.variants.map(variant => lane.cases
         .some(item => item.name === `LSLOT07-${variant.name}`) ? variant.name : 'missing')),
     ...fixture.input.variants.map(variant => variantObservation(variant, {
-      'publication-without-grant': () => publication.denied?.outcome === 'policy-denied',
+      'publication-without-grant': () => publication.denied?.outcome === 'policy-denied'
+        && evidence.publication_without_grant.outcome === 'policy-denied',
       'dispatch-without-grant': () => trace(dispatch)[0]?.[1] === 'policy-denied',
       'revoked-after-root-pin': () => trace(revoked)[0]?.[1] === 'policy-denied',
       'old-version-effect-revoked-after-pin': () => trace(effect)[0]?.[1] === 'allowed'
@@ -780,11 +818,14 @@ export function project07({ fixture, lane }) {
       trace(dispatch)[0]?.[1] === 'policy-denied' && trace(revoked)[0]?.[1] === 'policy-denied'
         && trace(effect)[0]?.[1] === 'allowed' && trace(effect)[1]?.[1] === 'denied'
         ? 'current-grant-is-independent' : 'other'),
-    unobserved('expected', 'publication_or_dispatch_authorized_by_id_ref_effect_or_evidence',
-      false,
-      'dispatch with an id, a host-issued ref and a declared effect is denied, but the `or'
-      + ' evidence` half needs an admitted proof present with the id, which requires'
-      + ' evidence-carrying publication (template identity).'),
+    measured('expected', 'publication_or_dispatch_authorized_by_id_ref_effect_or_evidence',
+      false, !(trace(dispatch)[0]?.[1] === 'policy-denied' && evidenceDenied),
+      'dispatch with an id, a host-issued ref and a declared effect is denied without the grant;'
+      + ' on a proof-required slot the exact valid record is refused without the publication'
+      + ' grant and publishes once it is restored, and the evidence-admitted target dispatches'
+      + ' with the grant and is denied without it',
+      { publication_without_grant: evidence.publication_without_grant,
+        dispatch_without_grant: evidenceTrace(evidence.dispatch_without_grant) }),
     measured('expected', 'revoked_effect_protected_operations', 0,
       effect.denied?.protected_operations),
     measured('expected', 'revoked_effect_request_recorded', true,
@@ -857,7 +898,200 @@ export function project09({ fixture, lane }) {
 
 export const projectors = { 'LSLOT-01': project01, 'LSLOT-02': project02,
   'LSLOT-03': project03, 'LSLOT-04': project04, 'LSLOT-05': project05,
-  'LSLOT-06': project06, 'LSLOT-07': project07, 'LSLOT-09': project09 };
+  'LSLOT-06': project06, 'LSLOT-07': project07, 'LSLOT-08': project08,
+  'LSLOT-09': project09 };
+
+// LSLOT-08 (integrator decision 45): the retention phases run on one session;
+// the hostile replay runs every variant from each baseline it names, each in
+// its own session. Symbolic fixture names are declared with the actual values
+// they stand for; everything else is measured from the recorded replies.
+export function project08({ fixture, lane }) {
+  const { retention, replay } = lane.summary;
+  assert.ok(retention, 'LSLOT-08 retention summary');
+  const retentionFixture = fixture.input.retention_fixture;
+  const replayFixture = fixture.input.replay_fixture;
+  const baselineNames = Object.keys(replayFixture.baselines);
+  const exactName = 'exact-frozen-admitted-and-ordered';
+  const run = (name, baseline) => {
+    const found = replay.filter(row => row.name === name && row.baseline === baseline);
+    assert.equal(found.length, 1, `LSLOT-08 ${baseline} ${name} run`);
+    assert.notEqual(found[0].status, 'failed', `LSLOT-08 ${baseline} ${name}: ${found[0].error}`);
+    return found[0];
+  };
+  const exact = Object.fromEntries(baselineNames.map(name => [name, run(exactName, name)]));
+  const dispatchRow = name => exact[name].recorded.request_trace[0];
+  const frozenSlot = name => exact[name].recorded.frozen_identity.slots[0];
+  const agreed = pick => {
+    const values = baselineNames.map(pick);
+    return values.every(value => same(value, values[0])) ? values[0] : { failed: values };
+  };
+  const requestsOf = name => lane.requests[name];
+  const effectRows = name => exact[name].recorded.request_trace.filter(row => row.operation === 'effect');
+  const refused = row => (row.outcome === 'refused' || row.outcome === 'replay-diverged')
+    && row.guest_requests === 0 && row.protected_operations === 0 && row.actual_stack === null;
+  const matched = row => row.outcome === 'replay-matched' && row.protected_operations === 0
+    && same(row.actual_trace, row.recorded.request_trace) && same(row.actual_stack, row.recorded.stack);
+  const hostile = replay.filter(row => row.name !== exactName);
+  const {
+    initial, entered, refused_while_pinned: pinnedRefusal, old_root: oldRoot,
+    refused_after_root: rootRefusal, still_callable: stillCallable, released, published,
+    new_root: newRoot, keeper, saved_program: savedProgram, reflected_sites: sites,
+  } = retention;
+  // Phase 1 runs while the held root is inside its dispatch; the refusal reply
+  // carries no counters of its own, and the resumed root reports exactly its
+  // one dispatch, so nothing else (no candidate) executed meanwhile.
+  const phaseOne = pinnedRefusal.outcome === 'retention-budget-refused' && pinnedRefusal.epoch === '1'
+    && (pinnedRefusal.guest_requests ?? 0) === 0 && entered.outcome === 'checkpoint-entered'
+    && oldRoot.guest_requests === oldRoot.request_trace.length && oldRoot.request_trace.length === 1;
+  const phaseTwo = oldRoot.outcome === 'executed' && oldRoot.epoch === '1'
+    && same(oldRoot.stack, [{ kind: 1, value: '6' }])
+    && rootRefusal.outcome === 'retention-budget-refused' && rootRefusal.epoch === '1'
+    && rootRefusal.guest_requests === 0 && rootRefusal.protected_operations === 0
+    && stillCallable.outcome === 'executed' && stillCallable.epoch === '1'
+    && same(stillCallable.stack, [{ kind: 1, value: '11' }]);
+  const retired = published.retire_code_spans.some(span => span.generation === Number(keeper.generation));
+  const phaseThree = released.outcome === 'program-released' && published.outcome === 'published'
+    && same([published.epoch, published.incarnation, published.generation], ['2', '1', '2'])
+    && retired && newRoot.epoch === '2' && newRoot.request_trace[0].generation === '2'
+    && same(newRoot.stack, [{ kind: 1, value: '7' }])
+    && newRoot.request_trace[0].programValueId !== oldRoot.request_trace[0].programValueId;
+  const phaseHolds = { 'both-old-owners-live': phaseOne, 'root-only-exits': phaseTwo,
+    'last-old-owner-releases': phaseThree };
+  const generic = { instruction: 'slot.invoke', siteId: 0, input: ['I64'], output: ['I64'],
+    effects: ['live.dispatch'] };
+  const variantHolds = variant => {
+    const runs = replay.filter(row => row.name === variant.name);
+    if (!same(runs.map(row => row.baseline).sort(), [...variant.baselines].sort())) return false;
+    return runs.every(row => variant.name === exactName ? matched(row) : refused(row));
+  };
+  const rootInputs = name => {
+    const requests = requestsOf(name);
+    const invoke = requests.find(request => request.operation === 'invoke' && request.record === true);
+    const caller = requests.find(request => request.operation === 'install' && request.id === 'caller');
+    assert.ok(invoke && caller, `LSLOT-08 ${name} recorded root and caller requests`);
+    const ref = refParts(caller.inputs[1]);
+    return [`I64:${invoke.inputs[0].value}`,
+      `host-issued LiveRef<[${ref.input.join(',')}],[${ref.output.join(',')}],`
+        + `{${ref.effects.join(',')}}> for ${invoke.refs[0].slot}`];
+  };
+  const traceKeys = {
+    root_epoch: ['rootEpoch'], slot_incarnation: ['incarnation'], slot_generation: ['generation'],
+    selected_ProgramValueId: ['programValueId'], selected_DefinitionId: ['definitionId'],
+    captures: ['captures'], admitted_artifact: ['artifactSha256'], semantic_context: ['semanticContext'],
+    host_policy: ['policyInput', 'policyAllowed'],
+  };
+  const recordedFields = fixture.expected.trace_fields.filter(field => {
+    if (field === 'ordered_host_request_response_accounting') {
+      return effectRows('effectful').length > 0 && effectRows('effectful').every(row =>
+        ['request', 'response', 'protectedOperations'].every(key => Object.hasOwn(row, key)));
+    }
+    return (traceKeys[field] ?? [null]).every(key => key !== null
+      && baselineNames.every(name => Object.hasOwn(dispatchRow(name), key)));
+  });
+  const entries = [
+    declared('input', 'harness', fixture.input.harness,
+      'the gate runs the retention and replay lane against the selected CLI'),
+    measured('input.retention_fixture.registry_epoch_1.slot', 'incarnation', 1,
+      numberValue(initial.incarnation)),
+    measured('input.retention_fixture.registry_epoch_1.slot', 'generation', 1,
+      numberValue(initial.generation)),
+    measured('input.retention_fixture.registry_epoch_1.slot', 'target', 'v1',
+      initial.epoch === '1' && oldRoot.request_trace[0].artifactSha256 === keeper.artifact_sha256
+        && oldRoot.request_trace[0].generation === '1' ? 'v1'
+        : { failed: { published: initial, dispatched: oldRoot.request_trace[0] } },
+      'v1 is the keeper quotation published at epoch 1; the held root dispatched exactly its artifact'),
+    measured('input.retention_fixture', 'retained_version_quota', 1, lane.authority.quota),
+    measured('input.retention_fixture', 'owners', retentionFixture.owners, [
+      initial.epoch === '1' ? retentionFixture.owners[0] : { failed: initial },
+      entered.outcome === 'checkpoint-entered' && oldRoot.epoch === '1'
+        ? retentionFixture.owners[1] : { failed: entered },
+      savedProgram?.owner && savedProgram.program_index === 1 && savedProgram.source_id === 'keeper'
+        ? retentionFixture.owners[2] : { failed: savedProgram },
+    ], 'the epoch-1 map, the root held inside its dispatch and the saved keeper quotation'),
+    measured('input.retention_fixture', 'phases', retentionFixture.phases,
+      retentionFixture.phases.map(phase => phaseHolds[phase.name] ? phase : { failed: phase.name }),
+      'each phase reproduces only when its recorded refusal, release and publication replies hold'),
+    measured('input.retention_fixture', 'reflection', retentionFixture.reflection,
+      sites.length >= 7 && sites.every(site => isDeepStrictEqual(site, sites[0]))
+        ? retentionFixture.reflection : { failed: sites }),
+    declared('input.replay_fixture', 'independent_from_retention_fixture',
+      replayFixture.independent_from_retention_fixture,
+      'every replay baseline and variant runs in its own CLI session, apart from the retention session',
+      { sessions: replay.map(row => row.raw) }),
+    measured('input.replay_fixture.frozen_admitted_registry', 'epoch', 9,
+      agreed(name => numberValue(dispatchRow(name).rootEpoch))),
+    measured('input.replay_fixture.frozen_admitted_registry', 'slot_id', 'emit',
+      agreed(name => dispatchRow(name).slotId)),
+    measured('input.replay_fixture.frozen_admitted_registry', 'incarnation', 4,
+      agreed(name => numberValue(frozenSlot(name).incarnation))),
+    measured('input.replay_fixture.frozen_admitted_registry', 'generation', 3,
+      agreed(name => numberValue(frozenSlot(name).generation))),
+    measured('input.replay_fixture', 'root_inputs', replayFixture.root_inputs, agreed(rootInputs)),
+    ...baselineNames.flatMap(name => {
+      const scope = `input.replay_fixture.baselines.${name}`;
+      const canonical = replayFixture.baselines[name];
+      const slot = frozenSlot(name);
+      const definition = requestsOf(name).find(request => request.operation === 'define');
+      return [
+        declared(scope, 'target', canonical.target,
+          'symbolic name for the selected ProgramValueId/DefinitionId',
+          { program_value_id: slot.programValueId, definition_id: slot.definitionId }),
+        measured(scope, 'source', canonical.source, definition?.source ?? null),
+        declared(scope, 'selected_artifact', canonical.selected_artifact,
+          'symbolic name for the selected artifact', { artifact_sha256: slot.artifactSha256 }),
+        measured(scope, 'captures', canonical.captures, slot.captures),
+        declared(scope, 'semantic_context', canonical.semantic_context,
+          'symbolic name for the selected semantic context', { semantic_context: slot.semanticContext }),
+        declared(scope, 'host_policy_inputs', canonical.host_policy_inputs,
+          'prose host policy; the authority grants and each recorded policy decision are evidence',
+          { grants: lane.authority.grants.filter(grant => grant.slotId === 'emit'),
+            decisions: exact[name].recorded.request_trace.map(row => [row.operation, row.policyAllowed]) }),
+        measured(scope, 'ordered_trace', canonical.ordered_trace, effectRows(name).map((row, index) => ({
+          request: `${row.effect}:${row.request}`, response: row.response,
+          accounting: `request-${index + 1}/protected-operation-${row.protectedOperations}` }))),
+      ];
+    }),
+    declared('input.replay_fixture', 'variant_protocol', replayFixture.variant_protocol,
+      'prose protocol; each run records its baseline and starts from a fresh session',
+      { runs: replay.map(row => [row.baseline, row.name]) }),
+    measured('input.replay_fixture', 'variants', replayFixture.variants,
+      replayFixture.variants.map(variant => variantHolds(variant) ? variant : { failed: variant.name })),
+    stageEntry([pinnedRefusal, rootRefusal, published, ...replay].map(row => row.stage),
+      { slot: 'retention-reflection-and-replay', command: 'retention-reflection-and-replay',
+        'operator-control': 'retention-reflection-and-replay' }, fixture.expected.stage),
+    measured('expected', 'outcome', fixture.expected.outcome,
+      phaseThree && baselineNames.every(name => matched(exact[name]))
+        ? 'last-pin-reclamation-and-exact-replay' : 'other'),
+    measured('expected', 'first_two_publications_refused_without_candidate_execution', true,
+      phaseOne && rootRefusal.outcome === 'retention-budget-refused' && rootRefusal.guest_requests === 0),
+    measured('expected', 'old_root_and_saved_program_usable_until_own_release', true, phaseTwo),
+    measured('expected', 'published_epoch_after_last_pin_release', 2, numberValue(published.epoch)),
+    measured('expected', 'published_slot_generation_after_last_pin_release', 2,
+      numberValue(published.generation)),
+    measured('expected', 'v1_retired_and_budget_reclaimed_after_new_commit', true,
+      phaseThree && rootRefusal.outcome === 'retention-budget-refused' && lane.authority.quota === 1,
+      'the quota-1 publication refused while v1 was owned succeeds after the last release and retires'
+      + ' v1\'s code span', { retired: published.retire_code_spans }),
+    measured('expected', 'reflection_all_phases', fixture.expected.reflection_all_phases,
+      sites.every(site => isDeepStrictEqual(site, generic)) ? fixture.expected.reflection_all_phases
+        : { failed: sites }),
+    measured('expected', 'hostile_replay_variants_all_refuse', true,
+      hostile.length > 0 && hostile.every(refused)),
+    measured('expected', 'exact_variant_replay_eligibility_is_behavioral_proof', false,
+      baselineNames.some(name => dispatchRow(name).policyInput?.version?.claim !== 'unverified'
+        || exact[name].reply_keys.some(key => ['proof', 'claim', 'evidence'].includes(key))),
+      'each selected version\'s recorded policy input carries no checked claim, and the replay reply'
+      + ' names no proof, claim or evidence; it reports a match only',
+      { reply_keys: Object.fromEntries(baselineNames.map(name => [name, exact[name].reply_keys])) }),
+    measured('expected', 'exact_variant_authorizes_real_host_effects', false,
+      baselineNames.some(name => exact[name].protected_operations !== 0
+        || exact[name].scripted_operations !== effectRows(name).length),
+      'with the effect grant revoked, the exact replay answers every recorded request from the'
+      + ' frozen script and performs no protected operation'),
+    measured('expected', 'trace_fields', fixture.expected.trace_fields, recordedFields),
+  ];
+  return entries;
+}
 
 // LSLOT-05: one proof-required slot selects the claim; every refused variant
 // changes exactly its named field of the exact record and is refused at the
