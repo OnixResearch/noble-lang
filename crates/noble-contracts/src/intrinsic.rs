@@ -3842,7 +3842,14 @@ fn contract_proof(
 ) -> Result<CheckedProof, Diagnostic> {
     advance!(*meter, meter.visit(0, obligation.span));
     let (_, literal) = prepare_checked_contract(contract, meter.limits)?;
-    if unary_true_rule_differs(contract)? {
+    if unary_shape_differs(contract) {
+        return Err(Diagnostic::new(
+            DiagnosticKind::Unsupported,
+            contract.contract_span,
+            "selected unary I64 rule takes exactly one I64 input and one I64 output",
+        ));
+    }
+    if atom(&contract.requires)? != "true" {
         return Err(reject(
             obligation.span,
             "selected unary I64 rule requires typed True precondition",
@@ -3907,14 +3914,13 @@ fn contract_proof(
         checker_revision: String::new(),
     })
 }
-/// Whether the contract is not a unary I64 rule with a `true` precondition;
-/// refuses a precondition that is not an atom.
-fn unary_true_rule_differs(contract: &ContractGoal) -> Result<bool, Diagnostic> {
-    Ok(contract.inputs.len() != 1
+/// Whether the contract's interface is outside the unary I64 rule: an
+/// unsupported goal, not a rejected proof term.
+fn unary_shape_differs(contract: &ContractGoal) -> bool {
+    contract.inputs.len() != 1
         || contract.outputs.len() != 1
         || contract.inputs[0].1 != "I64"
         || contract.outputs[0].1 != "I64"
-        || atom(&contract.requires)? != "true")
 }
 /// Whether `binder` is not a two-part binder whose sort is the atom `sort`;
 /// refuses a sort that is not an atom.

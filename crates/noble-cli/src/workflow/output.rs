@@ -99,6 +99,11 @@ pub(super) struct Report {
     pub(super) timeout_ms: u64,
     pub(super) emitted: Option<std::string::String>,
     pub(super) tools: super::encoding::Json,
+    /// The counterexample search record; present only when `--counterexample` ran.
+    pub(super) counterexample: Option<super::encoding::Json>,
+    /// VC-LOGIC-02: the precondition is the literal `false`. The report then
+    /// carries a vacuity record, and an accepted proof is `checked-vacuous`.
+    pub(super) is_vacuity_suspected: bool,
 }
 
 impl Report {
@@ -121,6 +126,8 @@ impl Report {
             diagnostics: std::vec::Vec::new(),
             timeout_ms: super::DEFAULT_TIMEOUT,
             emitted: None,
+            counterexample: None,
+            is_vacuity_suspected: false,
             tools: super::encoding::Json::Null,
         }
     }
@@ -131,7 +138,7 @@ impl Report {
     }
 
     pub(super) fn json(&self) -> super::encoding::Json {
-        super::encoding::object([
+        let mut json = super::encoding::object([
             ("schema", super::encoding::string("noble-mc1-report/v1")),
             ("command", super::encoding::string(self.command)),
             ("outcome", super::encoding::string(self.outcome.name())),
@@ -188,6 +195,34 @@ impl Report {
             ])),
             ("diagnostics", super::encoding::Json::Array(self.diagnostics.clone())),
             ("emitted", super::encoding::optional_string(self.emitted.as_deref())),
+        ]);
+        if let super::encoding::Json::Object(entries) = &mut json {
+            if let Some(record) = &self.counterexample {
+                entries.push(("counterexample", record.clone()));
+            }
+            if self.is_vacuity_suspected {
+                entries.push(("vacuity", self.vacuity()));
+            }
+        }
+        json
+    }
+
+    fn vacuity(&self) -> super::encoding::Json {
+        super::encoding::object([
+            ("status", super::encoding::string("suspected")),
+            ("reason", super::encoding::string("the precondition is the literal false")),
+            (
+                "category",
+                if matches!(self.outcome, Outcome::Proved) {
+                    super::encoding::string("checked-vacuous")
+                } else {
+                    super::encoding::Json::Null
+                },
+            ),
+            (
+                "explanation",
+                super::encoding::string("holds only because no input satisfies the precondition (VC-LOGIC-02); never correctness for unconstrained inputs"),
+            ),
         ])
     }
 }
