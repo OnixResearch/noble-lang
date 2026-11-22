@@ -1,0 +1,671 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "implicit-proof-arguments-impl-cases",
+  "amendments": [
+    {
+      "date": "2026-11-22",
+      "case": "IMPL-CASE-12",
+      "changed": "the design's `(app (use T) (infer))` stays as variant `app` and is refused as app under-application; the capture situation is exercised by variant `apply`, `(apply (apply (use t) (infer)) (infer))` against `(Pi (w I64) (Eq I64 w w))`, refused as `underconstrained` for `x`",
+      "reason": "Under the selected A2 rule every non-Type0 position of an `app` spine is written, so the design input is refused before any name comparison (design implementation notes). The `apply` placeholder form reaches the situation the case is about: `A` is fixed by the goal while nothing fixes `x`, and the goal's bound `w` is never matched to it."
+    },
+    {
+      "date": "2026-11-22",
+      "case": "IMPL-CASE-13",
+      "changed": "the wrong-order term is refused at the application whose binder sort names the rebased code (`apply value has wrong code`), not by a later claim comparison; P2 is taken in a context with three Type0 binders so that an off-by-two level names another code",
+      "reason": "With P2's ground solution `I64` a rebasing error has no observable effect. In the context `C, D, E, x, z` the correct solution is `C` and the off-by-two one `E`; the explicit checker refuses `z : (Pair (List C) I64)` for the binder expecting `(Pair (List E) I64)` before it would compare claims."
+    },
+    {
+      "date": "2026-11-22",
+      "case": "IMPL-CASE-14",
+      "changed": "the stale dependency is a new module version `logic@2`, whose head identity `logic@2/poly-refl` differs from the recorded `logic@1/poly-refl`; the replayed expansion is refused by the explicit checker and re-elaboration is refused as underconstrained, instead of `validate_dependency_revision` reporting `intrinsic-stale-proof`",
+      "reason": "`validate_dependency_revision` compares the model and checker revisions a dependency was accepted under; a module version is part of the head identity, not a revision. Supplying both versions keeps the import of `logic@1` bound to `logic@1`."
+    },
+    {
+      "date": "2026-11-22",
+      "case": "IMPL-CASE-16",
+      "changed": "an editor hole spelled `?NAME` is observed at a premise, a code and a value position; each is refused where it stands, never as `(infer)` and never accepted; the goal view's `incomplete` chip is not observed",
+      "reason": "Proof holes have no `.noble` transport (design: Context): the lexer reads `?h` as an atom, so the refusal comes from the position's own rule. `incomplete` is a goal-view state (proof-automation-diagnostics), not a `verify-module` outcome."
+    },
+    {
+      "date": "2026-11-22",
+      "case": "IMPL-CASE-18",
+      "changed": "the 200-binder head is kept as variant `nested-200` and is refused by the frontend depth limit; the budget variants use the deepest head the elaborator admits (20 Type0 and 20 value binders under 20 intros) with `--normalization-work` and `--substitution-work` one below the elaboration's own need, one below the whole request's need, and at that need; the `work` ceiling is not selectable through the CLI",
+      "reason": "Limits.depth is 64, and each inferred argument adds one `apply` level to the explicit term, so 24 pairs already exceed the elaboration depth bound. The shared `work` ceiling is the request limit (2,000,000); `verify-module` exposes only the normalization and substitution budgets."
+    },
+    {
+      "date": "2026-11-22",
+      "case": "IMPL-CASE-19",
+      "changed": "the constraint cap is observed with one Type0 binder constrained at 20 spans (16 listed, 4 counted) and the candidate cap with 50 local premises (8 listed, 42 counted); the byte cap with a clash between two 2.8 KiB codes",
+      "reason": "A spine supplies one argument per telescope binder and the elaboration depth bound admits about 20, so 1,000 constraint spans on one refusal are not reachable within the request limits; the caps and their explicit counts are what the case observes."
+    },
+    {
+      "date": "2026-11-22",
+      "case": "IMPL-CASE-20",
+      "changed": "\"zero elaborator invocations\" is observed as identical run, quote and compose reports, identical emitted Wasm and identical executable identity across the abbreviated, explicit and proof-free module forms",
+      "reason": "No report counts elaborator invocations. Elaboration has one production call site, module registration (`register/logical.rs`), which these frames do not reach; the observation shows the frames are independent of the proof form."
+    }
+  ],
+  "cases": [
+    {
+      "id": "IMPL-CASE-01",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "target": "p1",
+        "modules": ["exporter", "import-1"],
+        "control": "p1-explicit",
+        "design": "P1: `(intro (x (List I64)) (app (use alias.poly-refl) x))` against `(Pi (x (List I64)) (Eq (List I64) x x))`, with `logic@1` exporting `poly-refl` imported as `alias`"
+      },
+      "expected": {
+        "stage": "independent-recheck",
+        "outcome": "proved",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "explicit": "(intro (x (List I64)) (apply (apply (use alias.poly-refl) (List I64)) x))",
+        "inserted": [{ "binder": "A", "position": 1, "head": "logic@1/poly-refl", "solution": "(List I64)" }],
+        "explicit_control": "the hand-written explicit term proves the same claim"
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-02",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "target": "p1-context",
+        "design": "P1 with a context code: `(app (use poly-refl) y)` under `(intro (B Type0) (intro (y (List B)) ...))`"
+      },
+      "expected": {
+        "stage": "independent-recheck",
+        "outcome": "proved",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "explicit": "(intro (B Type0) (intro (y (List B)) (apply (apply (use poly-refl) (List B)) y)))",
+        "inserted": [{ "binder": "A", "position": 1, "head": "logic@1/poly-refl", "solution": "(List B)" }]
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-03",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "target": "p2",
+        "control": "p2-explicit",
+        "design": "P2: `(app (use base) x (refl x) z)` with `base : (Pi (x I64) (Pi (h (Eq I64 x x)) (Pi (A Type0) (Pi (y (Pair (List A) I64)) ...))))`, so `A` is solved after the value and premise binders are removed"
+      },
+      "expected": {
+        "stage": "independent-recheck",
+        "outcome": "proved",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "explicit": "(intro (x I64) (intro (z (Pair (List I64) I64)) (apply (apply (apply (apply (use base) x) (refl x)) I64) z)))",
+        "inserted": [{ "binder": "A", "position": 3, "head": "logic@1/base", "solution": "I64" }],
+        "explicit_control": "the hand-written explicit term proves the same claim"
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-04",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "target": "p3",
+        "control": "p3-explicit",
+        "design": "P3: the reviewed `exec-literal` rule with `(exec-literal (infer))` in the proof of `selected@1`'s `law` for `def selected [ 1 + ]`"
+      },
+      "expected": {
+        "stage": "independent-recheck",
+        "outcome": "proved",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "inserted": [{ "binder": "exec-literal", "position": 1, "head": "selected@1/law", "solution": "1" }],
+        "explicit_includes": "(pc-exact (exec-literal 1))",
+        "explicit_control": "the hand-written explicit proof checks the same claim"
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-05",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "design": "`(app (use const-refl) x)` with `const-refl : (Pi (A Type0) (Pi (B Type0) (Pi (x A) (Eq A x x))))`: no constraint mentions `B`"
+      },
+      "expected": {
+        "stage": "elaboration",
+        "outcome": "error",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "variants": {
+          "underconstrained": {
+            "outcome": "error",
+            "code": "intrinsic-contract-invalid",
+            "category": "rejected-source",
+            "message_includes": [
+              "Check: underconstrained: binder `B` (position 2) of logic@1/const-refl has no constraint",
+              "none is chosen"
+            ]
+          }
+        }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-06",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "design": "a premise placeholder `(app (use twice-refl) x (infer))` with two local premises `h1`, `h2 : (Eq I64 x x)`, and the same with only `h1`"
+      },
+      "expected": {
+        "stage": "elaboration",
+        "outcome": "unsupported",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "candidate_rows": "each candidate names its intro binder's span in the submitted source; none is chosen",
+        "variants": {
+          "two": {
+            "outcome": "unsupported",
+            "code": "intrinsic-source-unsupported",
+            "category": "outside-profile",
+            "message_includes": [
+              "Check: unsupported: premise inference for binder `h` (position 2) of logic@1/twice-refl",
+              "write the explicit witness (witness identity is never chosen)"
+            ]
+          },
+          "one": {
+            "outcome": "unsupported",
+            "code": "intrinsic-source-unsupported",
+            "category": "outside-profile",
+            "message_includes": [
+              "Check: unsupported: premise inference for binder `h` (position 2) of logic@1/twice-refl",
+              "write the explicit witness (witness identity is never chosen)"
+            ]
+          }
+        }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-07",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "design": "`import lawsA@1 as a` and `import lawsB@1 as b`, both exporting `assoc`: `(app (use a.assoc) x)` in both import orders, and the unqualified `(use assoc)`"
+      },
+      "expected": {
+        "stage": "independent-recheck",
+        "outcome": "proved",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "explicit": "(intro (x I64) (apply (apply (use a.assoc) I64) x))",
+        "inserted": [{ "binder": "A", "position": 1, "head": "lawsA@1/assoc", "solution": "I64" }],
+        "import_order": "swapping the import order changes neither the explicit term nor the record",
+        "variants": {
+          "unqualified": {
+            "outcome": "error",
+            "code": "intrinsic-resolve-invalid",
+            "category": "rejected-source",
+            "message_includes": ["Resolve: unknown, forward or cyclic proof use"]
+          }
+        }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-08",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "design": "`(apply (apply (apply (use t) (infer)) (infer)) w)` with `t : (Pi (A Type0) (Pi (x A) (Pi (y A) (Eq A y y))))`: the inner placeholders are in head position, where no goal constraint reaches `x`"
+      },
+      "expected": {
+        "stage": "elaboration",
+        "outcome": "error",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "variants": {
+          "meta-only": {
+            "outcome": "error",
+            "code": "intrinsic-contract-invalid",
+            "category": "rejected-source",
+            "message_includes": [
+              "Check: underconstrained: binder `x` (position 2) of logic@1/t has no constraint",
+              "none is chosen"
+            ]
+          }
+        }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-09",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "design": "P2 with `w : Bool` in place of `z`"
+      },
+      "expected": {
+        "stage": "elaboration",
+        "outcome": "error",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "variants": {
+          "wrong-value": {
+            "outcome": "error",
+            "code": "intrinsic-contract-invalid",
+            "category": "rejected-source",
+            "message_includes": [
+              "Check: invalid-constraint: code (Pair (List ?0) I64) does not match code Bool",
+              "checking the argument for binder `y` (position 4) of logic@1/base",
+              "?0 is the argument for binder `A` (position 3) of logic@1/base, constrained at"
+            ]
+          }
+        },
+        "origin_span": "the listed constraint span is the clashing argument `w`"
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-10",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "design": "a producer submits the forged expansion `(apply (apply (use poly-refl) I64) x)` with `x : (List I64)`; an elaboration record is never an input"
+      },
+      "expected": {
+        "stage": "acceptance",
+        "outcome": "error",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "variants": {
+          "forged-argument": {
+            "outcome": "error",
+            "code": "intrinsic-proof-refused",
+            "category": "rejected-term",
+            "message_includes": ["Acceptance: apply value has wrong code"]
+          }
+        }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-11",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "design": "an expansion inserting `(Resource test.counter)`, `(Program (Stack I64) (Stack I64))` or `Syntax` for `A`"
+      },
+      "expected": {
+        "stage": "acceptance",
+        "outcome": "error",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "variants": {
+          "resource": {
+            "outcome": "error",
+            "code": "intrinsic-proof-refused",
+            "category": "rejected-term",
+            "message_includes": ["Acceptance: not a predicative Type0 code"]
+          },
+          "program": {
+            "outcome": "error",
+            "code": "intrinsic-proof-refused",
+            "category": "rejected-term",
+            "message_includes": ["Acceptance: not a predicative Type0 code"]
+          },
+          "syntax": {
+            "outcome": "error",
+            "code": "intrinsic-proof-refused",
+            "category": "rejected-term",
+            "message_includes": ["Acceptance: not a bound Type0 code"]
+          }
+        }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-12",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "design": "`t : (Pi (A Type0) (Pi (x A) (Pi (y A) (Eq A y y))))` checked against `(Pi (w I64) (Eq I64 w w))` through `(apply (apply (use t) (infer)) (infer))` (amended) and the design's `(app (use t) (infer))`"
+      },
+      "expected": {
+        "stage": "elaboration",
+        "outcome": "error",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "variants": {
+          "apply": {
+            "outcome": "error",
+            "code": "intrinsic-contract-invalid",
+            "category": "rejected-source",
+            "message_includes": ["Check: underconstrained: binder `x` (position 2) of logic@1/t has no constraint"]
+          },
+          "app": {
+            "outcome": "unsupported",
+            "code": "intrinsic-source-unsupported",
+            "category": "outside-profile",
+            "message_includes": ["Check: unsupported: app under-application: no argument for binder `y` (position 3) of logic@1/t"]
+          }
+        }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-13",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "design": "P2 in the context `C, D, E : Type0`, `x : I64`, `z : (Pair (List C) I64)`: the abbreviated form, and the explicit term an elaborator that substituted before removing the value and premise binders would produce (`A := E`, two levels off)"
+      },
+      "expected": {
+        "stage": "independent-recheck",
+        "outcome": "proved",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "explicit": "(intro (C Type0) (intro (D Type0) (intro (E Type0) (intro (x I64) (intro (z (Pair (List C) I64)) (apply (apply (apply (apply (use base) x) (refl x)) C) z))))))",
+        "inserted": [{ "binder": "A", "position": 3, "head": "logic@1/base", "solution": "C" }],
+        "variants": {
+          "off-by-two": {
+            "outcome": "error",
+            "code": "intrinsic-proof-refused",
+            "category": "rejected-term",
+            "message_includes": ["Acceptance: apply value has wrong code"]
+          }
+        }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-14",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02", "VC-TOOL-04"],
+      "input": {
+        "harness": "verify-module",
+        "design": "P1 elaborated against `logic@1`; `logic@2` gives `poly-refl` an extra Type0 binder; the stored explicit expansion and the abbreviated source are replayed against `logic@2`; both versions are supplied and `logic@1` is imported"
+      },
+      "expected": {
+        "stage": "acceptance",
+        "outcome": "error",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "recorded_head": "logic@1/poly-refl",
+        "both_versions": "the import of logic@1 keeps the logic@1 expansion and record byte-for-byte",
+        "variants": {
+          "replay": {
+            "outcome": "error",
+            "code": "intrinsic-proof-refused",
+            "category": "rejected-term",
+            "message_includes": ["Acceptance: not a bound Type0 code"]
+          },
+          "reelaborate": {
+            "outcome": "error",
+            "code": "intrinsic-contract-invalid",
+            "category": "rejected-source",
+            "message_includes": ["Check: underconstrained: binder `B` (position 2) of logic@2/poly-refl has no constraint"]
+          }
+        }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-15",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "design": "P1 with the goal changed to `(Pi (x (List Bool)) ...)`: the stored expansion `(List I64)` reused, then the abbreviated source re-elaborated"
+      },
+      "expected": {
+        "stage": "acceptance",
+        "outcome": "error",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "explicit": "(intro (x (List Bool)) (apply (apply (use poly-refl) (List Bool)) x))",
+        "inserted": [{ "binder": "A", "position": 1, "head": "logic@1/poly-refl", "solution": "(List Bool)" }],
+        "variants": {
+          "stored": {
+            "outcome": "error",
+            "code": "intrinsic-proof-refused",
+            "category": "rejected-term",
+            "message_includes": ["Acceptance: apply value has wrong code"]
+          }
+        }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-16",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["DX-HOLE-01", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "design": "an editor hole spelled `?h` at a premise position, `?A` at a code position and `?x` at a value position of opted-in proofs"
+      },
+      "expected": {
+        "stage": "elaboration",
+        "outcome": "error",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "variants": {
+          "premise": {
+            "outcome": "error",
+            "code": "intrinsic-contract-invalid",
+            "category": "rejected-source",
+            "message_includes": ["Check: proof term has no inferable proposition"]
+          },
+          "code": {
+            "outcome": "error",
+            "code": "intrinsic-proof-refused",
+            "category": "rejected-term",
+            "message_includes": ["Acceptance: invalid logical identifier"]
+          },
+          "value": {
+            "outcome": "error",
+            "code": "intrinsic-contract-invalid",
+            "category": "rejected-source",
+            "message_includes": ["Check: apply value is unbound"]
+          }
+        }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-17",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-03", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "design": "P1, P2 and P3 each verified 100 times in separate processes, alternating two dependency-module orders around an unrelated module"
+      },
+      "expected": {
+        "stage": "independent-recheck",
+        "outcome": "proved",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "distinct_records": 1,
+        "record": "the whole `elaboration` object (explicit term, inserted rows, source map, digests, revisions, work) is byte-identical across runs"
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-18",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-05", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "design": "a head with 200 nested Type0 binders; a head with 20 Type0 and 20 value binders used by an abbreviated spine, with `--normalization-work` and `--substitution-work` one below the elaboration's need, one below the request's need and at it (needs read from the accepted run)"
+      },
+      "expected": {
+        "stage": "elaboration",
+        "outcome": "error",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "at_need": "proved",
+        "variants": {
+          "nested-200": {
+            "outcome": "error",
+            "code": "intrinsic-source-exhausted",
+            "category": "checker-exhausted",
+            "message_includes": ["Parse: frontend depth limit exceeded"]
+          },
+          "normalization-elaboration": {
+            "outcome": "error",
+            "code": "intrinsic-source-exhausted",
+            "category": "checker-exhausted",
+            "message_includes": ["Check: exhausted: elaboration unification step exceeded the normalization budget"]
+          },
+          "normalization-request": {
+            "outcome": "error",
+            "code": "normalization-work-exhausted",
+            "category": "checker-exhausted",
+            "message_includes": ["normalization work exhausted"]
+          },
+          "substitution-elaboration": {
+            "outcome": "error",
+            "code": "intrinsic-source-exhausted",
+            "category": "checker-exhausted",
+            "message_includes": ["Check: exhausted: elaboration substitution step exceeded the substitution budget"]
+          },
+          "substitution-request": {
+            "outcome": "error",
+            "code": "substitution-work-exhausted",
+            "category": "checker-exhausted",
+            "message_includes": ["substitution work exhausted"]
+          }
+        }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-19",
+      "profile": "Intrinsic-Proofs-Draft",
+      "kind": "admission",
+      "requirements": ["VC-INTRINSIC-05", "VC-TOOL-02"],
+      "input": {
+        "harness": "verify-module",
+        "design": "a premise placeholder with 50 local candidate premises; one Type0 binder constrained at 20 spans before a clash; a clash between `(Pair W I64)` and `(Sum W I64)` for a 2.8 KiB code `W`"
+      },
+      "expected": {
+        "stage": "elaboration",
+        "outcome": "error",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "listed_candidates": 8,
+        "listed_constraint_spans": 16,
+        "term_bytes": 1024,
+        "message_bytes": 16384,
+        "variants": {
+          "candidates": {
+            "outcome": "unsupported",
+            "code": "intrinsic-source-unsupported",
+            "category": "outside-profile",
+            "message_includes": ["premise inference for binder `h` (position 2) of logic@1/base", "; and 42 more candidates"]
+          },
+          "constraints": {
+            "outcome": "error",
+            "code": "intrinsic-contract-invalid",
+            "category": "rejected-source",
+            "message_includes": [
+              "Check: invalid-constraint: code I64 does not match code Bool",
+              "?0 is the argument for binder `A` (position 1) of logic@1/many, constrained at",
+              "; and 4 more constraint spans"
+            ]
+          },
+          "wide-clash": {
+            "outcome": "error",
+            "code": "intrinsic-contract-invalid",
+            "category": "rejected-source",
+            "message_includes": ["Check: invalid-constraint: code (Pair (Pair", " more bytes]", "of logic@1/t2"]
+          }
+        }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "IMPL-CASE-20",
+      "profile": "Declared-Modules-v1",
+      "kind": "runtime",
+      "requirements": ["VC-INTRINSIC-04"],
+      "input": {
+        "harness": "session --framed --declared-modules --opt off",
+        "design": "`selected@1` (`export selected def selected [ 1 + ]` with `law`) declared with the abbreviated proof, the explicit proof and no proof, then `41 s.selected`, `[ s.selected ] reflect` and `41 [ s.selected ] [ 1 + ] compose run`"
+      },
+      "expected": {
+        "stage": "wasm",
+        "outcome": "normal",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "stacks": [
+          [{ "handle": null, "type": "I64", "value": "42" }],
+          [
+            { "handle": null, "type": "I64", "value": "42" },
+            { "handle": 19, "type": "Syntax", "recipe": [{ "invoke": "definition:1" }], "witnesses": [{ "node": 0, "stack_in": "[I64]", "stack_out": "[I64]", "effects": [] }] }
+          ],
+          [
+            { "handle": null, "type": "I64", "value": "42" },
+            { "handle": 19, "type": "Syntax", "recipe": [{ "invoke": "definition:1" }], "witnesses": [{ "node": 0, "stack_in": "[I64]", "stack_out": "[I64]", "effects": [] }] },
+            { "handle": null, "type": "I64", "value": "43" }
+          ]
+        ],
+        "identical": "run, quote and compose reports, emitted Wasm and the definition identity and recipe are identical for the three proof forms; the link reports' proof evidence differs only in the module source digest"
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    }
+  ]
+}

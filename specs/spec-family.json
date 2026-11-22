@@ -129,7 +129,8 @@
     "conformance/effect-protocol-cases.json",
     "conformance/ownership-cases.json",
     "conformance/artifact-correspondence-cases.json",
-    "conformance/guard-cases.json"
+    "conformance/guard-cases.json",
+    "conformance/implicit-cases.json"
   ],
   "lifecycle": ".cairn"
 }

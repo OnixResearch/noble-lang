@@ -1166,7 +1166,8 @@
       ],
       "scenarios": [
         "CALC-10",
-        "DX-02"
+        "DX-02",
+        "IMPL-CASE-16"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -6452,7 +6453,23 @@
         "CONTRACT-20",
         "CONTRACT-23",
         "CONTRACT-24",
-        "CONTRACT-26"
+        "CONTRACT-26",
+        "IMPL-CASE-01",
+        "IMPL-CASE-02",
+        "IMPL-CASE-03",
+        "IMPL-CASE-04",
+        "IMPL-CASE-05",
+        "IMPL-CASE-06",
+        "IMPL-CASE-07",
+        "IMPL-CASE-08",
+        "IMPL-CASE-09",
+        "IMPL-CASE-10",
+        "IMPL-CASE-11",
+        "IMPL-CASE-12",
+        "IMPL-CASE-13",
+        "IMPL-CASE-14",
+        "IMPL-CASE-15",
+        "IMPL-CASE-17"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -6468,7 +6485,8 @@
       "scenarios": [
         "CONTRACT-22",
         "CONTRACT-23",
-        "CONTRACT-26"
+        "CONTRACT-26",
+        "IMPL-CASE-20"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -6485,7 +6503,9 @@
         "CONTRACT-19",
         "CONTRACT-20",
         "CONTRACT-21",
-        "CONTRACT-26"
+        "CONTRACT-26",
+        "IMPL-CASE-18",
+        "IMPL-CASE-19"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -6847,7 +6867,26 @@
         "review"
       ],
       "scenarios": [
-        "CONTRACT-09"
+        "CONTRACT-09",
+        "IMPL-CASE-01",
+        "IMPL-CASE-02",
+        "IMPL-CASE-03",
+        "IMPL-CASE-04",
+        "IMPL-CASE-05",
+        "IMPL-CASE-06",
+        "IMPL-CASE-07",
+        "IMPL-CASE-08",
+        "IMPL-CASE-09",
+        "IMPL-CASE-10",
+        "IMPL-CASE-11",
+        "IMPL-CASE-12",
+        "IMPL-CASE-13",
+        "IMPL-CASE-14",
+        "IMPL-CASE-15",
+        "IMPL-CASE-16",
+        "IMPL-CASE-17",
+        "IMPL-CASE-18",
+        "IMPL-CASE-19"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -6879,7 +6918,8 @@
         "CONTRACT-08",
         "CONTRACT-09",
         "CONTRACT-10",
-        "CONTRACT-12"
+        "CONTRACT-12",
+        "IMPL-CASE-14"
       ],
       "test_design": "scenario-described-not-executed"
     },
