@@ -156,10 +156,13 @@ export const inheritedOpaqueBodies = {
 // formatting layout is already an abstracted, observation-only boundary. Each
 // is a modelled boundary, never an extracted body, and its exact annotated item
 // is pinned in `reviewedAnnotations` below.
-// Fourteen bodies of the untrusted implicit-argument elaborator
-// (`intrinsic::elaborate`) are opaque because the pinned Aeneas refuses them:
-// nested borrows through the elaborator state, `(&Form, _)` worklists, and a
-// borrow-joining `match`. Acceptance consumes only the explicit term the
+// Thirty-two bodies of the untrusted implicit-argument elaborator
+// (`intrinsic::elaborate`) are opaque. The pinned Aeneas refuses fourteen of
+// them: nested borrows through the elaborator state, `(&Form, _)` worklists,
+// and a borrow-joining `match`. The other eighteen build diagnostic or
+// rendering text with `format!`, whose arguments the pinned Aeneas erases, so a
+// transparent body would need the `alloc::fmt::format` external that the
+// FORMAT-ERASURE check refuses. Acceptance consumes only the explicit term the
 // elaborator produces, after the extracted checker and the pinned Lean
 // consumer recheck it, so each is modelled as uninterpreted (any result is
 // possible) and no extracted claim depends on what it returns.
@@ -168,19 +171,37 @@ export const reviewedOpaque = {
     'noble_contracts::intrinsic::debug_form_kind',
     'noble_contracts::intrinsic::debug_proof_dependency',
     'noble_contracts::intrinsic::elaborate::abbreviation_step',
+    'noble_contracts::intrinsic::elaborate::contract_rule',
+    'noble_contracts::intrinsic::elaborate::describe_prop',
+    'noble_contracts::intrinsic::elaborate::describe_ty',
+    'noble_contracts::intrinsic::elaborate::describe_val',
     'noble_contracts::intrinsic::elaborate::find_infer_span',
+    'noble_contracts::intrinsic::elaborate::infer_diagnostic',
     'noble_contracts::intrinsic::elaborate::infer_span_step',
     'noble_contracts::intrinsic::elaborate::pi_names',
     'noble_contracts::intrinsic::elaborate::push_positions',
+    'noble_contracts::intrinsic::elaborate::rewrite_exec_literal',
     'noble_contracts::intrinsic::elaborate::scan_abbreviation',
     'noble_contracts::intrinsic::elaborate::scan_positions',
+    'noble_contracts::intrinsic::elaborate::stage_exhausted',
+    'noble_contracts::intrinsic::elaborate::stage_obligation',
     "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::app",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::bind_code",
     "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::binder_snapshot",
     "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::check",
     "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::finish_out",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::ground_step",
     "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::premise_refusal",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::render_ty",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::scope_ty",
     "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::subst",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::underconstrained",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::unify_prop",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::unify_sort",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::unify_ty",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::unify_val",
     "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::verify_ground",
+    'noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Head}::binder',
     'noble_contracts::source::chunks::{noble_contracts::source::chunks::MonotonicClock}::now_ns',
     "noble_contracts::source::chunks::{noble_contracts::source::chunks::ObserverHandle<'_0>}::observe",
     "noble_contracts::source::chunks::{noble_contracts::source::chunks::RankerHandle<'_0>}::model_identity",
@@ -242,10 +263,38 @@ export const reviewedAnnotations = {
       lines: 10, sha256: "7a87adf9158b5cb0bacf72b3d3ccde4a5d9172c704c01d11478422a24617eb92" },
   ],
   "crates/noble-contracts/src/intrinsic/elaborate.rs": [
+    { annotation: "opaque", item: "fn stage_obligation<'m>(",
+      lines: 78, sha256: "da1544ffb88269320504881f6c0f1df9f9843961dd7129ad643c023b16002385" },
+    { annotation: "opaque", item: "fn contract_rule(",
+      lines: 47, sha256: "afd5ecc0ced5388ecb3eb3a3d6e73ae8d2d9e6169772265019e808df0bb5cc65" },
+    { annotation: "opaque", item: "fn rewrite_exec_literal(",
+      lines: 63, sha256: "d2c5756015b76d0f36595b5cf5208892975639c0fe98cafd2050fa86bee1bb28" },
+    { annotation: "opaque", item: "fn binder(&self) -> (String, u32) {",
+      lines: 13, sha256: "6afcc5d757b721f58de37ccbddcadc4831f51734a332bb66d3f9cbd503e73efb" },
     { annotation: "opaque", item: "fn verify_ground(&self) -> Result<(), Diagnostic> {",
       lines: 9, sha256: "1d19b9e9a44db2dc1d68d11b2ae1c78b99a508e4b03c5e1f26808217708e86a4" },
+    { annotation: "opaque", item: "fn ground_step(&self, index: usize) -> Result<(), Diagnostic> {",
+      lines: 31, sha256: "f1afb228288389ca39408d47e0f7a7d24f91ffcbe9555fb657cbad7d8f851243" },
+    { annotation: "opaque", item: "fn underconstrained(&self, index: usize) -> Diagnostic {",
+      lines: 15, sha256: "c0ecf2b1c4f065476efd7b2ed7b1dea789036507fb418216c6e1033c7c1cf780" },
     { annotation: "opaque", item: "fn binder_snapshot(&self) -> (Vec<String>, Vec<Sort>) {",
       lines: 21, sha256: "80134a3e45b71a0b4b6d5273002fb9f1303776bc3ba172464e17a3eac18c5919" },
+    { annotation: "opaque", item: "fn stage_exhausted(span: Span, stage: &'static str) -> Diagnostic {",
+      lines: 7, sha256: "89d3d332bd1ce9d53e97be8686181df32be6e23e66ad1191dfc4b6aa5f827ddd" },
+    { annotation: "opaque", item: "fn infer_diagnostic(",
+      lines: 8, sha256: "189e3fa40acbe9cf86a75f758bcfc3d90c18a2140e5e52d58c8b2b8529fd9c48" },
+    { annotation: "opaque", item: "fn unify_ty(&mut self, left: &Ty, right: &Ty, span: Span) -> Result<(), Diagnostic> {",
+      lines: 40, sha256: "c60dde13c7c678e7d28d9644eacf2c70ba94cf11f23ab2b9d685524af7d09ab4" },
+    { annotation: "opaque", item: "fn unify_val(&mut self, left: Val, right: Val, span: Span) -> Result<(), Diagnostic> {",
+      lines: 31, sha256: "ae07c19d454d0cdee85a90e83df7ff2f769abe93ba7ea3a3c13dc6a001846282" },
+    { annotation: "opaque", item: "fn unify_sort(",
+      lines: 22, sha256: "8f6064f91de596197a923eed31adb5f55f19fefa548eeb311cb4a0f16c15d99c" },
+    { annotation: "opaque", item: "fn unify_prop(",
+      lines: 40, sha256: "c9259936646393e71e5bed6e6a31faf6c1d580c77ada937b608ac7273d8d5a78" },
+    { annotation: "opaque", item: "fn bind_code(&mut self, meta: u32, solution: Ty, span: Span) -> Result<(), Diagnostic> {",
+      lines: 18, sha256: "fe895bc1ec6fb671f26361eb3a1aad338bab6e506716fce0ed89b8bdf1653db3" },
+    { annotation: "opaque", item: "fn scope_ty(&self, ty: &Ty, depth: u32, span: Span) -> Result<(), Diagnostic> {",
+      lines: 19, sha256: "c4daae09943ace97198b74397b62ac64206b5d43aa5a532d88d86d6bb5badaab" },
     { annotation: "opaque", item: "fn check(&mut self, form: &Form, goal: &PropTerm, depth: u32) -> Result<Out, Diagnostic> {",
       lines: 14, sha256: "5b121bcc5fe0aa79bb24ffc804b4db8e0b746006a68d48e67c36e621d7877c41" },
     { annotation: "opaque", item: "fn subst(",
@@ -256,6 +305,8 @@ export const reviewedAnnotations = {
       lines: 35, sha256: "603a86041bd9b8e3a734c068b0839727ad3e9401141b0211434b249123875f82" },
     { annotation: "opaque", item: "fn finish_out(&self, out: &Out, depth: u32) -> Result<Form, Diagnostic> {",
       lines: 53, sha256: "0dd0ae79d9f7a0a5defebbb711d9b69c7762f4dddd5506a519adf4893ddbe009" },
+    { annotation: "opaque", item: "fn render_ty(&self, ty: &Ty, span: Span, names: &[String]) -> Result<String, Diagnostic> {",
+      lines: 21, sha256: "a783d443d11cff8214baf684fe0ef1d1062abf547305f734ff2a2b93afc1fc16" },
     { annotation: "opaque", item: "fn scan_abbreviation(form: &Form, limits: Limits) -> Result<Abbreviation, Diagnostic> {",
       lines: 26, sha256: "7d7ddd6890c6baa37b492a4ebd8341ad3e8839659b366652494a21cb0978780a" },
     { annotation: "opaque", item: "fn abbreviation_step<'a>(",
@@ -270,6 +321,12 @@ export const reviewedAnnotations = {
       lines: 19, sha256: "6ef1f32211336cb5c7be06182f5c2574a4c49a09cbd72d061cb091d9d032640c" },
     { annotation: "opaque", item: "fn pi_names(form: &Form) -> Vec<String> {",
       lines: 35, sha256: "1e2520028bed914fe8d4e89f8d1e0cebedf29dab5224179cff1d9e606367bbdc" },
+    { annotation: "opaque", item: "fn describe_ty(ty: &Ty) -> String {",
+      lines: 13, sha256: "ac15cd72edc1c6c3e15f50af660b12793e7360da702922dfb2e8757a0e07ce3e" },
+    { annotation: "opaque", item: "fn describe_val(value: Val) -> String {",
+      lines: 6, sha256: "627ebf0ac7e73f63001b22a612ba551fdf1ba8c9af11f6bbfdd1693645b2cc4d" },
+    { annotation: "opaque", item: "fn describe_prop(prop: &PropTerm) -> String {",
+      lines: 17, sha256: "75a17340e756e1d76a3e126d9a7ed8cb543a96efa20d9ea4c1489f083f3d419c" },
   ],
   "crates/noble-contracts/src/lib.rs": [
     { annotation: "variants_suffix(\"Expr\")", item: "pub enum ExprKind {",

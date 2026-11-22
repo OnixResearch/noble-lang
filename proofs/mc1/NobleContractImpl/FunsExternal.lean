@@ -392,4 +392,91 @@ opaque intrinsic.elaborate.push_positions :
 /-- [noble_contracts::intrinsic::elaborate::pi_names] -/
 opaque intrinsic.elaborate.pi_names : intrinsic.Form → Result (alloc.vec.Vec String)
 
+/-! Eighteen more bodies of the elaborator build diagnostic or rendering text
+with `format!`. The pinned Aeneas represents `core::fmt::Arguments` as `Unit`,
+so a transparent body would call an `alloc::fmt::format` external that cannot
+see its arguments; the M4 gate refuses that external (FORMAT-ERASURE). They are
+modelled the same way, as `opaque` constants, for the same reason: the
+elaborator is an untrusted producer whose term is rechecked. -/
+
+/-- [noble_contracts::intrinsic::elaborate::stage_obligation] -/
+opaque intrinsic.elaborate.stage_obligation :
+    Str → Std.U32 → Slice intrinsic.ProofObligation → Slice intrinsic.ProofDependency →
+      Std.Usize → Limits → intrinsic.IntrinsicMeter →
+      Result (core.result.Result (intrinsic.IntrinsicMeter ×
+        (Option (intrinsic.ProofObligation × intrinsic.elaborate.ElaborationRecord))) Diagnostic)
+
+/-- [noble_contracts::intrinsic::elaborate::contract_rule] -/
+opaque intrinsic.elaborate.contract_rule :
+    intrinsic.ProofObligation → intrinsic.ContractGoal → Limits →
+      Result (core.result.Result (intrinsic.Form × intrinsic.elaborate.ElaborationRecord) Diagnostic)
+
+/-- [noble_contracts::intrinsic::elaborate::rewrite_exec_literal] -/
+opaque intrinsic.elaborate.rewrite_exec_literal :
+    intrinsic.Form → Std.I64 → Span → Str → alloc.vec.Vec intrinsic.elaborate.InsertedArgument →
+      Limits → Std.U32 →
+      Result ((core.result.Result intrinsic.Form Diagnostic) ×
+        (alloc.vec.Vec intrinsic.elaborate.InsertedArgument))
+
+/-- [noble_contracts::intrinsic::elaborate::{Head}::binder] -/
+opaque intrinsic.elaborate.Head.binder : intrinsic.elaborate.Head → Result (String × Std.U32)
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::ground_step] -/
+opaque intrinsic.elaborate.Elaborator.ground_step :
+    intrinsic.elaborate.Elaborator → Std.Usize → Result (core.result.Result Unit Diagnostic)
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::underconstrained] -/
+opaque intrinsic.elaborate.Elaborator.underconstrained :
+    intrinsic.elaborate.Elaborator → Std.Usize → Result Diagnostic
+
+/-- [noble_contracts::intrinsic::elaborate::stage_exhausted] -/
+opaque intrinsic.elaborate.stage_exhausted : Span → Str → Result Diagnostic
+
+/-- [noble_contracts::intrinsic::elaborate::infer_diagnostic] -/
+opaque intrinsic.elaborate.infer_diagnostic : DiagnosticKind → Span → Str → Str → Result Diagnostic
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::unify_ty] -/
+opaque intrinsic.elaborate.Elaborator.unify_ty :
+    intrinsic.elaborate.Elaborator → intrinsic.elaborate.Ty → intrinsic.elaborate.Ty → Span →
+      Result ((core.result.Result Unit Diagnostic) × intrinsic.elaborate.Elaborator)
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::unify_val] -/
+opaque intrinsic.elaborate.Elaborator.unify_val :
+    intrinsic.elaborate.Elaborator → intrinsic.elaborate.Val → intrinsic.elaborate.Val → Span →
+      Result ((core.result.Result Unit Diagnostic) × intrinsic.elaborate.Elaborator)
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::unify_sort] -/
+opaque intrinsic.elaborate.Elaborator.unify_sort :
+    intrinsic.elaborate.Elaborator → intrinsic.elaborate.SortTerm → intrinsic.elaborate.SortTerm →
+      Span → Result ((core.result.Result Unit Diagnostic) × intrinsic.elaborate.Elaborator)
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::unify_prop] -/
+opaque intrinsic.elaborate.Elaborator.unify_prop :
+    intrinsic.elaborate.Elaborator → intrinsic.elaborate.PropTerm → intrinsic.elaborate.PropTerm →
+      Span → Result ((core.result.Result Unit Diagnostic) × intrinsic.elaborate.Elaborator)
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::bind_code] -/
+opaque intrinsic.elaborate.Elaborator.bind_code :
+    intrinsic.elaborate.Elaborator → Std.U32 → intrinsic.elaborate.Ty → Span →
+      Result ((core.result.Result Unit Diagnostic) × intrinsic.elaborate.Elaborator)
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::scope_ty] -/
+opaque intrinsic.elaborate.Elaborator.scope_ty :
+    intrinsic.elaborate.Elaborator → intrinsic.elaborate.Ty → Std.U32 → Span →
+      Result (core.result.Result Unit Diagnostic)
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::render_ty] -/
+opaque intrinsic.elaborate.Elaborator.render_ty :
+    intrinsic.elaborate.Elaborator → intrinsic.elaborate.Ty → Span → Slice String →
+      Result (core.result.Result String Diagnostic)
+
+/-- [noble_contracts::intrinsic::elaborate::describe_ty] -/
+opaque intrinsic.elaborate.describe_ty : intrinsic.elaborate.Ty → Result String
+
+/-- [noble_contracts::intrinsic::elaborate::describe_val] -/
+opaque intrinsic.elaborate.describe_val : intrinsic.elaborate.Val → Result String
+
+/-- [noble_contracts::intrinsic::elaborate::describe_prop] -/
+opaque intrinsic.elaborate.describe_prop : intrinsic.elaborate.PropTerm → Result String
+
 end noble_contracts

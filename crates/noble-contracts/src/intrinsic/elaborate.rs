@@ -183,6 +183,7 @@ pub fn elaborate_obligations(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
+#[charon::opaque]
 fn stage_obligation<'m>(
     module: &str,
     version: u32,
@@ -354,6 +355,7 @@ fn pure<'m>(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
+#[charon::opaque]
 fn contract_rule(
     obligation: &ProofObligation,
     contract: &ContractGoal,
@@ -423,6 +425,7 @@ fn contract_rule(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
+#[charon::opaque]
 fn rewrite_exec_literal(
     form: &Form,
     literal: i64,
@@ -599,6 +602,7 @@ struct Head {
 
 impl Head {
     /// The next telescope binder's name and position.
+    #[charon::opaque]
     fn binder(&self) -> (String, u32) {
         let position = self.next;
         // Aeneas refuses function-definition types with regions; avoid
@@ -703,6 +707,7 @@ impl Elaborator<'_, '_> {
     }
 
     /// One metavariable's groundness and scope check.
+    #[charon::opaque]
     fn ground_step(&self, index: usize) -> Result<(), Diagnostic> {
         let meta = &self.metas[index];
         let level = u32_level(index, meta.span)?;
@@ -760,6 +765,7 @@ impl Elaborator<'_, '_> {
     }
 
     /// The refusal for a metavariable no constraint solves.
+    #[charon::opaque]
     fn underconstrained(&self, index: usize) -> Diagnostic {
         let meta = &self.metas[index];
         let detail = format!(
@@ -936,6 +942,7 @@ fn stage_error(error: Diagnostic, stage: &'static str, span: Span) -> Diagnostic
     }
 }
 
+#[charon::opaque]
 fn stage_exhausted(span: Span, stage: &'static str) -> Diagnostic {
     Diagnostic::new(
         DiagnosticKind::Exhausted,
@@ -948,6 +955,7 @@ fn stage_exhausted(span: Span, stage: &'static str) -> Diagnostic {
     tigerstyle::ambiguous_params,
     reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
 )]
+#[charon::opaque]
 fn infer_diagnostic(
     kind: DiagnosticKind,
     span: Span,
@@ -1191,6 +1199,7 @@ impl Elaborator<'_, '_> {
         tigerstyle::no_recursion,
         reason = "Owner: noble-contracts; unification follows the two finite term trees, and every binding is occurs-checked"
     )]
+    #[charon::opaque]
     fn unify_ty(&mut self, left: &Ty, right: &Ty, span: Span) -> Result<(), Diagnostic> {
         self.meter_step(MeterStep::Normalize(1), "unification", span)?;
         let left = self.resolve_ty(left, span)?;
@@ -1233,6 +1242,7 @@ impl Elaborator<'_, '_> {
     }
 
     /// Unify two value positions.
+    #[charon::opaque]
     fn unify_val(&mut self, left: Val, right: Val, span: Span) -> Result<(), Diagnostic> {
         self.meter_step(MeterStep::Normalize(1), "unification", span)?;
         let left = self.resolve_val(left, span)?;
@@ -1271,6 +1281,7 @@ impl Elaborator<'_, '_> {
         tigerstyle::missing_const_fn,
         reason = "Owner: noble-contracts; a sort clash builds its diagnostic with format!, so the const suggestion does not apply"
     )]
+    #[charon::opaque]
     fn unify_sort(
         &mut self,
         left: &SortTerm,
@@ -1299,6 +1310,7 @@ impl Elaborator<'_, '_> {
         tigerstyle::no_recursion,
         reason = "Owner: noble-contracts; unification follows the two finite proposition trees"
     )]
+    #[charon::opaque]
     fn unify_prop(
         &mut self,
         left: &PropTerm,
@@ -1341,6 +1353,7 @@ impl Elaborator<'_, '_> {
     }
 
     /// Bind one code metavariable after an occurs check.
+    #[charon::opaque]
     fn bind_code(&mut self, meta: u32, solution: Ty, span: Span) -> Result<(), Diagnostic> {
         if occurs_code(meta, &solution) {
             return Err(invalid(
@@ -1422,6 +1435,7 @@ impl Elaborator<'_, '_> {
         tigerstyle::no_recursion,
         reason = "Owner: noble-contracts; the scope check follows the finite ground term"
     )]
+    #[charon::opaque]
     fn scope_ty(&self, ty: &Ty, depth: u32, span: Span) -> Result<(), Diagnostic> {
         match ty {
             Ty::Var(level) => {
@@ -2190,6 +2204,7 @@ impl Elaborator<'_, '_> {
         tigerstyle::no_recursion,
         reason = "Owner: noble-contracts; rendering follows the finite ground code"
     )]
+    #[charon::opaque]
     fn render_ty(&self, ty: &Ty, span: Span, names: &[String]) -> Result<String, Diagnostic> {
         match ty {
             Ty::Unit => Ok(String::from("Unit")),
@@ -2890,6 +2905,7 @@ fn prop_size_of(prop: &PropTerm) -> usize {
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; the rendering follows the finite term tree"
 )]
+#[charon::opaque]
 fn describe_ty(ty: &Ty) -> String {
     match ty {
         Ty::Unit => String::from("Unit"),
@@ -2905,6 +2921,7 @@ fn describe_ty(ty: &Ty) -> String {
 }
 
 /// Render a value for a clash diagnostic.
+#[charon::opaque]
 fn describe_val(value: Val) -> String {
     match value {
         Val::Level(level) => format!("#{level}"),
@@ -2926,6 +2943,7 @@ fn describe_sort(sort: &SortTerm) -> String {
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; the rendering follows the finite term tree"
 )]
+#[charon::opaque]
 fn describe_prop(prop: &PropTerm) -> String {
     match prop {
         PropTerm::Pi(index, sort, body) => {
