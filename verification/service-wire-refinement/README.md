@@ -137,6 +137,16 @@ theorems are checked again against the selected new subject and trusted models.
 
 ## Retained runs
 
+### `c64275ec`: [receipt-c64275ec.json](receipt-c64275ec.json)
+
+Cairn campaign batches 4-6 regenerated the contracts and Wasm subjects and left
+the kernel subject this profile consumes byte-identical, so `NobleKernel.lean`,
+`Types.lean` and `Funs.lean` keep their bound digests and only the renewed lock
+and receipt moved (discovery `8b601beb`, check `34f0ce97`). This clean run at
+`c64275ec` re-elaborates the refinement proofs with the same 61 theorems and the
+same refusals of all eleven mutation controls (8, 8, 9, 9, 8, 10, 8, 3, 3, 3
+and 3 strict theorems lost).
+
 ### `ba22f835`: [receipt-ba22f835.json](receipt-ba22f835.json)
 
 The combined Cairn campaign batch (batch 2 plus the third LIVE round) regenerated

@@ -1,0 +1,1933 @@
+{
+  "schema": "noble-service-wire-refinement-proof/v2",
+  "issue": "https://github.com/OnixResearch/noble-lang/issues/48",
+  "source_commit": "c64275ec48703fabb9803eaa0fdd6d211a07c127",
+  "source_tree": "4fa9b16036bfdbafad24f2df40174ea403dd3ef1",
+  "clean_source": true,
+  "allow_dirty": false,
+  "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "lean_path": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+  "lean_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+  "model_inputs": {
+    "schema": "noble-service-wire-refinement-inputs/v2",
+    "extraction_receipt": "verification/m4/implementation.json.gz",
+    "extraction_receipt_sha256": "dfbe3588842f509bd390167c7b15393cdf4edd4041d8eb7bdf057796c4370137",
+    "extraction_lock": "verification/m4/extraction-lock.json.gz",
+    "extraction_lock_sha256": "ec595877f9a477532793681e8661ca1b7d4e3bebb3af335b38cbbaa2921c817f",
+    "generated_inputs": {
+      "proofs/m3/NobleKernel.lean": "bd411e329236cb36c38920ca57b4c810a40a30a71a7954f2529225ef0966d9ec",
+      "proofs/m3/NobleKernel/Types.lean": "405faa8b512ef78ae210c46f260f73ef6cfbba8f1c26f8131ea1c2fca699f41e",
+      "proofs/m3/NobleKernel/Funs.lean": "a31dddcb77a46bc3fb7423108df1d4d4a0e5e78b6be898138b0c00a4654e3835"
+    },
+    "handwritten_inputs": {
+      "proofs/m3/NobleKernel/TypesExternal.lean": "816e8689319559c016245838f8a6524ccbb660de9e85a5b8a87b4ebf6826ee6f",
+      "proofs/m3/NobleKernel/FunsExternal.lean": "34bed5cb58eb8c879732e27235efff52a3844380a93190b88291623b95dd48b1"
+    },
+    "model": {
+      "proofs/foundation/NobleFoundation/ServiceWire.lean": "3e61096e8ecd7e95b0d640007455d626d89c759b53b303d5dbe46991487ed863"
+    },
+    "toolchain_reference": "proofs/m7",
+    "aeneas_revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+    "mathlib_revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+    "mutation_controls": [
+      "byte-budget-boundary",
+      "zero-depth-class",
+      "depth-scan-closer",
+      "prefix-byte",
+      "ready-tag-swap",
+      "name-alphabet-underscore",
+      "suffix-quote",
+      "encoder-ready-tag",
+      "encoder-invalid-name-class",
+      "encoder-skips-prefix",
+      "encoder-budget"
+    ]
+  },
+  "dependencies": {
+    "aeneas": {
+      "revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+      "tree": "6b9c1d973dbdd9e74415fe8b8d7e0f8388a4f2e4"
+    },
+    "mathlib": {
+      "revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+      "tree": "0db52fa68e6b0c5b917c22bc6383325391a00610"
+    },
+    "plausible": {
+      "revision": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+      "tree": "4cb8bf2ba49da888f56e270a08c7803000c1da89"
+    },
+    "LeanSearchClient": {
+      "revision": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+      "tree": "bf548235194a21930a91aa9ab852dea26ca0f039"
+    },
+    "importGraph": {
+      "revision": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+      "tree": "c50cb794df9a6a8618884d0ea5151f0a26c59257"
+    },
+    "proofwidgets": {
+      "revision": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+      "tree": "6f39a3ce916f1cd8c298b85695b620444719e14b"
+    },
+    "aesop": {
+      "revision": "4a174c490d8707121c4a9290800489f105d85e07",
+      "tree": "883b9af90cca8b2d83811a507a62be85b2f3c312"
+    },
+    "Qq": {
+      "revision": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+      "tree": "356cde3a20d62d1008736a4bb98c632a799c4aa6"
+    },
+    "batteries": {
+      "revision": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+      "tree": "8b834e0208f1bc8eb66f1816519aef3982e7fb8b"
+    },
+    "Cli": {
+      "revision": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+      "tree": "915a71e36b9b7067b2bdf21c7362ec883bcbb214"
+    }
+  },
+  "sources_sha256": {
+    "proofs/service-wire/ServiceWireRefinement.lean": "686cdea19ccfa7122c15df51eb3323bde5cfe330f92a47d7261a4b6d94ef86c1",
+    "proofs/service-wire/inventory.json": "03480a28561846a0473f3e95a68c26a87dc048e331982b123eb111b9597e125b",
+    "verification/service-wire-refinement/model-inputs.json": "33c7c94d0737c3405a054643a055a47318718c0c300c39eb509ca0ef3405211f",
+    "verification/service-wire-refinement/check.mjs": "5d4069354962473b7639543bd87b6948e5fdb805d54e6d698d8989ea174f1842",
+    "proofs/service-wire/lakefile.toml": "36efa81bdfda1b6e9e6d158d6d7206fd377658a10c2194d05eec4919bdb28483",
+    "proofs/service-wire/lake-manifest.json": "4e0fa249007357e98bb05bed1f1250158d9b0a02f244842e37b37c047f5a00a1",
+    "proofs/service-wire/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "proofs/m7/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "proofs/m7/lake-manifest.json": "1fb93a9e79a0dfb749e514f9dddd276f2b4e8d9e858716ef807a7dad2ec8857b",
+    "proofs/foundation/NobleFoundation/ServiceWire.lean": "3e61096e8ecd7e95b0d640007455d626d89c759b53b303d5dbe46991487ed863",
+    "proofs/m3/NobleKernel.lean": "bd411e329236cb36c38920ca57b4c810a40a30a71a7954f2529225ef0966d9ec",
+    "proofs/m3/NobleKernel/Funs.lean": "a31dddcb77a46bc3fb7423108df1d4d4a0e5e78b6be898138b0c00a4654e3835",
+    "proofs/m3/NobleKernel/FunsExternal.lean": "34bed5cb58eb8c879732e27235efff52a3844380a93190b88291623b95dd48b1",
+    "proofs/m3/NobleKernel/Types.lean": "405faa8b512ef78ae210c46f260f73ef6cfbba8f1c26f8131ea1c2fca699f41e",
+    "proofs/m3/NobleKernel/TypesExternal.lean": "816e8689319559c016245838f8a6524ccbb660de9e85a5b8a87b4ebf6826ee6f",
+    "verification/m4/implementation.json.gz": "dfbe3588842f509bd390167c7b15393cdf4edd4041d8eb7bdf057796c4370137",
+    "verification/m4/extraction-lock.json.gz": "ec595877f9a477532793681e8661ca1b7d4e3bebb3af335b38cbbaa2921c817f",
+    "policy/tool-selection.json": "0416aa65a2a4dad6e01aa76d71fc727939ea3c9bc66eb1e935c0d721fcd92d7f"
+  },
+  "artifacts_sha256": {
+    "Audit.lean": "1b331b8ad1b18245ac47ae09bd2a409efc67713ce340e964d35b09120393b245",
+    "commands/001/stdout": "028e9f4292eace7e8f35209d60aeb2b1ca0cf45c5673d31f490933dbe69e5f16",
+    "commands/001/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/001/command.json": "410d5889e0bca44005f536cef51524f884aa808b98959ce700d26022bc844557",
+    "commands/002/stdout": "397f1eb4529b10af62728e37b6a9ade4af94043e65b47f42f7fb5ecf2dc2b287",
+    "commands/002/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/002/command.json": "7589119178732f0dd921cd2c858b9ef71f6e3a3f2439445082d2457ae4792432",
+    "commands/003/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/003/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/003/command.json": "afe9ba017cf11bc726a3b6d66f2e304129bba34a2a2b242c701c481606a4b096",
+    "commands/004/stdout": "eb22144228dd41cd51a0c84af4f976cd0cef473102dcf99b60be756b11f2b95a",
+    "commands/004/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/004/command.json": "f48be77c073aa537fe2d1c3a7e8da1d3ac0fc8664a6003a240559db9fdef425f",
+    "commands/005/stdout": "bdbde4660eed09fdbaf31abe856dcad17bb6840e9e30086984964fcd9a3dc9bc",
+    "commands/005/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/005/command.json": "f0ab4f1e82a9792cacd0711aaa59f0cd9901854f9fec9eb53f256574abdb2d0e",
+    "commands/006/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/006/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/006/command.json": "e54e12477e6a5fea42697995ecde2ef0d7fa8ab21dcf8d221608d3836776b69c",
+    "commands/007/stdout": "90d027909d57051a62d39a286ec8c719703aa849aaed9518d958c5d31b528cba",
+    "commands/007/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/007/command.json": "7526d1edeaa980e7821597f5bce64a17361edd48e516d172452b9aea45c075d5",
+    "commands/008/stdout": "b8229665c405f86369704b424ffcfc2e08db2b809280cab9e0aaaa806fddf2e7",
+    "commands/008/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/008/command.json": "b457e22c940ddceb6f78a67c393cad1aa32b0820960259ae134aa3afed6dfc65",
+    "commands/009/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/009/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/009/command.json": "756555b4095f4ecf33b07245b6583138a05c26bab724aec630f6b50a3679b52f",
+    "commands/010/stdout": "128ac2c255c47dbb266523785fc2d3ebb5c81dcef13c1add564247baca4c5113",
+    "commands/010/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/010/command.json": "93340fe9b27b50ff259d6298eb180b8687508cf7f4ec9fc44e373f3e31c2eaea",
+    "commands/011/stdout": "d730b95c27722b2eb44f818512df47ab62e115e1ed64fe79c5e4ef63a2985415",
+    "commands/011/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/011/command.json": "d86503dda72ac840269a5ea842c7843a42e504b132fff87eb0ea620b610f62d8",
+    "commands/012/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/012/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/012/command.json": "674278d222b8f13e00e309ea35a4187de4de38c55a2041a4ee17fdcc254d6e88",
+    "commands/013/stdout": "f96c515c4098caa75842067eb83c9162b333c162591442c7282d409de8281937",
+    "commands/013/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/013/command.json": "19babf388c1e9eb3370b02e9ef541233a1d2b3ae97cf83c535d752cd248a0b62",
+    "commands/014/stdout": "ff5938c8d727868a984ba7e3a53351458fcb498ab525e4541eaab4717936df11",
+    "commands/014/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/014/command.json": "dbafec3a1aa7e6dc194fe3862b61ff8079f818009b76018e9cdafb5f788e1a6c",
+    "commands/015/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/015/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/015/command.json": "07a9ac47eda90dda8d1a30a79c06645d816aa9595fc5b32bf78a6d5b32406e9e",
+    "commands/016/stdout": "0e3d56f3491056700a72067a846e3fcfd3bfd917dfa54caf8134daa615604596",
+    "commands/016/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/016/command.json": "b92c986861afce5c2129123fbc9bf2291b43f4676080251e6386ccdf83991499",
+    "commands/017/stdout": "e4f2c09ac2341eb19583e9ac452600614f5d57dd481407156846612d23bf52b3",
+    "commands/017/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/017/command.json": "d144bf72c9ff76500bafaa473ed90b0f143d82c2dc69d8449af11a7767ad6369",
+    "commands/018/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/018/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/018/command.json": "12980db55c0d4950fe0440ecc41dca18ba9af27b953c5ea9ba6f60d2ebb44c98",
+    "commands/019/stdout": "5adccfad412cebae4eb5d8fdfc6cdfcd56c32f0831f45ea777332fca2b2ee39c",
+    "commands/019/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/019/command.json": "f8787011b3d63a8d68cdd193b0983125c556142d2bfbcb15318742fa5716cb5a",
+    "commands/020/stdout": "931756f9a8b6c5f48bec79b679703b7b48d31b9c0cdc9ae3b3ed197d3da3b0f8",
+    "commands/020/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/020/command.json": "20971008370eb66bd14e6e563bf5e7fa497dcbbeac64e4486ddd87cde125907e",
+    "commands/021/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/021/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/021/command.json": "5ccc5f34d7dc5e669c7343f5cb0359b0452cde03b29638a24c509382b207fc37",
+    "commands/022/stdout": "0ea7d090a3c4382dae9626d300f1d553e59faf0a433b90be4cde468bb3959f01",
+    "commands/022/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/022/command.json": "0dc636bd2cb669a97292e60a316614860f937c69a74b62232cc84448e47ad468",
+    "commands/023/stdout": "80e4949281db195075562868091bd1910a4a4f1480a8ec538ed93f50c53e5648",
+    "commands/023/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/023/command.json": "f813e5c1141988818da06bb72cb18a303e50579196e3cdd0e3d68bb07d30a8ac",
+    "commands/024/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/024/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/024/command.json": "83bafa00319599752eb90211a652dc4a0568753f7a8bb14619880ac51c8db711",
+    "commands/025/stdout": "a1a5b11c851755e42ceda1cb2a3e57af442240b1a13f9caf36362f72cf9844d4",
+    "commands/025/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/025/command.json": "c0c4a010fdc5bec27f2dfa99e1bc4744785f72bb2a036f66f3fef1d3b5bef1cb",
+    "commands/026/stdout": "02650859e6949cf622ec0737a58200ec93ae4fcb947a26e880259c5a5eb7b23d",
+    "commands/026/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/026/command.json": "44104339eeca297cf11c5bf85c9951afabe3bbeef8c21c41897de875f342b3ce",
+    "commands/027/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/027/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/027/command.json": "3be8b35566aaaafc873e70569c675f37843c23a18cffe20c31c1dd554ad6bb21",
+    "commands/028/stdout": "7b6e8026f2488f05e72ba684a06ea4bfe7b65c66424646f36ba288dbe5945092",
+    "commands/028/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/028/command.json": "f8546f5c7951abe1217d24e4918c3d452a45c408cd535ac481c9af88eb7e8b1a",
+    "commands/029/stdout": "1e0930b192dd58d5d04b1a588f0e2431d4e888cacdc95723384c5dcdfa410ae8",
+    "commands/029/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/029/command.json": "688596c578fcdf36c07ffbf103a9d3880b9844965a35c941dfda8d0db153732e",
+    "commands/030/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/030/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/030/command.json": "664df02a0ada0dc41a0e7398ad84d81c0d88e7132181e2ccf60423d88234d177",
+    "commands/031/stdout": "1dd1c99fa7e263b807afd92e51f3a60d3708efac930d0c4b7c9023242f2b45fa",
+    "commands/031/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/031/command.json": "2237561aa9d56be285fc6c341e1d0bb2bbcc55e503e90def92dcdacdb23d846c",
+    "commands/032/stdout": "74d733b897b8c450f0880d93ab02593440b80760b7ac10cdbe9a2fd8268dd6ec",
+    "commands/032/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/032/command.json": "807523276850c714a42400ac7915d4d9c4eaba9ab0baee29c430fe58088d1b21",
+    "commands/033/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/033/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/033/command.json": "62890b6088c9cddd9d2e998a553fad688a0c33a2959a2558c1716ad4f035608d",
+    "commands/034/stdout": "3f65c88bdf1d7cff575ae61358b6dbd06b5785b39189c226cf54481dae537572",
+    "commands/034/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/034/command.json": "ede99233941287b8e777ed227cb543d6cd245cda9b86cb6deac30b29706e3fa8",
+    "commands/035/stdout": "ec11b0d8dbf532b8af7fcbf83fd4c09638fd979b4a7dd596f4e79474d0606870",
+    "commands/035/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/035/command.json": "46acefa0553a1e502a6352c868fc59cbb0ed9b4e867ee5d68fbf898228090df1",
+    "commands/036/stdout": "dba7d377b72c0f367de6beaaa56a9c30f031df149182d331a5d2af37d2527d2d",
+    "commands/036/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/036/command.json": "8eee71c409559ecfbd3bcf129b454301331b0d3f62f912814c42df257df3a040",
+    "commands/037/stdout": "a847384f9f3db17213541ae5f1d43fc0e1a85c3dc00b516eea7c94954fd667c0",
+    "commands/037/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/037/command.json": "83b45c15f9434342eee54fa5da478197592ac8dd2aecae0ebeb977bc1f0034d5",
+    "commands/038/stdout": "6f90567aa2f4fe49531290cb9ec13ee5f1669c7d3a27cda657492f779b58f524",
+    "commands/038/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/038/command.json": "0ee183eb489ec87d478c9fccc82d209b46c43635c84ebf9fa658efdcbb3fc30a",
+    "commands/039/stdout": "399638d7f89504571b55f9917e2612bd3876ac95104c11eea08e1ba74abdf954",
+    "commands/039/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/039/command.json": "44998e7b9885edb6bb5996cd5bd5f97ed3fb5b786a137e42d519523c775d6607",
+    "commands/040/stdout": "e189b06be612e5f9b505948c23ea0ad471160d4e892d465a3576884af88e7b81",
+    "commands/040/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/040/command.json": "e29d3d3d7bbf674c7c876f00bb681b378c047f4987f043bc506e76ca77421e95",
+    "commands/041/stdout": "fe1bdc3eda7087718a970dc9f37caaccac133bfcc76402cb0455ce332614022a",
+    "commands/041/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/041/command.json": "b984feab2439265e3c319dad5bfc50aeb4b88a2029090e3e252ee89f207541ff",
+    "commands/042/stdout": "89876b35ab9aa1f75b8be174056e7a0b9edf7ec77c1c6dcad618ef1c67a26895",
+    "commands/042/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/042/command.json": "d5d59deb6145a7962364eabcb26fee7872e43207703b852f9190df7b77c2bca2",
+    "commands/043/stdout": "aef6d08611f00f33034b324b732e79eb72212f94fd9c7f540ac99af49a4386b8",
+    "commands/043/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/043/command.json": "70268aad79f0a184426c474667a473e5bc68cc0deee340905594f1b5f2ee938b",
+    "commands/044/stdout": "686e3cdfe67d2840a934e73107eadf7d739a763aab85817b19f8957607fc73b5",
+    "commands/044/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/044/command.json": "b5a663746f19e76b181dc286a2a69601a660c43fb0df98c60d35e2110c740102",
+    "commands/045/stdout": "389b3b95dae38b5752b5d093e5004a72cc0bd67c8376928dec8777c25f5a9596",
+    "commands/045/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/045/command.json": "2ca08dd86d575dd2ec822dd8a547c18f817949141f764af78eb53ad003a2295f",
+    "commands/046/stdout": "89e2fa3b7739742c49dc33012cbb2d894cddb9a5e557222933aed5fb2a592001",
+    "commands/046/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/046/command.json": "23854e66c943f9b56351b0fd63a794af9648db6a72d0d69e5ed833f9232370c4",
+    "commands/047/stdout": "0c7ca10500558b50444c9df29974f71e7487f376480b71cd21312afca1a65a5d",
+    "commands/047/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/047/command.json": "462657079c053d71187d39817e2ca66e00c8a9ffdd09f44cb72148f76eda7ec1",
+    "commands/048/stdout": "2ec3a33634f29452c79ad222097883b86bb1731d252724e79da8b2ba991041f7",
+    "commands/048/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/048/command.json": "126f86af972cb715342fc79e1aedc98286e594a66adc8c7222959d89b1dac044",
+    "commands/049/stdout": "6ca9d4f20df1c5c22c3fd37b3f0d5cbe89fbb5b58263bd08256ef439776bd428",
+    "commands/049/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/049/command.json": "80d8777ebb3574fc7409aa769cd21535a167834b041d897f79591dea7174dd9b",
+    "commands/050/stdout": "9b4460c3bcbc0be32e4b43618e628730d88547b741ef944ab8fff0217352ba9c",
+    "commands/050/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/050/command.json": "1d6ec91d12177eb9035e4a5d12837bd5e5b9cf611b18b7ffbd61d7c704decdd0",
+    "commands/051/stdout": "23b2a520a6430229874ee08734e26f7e5f3445843c428e53e0a449ca3298eb4c",
+    "commands/051/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/051/command.json": "1d26975fd41cfaefebabe3f7a91a810d838cd7a1e231e55a5165f80c0902b45d",
+    "commands/052/stdout": "bda92d102f6950a3ccd138d7ca44867d4928c66693e1bceca9641e9a86a67a52",
+    "commands/052/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/052/command.json": "be83699bac55037e0b7dea7dadf5f937b2cafa69ff0672d8f02342b5fdcb4263",
+    "commands/053/stdout": "7cffc77cc4c33b8fb4dd2627a746cb7a7338f6f2e6c13859e19bbc957fc4c26f",
+    "commands/053/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/053/command.json": "38e757b36a3d6c1611bc143539b17fb899208418cf3989d1b5c2df8a5899e0a1",
+    "commands/054/stdout": "bd894e0f8dce4bf1c0b58dd912841270665a124b2e44c2a9e8cf94781ac971ca",
+    "commands/054/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/054/command.json": "ec5c5f5236ad3aa026c982b13492e5e0f7ab270f40c9a0bc651f7861cf038b3a",
+    "commands/055/stdout": "ad9516a1bb197dec61a21d57094002e73d1821e1d7f74cf828ee4114a22fc8ed",
+    "commands/055/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/055/command.json": "e4716e2a17364df1e64d9323b9fb461fc77f1bf4cdf0794cf2120e7707b58fa3",
+    "commands/056/stdout": "d5458ab1ae9525aba4408c6347213dca4bcd8caf88ef844335c37cfcd7c2b8b9",
+    "commands/056/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/056/command.json": "c84aeb72b7c149401db64da285b2ba4062d87b1e58140de679de1601c75e4602",
+    "commands/057/stdout": "d074dd8ce0478475e8c6a272166b879e67681d1edf414ada5d7bf3a844fd584f",
+    "commands/057/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/057/command.json": "3145b732aa09d78acad3da7348e29f519cc25b834fb078727f0d312a2eaaf69a",
+    "commands/058/stdout": "4f3498be04581b759e23873ea924eb557c850b1666fc32775a6329503ac770ec",
+    "commands/058/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/058/command.json": "cad19a970c70afc7b9426bd97890379182492ffd1a76b819144b4ec07f78d1e0",
+    "commands/059/stdout": "028e9f4292eace7e8f35209d60aeb2b1ca0cf45c5673d31f490933dbe69e5f16",
+    "commands/059/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/059/command.json": "410d5889e0bca44005f536cef51524f884aa808b98959ce700d26022bc844557",
+    "commands/060/stdout": "397f1eb4529b10af62728e37b6a9ade4af94043e65b47f42f7fb5ecf2dc2b287",
+    "commands/060/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/060/command.json": "7589119178732f0dd921cd2c858b9ef71f6e3a3f2439445082d2457ae4792432",
+    "commands/061/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/061/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/061/command.json": "afe9ba017cf11bc726a3b6d66f2e304129bba34a2a2b242c701c481606a4b096"
+  },
+  "generated_source_lint_warnings": [],
+  "theorem_count": 61,
+  "theorems": [
+    {
+      "name": "ServiceWireRefinement.specReturns",
+      "role": "result-inversion",
+      "claim": "A spec judgement forces a normal return that satisfies the postcondition; restated here because Aeneas #1384 removed WP.spec_imp_exists.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@ServiceWireRefinement.specReturns : ∀ {α : Type u_1} {m : Aeneas.Std.Result α} {P : α → Prop}, Aeneas.Std.WP.spec m P → ∃ y, m = Aeneas.Std.Result.ok y ∧ P y",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.bytesOf_length",
+      "role": "byte-view",
+      "claim": "The byte view of a slice has the slice length.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.bytesOf_length : ∀ (s : Aeneas.Std.Slice Aeneas.Std.U8), (ServiceWireRefinement.bytesOf s).length = s.length",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.depthScanAux_ge",
+      "role": "depth-scan",
+      "claim": "The model depth scan never reports less than the depth it has already reached.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.depthScanAux_ge : ∀ (rest : List ℕ) (current reached : ℕ), reached ≤ NobleFoundation.ServiceWire.depthScanAux current reached rest",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.scanFails_eq",
+      "role": "depth-scan",
+      "claim": "The early-exit scan the generated loop performs fails exactly when the model scan exceeds the limit, from any reached depth within the limit.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.scanFails_eq : ∀ (limit : ℕ) (rest : List ℕ) (current reached : ℕ), reached ≤ limit → ServiceWireRefinement.scanFails limit current rest = decide (limit < NobleFoundation.ServiceWire.depthScanAux current reached rest)",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.depthExceeds_eq_scanFails",
+      "role": "depth-scan",
+      "claim": "The model depth check equals the early-exit scan started at depth zero.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.depthExceeds_eq_scanFails : ∀ (limit : ℕ) (bytes : List ℕ), NobleFoundation.ServiceWire.depthExceeds limit bytes = ServiceWireRefinement.scanFails limit 0 bytes",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.utf8EncodeChar_ascii",
+      "role": "utf8",
+      "claim": "Every byte below 128 encodes to itself as one UTF-8 byte.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.utf8EncodeChar_ascii : ∀ n < 128, String.utf8EncodeChar (Char.ofNat n) = [UInt8.ofNat n]",
+      "subjects": [],
+      "status": "proved",
+      "axioms": []
+    },
+    {
+      "name": "ServiceWireRefinement.flatMap_ascii",
+      "role": "utf8",
+      "claim": "UTF-8 encoding of ASCII characters is the byte list itself.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.flatMap_ascii : ∀ (bytes : List ℕ), (∀ n ∈ bytes, n < 128) → List.flatMap String.utf8EncodeChar (List.map Char.ofNat bytes) = List.map UInt8.ofNat bytes",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.ascii_bytes_are_valid_utf8",
+      "role": "utf8",
+      "claim": "An all-ASCII byte list is valid UTF-8.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.ascii_bytes_are_valid_utf8 : ∀ (bytes : List ℕ), (∀ n ∈ bytes, n < 128) → { data := (List.map UInt8.ofNat bytes).toArray }.IsValidUTF8",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.from_utf8_ascii",
+      "role": "utf8",
+      "claim": "The external from_utf8 model accepts an all-ASCII slice unchanged.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.from_utf8_ascii : ∀ (value : Aeneas.Std.Slice Aeneas.Std.U8), (∀ n ∈ ServiceWireRefinement.bytesOf value, n < 128) → noble_kernel.core.str.converts.from_utf8 value = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value)",
+      "subjects": [
+        "noble_kernel.core.str.converts.from_utf8"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.bytesOf_drop",
+      "role": "byte-view",
+      "claim": "Dropping a prefix of the byte view exposes the next slice element.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.bytesOf_drop : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (index : ℕ) (hlt : index < bytes.length), List.drop index (ServiceWireRefinement.bytesOf bytes) = ↑(↑bytes)[index] :: List.drop (index + 1) (ServiceWireRefinement.bytesOf bytes)",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.bytesOf_drop_length",
+      "role": "byte-view",
+      "claim": "Dropping the whole slice leaves no bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.bytesOf_drop_length : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8), List.drop bytes.length (ServiceWireRefinement.bytesOf bytes) = []",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.saturating_sub_one_val",
+      "role": "generated-step",
+      "claim": "Saturating subtraction of one from a u32 is truncated natural subtraction.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.saturating_sub_one_val : ∀ (x : Aeneas.Std.U32), ↑(Aeneas.Std.core.num.U32.saturating_sub x 1#u32) = ↑x - 1",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.check_depth_eq",
+      "role": "generated-step",
+      "claim": "For every configured depth up to four, the generated depth check returns DepthLimit exactly when the model scan exceeds that depth, and Ok otherwise.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.check_depth_eq : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (limit : Aeneas.Std.U32), ↑limit ≤ 4 → noble_kernel.dataspace.wire.check_depth bytes limit = Aeneas.Std.Result.ok (if ServiceWireRefinement.scanFails (↑limit) 0 (ServiceWireRefinement.bytesOf bytes) = true then Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.DepthLimit else Aeneas.Std.core.result.Result.Ok ())",
+      "subjects": [
+        "noble_kernel.dataspace.wire.check_depth"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.prefix_bytes",
+      "role": "generated-step",
+      "claim": "The generated ten-byte prefix constant is the model record prefix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.prefix_bytes : List.map (fun x => ↑x) ↑(Aeneas.Std.Array.make 10#usize [60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8, 32#u8, 34#u8] ⋯) = NobleFoundation.ServiceWire.recordPrefix",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.take_succ_of_lt",
+      "role": "byte-view",
+      "claim": "Taking one more element appends the element at that index.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.take_succ_of_lt : ∀ (l : List ℕ) (index : ℕ) (hlt : index < l.length), List.take (index + 1) l = List.take index l ++ [l[index]]",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.has_service_prefix_eq",
+      "role": "generated-step",
+      "claim": "On every slice of at least ten bytes, the generated prefix check returns whether the first ten bytes are the model prefix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.has_service_prefix_eq : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8), 10 ≤ bytes.length → noble_kernel.dataspace.wire.has_service_prefix bytes = Aeneas.Std.Result.ok (decide (List.take 10 (ServiceWireRefinement.bytesOf bytes) = NobleFoundation.ServiceWire.recordPrefix))",
+      "subjects": [
+        "noble_kernel.dataspace.wire.has_service_prefix"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.take_all",
+      "role": "byte-view",
+      "claim": "Taking at least the whole list returns the list.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.take_all : ∀ (l : List ℕ) (n : ℕ), l.length ≤ n → List.take n l = l",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.valid_name_eq",
+      "role": "generated-step",
+      "claim": "On every string, the generated name check returns the model validName of its bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.valid_name_eq : ∀ (label : Aeneas.Std.Str), noble_kernel.dataspace.wire.valid_name label = Aeneas.Std.Result.ok (NobleFoundation.ServiceWire.validName (ServiceWireRefinement.bytesOf label))",
+      "subjects": [
+        "noble_kernel.dataspace.wire.valid_name"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.encode_take",
+      "role": "model-shape",
+      "claim": "The first ten bytes of every model encoding are the record prefix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.encode_take : ∀ (label : List ℕ) (ready : Bool), List.take 10 (NobleFoundation.ServiceWire.encode label ready) = NobleFoundation.ServiceWire.recordPrefix",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.encode_suffix",
+      "role": "model-shape",
+      "claim": "The last five bytes of every model encoding are the readiness suffix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.encode_suffix : ∀ (label : List ℕ) (ready : Bool), List.drop ((NobleFoundation.ServiceWire.encode label ready).length - 5) (NobleFoundation.ServiceWire.encode label ready) = NobleFoundation.ServiceWire.recordSuffix ready",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.encode_middle",
+      "role": "model-shape",
+      "claim": "The bytes between the prefix and the suffix of a model encoding are its name.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.encode_middle : ∀ (label : List ℕ) (ready : Bool), ServiceWireRefinement.recordMiddle (NobleFoundation.ServiceWire.encode label ready) = label",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.split_record",
+      "role": "model-shape",
+      "claim": "A list of at least fifteen bytes is its first ten bytes, its middle and its last five bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.split_record : ∀ (bytes : List ℕ), 15 ≤ bytes.length → bytes = List.take 10 bytes ++ ServiceWireRefinement.recordMiddle bytes ++ List.drop (bytes.length - 5) bytes",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.encode_of_shape",
+      "role": "model-shape",
+      "claim": "A list with the record prefix and a readiness suffix is the model encoding of its middle.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.encode_of_shape : ∀ (bytes : List ℕ) (ready : Bool), 15 ≤ bytes.length → List.take 10 bytes = NobleFoundation.ServiceWire.recordPrefix → List.drop (bytes.length - 5) bytes = NobleFoundation.ServiceWire.recordSuffix ready → NobleFoundation.ServiceWire.encode (ServiceWireRefinement.recordMiddle bytes) ready = bytes",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.suffix_of_encoding",
+      "role": "model-shape",
+      "claim": "Bytes equal to a model encoding end with that encoding suffix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.suffix_of_encoding : ∀ (bytes label : List ℕ) (ready : Bool), NobleFoundation.ServiceWire.encode label ready = bytes → List.drop (bytes.length - 5) bytes = NobleFoundation.ServiceWire.recordSuffix ready",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.validName_ascii",
+      "role": "model-shape",
+      "claim": "Every byte of a valid name is ASCII.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.validName_ascii : ∀ (label : List ℕ), NobleFoundation.ServiceWire.validName label = true → ∀ n ∈ label, n < 128",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.bytesOf_slice_drop",
+      "role": "byte-view",
+      "claim": "The byte view commutes with dropping a slice prefix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.bytesOf_slice_drop : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (start : Aeneas.Std.Usize), ServiceWireRefinement.bytesOf (bytes.drop start) = List.drop (↑start) (ServiceWireRefinement.bytesOf bytes)",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.index_from",
+      "role": "generated-step",
+      "claim": "Range-from indexing within the slice length returns the dropped slice.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.index_from : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (start : Aeneas.Std.Usize), ↑start ≤ bytes.length → Aeneas.Std.core.slice.index.Slice.index (Aeneas.Std.core.slice.index.SliceIndexRangeFromUsizeSlice Aeneas.Std.U8) bytes { start := start } = Aeneas.Std.Result.ok (bytes.drop start)",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.index_range",
+      "role": "generated-step",
+      "claim": "Ordered in-bounds range indexing returns a slice whose bytes are the selected window.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.index_range : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (start stop : Aeneas.Std.Usize), ↑start ≤ ↑stop → ↑stop ≤ bytes.length → ∃ part, Aeneas.Std.core.slice.index.Slice.index (Aeneas.Std.core.slice.index.SliceIndexRangeUsizeSlice Aeneas.Std.U8) bytes { start := start, «end» := stop } = Aeneas.Std.Result.ok part ∧ ServiceWireRefinement.bytesOf part = List.take (↑stop - ↑start) (List.drop (↑start) (ServiceWireRefinement.bytesOf bytes))",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.index_usize_eq",
+      "role": "generated-step",
+      "claim": "In-bounds element indexing returns the element of the slice list.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.index_usize_eq : ∀ (v : Aeneas.Std.Slice Aeneas.Std.U8) (k : Aeneas.Std.Usize) (i : ℕ), ↑k = i → ∀ (l : List Aeneas.Std.U8), ↑v = l → ∀ (hk : i < l.length), v.index_usize k = Aeneas.Std.Result.ok l[i]",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.five_cases",
+      "role": "byte-view",
+      "claim": "A list of five bytes is a five-element literal.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.five_cases : ∀ (l : List Aeneas.Std.U8), l.length = 5 → ∃ a b c d e, l = [a, b, c, d, e]",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.from_utf8_cases",
+      "role": "utf8",
+      "claim": "The external from_utf8 model returns its input or reports invalid UTF-8.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.from_utf8_cases : ∀ (value : Aeneas.Std.Slice Aeneas.Std.U8), noble_kernel.core.str.converts.from_utf8 value = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value) ∨ noble_kernel.core.str.converts.from_utf8 value = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err noble_kernel.core.str.error.Utf8Error.Invalid)",
+      "subjects": [
+        "noble_kernel.core.str.converts.from_utf8"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.prefix_len",
+      "role": "generated-step",
+      "claim": "The generated prefix slice has length ten.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.prefix_len : (Aeneas.Std.Array.make 10#usize [60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8, 32#u8, 34#u8] ⋯).to_slice.len = 10#usize",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.suffix_len",
+      "role": "generated-step",
+      "claim": "The generated suffix slice has length five.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.suffix_len : (Aeneas.Std.Array.make 5#usize [34#u8, 32#u8, 35#u8, 116#u8, 62#u8] ⋯).to_slice.len = 5#usize",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.ite_ok_decide",
+      "role": "generated-step",
+      "claim": "A guarded boolean computation is the decision of the conjunction.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.ite_ok_decide : ∀ (p q : Prop) [inst : Decidable p] [inst_1 : Decidable q], (if p then Aeneas.Std.Result.ok (decide q) else Aeneas.Std.Result.ok false) = Aeneas.Std.Result.ok (decide (p ∧ q))",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.decode_after_checks",
+      "role": "model-shape",
+      "claim": "Past the byte budget, the configured depth and the depth scan, the model decides schema or accepts.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_after_checks : ∀ (bytes : List ℕ) (configured : ℕ), bytes.length ≤ NobleFoundation.ServiceWire.maxWireBytes → 1 ≤ configured ∧ configured ≤ NobleFoundation.ServiceWire.maxWireDepth → NobleFoundation.ServiceWire.depthExceeds configured bytes = false → NobleFoundation.ServiceWire.decode bytes configured = NobleFoundation.ServiceWire.Decision.schema ∨ ∃ label ready, NobleFoundation.ServiceWire.decode bytes configured = NobleFoundation.ServiceWire.Decision.accepted label ready",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.schema_of_refuted",
+      "role": "model-shape",
+      "claim": "Past those checks, the model decides schema unless the bytes are the encoding of a valid name.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.schema_of_refuted : ∀ (bytes : List ℕ) (configured : ℕ), bytes.length ≤ NobleFoundation.ServiceWire.maxWireBytes → 1 ≤ configured ∧ configured ≤ NobleFoundation.ServiceWire.maxWireDepth → NobleFoundation.ServiceWire.depthExceeds configured bytes = false → (∀ (label : List ℕ) (ready : Bool), NobleFoundation.ServiceWire.validName label = true → NobleFoundation.ServiceWire.encode label ready = bytes → False) → NobleFoundation.ServiceWire.decode bytes configured = NobleFoundation.ServiceWire.Decision.schema",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.accepted_of_shape",
+      "role": "model-shape",
+      "claim": "Past an allowed configured depth, a record with the prefix, a readiness suffix and a valid middle is accepted with that middle.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.accepted_of_shape : ∀ (bytes : List ℕ) (configured : ℕ) (ready : Bool), 1 ≤ configured ∧ configured ≤ NobleFoundation.ServiceWire.maxWireDepth → 15 ≤ bytes.length → List.take 10 bytes = NobleFoundation.ServiceWire.recordPrefix → List.drop (bytes.length - 5) bytes = NobleFoundation.ServiceWire.recordSuffix ready → NobleFoundation.ServiceWire.validName (ServiceWireRefinement.recordMiddle bytes) = true → NobleFoundation.ServiceWire.decode bytes configured = NobleFoundation.ServiceWire.Decision.accepted (ServiceWireRefinement.recordMiddle bytes) ready",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.min_service_bytes",
+      "role": "generated-step",
+      "claim": "The generated minimum record length is fifteen bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.min_service_bytes : ↑noble_kernel.dataspace.wire.decode_service.MIN_SERVICE_BYTES = 15",
+      "subjects": [
+        "noble_kernel.dataspace.wire.decode_service.MIN_SERVICE_BYTES"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.decode_service_refines",
+      "role": "refinement",
+      "claim": "For every byte slice and every configured depth, the generated decoder returns, and its result read through observed is the model decision.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_service_refines : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32), ∃ r, noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok r ∧ ServiceWireRefinement.observed r = some (NobleFoundation.ServiceWire.decode (ServiceWireRefinement.bytesOf bytes) ↑configured)",
+      "subjects": [
+        "noble_kernel.dataspace.wire.decode_service"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.decode_service_total",
+      "role": "consequence",
+      "claim": "The generated decoder returns on every input: no panic, failed bound check or divergence.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_service_total : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32), ∃ r, noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok r",
+      "subjects": [
+        "noble_kernel.dataspace.wire.decode_service"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.decode_service_accepts_iff",
+      "role": "consequence",
+      "claim": "The generated decoder returns a value with given name bytes and readiness exactly when the model accepts them.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_service_accepts_iff : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32) (label : List ℕ) (ready : Bool), (∃ value, noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value) ∧ ServiceWireRefinement.bytesOf value.name = label ∧ value.ready = ready) ↔ NobleFoundation.ServiceWire.decode (ServiceWireRefinement.bytesOf bytes) ↑configured = NobleFoundation.ServiceWire.Decision.accepted label ready",
+      "subjects": [
+        "noble_kernel.dataspace.wire.decode_service"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.decode_service_refuses_iff",
+      "role": "consequence",
+      "claim": "The generated decoder returns ByteLimit, DepthLimit or Schema exactly when the model decides that class.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_service_refuses_iff : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32), (noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.ByteLimit) ↔ NobleFoundation.ServiceWire.decode (ServiceWireRefinement.bytesOf bytes) ↑configured = NobleFoundation.ServiceWire.Decision.byteLimit) ∧ (noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.DepthLimit) ↔ NobleFoundation.ServiceWire.decode (ServiceWireRefinement.bytesOf bytes) ↑configured = NobleFoundation.ServiceWire.Decision.depthLimit) ∧ (noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.Schema) ↔ NobleFoundation.ServiceWire.decode (ServiceWireRefinement.bytesOf bytes) ↑configured = NobleFoundation.ServiceWire.Decision.schema)",
+      "subjects": [
+        "noble_kernel.dataspace.wire.decode_service"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.decode_service_of_encode",
+      "role": "consequence",
+      "claim": "Every model encoding of a valid name decodes through the generated decoder to that name and readiness under every allowed configured depth.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_service_of_encode : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32) (label : List ℕ) (ready : Bool), NobleFoundation.ServiceWire.validName label = true → 1 ≤ ↑configured ∧ ↑configured ≤ NobleFoundation.ServiceWire.maxWireDepth → ServiceWireRefinement.bytesOf bytes = NobleFoundation.ServiceWire.encode label ready → ∃ value, noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value) ∧ ServiceWireRefinement.bytesOf value.name = label ∧ value.ready = ready",
+      "subjects": [
+        "noble_kernel.dataspace.wire.decode_service"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.decode_service_accepted_is_canonical",
+      "role": "consequence",
+      "claim": "Every value the generated decoder accepts has a valid name and the input bytes are exactly its model encoding.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_service_accepted_is_canonical : ∀ (bytes : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32) (value : noble_kernel.dataspace.wire.ServiceRef), noble_kernel.dataspace.wire.decode_service bytes configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value) → NobleFoundation.ServiceWire.validName (ServiceWireRefinement.bytesOf value.name) = true ∧ NobleFoundation.ServiceWire.encode (ServiceWireRefinement.bytesOf value.name) value.ready = ServiceWireRefinement.bytesOf bytes",
+      "subjects": [
+        "noble_kernel.dataspace.wire.decode_service"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.setSlice_fit",
+      "role": "byte-view",
+      "claim": "A slice write that fits within the list replaces exactly its window.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@ServiceWireRefinement.setSlice_fit : ∀ {α : Type} (l s : List α) (i : ℕ), i + s.length ≤ l.length → l.setSlice! i s = List.take i l ++ s ++ List.drop (i + s.length) l",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.take_setSlice",
+      "role": "byte-view",
+      "claim": "After a fitting slice write, the list through the end of the window is the old prefix followed by the written bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@ServiceWireRefinement.take_setSlice : ∀ {α : Type} (l s : List α) (i : ℕ), i + s.length ≤ l.length → List.take (i + s.length) (l.setSlice! i s) = List.take i l ++ s",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.fill_record",
+      "role": "model-shape",
+      "claim": "Writing a ten-byte prefix, a name and a five-byte suffix in turn leaves exactly that record in front.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@ServiceWireRefinement.fill_record : ∀ {α : Type} (Z P N S : List α), P.length = 10 → S.length = 5 → 15 + N.length ≤ Z.length → List.take (15 + N.length) (((Z.setSlice! 0 P).setSlice! 10 N).setSlice! (10 + N.length) S) = P ++ N ++ S",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.prefix_slice_eq",
+      "role": "generated-step",
+      "claim": "The generated prefix slice is prefixSlice.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.prefix_slice_eq : (Aeneas.Std.Array.make 10#usize [60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8, 32#u8, 34#u8] ⋯).to_slice = ServiceWireRefinement.prefixSlice",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.prefixSlice_bytes",
+      "role": "generated-step",
+      "claim": "The generated prefix slice carries the model record prefix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.prefixSlice_bytes : ServiceWireRefinement.bytesOf ServiceWireRefinement.prefixSlice = NobleFoundation.ServiceWire.recordPrefix",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.suffix_choice",
+      "role": "generated-step",
+      "claim": "The generated readiness choice selects suffixArray.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.suffix_choice : ∀ (ready : Bool), (if ready = true then Aeneas.Std.Result.ok (Aeneas.Std.Array.make 5#usize [34#u8, 32#u8, 35#u8, 116#u8, 62#u8] ⋯) else Aeneas.Std.Result.ok (Aeneas.Std.Array.make 5#usize [34#u8, 32#u8, 35#u8, 102#u8, 62#u8] ⋯)) = Aeneas.Std.Result.ok (ServiceWireRefinement.suffixArray ready)",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.suffixArray_bytes",
+      "role": "generated-step",
+      "claim": "The selected generated suffix carries the model readiness suffix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.suffixArray_bytes : ∀ (ready : Bool), ServiceWireRefinement.bytesOf (ServiceWireRefinement.suffixArray ready).to_slice = NobleFoundation.ServiceWire.recordSuffix ready",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.to_slice_len",
+      "role": "generated-step",
+      "claim": "The slice view of an array has the array length.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "@ServiceWireRefinement.to_slice_len : ∀ {n : Aeneas.Std.Usize} (a : Aeneas.Std.Array Aeneas.Std.U8 n), a.to_slice.len = n",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.prefixSlice_len",
+      "role": "generated-step",
+      "claim": "The generated prefix slice has length ten.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.prefixSlice_len : ServiceWireRefinement.prefixSlice.len = 10#usize",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.prefixSlice_length",
+      "role": "generated-step",
+      "claim": "The generated prefix slice holds ten bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.prefixSlice_length : ServiceWireRefinement.prefixSlice.length = 10",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.suffixArray_length",
+      "role": "generated-step",
+      "claim": "The selected generated suffix holds five bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.suffixArray_length : ∀ (ready : Bool), (ServiceWireRefinement.suffixArray ready).to_slice.length = 5",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.copy_ok",
+      "role": "generated-step",
+      "claim": "A slice copy between equal lengths returns the source.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.copy_ok : ∀ (s src : Aeneas.Std.Slice Aeneas.Std.U8), s.length = src.length → Aeneas.Std.core.slice.Slice.copy_from_slice Aeneas.Std.core.marker.CopyU8 s src = Aeneas.Std.Result.ok src",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.encode_service_refines",
+      "role": "refinement",
+      "claim": "For every string and readiness tag the generated encoder returns: for a valid name a packet of fifteen plus the name length bytes carrying exactly the model encoding, and InvalidName otherwise.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.encode_service_refines : ∀ (label : Aeneas.Std.Str) (ready : Bool), ∃ r, noble_kernel.dataspace.wire.encode_service label ready = Aeneas.Std.Result.ok r ∧ if NobleFoundation.ServiceWire.validName (ServiceWireRefinement.bytesOf label) = true then ∃ packet, r = Aeneas.Std.core.result.Result.Ok packet ∧ ↑packet.len = 15 + (ServiceWireRefinement.bytesOf label).length ∧ ServiceWireRefinement.packetBytes packet = NobleFoundation.ServiceWire.encode (ServiceWireRefinement.bytesOf label) ready else r = Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.InvalidName",
+      "subjects": [
+        "noble_kernel.dataspace.wire.encode_service"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.as_bytes_eq",
+      "role": "generated-step",
+      "claim": "A packet within the wire budget exposes exactly its carried bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.as_bytes_eq : ∀ (packet : noble_kernel.dataspace.wire.Packet), ↑packet.len ≤ 64 → ∃ wire, packet.as_bytes = Aeneas.Std.Result.ok wire ∧ ServiceWireRefinement.bytesOf wire = ServiceWireRefinement.packetBytes packet",
+      "subjects": [
+        "noble_kernel.dataspace.wire.Packet.as_bytes"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.validName_length",
+      "role": "model-shape",
+      "claim": "A valid name has between one and thirty-two bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.validName_length : ∀ (label : List ℕ), NobleFoundation.ServiceWire.validName label = true → 1 ≤ label.length ∧ label.length ≤ 32",
+      "subjects": [],
+      "status": "proved",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.decode_service_encode_service",
+      "role": "round-trip",
+      "claim": "For a valid name and every allowed configured depth, the generated encoder packet decodes through the generated decoder to that name and readiness tag.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.decode_service_encode_service : ∀ (label : Aeneas.Std.Str) (ready : Bool) (configured : Aeneas.Std.U32), NobleFoundation.ServiceWire.validName (ServiceWireRefinement.bytesOf label) = true → 1 ≤ ↑configured ∧ ↑configured ≤ NobleFoundation.ServiceWire.maxWireDepth → ∃ packet wire value, noble_kernel.dataspace.wire.encode_service label ready = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok packet) ∧ packet.as_bytes = Aeneas.Std.Result.ok wire ∧ noble_kernel.dataspace.wire.decode_service wire configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value) ∧ ServiceWireRefinement.bytesOf value.name = ServiceWireRefinement.bytesOf label ∧ value.ready = ready",
+      "subjects": [
+        "noble_kernel.dataspace.wire.Packet.as_bytes",
+        "noble_kernel.dataspace.wire.decode_service",
+        "noble_kernel.dataspace.wire.encode_service"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "ServiceWireRefinement.encode_service_decode_service",
+      "role": "round-trip",
+      "claim": "Re-encoding a value the generated decoder accepts gives back exactly the input bytes.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "ServiceWireRefinement.encode_service_decode_service : ∀ (wire : Aeneas.Std.Slice Aeneas.Std.U8) (configured : Aeneas.Std.U32) (value : noble_kernel.dataspace.wire.ServiceRef), noble_kernel.dataspace.wire.decode_service wire configured = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok value) → ∃ packet again, noble_kernel.dataspace.wire.encode_service value.name value.ready = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok packet) ∧ packet.as_bytes = Aeneas.Std.Result.ok again ∧ ServiceWireRefinement.bytesOf again = ServiceWireRefinement.bytesOf wire",
+      "subjects": [
+        "noble_kernel.dataspace.wire.Packet.as_bytes",
+        "noble_kernel.dataspace.wire.decode_service",
+        "noble_kernel.dataspace.wire.encode_service"
+      ],
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  ],
+  "specification": [
+    {
+      "name": "ServiceWireRefinement.bytesOf",
+      "printed": "def ServiceWireRefinement.bytesOf : Aeneas.Std.Slice Aeneas.Std.U8 → List ℕ := fun s => List.map (fun x => ↑x) ↑s"
+    },
+    {
+      "name": "ServiceWireRefinement.scanFails",
+      "printed": "def ServiceWireRefinement.scanFails : ℕ → ℕ → List ℕ → Bool := fun limit x x_1 => List.brecOn (motive := fun x => ℕ → Bool) x_1 (ServiceWireRefinement.scanFails._f limit) x"
+    },
+    {
+      "name": "ServiceWireRefinement.recordMiddle",
+      "printed": "def ServiceWireRefinement.recordMiddle : List ℕ → List ℕ := fun bytes => List.take (bytes.length - 15) (List.drop 10 bytes)"
+    },
+    {
+      "name": "ServiceWireRefinement.observed",
+      "printed": "def ServiceWireRefinement.observed : Aeneas.Std.core.result.Result noble_kernel.dataspace.wire.ServiceRef noble_kernel.dataspace.Error → Option NobleFoundation.ServiceWire.Decision := fun x => match x with | Aeneas.Std.core.result.Result.Ok value => some (NobleFoundation.ServiceWire.Decision.accepted (ServiceWireRefinement.bytesOf value.name) value.ready) | Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.ByteLimit => some NobleFoundation.ServiceWire.Decision.byteLimit | Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.DepthLimit => some NobleFoundation.ServiceWire.Decision.depthLimit | Aeneas.Std.core.result.Result.Err noble_kernel.dataspace.Error.Schema => some NobleFoundation.ServiceWire.Decision.schema | Aeneas.Std.core.result.Result.Err a => none"
+    },
+    {
+      "name": "ServiceWireRefinement.packetBytes",
+      "printed": "def ServiceWireRefinement.packetBytes : noble_kernel.dataspace.wire.Packet → List ℕ := fun packet => List.map (fun x => ↑x) (List.take ↑packet.len ↑packet.bytes)"
+    },
+    {
+      "name": "ServiceWireRefinement.prefixSlice",
+      "printed": "def ServiceWireRefinement.prefixSlice : Aeneas.Std.Slice Aeneas.Std.U8 := (Aeneas.Std.Array.make 10#usize [60#u8, 115#u8, 101#u8, 114#u8, 118#u8, 105#u8, 99#u8, 101#u8, 32#u8, 34#u8] ServiceWireRefinement.prefixSlice._proof_11).to_slice"
+    },
+    {
+      "name": "ServiceWireRefinement.suffixArray",
+      "printed": "def ServiceWireRefinement.suffixArray : Bool → Aeneas.Std.Array Aeneas.Std.U8 5#usize := fun ready => if ready = true then Aeneas.Std.Array.make 5#usize [34#u8, 32#u8, 35#u8, 116#u8, 62#u8] ServiceWireRefinement.suffixArray._proof_5 else Aeneas.Std.Array.make 5#usize [34#u8, 32#u8, 35#u8, 102#u8, 62#u8] ServiceWireRefinement.suffixArray._proof_7"
+    }
+  ],
+  "binding": {
+    "reachable_generated_declarations": 19,
+    "reachable_project_constants": 87,
+    "shared_auxiliaries": 45,
+    "source_files": [
+      {
+        "file": "crates/noble-kernel/src/dataspace/mod.rs",
+        "binding": "exact-file",
+        "sha256": "5ba97535f38318bc3a11ba0c6c0122a8fac7f42d22d92e0dba5c5b948c40fd6f",
+        "declarations": [
+          {
+            "declaration": "dataspace.Error",
+            "lines": [
+              18,
+              26
+            ]
+          },
+          {
+            "declaration": "dataspace.MAX_NAME_BYTES",
+            "lines": [
+              11,
+              11
+            ]
+          },
+          {
+            "declaration": "dataspace.MAX_WIRE_BYTES",
+            "lines": [
+              9,
+              9
+            ]
+          },
+          {
+            "declaration": "dataspace.MAX_WIRE_DEPTH",
+            "lines": [
+              10,
+              10
+            ]
+          }
+        ]
+      },
+      {
+        "file": "crates/noble-kernel/src/dataspace/wire.rs",
+        "binding": "exact-file",
+        "sha256": "38b722dcbe36f6d986be105a76fd17472e5c8d72a126c1db813c7878d1915d08",
+        "declarations": [
+          {
+            "declaration": "dataspace.wire.Packet",
+            "lines": [
+              13,
+              16
+            ]
+          },
+          {
+            "declaration": "dataspace.wire.Packet.as_bytes",
+            "lines": [
+              19,
+              21
+            ]
+          },
+          {
+            "declaration": "dataspace.wire.ServiceRef",
+            "lines": [
+              7,
+              10
+            ]
+          },
+          {
+            "declaration": "dataspace.wire.check_depth",
+            "lines": [
+              69,
+              88
+            ]
+          },
+          {
+            "declaration": "dataspace.wire.check_depth_loop",
+            "lines": [
+              75,
+              88
+            ]
+          },
+          {
+            "declaration": "dataspace.wire.check_depth_loop.body",
+            "lines": [
+              75,
+              88
+            ]
+          },
+          {
+            "declaration": "dataspace.wire.decode_service",
+            "lines": [
+              102,
+              151
+            ]
+          },
+          {
+            "declaration": "dataspace.wire.decode_service.MIN_SERVICE_BYTES",
+            "lines": [
+              105,
+              105
+            ]
+          },
+          {
+            "declaration": "dataspace.wire.encode_service",
+            "lines": [
+              40,
+              67
+            ]
+          },
+          {
+            "declaration": "dataspace.wire.has_service_prefix",
+            "lines": [
+              90,
+              100
+            ]
+          },
+          {
+            "declaration": "dataspace.wire.has_service_prefix_loop",
+            "lines": [
+              93,
+              100
+            ]
+          },
+          {
+            "declaration": "dataspace.wire.has_service_prefix_loop.body",
+            "lines": [
+              93,
+              100
+            ]
+          },
+          {
+            "declaration": "dataspace.wire.valid_name",
+            "lines": [
+              24,
+              38
+            ]
+          },
+          {
+            "declaration": "dataspace.wire.valid_name_loop",
+            "lines": [
+              30,
+              38
+            ]
+          },
+          {
+            "declaration": "dataspace.wire.valid_name_loop.body",
+            "lines": [
+              30,
+              38
+            ]
+          }
+        ]
+      }
+    ],
+    "handwritten_inputs": [
+      {
+        "file": "proofs/m3/NobleKernel/FunsExternal.lean",
+        "binding": "exact-file",
+        "sha256": "34bed5cb58eb8c879732e27235efff52a3844380a93190b88291623b95dd48b1"
+      },
+      {
+        "file": "proofs/m3/NobleKernel/TypesExternal.lean",
+        "binding": "exact-file",
+        "sha256": "816e8689319559c016245838f8a6524ccbb660de9e85a5b8a87b4ebf6826ee6f"
+      }
+    ],
+    "external_models": [
+      "FunsExternal.lean:core.num.U8.is_ascii_alphanumeric",
+      "FunsExternal.lean:core.str.Str.as_bytes",
+      "FunsExternal.lean:core.str.Str.is_empty",
+      "FunsExternal.lean:core.str.Str.len",
+      "FunsExternal.lean:core.str.converts.from_utf8",
+      "TypesExternal.lean:core.str.error.Utf8Error"
+    ]
+  },
+  "mutation_controls": [
+    {
+      "id": "byte-budget-boundary",
+      "removes": "a record of exactly 64 bytes is no longer within the wire budget",
+      "edits": 1,
+      "mutated_funs_sha256": "758a2837cff651cb44f530a8a5bb23dbbb87796b2dc76ead40639d4dff3a3a0f",
+      "audit_sha256": "0625cadfde6cf3f573ff2b4130c15719593eaf268beed8e0ee244dbaaef13a20",
+      "failing_declarations": [
+        "ServiceWireRefinement.decode_service_refines"
+      ],
+      "lost_strict_axioms": [
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_total",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_refuses_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ],
+      "kept_strict_axioms": 53,
+      "targeted": [
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_refuses_iff"
+      ]
+    },
+    {
+      "id": "zero-depth-class",
+      "removes": "a zero configured depth is refused as a depth error",
+      "edits": 1,
+      "mutated_funs_sha256": "ac724df11f62212b111cb810f4a00d3c6fb860cfddd25ff11eaeaa034e52499c",
+      "audit_sha256": "0625cadfde6cf3f573ff2b4130c15719593eaf268beed8e0ee244dbaaef13a20",
+      "failing_declarations": [
+        "ServiceWireRefinement.decode_service_refines"
+      ],
+      "lost_strict_axioms": [
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_total",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_refuses_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ],
+      "kept_strict_axioms": 53,
+      "targeted": [
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_refuses_iff"
+      ]
+    },
+    {
+      "id": "depth-scan-closer",
+      "removes": "a closing angle bracket lowers the scanned depth",
+      "edits": 1,
+      "mutated_funs_sha256": "a444f6fe2c598dbae9434a080bf6edb0fb64d38b8f99a4fbf6f8d02b6e5b893a",
+      "audit_sha256": "0625cadfde6cf3f573ff2b4130c15719593eaf268beed8e0ee244dbaaef13a20",
+      "failing_declarations": [
+        "ServiceWireRefinement.check_depth_eq"
+      ],
+      "lost_strict_axioms": [
+        "ServiceWireRefinement.check_depth_eq",
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_total",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_refuses_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ],
+      "kept_strict_axioms": 52,
+      "targeted": [
+        "ServiceWireRefinement.check_depth_eq",
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_refuses_iff"
+      ]
+    },
+    {
+      "id": "prefix-byte",
+      "removes": "the record prefix spells service in lower case",
+      "edits": 1,
+      "mutated_funs_sha256": "84a26bd95c6e68f457481199045696061b82fd882c306b768f5e66dd02f11deb",
+      "audit_sha256": "0625cadfde6cf3f573ff2b4130c15719593eaf268beed8e0ee244dbaaef13a20",
+      "failing_declarations": [
+        "ServiceWireRefinement.has_service_prefix_eq"
+      ],
+      "lost_strict_axioms": [
+        "ServiceWireRefinement.has_service_prefix_eq",
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_total",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_refuses_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ],
+      "kept_strict_axioms": 52,
+      "targeted": [
+        "ServiceWireRefinement.has_service_prefix_eq",
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_refuses_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ]
+    },
+    {
+      "id": "ready-tag-swap",
+      "removes": "the #t tag decodes as ready",
+      "edits": 1,
+      "mutated_funs_sha256": "8dbff24c50e25d4665a9f7cc436e3669454beec01a197daf159c5214679842d8",
+      "audit_sha256": "0625cadfde6cf3f573ff2b4130c15719593eaf268beed8e0ee244dbaaef13a20",
+      "failing_declarations": [
+        "ServiceWireRefinement.decode_service_refines"
+      ],
+      "lost_strict_axioms": [
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_total",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_refuses_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ],
+      "kept_strict_axioms": 53,
+      "targeted": [
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ]
+    },
+    {
+      "id": "name-alphabet-underscore",
+      "removes": "an underscore is a name byte",
+      "edits": 1,
+      "mutated_funs_sha256": "159300b617014812518055e9f148004a8675403066a9c67054ab85c44f83f55e",
+      "audit_sha256": "0625cadfde6cf3f573ff2b4130c15719593eaf268beed8e0ee244dbaaef13a20",
+      "failing_declarations": [
+        "ServiceWireRefinement.valid_name_eq"
+      ],
+      "lost_strict_axioms": [
+        "ServiceWireRefinement.valid_name_eq",
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_total",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_refuses_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.encode_service_refines",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ],
+      "kept_strict_axioms": 51,
+      "targeted": [
+        "ServiceWireRefinement.valid_name_eq",
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_refuses_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.encode_service_refines",
+        "ServiceWireRefinement.decode_service_encode_service"
+      ]
+    },
+    {
+      "id": "suffix-quote",
+      "removes": "the closing quote of the name is a double quote",
+      "edits": 1,
+      "mutated_funs_sha256": "f1f800caaa4bb3abbee6b0f758ce83193e9781e5ee05528b856defd0ea865a53",
+      "audit_sha256": "0625cadfde6cf3f573ff2b4130c15719593eaf268beed8e0ee244dbaaef13a20",
+      "failing_declarations": [
+        "ServiceWireRefinement.decode_service_refines"
+      ],
+      "lost_strict_axioms": [
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_total",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_refuses_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ],
+      "kept_strict_axioms": 53,
+      "targeted": [
+        "ServiceWireRefinement.decode_service_refines",
+        "ServiceWireRefinement.decode_service_accepts_iff",
+        "ServiceWireRefinement.decode_service_refuses_iff",
+        "ServiceWireRefinement.decode_service_of_encode",
+        "ServiceWireRefinement.decode_service_accepted_is_canonical",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ]
+    },
+    {
+      "id": "encoder-ready-tag",
+      "removes": "a ready value is encoded with the #t tag",
+      "edits": 1,
+      "mutated_funs_sha256": "1c73529ec17df83e9b64616ecfb8aa73159ff1a9d14bd36ce46722178165cd47",
+      "audit_sha256": "0625cadfde6cf3f573ff2b4130c15719593eaf268beed8e0ee244dbaaef13a20",
+      "failing_declarations": [
+        "ServiceWireRefinement.encode_service_refines"
+      ],
+      "lost_strict_axioms": [
+        "ServiceWireRefinement.encode_service_refines",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ],
+      "kept_strict_axioms": 58,
+      "targeted": [
+        "ServiceWireRefinement.encode_service_refines",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ]
+    },
+    {
+      "id": "encoder-invalid-name-class",
+      "removes": "an invalid name is refused as InvalidName",
+      "edits": 1,
+      "mutated_funs_sha256": "c136b80f3f98d382ca74bbdd5019493e04cd9674b7179b692abd39eedb50e3e5",
+      "audit_sha256": "0625cadfde6cf3f573ff2b4130c15719593eaf268beed8e0ee244dbaaef13a20",
+      "failing_declarations": [
+        "ServiceWireRefinement.encode_service_refines"
+      ],
+      "lost_strict_axioms": [
+        "ServiceWireRefinement.encode_service_refines",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ],
+      "kept_strict_axioms": 58,
+      "targeted": [
+        "ServiceWireRefinement.encode_service_refines"
+      ]
+    },
+    {
+      "id": "encoder-skips-prefix",
+      "removes": "the name is written after the record prefix",
+      "edits": 1,
+      "mutated_funs_sha256": "84a2cc74ed55f291899f3f4ae4413c5f01c34f60d2a96a27bd3584aa7a50b327",
+      "audit_sha256": "0625cadfde6cf3f573ff2b4130c15719593eaf268beed8e0ee244dbaaef13a20",
+      "failing_declarations": [
+        "ServiceWireRefinement.encode_service_refines"
+      ],
+      "lost_strict_axioms": [
+        "ServiceWireRefinement.encode_service_refines",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ],
+      "kept_strict_axioms": 58,
+      "targeted": [
+        "ServiceWireRefinement.encode_service_refines",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ]
+    },
+    {
+      "id": "encoder-budget",
+      "removes": "the record budget is the 64-byte wire budget",
+      "edits": 1,
+      "mutated_funs_sha256": "66f1f084106694d59022625cda5fafac78ceaaf8a568130061e1279b7f921047",
+      "audit_sha256": "0625cadfde6cf3f573ff2b4130c15719593eaf268beed8e0ee244dbaaef13a20",
+      "failing_declarations": [
+        "ServiceWireRefinement.encode_service_refines"
+      ],
+      "lost_strict_axioms": [
+        "ServiceWireRefinement.encode_service_refines",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ],
+      "kept_strict_axioms": 58,
+      "targeted": [
+        "ServiceWireRefinement.encode_service_refines",
+        "ServiceWireRefinement.decode_service_encode_service",
+        "ServiceWireRefinement.encode_service_decode_service"
+      ]
+    }
+  ],
+  "claims": {
+    "theorems_by_role": {
+      "result-inversion": 1,
+      "byte-view": 9,
+      "depth-scan": 3,
+      "utf8": 5,
+      "generated-step": 22,
+      "model-shape": 12,
+      "refinement": 2,
+      "consequence": 5,
+      "round-trip": 2
+    },
+    "refinements": [
+      "ServiceWireRefinement.decode_service_refines",
+      "ServiceWireRefinement.encode_service_refines"
+    ],
+    "rust_round_trips": [
+      "ServiceWireRefinement.decode_service_encode_service",
+      "ServiceWireRefinement.encode_service_decode_service"
+    ],
+    "implementation_subjects": [
+      "noble_kernel.core.str.converts.from_utf8",
+      "noble_kernel.dataspace.wire.Packet.as_bytes",
+      "noble_kernel.dataspace.wire.check_depth",
+      "noble_kernel.dataspace.wire.decode_service",
+      "noble_kernel.dataspace.wire.decode_service.MIN_SERVICE_BYTES",
+      "noble_kernel.dataspace.wire.encode_service",
+      "noble_kernel.dataspace.wire.has_service_prefix",
+      "noble_kernel.dataspace.wire.valid_name"
+    ],
+    "finite_rust_comparisons": "none in this lane; verification/service-ref/differential.json remains the finite Rust-level comparison",
+    "correspondence": "statements name the checked-in generated functions; their bytes match the independent M4 extraction check and reviewed lock; the Charon/Aeneas translation is trusted, not re-run by this lane"
+  },
+  "assumptions": [
+    "Pinned Lean and the imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.",
+    "The checked-in kernel subjects match the recorded extraction and build against the selected Aeneas Lean library without compatibility aliases; matching the library pin alone does not renew extraction provenance.",
+    "The independently checked Charon/Aeneas translation (verification/m4/implementation.json.gz and extraction-lock.json.gz) is trusted to model the bound Rust sources; this lane does not re-run it.",
+    "Reachable handwritten external models are part of the trusted base and are listed in binding.external_models; core.str.converts.from_utf8 is modelled as returning its input on valid UTF-8 and Utf8Error.Invalid otherwise.",
+    "The Aeneas library models of slices, arrays, range indexing and range writes, slice copies, scalars, checked arithmetic and loops are trusted."
+  ],
+  "non_claims": [
+    "The decoded name is related by its byte values; that it borrows the input slice (zero copy) is not stated.",
+    "A packet is related by its first len bytes; the contents of the rest of its 64-byte buffer are not stated.",
+    "No claim about callers of the codec (dataspace table actions, noble-syndicate) beyond its results.",
+    "No Rust compiler, Charon or Aeneas correctness claim."
+  ],
+  "scope": "Universal theorems over the checked-in generated ServiceRef codec: for every byte slice and every configured depth the decoder returns, and the decision it returns, read through observed, equals NobleFoundation.ServiceWire.decode; for every string and readiness tag the encoder returns a packet carrying exactly the model encoding of a valid name, and InvalidName otherwise; totality, exact acceptance, exact refusal classes, canonical-only acceptance and both Rust-level round trips through Packet.as_bytes follow.",
+  "artifact_directory": "/dev/shm/noble-iss/lanes-b6/service-wire",
+  "command_count": 61
+}
