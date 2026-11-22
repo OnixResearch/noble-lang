@@ -1,0 +1,6 @@
+   Compiling noble-kernel v0.0.0 (/home/brittonr/.cache/noble-cairn/wt/b4-own/crates/noble-kernel)
+   Compiling noble-contracts v0.0.0 (/home/brittonr/.cache/noble-cairn/wt/b4-own/crates/noble-contracts)
+   Compiling noble-wasm v0.0.0 (/home/brittonr/.cache/noble-cairn/wt/b4-own/crates/noble-wasm)
+   Compiling noble-ngraph v0.0.0 (/home/brittonr/.cache/noble-cairn/wt/b4-own/crates/noble-ngraph)
+   Compiling noble-cli v0.0.0 (/home/brittonr/.cache/noble-cairn/wt/b4-own/crates/noble-cli)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 18.50s

@@ -1,0 +1,6 @@
+(contract 1 guard-eq-i64-literal-6
+  (input (x I64))
+  (output (y I64))
+  (program [ 1 + ])
+  (requires (eq (in x) 6))
+  (ensures true))

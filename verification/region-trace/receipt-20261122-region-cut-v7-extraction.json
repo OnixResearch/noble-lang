@@ -1,0 +1,564 @@
+{
+  "schema": "noble-region-cut-extraction/v2",
+  "result": "passed",
+  "source_commit": "ba22f8356ffc63f2cc43633a6b96d61cf9fb5c06",
+  "source_tree": "161dfbc0995274c9d41ccf2412a1f43beaf1db55",
+  "clean_source": true,
+  "selected_roots": [
+    "noble_kernel::region_read::preflight",
+    "noble_kernel::region_read::authorize_copy",
+    "noble_kernel::resources::table::access"
+  ],
+  "generated_sha256": {
+    "Funs.lean": "f3e215ca1c661a4020f9202a5a5493bc30cb7dc05a2f3907625ac2c607b311e3",
+    "Types.lean": "0c6050b9cf4281c7c34980ffce4bcf3d07ad4497bb093819b7daa5380ac0616e",
+    "translation.json": "e6179cd3a3c38b1f03a99eb0038530deba751e3396a1440e09b4144fa2c8ab5e"
+  },
+  "llbc_sha256": "a1129fa601b3d66b68965320d89610a44bfc743deb0374d380bc06db0f9eacc5",
+  "source_sha256": {
+    "proofs/m5/RegionCutProof.lean": "9c7375faa48aebcd249419467bb7944af22ef50cbae7f1793867e947391741d5",
+    "proofs/m5/HostLocality.lean": "3971f7502d79ff7e5c1289f70f19ec5e9f145c7065b14f225cd99fb26764e697",
+    "proofs/m5/M5Resources.lean": "5ff34ffd231d241c675c95bab6bf5175d932ca4a47b79d75c9520526a1fc599f",
+    "proofs/m3/NobleKernel/Types.lean": "405faa8b512ef78ae210c46f260f73ef6cfbba8f1c26f8131ea1c2fca699f41e",
+    "proofs/m3/NobleKernel/Funs.lean": "a31dddcb77a46bc3fb7423108df1d4d4a0e5e78b6be898138b0c00a4654e3835",
+    "proofs/m3/NobleKernel/FunsExternal.lean": "34bed5cb58eb8c879732e27235efff52a3844380a93190b88291623b95dd48b1",
+    "proofs/m3/NobleKernel.lean": "bd411e329236cb36c38920ca57b4c810a40a30a71a7954f2529225ef0966d9ec",
+    "proofs/m5/region-cut-inventory.json": "69c5168570a116e51efb51cdcd2b01e79f2d080593ee7b92ba22f9a677323a49",
+    "proofs/m5/lakefile.toml": "6b7cf011301f1f09974ea74ddaeb177cb7b8726a5699e8639a07185e22e53f04",
+    "crates/noble-kernel/src/region/read.rs": "5310805705afc7c411ee022df7feb82b37574a5f11d765661b361b73042e0437",
+    "crates/noble-kernel/src/lib.rs": "7f81d6e0f0e6a772ea956e6c40db10ec8775ef268cb0786cfbb07ecc91a9b04f",
+    "crates/noble-cli/src/component/bounded_region.rs": "3e88f1bf9a47598844f0bfe2b13d49b6aa63cee03f16b06380cee79fd52d0377",
+    "verification/host-locality/model-inputs.json": "fdba570e3c24850d6c00ae64f490cce643e3334e3d0f81334cc30955c6ddaecd",
+    "verification/region-trace/region-cut-generate.mjs": "4ad9d1d9a292570f6a9065e0cfccbbe74d843901f953f0fb99a07dd73ba3c69b",
+    "verification/region-trace/region-cut-check.mjs": "fbbd2b5c090e8a97fd99fc50d7427f98ed2bb09e6c7b720ab28260b822525bcc",
+    "verification/region-trace/region-cut-controls.mjs": "7a43f50ffe9023add6bec61caca31de01e9bd386da141b06621337e6628afe7a"
+  },
+  "proof_subject": {
+    "files": [
+      "proofs/m3/NobleKernel/Types.lean",
+      "proofs/m3/NobleKernel/Funs.lean",
+      "proofs/m3/NobleKernel/FunsExternal.lean"
+    ],
+    "provenance": "the reviewed whole-crate subject bound by the M4 extraction lock, not this lane",
+    "selected_declarations_checked_byte_for_byte": [
+      "noble_kernel::region_read::Refusal",
+      "noble_kernel::region_read::Request",
+      "noble_kernel::region_read::Range",
+      "noble_kernel::region_read::MAX_REGION_BYTES",
+      "noble_kernel::region_read::preflight",
+      "noble_kernel::region_read::authorize_copy"
+    ],
+    "reused_table_functions_checked_byte_for_byte": [
+      "noble_kernel::resources::table::access::{noble_kernel::resources::table::Table}::begin",
+      "noble_kernel::resources::table::access::{noble_kernel::resources::table::Table}::native_access",
+      "noble_kernel::resources::table::access::{noble_kernel::resources::table::Table}::complete",
+      "noble_kernel::resources::table::{noble_kernel::resources::table::Table}::commit"
+    ],
+    "duplicate_declarations_in_proofs_m5": 0
+  },
+  "inherited_m5_resource_source_sha256": {
+    "crates/noble-kernel/src/resources/mod.rs": "8669397e41d886c4b795a1a76df08c4e8665669dc533586d1587191b9577b0e3",
+    "crates/noble-kernel/src/resources/table.rs": "e4a7c7add3fedae1b590601e12f13daa169da6a5d625ccae1ad51c75d27adc35",
+    "crates/noble-kernel/src/resources/table/access.rs": "8fb0aa1c1b7c53407ac56238923b4b9a6a75e149dd781c36322183b13e84421b",
+    "crates/noble-kernel/src/resources/table/inspection.rs": "ea6c0522621552be0d2eaa0528035dd88e08913cf5901cf57c7d7df860da4a58",
+    "crates/noble-kernel/src/resources/table/transfer.rs": "2a380ae1f469d3153e1a09a297d8da51d8d871098285021adbeebe3e99e74cff",
+    "crates/noble-kernel/src/resources/transition.rs": "f1afba83433c04ae07a4ac165b3ef614af1c12c31336ef80736add52268bdc6f"
+  },
+  "external_models": {
+    "core.result.Result.is_err": "existing pinned Aeneas M5 external",
+    "core.option.Option.Insts.CoreCmpPartialEqOption.eq": "existing pinned Aeneas M5 external",
+    "Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from": "the checked-in whole-crate model in proofs/m3/NobleKernel/FunsExternal.lean; RegionCutProof.conversion_models_agree proves it equals the lane reference model and the conversion theorems are audited below"
+  },
+  "theorems": [
+    {
+      "name": "RegionCutProof.usize_max_succ_pow",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.usize_max_succ_pow : ↑Aeneas.Std.Usize.max + 1 = 2 ^ Aeneas.Std.UScalarTy.Usize.numBits",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.iscalar_hcast_usize_val",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.iscalar_hcast_usize_val : ∀ (value : Aeneas.Std.I64), 0 ≤ ↑value → ↑value ≤ ↑Aeneas.Std.Usize.max → ↑(Aeneas.Std.IScalar.hcast Aeneas.Std.UScalarTy.Usize value) = (↑value).toNat",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.conversion_models_agree",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.conversion_models_agree : ∀ (value : Aeneas.Std.I64), noble_kernel.Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from value = RegionCutProof.laneConversionModel value",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.conversion_success_nonnegative",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.conversion_success_nonnegative : ∀ (x : Aeneas.Std.I64) (converted : Aeneas.Std.Usize), noble_kernel.Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from x = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok converted) → 0 ≤ ↑x ∧ ↑converted = (↑x).toNat",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.conversion_refuses_negative",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.conversion_refuses_negative : ∀ (x : Aeneas.Std.I64), ↑x < 0 → noble_kernel.Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from x = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Err ())",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.handle_eq_self",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.handle_eq_self : ∀ (handle : noble_kernel.resources.Handle), noble_kernel.resources.Handle.Insts.CoreCmpPartialEqHandle.eq handle handle = Aeneas.Std.Result.ok true",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.handle_eq_sound",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.handle_eq_sound : ∀ (left right : noble_kernel.resources.Handle), noble_kernel.resources.Handle.Insts.CoreCmpPartialEqHandle.eq left right = Aeneas.Std.Result.ok true → left = right",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.handle_eq_truth",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.handle_eq_truth : ∀ (left right : noble_kernel.resources.Handle), noble_kernel.resources.Handle.Insts.CoreCmpPartialEqHandle.eq left right = Aeneas.Std.Result.ok (decide (left = right))",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.usize_tryMkOpt_value",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.usize_tryMkOpt_value : ∀ (n : ℕ) (value : Aeneas.Std.Usize), Aeneas.Std.UScalar.tryMkOpt Aeneas.Std.UScalarTy.Usize n = some value → ↑value = n",
+      "axioms": [
+        "propext"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.successful_preflight_binds_signed_range",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.successful_preflight_binds_signed_range : ∀ (table : noble_kernel.resources.table.Table) (required : noble_kernel.resources.Requirement) (request : noble_kernel.region_read.Request) (regionSize : Aeneas.Std.Usize) (range : noble_kernel.region_read.Range) (snapshot : noble_kernel.resources.Snapshot), table.validate request.claim required = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok snapshot) → request.retained = some request.claim → noble_kernel.region_read.preflight table required request regionSize = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok range) → RegionCutProof.rangeBinding request range regionSize",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.successful_preflight_matches_region_trace_commit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.successful_preflight_matches_region_trace_commit : ∀ (table : noble_kernel.resources.table.Table) (required : noble_kernel.resources.Requirement) (request : noble_kernel.region_read.Request) (regionSize : Aeneas.Std.Usize) (range : noble_kernel.region_read.Range) (snapshot : noble_kernel.resources.Snapshot), table.validate request.claim required = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok snapshot) → request.retained = some request.claim → noble_kernel.region_read.preflight table required request regionSize = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok range) → RegionTrace.CommitKind.regionRead (↑range.start) (↑range.finish - ↑range.start) = RegionTrace.CommitKind.regionRead (↑request.offset_bytes).toNat (↑request.length_bytes).toNat",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.access_refusal_prevents_copy",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.access_refusal_prevents_copy : ∀ (failure : noble_kernel.resources.Error) (claim : noble_kernel.resources.Handle) (scope : noble_kernel.resources.Scope) (range : noble_kernel.region_read.Range) (size : Aeneas.Std.Usize), noble_kernel.region_read.authorize_copy (Aeneas.Std.core.result.Result.Err failure) claim scope range size = Aeneas.Std.Result.ok false",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.authorized_copy_has_native_access",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.authorized_copy_has_native_access : ∀ (access : Aeneas.Std.core.result.Result noble_kernel.resources.Snapshot noble_kernel.resources.Error) (claim : noble_kernel.resources.Handle) (scope : noble_kernel.resources.Scope) (range : noble_kernel.region_read.Range) (size : Aeneas.Std.Usize), noble_kernel.region_read.authorize_copy access claim scope range size = Aeneas.Std.Result.ok true → ∃ snapshot, access = Aeneas.Std.core.result.Result.Ok snapshot",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.state_eq_with_busy_total",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.state_eq_with_busy_total : ∀ (state : noble_kernel.resources.State) (serial : Aeneas.Std.U64), ∃ answer, noble_kernel.resources.State.Insts.CoreCmpPartialEqState.eq state (noble_kernel.resources.State.Busy serial) = Aeneas.Std.Result.ok answer",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.state_eq_busy_sound",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.state_eq_busy_sound : ∀ (state : noble_kernel.resources.State) (serial : Aeneas.Std.U64), noble_kernel.resources.State.Insts.CoreCmpPartialEqState.eq state (noble_kernel.resources.State.Busy serial) = Aeneas.Std.Result.ok true → state = noble_kernel.resources.State.Busy serial",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.authorized_copy_exact_identity_and_bounds",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.authorized_copy_exact_identity_and_bounds : ∀ (snapshot : noble_kernel.resources.Snapshot) (claim : noble_kernel.resources.Handle) (scope : noble_kernel.resources.Scope) (range : noble_kernel.region_read.Range) (regionSize : Aeneas.Std.Usize), noble_kernel.region_read.authorize_copy (Aeneas.Std.core.result.Result.Ok snapshot) claim scope range regionSize = Aeneas.Std.Result.ok true → snapshot.handle = claim ∧ scope.handle = claim ∧ snapshot.state = noble_kernel.resources.State.Busy scope.serial ∧ snapshot.last_scope = some scope.serial ∧ ↑range.start ≤ ↑range.finish ∧ ↑range.finish ≤ ↑regionSize",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.admitted_completion_decision",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.admitted_completion_decision : ∀ (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64), (↑table.records)[↑record.handle.slot]? = some record → M5Resources.valid record = true → record.state = noble_kernel.resources.State.Busy serial → M5Resources.scopeCheck record serial = Aeneas.Std.core.result.Result.Ok () → table.decide record.handle (noble_kernel.resources.Event.Complete serial noble_kernel.resources.Completion.Success) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { record := { handle := record.handle, state := noble_kernel.resources.State.Live, last_scope := record.last_scope, retirement := record.retirement }, action := noble_kernel.resources.Action.OwnerReturned noble_kernel.resources.Completion.Success })",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.owner_return_commit_succeeds",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.owner_return_commit_succeeds : ∀ (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot), (↑table.records)[↑record.handle.slot]? = some record → 0 < ↑table.pins → ∃ updated, table.commit { record := { handle := record.handle, state := noble_kernel.resources.State.Live, last_scope := record.last_scope, retirement := record.retirement }, action := noble_kernel.resources.Action.OwnerReturned noble_kernel.resources.Completion.Success } = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok (), updated)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    },
+    {
+      "name": "RegionCutProof.admitted_complete_restores_owner",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "statement": "RegionCutProof.admitted_complete_restores_owner : ∀ (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64), (↑table.records)[↑record.handle.slot]? = some record → M5Resources.valid record = true → record.state = noble_kernel.resources.State.Busy serial → M5Resources.scopeCheck record serial = Aeneas.Std.core.result.Result.Ok () → 0 < ↑table.pins → ∃ updated, noble_kernel.resources.table.access.Table.complete table { handle := record.handle, serial := serial } noble_kernel.resources.Completion.Success = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { owner := some { handle := record.handle }, decision := { record := { handle := record.handle, state := noble_kernel.resources.State.Live, last_scope := record.last_scope, retirement := record.retirement }, action := noble_kernel.resources.Action.OwnerReturned noble_kernel.resources.Completion.Success } }, updated)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved"
+    }
+  ],
+  "controls": {
+    "result": "passed",
+    "positive": "real-wrapper",
+    "controls": [
+      {
+        "name": "authorization-removed",
+        "observed": "refused"
+      },
+      {
+        "name": "authorization-after-copy",
+        "observed": "refused"
+      },
+      {
+        "name": "owner-substituted",
+        "observed": "refused"
+      },
+      {
+        "name": "protected-commit-omitted",
+        "observed": "refused"
+      },
+      {
+        "name": "failure-pretends-owner-restored",
+        "observed": "refused"
+      }
+    ]
+  },
+  "commands": [
+    {
+      "executable": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "executable_sha256": "af952b5135fe3ddf83c49163524c22f83496aea67d9f8bad416d807a0cc799e7",
+      "args": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-cairn/wt/verify-b2",
+      "exit": 0,
+      "stdout_sha256": "892e4d05dcf1576ff2ab3eee972f6727d83a9bd2fdfea757c7488e953b0fd615",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "executable": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "executable_sha256": "af952b5135fe3ddf83c49163524c22f83496aea67d9f8bad416d807a0cc799e7",
+      "args": [
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-cairn/wt/verify-b2",
+      "exit": 0,
+      "stdout_sha256": "bc5c207a5356abb13fcd4c609fc26ac2f6313a5676b65477e400f45b3f0edc42",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "executable": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "executable_sha256": "af952b5135fe3ddf83c49163524c22f83496aea67d9f8bad416d807a0cc799e7",
+      "args": [
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-cairn/wt/verify-b2",
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "executable": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "executable_sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "args": [
+        "verification/region-trace/region-cut-controls.mjs"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-cairn/wt/verify-b2",
+      "exit": 0,
+      "stdout_sha256": "bc3b2dabb293e9a564b30183a875d469f2d2f92b566d499406e4cb12f73cae77",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "executable": "/nix/store/dg8i5s1hl2lncdcjmi6iq98iq1dji5x3-charon/bin/charon",
+      "executable_sha256": "71f5e98fe202aefcfce7ea9cd759502d672fa15d695fe3fa080efcda88aa9cb2",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--inline-anon-consts",
+        "--start-from",
+        "noble_kernel::region_read::preflight",
+        "--start-from",
+        "noble_kernel::region_read::authorize_copy",
+        "--start-from",
+        "noble_kernel::resources::table::access",
+        "--dest-file",
+        "/dev/shm/noble-iss/lanes-b3/kernel/region-trace/region-cut/region-cut.llbc",
+        "--",
+        "--manifest-path",
+        "crates/noble-kernel/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-cairn/wt/verify-b2",
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "72c32dbe15bbcad35699676f49b67bba1459eb19104d2d2770059b47d42bdb8c"
+    },
+    {
+      "executable": "/nix/store/mx4siwxnwb74avq1sq971h5i55bwxwzq-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "executable_sha256": "e4e3aad6e8ed45d2b05c82d53be24fe2164bcb129d9a7ae110b66b9be758cbb8",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-split-files",
+        "-gen-lib-entry",
+        "-all-computable",
+        "-dest",
+        "/dev/shm/noble-iss/lanes-b3/kernel/region-trace/region-cut/generated",
+        "/dev/shm/noble-iss/lanes-b3/kernel/region-trace/region-cut/region-cut.llbc"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-cairn/wt/verify-b2",
+      "exit": 0,
+      "stdout_sha256": "a239eaa58c983a3258ca749eb6b6a9d8d0f39b736393c8ccf3767448a7ec7edc",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "executable": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+      "executable_sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+      "args": [
+        "verification/region-trace/region-cut-generate.mjs",
+        "/dev/shm/noble-iss/lanes-b3/kernel/region-trace/region-cut/generated",
+        "/dev/shm/noble-iss/lanes-b3/kernel/region-trace/region-cut/fresh-selected.lean"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-cairn/wt/verify-b2",
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "executable": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "executable_sha256": "f6b0733782cb24932ed45979f88eccfb0e466f966a578c9f35e70ea468ee67ad",
+      "args": [
+        "--no-cache",
+        "build",
+        "RegionCutProof"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-cairn/wt/verify-b2/proofs/m5",
+      "exit": 0,
+      "stdout_sha256": "fdc1ae0aefa63cef15f8f6d99680b2581a7b8743d806c020e27d6461b0929f36",
+      "stderr_sha256": "9225b59c2a9f74a8edcb1a158c7ce9448463dfb5868569965db87af5275ee23a"
+    },
+    {
+      "executable": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "executable_sha256": "f6b0733782cb24932ed45979f88eccfb0e466f966a578c9f35e70ea468ee67ad",
+      "args": [
+        "env",
+        "lean",
+        "--json",
+        "/dev/shm/noble-iss/lanes-b3/kernel/region-trace/region-cut/Audit.lean"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-cairn/wt/verify-b2/proofs/m5",
+      "exit": 0,
+      "stdout_sha256": "0e1fc97f02eae0819678ae1eda9c8062361eb4e22f0a17272fec4bb118da7ed9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "executable": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "executable_sha256": "af952b5135fe3ddf83c49163524c22f83496aea67d9f8bad416d807a0cc799e7",
+      "args": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-cairn/wt/verify-b2",
+      "exit": 0,
+      "stdout_sha256": "892e4d05dcf1576ff2ab3eee972f6727d83a9bd2fdfea757c7488e953b0fd615",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "executable": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "executable_sha256": "af952b5135fe3ddf83c49163524c22f83496aea67d9f8bad416d807a0cc799e7",
+      "args": [
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-cairn/wt/verify-b2",
+      "exit": 0,
+      "stdout_sha256": "bc5c207a5356abb13fcd4c609fc26ac2f6313a5676b65477e400f45b3f0edc42",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "executable": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "executable_sha256": "af952b5135fe3ddf83c49163524c22f83496aea67d9f8bad416d807a0cc799e7",
+      "args": [
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "cwd": "/home/brittonr/.cache/noble-cairn/wt/verify-b2",
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "scope": "Two extracted Rust decision functions and the existing M5 table functions, proved over the checked-in whole-crate generated declarations; not the imperative wrapper, allocator, emitted component, Canonical ABI or Wasmtime semantics."
+}

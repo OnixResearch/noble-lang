@@ -2808,14 +2808,6 @@
       "disposition": "open",
       "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
       "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/controls.rs:5491:5500",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/controls.rs:948:964",
       "refinement": "open"
     },
@@ -2857,70 +2849,6 @@
       "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
       "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/controls/checker.rs:8407:8415",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:5372:5377",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:7035:7042",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:7133:7135",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:7351:7358",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:8618:8625",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:8877:8880",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:9197:9200",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Anonymous closure carrying authored source-body semantics; inherited extraction and refinement obligations remain open. Its effects remain in compiler architecture evaluation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:9344:9353",
       "refinement": "open"
     },
     {
@@ -112672,14 +112600,6 @@
       "disposition": "generated",
       "note": "Renewed review fixes: kernel bounds, ngraph certificate and extraction, contracts, live slots, hosts, tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
       "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/controls.rs:7287:9394",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed review fixes: kernel bounds, ngraph certificate and extraction, contracts, live slots, hosts, tests: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/framing.rs:11176:12165",
       "refinement": "not-applicable"
     },
@@ -128946,70 +128866,6 @@
       "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/arguments.rs:20763:24587",
       "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 4: #40 conversions, #123 Nickel builder, #37/#109/#117/#124 revision-3 nets, #47 follow-up, #39 checked I64, #80 encoded layout, #32 specialization, #36 ADAPT-17 trial, #114 belt targets, #62 checkers, #73 typed chunks, #64 chained certificates, #82 Wasm pilot from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:1987:1989",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 4: #40 conversions, #123 Nickel builder, #37/#109/#117/#124 revision-3 nets, #47 follow-up, #39 checked I64, #80 encoded layout, #32 specialization, #36 ADAPT-17 trial, #114 belt targets, #62 checkers, #73 typed chunks, #64 chained certificates, #82 Wasm pilot from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:3175:3187",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 4: #40 conversions, #123 Nickel builder, #37/#109/#117/#124 revision-3 nets, #47 follow-up, #39 checked I64, #80 encoded layout, #32 specialization, #36 ADAPT-17 trial, #114 belt targets, #62 checkers, #73 typed chunks, #64 chained certificates, #82 Wasm pilot from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:3534:3541",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 4: #40 conversions, #123 Nickel builder, #37/#109/#117/#124 revision-3 nets, #47 follow-up, #39 checked I64, #80 encoded layout, #32 specialization, #36 ADAPT-17 trial, #114 belt targets, #62 checkers, #73 typed chunks, #64 chained certificates, #82 Wasm pilot from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:4671:4673",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 4: #40 conversions, #123 Nickel builder, #37/#109/#117/#124 revision-3 nets, #47 follow-up, #39 checked I64, #80 encoded layout, #32 specialization, #36 ADAPT-17 trial, #114 belt targets, #62 checkers, #73 typed chunks, #64 chained certificates, #82 Wasm pilot from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:5058:5065",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 4: #40 conversions, #123 Nickel builder, #37/#109/#117/#124 revision-3 nets, #47 follow-up, #39 checked I64, #80 encoded layout, #32 specialization, #36 ADAPT-17 trial, #114 belt targets, #62 checkers, #73 typed chunks, #64 chained certificates, #82 Wasm pilot from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:5369:5376",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 4: #40 conversions, #123 Nickel builder, #37/#109/#117/#124 revision-3 nets, #47 follow-up, #39 checked I64, #80 encoded layout, #32 specialization, #36 ADAPT-17 trial, #114 belt targets, #62 checkers, #73 typed chunks, #64 chained certificates, #82 Wasm pilot from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:5884:5886",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 4: #40 conversions, #123 Nickel builder, #37/#109/#117/#124 revision-3 nets, #47 follow-up, #39 checked I64, #80 encoded layout, #32 specialization, #36 ADAPT-17 trial, #114 belt targets, #62 checkers, #73 typed chunks, #64 chained certificates, #82 Wasm pilot from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:6173:6185",
-      "refinement": "open"
     },
     {
       "category": "body",
@@ -187672,38 +187528,6 @@
       "disposition": "open",
       "note": "Renewed Cairn campaign batch 1 (2026-11-20): owner-law release consumer, v4 build pins, PAA-1 consumer and the three-feature collection plan, guards v2, wire@1, goal view, calculator contract, live and ownership lanes from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/operations/invocation.rs:2313:2315",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign batch 1 (2026-11-20): owner-law release consumer, v4 build pins, PAA-1 consumer and the three-feature collection plan, guards v2, wire@1, goal view, calculator contract, live and ownership lanes from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/operations/invocation.rs:4874:4876",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign batch 1 (2026-11-20): owner-law release consumer, v4 build pins, PAA-1 consumer and the three-feature collection plan, guards v2, wire@1, goal view, calculator contract, live and ownership lanes from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/operations/invocation.rs:7537:7544",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign batch 1 (2026-11-20): owner-law release consumer, v4 build pins, PAA-1 consumer and the three-feature collection plan, guards v2, wire@1, goal view, calculator contract, live and ownership lanes from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/operations/invocation.rs:7577:7584",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign batch 1 (2026-11-20): owner-law release consumer, v4 build pins, PAA-1 consumer and the three-feature collection plan, guards v2, wire@1, goal view, calculator contract, live and ownership lanes from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker/assembly.rs:3490:3497",
       "refinement": "open"
     },
@@ -193790,14 +193614,6 @@
     {
       "category": "body",
       "disposition": "open",
-      "note": "Renewed Cairn campaign batch 1 (2026-11-20): owner-law release consumer, v4 build pins, PAA-1 consumer and the three-feature collection plan, guards v2, wire@1, goal view, calculator contract, live and ownership lanes from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble::core::companions::operations::invocation::invoke_list::PRELUDE",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
       "note": "Renewed Cairn campaign batch 1 (2026-11-20): owner-law release consumer, v4 build pins, PAA-1 consumer and the three-feature collection plan, guards v2, wire@1, goal view, calculator contract, live and ownership lanes from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
       "qualified_path": "noble::core::worker::Engine::tools_record",
@@ -198064,135 +197880,7 @@
       "disposition": "open",
       "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:45530:45537",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:45857:49502",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:46555:46562",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:46716:46723",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:47604:47611",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:47991:47998",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:49978:49984",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:50372:50379",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:50732:50739",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:50799:50806",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:50913:50919",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:5120:5127",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:51234:51241",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:51375:51382",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:51617:51964",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:52050:53153",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:52518:52525",
       "refinement": "open"
     },
     {
@@ -198210,134 +197898,6 @@
       "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker/configuration.rs:5362:5364",
       "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:100071:101422",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:101440:102368",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:103380:104640",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:104658:106164",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:106182:107735",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:106265:106322",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:107753:107948",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:107966:109239",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:108221:108233",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:109257:110734",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:109549:109564",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:110752:112061",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:110843:110858",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:112079:113086",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:112226:112260",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:113490:114546",
-      "refinement": "not-applicable"
     },
     {
       "category": "body",
@@ -198506,126 +198066,6 @@
       "package": "noble-contracts",
       "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:55412:55414",
       "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:76121:76732",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:77350:80667",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:80925:82970",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:83167:86433",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:83462:83476",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:86451:88156",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:88174:90913",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:90931:93657",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:93675:94384",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:94402:95325",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:95343:96041",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:96059:96885",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:96903:97927",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:97945:98629",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm): every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-contracts",
-      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:98647:100053",
-      "refinement": "not-applicable"
     },
     {
       "category": "body",
@@ -198929,6 +198369,702 @@
       "note": "Renewed Cairn campaign combined batch (batch 2 plus LIVE round 3): live REPL test hosts and shipped byte admission (noble-cli live/worker/engine), the live test-host validation rule (noble-kernel), live session test hosts (noble-contracts) and live effect admission (noble-wasm) from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-contracts",
       "qualified_path": "noble_contracts::source::tests::live_session_admits_core_test_hosts_only_under_the_host_grant",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/controls.rs:5502:5511",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/controls.rs:7298:9405",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/controls/guard.rs:828:4040",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:5756:5761",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:7419:7426",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:7517:7519",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:7735:7742",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:9002:9009",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:9261:9264",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:9581:9584",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/entry.rs:9728:9737",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/operations/invocation.rs:11789:11802",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/operations/invocation.rs:12087:12099",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/operations/invocation.rs:12189:12198",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/operations/invocation.rs:12360:12362",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/operations/invocation.rs:15171:15178",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/operations/invocation.rs:15211:15218",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/operations/invocation.rs:2484:2486",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/operations/invocation.rs:5730:5732",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:2017:2019",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:3205:3217",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:3564:3571",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:4879:4881",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:5266:5273",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:5577:5584",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:6092:6094",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/companions/session.rs:6381:6393",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:45755:45762",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:46082:49727",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:46780:46787",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:46941:46948",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:47829:47836",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:48216:48223",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:50203:50209",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:50597:50604",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:50957:50964",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:51024:51031",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:51138:51144",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:51459:51466",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:51600:51607",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:51842:52189",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:52275:53378",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/core/worker.rs:52743:52750",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:100115:101466",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:101484:102412",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:103424:104684",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:104702:106208",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:106226:107779",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:106309:106366",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:107797:107992",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:108010:109283",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:108265:108277",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:109301:110778",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:109593:109608",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:110796:112105",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:110887:110902",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:112123:113130",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:112270:112304",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:113534:114636",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:76165:76776",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:77394:80711",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:80969:83014",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:83211:86477",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:83506:83520",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:86495:88200",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:88218:90957",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:90975:93701",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:93719:94428",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:94446:95369",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:95387:96085",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:96103:96929",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:96947:97971",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:97989:98673",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-contracts",
+      "qualified_path": "noble-contracts::closure@crates/noble-contracts/src/source.rs:98691:100097",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: declaration-only compiler kind (module); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::controls::guard",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::controls::guard::EQ_FIVE",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::controls::guard::EQ_SIX",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::controls::guard::TRUE_PROOF",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::controls::guard::exercise",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::controls::guard::test",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "structural",
+      "disposition": "structural",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources.: declaration-only compiler kind (struct); accounting only, with no body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::operations::invocation::Fault",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::operations::invocation::LIST_PRELUDE",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::operations::invocation::MAX_CELLS_ABOVE_LIST",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::operations::invocation::copy_to_top",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::operations::invocation::guard_fault",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::operations::invocation::release_copy",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn campaign batch 4: the GUARD-CASE gate, the v2 NonEmptyList invocation at v1 parity, the abnormal-guard-exit session termination and the guard fault selection changed noble-cli sources. from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble::core::companions::operations::invocation::run_list_guard",
       "refinement": "open"
     }
   ],
@@ -207608,11 +207744,13 @@
     "noble-cli::closure@crates/noble-cli/tests/smoke/epoch.rs:4768:4807",
     "noble-cli::closure@crates/noble-cli/tests/smoke/epoch.rs:6808:8229",
     "noble-cli::closure@crates/noble-cli/tests/smoke/epoch.rs:9209:11488",
-    "noble-cli::closure@crates/noble-cli/tests/smoke/guardv2.rs:2685:2687",
-    "noble-cli::closure@crates/noble-cli/tests/smoke/guardv2.rs:3728:4234",
-    "noble-cli::closure@crates/noble-cli/tests/smoke/guardv2.rs:4244:4830",
-    "noble-cli::closure@crates/noble-cli/tests/smoke/guardv2.rs:4840:6354",
-    "noble-cli::closure@crates/noble-cli/tests/smoke/guardv2.rs:6364:7320",
+    "noble-cli::closure@crates/noble-cli/tests/smoke/guardv2.rs:2742:2744",
+    "noble-cli::closure@crates/noble-cli/tests/smoke/guardv2.rs:3785:4291",
+    "noble-cli::closure@crates/noble-cli/tests/smoke/guardv2.rs:4301:4887",
+    "noble-cli::closure@crates/noble-cli/tests/smoke/guardv2.rs:4897:6387",
+    "noble-cli::closure@crates/noble-cli/tests/smoke/guardv2.rs:6397:7258",
+    "noble-cli::closure@crates/noble-cli/tests/smoke/guardv2.rs:7015:7021",
+    "noble-cli::closure@crates/noble-cli/tests/smoke/guardv2.rs:7268:8224",
     "noble-cli::closure@crates/noble-cli/tests/smoke/paa1.rs:1083:1628",
     "noble-cli::closure@crates/noble-cli/tests/smoke/paa1.rs:1638:3024",
     "noble-cli::closure@crates/noble-cli/tests/smoke/paa1.rs:3034:3563",
@@ -214178,9 +214316,10 @@
     "smoke::guardv2::BODY",
     "smoke::guardv2::LIVE_WRAPPER",
     "smoke::guardv2::SOURCE_WRAPPER",
+    "smoke::guardv2::argument_copy_leaves_the_slot_and_the_cells_above_it_in_place",
     "smoke::guardv2::assert_invocation",
     "smoke::guardv2::assert_rejection",
-    "smoke::guardv2::invocation_prelude_removes_the_companion_cell_before_the_guard",
+    "smoke::guardv2::invocation_prelude_replays_the_copied_argument_below_the_subject",
     "smoke::guardv2::invocation_wrapper_text_preserves_the_argument_cell",
     "smoke::guardv2::result_cell",
     "smoke::guardv2::session",

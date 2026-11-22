@@ -1,0 +1,1 @@
+[ [ swap dup [ true ] [ drop drop false ] list.case [ drop drop 1 inl ] [ swap run inr ] if ] run ] dip

@@ -16,7 +16,7 @@
   },
   "documents": 16,
   "requirements": 632,
-  "scenarios": 310,
+  "scenarios": 298,
   "scenarios_executed": 227,
   "open_test_design": 242,
   "proof_obligations": 30,
@@ -2283,7 +2283,7 @@
     },
     {
       "file": ".cairn/changes/bounded-applicability-guards/tasks.md",
-      "sha256": "8b0543eea404190ff7ad3d8f162c74ac75b53aa6b505817521f6708f53157bda"
+      "sha256": "da8ea163c2d2df927b399e513cbc477d5954a0abe959b1ab7137f397fba4bd58"
     },
     {
       "file": ".cairn/changes/c-backend/design.md",
@@ -2834,10 +2834,6 @@
       "sha256": "7e0daf547a964834603e81d3c7087b241b1031c3163b20b1e5acf13a136bec01"
     },
     {
-      "file": "specs/conformance/guard-cases.json",
-      "sha256": "db698812530071aed02085761efbe1fa97714e441472507c341ef6b17dfd61f4"
-    },
-    {
       "file": "specs/conformance/identity-cases.json",
       "sha256": "2b3ff7e7e74ea4347586bcdd0ca0761081759b294ac4747dc8fac02d9523cf8b"
     },
@@ -2935,7 +2931,7 @@
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "126f74e289ce34ebada87f1421e7d715d1d6572c14fd5a867afbbf12af1eeded"
+      "sha256": "c62d80ece893433d82f10a27441148fc732ad920ab03ab88625c8cd48c07adaa"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -2967,7 +2963,7 @@
     },
     {
       "file": "specs/spec-family.json",
-      "sha256": "35ee052690f7cd97a0f8bd5035fcc19b00248f5dcbf258f86fa31d96baabe19f"
+      "sha256": "b92558bb38960f701c3fc5c54e8184320f1461c0af4cbc037e0a381f72bddd71"
     },
     {
       "file": "specs/STATUS.json",
@@ -3019,7 +3015,7 @@
     },
     {
       "file": "verification/aeneas-re-extraction/README.md",
-      "sha256": "2fc56f460601c1652ca11e077631491e8e8222433d4825b53c78ee9de3cbc2c3"
+      "sha256": "9a17a1889b478a39fd33db463be30c652bbf0a62b5c7ab61373513264df091fc"
     },
     {
       "file": "verification/allocator-admission/decision.md",
@@ -3547,7 +3543,7 @@
     },
     {
       "file": "verification/service-wire-refinement/README.md",
-      "sha256": "e5cfc1b955f7e496fdd075a1abbf7cb770ec2bdbd2c23d0d83d03dd950c7d6be"
+      "sha256": "8829fa95fb17a60c1d5351e36a49ab395be92c6acdf4a3029b6a151880f96eb3"
     },
     {
       "file": "verification/shared-candidates/criteria.md",

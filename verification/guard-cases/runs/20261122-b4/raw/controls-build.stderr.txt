@@ -1,0 +1,2 @@
+   Compiling noble-cli v0.0.0 (/home/brittonr/.cache/noble-cairn/wt/b4-own/crates/noble-cli)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.44s
