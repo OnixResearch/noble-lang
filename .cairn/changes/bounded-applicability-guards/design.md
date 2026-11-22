@@ -248,7 +248,7 @@ Every row has state `absent / not-run / open / unassessed` with empty evidence. 
 |---|---|---|---|
 | v1 `guard_sound`, `wrapperProgram_exec_iff`, `sourceWrapperProgram_refines`, `liveWrapperProgram_refines`, `guard_correspondence`, `ltI64Max_boundary` | Strict Lean theorems in MC2 gate | Present in `Guards.lean`; PO-21 remains `open` | Reused unchanged |
 | v1 renderer equations `wrapper_source_layout`, `invocation_wrapper_layout` | Extracted-Rust (Charon/Aeneas) equations | Present in `Correspondence.lean` | Reused unchanged |
-| C1 recognizer link for v1 and `NonEmptyList` | **Theorem obligation** (Lean model + Aeneas over `templates_of`) | Absent | New, open (`GUARD-CORR-01`) |
+| C1 recognizer link for v1 and `NonEmptyList` | **Theorem obligation** (Lean model + Aeneas over `templates_of`) | Absent | New (`GUARD-CORR-01`). v1: proved at model level (`GuardLink`) and for the extracted `templates_of` (`GuardExtracted`: soundness, and completeness on an `[I64]` interface, relative to the structural reading of the arena). `NonEmptyList`: model level only (`GuardsV2`); the extracted `guard_v2::templates_of` stays open |
 | C2–C4 for `NonEmptyList` (guard exec, soundness + exactness, wrapper) | Theorem obligation (strict Lean) | Absent | New, open |
 | C5 renderer layouts for v2 | Extracted-Rust equations | Absent | New, open |
 | C6 Wasm lowering/loading of wrapper | PO-17/PO-18 | Open, not addressed by this design | Remains open; coordinated in #10 |

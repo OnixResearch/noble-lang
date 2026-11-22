@@ -17,9 +17,10 @@ Each theorem below proves `Holds e [.i64 x] [] params ↔ GuardPrecondition t x`
 those spellings. The recognizer runs only when the input interface is exactly `[I64]`, which
 is why the input is `.i64 x`.
 
-Not proved here: that the Rust `Prepared` arena denotes these terms, i.e. the extracted
-correspondence for `templates_of`, and C1 for `NonEmptyList`, which waits for the v2 template
-set.
+The extracted correspondence for the v1 `templates_of`, relative to the structural reading of the
+`Prepared` arena, is in `GuardExtracted`; C1 for `NonEmptyList` is in `GuardsV2`. Not proved here
+or there: that the structural reading agrees with the Lean statement the MC1 export renders for
+the same arena, and the extracted correspondence for `guard_v2::templates_of`.
 -/
 
 open NobleContracts

@@ -20,6 +20,21 @@
   `Prepared` arena to MC1
   terms. C1 for `NonEmptyList` is now proved at model level in `GuardsV2.nonEmptyList_link` and
   `nonEmptyList_link_of_type` (2026-11-20); its extracted link is the same open obligation.
+  Progress (2026-11-22): the extracted correspondence for v1 `templates_of` is proved in
+  `proofs/mc2/NobleCertificates/GuardExtracted.lean` over the pinned whole-crate translation.
+  `arenaTerm` reads the `Prepared` arena structurally (an `I64` node is `Term.i64` of the same
+  integer, input `i` is `Term.input i`, `not`/`eq`/`lt` are the MC1 constructors), and
+  `expression_eq` shows the extracted arena lookup is exactly that read. Every extracted helper
+  returns `ok` of a pure function of the arena (`recognize_eq` and the lemmas before it), so the
+  recognizer cannot fail or diverge. `templates_of_sound`: at most one template, and `t` only when
+  the whole `requires` reads as one of the five spellings for `t`; `templates_of_link` composes it
+  with `GuardLink` into C1 (`Holds requires [x] [] params ↔ GuardPrecondition t x`);
+  `templates_of_complete`: on an `[I64]` interface every such spelling is recognized (the kernel
+  type equality evaluates `I64 = I64` to `true`, `ty_eq_i64`). `MC2ExtractionGate` audits the five
+  as strict actual-source correspondence theorems (strict axioms). Still open: that the
+  structural reading agrees with the Lean statement the MC1 export renders for the same arena,
+  and the extracted correspondence for `guard_v2::templates_of` (its `[List A]` branch, including
+  the `is_type0` work-list check).
 - [x] [serial] Implement the versioned v2 template set (`NonEmptyList` recognizer, wrappers, `List A` slot injection for `op_invoke`, registry/digest version) with v1 bytes and gate unchanged; prove C2–C5 for `NonEmptyList` in a v2 MC2 gate. r[GUARD-LIST-01]
   Progress (2026-11-20): Lean model. `proofs/mc2/NobleCertificates/GuardsV2.lean` adds a separate
   `GuardTemplateV2` set (the three frozen v1 templates plus `nonEmptyList`), the pure
