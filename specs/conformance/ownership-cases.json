@@ -2,6 +2,15 @@
   "schema_version": 1,
   "revision": "0.1.0-draft.5",
   "origin": "ownership-lifetime-contract-own-cases",
+  "amendments": [
+    {
+      "date": "2026-11-22",
+      "case": "OWN-CASE-03",
+      "changed": "the 8-leaf left-deep and right-deep variants now expect the refusal at compose 5 under the reviewed 32-node/4096-byte summary bound, and 4-leaf balanced, left-deep and right-deep variants (10, with 6 releases before the root) are added so shape independence is observed within the bound; deep chains release every leaf and intermediate except the root, as the balanced tree does",
+      "reason": "The registered 8-leaf deep chains cannot execute under the host observation bound the live-slot profile reviewed (the receipt records the refusal at compose 5 and the session terminating), and the earlier deep-chain lane released 7 owners where the design names every leaf and intermediate (14). The bound is a live-slot observation limit unrelated to ownership; raising it would only move the cliff.",
+      "decision": "OWNER DECISION 2026-11-22 (decision 35, delegated: \"do what is most correct/best long term\"): amend OWN-CASE-03 rather than raise the bound; keep the 8-leaf balanced tree, record the 8-leaf deep chains' refusal, add 4-leaf variants of all three shapes."
+    }
+  ],
   "cases": [
     {
       "id": "OWN-CASE-01",
@@ -138,38 +147,55 @@
       ],
       "input": {
         "harness": "live-slot-composed-tree",
-        "leaves": 8,
-        "leaf": "each leaf is `quote [ + ] compose`: the leaf factory is invoked with the I64 captures 1..8, `quote` captures that input and `[ + ]` adds it to the running value, so the root returns 36",
+        "leaves": [8, 4],
+        "leaf": "each leaf is `quote [ + ] compose`: the leaf factory is invoked with the I64 captures 1..n, `quote` captures that input and `[ + ]` adds it to the running value, so the root returns n(n+1)/2 (36 for 8 leaves, 10 for 4)",
         "composer": "compose",
         "variants": [
-          "balanced",
-          "left-deep",
-          "right-deep"
+          "balanced-8",
+          "left-deep-8",
+          "right-deep-8",
+          "balanced-4",
+          "left-deep-4",
+          "right-deep-4"
         ],
-        "release": "every leaf and intermediate owner except the root"
+        "release": "every leaf and intermediate owner except the root (2n - 2 owners for n leaves)"
       },
       "expected": {
         "stage": "live-slot-root",
-        "outcome": "equal-results-for-all-three-trees",
+        "outcome": "equal-results-for-every-tree-within-the-summary-bound",
         "variants": {
-          "balanced": {
+          "balanced-8": {
             "result_before": 36,
             "result_after": 36,
             "released_before_root": 14
           },
-          "left-deep": {
-            "result_before": 36,
-            "result_after": 36,
-            "released_before_root": 14
+          "left-deep-8": {
+            "refused_at_compose": 5,
+            "diagnostic": "Error: checked captured value exceeds host observation bound",
+            "session_state": "terminated-after-guest-failure"
           },
-          "right-deep": {
-            "result_before": 36,
-            "result_after": 36,
-            "released_before_root": 14
+          "right-deep-8": {
+            "refused_at_compose": 5,
+            "diagnostic": "Error: checked captured value exceeds host observation bound",
+            "session_state": "terminated-after-guest-failure"
+          },
+          "balanced-4": {
+            "result_before": 10,
+            "result_after": 10,
+            "released_before_root": 6
+          },
+          "left-deep-4": {
+            "result_before": 10,
+            "result_after": 10,
+            "released_before_root": 6
+          },
+          "right-deep-4": {
+            "result_before": 10,
+            "result_after": 10,
+            "released_before_root": 6
           }
         },
         "summary_bound": "32 nodes / 4096 bytes per anonymous summary child",
-        "deep_chain_refusal": "the left-deep and right-deep 8-leaf chains are refused at compose 5 by the summary node bound (checked captured value exceeds host observation bound) and the session ends terminated-after-guest-failure",
         "bounded_control": {
           "leaves": 40,
           "refused_at_compose": 5,

@@ -124,6 +124,18 @@
     and an M4-bound lane file; they merged in batch 2 and the batch-2 run above re-cites the
     promoted cases. This task stays open until OWN-CASE-05 executes (it needs observable
     frame-pin release, shared with LREF-EXIT-01) and the owner decides the round-1 commit identity.
+  Progress (2026-11-22, owner decision 35, delegated): **OWN-CASE-03 amended, not narrowed.** The
+  32-node/4096-byte summary bound is a reviewed live-slot observation limit, so raising it would
+  only move the cliff. The case keeps the 8-leaf balanced tree (36, 14 releases), registers the
+  8-leaf left-deep and right-deep chains as refused at compose 5 (`checked captured value exceeds
+  host observation bound`, session `terminated-after-guest-failure`), and adds 4-leaf balanced,
+  left-deep and right-deep trees that must agree (10 before and after 6 releases), so shape
+  independence is observed within the bound. The deep-chain lane now releases every leaf and
+  intermediate except the root (`2n - 2`), as the design and the balanced tree do; it had released
+  7 of 14. The amendment is recorded in the case file's `amendments` block. Observed (debug CLI
+  from the batch-4 branch): balanced-8 36/14, left- and right-deep-8 refused at compose 5,
+  balanced-, left-deep- and right-deep-4 all 10/6. Promotion waits for the gate's run on the
+  merged tree and an integrator review (decision 28).
 - [x] [serial] If a borrow profile is selected, specify syntax separately, implement the checker escape test and obtain checker-refinement evidence for OWN-PO-2. r[OWN-BORROW-01] OWNER DECISION 2026-11-20: no borrow profile is selected, so the condition does not hold and the task closes with that recorded outcome (owner rule: a recorded negative outcome completes a conditional task). Noble keeps only the WIT `own`/`borrow` adapter forms; it has no `borrow` word. OWN-CASE-04's borrow variants are therefore inapplicable, OWN-PO-2 is not applicable, and no checker escape test or refinement evidence is claimed. Selecting a borrow profile later needs a new change carrying its syntax, escape test and OWN-PO-2 evidence.
 - [ ] [serial] Mechanize OWN-PO-1/3 in the abstract model, then obtain separate lowering, runtime and host-ledger correspondence for OWN-PO-4..7. r[OWN-EV-01]
   Progress (2026-10-30): `proofs/foundation/NobleFoundation/Effects.lean` proved OWN-PO-1 for
