@@ -11,9 +11,12 @@
 // 8-leaf balanced tree, the 8-leaf deep chains (registered as refused at compose 5 by the summary
 // bound) and 4-leaf balanced, left-deep and right-deep trees. A variant whose observation differs
 // from its registration makes the case unmet, never narrowed.
+// Under decision 39 a refusal there is an exact release that keeps the session: every owner saved
+// before it is released and a new root runs.
 // OWN-CASE-05 uses a policy-denied effect inside a dispatched frame after the Program is produced;
-// `test.abort` is not installable in this profile and its internal-diagnostic refusal is recorded
-// as a frontend-defect witness, not as the case's success condition.
+// the frame-pin ledger and the exit release are observed (LREF-EXIT-01). `test.abort` is not
+// installable in this profile and its refusal is recorded as a witness, not as the case's success
+// condition.
 //
 // Usage (inside the pinned devShell):
 //   node verification/own-cases/gate.mjs --out NEW_DIRECTORY
@@ -263,9 +266,17 @@ observe('OWN-CASE-03', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', e
       }
       check(`OWN-CASE-03 ${name} refusal point`, row.refused_at_compose, registered.refused_at_compose);
       check(`OWN-CASE-03 ${name} diagnostic`, row.diagnostic, registered.diagnostic);
+      check(`OWN-CASE-03 ${name} exit release`, row.exit_release, registered.exit_release);
       check(`OWN-CASE-03 ${name} session`, row.session_state, registered.session_state);
+      check(`OWN-CASE-03 ${name} released after the refusal`, row.released_after_refusal,
+        registered.released_after_refusal);
+      check(`OWN-CASE-03 ${name} root after the refusal`, row.root_after_refusal,
+        registered.root_after_refusal);
+      check(`OWN-CASE-03 ${name} exit`, row.exit, 0);
       return { name, executed: false, refused: true, refused_at_compose: row.refused_at_compose,
-        diagnostic: row.diagnostic, session_state: row.session_state };
+        diagnostic: row.diagnostic, exit_release: row.exit_release, session_state: row.session_state,
+        released_after_refusal: row.released_after_refusal,
+        root_after_refusal: row.root_after_refusal };
     }
     if (!row || row.refused === true) {
       mismatches.push(`OWN-CASE-03 ${name} did not execute: ${JSON.stringify(row ?? null)}`);
@@ -288,9 +299,15 @@ observe('OWN-CASE-03', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', e
     expected.bounded_control.refused_at_compose);
   check('OWN-CASE-03 control diagnostic', control?.diagnostic,
     expected.bounded_control.diagnostic);
+  check('OWN-CASE-03 control exit release', control?.exit_release,
+    expected.bounded_control.exit_release);
   check('OWN-CASE-03 control session', control?.session_state,
     expected.bounded_control.session_state);
-  check('OWN-CASE-03 control exit', control?.exit, 2);
+  check('OWN-CASE-03 control released after the refusal', control?.released_after_refusal,
+    expected.bounded_control.released_after_refusal);
+  check('OWN-CASE-03 control root after the refusal', control?.root_after_refusal,
+    expected.bounded_control.root_after_refusal);
+  check('OWN-CASE-03 control exit', control?.exit, 0);
   const results = { variants, bounded_control: control };
   if (mismatches.length) {
     // Every observed variant travels with the mismatch list, so the receipt carries them all.
@@ -342,9 +359,9 @@ observe('OWN-CASE-04', 'crates/noble-cli/tests/live_slot_own_resource_rejection.
   };
 });
 
-// OWN-CASE-05: WITHHELD. The lane records the abnormal exit (no saved owner, request trace,
-// poisoned session) and the pins the failed root still held; the design's "frame pins are released
-// exactly once" is not observable here and belongs to live-reference-lifetimes (LREF-EXIT-01).
+// OWN-CASE-05: the abnormal exit of a root that produced a Program. The CLI reply's frame-pin
+// ledger and exit release, and the in-process release of a root aborted inside both frames, are
+// compared with the registration; the session's termination is observed by the exit status.
 observe('OWN-CASE-05', 'crates/noble-cli/tests/live_slot_own_trap.mjs', expected => {
   const executed = run(out, 'own-05',
     node, [path.join(root, 'crates/noble-cli/tests/live_slot_own_trap.mjs'), binary.executable]);
@@ -355,31 +372,28 @@ observe('OWN-CASE-05', 'crates/noble-cli/tests/live_slot_own_trap.mjs', expected
   const ledger = observed.host_ledger;
   expectValue('OWN-CASE-05 saved owners', exit.saved_owner_tokens_issued,
     expected.saved_owner_tokens_issued);
+  expectValue('OWN-CASE-05 saved owners before the root', exit.saved_owners_before_root,
+    expected.saved_owners_before_root);
+  expectValue('OWN-CASE-05 retained owner reaches the failed root\'s cell',
+    exit.saved_owners_before_root + exit.saved_owner_tokens_issued > 0,
+    expected.retained_owner_reaches_failed_root_cell);
+  expectValue('OWN-CASE-05 frame pins', exit.frame_pins, expected.frame_pins);
+  expectValue('OWN-CASE-05 exit release', exit.exit_release, expected.exit_release);
   expectValue('OWN-CASE-05 guest instance', exit.guest_instance,
-    expected.session_state.observed_rule);
+    expected.guest_instance);
   expectValue('OWN-CASE-05 session state', exit.session_state,
     expected.session_state.observed_rule);
   expectValue('OWN-CASE-05 dispatch trace', exit.target_trace,
     [['dispatch', 'allowed'], ['effect', 'denied']]);
   expectValue('OWN-CASE-05 exit', exit.exit, 2);
-  // Consistency check, not an observation: released + active = entered holds by the
-  // ledger's construction, so it only guards the reply's shape.
-  assert.equal(exit.frame_pins.released + exit.frame_pins.active, exit.frame_pins.entered,
-    `the reply's ledger is malformed (consistency): ${JSON.stringify(exit.frame_pins)}`);
-  assert.ok(typeof exit.frame_pins.measurement === 'string',
-    'the reply must label the count as host entry/exit calls, not a release proof');
   expectValue('OWN-CASE-05 abort witness', witness.outcome, 'refused');
   expectValue('OWN-CASE-05 abort witness guest requests', witness.guest_requests, 0);
   expectValue('OWN-CASE-05 normal finish', ledger.normal_finish_refused, true);
-  assert.ok(ledger.frame_pins.released < ledger.frame_pins.entered
-    && ledger.frame_pins.active > 0,
-    `the abandoned-pin abort must report the pins it still held, not assign a release: ${JSON.stringify(ledger.frame_pins)}`);
+  expectValue('OWN-CASE-05 abandoned frame pins', ledger.frame_pins, expected.abandoned_frame_pins);
+  expectValue('OWN-CASE-05 map pin released once', ledger.retired_exactly_once, ['101:P-B1']);
   return {
-    case: 'withheld',
+    case: 'passed',
     abnormal_exit: exit, abort_refusal_witness: witness, host_ledger: ledger,
-    withheld_reason: 'frame pins are not released or counted on the abnormal path; real '
-      + 'per-frame release accounting belongs to live-reference-lifetimes (decision 6, LREF-EXIT-01)',
-    unobserved: [expected.frame_pins_released, expected.retained_owner_reaches_failed_root_cell],
   };
 });
 
@@ -466,8 +480,8 @@ const acceptance = {
   failed_cases: failedCases,
   withheld,
   non_claims: [
-    'OWN-CASE-03 executes captured-I64 leaves (`quote [ + ] compose`, one dynamic I64 capture each) under owner decision 35: the 8-leaf deep chains are registered as refused at compose 5 by the anonymous summary\'s 32-node bound, so 8-leaf deep shape independence is not observed; it is observed for 4 leaves (balanced, left-deep and right-deep alike) and the 8-leaf balanced tree.',
-    'OWN-CASE-05 is withheld. The lane records the abnormal exit of a root that produced a Program (no saved owner, request trace [dispatch allowed, effect denied], poisoned session) and the frame pins the failed root still held; the host neither releases nor counts them, so "frame pins are released exactly once" is not observed. Per-frame release accounting belongs to live-reference-lifetimes (decision 6, LREF-EXIT-01). `test.abort` is not installable in this profile and its internal-diagnostic refusal is a frontend-defect witness, not success.',
+    'OWN-CASE-03 executes captured-I64 leaves (`quote [ + ] compose`, one dynamic I64 capture each) under owner decision 35: the 8-leaf deep chains are registered as refused at compose 5 by the anonymous summary\'s 32-node bound, so 8-leaf deep shape independence is not observed; it is observed for 4 leaves (balanced, left-deep and right-deep alike) and the 8-leaf balanced tree. Under decision 39 each refusal is an exact release that keeps the session, observed by releasing every earlier owner and running one more root, not by a live-cell count.',
+    'OWN-CASE-05 observes the frame-pin ledger the host keeps (2 entered, 2 released by the guest\'s unwinding, 0 on abort for the CLI root; 2 released on abort for a root aborted inside both frames in process) and the stated reason the release is not exact. The trap path with frames still entered is exercised in process only: the shipped CLI has no mechanism that stops the guest inside a frame. `test.abort` is not installable in this profile and its refusal is a witness, not success.',
     'OWN-CASE-02 observes shared-owner order independence through the surviving owner running and released owners being refused; the runtime exposes no live-cell count, so reclamation timing is not directly observed.',
     'OWN-CASE-04 registers and executes the design\'s `Account@1` opaque nominal and source programs through the real CLI. The borrow variants are inapplicable (owner decision 2026-11-20, decision 7: no borrow profile is selected).',
     'No proof is claimed: every promoted case keeps proof open, and no lowering, runtime or host-ledger correspondence proof is supplied here.',

@@ -7,6 +7,25 @@
 ## Phase 2: Future implementation and evidence gates (open; not undertaken here)
 
 - [ ] [serial] Implement abnormal-exit pin release with exact ledger accounting for a continuing host, and execute LREF-CASE-01. r[LREF-EXIT-01]
+  Progress 2026-11-22 (implemented; integrator decision 39, owner decision 6):
+  - **Release.** `SlotRegistry.abortRoot` releases every frame pin the failed root still holds from
+    the host ledger, innermost first and each exactly once, then the root's map pin; the root's
+    refs expire with it. The reply's `frame_pins` gains `released_on_abort`, the pins the host
+    released itself, as distinct from those the guest's unwinding released through `leaveFrame`.
+    A ledger that does not balance afterwards is refused.
+  - **Continue or poison.** The slot engine continues the session only when the release is
+    provably exact: every cleanup step succeeded, no guest call was interrupted, no guest failure
+    was recorded (it is terminal for the shared guest state), no continuation, reflection walk,
+    dispatch or borrowed frame is open, no pin was released on abort (its backend reference would
+    remain), the operand roots were released through the backend and the retirement sweep
+    succeeded. Otherwise it poisons, as before. Replies carry `exit_release` and `session_state`
+    (`retained` or `terminated-after-guest-failure`).
+  - **LREF-CASE-01.** `crates/noble-cli/tests/live_slot_abnormal_exit.mjs` (hosted by
+    `live_slot_direct_quote.rs`) runs the save-time variant (continue: a freshly authorized B-v2
+    publishes at epoch 2 in a quota-1 registry, B-v1 retires, a new root selects B-v2) and the
+    quota variant (poison, with no pin left), and aborts an in-process root inside both frames
+    (2 pins released on abort). Host abort and worker cancellation are not executable through the
+    shipped CLI. The receipt tool is `verification/abnormal-exit/receipt.mjs`.
 - [x] [serial] Implement package-level version retention, resolve #3 `OWN-CASE-06`, and execute LREF-CASE-03 through slot replacement. r[LREF-PKG-01]
   Ticked 2026-11-09. `crates/noble-cli/tests/live_slot_package_retention.mjs` runs LREF-CASE-03,
   hosted by a third test in `live_slot_direct_quote.rs`.
