@@ -152,6 +152,98 @@ def Holds₂ (env : NamedV1.Environment) (term : Term)
     (before params : NamedV1.Stack) : ¬ Holds₂ env (.not (.output 0)) before [] params := by
   simp [Holds₂, evaluate₂, unaryBool]
 
+/-! ### Public `Holds₂` evaluation lemmas
+
+The Boolean and comparison helpers above are private, so a caller outside this
+module cannot unfold `Holds₂` of `not`, `and`, `lt` or `le` with `simp`. These
+lemmas state what each form means instead (review m7). -/
+
+private theorem unaryBool_eq_true {f : Bool → Bool} {x : Option NamedV1.Value} :
+    unaryBool f x = some (.bool true) ↔ ∃ b, x = some (.bool b) ∧ f b = true := by
+  rcases x with _ | v
+  · simp [unaryBool]
+  · cases v <;> simp [unaryBool]
+
+private theorem binaryBool_eq_true {f : Bool → Bool → Bool} {x y : Option NamedV1.Value} :
+    binaryBool f x y = some (.bool true) ↔
+      ∃ p q, x = some (.bool p) ∧ y = some (.bool q) ∧ f p q = true := by
+  rcases x with _ | vx
+  · simp [binaryBool]
+  · rcases y with _ | vy
+    · cases vx <;> simp [binaryBool]
+    · cases vx <;> cases vy <;> simp [binaryBool]
+
+private theorem compareI64_eq_true {f : Int → Int → Bool} {x y : Option NamedV1.Value} :
+    compareI64 f x y = some (.bool true) ↔
+      ∃ m n, x = some (.i64 m) ∧ y = some (.i64 n) ∧ f m.toInt n.toInt = true := by
+  rcases x with _ | vx
+  · simp [compareI64]
+  · rcases y with _ | vy
+    · cases vx <;> simp [compareI64]
+    · cases vx <;> cases vy <;> simp [compareI64]
+
+/-- A Boolean literal holds exactly when it is `true`; in particular `false`
+never establishes an assertion. -/
+@[simp] theorem holds₂_bool (env : NamedV1.Environment) (b : Bool)
+    (before after params : NamedV1.Stack) :
+    Holds₂ env (.bool b) before after params ↔ b = true := by
+  simp [Holds₂, evaluate₂]
+
+theorem not_holds₂_false (env : NamedV1.Environment) (before after params : NamedV1.Stack) :
+    ¬ Holds₂ env (.bool false) before after params := by
+  simp
+
+/-- `not t` holds exactly when `t` evaluates to `false`; an undefined `t`
+establishes neither `t` nor `not t`. -/
+theorem holds₂_not (env : NamedV1.Environment) (t : Term)
+    (before after params : NamedV1.Stack) :
+    Holds₂ env (.not t) before after params ↔
+      evaluate₂ env t before after params = some (.bool false) := by
+  unfold Holds₂
+  simp only [evaluate₂, unaryBool_eq_true]
+  constructor
+  · rintro ⟨b, h, hb⟩
+    cases b
+    · exact h
+    · simp at hb
+  · intro h
+    exact ⟨false, h, rfl⟩
+
+/-- `and a b` holds exactly when both conjuncts hold. -/
+theorem holds₂_and (env : NamedV1.Environment) (a b : Term)
+    (before after params : NamedV1.Stack) :
+    Holds₂ env (.and a b) before after params ↔
+      Holds₂ env a before after params ∧ Holds₂ env b before after params := by
+  unfold Holds₂
+  simp only [evaluate₂, binaryBool_eq_true]
+  constructor
+  · rintro ⟨p, q, hp, hq, h⟩
+    simp only [Bool.and_eq_true] at h
+    obtain ⟨rfl, rfl⟩ := h
+    exact ⟨hp, hq⟩
+  · rintro ⟨hp, hq⟩
+    exact ⟨true, true, hp, hq, rfl⟩
+
+/-- `lt a b` holds exactly when both sides are `I64` values whose signed
+readings are strictly ordered. -/
+theorem holds₂_lt (env : NamedV1.Environment) (a b : Term)
+    (before after params : NamedV1.Stack) :
+    Holds₂ env (.lt a b) before after params ↔
+      ∃ m n, evaluate₂ env a before after params = some (.i64 m) ∧
+        evaluate₂ env b before after params = some (.i64 n) ∧ m.toInt < n.toInt := by
+  unfold Holds₂
+  simp only [evaluate₂, compareI64_eq_true, decide_eq_true_eq]
+
+/-- `le a b` holds exactly when both sides are `I64` values whose signed
+readings are ordered. -/
+theorem holds₂_le (env : NamedV1.Environment) (a b : Term)
+    (before after params : NamedV1.Stack) :
+    Holds₂ env (.le a b) before after params ↔
+      ∃ m n, evaluate₂ env a before after params = some (.i64 m) ∧
+        evaluate₂ env b before after params = some (.i64 n) ∧ m.toInt ≤ n.toInt := by
+  unfold Holds₂
+  simp only [evaluate₂, compareI64_eq_true, decide_eq_true_eq]
+
 /-- Body-local inversion for one accepted immutable `[1 +]` specialization.
 Lookup and full use matching are explicit premises; no source identity is
 inferred from a manually supplied `Use`. -/
