@@ -141,6 +141,102 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: GUARD-CASE-01 for VC-LOGIC-02
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-01](../../../specs/conformance/guard-cases.json)
+- WHEN the `runtime` procedure for case `GUARD-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-02 for VC-LOGIC-02
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-02](../../../specs/conformance/guard-cases.json)
+- WHEN the `runtime` procedure for case `GUARD-CASE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-03 for VC-LOGIC-02
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-03](../../../specs/conformance/guard-cases.json)
+- WHEN the `runtime` procedure for case `GUARD-CASE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-04 for VC-LOGIC-02
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-04](../../../specs/conformance/guard-cases.json)
+- WHEN the `admission` procedure for case `GUARD-CASE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-05 for VC-LOGIC-02
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-05](../../../specs/conformance/guard-cases.json)
+- WHEN the `admission` procedure for case `GUARD-CASE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-06 for VC-LOGIC-02
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-06](../../../specs/conformance/guard-cases.json)
+- WHEN the `admission` procedure for case `GUARD-CASE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-07 for VC-LOGIC-02
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-07](../../../specs/conformance/guard-cases.json)
+- WHEN the `admission` procedure for case `GUARD-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-08 for VC-LOGIC-02
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-08](../../../specs/conformance/guard-cases.json)
+- WHEN the `identity` procedure for case `GUARD-CASE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-09 for VC-LOGIC-02
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-09](../../../specs/conformance/guard-cases.json)
+- WHEN the `runtime` procedure for case `GUARD-CASE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-10 for VC-LOGIC-02
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-10](../../../specs/conformance/guard-cases.json)
+- WHEN the `admission` procedure for case `GUARD-CASE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-11 for VC-LOGIC-02
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-11](../../../specs/conformance/guard-cases.json)
+- WHEN the `runtime` procedure for case `GUARD-CASE-11` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-11`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-12 for VC-LOGIC-02
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-12](../../../specs/conformance/guard-cases.json)
+- WHEN the `admission` procedure for case `GUARD-CASE-12` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-12`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: VC-LOGIC-06
@@ -234,6 +330,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN the `Contracts-Draft` profile and every field of `input` in [CONTRACT-04](../../../specs/conformance/contract-cases.json)
 - WHEN the `admission` procedure for case `CONTRACT-04` runs against those inputs
 - THEN the observations match every field of `expected` in case `CONTRACT-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-10 for VC-COMPOSE-01
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-10](../../../specs/conformance/guard-cases.json)
+- WHEN the `admission` procedure for case `GUARD-CASE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-10`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -853,6 +957,62 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: GUARD-CASE-01 for VC-ADMIT-05
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-01](../../../specs/conformance/guard-cases.json)
+- WHEN the `runtime` procedure for case `GUARD-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-02 for VC-ADMIT-05
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-02](../../../specs/conformance/guard-cases.json)
+- WHEN the `runtime` procedure for case `GUARD-CASE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-03 for VC-ADMIT-05
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-03](../../../specs/conformance/guard-cases.json)
+- WHEN the `runtime` procedure for case `GUARD-CASE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-07 for VC-ADMIT-05
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-07](../../../specs/conformance/guard-cases.json)
+- WHEN the `admission` procedure for case `GUARD-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-08 for VC-ADMIT-05
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-08](../../../specs/conformance/guard-cases.json)
+- WHEN the `identity` procedure for case `GUARD-CASE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-09 for VC-ADMIT-05
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-09](../../../specs/conformance/guard-cases.json)
+- WHEN the `runtime` procedure for case `GUARD-CASE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-12 for VC-ADMIT-05
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-12](../../../specs/conformance/guard-cases.json)
+- WHEN the `admission` procedure for case `GUARD-CASE-12` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-12`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ## 8. First supported contract fragment
@@ -1251,6 +1411,86 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: GUARD-CASE-01 for VC-USE-01
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-01](../../../specs/conformance/guard-cases.json)
+- WHEN the `runtime` procedure for case `GUARD-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-02 for VC-USE-01
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-02](../../../specs/conformance/guard-cases.json)
+- WHEN the `runtime` procedure for case `GUARD-CASE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-03 for VC-USE-01
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-03](../../../specs/conformance/guard-cases.json)
+- WHEN the `runtime` procedure for case `GUARD-CASE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-04 for VC-USE-01
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-04](../../../specs/conformance/guard-cases.json)
+- WHEN the `admission` procedure for case `GUARD-CASE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-05 for VC-USE-01
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-05](../../../specs/conformance/guard-cases.json)
+- WHEN the `admission` procedure for case `GUARD-CASE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-06 for VC-USE-01
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-06](../../../specs/conformance/guard-cases.json)
+- WHEN the `admission` procedure for case `GUARD-CASE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-07 for VC-USE-01
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-07](../../../specs/conformance/guard-cases.json)
+- WHEN the `admission` procedure for case `GUARD-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-09 for VC-USE-01
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-09](../../../specs/conformance/guard-cases.json)
+- WHEN the `runtime` procedure for case `GUARD-CASE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-10 for VC-USE-01
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-10](../../../specs/conformance/guard-cases.json)
+- WHEN the `admission` procedure for case `GUARD-CASE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: GUARD-CASE-11 for VC-USE-01
+
+- GIVEN the `Bounded-Applicability-Design` profile and every field of `input` in [GUARD-CASE-11](../../../specs/conformance/guard-cases.json)
+- WHEN the `runtime` procedure for case `GUARD-CASE-11` runs against those inputs
+- THEN the observations match every field of `expected` in case `GUARD-CASE-11`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ## 11. Compositional proof library
@@ -1424,6 +1664,158 @@ Malformed or rejected proof material is `error`, not a refutation. Resource-limi
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: IMPL-CASE-01 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-01](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-02 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-02](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-03 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-03](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-04 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-04](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-05 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-05](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-06 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-06](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-07 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-07](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-08 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-08](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-09 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-09](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-10 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-10](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-11 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-11](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-11` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-11`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-12 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-12](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-12` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-12`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-13 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-13](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-13` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-13`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-14 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-14](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-14` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-14`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-15 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-15](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-15` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-15`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-16 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-16](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-16` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-16`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-17 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-17](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-17` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-17`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-18 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-18](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-18` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-18`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-19 for VC-TOOL-02
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-19](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-19` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-19`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: VC-TOOL-03
@@ -1489,6 +1881,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN the `Contracts-Draft` profile and every field of `input` in [CONTRACT-12](../../../specs/conformance/contract-cases.json)
 - WHEN the `static` procedure for case `CONTRACT-12` runs against those inputs
 - THEN the observations match every field of `expected` in case `CONTRACT-12`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-14 for VC-TOOL-04
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-14](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-14` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-14`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -1815,6 +2215,134 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: IMPL-CASE-01 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-01](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-02 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-02](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-03 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-03](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-04 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-04](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-05 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-05](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-06 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-06](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-07 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-07](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-08 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-08](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-08` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-08`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-09 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-09](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-09` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-09`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-10 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-10](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-10` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-10`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-11 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-11](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-11` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-11`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-12 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-12](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-12` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-12`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-13 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-13](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-13` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-13`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-14 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-14](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-14` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-14`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-15 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-15](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-15` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-15`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-17 for VC-INTRINSIC-03
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-17](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-17` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-17`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: VC-INTRINSIC-04
@@ -1847,6 +2375,14 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-26](../../../specs/conformance/contract-cases.json)
 - WHEN the `admission` procedure for case `CONTRACT-26` runs against those inputs
 - THEN the observations match every field of `expected` in case `CONTRACT-26`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-20 for VC-INTRINSIC-04
+
+- GIVEN the `Declared-Modules-v1` profile and every field of `input` in [IMPL-CASE-20](../../../specs/conformance/implicit-cases.json)
+- WHEN the `runtime` procedure for case `IMPL-CASE-20` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-20`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -1890,6 +2426,22 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 - GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [CONTRACT-26](../../../specs/conformance/contract-cases.json)
 - WHEN the `admission` procedure for case `CONTRACT-26` runs against those inputs
 - THEN the observations match every field of `expected` in case `CONTRACT-26`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-18 for VC-INTRINSIC-05
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-18](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-18` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-18`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: IMPL-CASE-19 for VC-INTRINSIC-05
+
+- GIVEN the `Intrinsic-Proofs-Draft` profile and every field of `input` in [IMPL-CASE-19](../../../specs/conformance/implicit-cases.json)
+- WHEN the `admission` procedure for case `IMPL-CASE-19` runs against those inputs
+- THEN the observations match every field of `expected` in case `IMPL-CASE-19`
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
@@ -2255,3 +2807,70 @@ Test design remains open for this requirement. No scenario or execution evidence
 - WHEN it is displayed or consumed
 - THEN no success, verified or merged flag is set, and the exact nonverified
   state is retained
+
+### Requirement: IMPL-ELAB-01
+r[IMPL-ELAB-01]
+
+**IMPL-ELAB-01.**
+
+An opt-in, revision-recorded proof elaborator MAY omit arguments only in three cases:
+
+- `Type0` or value arguments of an exactly resolved proof application.
+- The `Type0` prefix of an explicit-spine application.
+- Structural parameters of a reviewed template rule that are fixed by the exact prepared subject.
+
+The arguments are reconstructed solely from these sources: the head's signature, the supplied arguments' sorts, inferable explicit premise arguments, the expected goal and the trusted subject preparation. The elaborator solves first-order equations over `PureTyCode` terms, value levels and `Pi`/`Eq` propositions by syntactic unification with an occurs check. The only definitional equality is the checker's structural identity.
+
+An elaboration is unique only when the most general unifier assigns every metavariable a ground term whose free levels lie within the application context. If any of the following holds, the elaborator MUST refuse at the source span with distinct categories and an explicit-argument request:
+
+- Underconstrained, conflicting or ill-scoped solutions.
+- Premise-witness placeholders, motive inference or partial application.
+- Exhaustion or internal failure.
+
+The refusal MUST report the unresolved binder, the selected head identity and the originating constraints. Candidates MAY be listed but MUST NOT be chosen. The elaborator MUST NOT search the local context, imports, bundles or any global instance table, MUST NOT apply a heuristic default or tie-break, and MUST NOT let import order influence the result.
+
+
+<!-- cairn:scenario-links:start -->
+Test design remains open for this requirement. No scenario or execution evidence is supplied.
+<!-- cairn:scenario-links:end -->
+
+#### Scenario: IMPL-CASE-01 polymorphic reflexivity abbreviation
+
+- GIVEN an accepted exported `poly-refl : (Pi (A Type0) (Pi (x A) (Eq A x x)))` and the goal `(Pi (x (List I64)) (Eq (List I64) x x))`
+- WHEN the spine application with implicit `A` and explicit `x` is elaborated
+- THEN it expands to `(intro (x (List I64)) (apply (apply (use alias.poly-refl) (List I64)) x))`, and the expanded term is checked against the same declared claim as the hand-written explicit term
+
+#### Scenario: IMPL-CASE-06 two applicable local proofs
+
+- GIVEN two local premises `h1` and `h2`, both of type `(Eq I64 x x)`, and a premise placeholder at a binder requiring `(Eq I64 x x)`
+- WHEN elaboration runs
+- THEN it refuses with `unsupported: premise inference`, lists `h1` and `h2` with their spans without choosing either, and refuses identically when only one candidate exists
+
+### Requirement: IMPL-TRUST-01
+r[IMPL-TRUST-01]
+
+**IMPL-TRUST-01.**
+
+The proof elaborator MUST be an untrusted producer.
+
+- **Acceptance.** Only its fully explicit output is accepted. That output MUST pass the existing explicit source proof checker, which independently revalidates every inserted `Type0` code, value sort and substitution, and then the independently pinned Lean consumer against the separately regenerated exact expected claim. A missing proof witness, bridge or join obligation, or an unresolved metavariable, MUST NOT become an assumption, axiom or accepted hole.
+- **Budget.** Constraint generation, unification, substitution, normalization, dependency traversal, term expansion, memory and diagnostic output MUST be charged to the same bounded admission request as checking. Exhaustion MUST be reported distinctly and never as acceptance or refutation.
+- **Scope.** Elaboration MUST NOT run during ordinary `quote`/`compose`/`run`, runtime evidence replay or admission.
+- **Identity.** An inferred logical equality or behavioral law MUST NOT establish Program, recipe or content-hash identity, and MUST NOT authorize evidence reuse for a different subject.
+
+
+<!-- cairn:scenario-links:start -->
+Test design remains open for this requirement. No scenario or execution evidence is supplied.
+<!-- cairn:scenario-links:end -->
+
+#### Scenario: IMPL-CASE-10 forged inferred argument
+
+- GIVEN an abbreviated proof whose producer-supplied expansion or elaboration record claims a different inserted code than the deterministic elaborator derives
+- WHEN the submission is checked
+- THEN the explicit checker refuses any ill-typed inserted argument, source-binding re-elaboration refuses a byte mismatch, and no record field is used as authority
+
+#### Scenario: IMPL-CASE-18 elaboration budget exhaustion
+
+- GIVEN a head with 200 nested `Type0` binders and a work, normalization or substitution budget just below the requirement
+- WHEN elaboration runs
+- THEN it reports exhaustion naming the stage, accepts nothing and reports no refutation

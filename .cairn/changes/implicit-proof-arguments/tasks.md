@@ -101,4 +101,12 @@
   The task stays open: no Rust elaborator exists to refine against the model, and no Rust
   representation of the encoded propositions exists either. Which premise positions the surface
   grammar may infer stays a policy decision, and source-to-Lean translation stays V-INTRINSIC-01.
-- [ ] [serial] Register scenarios in conformance JSON and sync the requirement deltas only after independent review. Consider archive only after implementation and evidence gates. r[IMPL-EXPOSE-01]
+- [x] [serial] Register scenarios in conformance JSON and sync the requirement deltas only after independent review. Consider archive only after implementation and evidence gates. r[IMPL-EXPOSE-01]
+  Done 2026-11-22 (owner decision 44): the IMPL-CASE-01..20 designs were registered in
+  `specs/conformance/implicit-cases.json` and promoted in batch 5 from the IMPL gate receipt
+  (`verification/implicit-cases/runs/20261122-b5`). The owner accepted their veto as the review of the
+  integrator-authored deltas (as in decision 38) and asked for the sync now: `cairn sync
+  implicit-proof-arguments --execute` merged IMPL-ELAB-01, IMPL-TRUST-01, IMPL-EXPOSE-01 and
+  IMPL-GRAMMAR-01 into `.cairn/specs/program-contracts` and `.cairn/specs/developer-experience`, and
+  `tools/cairn-specs.mjs --write-views` regenerated the views and scenario links. The change stays
+  active: task 4 (Rust elaborator refinement) is open by the same decision, so it is not archived.
