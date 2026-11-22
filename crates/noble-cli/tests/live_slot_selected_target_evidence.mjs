@@ -9,53 +9,14 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { cli, digest, evidenceDirectory, expectOutcome, selectedAuthority } from './live_slot_resource_ref_cli.mjs';
+import {
+  assumptions, claimOther, claimQ1, claimQ2, context, proofBudget, proofQ1, proofWait, record,
+  requireConsumerEnvironment, saved,
+} from './live_slot_evidence_fixture.mjs';
 
 const binary = process.argv[2];
 assert.ok(binary, 'pass the selected noble CLI binary');
-// The consumer's Lean recheck needs the reviewed sandbox tools and the contract
-// library; the gate supplies them, and the CLI child inherits this environment.
-for (const name of ['NOBLE_LEAN', 'NOBLE_BWRAP', 'NOBLE_PRLIMIT', 'NOBLE_SYSTEMD_RUN', 'NOBLE_CONTRACT_LIBRARY'])
-  assert.ok(process.env[name], `the selected-target evidence lane needs ${name}`);
-const proofBudget = 600_000;
-const proofWait = proofBudget + 60_000;
-
-const contract = (name, body, input, result) => `(contract 1 ${name}
-  (input (x I64))
-  (output (y I64))
-  (program ${body})
-  (requires (eq (in x) ${input}))
-  (ensures (eq (out y) ${result})))
-`;
-const proof = (input, result) => `import MC1Obligation
-import NobleContracts
-import NobleContracts.Expression
-
-open NobleContracts
-
-namespace MC1Proof
-
-theorem proof : MC1Obligation.claim := by
-  intro tail before params hi _hp hpre final he
-  obtain ⟨n, rfl⟩ := (stackTyped_i64_iff before).mp hi
-  have hn : n = ${input} := by
-    simpa [MC1Obligation.precondition, MC1Obligation.expression_2, MC1Obligation.expression_0,
-      MC1Obligation.expression_1, Holds, evaluate] using hpre
-  subst hn
-  have hfinal : final = tail ++ [.i64 ${result}] := by
-    simpa [MC1Obligation.program, MC1Obligation.node_0, MC1Obligation.node_1, Exec] using he
-  refine ⟨[.i64 ${result}], hfinal, .cons .i64 .nil, ?_⟩
-  simp [MC1Obligation.postcondition, MC1Obligation.expression_5, MC1Obligation.expression_3,
-    MC1Obligation.expression_4, Holds, evaluate]
-
-end MC1Proof
-`;
-// Q2 is the slot's claim about P2; Q1 is the old version's claim about its own
-// target; the other claim is about the same subject with another statement.
-const claimQ2 = contract('lslot05', '[ 2 + ]', 20, 22);
-const claimQ1 = contract('lslot05-old', '[ 2 - ]', 20, 18);
-const claimOther = contract('lslot05-other', '[ 2 + ]', 21, 23);
-const proofQ2 = proof(20, 22);
-const proofQ1 = proof(20, 18);
+requireConsumerEnvironment('selected-target evidence');
 
 const definitions = [
   ['builder', 'builder', 'def builder [ quote [ + ] compose ]'],
@@ -81,25 +42,6 @@ const issue = async (request, outcome, wait) => {
   return row;
 };
 const input = value => ({ kind: 'i64', value: String(value) });
-const saved = row => {
-  const program = row.stack[0];
-  assert.equal(program.kind, 4);
-  assert.ok(program.owner && program.target_identity?.artifact_sha256, 'a checked returned target');
-  return program;
-};
-const context = (semanticRevision = 0) => ({ semantic_revision: semanticRevision, policy_revision: 1 });
-const assumptions = ['propext', 'Classical.choice', 'Quot.sound'];
-const record = (target, overrides = {}) => ({
-  subject: { program_value_id: target.target_identity.program_value_id,
-    definition_id: target.target_identity.definition_id },
-  captures: target.target_identity.captures,
-  context: context(),
-  claim_sha256: digest(claimQ2),
-  assumptions,
-  artifact_sha256: target.target_identity.artifact_sha256,
-  proof: proofQ2,
-  ...overrides,
-});
 const publish = (target, evidence, outcome = 'refused', wait = 30_000) => issue({ operation: 'publish',
   slot: 'selected', owner: target.owner, expected_epoch: '0', evidence }, outcome, wait);
 

@@ -21,6 +21,7 @@ if (requestedEvidence) fs.mkdirSync(evidenceDir, { recursive: true, mode: 0o700 
 const selectedSource = Object.freeze({
   caller: 'slot.invoke', keeper: '[ 1 + ]', increment: '2 +', use_saved: 'run',
   definition: 'def traced [ drop "A" test.emit drop "B" test.emit drop 42 ]', named: 'traced',
+  adder_definition: 'def adder [ quote [ + ] compose ]', adder: 'adder',
 });
 const reportPath = name => path.join(evidenceDir, `${name}.raw.jsonl`);
 const selected = (row, outcome) => {
@@ -105,6 +106,12 @@ async function retention() {
     counted(selected(await session.issue({ operation: 'install', id: 'caller',
       source: selectedSource.caller, inputs: ['I64', 'LiveRef<I64,I64,pure>'] }), 'installed'));
     const generic = await reflect(session); // Before any slot exists.
+    const sites = [generic];
+    const phase = async () => {
+      const site = await reflect(session);
+      assert.deepEqual(site, generic);
+      sites.push(site);
+    };
     const keeper = counted(selected(await session.issue({ operation: 'install', id: 'keeper',
       source: selectedSource.keeper, inputs: [] }), 'installed'));
     const initial = counted(selected(await session.issue({ operation: 'publish', slot: 'Q',
@@ -117,7 +124,7 @@ async function retention() {
     assert.equal(sourceId, 'keeper');
     assert.equal(index, 1);
     assert.match(owner, /^program-[1-9][0-9]*$/);
-    assert.deepEqual(await reflect(session), generic);
+    await phase();
     counted(selected(await session.issue({ operation: 'install', id: 'use_saved',
       source: selectedSource.use_saved, inputs: ['I64', 'Program<I64,I64,pure>'] }), 'installed'));
     counted(selected(await session.issue({ operation: 'install', id: 'increment',
@@ -128,7 +135,7 @@ async function retention() {
     selected(await session.issue({ operation: 'hold-checkpoint', import: 'live_select', occurrence: 1 }),
       'checkpoint-hold-selected');
     session.write({ operation: 'invoke', id: 'caller', inputs: scalar(5), refs: ref('Q') });
-    selected(await session.next(), 'checkpoint-entered');
+    const entered = selected(await session.next(), 'checkpoint-entered');
     const refusedWhilePinned = selected(await session.issue(attempt), 'retention-budget-refused');
     assert.equal(refusedWhilePinned.epoch, '1');
     const oldRoot = counted(selected(await session.issue({ operation: 'resume-checkpoint' }), 'executed'), 1);
@@ -137,33 +144,38 @@ async function retention() {
     assert.equal(oldRoot.request_trace[0].generation, '1');
     assert.equal(oldRoot.request_trace[0].artifactSha256, keeper.artifact_sha256);
     assert.deepEqual(oldRoot.retire_code_spans, []);
-    assert.deepEqual(await reflect(session), generic);
+    await phase();
     const refusedAfterRoot = counted(selected(await session.issue(attempt), 'retention-budget-refused'));
     assert.equal(refusedAfterRoot.epoch, '1');
     assert.deepEqual(refusedAfterRoot.retire_code_spans, []);
-    assert.deepEqual(await reflect(session), generic);
+    await phase();
     const stillCallable = counted(selected(await session.issue({ operation: 'invoke', id: 'use_saved',
       inputs: [...scalar(10), { kind: 'program', owner }], refs: [] }), 'executed'));
     assert.deepEqual(stillCallable.stack, [{ kind: 1, value: '11' }]);
     assert.equal(stillCallable.epoch, '1');
-    counted(selected(await session.issue({ operation: 'release-program', owner }), 'program-released'));
-    assert.deepEqual(await reflect(session), generic);
+    const released = counted(selected(await session.issue({ operation: 'release-program', owner }),
+      'program-released'));
+    await phase();
     const published = counted(selected(await session.issue(attempt), 'published'));
     assert.deepEqual([published.epoch, published.incarnation, published.generation], ['2', '1', '2']);
     assert.ok(published.retire_code_spans.some(span => span.generation === Number(keeper.generation)),
       'last owner release must permit physical v1 code-span retirement on publication');
-    assert.deepEqual(await reflect(session), generic);
+    await phase();
     const newRoot = counted(selected(await session.issue({ operation: 'invoke', id: 'caller',
       inputs: scalar(5), refs: ref('Q') }), 'executed'), 1);
     assert.deepEqual(newRoot.stack, [{ kind: 1, value: '7' }]);
     assert.equal(newRoot.epoch, '2');
     assert.equal(newRoot.request_trace[0].generation, '2');
     assert.notEqual(newRoot.request_trace[0].programValueId, oldRoot.request_trace[0].programValueId);
-    assert.deepEqual(await reflect(session), generic);
+    await phase();
     await session.finish();
     return { owner, oldEpoch: oldRoot.epoch, newEpoch: newRoot.epoch,
       retired: published.retire_code_spans,
-      ...(requestedEvidence ? { raw: session.output, requests: session.commands } : {}) };
+      keeper: { artifact_sha256: keeper.artifact_sha256, generation: keeper.generation },
+      saved_program: saved.stack[0], initial, entered, refused_while_pinned: refusedWhilePinned,
+      old_root: oldRoot, refused_after_root: refusedAfterRoot, still_callable: stillCallable, released,
+      published, new_root: newRoot, reflected_sites: sites,
+      ...(requestedEvidence ? { raw: path.basename(session.output), requests: path.basename(session.commands) } : {}) };
   } catch (error) { session.abort(); throw error; }
 }
 
@@ -191,19 +203,64 @@ function mutatedRequest(variant, recorded, inputs, refs) {
   return request;
 }
 
-async function replayVariant(variant) {
-  const session = start(`replay-${variant.name}`);
+// LSLOT-08's two replay baselines (integrator decision 45). Both reach the
+// frozen registry (slot `emit` at epoch 9, incarnation 4, generation 3) through
+// deletes and republications, record one root over `I64:5` and a host-issued
+// `LiveRef<I64,I64,test.emit>` for `emit`, revoke the effect grant and replay.
+// The captured baseline selects the returned `[ 5 + ]` (captures `I64:5`); the
+// effectful one selects the named definition `traced` (test.emit A then B).
+const baselines = {
+  captured: {
+    async prepare(session) {
+      selected(await session.issue({ operation: 'define', id: 'definition-adder', name: 'adder',
+        source: selectedSource.adder_definition, inputs: [] }), 'definition-retained');
+      counted(selected(await session.issue({ operation: 'install', id: 'adder',
+        source: selectedSource.adder, inputs: ['I64'], selected_name: 'adder' }), 'installed'));
+      // Each incarnation publishes a fresh instantiation of the builder.
+      return async () => {
+        const built = counted(selected(await session.issue({ operation: 'invoke', id: 'adder',
+          inputs: scalar(5), refs: [] }), 'executed'));
+        const [program] = built.stack;
+        assert.deepEqual(program.target_identity?.captures, [{ type: 'I64', value: '5' }]);
+        return { owner: program.owner };
+      };
+    },
+    stack: '10', operations: ['dispatch'], requests: 1, protectedOperations: 0, captures: ['I64:5'],
+  },
+  effectful: {
+    async prepare(session) {
+      selected(await session.issue({ operation: 'define', id: 'definition', name: 'traced',
+        source: selectedSource.definition, inputs: [] }), 'definition-retained');
+      // Each incarnation publishes a fresh installation of the named definition.
+      let installed = 0;
+      return async () => {
+        const id = installed === 0 ? 'named' : `named${installed + 1}`;
+        installed += 1;
+        counted(selected(await session.issue({ operation: 'install', id,
+          source: selectedSource.named, inputs: ['I64'], selected_name: 'traced' }), 'installed'));
+        return { id, program_index: 0 };
+      };
+    },
+    stack: '42', operations: ['dispatch', 'effect', 'effect'], requests: 3, protectedOperations: 2,
+    captures: [],
+  },
+};
+
+async function replayVariant(baselineName, variant) {
+  const baseline = baselines[baselineName];
+  assert.ok(baseline, `unknown replay baseline ${baselineName}`);
+  const session = start(`replay-${baselineName}-${variant.name}`);
   try {
     counted(selected(await session.next(), 'configured'));
+    // A returned target's native quote/compose code donor must be the first
+    // installed module, so each baseline installs its own sources before the
+    // generic caller.
+    const nextTarget = await baseline.prepare(session);
     counted(selected(await session.issue({ operation: 'install', id: 'caller',
       source: selectedSource.caller, inputs: ['I64', 'LiveRef<I64,I64,test.emit>'] }), 'installed'));
-    selected(await session.issue({ operation: 'define', id: 'definition', name: 'traced',
-      source: selectedSource.definition, inputs: [] }), 'definition-retained');
-    counted(selected(await session.issue({ operation: 'install', id: 'named',
-      source: selectedSource.named, inputs: ['I64'], selected_name: 'traced' }), 'installed'));
-    let selectedId = 'named';
+    let target = await nextTarget();
     let published = counted(selected(await session.issue({ operation: 'publish', slot: 'emit',
-      id: 'named', program_index: 0, expected_epoch: '0' }), 'published'));
+      ...target, expected_epoch: '0' }), 'published'));
     assert.deepEqual([published.epoch, published.incarnation, published.generation], ['1', '1', '1']);
     let epoch = 1;
     for (let incarnation = 1; incarnation <= 3; incarnation++) {
@@ -211,17 +268,15 @@ async function replayVariant(variant) {
         expected_epoch: String(epoch), expected_incarnation: String(incarnation),
         expected_generation: '1' }), 'deleted'));
       assert.equal(deleted.epoch, String(++epoch));
-      selectedId = `named${incarnation + 1}`;
-      counted(selected(await session.issue({ operation: 'install', id: selectedId,
-        source: selectedSource.named, inputs: ['I64'], selected_name: 'traced' }), 'installed'));
+      target = await nextTarget();
       published = counted(selected(await session.issue({ operation: 'publish', slot: 'emit',
-        id: selectedId, program_index: 0, expected_epoch: String(epoch) }), 'published'));
+        ...target, expected_epoch: String(epoch) }), 'published'));
       assert.deepEqual([published.epoch, published.incarnation, published.generation],
         [String(++epoch), String(incarnation + 1), '1']);
     }
     for (let generation = 2; generation <= 3; generation++) {
       published = counted(selected(await session.issue({ operation: 'publish', slot: 'emit',
-        id: selectedId, program_index: 0, expected_epoch: String(epoch),
+        ...target, expected_epoch: String(epoch),
         expected_incarnation: '4', expected_generation: String(generation - 1) }), 'published'));
       assert.deepEqual([published.epoch, published.incarnation, published.generation],
         [String(++epoch), '4', String(generation)]);
@@ -229,23 +284,26 @@ async function replayVariant(variant) {
     assert.equal(epoch, 9, 'frozen replay must start at reachable incarnation 4/generation 3');
     const inputs = scalar(5), refs = ref('emit');
     const recorded = counted(selected(await session.issue({ operation: 'invoke', id: 'caller',
-      inputs, refs, record: true }), 'executed'), 3, 2);
+      inputs, refs, record: true }), 'executed'), baseline.requests, baseline.protectedOperations);
     assert.equal(recorded.epoch, '9');
     assert.match(recorded.replay_token, /^replay-[1-9][0-9]*$/);
-    assert.deepEqual(recorded.stack, [{ kind: 1, value: '42' }]);
-    assert.deepEqual(recorded.request_trace.map(row => row.operation), ['dispatch', 'effect', 'effect']);
-    assert.deepEqual(recorded.request_trace.slice(1).map(row => row.request), ['A', 'B']);
-    assert.deepEqual(recorded.request_trace.slice(1).map(row => row.response), ['emitted:A', 'emitted:B']);
-    assert.deepEqual(recorded.request_trace.slice(1).map(row => row.protectedOperations), [1, 2]);
+    assert.deepEqual(recorded.stack, [{ kind: 1, value: baseline.stack }]);
+    assert.deepEqual(recorded.request_trace.map(row => row.operation), baseline.operations);
+    if (baselineName === 'effectful') {
+      assert.deepEqual(recorded.request_trace.slice(1).map(row => row.request), ['A', 'B']);
+      assert.deepEqual(recorded.request_trace.slice(1).map(row => row.response), ['emitted:A', 'emitted:B']);
+      assert.deepEqual(recorded.request_trace.slice(1).map(row => row.protectedOperations), [1, 2]);
+    }
     assert.equal(recorded.request_trace[0].rootEpoch, '9');
-    assert.ok(recorded.request_trace[0].definitionId, 'named selected target must have checked DefinitionId');
+    assert.ok(recorded.request_trace[0].definitionId, 'the selected target must have a DefinitionId');
     assert.equal(recorded.frozen_identity.slots[0].definitionId, recorded.request_trace[0].definitionId);
+    assert.deepEqual(recorded.frozen_identity.slots[0].captures, baseline.captures);
     counted(selected(await session.issue({ operation: 'policy',
       grant: { operation: 'effect', slotId: 'emit', allowed: false } }), 'policy-updated'));
     const outcome = await session.issue(mutatedRequest(variant, recorded, inputs, refs));
     if (variant.name === 'exact-frozen-admitted-and-ordered') {
-      counted(selected(outcome, 'replay-matched'), 3, 0);
-      assert.equal(outcome.scripted_operations, 2);
+      counted(selected(outcome, 'replay-matched'), baseline.requests, 0);
+      assert.equal(outcome.scripted_operations, baseline.protectedOperations);
       assert.deepEqual(outcome.actual_trace, recorded.request_trace);
       assert.deepEqual(outcome.actual_stack, recorded.stack);
     } else {
@@ -253,10 +311,14 @@ async function replayVariant(variant) {
       assert.equal(outcome.actual, undefined, 'mismatched receipt must refuse before guest execution');
     }
     await session.finish();
-    return { name: variant.name, outcome: outcome.outcome,
+    return { baseline: baselineName, name: variant.name, outcome: outcome.outcome, stage: outcome.stage,
+      reply_keys: Object.keys(outcome).sort(),
       guest_requests: outcome.guest_requests, protected_operations: outcome.protected_operations,
       scripted_operations: outcome.scripted_operations ?? null,
-      ...(requestedEvidence ? { raw: session.output, requests: session.commands } : {}) };
+      actual_stack: outcome.actual_stack ?? null, actual_trace: outcome.actual_trace ?? null,
+      recorded: { epoch: recorded.epoch, stack: recorded.stack, request_trace: recorded.request_trace,
+        frozen_identity: recorded.frozen_identity },
+      ...(requestedEvidence ? { raw: path.basename(session.output), requests: path.basename(session.commands) } : {}) };
   } catch (error) { session.abort(); throw error; }
 }
 
@@ -304,21 +366,32 @@ try { retained = await retention(); }
 catch (error) { failures.push({ name: 'retention', error: String(error.stack ?? error) }); }
 const replayed = [];
 for (const variant of variants) {
-  try { replayed.push(await replayVariant(variant)); }
-  catch (error) {
-    const failure = { name: variant.name, status: 'failed',
-      error: String(error.stack ?? error),
-      ...(requestedEvidence ? {
-        raw: reportPath(`replay-${variant.name}`),
-        requests: path.join(evidenceDir, `replay-${variant.name}.requests.jsonl`),
-      } : {}) };
-    failures.push(failure);
-    replayed.push(failure);
+  assert.ok(Array.isArray(variant.baselines) && variant.baselines.length > 0,
+    `canonical replay variant ${variant.name} must name its baselines`);
+  for (const baseline of variant.baselines) {
+    try { replayed.push(await replayVariant(baseline, variant)); }
+    catch (error) {
+      const failure = { baseline, name: variant.name, status: 'failed',
+        error: String(error.stack ?? error),
+        ...(requestedEvidence ? {
+          raw: `replay-${baseline}-${variant.name}.raw.jsonl`,
+          requests: `replay-${baseline}-${variant.name}.requests.jsonl`,
+        } : {}) };
+      failures.push(failure);
+      replayed.push(failure);
+    }
   }
 }
 try { boundedTrace = await traceCapacity(); }
 catch (error) { failures.push({ name: 'bounded-trace-retention', error: String(error.stack ?? error) }); }
-console.log(JSON.stringify({ retention: retained, replay: replayed, boundedTrace, failures }));
+const summary = { retention: retained, replay: replayed, boundedTrace, failures };
+if (requestedEvidence) {
+  fs.writeFileSync(path.join(evidenceDir, 'LSLOT08-summary.json'), JSON.stringify(summary, null, 2) + '\n',
+    { flag: 'wx', mode: 0o600 });
+}
+console.log(JSON.stringify({ retention: retained && { oldEpoch: retained.oldEpoch, newEpoch: retained.newEpoch,
+  retired: retained.retired }, replay: replayed.map(row => [row.baseline, row.name, row.outcome ?? row.status]),
+  boundedTrace, failures: failures.map(row => row.name) }));
 if (failures.length) {
   console.error(`quota/replay failures preserved: ${evidenceDir}`);
   process.exitCode = 1;
