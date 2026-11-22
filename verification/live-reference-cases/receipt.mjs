@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 /**
- * Source-bound receipt for LREF-CASE-04, 05 and 06 (`.cairn/changes/live-reference-lifetimes`,
- * r[LREF-ESCAPE-01], r[LREF-EV-01]): escaped results, saved generic callers and held roots
- * against the selected live-slot CLI. Each case runs its own lane:
+ * Source-bound receipt for LREF-CASE-02, 04, 05 and 06 (`.cairn/changes/live-reference-lifetimes`,
+ * r[LREF-CTR-01], r[LREF-ESCAPE-01], r[LREF-EV-01]): non-wrapping counters, escaped results, saved
+ * generic callers and held roots. Each case runs its own lane:
+ *   LREF-CASE-02 - crates/noble-cli/tests/live_slot_counter_exhaustion.mjs (in-process registry
+ *                  fixtures; the compiler's install generation is the noble-wasm unit test
+ *                  `install_generation_refuses_at_its_maximum_without_wrapping`, run by Cargo)
  *   LREF-CASE-04 - crates/noble-cli/tests/live_slot_escaped_result.mjs
  *   LREF-CASE-05 - crates/noble-cli/tests/live_slot_generic_caller_roots.mjs
  *   LREF-CASE-06 - crates/noble-cli/tests/live_slot_held_root_mixing.mjs
@@ -42,6 +45,7 @@ const save = (name, content) => fs.writeFileSync(path.join(output, name),
   { flag: 'wx', mode: 0o600 });
 const bytesOf = relative => ({ path: relative, sha256: sha(fs.readFileSync(path.join(root, relative))) });
 const lanes = {
+  'LREF-CASE-02': 'crates/noble-cli/tests/live_slot_counter_exhaustion.mjs',
   'LREF-CASE-04': 'crates/noble-cli/tests/live_slot_escaped_result.mjs',
   'LREF-CASE-05': 'crates/noble-cli/tests/live_slot_generic_caller_roots.mjs',
   'LREF-CASE-06': 'crates/noble-cli/tests/live_slot_held_root_mixing.mjs',
@@ -52,6 +56,7 @@ const bound = [...Object.values(lanes),
   'crates/noble-cli/src/core/live_slot.rs',
   'crates/noble-cli/src/core/runtime/slot-engine.mjs',
   'crates/noble-cli/src/core/runtime/slot-registry.mjs',
+  'crates/noble-wasm/src/source/mod.rs',
   'verification/live-reference-cases/receipt.mjs'].map(bytesOf);
 const binarySha256 = sha(fs.readFileSync(binary));
 
@@ -64,10 +69,16 @@ const runLane = (name, lane) => {
   const summary = (run.stdout ?? '').trim().split('\n').filter(line => line.startsWith('{'))
     .map(line => JSON.parse(line)).find(line => line.case === name);
   assert.ok(summary, `${name} summary line`);
-  assert.equal(summary.selected_binary_sha256, binarySha256);
+  if (name !== 'LREF-CASE-02') assert.equal(summary.selected_binary_sha256, binarySha256);
   return summary;
 };
 
+const case02 = runLane('LREF-CASE-02', lanes['LREF-CASE-02']);
+assert.deepEqual([case02.epoch.publication, case02.epoch.deletion, case02.generation.publication,
+  case02.incarnation.recreation],
+['epoch-exhausted', 'epoch-exhausted', 'generation-exhausted', 'incarnation-exhausted']);
+assert.deepEqual([case02.epoch.epoch_after, case02.generation.epoch_after, case02.incarnation.epoch_after],
+  ['18446744073709551615', '1', '2']);
 const case04 = runLane('LREF-CASE-04', lanes['LREF-CASE-04']);
 assert.deepEqual(case04.o_after_publication, [{ kind: 1, value: '21' }]);
 assert.deepEqual(case04.fresh_result, [{ kind: 1, value: '22' }]);
@@ -83,9 +94,17 @@ assert.deepEqual([case06.r1.epoch, case06.r1.stack, case06.publication_while_hel
 
 save('receipt.json', {
   schema: 'noble-live-reference-cases-receipt/v1',
-  claim: 'selected host execution evidence for LREF-CASE-04, 05 and 06 against one CLI built from the source below; not a proof and not a conformance promotion',
+  claim: 'selected host execution evidence for LREF-CASE-02 (in-process registry fixtures), 04, 05 and 06 (against one CLI built from the source below); not a proof and not a conformance promotion',
   source: { ...source, bound }, binary_sha256: binarySha256,
   cases: {
+    'LREF-CASE-02': { lane: lanes['LREF-CASE-02'], summary: case02,
+      unit_test: 'cargo test -p noble-wasm --lib retention_tests::install_generation_refuses_at_its_maximum_without_wrapping',
+      non_claims: [
+        'the registry runs in process from fixtures (a fixture-only constructor option the slot engine never passes); no CLI input reaches a counter maximum',
+        'the live-slot code-retention counter is the compiler\'s u32 install generation (maximum 2^32-1, refused with the compiler\'s general `Exhausted` diagnostic at the next installation); the declared-text `retention_revision` is outside Live-Slot-Design (integrator decision 47)',
+        'the unit test result is not executed by this script; it is a Cargo test of the same source tree',
+        'guest handle epochs are not part of the case: an exhausted physical slot is retired, never wrapped',
+      ] },
     'LREF-CASE-04': { lane: lanes['LREF-CASE-04'], summary: case04, non_claims: [
       'one slot whose versions return a Program composed from a literal; O is observed through its saved record and by running it, not through a reflection operation on saved Programs, which the live-slot protocol does not offer',
       'the recorded cell graph is the host\'s bounded observation of O; that a LiveRef cannot appear in it follows from LiveRefs being root bindings rather than cells',

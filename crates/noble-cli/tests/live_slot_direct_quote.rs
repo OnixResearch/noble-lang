@@ -21,6 +21,8 @@
 //! one installed generic caller selects the version each root pinned (LREF-CASE-05), and a root
 //! held across a publication selects its pinned version for every dispatch while an older saved
 //! Program it receives runs its own code (LREF-CASE-06).
+//! The registry's epoch, generation and incarnation counters refuse at their maximum with
+//! distinct diagnostics instead of wrapping, from in-process fixtures (LREF-CASE-02).
 
 #[test]
 fn direct_quote_owner_can_run_and_release_without_retaining_code() {
@@ -217,6 +219,25 @@ fn a_held_root_keeps_its_map_and_runs_an_older_program() {
     assert!(
         output.status.success(),
         "checked CLI held root lane failed: stdout={} stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+}
+
+#[test]
+fn registry_counters_refuse_at_their_maximum_without_wrapping() {
+    let output = std::process::Command::new(
+        "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    )
+    .arg(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/live_slot_counter_exhaustion.mjs"
+    ))
+    .output()
+    .expect("launch selected Node/V8 counter exhaustion child");
+    assert!(
+        output.status.success(),
+        "in-process counter exhaustion lane failed: stdout={} stderr={}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );
