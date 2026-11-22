@@ -156,13 +156,16 @@ export const inheritedOpaqueBodies = {
 // formatting layout is already an abstracted, observation-only boundary. Each
 // is a modelled boundary, never an extracted body, and its exact annotated item
 // is pinned in `reviewedAnnotations` below.
-// Thirty-two bodies of the untrusted implicit-argument elaborator
+// Thirty-three bodies of the untrusted implicit-argument elaborator
 // (`intrinsic::elaborate`) are opaque. The pinned Aeneas refuses fourteen of
 // them: nested borrows through the elaborator state, `(&Form, _)` worklists,
-// and a borrow-joining `match`. The other eighteen build diagnostic or
-// rendering text with `format!`, whose arguments the pinned Aeneas erases, so a
-// transparent body would need the `alloc::fmt::format` external that the
-// FORMAT-ERASURE check refuses. Acceptance consumes only the explicit term the
+// and a borrow-joining `match`. Eighteen build diagnostic or rendering text
+// with `format!`, whose arguments the pinned Aeneas erases, so a transparent
+// body would need the `alloc::fmt::format` external that the FORMAT-ERASURE
+// check refuses. One, `render_into`, renders a list's items in a loop that
+// recurses into itself; the pinned Aeneas emits that loop through its `loop`
+// combinator, whose `partial_fixpoint` the pinned Lean cannot prove monotone
+// in the recursive call. Acceptance consumes only the explicit term the
 // elaborator produces, after the extracted checker and the pinned Lean
 // consumer recheck it, so each is modelled as uninterpreted (any result is
 // possible) and no extracted claim depends on what it returns.
@@ -180,6 +183,7 @@ export const reviewedOpaque = {
     'noble_contracts::intrinsic::elaborate::infer_span_step',
     'noble_contracts::intrinsic::elaborate::pi_names',
     'noble_contracts::intrinsic::elaborate::push_positions',
+    'noble_contracts::intrinsic::elaborate::render_into',
     'noble_contracts::intrinsic::elaborate::rewrite_exec_literal',
     'noble_contracts::intrinsic::elaborate::scan_abbreviation',
     'noble_contracts::intrinsic::elaborate::scan_positions',
@@ -327,6 +331,8 @@ export const reviewedAnnotations = {
       lines: 6, sha256: "627ebf0ac7e73f63001b22a612ba551fdf1ba8c9af11f6bbfdd1693645b2cc4d" },
     { annotation: "opaque", item: "fn describe_prop(prop: &PropTerm) -> String {",
       lines: 17, sha256: "75a17340e756e1d76a3e126d9a7ed8cb543a96efa20d9ea4c1489f083f3d419c" },
+    { annotation: "opaque", item: "fn render_into(",
+      lines: 35, sha256: "cbd822a748fc04e3bb983abe509d3cc5adf85e2c2f5afe38954649bba505fecd" },
   ],
   "crates/noble-contracts/src/lib.rs": [
     { annotation: "variants_suffix(\"Expr\")", item: "pub enum ExprKind {",

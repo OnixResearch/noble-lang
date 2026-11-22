@@ -479,4 +479,14 @@ opaque intrinsic.elaborate.describe_val : intrinsic.elaborate.Val → Result Str
 /-- [noble_contracts::intrinsic::elaborate::describe_prop] -/
 opaque intrinsic.elaborate.describe_prop : intrinsic.elaborate.PropTerm → Result String
 
+/-! `render_into` renders a list's items in a loop that recurses into
+`render_into`. The pinned Aeneas emits the loop through its `loop` combinator,
+whose `partial_fixpoint` the pinned Lean cannot prove monotone in that
+recursive call, so the body is modelled as an `opaque` constant as well. -/
+
+/-- [noble_contracts::intrinsic::elaborate::render_into] -/
+opaque intrinsic.elaborate.render_into :
+    intrinsic.Form → Limits → Std.U32 → String →
+      Result ((core.result.Result Unit Diagnostic) × String)
+
 end noble_contracts

@@ -1419,10 +1419,12 @@ impl Elaborator<'_, '_> {
             };
             self.constrain_ty(&required, &code, span)?;
         }
-        let entry = self
-            .metas
-            .get_mut(index)
-            .ok_or_else(|| internal(span, "unknown value metavariable"))?;
+        // A `let`-`else` rather than `ok_or_else` on the mutable borrow: the
+        // pinned Aeneas models `Option::ok_or_else` without the backward
+        // function a `&mut` payload needs.
+        let Some(entry) = self.metas.get_mut(index) else {
+            return Err(internal(span, "unknown value metavariable"));
+        };
         if entry.value.is_some() {
             return Err(internal(span, "value metavariable bound twice"));
         }
@@ -1590,6 +1592,9 @@ impl Elaborator<'_, '_> {
         self.push_binder(Binder { name, sort: actual }, args[1].span)?;
         let body = self.check(&args[1], rest, body_depth);
         self.pop_binder();
+        // Propagated before `vec!`: a `?` inside its elements lowers to an
+        // uninitialised box the pinned Aeneas library does not model.
+        let body = body?;
         let binder_out = Out::List(
             alloc::vec![
                 Out::Done(binder_form[0].clone()),
@@ -1598,7 +1603,7 @@ impl Elaborator<'_, '_> {
             args[0].span,
         );
         Ok(Out::List(
-            alloc::vec![out_atom("intro", form.span), binder_out, body?,],
+            alloc::vec![out_atom("intro", form.span), binder_out, body],
             form.span,
         ))
     }
@@ -2169,29 +2174,32 @@ impl Elaborator<'_, '_> {
                 let name = level_name(names, *level, span)?;
                 Ok(atom_form(&name, span))
             }
-            Ty::Pair(left, right) => Ok(Form {
-                kind: FormKind::List(alloc::vec![
-                    atom_form("Pair", span),
-                    self.ty_form(left, span, names)?,
-                    self.ty_form(right, span, names)?,
-                ]),
-                span,
-            }),
-            Ty::Sum(left, right) => Ok(Form {
-                kind: FormKind::List(alloc::vec![
-                    atom_form("Sum", span),
-                    self.ty_form(left, span, names)?,
-                    self.ty_form(right, span, names)?,
-                ]),
-                span,
-            }),
-            Ty::List(item) => Ok(Form {
-                kind: FormKind::List(alloc::vec![
-                    atom_form("List", span),
-                    self.ty_form(item, span, names)?,
-                ]),
-                span,
-            }),
+            // Each component is rendered before `vec!`: a `?` inside its
+            // elements lowers to an uninitialised box the pinned Aeneas
+            // library does not model.
+            Ty::Pair(left, right) => {
+                let left = self.ty_form(left, span, names)?;
+                let right = self.ty_form(right, span, names)?;
+                Ok(Form {
+                    kind: FormKind::List(alloc::vec![atom_form("Pair", span), left, right]),
+                    span,
+                })
+            }
+            Ty::Sum(left, right) => {
+                let left = self.ty_form(left, span, names)?;
+                let right = self.ty_form(right, span, names)?;
+                Ok(Form {
+                    kind: FormKind::List(alloc::vec![atom_form("Sum", span), left, right]),
+                    span,
+                })
+            }
+            Ty::List(item) => {
+                let item = self.ty_form(item, span, names)?;
+                Ok(Form {
+                    kind: FormKind::List(alloc::vec![atom_form("List", span), item]),
+                    span,
+                })
+            }
             Ty::Meta(_) => Err(internal(
                 span,
                 "unresolved code metavariable in an expansion",
@@ -2986,6 +2994,7 @@ fn render_form(form: &Form, limits: Limits) -> Result<String, Diagnostic> {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
+#[charon::opaque]
 fn render_into(
     form: &Form,
     limits: Limits,
