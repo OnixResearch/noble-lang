@@ -72,7 +72,7 @@
   `stack-depth`. Reports carry `invocation_prelude` and `invocation_argument_copy`. Observed:
   `cargo test -p noble-cli --test smoke guardv2` -> 5 passed, including the new prelude
   composition and the copy past a cell above the slot.
-- [ ] [serial] Register and execute GUARD-CASE-01…12 against frozen executables, retaining stacks, identities, counters and refusal stages; keep exhaustion/trap distinct from rejection. r[GUARD-BIND-01] r[GUARD-CORR-01]
+- [x] [serial] Register and execute GUARD-CASE-01…12 against frozen executables, retaining stacks, identities, counters and refusal stages; keep exhaustion/trap distinct from rejection. r[GUARD-BIND-01] r[GUARD-CORR-01]
   Progress (2026-11-22): registered in `specs/conformance/guard-cases.json` (profile
   `Bounded-Applicability-Design`, all twelve absent/not-run/open/unassessed, citing the canonical
   VC-LOGIC-02, VC-USE-01, VC-ADMIT-05 and VC-COMPOSE-01). A separate file, not
@@ -104,4 +104,17 @@
   showed a cap of 1 exhausting in reflection/type-observation work with no execution step and
   caps of 2 to 32 exhausting in execution work, where the body's start is not observable, so the
   case uses cap 1.
+  Executed (2026-11-22). The gate ran twice on the batch-4 tree, retained in
+  `verification/guard-cases/runs/` with its README. At `f5c4ccec` every case except
+  GUARD-CASE-03 was observed as registered; that case's tail clause read as unmet because the
+  gate read a stack cell's `value`, while a cell carries its value as the JSON text of `detail`
+  (the transcript keeps the `I64 41` tail at the bottom of all 21 stacks). After the reading fix
+  (`db0fe933`) the run
+  [`runs/20261122-b4r`](../../../verification/guard-cases/runs/20261122-b4r/acceptance.json)
+  (sha256 `da95ab5a...`, source revision `sha256:cc9dda44...`, both binaries hashed unchanged
+  before and after) observed all twelve cases as registered: verdict `all-passed`. GUARD-CASE-01..12
+  are promoted to implemented/passed with proof open and explicit trust, each citing that
+  receipt. The registration, the GUARD-CASE-11 amendment and the run were accepted by the
+  integrator review [`review-integrator-2026-11-22-guard-cases.md`](review-integrator-2026-11-22-guard-cases.md)
+  (owner decision 28). C1 for `templates_of`, C6 and PO-21 remain open.
 - [ ] [serial] Coordinate C6 (Wasm lowering/loading of wrappers, PO-17/PO-18) through #10. Static-witness companion rules wait for #7; resource-bearing applicability waits for #3. r[GUARD-FACT-01]

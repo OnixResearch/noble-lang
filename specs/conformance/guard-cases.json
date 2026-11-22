@@ -52,8 +52,40 @@
         "guest_requests": 0,
         "protected_operations": 0
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "GUARD-CASE-01",
+          "claim": "`LtI64Max` and `NeI64Min` each refuse their boundary argument as a precondition rejection before the candidate body starts and certify the arguments beside it with the registered outputs, through the frozen v1 wrapper bytes with no set version.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+          "configuration": {
+            "profile": "Bounded-Applicability-Design",
+            "receipt": "../../verification/guard-cases/runs/20261122-b4r/acceptance.json",
+            "receipt_sha256": "da95ab5ada935f9f2a6fa8a6b0cd33f0d10986b641032e659fb0bec8ef8ad704",
+            "gate": "../../verification/guard-cases/gate.mjs",
+            "gate_sha256": "6ceaf3333235139a7d9d763d9b33071f578855527ae663c8205c61ebe7f5ed0f",
+            "tested_commit": "db0fe9339121f1df4dc4a2dd4b897ba787aa0dd4",
+            "binary_sha256": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "binary_sha256_after": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+            "projection_sha256": "2abc8a0da58e2df82c0509d300fec74b376d9e4b9548169630228bd4c62e2125",
+            "case_id": "GUARD-CASE-01",
+            "lane": "verification/guard-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble companions` on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digests before and after the run and every raw output.",
+            "Finite behavioral evidence for these inputs only: C1 for `templates_of`, C6 (Wasm lowering of wrappers) and PO-21 stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "GUARD-CASE-02",
@@ -79,8 +111,40 @@
         "substituted_binding": { "stage": "binding", "outcome": "correspondence-mismatch", "guard_executed": false },
         "accepts_6_under_eq_5": false
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "GUARD-CASE-02",
+          "claim": "`EqI64Literal 5` certifies 5 and refuses 6 and -5 before the body starts; the substituted `EqI64Literal 6` binding is refused by the core correspondence check before any guard executes, with no new certified status.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+          "configuration": {
+            "profile": "Bounded-Applicability-Design",
+            "receipt": "../../verification/guard-cases/runs/20261122-b4r/acceptance.json",
+            "receipt_sha256": "da95ab5ada935f9f2a6fa8a6b0cd33f0d10986b641032e659fb0bec8ef8ad704",
+            "gate": "../../verification/guard-cases/gate.mjs",
+            "gate_sha256": "6ceaf3333235139a7d9d763d9b33071f578855527ae663c8205c61ebe7f5ed0f",
+            "tested_commit": "db0fe9339121f1df4dc4a2dd4b897ba787aa0dd4",
+            "binary_sha256": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "binary_sha256_after": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+            "projection_sha256": "2abc8a0da58e2df82c0509d300fec74b376d9e4b9548169630228bd4c62e2125",
+            "case_id": "GUARD-CASE-02",
+            "lane": "verification/guard-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble companions` on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digests before and after the run and every raw output.",
+            "Finite behavioral evidence for these inputs only: C1 for `templates_of`, C6 (Wasm lowering of wrappers) and PO-21 stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "GUARD-CASE-03",
@@ -117,8 +181,40 @@
         "guest_requests": 0,
         "protected_operations": 0
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "GUARD-CASE-03",
+          "claim": "`head-of-nonempty` refuses the empty list as `inl 1` before the body starts, certifies `[MIN]` and `[7, 8]` with their heads and returns the empty list for `[[]]`; the session tail below the argument and every cell are preserved.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+          "configuration": {
+            "profile": "Bounded-Applicability-Design",
+            "receipt": "../../verification/guard-cases/runs/20261122-b4r/acceptance.json",
+            "receipt_sha256": "da95ab5ada935f9f2a6fa8a6b0cd33f0d10986b641032e659fb0bec8ef8ad704",
+            "gate": "../../verification/guard-cases/gate.mjs",
+            "gate_sha256": "6ceaf3333235139a7d9d763d9b33071f578855527ae663c8205c61ebe7f5ed0f",
+            "tested_commit": "db0fe9339121f1df4dc4a2dd4b897ba787aa0dd4",
+            "binary_sha256": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "binary_sha256_after": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+            "projection_sha256": "2abc8a0da58e2df82c0509d300fec74b376d9e4b9548169630228bd4c62e2125",
+            "case_id": "GUARD-CASE-03",
+            "lane": "verification/guard-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble companions` on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digests before and after the run and every raw output.",
+            "Finite behavioral evidence for these inputs only: C1 for `templates_of`, C6 (Wasm lowering of wrappers) and PO-21 stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "GUARD-CASE-04",
@@ -143,8 +239,40 @@
         "guest_requests": 0,
         "protected_operations": 0
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "GUARD-CASE-04",
+          "claim": "Contracts that need an undefined selector are reported as unsupported guard templates, never as precondition rejections, with no body started, guest request or protected operation.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+          "configuration": {
+            "profile": "Bounded-Applicability-Design",
+            "receipt": "../../verification/guard-cases/runs/20261122-b4r/acceptance.json",
+            "receipt_sha256": "da95ab5ada935f9f2a6fa8a6b0cd33f0d10986b641032e659fb0bec8ef8ad704",
+            "gate": "../../verification/guard-cases/gate.mjs",
+            "gate_sha256": "6ceaf3333235139a7d9d763d9b33071f578855527ae663c8205c61ebe7f5ed0f",
+            "tested_commit": "db0fe9339121f1df4dc4a2dd4b897ba787aa0dd4",
+            "binary_sha256": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "binary_sha256_after": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+            "projection_sha256": "2abc8a0da58e2df82c0509d300fec74b376d9e4b9548169630228bd4c62e2125",
+            "case_id": "GUARD-CASE-04",
+            "lane": "verification/guard-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble companions` on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digests before and after the run and every raw output.",
+            "Finite behavioral evidence for these inputs only: C1 for `templates_of`, C6 (Wasm lowering of wrappers) and PO-21 stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "GUARD-CASE-05",
@@ -168,8 +296,40 @@
         "guest_requests": 0,
         "protected_operations": 0
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "GUARD-CASE-05",
+          "claim": "Conjunction contracts are reported as unsupported guard templates; no conjunct guard yields applicability.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+          "configuration": {
+            "profile": "Bounded-Applicability-Design",
+            "receipt": "../../verification/guard-cases/runs/20261122-b4r/acceptance.json",
+            "receipt_sha256": "da95ab5ada935f9f2a6fa8a6b0cd33f0d10986b641032e659fb0bec8ef8ad704",
+            "gate": "../../verification/guard-cases/gate.mjs",
+            "gate_sha256": "6ceaf3333235139a7d9d763d9b33071f578855527ae663c8205c61ebe7f5ed0f",
+            "tested_commit": "db0fe9339121f1df4dc4a2dd4b897ba787aa0dd4",
+            "binary_sha256": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "binary_sha256_after": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+            "projection_sha256": "2abc8a0da58e2df82c0509d300fec74b376d9e4b9548169630228bd4c62e2125",
+            "case_id": "GUARD-CASE-05",
+            "lane": "verification/guard-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble companions` on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digests before and after the run and every raw output.",
+            "Finite behavioral evidence for these inputs only: C1 for `templates_of`, C6 (Wasm lowering of wrappers) and PO-21 stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "GUARD-CASE-06",
@@ -195,8 +355,40 @@
         "guest_requests": 0,
         "protected_operations": 0
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "GUARD-CASE-06",
+          "claim": "Near-miss shapes of the supported templates are reported as unsupported guard templates, with no body started.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+          "configuration": {
+            "profile": "Bounded-Applicability-Design",
+            "receipt": "../../verification/guard-cases/runs/20261122-b4r/acceptance.json",
+            "receipt_sha256": "da95ab5ada935f9f2a6fa8a6b0cd33f0d10986b641032e659fb0bec8ef8ad704",
+            "gate": "../../verification/guard-cases/gate.mjs",
+            "gate_sha256": "6ceaf3333235139a7d9d763d9b33071f578855527ae663c8205c61ebe7f5ed0f",
+            "tested_commit": "db0fe9339121f1df4dc4a2dd4b897ba787aa0dd4",
+            "binary_sha256": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "binary_sha256_after": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+            "projection_sha256": "2abc8a0da58e2df82c0509d300fec74b376d9e4b9548169630228bd4c62e2125",
+            "case_id": "GUARD-CASE-06",
+            "lane": "verification/guard-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble companions` on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digests before and after the run and every raw output.",
+            "Finite behavioral evidence for these inputs only: C1 for `templates_of`, C6 (Wasm lowering of wrappers) and PO-21 stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "GUARD-CASE-07",
@@ -220,8 +412,40 @@
         "guest_requests": 0,
         "protected_operations": 0
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "GUARD-CASE-07",
+          "claim": "A changed predicate is unguarded (unsupported template), a policy change makes the companion stale, and after readmission the invocation is certified again with output 7.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+          "configuration": {
+            "profile": "Bounded-Applicability-Design",
+            "receipt": "../../verification/guard-cases/runs/20261122-b4r/acceptance.json",
+            "receipt_sha256": "da95ab5ada935f9f2a6fa8a6b0cd33f0d10986b641032e659fb0bec8ef8ad704",
+            "gate": "../../verification/guard-cases/gate.mjs",
+            "gate_sha256": "6ceaf3333235139a7d9d763d9b33071f578855527ae663c8205c61ebe7f5ed0f",
+            "tested_commit": "db0fe9339121f1df4dc4a2dd4b897ba787aa0dd4",
+            "binary_sha256": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "binary_sha256_after": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+            "projection_sha256": "2abc8a0da58e2df82c0509d300fec74b376d9e4b9548169630228bd4c62e2125",
+            "case_id": "GUARD-CASE-07",
+            "lane": "verification/guard-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble companions` on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digests before and after the run and every raw output.",
+            "Finite behavioral evidence for these inputs only: C1 for `templates_of`, C6 (Wasm lowering of wrappers) and PO-21 stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "GUARD-CASE-08",
@@ -243,8 +467,40 @@
         "original_companion_identity_unchanged": true,
         "guard_executed": false
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "GUARD-CASE-08",
+          "claim": "A changed subject and a changed family capture are refused as mismatched subjects at binding, before any guard executes; no companion is published and the original companion identity is unchanged.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+          "configuration": {
+            "profile": "Bounded-Applicability-Design",
+            "receipt": "../../verification/guard-cases/runs/20261122-b4r/acceptance.json",
+            "receipt_sha256": "da95ab5ada935f9f2a6fa8a6b0cd33f0d10986b641032e659fb0bec8ef8ad704",
+            "gate": "../../verification/guard-cases/gate.mjs",
+            "gate_sha256": "6ceaf3333235139a7d9d763d9b33071f578855527ae663c8205c61ebe7f5ed0f",
+            "tested_commit": "db0fe9339121f1df4dc4a2dd4b897ba787aa0dd4",
+            "binary_sha256": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "binary_sha256_after": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+            "projection_sha256": "2abc8a0da58e2df82c0509d300fec74b376d9e4b9548169630228bd4c62e2125",
+            "case_id": "GUARD-CASE-08",
+            "lane": "verification/guard-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble companions` on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digests before and after the run and every raw output.",
+            "Finite behavioral evidence for these inputs only: C1 for `templates_of`, C6 (Wasm lowering of wrappers) and PO-21 stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "GUARD-CASE-09",
@@ -271,8 +527,40 @@
         },
         "static_without_proof": { "release": "blocked" }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "GUARD-CASE-09",
+          "claim": "The erased projection runs identically (`left 1` for the empty list, `right 7` for `[7, 8]`) and claims no behavioral certification; a static applicability without proof blocks release.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+          "configuration": {
+            "profile": "Bounded-Applicability-Design",
+            "receipt": "../../verification/guard-cases/runs/20261122-b4r/acceptance.json",
+            "receipt_sha256": "da95ab5ada935f9f2a6fa8a6b0cd33f0d10986b641032e659fb0bec8ef8ad704",
+            "gate": "../../verification/guard-cases/gate.mjs",
+            "gate_sha256": "6ceaf3333235139a7d9d763d9b33071f578855527ae663c8205c61ebe7f5ed0f",
+            "tested_commit": "db0fe9339121f1df4dc4a2dd4b897ba787aa0dd4",
+            "binary_sha256": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "binary_sha256_after": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+            "projection_sha256": "2abc8a0da58e2df82c0509d300fec74b376d9e4b9548169630228bd4c62e2125",
+            "case_id": "GUARD-CASE-09",
+            "lane": "verification/guard-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble companions` on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digests before and after the run and every raw output.",
+            "Finite behavioral evidence for these inputs only: C1 for `templates_of`, C6 (Wasm lowering of wrappers) and PO-21 stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "GUARD-CASE-10",
@@ -296,8 +584,40 @@
         "guest_requests": 0,
         "protected_operations": 0
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "GUARD-CASE-10",
+          "claim": "No composite inherits a guard: guarded compositions are refused at the implication with no new certified status, and the derived increment composite carries no guard.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+          "configuration": {
+            "profile": "Bounded-Applicability-Design",
+            "receipt": "../../verification/guard-cases/runs/20261122-b4r/acceptance.json",
+            "receipt_sha256": "da95ab5ada935f9f2a6fa8a6b0cd33f0d10986b641032e659fb0bec8ef8ad704",
+            "gate": "../../verification/guard-cases/gate.mjs",
+            "gate_sha256": "6ceaf3333235139a7d9d763d9b33071f578855527ae663c8205c61ebe7f5ed0f",
+            "tested_commit": "db0fe9339121f1df4dc4a2dd4b897ba787aa0dd4",
+            "binary_sha256": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "binary_sha256_after": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+            "projection_sha256": "2abc8a0da58e2df82c0509d300fec74b376d9e4b9548169630228bd4c62e2125",
+            "case_id": "GUARD-CASE-10",
+            "lane": "verification/guard-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble companions` on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digests before and after the run and every raw output.",
+            "Finite behavioral evidence for these inputs only: C1 for `templates_of`, C6 (Wasm lowering of wrappers) and PO-21 stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "GUARD-CASE-11",
@@ -348,8 +668,43 @@
           "later_operation": { "outcome": "terminated-after-runtime-failure", "code": "session-terminated" }
         }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "GUARD-CASE-11",
+          "claim": "Under the test-only harness fault model, an exhausted or trapped guard is reported as a guard runtime failure distinct from a precondition rejection before its first execution step, the session ends and every later operation is refused.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+          "configuration": {
+            "profile": "Bounded-Applicability-Design",
+            "receipt": "../../verification/guard-cases/runs/20261122-b4r/acceptance.json",
+            "receipt_sha256": "da95ab5ada935f9f2a6fa8a6b0cd33f0d10986b641032e659fb0bec8ef8ad704",
+            "gate": "../../verification/guard-cases/gate.mjs",
+            "gate_sha256": "6ceaf3333235139a7d9d763d9b33071f578855527ae663c8205c61ebe7f5ed0f",
+            "tested_commit": "db0fe9339121f1df4dc4a2dd4b897ba787aa0dd4",
+            "binary_sha256": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "binary_sha256_after": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+            "projection_sha256": "2abc8a0da58e2df82c0509d300fec74b376d9e4b9548169630228bd4c62e2125",
+            "case_id": "GUARD-CASE-11",
+            "lane": "verification/guard-cases/gate.mjs",
+            "guard_fault_binary_sha256": "d2ec63463e6b84f58610de44c7be212c0d23faf64c15db4f79e0e9d8e7183e37",
+            "guard_fault_binary_sha256_after": "d2ec63463e6b84f58610de44c7be212c0d23faf64c15db4f79e0e9d8e7183e37"
+          },
+          "assumptions": [
+            "Executed through `noble companions` on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digests before and after the run and every raw output.",
+            "Finite behavioral evidence for these inputs only: C1 for `templates_of`, C6 (Wasm lowering of wrappers) and PO-21 stay open, and no proof is claimed.",
+            "Observed under the harness fault model of owner decisions 33 and 33a: a test-only `live-test-barrier` build exhausts or traps exactly one guard execution; the shipped binary neither defines nor forwards the hook."
+          ]
+        }
+      ]
     },
     {
       "id": "GUARD-CASE-12",
@@ -370,8 +725,40 @@
         "guest_requests": 0,
         "protected_operations": 0
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "GUARD-CASE-12",
+          "claim": "Wrong-typed slots are refused at injection typing (stack-type) before any guard executes, with the session preserved.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+          "configuration": {
+            "profile": "Bounded-Applicability-Design",
+            "receipt": "../../verification/guard-cases/runs/20261122-b4r/acceptance.json",
+            "receipt_sha256": "da95ab5ada935f9f2a6fa8a6b0cd33f0d10986b641032e659fb0bec8ef8ad704",
+            "gate": "../../verification/guard-cases/gate.mjs",
+            "gate_sha256": "6ceaf3333235139a7d9d763d9b33071f578855527ae663c8205c61ebe7f5ed0f",
+            "tested_commit": "db0fe9339121f1df4dc4a2dd4b897ba787aa0dd4",
+            "binary_sha256": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "binary_sha256_after": "587b3b710e902664917ea8bb57722cfe6a0998a5051198efaba2483e42bc611c",
+            "source_revision": "sha256:cc9dda44bb47ac5d44650d0b243ef54a36ce4ffeef675ca3242389d1993c0e3e",
+            "projection_sha256": "2abc8a0da58e2df82c0509d300fec74b376d9e4b9548169630228bd4c62e2125",
+            "case_id": "GUARD-CASE-12",
+            "lane": "verification/guard-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble companions` on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digests before and after the run and every raw output.",
+            "Finite behavioral evidence for these inputs only: C1 for `templates_of`, C6 (Wasm lowering of wrappers) and PO-21 stay open, and no proof is claimed."
+          ]
+        }
+      ]
     }
   ]
 }
