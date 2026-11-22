@@ -66,6 +66,17 @@ pub(in crate::core::companions) fn op_invoke(
             crate::core::companions::reporting::inputs::program_injection(companion.subject),
         ],
     );
+    if driver.terminated.is_some() {
+        // The poisoned engine has exited; the parked frame is never restored.
+        let report = attempt!(outcome);
+        return guard_fault(&Fault {
+            report: &report,
+            template: template.code(),
+            wrapper: &wrapper,
+            prelude: None,
+            set_version: None,
+        });
+    }
     let report = attempt!(driver.restore_frame(parked, outcome));
     let again = attempt!(driver.certified_at(index));
     let has_changed_identity = again.subject != companion.subject;
@@ -163,6 +174,18 @@ fn invoke_list(
         .core
         .invocation_wrapper_v2(noble_contracts::companion::GuardTemplateV2::NonEmptyList);
     let guarded = run_list_guard(driver, &wrapper, &program);
+    if driver.terminated.is_some() {
+        // Neither the frame nor the copy cell can be restored or released on
+        // a poisoned engine; the session refuses every later operation.
+        let report = attempt!(guarded);
+        return guard_fault(&Fault {
+            report: &report,
+            template: noble_contracts::companion::GuardTemplateV2::NonEmptyList.code(),
+            wrapper: &wrapper,
+            prelude: Some(LIST_PRELUDE),
+            set_version: Some(noble_contracts::companion::GUARD_SET_VERSION_V2),
+        });
+    }
     // The copy cell is the restored top slot; it is released on every path,
     // after the frame (or its refusal) is settled.
     let released = release_copy(driver);
@@ -224,6 +247,9 @@ fn run_list_guard(
             crate::core::companions::reporting::inputs::program_injection(program.handle),
         ],
     );
+    if driver.terminated.is_some() {
+        return outcome;
+    }
     driver.restore_frame(parked, outcome)
 }
 
@@ -243,6 +269,108 @@ fn release_copy(
         ));
     }
     Ok(())
+}
+
+/// One guarded execution that ended abnormally.
+struct Fault<'report> {
+    report: &'report crate::core::report::Value,
+    template: &'static str,
+    wrapper: &'report str,
+    prelude: Option<&'static str>,
+    set_version: Option<u32>,
+}
+
+/// The line for a guard whose engine execution trapped or exhausted its
+/// quota. It is neither a rejection nor an invocation: the engine's own
+/// classification, quota reason, trap text and charged work are reported,
+/// and the session is terminated. Whether the candidate body started is not
+/// observable from this report and is not claimed.
+fn guard_fault(
+    fault: &Fault<'_>,
+) -> crate::core::companions::Attempt<crate::workflow::encoding::Json> {
+    let text = |field: &str| {
+        fault
+            .report
+            .member(field)
+            .and_then(crate::core::report::Value::text)
+            .map_or(
+                crate::workflow::encoding::Json::Null,
+                crate::workflow::encoding::string,
+            )
+    };
+    let metric = |name: &str| {
+        fault
+            .report
+            .member("metrics")
+            .and_then(|metrics| metrics.member(name))
+            .and_then(crate::core::report::Value::index)
+            .map(crate::workflow::encoding::Json::Number)
+            .ok_or_else(|| {
+                crate::core::companions::Refused::script(std::format!("runtime omitted {name}"))
+            })
+    };
+    let mut fields = std::vec::Vec::from([
+        (
+            "guard_template",
+            crate::workflow::encoding::string(fault.template),
+        ),
+        ("engine_outcome", text("outcome")),
+        ("quota_reason", text("quota_reason")),
+        ("native_trap", text("native_trap")),
+        ("execution_steps", attempt!(metric("execution_steps"))),
+        ("reflection_steps", attempt!(metric("reflection_steps"))),
+        ("session_state", text("session_state")),
+        (
+            "frame_restored",
+            crate::workflow::encoding::Json::Bool(false),
+        ),
+        ("prover_calls", crate::workflow::encoding::Json::Number(0)),
+        (
+            "candidate_prepare_requests",
+            crate::workflow::encoding::Json::Number(0),
+        ),
+        (
+            "guest_requests",
+            attempt!(crate::core::companions::reporting::runtime_count(
+                fault.report,
+                "guest_requests",
+            )),
+        ),
+        (
+            "protected_operations",
+            attempt!(crate::core::companions::reporting::runtime_count(
+                fault.report,
+                "protected_operations",
+            )),
+        ),
+        (
+            "wrapper_executions",
+            crate::workflow::encoding::Json::Number(1),
+        ),
+        (
+            "wrapper_source",
+            crate::workflow::encoding::string(fault.wrapper),
+        ),
+    ]);
+    if let Some(prelude) = fault.prelude {
+        fields.push((
+            "invocation_prelude",
+            crate::workflow::encoding::string(prelude),
+        ));
+    }
+    if let Some(version) = fault.set_version {
+        fields.push((
+            "guard_template_set_version",
+            crate::workflow::encoding::Json::Number(u64::from(version)),
+        ));
+    }
+    Ok(crate::core::companions::reporting::line(
+        crate::core::companions::reporting::Header {
+            operation: "invoke",
+            outcome: "guard-runtime",
+        },
+        fields,
+    ))
 }
 
 #[expect(

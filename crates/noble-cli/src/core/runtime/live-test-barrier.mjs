@@ -6,8 +6,38 @@
   const point = process.env.NOBLE_LIVE_TEST_BARRIER_POINT;
   const expected = process.env.NOBLE_LIVE_TEST_BARRIER_EXPECTED;
   const tamper = process.env.NOBLE_LIVE_TEST_PROPOSAL_TAMPER;
+  const guardFault = process.env.NOBLE_LIVE_TEST_GUARD_FAULT;
   for (const key of ['NOBLE_LIVE_TEST_BARRIER_DIR', 'NOBLE_LIVE_TEST_BARRIER_POINT',
-    'NOBLE_LIVE_TEST_BARRIER_EXPECTED', 'NOBLE_LIVE_TEST_PROPOSAL_TAMPER']) delete process.env[key];
+    'NOBLE_LIVE_TEST_BARRIER_EXPECTED', 'NOBLE_LIVE_TEST_PROPOSAL_TAMPER',
+    'NOBLE_LIVE_TEST_GUARD_FAULT']) delete process.env[key];
+  if (guardFault !== undefined) {
+    // Harness fault model for GUARD-CASE-11 (owner decision 33): the one real
+    // execution whose checked source has the selected SHA-256 either runs
+    // under a host-selected step cap, so the guest's own meter exhausts, or
+    // raises a Wasm trap at the top of its real guest frame. It is one-shot,
+    // selects no other execution and grants no authority; the engine's own
+    // classification, poisoning and report paths are unchanged.
+    const selected = /^exhaust:([1-9][0-9]{0,5}):([a-f0-9]{64})$/.exec(guardFault)
+      ?? /^trap:()([a-f0-9]{64})$/.exec(guardFault);
+    if (!selected) fail('invalid private guard fault selection');
+    const [, cap, source] = selected;
+    const steps = cap === '' ? null : Number(cap);
+    let armed = true;
+    const original = CoreEngine.prototype.execute;
+    CoreEngine.prototype.execute = function (options = {}) {
+      if (!armed || this.pending?.record?.source_sha256 !== source) {
+        return original.call(this, options);
+      }
+      armed = false;
+      if (steps !== null) {
+        return original.call(this, { ...options, limits: { ...(options.limits ?? {}), steps } });
+      }
+      this.liveTestPause = () => {
+        throw new WebAssembly.RuntimeError('test-only guard fault at the top of the guest frame');
+      };
+      return original.call(this, options);
+    };
+  }
   if (tamper !== undefined) {
     if (tamper !== 'snapshot-cell') fail('invalid private live proposal tamper selection');
     // Hostile-harness control: change one byte of a reachable capture cell

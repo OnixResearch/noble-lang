@@ -170,6 +170,10 @@ struct Driver {
     policy: u32,
     timeout_ms: u64,
     optimized: bool,
+    /// The engine outcome that ended this session. A trap, exhaustion or
+    /// internal failure poisons the engine and its worker exits, so nothing
+    /// parked is restored and every later operation is refused.
+    terminated: Option<std::string::String>,
 }
 
 mod entry;
