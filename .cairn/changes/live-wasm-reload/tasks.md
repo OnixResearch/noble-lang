@@ -392,3 +392,13 @@ including the case's own `[ addone ]` submission held in flight at the
 - [ ] [serial] Complete host-granted guest self-edit with compiler-bound originating identity, effectful generation observation, typed pure Program proposal during actual Wasm invocation, bounded enqueue, post-return independent admission and one-use generation CAS; exercise LIVE-09/10 including retained-old-Program denial, rearm, traps, effects and guest/file provenance. Keep both cases absent/not-run until executed. r[K-LIVE-02] r[H-LIVE-04]
 
   Progress (live-seams, 2026-11-20): LIVE-09 is executed and promoted by the receipt above (two real children, generations 1→2, derived `[ 2 + ]`/`[ 3 + ]`, refused effect-increasing file restore, grant retention, file/compiler provenance). LIVE-10 is executed for every representable variant (old-Program owner-mismatch denial, rearm, stale generation, replayed proposal, work-quota trap, retained-generation budget, unsupported `[ ]` recipe, snapshot tamper, tampered candidate bytes, static refusals, positive B commit) and remains `absent`/`not-run` because `foreign-session-grant` has no cross-session grant input and `shadow-stage-failure` plus the enqueue/publication generation CAS need host seams this slice did not add. Task 4 stays open for those two case variants or a separately owner-approved case amendment.
+  Progress 2026-11-22 (integrator decision 41): LIVE-10's two remaining host-callback variants and
+  two post-return variants are closed. `foreign-session-grant` is dropped as not representable (a
+  grant is process-local host state with no token, import or reference form); `wrong-selected-name`
+  is observed as the earlier refusal at source admission when the grant names another definition;
+  `shadow-stage-failure` and `generation-changed-between-enqueue-and-publication-CAS` run under
+  one-shot test-only fault models of the `live-test-barrier` feature build
+  (`NOBLE_LIVE_TEST_SHADOW_FAULT`, `NOBLE_LIVE_TEST_GENERATION_SHIFT`), each refusing before
+  publication with the grant and stack kept while the next proposal commits. The LIVE gate now
+  observes every LIVE-10 field (including its own dependent-definition lane) and declares LIVE-10
+  promotable; the task is ticked when its receipt is retained.

@@ -58,7 +58,7 @@ const projections = {
   'LIVE-07': 'aa80f1244e9039b8c7a2a3ebdfa19a05e97658cc8d03c4d78177b56d403d77b5',
   'LIVE-08': 'db9b11bbeb86a1afebf945d585123d0ab755a9e3b84c751ad3785f6a7e4cddc3',
   'LIVE-09': '0787a4357513531b03a2eb02f85878d39f14e7de71d137503a5425857b968ce9',
-  'LIVE-10': 'e7a1d5ba9f2fa9248e941fbfc2f595d7332706928b02ccbe6f9fd3715db05cf6',
+  'LIVE-10': 'f5513c28e736afb6645c44d2f486604cbf8c5b9f6dbd5ba827c95c981df0ce13',
 };
 const projectionOf = row => ({
   id: row.id, profile: row.profile, kind: row.kind, requirements: row.requirements,
@@ -73,7 +73,8 @@ for (const [id, digest] of Object.entries(projections))
 // LIVE-05's `missing-import` variant is dropped as inapplicable (owner decision
 // 30: the live profiles have no import grammar); its remaining variants are
 // observed below.
-const promoted = ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-06', 'LIVE-07', 'LIVE-09'];
+const promoted = ['LIVE-01', 'LIVE-02', 'LIVE-03', 'LIVE-04', 'LIVE-05', 'LIVE-06', 'LIVE-07', 'LIVE-09',
+  'LIVE-10'];
 
 
 // ---------------------------------------------------------------------------
@@ -1526,10 +1527,11 @@ async function observeLive09() {
 }
 
 // LIVE-10: origin, rearm, callback denial, post-return refusal and terminal
-// trap boundaries of host-granted guest self-edit. Two case variants
-// (a foreign-session grant and a shadow-stage/CAS interleaving) have no CLI
-// or host seam in this tree; the rows below record that absence instead of
-// claiming them.
+// trap boundaries of host-granted guest self-edit. Under integrator decision 41
+// a wrong selected name is refused when the grant is acquired, a foreign-session
+// grant is not representable (dropped), and the shadow-stage failure and the
+// generation change between enqueue and publication run under one-shot
+// test-only fault models of the feature build.
 const LIVE10_SOURCE =
   'def evolve [ 2 quote [ + ] compose self.generation swap self.propose drop 1 + ]';
 const LIVE10_SOURCE_B =
@@ -1661,6 +1663,62 @@ async function observeLive10(feature) {
   const snapshotTerminal = await snapshot.report();
   await snapshot.close(2);
 
+  // Shadow-stage failure (fault model): the derived `[ 2 + ]` candidate's isolated
+  // shadow instantiation fails after a completed invocation. Nothing is
+  // published; the grant and stack survive, and the same grant then queues and
+  // commits the same candidate once the one-shot fault is spent.
+  const derivedTwo = 'def evolve [ 2 + ]';
+  const shadow = start('LIVE-10-shadow', ['live', 'repl', '--source',
+    fixture('LIVE-10-shadow', 'evolve.noble', LIVE10_SOURCE).source, '--engine', 'v8',
+    ...grantArguments], { NOBLE_LIVE_TEST_SHADOW_FAULT: sha256(derivedTwo) }, feature.binary);
+  await shadow.report();
+  await shadow.report();
+  const shadowExecuted = await shadow.submit('20 evolve');
+  const shadowPending = await shadow.report();
+  const shadowRefused = await shadow.report();
+  const shadowAgain = await shadow.submit('20 evolve');
+  const shadowAgainPending = await shadow.report();
+  const shadowCommitted = await shadow.report();
+  await shadow.close(0);
+
+  // Generation change between enqueue and publication (fault model): the queued
+  // proposal is inspected as if the selected source had advanced one generation
+  // after the enqueue. It is refused before any candidate staging; the grant and
+  // stack survive, and the next proposal commits.
+  const shift = start('LIVE-10-generation-shift', ['live', 'repl', '--source',
+    fixture('LIVE-10-generation-shift', 'evolve.noble', LIVE10_SOURCE).source, '--engine', 'v8',
+    ...grantArguments], { NOBLE_LIVE_TEST_GENERATION_SHIFT: 'evolve' }, feature.binary);
+  await shift.report();
+  await shift.report();
+  const shiftExecuted = await shift.submit('20 evolve');
+  const shiftPending = await shift.report();
+  const shiftRefused = await shift.report();
+  const shiftAgain = await shift.submit('20 evolve');
+  const shiftAgainPending = await shift.report();
+  const shiftCommitted = await shift.report();
+  await shift.close(0);
+
+  // Wrong selected name: the grant binds the selected definition, so with a grant
+  // for another name the definition's self words are refused at source admission
+  // and no callback can carry the wrong name.
+  const wrongName = start('LIVE-10-wrong-name', ['live', 'repl', '--source',
+    fixture('LIVE-10-wrong-name', 'evolve.noble', LIVE10_SOURCE).source, '--engine', 'v8',
+    '--self-edit', 'other', '--expect-generation', '1']);
+  const wrongNameReport = await wrongName.report();
+  await wrongName.close(2);
+
+  // Dependent definition in the bounded subset: with a dependent `twice`, the
+  // proposal is refused before candidate staging after a completed invocation.
+  const dependentLane = startGranted('LIVE-10-dependent', LIVE10_SOURCE);
+  await dependentLane.live.report();
+  await dependentLane.live.report();
+  const dependentDefined = await dependentLane.live.submit('def twice [ evolve evolve ]');
+  const dependentRearmed = await dependentLane.live.submit(':grant-self-edit evolve 2');
+  const dependentExecuted = await dependentLane.live.submit('20 evolve');
+  const dependentPending = await dependentLane.live.report();
+  const dependentRefused = await dependentLane.live.report();
+  await dependentLane.live.close(0);
+
   // Static pre-invocation refusals.
   const noGrantFiles = fixture('LIVE-10-no-grant', 'evolve.noble', LIVE10_SOURCE);
   const noGrant = start('LIVE-10-no-grant', ['live', 'repl', '--source', noGrantFiles.source,
@@ -1750,21 +1808,58 @@ async function observeLive10(feature) {
       unnamed_self_propose: unnamedReport.outcome,
       mapping: 'incompatible candidate interface is the typed `[ true ]` candidate refusal',
     });
-  record('LIVE-10', 'input.host_callback_denial_variants', {
-    observed_variants: ['old-captured-definition-A-after-rearm-for-B',
-      'stale-expected-generation', 'replayed-or-conflicting-proposal'],
-    named_test_variants: ['wrong-selected-name'],
-    unobserved_variant: 'foreign-session-grant',
-    reason: 'the live REPL has no cross-session grant import or reference; a grant is process-local host state created only by --self-edit/:grant-self-edit, so a grant from another session has no representable input. `wrong-selected-name` is exercised only by the named real-child test `grant_for_other_name_cannot_acquire_selected_definition`, not by a CLI lane in this gate',
-    evidence: { old_owner_trace: oldTrace, stale: staleDenied.outcome, replay: replayTrace },
-  });
-  record('LIVE-10', 'input.post_return_candidate_refusal_variants', {
-    observed_variants: ['queued-candidate-capture-cell-byte-changed-before-postreturn-reflection',
-      'checked-pure-identity-[ ]-outside-selected-reifier', 'dependent-definition-in-bounded-subset',
-      'tampered-actual-wasm-bytes', 'table-or-retained-generation-budget'],
-    unobserved_variants: ['shadow-stage-failure', 'generation-changed-between-enqueue-and-publication-CAS'],
-    reason: 'a shadow-stage failure and a generation change between enqueue and synchronous publication require host seams that this slice did not add; no CLI input reaches either interleaving',
-  });
+  const staleTrace = staleDenied.request_trace ?? [];
+  observe('LIVE-10', 'input.host_callback_denial_variants',
+    wrongNameReport.outcome === 'reload-refused'
+      && String(wrongNameReport.diagnostic ?? '').includes('requires the selected named definition')
+      && wrongNameReport.guest_requests === 0 && wrongNameReport.protected_operations === 0
+      && oldTrace.includes('live.propose:denied:owner-mismatch') && denied.proposal_queued === false
+      && staleDenied.proposal_queued !== true
+      && staleTrace.some(entry => entry.startsWith('live.propose:denied:'))
+      && replayTrace.includes('live.propose:denied:already-queued'),
+    {
+      wrong_selected_name: { outcome: wrongNameReport.outcome, diagnostic: wrongNameReport.diagnostic,
+        guest_requests: wrongNameReport.guest_requests,
+        mapping: 'the grant binds the selected definition, so with a grant for another name the self words are refused at source admission (decision 41)' },
+      old_owner_trace: oldTrace,
+      stale: { outcome: staleDenied.outcome, trace: staleTrace },
+      replay: replayTrace,
+      dropped: 'foreign-session-grant (decision 41: a grant is process-local host state with no import or reference form)',
+    });
+  const refusedAndRecovered = (refused, again, againPending, committed) =>
+    refused.outcome === 'proposal-refused' && refused.generation === 1
+      && refused.candidate_prepare_requests === 0 && isStack(refused, ['I64:21'])
+      && isStack(again, ['I64:21', 'I64:21']) && againPending.outcome === 'proposal-pending'
+      && committed.outcome === 'proposal-committed';
+  observe('LIVE-10', 'input.post_return_candidate_refusal_variants',
+    snapshotTerminal.outcome === 'internal-failure'
+      && unsupportedRefused.outcome === 'proposal-refused'
+      && dependentDefined.outcome === 'defined' && dependentRearmed.outcome === 'grant-selected'
+      && dependentExecuted.outcome === 'normal' && dependentPending.outcome === 'proposal-pending'
+      && dependentRefused.outcome === 'proposal-refused'
+      && String(dependentRefused.diagnostic ?? '').includes('refuses dependent definitions')
+      && tamperedRefused.outcome === 'proposal-refused'
+      && budgetRefused.outcome === 'proposal-refused'
+      && shadowExecuted.outcome === 'normal' && shadowPending.outcome === 'proposal-pending'
+      && String(shadowRefused.diagnostic ?? '').includes('test-only shadow-stage failure')
+      && refusedAndRecovered(shadowRefused, shadowAgain, shadowAgainPending, shadowCommitted)
+      && shiftExecuted.outcome === 'normal'
+      && String(shiftRefused.diagnostic ?? '').includes('selected-source generation changed')
+      && refusedAndRecovered(shiftRefused, shiftAgain, shiftAgainPending, shiftCommitted),
+    {
+      capture_cell: snapshotTerminal.outcome, identity: unsupportedRefused.outcome,
+      dependent: { defined: dependentDefined.outcome, refused: dependentRefused.outcome,
+        diagnostic: dependentRefused.diagnostic }, tampered: tamperedRefused.outcome,
+      budget: budgetRefused.outcome,
+      shadow_stage_failure: { pending: shadowPending.outcome, refused: shadowRefused.outcome,
+        diagnostic: shadowRefused.diagnostic, stack: stackOf(shadowRefused),
+        then: [stackOf(shadowAgain), shadowAgainPending.outcome, shadowCommitted.outcome],
+        fault_model: 'one-shot test-only shadow instantiation failure of the selected candidate (decision 41)' },
+      generation_changed: { pending: shiftPending.outcome, refused: shiftRefused.outcome,
+        diagnostic: shiftRefused.diagnostic, stack: stackOf(shiftRefused),
+        then: [stackOf(shiftAgain), shiftAgainPending.outcome, shiftCommitted.outcome],
+        fault_model: 'one-shot test-only advance of the selected source generation between enqueue and publication, restored afterwards (decision 41)' },
+    });
   observe('LIVE-10', 'input.trap_after_enqueue',
     quotaExhausted.outcome === 'runtime-exhausted'
       && quotaExhausted.proposal_queued === false
@@ -2237,7 +2332,7 @@ const receipt = {
   kind: 'test',
   result: 'passed',
 
-  claim: `The promoted LIVE cases (${promoted.join(', ')}) are exercised against the production ${'`'}noble live repl${'`'} child built from this committed tree. LIVE-01: a resident V8 reload whose ACK precedes a fresh next top-level stack, with the same worker child PID observed before the first submission and after the ACK. LIVE-02: Decision 21a's post-ACK script derives the declared [24, 21] from the retained old Program's captured 21 and the rebuilt dependent's 24, and the same source, flags and ${'`'}[ addone ]${'`'} submission are additionally held in flight at the feature seam so the reload ACK is observed only after that frame returns on its old generation. LIVE-03: every declared replacement is refused at admission with the old definition still callable, including the host-binding-mismatch variant run as written (startup manifest binding, replacement module, admission refusal, generation and stack preserved, next ${'`'}addone${'`'} = 8). LIVE-04: ten canonical-section-edited variants of the captured emission each stop at an exact expected class - the four Noble-policy and three invalid variants in the worker's own byte validator or V8 at stage ${'`'}wasm${'`'}, the forged-digest, independent-digest and oversized variants at shipped host byte admission - with the worker's memory, table, globals, guest-execution and host-request witness unchanged and the installed ${'`'}base${'`'} still returning 7. LIVE-05: a resident V8 ${'`'}noble live watch${'`'} child publishes only the complete atomic save (the next call returns 22) and leaves the prior generation unchanged for a partial in-place write, a symlink escape and the retained-generation budget refusal, and the shipped ${'`'}noble live repl --allow-effects test.emit,test.abort${'`'} trap keeps the request prefix [test.emit:A, test.abort] and terminates the session; its ${'`'}missing-import${'`'} variant is dropped as inapplicable (owner decision 30). LIVE-06: a retained old Program whose request is denied under the revoked current host policy. LIVE-07: an explicit interpreter choice refused at startup without a V8 fallback. LIVE-09: two real V8 guests that observe generation 1, queue a typed pure Program during the callback, publish input-dependent derived definitions at generation 2 whose committed source digests are the re-accepted derived texts, show the worker's cumulative guest-execution counter identical across invocation, pending and committed receipts, show the grant still selected after two refused dependents and null after the successful publication, and refuse an effect-increasing file restore. Byte substitution, the in-flight hold and proposal tampering are named ${'`'}live-test-barrier${'`'} seams; their default-binary absence is observed separately. No proof and no case outside the promoted set is claimed.`,
+  claim: `The promoted LIVE cases (${promoted.join(', ')}) are exercised against the production ${'`'}noble live repl${'`'} child built from this committed tree. LIVE-01: a resident V8 reload whose ACK precedes a fresh next top-level stack, with the same worker child PID observed before the first submission and after the ACK. LIVE-02: Decision 21a's post-ACK script derives the declared [24, 21] from the retained old Program's captured 21 and the rebuilt dependent's 24, and the same source, flags and ${'`'}[ addone ]${'`'} submission are additionally held in flight at the feature seam so the reload ACK is observed only after that frame returns on its old generation. LIVE-03: every declared replacement is refused at admission with the old definition still callable, including the host-binding-mismatch variant run as written (startup manifest binding, replacement module, admission refusal, generation and stack preserved, next ${'`'}addone${'`'} = 8). LIVE-04: ten canonical-section-edited variants of the captured emission each stop at an exact expected class - the four Noble-policy and three invalid variants in the worker's own byte validator or V8 at stage ${'`'}wasm${'`'}, the forged-digest, independent-digest and oversized variants at shipped host byte admission - with the worker's memory, table, globals, guest-execution and host-request witness unchanged and the installed ${'`'}base${'`'} still returning 7. LIVE-05: a resident V8 ${'`'}noble live watch${'`'} child publishes only the complete atomic save (the next call returns 22) and leaves the prior generation unchanged for a partial in-place write, a symlink escape and the retained-generation budget refusal, and the shipped ${'`'}noble live repl --allow-effects test.emit,test.abort${'`'} trap keeps the request prefix [test.emit:A, test.abort] and terminates the session; its ${'`'}missing-import${'`'} variant is dropped as inapplicable (owner decision 30). LIVE-06: a retained old Program whose request is denied under the revoked current host policy. LIVE-07: an explicit interpreter choice refused at startup without a V8 fallback. LIVE-09: two real V8 guests that observe generation 1, queue a typed pure Program during the callback, publish input-dependent derived definitions at generation 2 whose committed source digests are the re-accepted derived texts, show the worker's cumulative guest-execution counter identical across invocation, pending and committed receipts, show the grant still selected after two refused dependents and null after the successful publication, and refuse an effect-increasing file restore. Byte substitution, the in-flight hold and proposal tampering are named ${'`'}live-test-barrier${'`'} seams; their default-binary absence is observed separately. LIVE-10: under integrator decision 41 every remaining origin, rearm, callback-denial, post-return-refusal and terminal-trap variant is observed: with a grant for another name the self words are refused at source admission, a foreign-session grant is not representable (dropped), and the shadow-stage failure and the generation change between enqueue and publication run under one-shot ${"`"}live-test-barrier${"`"} fault models, each refusing before publication with the grant and stack kept and the next proposal committing. No proof and no case outside the promoted set is claimed.`,
 
   tested_commit: studiedCommit,
   source_revision: sourceRevision,
@@ -2266,7 +2361,7 @@ const receipt = {
     'LIVE-05\'s `missing-import` variant is dropped as inapplicable (owner decision 30: the live profiles have no import grammar, so `import missing@1 as m` is refused lexically before any import resolution); no missing-registry check is claimed. The trap variant runs in the shipped `noble live repl` under the explicit host grant (Decision 22), not under the watched-session harness, and `test.emit` is a Core host effect request that performs no Declared-Modules protected operation, so its measured `protected_operations` is 0.',
     'LIVE-04 observations use the `live-test-barrier` byte seam only to serve the mutated bytes and, for the independent-digest variant, to present a digest; the decisions are the shipped worker byte validator/Noble policy checks and the shipped host source/binding/frame admission compiled into every binary. A default binary with every seam variable set executed normally and wrote no capture (observed absence).',
     'LIVE-09\'s ordinary `run`/`session` rows are the same committed default binary and Core-Bootstrap profile; they observe that the live self-edit words remain unbound outside the live REPL, not a temporal comparison with an older binary.',
-    'LIVE-10 stays absent/not-run: `foreign-session-grant` has no cross-session grant input, and `shadow-stage-failure` plus `generation-changed-between-enqueue-and-publication-CAS` need host seams this slice did not add; all other pre-invocation, callback-denial, post-return-refusal and trap variants were executed.',
+    'LIVE-10\'s shadow-stage failure and generation change between enqueue and publication are test-only fault models of the feature build (integrator decision 41): the serial live host admits a proposal right after the invocation returns, so no CLI input reaches either; the shipped binary has neither selection. A foreign-session grant is not representable and is dropped; with a grant for another name the self words are refused at source admission.',
     'LIVE-08 is not exercised by this gate.',
     'The interpreter refusal is an observed refusal, not a proof that no custom bytecode ISA exists anywhere.',
     'The gate observes single bounded child sessions; it does not claim filesystem-watch completeness or V8 garbage collection. Binaries are retained under `bin/`: build hashes depend on the output path, so `binary_sha256` is confirmable against the retained copy rather than by rebuilding elsewhere.',

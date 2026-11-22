@@ -1183,13 +1183,18 @@ await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString
         // The hook delays a real guest or candidate, never grants authority
         // or changes source/byte admission. The guard fault selection makes
         // one selected guest execution exhaust a lowered step cap or trap at
-        // its first instruction (GUARD-CASE-11's harness fault model).
+        // its first instruction (GUARD-CASE-11's harness fault model); the
+        // shadow fault and generation shift are LIVE-10's one-shot fault
+        // models of a failing shadow stage and of a publication between a
+        // proposal's enqueue and its admission.
         for key in [
             "NOBLE_LIVE_TEST_BARRIER_DIR",
             "NOBLE_LIVE_TEST_BARRIER_POINT",
             "NOBLE_LIVE_TEST_BARRIER_EXPECTED",
             "NOBLE_LIVE_TEST_PROPOSAL_TAMPER",
             "NOBLE_LIVE_TEST_GUARD_FAULT",
+            "NOBLE_LIVE_TEST_SHADOW_FAULT",
+            "NOBLE_LIVE_TEST_GENERATION_SHIFT",
         ] {
             if let Some(value) = std::env::var_os(key) {
                 command.env(key, value);
