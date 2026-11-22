@@ -67,7 +67,7 @@
           { "argument": "-5", "outcome": "precondition-reject", "candidate_body_started": false }
         ],
         "wrapper_source": "[ swap dup 5 = [ swap run inr ] [ drop drop 1 inl ] if ]",
-        "substituted_binding": { "stage": "binding", "outcome": "mismatched-context", "guard_executed": false },
+        "substituted_binding": { "stage": "binding", "outcome": "correspondence-mismatch", "guard_executed": false },
         "accepts_6_under_eq_5": false
       },
       "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },

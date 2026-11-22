@@ -79,7 +79,10 @@
   `contract-cases.json` as the design suggested, because the MC2 gate treats any other case in
   that file as unscoped. Case designs follow owner decisions 32-34: GUARD-CASE-03 keeps its tail
   clause; GUARD-CASE-11 uses a harness-level fault model; GUARD-CASE-02's substituted binding runs
-  as a core control. Three designs were made executable: GUARD-CASE-07's changed predicate uses
+  as a core control (`controls/guard.rs`); its registered refusal is `correspondence-mismatch`,
+  the code `release::correspond` returns for evidence presented under another contract, where
+  the design had guessed `MismatchedContext`/`StaleContext`. Three designs were made executable:
+  GUARD-CASE-07's changed predicate uses
   `ensures true` on both contracts (the design's unchanged `head` postcondition is unprovable
   under `requires true`, so that contract could never be admitted); GUARD-CASE-10 records every
   guarded composition refusing at the implication (`rules/derive.rs::composition` composes only

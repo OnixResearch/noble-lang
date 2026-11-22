@@ -116,6 +116,21 @@ function buildNoble(output) {
   return { executable, executable_sha256: hash(executable) };
 }
 
+// The CLI unit-test executable that carries the core controls.
+function buildControls(output) {
+  const build = spawnSync('cargo', ['test', '--locked', '-p', 'noble-cli', '--bin', 'noble', '--no-run',
+    '--message-format=json-render-diagnostics'],
+  { cwd: root, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+  recordRaw(output, 'controls-build.stdout', build.stdout ?? '');
+  recordRaw(output, 'controls-build.stderr', build.stderr ?? '');
+  assert.equal(build.status, 0, `cargo test --no-run failed:\n${build.stderr}`);
+  const artifacts = build.stdout.split('\n').filter(Boolean).map(line => JSON.parse(line))
+    .filter(message => message.reason === 'compiler-artifact' && message.target?.name === 'noble'
+      && message.profile?.test === true && message.executable);
+  assert.equal(artifacts.length, 1, 'expected one CLI unit-test executable');
+  return { executable: artifacts[0].executable, executable_sha256: hash(artifacts[0].executable) };
+}
+
 // The reviewed Lean sandbox tools, as the MC2 gate selects them.
 const REVIEWED = {
   NOBLE_LEAN: '/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean',
@@ -345,10 +360,26 @@ observations['GUARD-CASE-02'] = await observe('GUARD-CASE-02', async () => {
   expectValue('eq-5 wrapper bytes', cli.wrappers, [expected.wrapper_source]);
   expectValue('6 accepted under eq-5', cli.rows.some(row => row.argument === '6'
     && row.outcome === 'certified-invocation'), expected.accepts_6_under_eq_5);
-  // The substituted binding runs as a Rust core control (owner decision 34); until that control
-  // exists the case records the CLI half and is not promotable.
-  return { case: 'not-executed', rows: cli.rows,
-    reason: 'the substituted EqI64Literal 6 binding core control is not implemented yet' };
+  // The substituted binding runs as a Rust core control against the real Core (owner decision
+  // 34): the CLI cannot mint a companion whose evidence belongs to another contract.
+  const controls = buildControls(out);
+  const receipt = path.join(out, 'guard-controls.json');
+  const run = spawnSync(controls.executable, ['core::companions::controls::guard::exercise', '--exact',
+    '--ignored', '--nocapture'], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
+    env: { ...environment, NOBLE_GUARD_CONTROL_RECEIPT: receipt, NOBLE_MC2_CHECKER_BINARY: binary } });
+  recordRaw(out, 'guard-controls.stdout', run.stdout ?? '');
+  recordRaw(out, 'guard-controls.stderr', run.stderr ?? '');
+  assert.equal(run.status, 0, `guard core control failed:\n${run.stdout}\n${run.stderr}`);
+  const control = JSON.parse(fs.readFileSync(receipt, 'utf8')).controls
+    .find(one => one.case === 'GUARD-CASE-02' && one.variant === 'substituted-eq-6-binding');
+  assert.ok(control, 'the substituted-binding control is missing from its receipt');
+  const substituted = { stage: 'binding', outcome: control.observed.diagnostic,
+    guard_executed: control.input.guard_executed };
+  expectValue('substituted binding', substituted, expected.substituted_binding);
+  expectValue('no certified status from the substitution', control.observed.new_certified_status, false);
+  return { rows: cli.rows, substituted_binding: substituted,
+    controls: { executable_sha256: controls.executable_sha256, receipt: path.relative(out, receipt),
+      receipt_sha256: hash(receipt) } };
 });
 
 observations['GUARD-CASE-03'] = await observe('GUARD-CASE-03', async () => {

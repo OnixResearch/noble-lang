@@ -54,6 +54,7 @@ mod composition;
 mod context;
 mod derivation;
 mod eligibility;
+mod guard;
 
 pub(super) const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     bytes: 65_536,
