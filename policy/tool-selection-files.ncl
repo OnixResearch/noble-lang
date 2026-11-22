@@ -6,7 +6,7 @@
   "crates/noble-cli/Cargo.toml" = "7bb0618a2207272cefa6b6f7f74ecc742db820141aa438612e9ac4221e295748",
   "crates/noble-cli/src/core/live_slot.rs" = "8cf7aa908c2c594115c7ba1df7540c1c6b84188786afd33f6ae6002e4c823bf1",
   "crates/noble-cli/src/core/live_slot_origin.rs" = "b173f1649587d94d846acf1cf9119c268f9673202dc4133990f67ae5ebc3c0cb",
-  "crates/noble-cli/src/workflow/intrinsic.rs" = "b904b87cfe06f0e29a71eb981000fdc3bbe5fcbba4bdb3f8522039863931e55f",
+  "crates/noble-cli/src/workflow/intrinsic.rs" = "aececc7bb34434929a9eb8d5c3a4e5226c5508355cc4225ca2c23f0f0946e851",
   "crates/noble-cli/src/backend/vocabulary.noble" = "f8d7a7e587cf85bcc36fe21c75506dd0c58a4c7e18baa8ddb1e11fde8aeb23e3",
   "crates/noble-cli/src/core/runtime/abi.json" = "fea51903d9155f31cb27be173ca96644adb67c7ca08e9bd0898f206ff4faa589",
   "crates/noble-cli/src/core/runtime/config.json" = "400365e6de281bbde84cbde772dde705fdf97e7e8ee534884fa029c627fb2be8",
