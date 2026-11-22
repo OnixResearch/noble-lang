@@ -35,6 +35,15 @@ export const APPROVED_LIVE_CHANGES = {
       + ' as inapplicable (live profiles have no import grammar). LIVE-05 can then promote'
       + ' from the merged run."',
   },
+  'LIVE-10': {
+    path: ['input', 'host_callback_denial_variants'],
+    // The amended value is the baseline list with exactly this variant removed.
+    dropped: 'foreign-session-grant',
+    decision: 'INTEGRATOR DECISION 2026-11-22 (decision 41, under the owner\'s case-design'
+      + ' delegation of decisions 32-35; owner veto at the push): `foreign-session-grant` is'
+      + ' dropped as not representable, because a self-edit grant is process-local host state'
+      + ' with no token, import or reference form.',
+  },
 };
 
 export const liveDesign = bytes => JSON.parse(bytes).cases
@@ -71,10 +80,12 @@ export function liveContractDiffs({ baselineBytes, currentBytes,
     const afterField = fieldOf(after, approval.path);
     if (JSON.stringify(beforeField) === JSON.stringify(afterField)) return false;
     if (approval.dropped !== undefined) {
+      // Variant lists hold named objects or bare variant names.
+      const nameOf = variant => typeof variant === 'string' ? variant : variant?.name;
       if (!Array.isArray(beforeField)
-        || beforeField.filter(variant => variant?.name === approval.dropped).length !== 1) return true;
+        || beforeField.filter(variant => nameOf(variant) === approval.dropped).length !== 1) return true;
       return JSON.stringify(afterField)
-        !== JSON.stringify(beforeField.filter(variant => variant?.name !== approval.dropped));
+        !== JSON.stringify(beforeField.filter(variant => nameOf(variant) !== approval.dropped));
     }
     return JSON.stringify(beforeField) !== JSON.stringify(approval.original)
       || JSON.stringify(afterField) !== JSON.stringify(approval.amended);
