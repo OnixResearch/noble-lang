@@ -22,7 +22,12 @@
   - **Cost.** Retention grows until the saved caller is released.
   - **Evidence.** `verification/module-root-retention/receipt.json`: the fixed CLI passes from clean
     source `27e941a0`, and the CLI from the parent commit `3baaa029` fails at the trap.
-- [ ] [serial] Register the OWN-CASE designs in a reviewed conformance change and execute OWN-CASE-01..05 and 07 against the actual runtimes, without inheriting LIVE or LSLOT acceptance. r[OWN-EV-01]
+- [x] [serial] Register the OWN-CASE designs in a reviewed conformance change and execute OWN-CASE-01..05 and 07 against the actual runtimes, without inheriting LIVE or LSLOT acceptance. r[OWN-EV-01]
+  Done 2026-11-22 (owner decision 44): the last open item was review finding F-05 (14 round-1
+  commits authored as `brittonr`, already on `main`). The owner waived it: published history is not
+  rewritten, and later OWN commits are authored as `noble-maintainers`. OWN-CASE-01..07 are
+  implemented/passed from `verification/own-cases/runs/20261122-b5` (OWN-CASE-05 and the amended
+  OWN-CASE-03 included); proof stays open.
   Progress (2026-11-09): OWN-CASE-01 to 03 first ran on the live-slot runtime; see
   `verification/ownership-cases/receipt.json`, from clean source `dd96f88c` (historical-only after
   2026-11-20; its bound description is superseded).
