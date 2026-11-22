@@ -12,7 +12,8 @@ use wasmparser::{
 #[path = "live_slot_returned_dag.rs"]
 mod returned_dag;
 pub(super) use returned_dag::{
-    anonymous_target_identity, checked_code_donor_manifest, supports_anonymous_target,
+    anonymous_target_identity, anonymous_target_subject, checked_code_donor_manifest,
+    supports_anonymous_target,
 };
 
 fn denied(reason: &str) -> String {

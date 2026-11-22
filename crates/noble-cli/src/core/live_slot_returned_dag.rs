@@ -1728,6 +1728,103 @@ pub(in crate::core::live_slot) fn anonymous_target_identity(
     Ok(Some(plan.identity()?))
 }
 
+/// The closed Noble quotation a verified returned target instantiates: its
+/// template with every quoted root input replaced by the captured value. It is
+/// the subject a selected-target claim must bind (LSLOT-05); `None` when the
+/// target is outside the verified template subset.
+pub(in crate::core::live_slot) fn anonymous_target_subject(
+    origin: &Value,
+    contracts: &[ProgramContract],
+    position: usize,
+    descriptor: &str,
+    saved: &Value,
+    graph: &Value,
+    inputs: &[Value],
+) -> Result<Option<String>, String> {
+    let Some(plan) = Plan::new(origin, contracts, position, descriptor, inputs)? else {
+        return Ok(None);
+    };
+    Graph::new(graph)?.validate(&plan, saved)?;
+    let mut subject = String::from("[");
+    plan.subject_node(&plan.template, 0, &mut subject)?;
+    subject.push_str(" ]");
+    Ok(Some(subject))
+}
+
+impl Plan<'_> {
+    /// Append the code of one template node: a composition is its left code
+    /// followed by its right code, a quoted I64 pushes that value, a quoted
+    /// Program pushes that Program, and a static Program is its checked body.
+    fn subject_node(&self, node: &Value, depth: usize, out: &mut String) -> Result<(), String> {
+        if depth > 32 {
+            return Err(denied("returned template is too deep to render"));
+        }
+        match text(node, "kind")? {
+            "compose" => {
+                self.subject_node(&node["left"], depth + 1, out)?;
+                self.subject_node(&node["right"], depth + 1, out)
+            }
+            "quote-i64" => {
+                let operand = &node["operand"];
+                let value = match text(operand, "kind")? {
+                    "root-i64" => {
+                        let index = number(operand, "position")? as usize;
+                        let input = self
+                            .inputs
+                            .get(index)
+                            .ok_or_else(|| denied("quoted root binder does not exist"))?;
+                        canonical_i64(text(input, "value")?)?
+                    }
+                    "fixed-i64" => text(operand, "value")?.to_owned(),
+                    _ => return Err(denied("foreign Program quote I64 operand")),
+                };
+                out.push(' ');
+                out.push_str(&value);
+                Ok(())
+            }
+            "quote-program" => {
+                out.push_str(" [");
+                self.subject_node(&node["operand"], depth + 1, out)?;
+                out.push_str(" ]");
+                Ok(())
+            }
+            "static-program" => subject_body(&node["program"], depth + 1, out),
+            _ => Err(denied("unsupported returned template node")),
+        }
+    }
+}
+
+/// Append the words of one checked static body.
+fn subject_body(body: &Value, depth: usize, out: &mut String) -> Result<(), String> {
+    if depth > 32 {
+        return Err(denied("returned template is too deep to render"));
+    }
+    for operation in rows(body, "operations")? {
+        let word = match text(operation, "kind")? {
+            "i64" => text(operation, "value")?,
+            "static-program" => {
+                out.push_str(" [");
+                subject_body(&operation["program"], depth + 1, out)?;
+                out.push_str(" ]");
+                continue;
+            }
+            "add" => "+",
+            "sub" => "-",
+            "mul" => "*",
+            "quote-i64" | "quote-program" => "quote",
+            kind @ ("dup" | "drop" | "swap" | "dip" | "run" | "compose") => kind,
+            _ => {
+                return Err(denied(
+                    "unsupported static operation in a selected-target subject",
+                ))
+            }
+        };
+        out.push(' ');
+        out.push_str(word);
+    }
+    Ok(())
+}
+
 fn recipe_digest(graph: &Value) -> Result<String, String> {
     let cells = graph
         .as_array()
