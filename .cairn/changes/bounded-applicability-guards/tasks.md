@@ -35,6 +35,19 @@
   structural reading agrees with the Lean statement the MC1 export renders for the same arena,
   and the extracted correspondence for `guard_v2::templates_of` (its `[List A]` branch, including
   the `is_type0` work-list check).
+  Progress (2026-11-22, later): the v2 recognizer too. The arena reading adds `is-nil`.
+  `templates_of_v2_sound`: every template the extracted `guard_v2::templates_of` returns is the
+  Rust form of a template `recognizeTermV2` assigns to the reading of the whole `requires`; on
+  `[I64]` the v1 result is lifted through the copying loop (`templates_of_loop_eq`), otherwise
+  only `(not (is-nil x0))` on a one-element `[List A]` interface yields `NonEmptyList`.
+  `templates_of_v2_link` composes it with `GuardLink` and `GuardsV2.nonEmptyList_link` into C1 for
+  every input the template takes (`HasInput`). `templates_of_v2_complete_i64` and
+  `templates_of_v2_complete_list` are the converses, the latter for an element type the bounded
+  `is_type0` check accepts. `MC2ExtractionGate` audits ten guard theorems in all. Scope, recorded
+  rather than closed: the reading is structural, so its agreement with the Lean statement the MC1
+  export renders for the same arena is not proved, and the bounded `is_type0` check is not shown
+  to accept every `Type0` code. The box is ticked with the MC2/M4 receipt of the batch that
+  carries this module.
 - [x] [serial] Implement the versioned v2 template set (`NonEmptyList` recognizer, wrappers, `List A` slot injection for `op_invoke`, registry/digest version) with v1 bytes and gate unchanged; prove C2–C5 for `NonEmptyList` in a v2 MC2 gate. r[GUARD-LIST-01]
   Progress (2026-11-20): Lean model. `proofs/mc2/NobleCertificates/GuardsV2.lean` adds a separate
   `GuardTemplateV2` set (the three frozen v1 templates plus `nonEmptyList`), the pure

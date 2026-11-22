@@ -21,7 +21,7 @@ set_option maxRecDepth 2048
 private def strictAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 
 /-- The modules a strict correspondence theorem may come from: the actual-source
-correspondence lemmas and the extracted v1 guard recognizer's correspondence. -/
+correspondence lemmas and the extracted guard recognizers' correspondence. -/
 private def strictOwners : List Name :=
   [`NobleCertificates.Correspondence, `NobleCertificates.GuardExtracted]
 
@@ -64,7 +64,31 @@ private def strictSubjects : List (Name × List Name) := [
     [``noble_contracts.companion.guard.templates_of,
      ``NobleCertificates.GuardExtracted.arenaTerm,
      ``NobleCertificates.GuardExtracted.recognizeTerm,
-     ``NobleCertificates.Correspondence.rustGuard])]
+     ``NobleCertificates.Correspondence.rustGuard]),
+  (``NobleCertificates.GuardExtracted.is_nil_input_zero_eq,
+    [``noble_contracts.companion.guard_v2.is_nil_input_zero,
+     ``NobleCertificates.GuardExtracted.nilInputZero]),
+  (``NobleCertificates.GuardExtracted.templates_of_v2_sound,
+    [``noble_contracts.companion.guard_v2.templates_of,
+     ``NobleCertificates.GuardExtracted.arenaTerm,
+     ``NobleCertificates.GuardExtracted.recognizeTermV2,
+     ``NobleCertificates.GuardExtracted.rustGuardV2]),
+  (``NobleCertificates.GuardExtracted.templates_of_v2_link,
+    [``noble_contracts.companion.guard_v2.templates_of,
+     ``NobleCertificates.GuardExtracted.arenaTerm,
+     ``NobleContracts.Holds, ``NobleCertificates.GuardPreconditionV2,
+     ``NobleCertificates.HasInput]),
+  (``NobleCertificates.GuardExtracted.templates_of_v2_complete_i64,
+    [``noble_contracts.companion.guard_v2.templates_of,
+     ``NobleCertificates.GuardExtracted.arenaTerm,
+     ``NobleCertificates.GuardExtracted.recognizeTerm,
+     ``NobleCertificates.GuardExtracted.rustGuardV2]),
+  (``NobleCertificates.GuardExtracted.templates_of_v2_complete_list,
+    [``noble_contracts.companion.guard_v2.templates_of,
+     ``noble_contracts.companion.guard_v2.is_type0,
+     ``NobleCertificates.GuardExtracted.arenaTerm,
+     ``NobleCertificates.nonEmptyListTerm,
+     ``NobleCertificates.GuardExtracted.rustGuardV2])]
 
 private def rendererSubjects : List (Name × List Name) := [
   (``NobleCertificates.Correspondence.wrapper_source_layout,
