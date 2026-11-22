@@ -536,15 +536,11 @@ fn constraint_spans_are_capped_with_a_count() {
 /// so a refusal stays within 16 KiB whatever the size of its codes.
 #[test]
 fn rendered_terms_are_capped_with_a_count() {
-    fn tree(depth: u32) -> String {
-        if depth == 0 {
-            String::from("I64")
-        } else {
-            let child = tree(depth - 1);
-            format!("(Pair {child} {child})")
-        }
+    // A full Pair tree of depth 8 (256 I64 leaves), built level by level.
+    let mut wide = String::from("I64");
+    for _ in 0..8 {
+        wide = format!("(Pair {wide} {wide})");
     }
-    let wide = tree(8);
     let (pair, sum) = (format!("(Pair {wide} I64)"), format!("(Sum {wide} I64)"));
     let message = refuse(&module(
         "proof 1 t2 : [ (Pi (A Type0) (Pi (x A) (Pi (y A) (Eq A x x)))) ] [ (intro (A Type0) (intro (x A) (intro (y A) (refl x)))) ]",
