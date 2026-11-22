@@ -257,9 +257,12 @@ function payload(report) {
   return value?.value ?? null;
 }
 
-// Stack identity: types and cell handles, so a preserved session is byte-for-byte the same.
+// Stack identity: types, cell handles and plain values, so a preserved session is byte-for-byte
+// the same. A stack cell carries its value as the JSON text of `detail` (a Program cell's detail
+// has no `value`).
+const cellValue = cell => typeof cell?.detail === 'string' ? JSON.parse(cell.detail)?.value ?? null : null;
 const shape = stack => stack.map(cell => ({ type: cell.type, handle: cell.handle ?? null,
-  value: cell.value ?? null }));
+  value: cellValue(cell) }));
 
 function invocationRow(argument, report) {
   const row = { argument, outcome: report.outcome };
