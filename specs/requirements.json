@@ -6102,7 +6102,14 @@
         "ACORR-CASE-02",
         "ACORR-CASE-07",
         "ADAPT-15",
-        "CONTRACT-07"
+        "CONTRACT-07",
+        "GUARD-CASE-01",
+        "GUARD-CASE-02",
+        "GUARD-CASE-03",
+        "GUARD-CASE-07",
+        "GUARD-CASE-08",
+        "GUARD-CASE-09",
+        "GUARD-CASE-12"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -6174,7 +6181,8 @@
       ],
       "scenarios": [
         "CONTRACT-03",
-        "CONTRACT-04"
+        "CONTRACT-04",
+        "GUARD-CASE-10"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -6599,7 +6607,19 @@
       ],
       "scenarios": [
         "CONTRACT-07",
-        "CONTRACT-16"
+        "CONTRACT-16",
+        "GUARD-CASE-01",
+        "GUARD-CASE-02",
+        "GUARD-CASE-03",
+        "GUARD-CASE-04",
+        "GUARD-CASE-05",
+        "GUARD-CASE-06",
+        "GUARD-CASE-07",
+        "GUARD-CASE-08",
+        "GUARD-CASE-09",
+        "GUARD-CASE-10",
+        "GUARD-CASE-11",
+        "GUARD-CASE-12"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -6874,7 +6894,17 @@
       ],
       "scenarios": [
         "CONTRACT-07",
-        "CONTRACT-08"
+        "CONTRACT-08",
+        "GUARD-CASE-01",
+        "GUARD-CASE-02",
+        "GUARD-CASE-03",
+        "GUARD-CASE-04",
+        "GUARD-CASE-05",
+        "GUARD-CASE-06",
+        "GUARD-CASE-07",
+        "GUARD-CASE-09",
+        "GUARD-CASE-10",
+        "GUARD-CASE-11"
       ],
       "test_design": "scenario-described-not-executed"
     },
