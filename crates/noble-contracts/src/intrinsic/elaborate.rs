@@ -187,10 +187,7 @@ pub fn elaborate_obligations(
 
 /// Stage one obligation: check its abbreviations and elaborate it when it
 /// opted in. Returns the rewritten obligation and record, or the unchanged
-/// pass-through as no staged pair. An imported dependency is available under
-/// its own visible name (alias-qualified for an import, e.g. `alias.poly-refl`),
-/// exactly as the explicit checker resolves `use`; its declaration name only
-/// enters the identity.
+/// pass-through as no staged pair.
 #[expect(
     tigerstyle::too_many_parameters,
     reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
@@ -230,22 +227,7 @@ fn stage_obligation<'m>(
     if !abbreviation.infer && !abbreviation.app {
         return Ok((meter, None));
     }
-    let mut available = Vec::new();
-    let mut dependency_at = 0usize;
-    while dependency_at < dependencies.len() {
-        let dependency = &dependencies[dependency_at];
-        push_available(
-            &mut available,
-            identity_text(
-                &dependency.module,
-                dependency.version,
-                &dependency.declaration.name,
-            ),
-            dependency.name.clone(),
-            &dependency.declaration.goal,
-        );
-        dependency_at = dependency_at.saturating_add(1);
-    }
+    let mut available = dependency_proofs(dependencies);
     let mut prior = 0usize;
     while prior < at {
         push_available(
@@ -277,6 +259,30 @@ fn stage_obligation<'m>(
             "inference requires a revision-1 pure proof",
         )),
     }
+}
+
+/// Every imported dependency as an available proof, under its own visible
+/// name (alias-qualified for an import, e.g. `alias.poly-refl`), exactly as
+/// the explicit checker resolves `use`; its declaration name only enters the
+/// identity.
+fn dependency_proofs(dependencies: &[ProofDependency]) -> Vec<Available> {
+    let mut available = Vec::new();
+    let mut dependency_at = 0usize;
+    while dependency_at < dependencies.len() {
+        let dependency = &dependencies[dependency_at];
+        push_available(
+            &mut available,
+            identity_text(
+                &dependency.module,
+                dependency.version,
+                &dependency.declaration.name,
+            ),
+            dependency.name.clone(),
+            &dependency.declaration.goal,
+        );
+        dependency_at = dependency_at.saturating_add(1);
+    }
+    available
 }
 
 /// Record one pure proposition goal as an available proof.
@@ -3504,6 +3510,10 @@ fn position_step<'a>(
 
 /// Whether `(infer)` may stand at `position`: only the three selected
 /// positions admit it, and every other position refuses with its own name.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; a refusal is built by the non-const unsupported constructor"
+)]
 fn infer_admissible_at(position: Position, span: Span) -> Result<(), Diagnostic> {
     match position {
         Position::ApplyArgument | Position::AppArgument | Position::ExecLiteral => Ok(()),
