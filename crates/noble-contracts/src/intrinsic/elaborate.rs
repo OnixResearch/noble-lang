@@ -1315,7 +1315,12 @@ fn capped_term(text: String) -> String {
 
 /// `start..end`, the byte range of a source span.
 fn span_text(span: Span) -> String {
-    text![&u32_text(span.start), "..", &u32_text(span.end)]
+    // Not `text!`: its first part goes through `String::from`, and the pinned
+    // Aeneas library models that conversion only from `&str`, not `&String`.
+    let mut text = u32_text(span.start);
+    text.push_str("..");
+    text.push_str(&u32_text(span.end));
+    text
 }
 
 /// `ROLE for binder `NAME` (position P) of HEAD`, with the 1-based position.
