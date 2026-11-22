@@ -356,17 +356,24 @@ fn contract(
     reason = "Owner: noble-contracts; recognizing the opt-in compares the token bytes through the non-const slice PartialEq, so the const suggestion does not apply"
 )]
 fn opt_in(mut cursor: super::Cursor<'_>) -> Result<(bool, super::Cursor<'_>), crate::Diagnostic> {
-    let is_infer = matches!(
-        cursor.tokens.get(cursor.at),
-        Some(crate::source::lexer::Token {
-            kind: crate::source::lexer::TokenKind::Word(bytes),
-            ..
-        }) if bytes.as_slice() == b"infer"
-    );
+    let is_infer = infer_at(cursor.tokens, cursor.at);
     if is_infer {
         cursor.at += 1;
     }
     Ok((is_infer, cursor))
+}
+
+/// Whether the token at `at` is the word `infer`. The token is matched in
+/// the parser's `open_at` shape (a slice and an index, never the cursor), which
+/// the selected extraction translates.
+fn infer_at(tokens: &[crate::source::lexer::Token], at: usize) -> bool {
+    let Some(token) = tokens.get(at) else {
+        return false;
+    };
+    let crate::source::lexer::TokenKind::Word(bytes) = &token.kind else {
+        return false;
+    };
+    bytes == b"infer"
 }
 
 #[expect(

@@ -156,10 +156,31 @@ export const inheritedOpaqueBodies = {
 // formatting layout is already an abstracted, observation-only boundary. Each
 // is a modelled boundary, never an extracted body, and its exact annotated item
 // is pinned in `reviewedAnnotations` below.
+// Fourteen bodies of the untrusted implicit-argument elaborator
+// (`intrinsic::elaborate`) are opaque because the pinned Aeneas refuses them:
+// nested borrows through the elaborator state, `(&Form, _)` worklists, and a
+// borrow-joining `match`. Acceptance consumes only the explicit term the
+// elaborator produces, after the extracted checker and the pinned Lean
+// consumer recheck it, so each is modelled as uninterpreted (any result is
+// possible) and no extracted claim depends on what it returns.
 export const reviewedOpaque = {
   contracts: [
     'noble_contracts::intrinsic::debug_form_kind',
     'noble_contracts::intrinsic::debug_proof_dependency',
+    'noble_contracts::intrinsic::elaborate::abbreviation_step',
+    'noble_contracts::intrinsic::elaborate::find_infer_span',
+    'noble_contracts::intrinsic::elaborate::infer_span_step',
+    'noble_contracts::intrinsic::elaborate::pi_names',
+    'noble_contracts::intrinsic::elaborate::push_positions',
+    'noble_contracts::intrinsic::elaborate::scan_abbreviation',
+    'noble_contracts::intrinsic::elaborate::scan_positions',
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::app",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::binder_snapshot",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::check",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::finish_out",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::premise_refusal",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::subst",
+    "noble_contracts::intrinsic::elaborate::{noble_contracts::intrinsic::elaborate::Elaborator<'_0, '_1>}::verify_ground",
     'noble_contracts::source::chunks::{noble_contracts::source::chunks::MonotonicClock}::now_ns',
     "noble_contracts::source::chunks::{noble_contracts::source::chunks::ObserverHandle<'_0>}::observe",
     "noble_contracts::source::chunks::{noble_contracts::source::chunks::RankerHandle<'_0>}::model_identity",
@@ -219,6 +240,36 @@ export const reviewedAnnotations = {
       lines: 7, sha256: "af149099953ff42060b75be1bc4416f25ba1fce095f1f9c9b97b038a565bef00" },
     { annotation: "variants_suffix(\"Code\")", item: "enum Code {",
       lines: 10, sha256: "7a87adf9158b5cb0bacf72b3d3ccde4a5d9172c704c01d11478422a24617eb92" },
+  ],
+  "crates/noble-contracts/src/intrinsic/elaborate.rs": [
+    { annotation: "opaque", item: "fn verify_ground(&self) -> Result<(), Diagnostic> {",
+      lines: 9, sha256: "1d19b9e9a44db2dc1d68d11b2ae1c78b99a508e4b03c5e1f26808217708e86a4" },
+    { annotation: "opaque", item: "fn binder_snapshot(&self) -> (Vec<String>, Vec<Sort>) {",
+      lines: 21, sha256: "80134a3e45b71a0b4b6d5273002fb9f1303776bc3ba172464e17a3eac18c5919" },
+    { annotation: "opaque", item: "fn check(&mut self, form: &Form, goal: &PropTerm, depth: u32) -> Result<Out, Diagnostic> {",
+      lines: 14, sha256: "5b121bcc5fe0aa79bb24ffc804b4db8e0b746006a68d48e67c36e621d7877c41" },
+    { annotation: "opaque", item: "fn subst(",
+      lines: 112, sha256: "2c466201f87262598306b8a3e13b8d8f92954032421dc275a98b2ef435612996" },
+    { annotation: "opaque", item: "fn premise_refusal(&self, span: Span, expected: &PropTerm) -> Diagnostic {",
+      lines: 46, sha256: "eee3ca961946ce61406f76e7685382ff1afbc0ada28b60f8155f0729f7f78fb3" },
+    { annotation: "opaque", item: "fn app(&mut self, form: &Form, depth: u32) -> Result<Inferred, Diagnostic> {",
+      lines: 35, sha256: "603a86041bd9b8e3a734c068b0839727ad3e9401141b0211434b249123875f82" },
+    { annotation: "opaque", item: "fn finish_out(&self, out: &Out, depth: u32) -> Result<Form, Diagnostic> {",
+      lines: 53, sha256: "0dd0ae79d9f7a0a5defebbb711d9b69c7762f4dddd5506a519adf4893ddbe009" },
+    { annotation: "opaque", item: "fn scan_abbreviation(form: &Form, limits: Limits) -> Result<Abbreviation, Diagnostic> {",
+      lines: 26, sha256: "7d7ddd6890c6baa37b492a4ebd8341ad3e8839659b366652494a21cb0978780a" },
+    { annotation: "opaque", item: "fn abbreviation_step<'a>(",
+      lines: 35, sha256: "ed586bcfa6faa7744dd25b32792db07ce8386094f47d5396e000a7ed45a95316" },
+    { annotation: "opaque", item: "fn find_infer_span(form: &Form, limits: Limits) -> Result<Option<Span>, Diagnostic> {",
+      lines: 19, sha256: "da48f8487aca55b071d504aa0701231f289fdc0d49dfe09d63cbd30e0c865181" },
+    { annotation: "opaque", item: "fn infer_span_step<'a>(",
+      lines: 30, sha256: "8eb58f21e6a5793b25211795b77facdc25bb62924a985fa2b5ba834e4fc25aad" },
+    { annotation: "opaque", item: "fn scan_positions(form: &Form, limits: Limits) -> Result<(), Diagnostic> {",
+      lines: 14, sha256: "afbb679fdbfaf23e55282d5eb13589e402b556a9a65bcc0cbd9e7834c2ad79d4" },
+    { annotation: "opaque", item: "fn push_positions<'a>(",
+      lines: 19, sha256: "6ef1f32211336cb5c7be06182f5c2574a4c49a09cbd72d061cb091d9d032640c" },
+    { annotation: "opaque", item: "fn pi_names(form: &Form) -> Vec<String> {",
+      lines: 35, sha256: "1e2520028bed914fe8d4e89f8d1e0cebedf29dab5224179cff1d9e606367bbdc" },
   ],
   "crates/noble-contracts/src/lib.rs": [
     { annotation: "variants_suffix(\"Expr\")", item: "pub enum ExprKind {",

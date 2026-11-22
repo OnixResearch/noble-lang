@@ -100,14 +100,15 @@ test('feature-selected source remains refused', () => {
   error => error.message === `M4-SOURCE-FILTER: ${effectOracleFile}: unreviewed conditional source selection`);
 });
 
-test('local opaque review is exactly ten frontend functions, four types and one backend function', () => {
-  assert.equal(reviewedOpaque.contracts.length, 10);
+test('local opaque review is exactly twenty-four frontend functions, four types and one backend function', () => {
+  assert.equal(reviewedOpaque.contracts.length, 24);
+  assert.equal(reviewedOpaque.contracts.filter(name => name.startsWith('noble_contracts::intrinsic::elaborate::')).length, 14);
   assert.equal(reviewedOpaqueTypes.contracts.length, 4);
   assert.equal(reviewedOpaque.wasm.length, 1);
   assert.deepEqual(reviewedOpaqueTypes.wasm, []);
   const contracts = Object.entries(reviewedAnnotations).filter(([file]) => file.startsWith('crates/noble-contracts/'))
     .flatMap(([, rows]) => rows);
-  for (const [kind, count] of [['rename', 10], ['opaque', 14], ['exclude', 10]]) {
+  for (const [kind, count] of [['rename', 10], ['opaque', 28], ['exclude', 10]]) {
     assert.equal(contracts.filter(row => row.annotation.split('(')[0] === kind).length, count);
   }
   assert.doesNotThrow(() => sourcePolicy(annotationFiles, readAnnotationSource));

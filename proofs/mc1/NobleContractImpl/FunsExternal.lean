@@ -6,7 +6,7 @@ public import NobleContractImpl.KernelBridge
 @[expose] public section
 
 /-!
-Models of the ten crate-local `#[charon::opaque]` functions of the regenerated
+Models of the twenty-four crate-local `#[charon::opaque]` functions of the regenerated
 `noble-contracts` subject, the reviewed boundaries that
 `verification/mc1/implementation.mjs` admits by exact Rust name. Each names its
 Rust item and why the model is faithful.
@@ -307,5 +307,89 @@ def source.procedures.acceptance.OwnerVerifier.Insts.CoreFmtDebug.fmt
     Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) := do
   let result ← verifier.debug
   ok (result, formatter)
+
+/-! ### The untrusted implicit-argument elaborator
+
+Fourteen bodies of `intrinsic::elaborate` are reviewed opaque boundaries: the
+pinned Aeneas refuses them (nested borrows through the elaborator state,
+`(&Form, _)` worklists and a borrow-joining `match`). Each model is an `opaque`
+constant, which hides an arbitrary inhabitant of its type: no definition can be
+unfolded, so every Rust behavior, failure included, is represented and no
+theorem can depend on what the elaborator returns. That is faithful because the
+elaborator is an untrusted producer: acceptance consumes only the explicit term
+it produces, after the extracted checker and the pinned Lean consumer recheck
+that term. -/
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::verify_ground] -/
+opaque intrinsic.elaborate.Elaborator.verify_ground :
+    intrinsic.elaborate.Elaborator → Result (core.result.Result Unit Diagnostic)
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::binder_snapshot] -/
+opaque intrinsic.elaborate.Elaborator.binder_snapshot :
+    intrinsic.elaborate.Elaborator →
+      Result ((alloc.vec.Vec String) × (alloc.vec.Vec intrinsic.Sort))
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::check] -/
+opaque intrinsic.elaborate.Elaborator.check :
+    intrinsic.elaborate.Elaborator → intrinsic.Form → intrinsic.elaborate.PropTerm → Std.U32 →
+      Result ((core.result.Result intrinsic.elaborate.Out Diagnostic) ×
+        intrinsic.elaborate.Elaborator)
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::subst] -/
+opaque intrinsic.elaborate.Elaborator.subst :
+    intrinsic.elaborate.Elaborator → intrinsic.Form → Slice intrinsic.Form →
+      intrinsic.elaborate.PropTerm → Std.U32 →
+      Result ((core.result.Result intrinsic.elaborate.Out Diagnostic) ×
+        intrinsic.elaborate.Elaborator)
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::premise_refusal] -/
+opaque intrinsic.elaborate.Elaborator.premise_refusal :
+    intrinsic.elaborate.Elaborator → Span → intrinsic.elaborate.PropTerm → Result Diagnostic
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::app] -/
+opaque intrinsic.elaborate.Elaborator.app :
+    intrinsic.elaborate.Elaborator → intrinsic.Form → Std.U32 →
+      Result ((core.result.Result intrinsic.elaborate.Inferred Diagnostic) ×
+        intrinsic.elaborate.Elaborator)
+
+/-- [noble_contracts::intrinsic::elaborate::{Elaborator}::finish_out] -/
+opaque intrinsic.elaborate.Elaborator.finish_out :
+    intrinsic.elaborate.Elaborator → intrinsic.elaborate.Out → Std.U32 →
+      Result (core.result.Result intrinsic.Form Diagnostic)
+
+/-- [noble_contracts::intrinsic::elaborate::scan_abbreviation] -/
+opaque intrinsic.elaborate.scan_abbreviation :
+    intrinsic.Form → Limits →
+      Result (core.result.Result intrinsic.elaborate.Abbreviation Diagnostic)
+
+/-- [noble_contracts::intrinsic::elaborate::abbreviation_step] -/
+opaque intrinsic.elaborate.abbreviation_step :
+    intrinsic.Form → Std.U32 → Limits → intrinsic.elaborate.Abbreviation → Std.U32 →
+      alloc.vec.Vec (intrinsic.Form × Std.U32) →
+      Result ((core.result.Result Unit Diagnostic) × (alloc.vec.Vec (intrinsic.Form × Std.U32)) ×
+        intrinsic.elaborate.Abbreviation × Std.U32)
+
+/-- [noble_contracts::intrinsic::elaborate::find_infer_span] -/
+opaque intrinsic.elaborate.find_infer_span :
+    intrinsic.Form → Limits → Result (core.result.Result (Option Span) Diagnostic)
+
+/-- [noble_contracts::intrinsic::elaborate::infer_span_step] -/
+opaque intrinsic.elaborate.infer_span_step :
+    intrinsic.Form → Std.U32 → Limits → Std.U32 → alloc.vec.Vec (intrinsic.Form × Std.U32) →
+      Result ((core.result.Result (Option Span) Diagnostic) ×
+        (alloc.vec.Vec (intrinsic.Form × Std.U32)) × Std.U32)
+
+/-- [noble_contracts::intrinsic::elaborate::scan_positions] -/
+opaque intrinsic.elaborate.scan_positions :
+    intrinsic.Form → Limits → Result (core.result.Result Unit Diagnostic)
+
+/-- [noble_contracts::intrinsic::elaborate::push_positions] -/
+opaque intrinsic.elaborate.push_positions :
+    alloc.vec.Vec (intrinsic.Form × intrinsic.elaborate.Position × Std.U32) →
+      Slice intrinsic.Form → intrinsic.elaborate.Position → Std.U32 →
+      Result (alloc.vec.Vec (intrinsic.Form × intrinsic.elaborate.Position × Std.U32))
+
+/-- [noble_contracts::intrinsic::elaborate::pi_names] -/
+opaque intrinsic.elaborate.pi_names : intrinsic.Form → Result (alloc.vec.Vec String)
 
 end noble_contracts

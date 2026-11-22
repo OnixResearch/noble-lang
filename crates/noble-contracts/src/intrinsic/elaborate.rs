@@ -27,6 +27,13 @@
 //! Elaboration is an untrusted producer: acceptance consumes only the explicit
 //! term, which the existing source checker and the pinned Lean consumer
 //! recheck independently. Nothing here is proof authority.
+//!
+//! Fourteen functions carry the Charon `opaque` annotation: the pinned Aeneas
+//! refuses their bodies (nested borrows through the elaborator state, `(&Form, _)`
+//! worklists and a borrow-joining `match`). They are reviewed extraction
+//! boundaries modelled as uninterpreted in `NobleContractImpl/FunsExternal.lean`;
+//! no extracted claim depends on what the elaborator returns, because only the
+//! explicit term it produces is accepted, and only after rechecking.
 
 #[expect(
     tigerstyle::non_trait_imports,
@@ -684,6 +691,7 @@ impl Elaborator<'_, '_> {
 
     /// Refuse unless every metavariable is solved by a ground, well-scoped
     /// term; a value metavariable must be a level below its depth.
+    #[charon::opaque]
     fn verify_ground(&self) -> Result<(), Diagnostic> {
         let mut index = 0usize;
         let mut outcome: Result<(), Diagnostic> = Ok(());
@@ -836,6 +844,7 @@ impl Elaborator<'_, '_> {
     }
 
     /// The current proof-context binder names and sorts, by level.
+    #[charon::opaque]
     fn binder_snapshot(&self) -> (Vec<String>, Vec<Sort>) {
         let mut names = Vec::with_capacity(self.context.total);
         let mut sorts = Vec::with_capacity(self.context.total);
@@ -1513,6 +1522,7 @@ impl Elaborator<'_, '_> {
 )]
 impl Elaborator<'_, '_> {
     /// Check `term` against `goal`, the checker's check-mode rule set.
+    #[charon::opaque]
     fn check(&mut self, form: &Form, goal: &PropTerm, depth: u32) -> Result<Out, Diagnostic> {
         self.meter_step(MeterStep::Visit(depth), "work", form.span)?;
         if matches!(goal, PropTerm::Pi(..)) {
@@ -1581,6 +1591,7 @@ impl Elaborator<'_, '_> {
 
     /// Check a `subst` against a goal: the motive is explicit, the evidence is
     /// inferred, and the premise is checked against the substituted motive.
+    #[charon::opaque]
     fn subst(
         &mut self,
         form: &Form,
@@ -1908,6 +1919,7 @@ impl Elaborator<'_, '_> {
     }
 
     /// Refuse a premise placeholder, listing candidates without choosing.
+    #[charon::opaque]
     fn premise_refusal(&self, span: Span, expected: &PropTerm) -> Diagnostic {
         const MAX_CANDIDATES: usize = 8;
         let mut detail = String::from(
@@ -1971,6 +1983,7 @@ impl Elaborator<'_, '_> {
     }
 
     /// Elaborate the A2 explicit spine `(app H a1 … an)`.
+    #[charon::opaque]
     fn app(&mut self, form: &Form, depth: u32) -> Result<Inferred, Diagnostic> {
         let items = list(form)?;
         if items.len() < 3 {
@@ -2072,6 +2085,7 @@ impl Elaborator<'_, '_> {
         tigerstyle::no_recursion,
         reason = "Owner: noble-contracts; assembly follows the finite constructed term under the caller's depth budget"
     )]
+    #[charon::opaque]
     fn finish_out(&self, out: &Out, depth: u32) -> Result<Form, Diagnostic> {
         match out {
             Out::Done(form) => Ok(form.clone()),
@@ -2303,6 +2317,7 @@ fn is_inferable(form: &Form) -> bool {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
+#[charon::opaque]
 fn scan_abbreviation(form: &Form, limits: Limits) -> Result<Abbreviation, Diagnostic> {
     let mut abbreviation = Abbreviation {
         infer: false,
@@ -2348,6 +2363,7 @@ fn scan_abbreviation(form: &Form, limits: Limits) -> Result<Abbreviation, Diagno
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
+#[charon::opaque]
 fn abbreviation_step<'a>(
     current: &'a Form,
     depth: u32,
@@ -2385,6 +2401,7 @@ fn abbreviation_step<'a>(
 }
 
 /// The span of the first `(infer)` placeholder, in walk order.
+#[charon::opaque]
 fn find_infer_span(form: &Form, limits: Limits) -> Result<Option<Span>, Diagnostic> {
     let mut pending = Vec::new();
     pending.push((form, 0u32));
@@ -2419,6 +2436,7 @@ fn find_infer_span(form: &Form, limits: Limits) -> Result<Option<Span>, Diagnost
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
+#[charon::opaque]
 fn infer_span_step<'a>(
     current: &'a Form,
     depth: u32,
@@ -2504,6 +2522,7 @@ impl Position {
 }
 
 /// Refuse every `(infer)` outside the three specified abbreviation positions.
+#[charon::opaque]
 fn scan_positions(form: &Form, limits: Limits) -> Result<(), Diagnostic> {
     let mut pending = Vec::new();
     pending.push((form, Position::Root, 0u32));
@@ -2584,6 +2603,7 @@ fn position_step<'a>(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
 )]
+#[charon::opaque]
 fn push_positions<'a>(
     pending: &mut Vec<(&'a Form, Position, u32)>,
     items: &'a [Form],
@@ -2653,6 +2673,7 @@ fn child_position(head: Option<&str>, position: Position, index: usize) -> Posit
     tigerstyle::unbounded_collection_growth,
     reason = "Owner: noble-contracts; the walk pushes at most one name per iteration of its 64-step loop"
 )]
+#[charon::opaque]
 fn pi_names(form: &Form) -> Vec<String> {
     let mut names = Vec::new();
     let mut current = form;
