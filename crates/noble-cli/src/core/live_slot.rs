@@ -77,6 +77,99 @@ fn lexical_replay_json(
         "candidate_to_lexical":selected.candidate_to_lexical()}))
 }
 
+/// The spelling of row `row`, which must be one of the rows already spelled.
+fn earlier_spelling(spellings: &[String], row: u32) -> Result<&str, String> {
+    usize::try_from(row)
+        .ok()
+        .and_then(|row| spellings.get(row))
+        .map(String::as_str)
+        .ok_or_else(|| reject("selected template row names a later row"))
+}
+
+/// The canonical spelling of every class of one template, with its occurrences,
+/// ordered by spelling: `p:named`, a static body's `p<in>:<out>[…]`,
+/// `q(r<position>)`, `q(<recipe>)`, `q(<class>)` or `c(<class>,<class>)`. Rows
+/// name earlier rows only, so each table is spelled in one forward pass.
+fn template_class_spellings(
+    template: &noble_wasm::source::OriginTemplate,
+) -> Result<Vec<(String, u32)>, String> {
+    use noble_wasm::source::{
+        OriginBinding, OriginFixedArithmetic, OriginRecipe, OriginStaticOperation,
+    };
+    let mut recipes = Vec::with_capacity(template.recipes.len());
+    for recipe in &template.recipes {
+        let spelling = match *recipe {
+            OriginRecipe::Literal(value) => format!("#{value}"),
+            OriginRecipe::Arithmetic { kind, left, right } => {
+                let kind = match kind {
+                    OriginFixedArithmetic::Add => "add",
+                    OriginFixedArithmetic::Sub => "sub",
+                    OriginFixedArithmetic::Mul => "mul",
+                };
+                format!(
+                    "{kind}({},{})",
+                    earlier_spelling(&recipes, left)?,
+                    earlier_spelling(&recipes, right)?
+                )
+            }
+        };
+        recipes.push(spelling);
+    }
+    let mut statics = Vec::with_capacity(template.statics.len());
+    for body in &template.statics {
+        let mut spelling = format!("p{}:{}[", body.input_signature, body.output_signature);
+        for (at, operation) in body.operations.iter().enumerate() {
+            if at > 0 {
+                spelling.push(';');
+            }
+            match *operation {
+                OriginStaticOperation::I64(value) => spelling.push_str(&format!("#{value}")),
+                OriginStaticOperation::Add => spelling.push_str("add"),
+                OriginStaticOperation::Sub => spelling.push_str("sub"),
+                OriginStaticOperation::Mul => spelling.push_str("mul"),
+                OriginStaticOperation::Dup => spelling.push_str("dup"),
+                OriginStaticOperation::Drop => spelling.push_str("drop"),
+                OriginStaticOperation::Swap => spelling.push_str("swap"),
+                OriginStaticOperation::Dip => spelling.push_str("dip"),
+                OriginStaticOperation::Run => spelling.push_str("run"),
+                OriginStaticOperation::Compose => spelling.push_str("compose"),
+                OriginStaticOperation::Quote => spelling.push_str("quote"),
+                OriginStaticOperation::Static(child) => {
+                    spelling.push_str(earlier_spelling(&statics, child)?);
+                }
+            }
+        }
+        spelling.push(']');
+        statics.push(spelling);
+    }
+    let mut classes = Vec::<String>::with_capacity(template.classes.len());
+    for class in &template.classes {
+        let spelling = match class.binding {
+            OriginBinding::Named => String::from("p:named"),
+            OriginBinding::Static(body) => earlier_spelling(&statics, body)?.to_owned(),
+            OriginBinding::QuoteRoot(position) => format!("q(r{position})"),
+            OriginBinding::QuoteFixed(recipe) => {
+                format!("q({})", earlier_spelling(&recipes, recipe)?)
+            }
+            OriginBinding::QuoteProgram(child) => {
+                format!("q({})", earlier_spelling(&classes, child)?)
+            }
+            OriginBinding::Compose { left, right } => format!(
+                "c({},{})",
+                earlier_spelling(&classes, left)?,
+                earlier_spelling(&classes, right)?
+            ),
+        };
+        classes.push(spelling);
+    }
+    let mut spelled = classes
+        .into_iter()
+        .zip(template.classes.iter().map(|class| class.occurrences))
+        .collect::<Vec<_>>();
+    spelled.sort_by(|left, right| left.0.cmp(&right.0));
+    Ok(spelled)
+}
+
 fn selected_origin_json(
     origin: &noble_wasm::source::SelectedOriginMetadata,
     target: &Value,
@@ -247,6 +340,25 @@ fn selected_origin_json(
             "effect_mask":program.effect_mask,"operations":operations})
         })
         .collect::<Vec<_>>();
+    let templates = origin
+        .outputs
+        .iter()
+        .map(|output| {
+            let classes = template_class_spellings(&output.template)?;
+            Ok(json!({
+                "captures":output.template.captures,
+                "classes":classes.iter()
+                    .map(|(binding, occurrences)| json!({"binding":binding,
+                        "occurrences":occurrences}))
+                    .collect::<Vec<_>>(),
+                "owner":match output.template.owner {
+                    noble_wasm::source::OriginOwner::Absent => json!({"kind":"absent"}),
+                    noble_wasm::source::OriginOwner::SelfNamed =>
+                        json!({"kind":"self-named"}),
+                },
+            }))
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     Ok(json!({"definition_index":origin.definition_id.index(),
         "definition_identity":origin.definition_id.identity().to_string(),
         "source_generation":origin.source_generation.to_string(),
@@ -261,7 +373,8 @@ fn selected_origin_json(
             let mut fixed_nodes = 0;
             Ok(json!({"stack_position":output.stack_position,
                 "result":result(&output.result, &mut seen, &mut count, &mut fixed_nodes)?}))
-        }).collect::<Result<Vec<_>, String>>()? }))
+        }).collect::<Result<Vec<_>, String>>()?,
+        "templates":templates }))
 }
 
 fn assemble_slot(wat: &[u8]) -> Result<Vec<u8>, String> {

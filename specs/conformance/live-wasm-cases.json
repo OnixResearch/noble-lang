@@ -9,6 +9,30 @@
       "dropped_variant": {"name": "missing-import", "bytes": "import missing@1 as m", "registry": []},
       "reason": "The live profiles have no import grammar: the live tokenizer refuses `import missing@1 as m` at `@` before any import resolution or registry lookup, so the variant cannot exercise a missing registry entry (review finding A4).",
       "decision": "OWNER DECISION 2026-11-21 (decision 30): \"Drop the variant: record it as inapplicable (live profiles have no import grammar). LIVE-05 can then promote from the merged run.\""
+    },
+    {
+      "date": "2026-11-22",
+      "case": "LIVE-10",
+      "dropped_variant": {"name": "foreign-session-grant", "list": "input.host_callback_denial_variants"},
+      "reason": "A self-edit grant is process-local host state that only `--self-edit` and `:grant-self-edit` create inside the session that uses it; it has no token, import or reference form, so no input can present another session's grant. The variant is not representable rather than unobserved.",
+      "decision": "INTEGRATOR DECISION 2026-11-22 (decision 41, under the owner's case-design delegation of decisions 32-35; owner veto at the push)"
+    },
+    {
+      "date": "2026-11-22",
+      "case": "LIVE-10",
+      "observed_as": {"variant": "wrong-selected-name", "observation": "the grant binds the selected definition, so with `--self-edit other` the definition's `self.generation`/`self.propose` words are refused at source admission (`reload-refused`, zero guest requests) and no callback can carry another name"},
+      "reason": "A host callback cannot name a definition other than the one the grant selected; the refusal happens earlier, at source admission, which is the stronger form of the same boundary.",
+      "decision": "INTEGRATOR DECISION 2026-11-22 (decision 41, under the owner's case-design delegation of decisions 32-35; owner veto at the push)"
+    },
+    {
+      "date": "2026-11-22",
+      "case": "LIVE-10",
+      "fault_models": [
+        {"variant": "shadow-stage-failure", "model": "the feature build's one-shot NOBLE_LIVE_TEST_SHADOW_FAULT selects one candidate by its source SHA-256, whose isolated shadow instantiation then fails"},
+        {"variant": "generation-changed-between-enqueue-and-publication-CAS", "model": "the feature build's one-shot NOBLE_LIVE_TEST_GENERATION_SHIFT inspects the first queued proposal for the selected name as if the selected source had advanced one generation after the enqueue, then restores the true generation"}
+      ],
+      "reason": "The serial live host admits a guest proposal right after the invocation returns, so no CLI input reaches a failing shadow stage or a publication between enqueue and admission. Each variant runs under a test-only harness fault model, as GUARD-CASE-11 does (owner decision 33); the shipped binary has neither selection.",
+      "decision": "INTEGRATOR DECISION 2026-11-22 (decision 41, under the owner's case-design delegation of decisions 32-35; owner veto at the push)"
     }
   ],
   "cases": [
@@ -372,7 +396,7 @@
         ],
         "pre_invocation_variants": ["no-grant-at-static-source-admission", "wrong-candidate-program-type", "effectful-candidate-program", "incompatible-candidate-interface", "unbound-self-propose-outside-live-profile", "unnamed-top-level-self-propose-without-checked-origin"],
         "host_callback_denial_variants": [
-          "wrong-selected-name", "foreign-session-grant",
+          "wrong-selected-name",
           "old-captured-definition-A-after-rearm-for-B-even-with-current-generation",
           "stale-expected-generation", "replayed-or-conflicting-proposal"
         ],

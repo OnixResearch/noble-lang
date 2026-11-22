@@ -7,9 +7,54 @@
   const expected = process.env.NOBLE_LIVE_TEST_BARRIER_EXPECTED;
   const tamper = process.env.NOBLE_LIVE_TEST_PROPOSAL_TAMPER;
   const guardFault = process.env.NOBLE_LIVE_TEST_GUARD_FAULT;
+  const shadowFault = process.env.NOBLE_LIVE_TEST_SHADOW_FAULT;
+  const generationShift = process.env.NOBLE_LIVE_TEST_GENERATION_SHIFT;
   for (const key of ['NOBLE_LIVE_TEST_BARRIER_DIR', 'NOBLE_LIVE_TEST_BARRIER_POINT',
     'NOBLE_LIVE_TEST_BARRIER_EXPECTED', 'NOBLE_LIVE_TEST_PROPOSAL_TAMPER',
-    'NOBLE_LIVE_TEST_GUARD_FAULT']) delete process.env[key];
+    'NOBLE_LIVE_TEST_GUARD_FAULT', 'NOBLE_LIVE_TEST_SHADOW_FAULT',
+    'NOBLE_LIVE_TEST_GENERATION_SHIFT']) delete process.env[key];
+  if (shadowFault !== undefined) {
+    // Harness fault model for LIVE-10's shadow-stage-failure variant (integrator decision 41):
+    // the one staged candidate whose source has the selected SHA-256 fails its isolated shadow
+    // instantiation, as a candidate that cannot link would. One-shot; the engine's own staging
+    // refusal path is unchanged and nothing is published.
+    if (!/^[a-f0-9]{64}$/.test(shadowFault)) fail('invalid private shadow fault selection');
+    let armed = true;
+    const originalStage = CoreEngine.prototype.stageBinary;
+    const originalArena = CoreEngine.prototype.stageArena;
+    CoreEngine.prototype.stageBinary = function (bytes, source, ...rest) {
+      this.liveTestShadowFault = armed && sha256(source) === shadowFault;
+      if (this.liveTestShadowFault) armed = false;
+      try { return originalStage.call(this, bytes, source, ...rest); }
+      finally { this.liveTestShadowFault = false; }
+    };
+    CoreEngine.prototype.stageArena = function (...args) {
+      if (this.liveTestShadowFault) {
+        throw new WebAssembly.LinkError('test-only shadow-stage failure of the selected candidate');
+      }
+      return originalArena.apply(this, args);
+    };
+  }
+  if (generationShift !== undefined) {
+    // Harness fault model for LIVE-10's generation-changed-between-enqueue-and-publication-CAS
+    // variant (integrator decision 41). The serial live host admits a guest proposal right after
+    // the invocation returns, so no real publication can come between; the first queued proposal
+    // for the selected name is inspected as if the selected source had advanced one generation
+    // after the enqueue, and the true generation is restored afterwards. One-shot.
+    if (!/^[a-z][a-z0-9_.-]{0,63}$/.test(generationShift)) fail('invalid private generation shift selection');
+    let armed = true;
+    const original = CoreEngine.prototype.takeLiveProposal;
+    CoreEngine.prototype.takeLiveProposal = function (...args) {
+      if (!armed || this.liveProposal?.grant?.name !== generationShift) {
+        return original.apply(this, args);
+      }
+      armed = false;
+      const current = this.liveSourceGeneration;
+      this.liveSourceGeneration = current + 1n;
+      try { return original.apply(this, args); }
+      finally { this.liveSourceGeneration = current; }
+    };
+  }
   if (guardFault !== undefined) {
     // Harness fault model for GUARD-CASE-11 (owner decision 33): the one real
     // execution whose checked source has the selected SHA-256 either runs

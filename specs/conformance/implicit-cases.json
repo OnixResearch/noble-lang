@@ -68,8 +68,40 @@
         "inserted": [{ "binder": "A", "position": 1, "head": "logic@1/poly-refl", "solution": "(List I64)" }],
         "explicit_control": "the hand-written explicit term proves the same claim"
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-01",
+          "claim": "The abbreviated P1 proof elaborates to exactly the registered explicit term with `A := (List I64)` from `logic@1/poly-refl`, the explicit checker and the pinned Lean consumer accept it, and the hand-written explicit term proves the same claim.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-01",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-02",
@@ -89,8 +121,40 @@
         "explicit": "(intro (B Type0) (intro (y (List B)) (apply (apply (use poly-refl) (List B)) y)))",
         "inserted": [{ "binder": "A", "position": 1, "head": "logic@1/poly-refl", "solution": "(List B)" }]
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-02",
+          "claim": "P1 with a context code elaborates `A := (List B)`, a solution naming a context binder below its depth, and the independent recheck accepts it.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-02",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-03",
@@ -112,8 +176,40 @@
         "inserted": [{ "binder": "A", "position": 3, "head": "logic@1/base", "solution": "I64" }],
         "explicit_control": "the hand-written explicit term proves the same claim"
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-03",
+          "claim": "P2 elaborates `A := I64` at position 3 of `logic@1/base` after the value and premise binders are applied, the expansion is accepted, and the hand-written explicit term proves the same claim.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-03",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-04",
@@ -135,8 +231,40 @@
         "explicit_includes": "(pc-exact (exec-literal 1))",
         "explicit_control": "the hand-written explicit proof checks the same claim"
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-04",
+          "claim": "P3 elaborates the reviewed `exec-literal` structural parameter to `1` from the exact subject `selected@1/law`, and the expanded contract proof checks the same claim as the explicit one.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-04",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-05",
@@ -164,8 +292,40 @@
           }
         }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-05",
+          "claim": "A Type0 binder no constraint mentions is refused as `underconstrained`, naming the binder, its position and the head identity, and nothing is defaulted.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-05",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-06",
@@ -203,8 +363,40 @@
           }
         }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-06",
+          "claim": "A premise placeholder is refused as `unsupported: premise inference` naming the premise binder and head; the local candidates are listed with their binder spans and none is chosen, with two candidates and with one.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-06",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-07",
@@ -232,8 +424,40 @@
           }
         }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-07",
+          "claim": "With two imports exporting `assoc`, `(use a.assoc)` elaborates against `lawsA@1/assoc`, swapping the import order changes neither the explicit term nor the record, and the unqualified `(use assoc)` is refused at resolution.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-07",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-08",
@@ -261,8 +485,40 @@
           }
         }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-08",
+          "claim": "Placeholders in head position whose solution no goal constraint reaches are refused as `underconstrained` for `x` of `logic@1/t`.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-08",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-09",
@@ -292,8 +548,40 @@
         },
         "origin_span": "the listed constraint span is the clashing argument `w`"
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-09",
+          "claim": "A value of the wrong code is refused as an `invalid-constraint` clash that names the argument it was checking, the unresolved binder `A` of `logic@1/base` and the clashing argument's span.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-09",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-10",
@@ -318,8 +606,40 @@
           }
         }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-10",
+          "claim": "A forged expansion that inserts `I64` for a `(List I64)` value is refused by the explicit checker (`apply value has wrong code`); no elaboration record is ever read as input.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-10",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-11",
@@ -356,8 +676,40 @@
           }
         }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-11",
+          "claim": "Expansions inserting a resource, a program or `Syntax` for a Type0 binder are refused by the checker's code parser.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-11",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-12",
@@ -388,8 +740,41 @@
           }
         }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-12",
+          "claim": "Under the amended input the goal-fixed `A` leaves `x` unconstrained and the refusal is `underconstrained` for `x`, never a match with the goal's bound `w`; the design's A2 spine is refused as an under-application naming the head and binder.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-12",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed.",
+            "Observed under the recorded amendment of this case in specs/conformance/implicit-cases.json (integrator decision under the owner's case-design delegation)."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-13",
@@ -416,8 +801,41 @@
           }
         }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-13",
+          "claim": "In a context with three codes the elaborator rebases `A := C` correctly and the expansion is accepted, while the off-by-two term (`A := E`) is refused by the explicit checker at the application.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-13",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed.",
+            "Observed under the recorded amendment of this case in specs/conformance/implicit-cases.json (integrator decision under the owner's case-design delegation)."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-14",
@@ -450,8 +868,41 @@
           }
         }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-14",
+          "claim": "The P1 record names `logic@1/poly-refl`; against `logic@2` the stored expansion is refused by the checker and re-elaboration is refused as underconstrained for `logic@2/poly-refl`; with both versions supplied the `logic@1` import keeps the `logic@1` expansion byte-for-byte.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-14",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed.",
+            "Observed under the recorded amendment of this case in specs/conformance/implicit-cases.json (integrator decision under the owner's case-design delegation)."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-15",
@@ -478,8 +929,40 @@
           }
         }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-15",
+          "claim": "After the claim changes to `(List Bool)` the stored `(List I64)` expansion is refused by the checker, and re-elaboration produces and accepts the new expansion `A := (List Bool)`.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-15",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-16",
@@ -516,8 +999,41 @@
           }
         }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-16",
+          "claim": "An editor hole spelled `?NAME` at a premise, code or value position is refused where it stands and never treated as `(infer)` or accepted.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-16",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed.",
+            "Observed under the recorded amendment of this case in specs/conformance/implicit-cases.json (integrator decision under the owner's case-design delegation)."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-17",
@@ -536,8 +1052,40 @@
         "distinct_records": 1,
         "record": "the whole `elaboration` object (explicit term, inserted rows, source map, digests, revisions, work) is byte-identical across runs"
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-17",
+          "claim": "P1, P2 and P3 verified 100 times each in separate processes, alternating two dependency-module orders, produced one byte-identical elaboration record per pair, every run accepted by the independent recheck.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-17",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-18",
@@ -587,8 +1135,41 @@
           }
         }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-18",
+          "claim": "The 200-binder head is refused by the frontend depth limit; for a 20-plus-20-binder head, normalization and substitution budgets one below the elaboration's own need exhaust elaboration naming the stage and budget, one below the request's need exhaust the checker, and at the need the proof is accepted; nothing is accepted or refuted on exhaustion.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-18",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed.",
+            "Observed under the recorded amendment of this case in specs/conformance/implicit-cases.json (integrator decision under the owner's case-design delegation)."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-19",
@@ -633,8 +1214,41 @@
           }
         }
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-19",
+          "claim": "Refusals list at most 8 of 50 candidates and 16 of 20 constraint spans with explicit counts, keep at most 1 KiB of each rendered code with the cut counted, and stay within 16 KiB; their categories are unchanged.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Intrinsic-Proofs-Draft",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-19",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed.",
+            "Observed under the recorded amendment of this case in specs/conformance/implicit-cases.json (integrator decision under the owner's case-design delegation)."
+          ]
+        }
+      ]
     },
     {
       "id": "IMPL-CASE-20",
@@ -664,8 +1278,41 @@
         ],
         "identical": "run, quote and compose reports, emitted Wasm and the definition identity and recipe are identical for the three proof forms; the link reports' proof evidence differs only in the module source digest"
       },
-      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
-      "evidence": []
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "IMPL-CASE-20",
+          "claim": "Run, quote and compose of a module definition yield byte-identical reports, emitted Wasm and definition identity and recipe whether the module carries the abbreviated proof, the explicit proof or none.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+          "configuration": {
+            "profile": "Declared-Modules-v1",
+            "receipt": "../../verification/implicit-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "1641c70ca8165a8db2df3da1d8f7d9369a344f6884e1ece3d48130b0ddaf8ba8",
+            "gate": "../../verification/implicit-cases/gate.mjs",
+            "gate_sha256": "79a3614db8e12a0a1a392546b6395e205bcaa081bd711f3faeefdf3bd0cb84b0",
+            "tested_commit": "b4c63a1e255e74e720cd9b7211c83f684b894df6",
+            "binary_sha256": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "binary_sha256_after": "38d1e33d85633b731e0b06425b14b29996698794ad9c762f9d527315ccefb79d",
+            "source_revision": "sha256:ed0941eb13eff293d9fabca97aff4d69992a9353bc380547bf437f58792f3bc5",
+            "projection_sha256": "6df4a693faae25611a320f9e1b2b6cf0a4e7f0a712330f127c43e6752351740a",
+            "case_id": "IMPL-CASE-20",
+            "lane": "verification/implicit-cases/gate.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble verify-module` (IMPL-CASE-20: declared-module `noble session`s) on the binary built from the recorded clean commit; the receipt binds the source snapshot, the binary digest before and after the run, every fixture and every raw output.",
+            "The elaborator is an untrusted producer: acceptance rests on the unchanged explicit checker and the pinned Lean consumer with the repository MC1 library (explicit assumptions, VC-GATE-03). Finite behavioral evidence for these inputs only; unification uniqueness, Rust elaborator refinement and source-to-Lean translation stay open, and no proof is claimed.",
+            "Observed under the recorded amendment of this case in specs/conformance/implicit-cases.json (integrator decision under the owner's case-design delegation)."
+          ]
+        }
+      ]
     }
   ]
 }

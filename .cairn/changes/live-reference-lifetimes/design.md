@@ -131,14 +131,14 @@ New LREF designs, recorded only here. Each is `implementation: absent`, `executi
 ## Risks / Trade-offs
 
 - Counting packages instead of cells makes retained-version quotas coarser: one escaped result can hold a whole module. Finer retention would require per-definition code spans.
-- The poison-or-continue choice on abnormal exit stays a host policy. Continuing requires exact ledger accounting that is not yet verified.
+- The poison-or-continue choice on abnormal exit stays a host policy. Owner decision 6 (2026-11-20) selected it for the experimental runtime: continue only when the pin ledger proves an exact release, poison otherwise. Since 2026-11-22 the runtime implements that rule (see `tasks.md`): in practice only host-side failures after the guest settled continue, and every guest failure or trap still poisons, because a recorded guest failure is terminal for the shared guest state.
 - LREF-CASE-03 may expose the #3 correspondence gap. Resolving it may extend module lifetime to escaped results.
 
 ### Remaining decisions and evidence before implementation claims
 
 1. Execute LSLOT-01..09 and LREF-CASE-01..06 against an implemented profile, with source-bound evidence bound per `EV-LSLOT-01`/`LREF-EV-01`.
 2. Resolve `OWN-CASE-06` and choose the package-retention mechanism.
-3. Decide the poison-or-continue policy after abnormal exit for any accepted profile.
+3. Decide the poison-or-continue policy after abnormal exit for any accepted profile. Decided for the experimental runtime by owner decision 6 and implemented 2026-11-22; an accepted canonical profile still needs its own decision.
 4. Register LREF-CASE designs in conformance only through a separate reviewed change.
 
 ## Acceptance mapping

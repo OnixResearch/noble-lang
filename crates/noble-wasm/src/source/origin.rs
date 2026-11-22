@@ -24,9 +24,10 @@ use noble_kernel::{types::Ty, untrusted::NodeId};
 )]
 use super::{
     plan::{Action, Layout},
-    OriginAction, OriginFixedArithmetic, OriginFixedExpression, OriginI64, OriginOperand,
-    OriginOperation, OriginOutput, OriginProgram, OriginProgramValue, OriginSource,
-    SelectedOriginMetadata,
+    OriginAction, OriginBinding, OriginClass, OriginFixedArithmetic, OriginFixedExpression,
+    OriginI64, OriginOperand, OriginOperation, OriginOutput, OriginOwner, OriginProgram,
+    OriginProgramValue, OriginRecipe, OriginSource, OriginStaticBody, OriginStaticOperation,
+    OriginTemplate, SelectedOriginMetadata,
 };
 
 const MAX_ORIGIN_PROGRAMS: usize = 32;
@@ -938,6 +939,8 @@ fn replay_outputs(
             &outputs[stack_position],
             &stack[stack_position],
             stack_position,
+            programs,
+            named_index,
         ) {
             Some(Some(output)) => {
                 result.push(output);
@@ -962,16 +965,28 @@ fn replay_outputs(
 }
 
 /// One returned stack entry: a constructed Program output, an I64, or a refusal.
-fn returned_output(ty: &Ty, value: &Value, stack_position: usize) -> Option<Option<OriginOutput>> {
+fn returned_output(
+    ty: &Ty,
+    value: &Value,
+    stack_position: usize,
+    programs: &[OriginProgram],
+    named_index: usize,
+) -> Option<Option<OriginOutput>> {
     match ty {
-        Ty::Program(..) => program_output(value, stack_position),
+        Ty::Program(..) => program_output(value, stack_position, programs, named_index),
         Ty::I64 => i64_output(value),
         _ => None,
     }
 }
 
-/// A returned Program entry: a constructed output, or a refusal for anything else.
-fn program_output(value: &Value, stack_position: usize) -> Option<Option<OriginOutput>> {
+/// A returned Program entry: a constructed output with its exact template
+/// projection, or a refusal for anything else.
+fn program_output(
+    value: &Value,
+    stack_position: usize,
+    programs: &[OriginProgram],
+    named_index: usize,
+) -> Option<Option<OriginOutput>> {
     let Value::Program { result, .. } = value else {
         return None;
     };
@@ -979,10 +994,14 @@ fn program_output(value: &Value, stack_position: usize) -> Option<Option<OriginO
         // An installed static Program already has its own pinned
         // source/index owner; it is not a constructed returned target.
         OriginProgramValue::Static { .. } => None,
-        _ => Some(Some(OriginOutput {
-            stack_position,
-            result: Rc::clone(result),
-        })),
+        _ => {
+            let template = template_projection(result, programs, named_index)?;
+            Some(Some(OriginOutput {
+                stack_position,
+                result: Rc::clone(result),
+                template,
+            }))
+        }
     }
 }
 
@@ -1233,6 +1252,484 @@ fn bounded_graph_cells(
     }
 }
 
+/// One bounded derivation of a returned template's logical source-binding
+/// classes, ordered root captures and recursive-owner classification.
+struct TemplateWalk {
+    /// Distinct retained cells already visited, with their class row.
+    cells: Vec<(Rc<OriginProgramValue>, u32)>,
+    classes: Vec<OriginClass>,
+    statics: Vec<OriginStaticBody>,
+    recipes: Vec<OriginRecipe>,
+    captures: Vec<u32>,
+    owner: OriginOwner,
+    /// The `statics` row of each resolved static quotation body, by program index.
+    static_rows: Vec<Option<u32>>,
+    static_visiting: Vec<bool>,
+}
+
+/// A bounded row index for a table of at most `MAX_ORIGIN_OPERATIONS` rows.
+fn row_index(row_count: usize) -> Option<u32> {
+    if row_count >= MAX_ORIGIN_OPERATIONS {
+        return None;
+    }
+    u32::try_from(row_count).ok()
+}
+
+/// The row of `recipe` in the walk's recipe table, appended when new.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-wasm-maintainers; it appends only to the walk's own exclusively borrowed recipe table, which requires Vec growth rather than a slice."
+)]
+fn intern_recipe(recipes: &mut Vec<OriginRecipe>, recipe: OriginRecipe) -> Option<u32> {
+    let mut at = 0usize;
+    let mut found = recipes.len();
+    while found == recipes.len() && at < recipes.len() {
+        if recipes[at] == recipe {
+            found = at;
+        }
+        at += 1;
+    }
+    if found < recipes.len() {
+        return u32::try_from(found).ok();
+    }
+    let row = row_index(recipes.len())?;
+    recipes.push(recipe);
+    Some(row)
+}
+
+/// The recipe row of one checked, size-bounded fixed I64 recipe: a literal, or
+/// checked input-independent arithmetic over the rows of its two operands.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::no_recursion,
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-wasm-maintainers; the recursion follows the structure of an already checked, size-bounded fixed recipe, and the node meter and the growing recipe table (a Vec, not a slice) are the caller's bounded derivation state."
+)]
+fn recipe_row(
+    recipe: &Rc<OriginFixedExpression>,
+    depth: usize,
+    nodes: &mut usize,
+    recipes: &mut Vec<OriginRecipe>,
+) -> Option<u32> {
+    *nodes = nodes.checked_add(1)?;
+    if *nodes > MAX_ORIGIN_OPERATIONS || depth > MAX_ORIGIN_DEPTH {
+        return None;
+    }
+    match recipe.as_ref() {
+        OriginFixedExpression::Literal(value) => {
+            intern_recipe(recipes, OriginRecipe::Literal(*value))
+        }
+        OriginFixedExpression::Arithmetic {
+            kind, left, right, ..
+        } => {
+            let left = recipe_row(left, depth.checked_add(1)?, nodes, recipes)?;
+            let right = recipe_row(right, depth.checked_add(1)?, nodes, recipes)?;
+            intern_recipe(
+                recipes,
+                OriginRecipe::Arithmetic {
+                    kind: *kind,
+                    left,
+                    right,
+                },
+            )
+        }
+    }
+}
+
+/// Whether two static quotation bodies are equal by content.
+fn same_static_body(left: &OriginStaticBody, right: &OriginStaticBody) -> bool {
+    if left.input_signature != right.input_signature
+        || left.output_signature != right.output_signature
+        || left.operations.len() != right.operations.len()
+    {
+        return false;
+    }
+    let mut at = 0usize;
+    let mut is_same = true;
+    while is_same && at < left.operations.len() {
+        is_same = left.operations[at] == right.operations[at];
+        at += 1;
+    }
+    is_same
+}
+
+/// The row of `body` in the walk's static body table, appended when new.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-wasm-maintainers; it appends only to the walk's own exclusively borrowed static body table, which requires Vec growth rather than a slice."
+)]
+fn intern_static(statics: &mut Vec<OriginStaticBody>, body: OriginStaticBody) -> Option<u32> {
+    let mut at = 0usize;
+    let mut found = statics.len();
+    while found == statics.len() && at < statics.len() {
+        if same_static_body(&statics[at], &body) {
+            found = at;
+        }
+        at += 1;
+    }
+    if found < statics.len() {
+        return u32::try_from(found).ok();
+    }
+    let row = row_index(statics.len())?;
+    statics.push(body);
+    Some(row)
+}
+
+/// The content operation of one static body operation; a nested static
+/// quotation is resolved to its own row first. The selected call is never
+/// part of a classified static body.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-wasm-maintainers; it mutates only the walk's own exclusively borrowed derivation state; its mutual recursion with `static_row` follows the bounded, acyclic nesting of checked static quotation bodies."
+)]
+fn static_operation(
+    action: OriginAction,
+    programs: &[OriginProgram],
+    walk: &mut TemplateWalk,
+    depth: usize,
+) -> Option<OriginStaticOperation> {
+    match action {
+        OriginAction::I64(value) => Some(OriginStaticOperation::I64(value)),
+        OriginAction::Add => Some(OriginStaticOperation::Add),
+        OriginAction::Sub => Some(OriginStaticOperation::Sub),
+        OriginAction::Mul => Some(OriginStaticOperation::Mul),
+        OriginAction::Dup => Some(OriginStaticOperation::Dup),
+        OriginAction::Drop => Some(OriginStaticOperation::Drop),
+        OriginAction::Swap => Some(OriginStaticOperation::Swap),
+        OriginAction::Dip => Some(OriginStaticOperation::Dip),
+        OriginAction::Run => Some(OriginStaticOperation::Run),
+        OriginAction::Compose => Some(OriginStaticOperation::Compose),
+        OriginAction::Quote { .. } => Some(OriginStaticOperation::Quote),
+        OriginAction::StaticProgram(child) => Some(OriginStaticOperation::Static(static_row(
+            child,
+            programs,
+            walk,
+            depth.checked_add(1)?,
+        )?)),
+        OriginAction::CallSelected(_) => None,
+    }
+}
+
+/// The row of one static quotation body, resolved by content after recipe
+/// normalization rather than by compiled program index, so two independently
+/// written but equal bodies share one row.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-wasm-maintainers; it mutates only the walk's own exclusively borrowed derivation state; its mutual recursion with `static_operation` follows the bounded, acyclic nesting of checked static quotation bodies, refusing a revisited body."
+)]
+fn static_row(
+    index: usize,
+    programs: &[OriginProgram],
+    walk: &mut TemplateWalk,
+    depth: usize,
+) -> Option<u32> {
+    if depth > MAX_ORIGIN_DEPTH {
+        return None;
+    }
+    if let Some(row) = *walk.static_rows.get(index)? {
+        return Some(row);
+    }
+    if *walk.static_visiting.get(index)? {
+        return None;
+    }
+    let program = programs.get(index)?;
+    if program.source_artifact != OriginSource::Definition
+        || program.body_node.is_none()
+        || program.operations.len() > MAX_ORIGIN_OPERATIONS
+    {
+        return None;
+    }
+    *walk.static_visiting.get_mut(index)? = true;
+    let mut operations = Vec::with_capacity(program.operations.len());
+    let mut at = 0usize;
+    let mut is_resolved = true;
+    while is_resolved && at < program.operations.len() {
+        match static_operation(program.operations[at].action, programs, walk, depth) {
+            Some(operation) => operations.push(operation),
+            None => is_resolved = false,
+        }
+        at += 1;
+    }
+    if !is_resolved {
+        return None;
+    }
+    let row = intern_static(
+        &mut walk.statics,
+        OriginStaticBody {
+            input_signature: program.input_signature,
+            output_signature: program.output_signature,
+            operations,
+        },
+    )?;
+    *walk.static_visiting.get_mut(index)? = false;
+    *walk.static_rows.get_mut(index)? = Some(row);
+    Some(row)
+}
+
+/// The class row a cell already visited in this walk keeps, if any.
+fn visited_class(walk: &TemplateWalk, value: &Rc<OriginProgramValue>) -> Option<u32> {
+    let mut at = 0usize;
+    let mut found = None;
+    while found.is_none() && at < walk.cells.len() {
+        if Rc::ptr_eq(&walk.cells[at].0, value) {
+            found = Some(walk.cells[at].1);
+        }
+        at += 1;
+    }
+    found
+}
+
+/// Whether `position` is already among the walk's ordered distinct captures.
+fn is_captured(captures: &[u32], position: u32) -> bool {
+    let mut at = 0usize;
+    let mut is_known = false;
+    while !is_known && at < captures.len() {
+        is_known = captures[at] == position;
+        at += 1;
+    }
+    is_known
+}
+
+/// The class row of `binding`: an equal class gains one more instantiating
+/// cell, a new binding is appended.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-wasm-maintainers; it appends only to the walk's own exclusively borrowed class table, which requires Vec growth rather than a slice."
+)]
+fn intern_class(classes: &mut Vec<OriginClass>, binding: OriginBinding) -> Option<u32> {
+    let mut at = 0usize;
+    let mut found = classes.len();
+    while found == classes.len() && at < classes.len() {
+        if classes[at].binding == binding {
+            found = at;
+        }
+        at += 1;
+    }
+    if found < classes.len() {
+        let class = classes.get_mut(found)?;
+        class.occurrences = class.occurrences.checked_add(1)?;
+        return u32::try_from(found).ok();
+    }
+    if classes.len() >= MAX_ORIGIN_PROGRAMS {
+        return None;
+    }
+    let row = u32::try_from(classes.len()).ok()?;
+    classes.push(OriginClass {
+        binding,
+        occurrences: 1,
+    });
+    Some(row)
+}
+
+/// The logical source binding of one retained Program cell whose children
+/// already have class rows.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; it mutates only the walk's own exclusively borrowed derivation state, its mutual recursion with `template_class` follows an already checked size-bounded returned graph, and the parameters are the checked inputs plus the shared bound state threaded explicitly."
+)]
+fn cell_binding(
+    value: &Rc<OriginProgramValue>,
+    programs: &[OriginProgram],
+    named: usize,
+    walk: &mut TemplateWalk,
+    depth: usize,
+    fixed_nodes: &mut usize,
+) -> Option<OriginBinding> {
+    match value.as_ref() {
+        OriginProgramValue::Static { program_index, .. } => {
+            let program = programs.get(*program_index)?;
+            if program.source_artifact != OriginSource::Definition {
+                return None;
+            }
+            if *program_index == named {
+                // The enclosing named definition is reached from inside its own
+                // returned graph: a required lexical recursive owner.
+                walk.owner = OriginOwner::SelfNamed;
+                return Some(OriginBinding::Named);
+            }
+            program.body_node?;
+            Some(OriginBinding::Static(static_row(
+                *program_index,
+                programs,
+                walk,
+                0,
+            )?))
+        }
+        OriginProgramValue::Quote {
+            operand: OriginOperand::I64(OriginI64::RootInput(position)),
+            ..
+        } => {
+            if !is_captured(&walk.captures, *position) {
+                walk.captures.push(*position);
+            }
+            Some(OriginBinding::QuoteRoot(*position))
+        }
+        OriginProgramValue::Quote {
+            operand: OriginOperand::I64(OriginI64::Fixed { recipe, .. }),
+            ..
+        } => Some(OriginBinding::QuoteFixed(recipe_row(
+            recipe,
+            0,
+            fixed_nodes,
+            &mut walk.recipes,
+        )?)),
+        OriginProgramValue::Quote {
+            operand: OriginOperand::Program(child),
+            ..
+        } => Some(OriginBinding::QuoteProgram(template_class(
+            child,
+            programs,
+            named,
+            walk,
+            depth.checked_add(1)?,
+            fixed_nodes,
+        )?)),
+        OriginProgramValue::Compose { left, right, .. } => {
+            let deeper = depth.checked_add(1)?;
+            let left = template_class(left, programs, named, walk, deeper, fixed_nodes)?;
+            let right = template_class(right, programs, named, walk, deeper, fixed_nodes)?;
+            Some(OriginBinding::Compose { left, right })
+        }
+    }
+}
+
+/// The class row of one retained Program cell. A revisited cell keeps the row
+/// of its first visit, so physical sharing never changes a binding; a distinct
+/// cell with an equal binding adds one occurrence to that class.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; it mutates only the walk's own exclusively borrowed derivation state, its mutual recursion with `cell_binding` follows an already checked size-bounded returned graph, and the parameters are the checked inputs plus the shared bound state threaded explicitly."
+)]
+fn template_class(
+    value: &Rc<OriginProgramValue>,
+    programs: &[OriginProgram],
+    named: usize,
+    walk: &mut TemplateWalk,
+    depth: usize,
+    fixed_nodes: &mut usize,
+) -> Option<u32> {
+    if depth >= MAX_ORIGIN_DEPTH {
+        return None;
+    }
+    if let Some(row) = visited_class(walk, value) {
+        return Some(row);
+    }
+    let binding = cell_binding(value, programs, named, walk, depth, fixed_nodes)?;
+    let row = intern_class(&mut walk.classes, binding)?;
+    if walk.cells.len() >= MAX_ORIGIN_PROGRAMS {
+        return None;
+    }
+    walk.cells.push((Rc::clone(value), row));
+    Some(row)
+}
+
+/// Exact bounded template projection of one returned value.
+fn template_projection(
+    value: &Rc<OriginProgramValue>,
+    programs: &[OriginProgram],
+    named: usize,
+) -> Option<OriginTemplate> {
+    let mut walk = TemplateWalk {
+        cells: Vec::with_capacity(MAX_ORIGIN_PROGRAMS),
+        classes: Vec::with_capacity(MAX_ORIGIN_PROGRAMS),
+        statics: Vec::new(),
+        recipes: Vec::new(),
+        captures: Vec::new(),
+        owner: OriginOwner::Absent,
+        static_rows: alloc::vec![None; programs.len()],
+        static_visiting: alloc::vec![false; programs.len()],
+    };
+    let mut fixed_nodes = 0usize;
+    template_class(value, programs, named, &mut walk, 0, &mut fixed_nodes)?;
+    Some(OriginTemplate {
+        captures: walk.captures,
+        classes: walk.classes,
+        statics: walk.statics,
+        recipes: walk.recipes,
+        owner: walk.owner,
+    })
+}
+
+/// Whether two templates are equal row by row.
+fn same_template(left: &OriginTemplate, right: &OriginTemplate) -> bool {
+    let mut is_same = left.owner == right.owner
+        && left.captures.len() == right.captures.len()
+        && left.classes.len() == right.classes.len()
+        && left.statics.len() == right.statics.len()
+        && left.recipes.len() == right.recipes.len();
+    let mut at = 0usize;
+    while is_same && at < left.captures.len() {
+        is_same = left.captures[at] == right.captures[at];
+        at += 1;
+    }
+    at = 0;
+    while is_same && at < left.classes.len() {
+        is_same = left.classes[at] == right.classes[at];
+        at += 1;
+    }
+    at = 0;
+    while is_same && at < left.statics.len() {
+        is_same = same_static_body(&left.statics[at], &right.statics[at]);
+        at += 1;
+    }
+    at = 0;
+    while is_same && at < left.recipes.len() {
+        is_same = left.recipes[at] == right.recipes[at];
+        at += 1;
+    }
+    is_same
+}
+
+/// Whether one retained output re-derives to exactly its stored template
+/// projection and requires no lexical recursive owner.
+fn verified_template(output: &OriginOutput, programs: &[OriginProgram], named: usize) -> bool {
+    if output.template.owner != OriginOwner::Absent
+        || output.template.captures.len() > MAX_ORIGIN_OPERATIONS
+        || output.template.classes.len() > MAX_ORIGIN_PROGRAMS
+    {
+        return false;
+    }
+    match template_projection(&output.result, programs, named) {
+        Some(template) => {
+            template.owner == OriginOwner::Absent && same_template(&template, &output.template)
+        }
+        None => false,
+    }
+}
+
+/// Whether every retained output re-derives to exactly its stored template
+/// projection and requires no lexical recursive owner. A stored projection that
+/// is absent, forged, truncated or stale is refused.
+pub(super) fn verified_templates(origin: &SelectedOriginMetadata) -> bool {
+    let mut is_verified = !origin.outputs.is_empty() && origin.outputs.len() <= MAX_ORIGIN_PROGRAMS;
+    let mut at = 0usize;
+    while is_verified && at < origin.outputs.len() {
+        is_verified = verified_template(
+            &origin.outputs[at],
+            &origin.programs,
+            origin.named_program_index,
+        );
+        at += 1;
+    }
+    is_verified
+}
+
+/// Whether no returned output reaches the enclosing named definition.
+fn ownerless_outputs(outputs: &[OriginOutput]) -> bool {
+    let mut is_ownerless = true;
+    let mut at = 0usize;
+    while is_ownerless && at < outputs.len() {
+        is_ownerless = outputs[at].template.owner == OriginOwner::Absent;
+        at += 1;
+    }
+    is_ownerless
+}
+
 #[expect(
     tigerstyle::compound_condition,
     reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
@@ -1280,14 +1777,25 @@ pub(super) fn build(
         &mut cells,
         &mut fixed_nodes,
     )?;
-    Some(SelectedOriginMetadata {
+    // A reachable reference to the enclosing named definition requires a
+    // semantic lexical recursive owner this bounded subset does not classify.
+    if !ownerless_outputs(&outputs) {
+        return None;
+    }
+    let origin = SelectedOriginMetadata {
         definition_id: selected.definition_id(),
         source_generation: selected.source_generation(),
         named_program_index,
         root_program_index: plan.root,
         programs,
         outputs,
-    })
+    };
+    // Fail closed on any projection that does not re-derive exactly.
+    if verified_templates(&origin) {
+        Some(origin)
+    } else {
+        None
+    }
 }
 
 // Test harness only: the recursive forms that the explicit-stack walks
@@ -1662,6 +2170,36 @@ mod walk_order_tests {
         assert!(
             refused.iter().all(Option::is_none),
             "empty, unknown and over-cap fixtures are refused"
+        );
+    }
+
+    #[test]
+    fn template_projection_requires_a_classified_recursive_owner() {
+        let mut programs = table(&[alloc::vec::Vec::new(), alloc::vec::Vec::new()]);
+        programs[0].source_artifact = super::OriginSource::Selection;
+        let named = 1usize;
+        let self_reference = alloc::rc::Rc::new(super::OriginProgramValue::Static {
+            node: noble_kernel::untrusted::NodeId(2),
+            program_index: named,
+        });
+        let owner = super::template_projection(&self_reference, &programs, named)
+            .map(|template| template.owner);
+        assert_eq!(
+            owner,
+            Some(super::OriginOwner::SelfNamed),
+            "a reachable reference to the enclosing named definition is a required recursive owner"
+        );
+        let quotation = alloc::rc::Rc::new(super::OriginProgramValue::Quote {
+            node: noble_kernel::untrusted::NodeId(3),
+            table_entry: 3,
+            operand: super::OriginOperand::I64(super::OriginI64::RootInput(0)),
+        });
+        let owner =
+            super::template_projection(&quotation, &programs, named).map(|template| template.owner);
+        assert_eq!(
+            owner,
+            Some(super::OriginOwner::Absent),
+            "a bounded root capture requires no lexical recursive owner"
         );
     }
 }

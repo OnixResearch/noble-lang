@@ -168,8 +168,19 @@ const runs = [];
 // that cannot report a field at all, is `failed`.
 class Mismatch extends Error {}
 
+// Object key order carries no meaning (the CLI host re-serializes replies with sorted keys), so
+// values are compared in a canonical form; array order still counts.
+function canonical(value) {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])]));
+  }
+  return value;
+}
+const same = (left, right) => JSON.stringify(canonical(left)) === JSON.stringify(canonical(right));
+
 function expectValue(label, actual, expected) {
-  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+  if (!same(actual, expected)) {
     throw new Mismatch(`${label}: observed ${JSON.stringify(actual)}, `
       + `registered ${JSON.stringify(expected)}`);
   }
@@ -250,7 +261,7 @@ observe('OWN-CASE-03', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', e
   const trees = parsed(executed.stdout).cases['OWN-CASE-03'];
   const mismatches = [];
   const check = (label, actual, registered) => {
-    if (JSON.stringify(actual) !== JSON.stringify(registered)) {
+    if (!same(actual, registered)) {
       mismatches.push(`${label}: observed ${JSON.stringify(actual)}, `
         + `registered ${JSON.stringify(registered)}`);
     }

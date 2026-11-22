@@ -64,18 +64,18 @@
           "claim": "The direct typed quote `def q [ quote ]` saves a Program whose captured value 5 is still live after the creating root exits; a second root runs it with 20 via `swap [ run ] dip +` and returns 25 with zero guest requests, the released owner is refused, and discarding the installed quotation retires exactly one code span.",
           "revision": "0.1.0-draft.5",
           "result": "passed",
-          "source_revision": "sha256:50617810385cf5c624fc183bf89faeff59b8ea12de1f09dfbacb69f8560d6581",
+          "source_revision": "sha256:897a5ebf0a18b4a70f1bb6f0f16bfd2ef8d8043910051736b6216df504df82e2",
           "configuration": {
             "profile": "Ownership-Lifetime-Design",
-            "receipt": "../../verification/own-cases/runs/20261122-b4/acceptance.json",
-            "receipt_sha256": "1a5abea4bb710a8fed168ad0a25c781bbd17993fd6bdd0409d1fd1257bad1319",
+            "receipt": "../../verification/own-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "c9bbeb5601f88e090e9420b3638e0b26e104ad5af3dbd9836fd6a2291cf220c3",
             "gate": "../../verification/own-cases/gate.mjs",
-            "gate_sha256": "65c49dc8a3f85a800c4cb46124adca926261be9d3de1d2c70a912c63043e5667",
-            "tested_commit": "88e90add9f6446dddfc2040bd0cafc54e0c61a29",
-            "binary_sha256": "ca120a2e7334064a5bdd3efe17a396dc59a54e33b093669943734f2eec8aaeb5",
-            "binary_sha256_after": "ca120a2e7334064a5bdd3efe17a396dc59a54e33b093669943734f2eec8aaeb5",
-            "source_revision": "sha256:50617810385cf5c624fc183bf89faeff59b8ea12de1f09dfbacb69f8560d6581",
-            "projection_sha256": "946d97ab3c86c2049e31456fc9768cfdf2053cf2ee59f245bfad308cf9f79583",
+            "gate_sha256": "c8fe77d03f77dd9a6279983c3a232dc8f00318c115c69454b9f9d7d85bc5bb18",
+            "tested_commit": "8b62827abbb012be4b2066f1d69f459dee7e5aaa",
+            "binary_sha256": "7f32e4e187cb88f7d9a7cd0672a4b20967f057ea024444e2f62e6f68ad59bcc1",
+            "binary_sha256_after": "7f32e4e187cb88f7d9a7cd0672a4b20967f057ea024444e2f62e6f68ad59bcc1",
+            "source_revision": "sha256:897a5ebf0a18b4a70f1bb6f0f16bfd2ef8d8043910051736b6216df504df82e2",
+            "projection_sha256": "3130b4c637d9b4470584b42a539148c7f232cfb21ce264facc1869c60c291f01",
             "case_id": "OWN-CASE-01",
             "lane": "crates/noble-cli/tests/live_slot_direct_quote.mjs"
           },
@@ -127,18 +127,18 @@
           "claim": "Both `[ 1 + ] dup` release orders leave the surviving owner runnable once (42) after the first release, refuse the released owner (including a second release of it), and refuse both owners after the second release.",
           "revision": "0.1.0-draft.5",
           "result": "passed",
-          "source_revision": "sha256:50617810385cf5c624fc183bf89faeff59b8ea12de1f09dfbacb69f8560d6581",
+          "source_revision": "sha256:897a5ebf0a18b4a70f1bb6f0f16bfd2ef8d8043910051736b6216df504df82e2",
           "configuration": {
             "profile": "Ownership-Lifetime-Design",
-            "receipt": "../../verification/own-cases/runs/20261122-b4/acceptance.json",
-            "receipt_sha256": "1a5abea4bb710a8fed168ad0a25c781bbd17993fd6bdd0409d1fd1257bad1319",
+            "receipt": "../../verification/own-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "c9bbeb5601f88e090e9420b3638e0b26e104ad5af3dbd9836fd6a2291cf220c3",
             "gate": "../../verification/own-cases/gate.mjs",
-            "gate_sha256": "65c49dc8a3f85a800c4cb46124adca926261be9d3de1d2c70a912c63043e5667",
-            "tested_commit": "88e90add9f6446dddfc2040bd0cafc54e0c61a29",
-            "binary_sha256": "ca120a2e7334064a5bdd3efe17a396dc59a54e33b093669943734f2eec8aaeb5",
-            "binary_sha256_after": "ca120a2e7334064a5bdd3efe17a396dc59a54e33b093669943734f2eec8aaeb5",
-            "source_revision": "sha256:50617810385cf5c624fc183bf89faeff59b8ea12de1f09dfbacb69f8560d6581",
-            "projection_sha256": "946d97ab3c86c2049e31456fc9768cfdf2053cf2ee59f245bfad308cf9f79583",
+            "gate_sha256": "c8fe77d03f77dd9a6279983c3a232dc8f00318c115c69454b9f9d7d85bc5bb18",
+            "tested_commit": "8b62827abbb012be4b2066f1d69f459dee7e5aaa",
+            "binary_sha256": "7f32e4e187cb88f7d9a7cd0672a4b20967f057ea024444e2f62e6f68ad59bcc1",
+            "binary_sha256_after": "7f32e4e187cb88f7d9a7cd0672a4b20967f057ea024444e2f62e6f68ad59bcc1",
+            "source_revision": "sha256:897a5ebf0a18b4a70f1bb6f0f16bfd2ef8d8043910051736b6216df504df82e2",
+            "projection_sha256": "3130b4c637d9b4470584b42a539148c7f232cfb21ce264facc1869c60c291f01",
             "case_id": "OWN-CASE-02",
             "lane": "crates/noble-cli/tests/live_slot_ownership_cases.mjs"
           },
@@ -235,11 +235,39 @@
       },
       "state": {
         "implementation": "implemented",
-        "execution": "not-run",
+        "execution": "passed",
         "proof": "open",
-        "trust": "unassessed"
+        "trust": "explicit"
       },
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "OWN-CASE-03",
+          "claim": "Executed against captured-I64 leaves (`quote [ + ] compose`) as amended by owner decision 35 and integrator decision 39: the balanced 8-leaf tree returns 36 before and after all 14 owners other than the root are released; the 4-leaf balanced, left-deep and right-deep trees each return 10 before and after their 6 non-root owners are released; and the left-deep and right-deep 8-leaf chains are refused at compose 5 by the anonymous summary's 32-node per-child bound (`checked captured value exceeds host observation bound`) with an exact release (`exit_release` exact, session retained), after which all 12 earlier owners are released and a new root executes; the 40-leaf control is refused at the same compose 5, releases its 44 earlier owners and executes a new root. Every released owner is refused. Shape independence is observed for 4 leaves; for 8 leaves only the balanced tree fits the bound.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:897a5ebf0a18b4a70f1bb6f0f16bfd2ef8d8043910051736b6216df504df82e2",
+          "configuration": {
+            "profile": "Ownership-Lifetime-Design",
+            "receipt": "../../verification/own-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "c9bbeb5601f88e090e9420b3638e0b26e104ad5af3dbd9836fd6a2291cf220c3",
+            "gate": "../../verification/own-cases/gate.mjs",
+            "gate_sha256": "c8fe77d03f77dd9a6279983c3a232dc8f00318c115c69454b9f9d7d85bc5bb18",
+            "tested_commit": "8b62827abbb012be4b2066f1d69f459dee7e5aaa",
+            "binary_sha256": "7f32e4e187cb88f7d9a7cd0672a4b20967f057ea024444e2f62e6f68ad59bcc1",
+            "binary_sha256_after": "7f32e4e187cb88f7d9a7cd0672a4b20967f057ea024444e2f62e6f68ad59bcc1",
+            "source_revision": "sha256:897a5ebf0a18b4a70f1bb6f0f16bfd2ef8d8043910051736b6216df504df82e2",
+            "projection_sha256": "3130b4c637d9b4470584b42a539148c7f232cfb21ce264facc1869c60c291f01",
+            "case_id": "OWN-CASE-03",
+            "lane": "crates/noble-cli/tests/live_slot_ownership_cases.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble live slot` on the binary built from the recorded clean commit.",
+            "The registered 8-leaf deep-chain refusal is a representation bound on the anonymous capture summary, not a reclamation failure; the refusal happens while saving the root's output, after the guest settled, so the host's release is exact (r[LREF-EXIT-01], owner decision 6).",
+            "Reclamation is observable only through owner release and refusal; the runtime exposes no live-cell count."
+          ]
+        }
+      ]
     },
     {
       "id": "OWN-CASE-04",
@@ -306,18 +334,18 @@
           "claim": "Through the real CLI with the registered `Account@1` opaque nominal, the six non-borrow source programs (`dup`, `drop`, `quote` on `Account@1`; `quote` on `Pair<I64,Account@1>`; `drop` on `Sum<Account@1,I64>`; `drop` on `List<Account@1>`) are each refused by the checker's eligibility rule (host-reported at the command stage) with the exact `required S Data` diagnostic naming the registered resource, with zero guest requests, zero protected operations and no emitted artifact; two controls (an I64 program and a resource pass-through) install and emit an artifact.",
           "revision": "0.1.0-draft.5",
           "result": "passed",
-          "source_revision": "sha256:50617810385cf5c624fc183bf89faeff59b8ea12de1f09dfbacb69f8560d6581",
+          "source_revision": "sha256:897a5ebf0a18b4a70f1bb6f0f16bfd2ef8d8043910051736b6216df504df82e2",
           "configuration": {
             "profile": "Ownership-Lifetime-Design",
-            "receipt": "../../verification/own-cases/runs/20261122-b4/acceptance.json",
-            "receipt_sha256": "1a5abea4bb710a8fed168ad0a25c781bbd17993fd6bdd0409d1fd1257bad1319",
+            "receipt": "../../verification/own-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "c9bbeb5601f88e090e9420b3638e0b26e104ad5af3dbd9836fd6a2291cf220c3",
             "gate": "../../verification/own-cases/gate.mjs",
-            "gate_sha256": "65c49dc8a3f85a800c4cb46124adca926261be9d3de1d2c70a912c63043e5667",
-            "tested_commit": "88e90add9f6446dddfc2040bd0cafc54e0c61a29",
-            "binary_sha256": "ca120a2e7334064a5bdd3efe17a396dc59a54e33b093669943734f2eec8aaeb5",
-            "binary_sha256_after": "ca120a2e7334064a5bdd3efe17a396dc59a54e33b093669943734f2eec8aaeb5",
-            "source_revision": "sha256:50617810385cf5c624fc183bf89faeff59b8ea12de1f09dfbacb69f8560d6581",
-            "projection_sha256": "946d97ab3c86c2049e31456fc9768cfdf2053cf2ee59f245bfad308cf9f79583",
+            "gate_sha256": "c8fe77d03f77dd9a6279983c3a232dc8f00318c115c69454b9f9d7d85bc5bb18",
+            "tested_commit": "8b62827abbb012be4b2066f1d69f459dee7e5aaa",
+            "binary_sha256": "7f32e4e187cb88f7d9a7cd0672a4b20967f057ea024444e2f62e6f68ad59bcc1",
+            "binary_sha256_after": "7f32e4e187cb88f7d9a7cd0672a4b20967f057ea024444e2f62e6f68ad59bcc1",
+            "source_revision": "sha256:897a5ebf0a18b4a70f1bb6f0f16bfd2ef8d8043910051736b6216df504df82e2",
+            "projection_sha256": "3130b4c637d9b4470584b42a539148c7f232cfb21ce264facc1869c60c291f01",
             "case_id": "OWN-CASE-04",
             "lane": "crates/noble-cli/tests/live_slot_own_resource_rejection.mjs"
           },
@@ -378,12 +406,40 @@
         }
       },
       "state": {
-        "implementation": "absent",
-        "execution": "not-run",
+        "implementation": "implemented",
+        "execution": "passed",
         "proof": "open",
-        "trust": "unassessed"
+        "trust": "explicit"
       },
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "OWN-CASE-05",
+          "claim": "A root that dispatches into a target which produces a captured I64 Program and then performs a revoked `test.emit` fails before returning: no saved owner is issued (none existed before the root), the request trace is [dispatch allowed, effect denied], and both frame pins are released exactly once through the host ledger (2 entered, 2 released by the guest's unwinding, 0 released on abort, 0 active). The exit release is not exact because the guest's recorded failure is terminal for the shared guest state, so the session terminates (owner decision 6, poison branch) and the CLI exits 2. In process, a root aborted inside both frames has both pins released on abort and its map pin released exactly once.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "sha256:897a5ebf0a18b4a70f1bb6f0f16bfd2ef8d8043910051736b6216df504df82e2",
+          "configuration": {
+            "profile": "Ownership-Lifetime-Design",
+            "receipt": "../../verification/own-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "c9bbeb5601f88e090e9420b3638e0b26e104ad5af3dbd9836fd6a2291cf220c3",
+            "gate": "../../verification/own-cases/gate.mjs",
+            "gate_sha256": "c8fe77d03f77dd9a6279983c3a232dc8f00318c115c69454b9f9d7d85bc5bb18",
+            "tested_commit": "8b62827abbb012be4b2066f1d69f459dee7e5aaa",
+            "binary_sha256": "7f32e4e187cb88f7d9a7cd0672a4b20967f057ea024444e2f62e6f68ad59bcc1",
+            "binary_sha256_after": "7f32e4e187cb88f7d9a7cd0672a4b20967f057ea024444e2f62e6f68ad59bcc1",
+            "source_revision": "sha256:897a5ebf0a18b4a70f1bb6f0f16bfd2ef8d8043910051736b6216df504df82e2",
+            "projection_sha256": "3130b4c637d9b4470584b42a539148c7f232cfb21ce264facc1869c60c291f01",
+            "case_id": "OWN-CASE-05",
+            "lane": "crates/noble-cli/tests/live_slot_own_trap.mjs"
+          },
+          "assumptions": [
+            "Executed through `noble live slot` on the binary built from the recorded clean commit; the in-process half drives the committed slot registry directly.",
+            "The trap path with frames still entered is exercised in process only: the shipped CLI has no mechanism that stops the guest inside a frame. `test.abort` is not installable in this profile; its refusal is recorded as a witness, not as success.",
+            "Finite behavioral evidence for this run; no lowering, runtime or host-ledger correspondence proof is claimed."
+          ]
+        }
+      ]
     },
     {
       "id": "OWN-CASE-06",
@@ -422,18 +478,18 @@
           "claim": "A saved `[ g ]` whose compiled body reads `g` through module M's global still returns 42 after M's supersession; M's code span retires only after the saved owner is released, and no stale-handle trap occurs.",
           "revision": "0.1.0-draft.5",
           "result": "passed",
-          "source_revision": "sha256:50617810385cf5c624fc183bf89faeff59b8ea12de1f09dfbacb69f8560d6581",
+          "source_revision": "sha256:897a5ebf0a18b4a70f1bb6f0f16bfd2ef8d8043910051736b6216df504df82e2",
           "configuration": {
             "profile": "Ownership-Lifetime-Design",
-            "receipt": "../../verification/own-cases/runs/20261122-b4/acceptance.json",
-            "receipt_sha256": "1a5abea4bb710a8fed168ad0a25c781bbd17993fd6bdd0409d1fd1257bad1319",
+            "receipt": "../../verification/own-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "c9bbeb5601f88e090e9420b3638e0b26e104ad5af3dbd9836fd6a2291cf220c3",
             "gate": "../../verification/own-cases/gate.mjs",
-            "gate_sha256": "65c49dc8a3f85a800c4cb46124adca926261be9d3de1d2c70a912c63043e5667",
-            "tested_commit": "88e90add9f6446dddfc2040bd0cafc54e0c61a29",
-            "binary_sha256": "ca120a2e7334064a5bdd3efe17a396dc59a54e33b093669943734f2eec8aaeb5",
-            "binary_sha256_after": "ca120a2e7334064a5bdd3efe17a396dc59a54e33b093669943734f2eec8aaeb5",
-            "source_revision": "sha256:50617810385cf5c624fc183bf89faeff59b8ea12de1f09dfbacb69f8560d6581",
-            "projection_sha256": "946d97ab3c86c2049e31456fc9768cfdf2053cf2ee59f245bfad308cf9f79583",
+            "gate_sha256": "c8fe77d03f77dd9a6279983c3a232dc8f00318c115c69454b9f9d7d85bc5bb18",
+            "tested_commit": "8b62827abbb012be4b2066f1d69f459dee7e5aaa",
+            "binary_sha256": "7f32e4e187cb88f7d9a7cd0672a4b20967f057ea024444e2f62e6f68ad59bcc1",
+            "binary_sha256_after": "7f32e4e187cb88f7d9a7cd0672a4b20967f057ea024444e2f62e6f68ad59bcc1",
+            "source_revision": "sha256:897a5ebf0a18b4a70f1bb6f0f16bfd2ef8d8043910051736b6216df504df82e2",
+            "projection_sha256": "3130b4c637d9b4470584b42a539148c7f232cfb21ce264facc1869c60c291f01",
             "case_id": "OWN-CASE-06",
             "lane": "crates/noble-cli/tests/live_slot_module_root_retention.mjs"
           },
@@ -483,20 +539,20 @@
           "claim": "After `def n [ 1 ]` saves `[ n ]` and `def n [ 2 ]` is reloaded, the saved Program returns 1, the old code span stays installed while the owner lives, and `:release-observed-roots` retires it (one observed root released) with zero guest requests.",
           "revision": "0.1.0-draft.5",
           "result": "passed",
-          "source_revision": "sha256:50617810385cf5c624fc183bf89faeff59b8ea12de1f09dfbacb69f8560d6581",
+          "source_revision": "sha256:897a5ebf0a18b4a70f1bb6f0f16bfd2ef8d8043910051736b6216df504df82e2",
           "configuration": {
             "profile": "Ownership-Lifetime-Design",
-            "receipt": "../../verification/own-cases/runs/20261122-b4/acceptance.json",
-            "receipt_sha256": "1a5abea4bb710a8fed168ad0a25c781bbd17993fd6bdd0409d1fd1257bad1319",
+            "receipt": "../../verification/own-cases/runs/20261122-b5/acceptance.json",
+            "receipt_sha256": "c9bbeb5601f88e090e9420b3638e0b26e104ad5af3dbd9836fd6a2291cf220c3",
             "gate": "../../verification/own-cases/gate.mjs",
-            "gate_sha256": "65c49dc8a3f85a800c4cb46124adca926261be9d3de1d2c70a912c63043e5667",
-            "tested_commit": "88e90add9f6446dddfc2040bd0cafc54e0c61a29",
-            "binary_sha256": "ca120a2e7334064a5bdd3efe17a396dc59a54e33b093669943734f2eec8aaeb5",
-            "binary_sha256_after": "ca120a2e7334064a5bdd3efe17a396dc59a54e33b093669943734f2eec8aaeb5",
-            "source_revision": "sha256:50617810385cf5c624fc183bf89faeff59b8ea12de1f09dfbacb69f8560d6581",
-            "projection_sha256": "946d97ab3c86c2049e31456fc9768cfdf2053cf2ee59f245bfad308cf9f79583",
+            "gate_sha256": "c8fe77d03f77dd9a6279983c3a232dc8f00318c115c69454b9f9d7d85bc5bb18",
+            "tested_commit": "8b62827abbb012be4b2066f1d69f459dee7e5aaa",
+            "binary_sha256": "7f32e4e187cb88f7d9a7cd0672a4b20967f057ea024444e2f62e6f68ad59bcc1",
+            "binary_sha256_after": "7f32e4e187cb88f7d9a7cd0672a4b20967f057ea024444e2f62e6f68ad59bcc1",
+            "source_revision": "sha256:897a5ebf0a18b4a70f1bb6f0f16bfd2ef8d8043910051736b6216df504df82e2",
+            "projection_sha256": "3130b4c637d9b4470584b42a539148c7f232cfb21ce264facc1869c60c291f01",
             "case_id": "OWN-CASE-07",
-            "command": "test --locked -p noble-cli --test live_repl retained_old_definition_yields_old_value_and_retires_after_release -- --nocapture --test-threads=1"
+            "lane": "crates/noble-cli/tests/live_repl.rs"
           },
           "assumptions": [
             "Finite behavioral evidence for this run on the binary built from the recorded clean commit; it does not prove lifetime, reclamation, lowering or compiler correctness.",

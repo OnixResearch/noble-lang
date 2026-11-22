@@ -495,6 +495,9 @@ impl Live {
                 ReloadDecision::PreviewStale { reason, .. } => {
                     Ok(self.admission_refusal(&reason, "declared-refused"))
                 }
+                ReloadDecision::ProofRefused(..) => Err(super::fatal_failure(
+                    "declared publication reported a proof-policy refusal",
+                )),
             };
         }
         self.execute_declared(prepared, source, number)
