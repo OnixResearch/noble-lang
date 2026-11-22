@@ -299,6 +299,10 @@ fn apply_placeholders_elaborate_from_the_goal() {
 /// budget. The checker resumes from the work elaboration charged, so a work
 /// limit that fits checking alone but not both together refuses as exhausted.
 #[test]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; a test entry point runs the non-const module preparation and checker, so the const suggestion does not apply"
+)]
 fn elaboration_and_checking_share_one_request_budget() {
     let prepared = batch(&format!(
         "module logic@1 [ {POLY_REFL} proof 1 refl-type infer : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (apply (use poly-refl) (infer)) (infer))) ] ]"
@@ -464,6 +468,10 @@ fn contract_literal_placeholder_takes_the_subject_literal() {
 
 /// IMPL-2: elaboration is charged to a bounded request and names its stage.
 #[test]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; a test entry point runs the non-const module preparation and elaborator, so the const suggestion does not apply"
+)]
 fn elaboration_budget_exhaustion_names_the_stage() {
     let prepared = batch(&module(
         POLY_REFL,
