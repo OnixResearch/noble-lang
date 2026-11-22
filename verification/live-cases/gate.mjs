@@ -2037,8 +2037,11 @@ const live08Consumer = {
   NOBLE_SYSTEMD_RUN: '/nix/store/baxgs06659w4i6ggsfr56srjrb52v1h8-systemd-261.2/bin/systemd-run',
   NOBLE_CONTRACT_LIBRARY: path.join(root, 'proofs/mc1'),
 };
-// One sandboxed Lean recheck takes about a minute on the reference host.
-const live08ProofTimeout = 600_000;
+// One sandboxed Lean recheck takes about a minute on an idle reference host and
+// well over two under load, so the children get the CLI's maximum recheck
+// budget and the gate waits a little longer than that for each report.
+const live08ProofBudget = 600_000;
+const live08ProofTimeout = live08ProofBudget + 60_000;
 // The contract states the case's claim exactly: input 20, result `result`.
 const live08Contract = (name, body, input, result) => `(contract 1 ${name}
   (input (x I64))
@@ -2091,7 +2094,7 @@ async function observeLive08(feature) {
   const newContract = live08Contract('live08-new', newBody, input.new_claim.input, input.new_claim.result);
   const oldOffer = `${evidence('old.contract', oldContract)} ${evidence('old.lean', live08Proof(input.old_claim.input, input.old_claim.result))}`;
   const newOffer = `${evidence('new.contract', newContract)} ${evidence('new.lean', live08Proof(input.new_claim.input, input.new_claim.result))}`;
-  const args = ['live', 'repl', '--require-proof', 'addone'];
+  const args = ['live', 'repl', '--require-proof', 'addone', '--proof-timeout-ms', String(live08ProofBudget)];
   const oldResult = `I64:${input.old_claim.result}`;
   const newResult = `I64:${input.new_claim.result}`;
   const arenaSame = (before, after) => after.arena.memory_sha256 === before.arena.memory_sha256

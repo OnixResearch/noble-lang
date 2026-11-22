@@ -23,6 +23,8 @@
 /// The selected subject and at most one staged, unconsumed evidence offer.
 pub(super) struct Policy {
     subject: std::string::String,
+    /// The consumer's total wall-clock budget for one evidence recheck.
+    timeout_ms: u64,
     staged: Option<Offer>,
 }
 
@@ -51,9 +53,10 @@ pub(super) struct Artifact<'a> {
 }
 
 impl Policy {
-    pub(super) const fn new(subject: std::string::String) -> Self {
+    pub(super) const fn new(subject: std::string::String, timeout_ms: u64) -> Self {
         Self {
             subject,
+            timeout_ms,
             staged: None,
         }
     }
@@ -147,7 +150,7 @@ impl Policy {
             &offer.contract,
             crate::core::SOURCE_LIMITS,
             Some((offer.proof.as_slice(), false)),
-            crate::workflow::DEFAULT_TIMEOUT,
+            self.timeout_ms,
         ) {
             Ok(completion) => completion,
             Err(refusal) => {

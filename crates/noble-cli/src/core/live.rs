@@ -42,6 +42,8 @@ struct LiveOptions {
     guest_step_budget: Option<u32>,
     /// The one definition name whose every admission needs fresh evidence.
     proof_subject: Option<std::string::String>,
+    /// The evidence recheck budget, as for `noble build --timeout-ms`.
+    proof_timeout_ms: Option<u64>,
 }
 
 enum ReloadDecision {
@@ -183,6 +185,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         retained_generation_limit,
         guest_step_budget,
         proof_subject,
+        proof_timeout_ms,
     } = match parse(arguments) {
         Ok(options) => options,
         Err(message) => {
@@ -288,7 +291,12 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         accepted_watch_seal: None,
         #[cfg(target_os = "linux")]
         watch: watcher,
-        proof: proof_subject.map(proof::Policy::new),
+        proof: proof_subject.map(|subject| {
+            proof::Policy::new(
+                subject,
+                proof_timeout_ms.unwrap_or(crate::workflow::DEFAULT_TIMEOUT),
+            )
+        }),
     };
     if let Some(source) = source {
         if !live.respond_reload(&source) {
@@ -574,6 +582,7 @@ fn parse(arguments: &[std::ffi::OsString]) -> Result<LiveOptions, std::string::S
     let mut retained_generation_limit = None;
     let mut guest_step_budget = None;
     let mut proof_subject = None;
+    let mut proof_timeout_ms = None;
     let mut at = 2;
     while at < arguments.len() {
         let flag = arguments[at].to_str().ok_or("invalid live option")?;
@@ -647,6 +656,15 @@ fn parse(arguments: &[std::ffi::OsString]) -> Result<LiveOptions, std::string::S
                 }
                 proof_subject = Some(value.to_owned());
             }
+            "--proof-timeout-ms" if proof_timeout_ms.is_none() => {
+                proof_timeout_ms = Some(
+                    value
+                        .parse::<u64>()
+                        .ok()
+                        .filter(|limit| (1..=crate::workflow::MAX_TIMEOUT).contains(limit))
+                        .ok_or("proof timeout must be an integer from 1 through 600000 ms")?,
+                );
+            }
             "--expect-generation" if grant_generation.is_none() => {
                 grant_generation = Some(
                     value
@@ -687,6 +705,9 @@ fn parse(arguments: &[std::ffi::OsString]) -> Result<LiveOptions, std::string::S
     {
         return Err("--require-proof selects a Core live repl without --source, --watch, declared modules, self-edit or host test effects; stage :evidence, then :reload".into());
     }
+    if proof_timeout_ms.is_some() && proof_subject.is_none() {
+        return Err("--proof-timeout-ms requires --require-proof NAME".into());
+    }
     let grant = match (grant_name, grant_generation) {
         (Some(name), Some(expected_generation)) if source.is_some() && !name.is_empty() => {
             Some(GrantSelection {
@@ -718,6 +739,7 @@ fn parse(arguments: &[std::ffi::OsString]) -> Result<LiveOptions, std::string::S
         retained_generation_limit,
         guest_step_budget,
         proof_subject,
+        proof_timeout_ms,
     })
 }
 
