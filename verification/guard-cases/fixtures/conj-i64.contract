@@ -1,0 +1,6 @@
+(contract 1 conj-i64
+  (input (x I64))
+  (output (y I64))
+  (program [ 1 + ])
+  (requires (and (lt (in x) 9223372036854775807) (not (eq (in x) -9223372036854775808))))
+  (ensures true))

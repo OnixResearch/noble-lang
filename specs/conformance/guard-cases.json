@@ -1,0 +1,377 @@
+{
+  "schema_version": 1,
+  "revision": "0.1.0-draft.5",
+  "origin": "bounded-applicability-guards-guard-cases",
+  "amendments": [
+    {
+      "date": "2026-11-22",
+      "case": "GUARD-CASE-11",
+      "changed": "the design's 'frame restored' becomes 'the session ends': an abnormal guard exit reports guard-runtime with the engine's classification and charged work, the session is terminated and every later operation is refused; the exhaustion quota expires in the guard's reflection/type-observation work before its first execution step instead of inside dup/list.case",
+      "reason": "The engine poisons itself on every abnormal guest exit and its worker exits, so no parked frame can be restored; restoring one would need the exact-release evidence decision 6 requires for live slots, and the Wasm instance state after a trap is not established. The engine charges guard and body work to one meter without marking where the body starts, so only a fault before the first execution step shows the body unstarted; caps of 2 to 32 already exhaust in execution work, where the body's start is not observable.",
+      "decision": "OWNER DECISION 2026-11-22 (decision 33, delegated: 'do what is most correct/best long term'), refined by the integrator as decision 33a"
+    }
+  ],
+  "cases": [
+    {
+      "id": "GUARD-CASE-01",
+      "profile": "Bounded-Applicability-Design",
+      "kind": "runtime",
+      "requirements": ["VC-LOGIC-02", "VC-USE-01", "VC-ADMIT-05"],
+      "input": {
+        "harness": "companion-guard-invocation",
+        "subject": "[ 1 + ]",
+        "contracts": {
+          "LtI64Max": "requires (lt (in x) 9223372036854775807), ensures (lt (in x) (out y))",
+          "NeI64Min": "requires (not (eq (in x) -9223372036854775808)), ensures true"
+        },
+        "arguments": {
+          "LtI64Max": ["9223372036854775807", "9223372036854775806", "-9223372036854775808"],
+          "NeI64Min": ["-9223372036854775808", "-9223372036854775807", "9223372036854775807"]
+        }
+      },
+      "expected": {
+        "stage": "applicability",
+        "outcome": "reject-at-each-boundary-accept-beside-it",
+        "outcomes": {
+          "LtI64Max": [
+            { "argument": "9223372036854775807", "outcome": "precondition-reject", "candidate_body_started": false },
+            { "argument": "9223372036854775806", "outcome": "certified-invocation", "output": "9223372036854775807" },
+            { "argument": "-9223372036854775808", "outcome": "certified-invocation", "output": "-9223372036854775807" }
+          ],
+          "NeI64Min": [
+            { "argument": "-9223372036854775808", "outcome": "precondition-reject", "candidate_body_started": false },
+            { "argument": "-9223372036854775807", "outcome": "certified-invocation", "output": "-9223372036854775806" },
+            { "argument": "9223372036854775807", "outcome": "certified-invocation", "output": "-9223372036854775808" }
+          ]
+        },
+        "wrapper_source": {
+          "LtI64Max": "[ swap dup 9223372036854775807 = [ drop drop 1 inl ] [ swap run inr ] if ]",
+          "NeI64Min": "[ swap dup -9223372036854775808 = [ drop drop 1 inl ] [ swap run inr ] if ]"
+        },
+        "guard_template_set_version": null,
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "GUARD-CASE-02",
+      "profile": "Bounded-Applicability-Design",
+      "kind": "runtime",
+      "requirements": ["VC-LOGIC-02", "VC-USE-01", "VC-ADMIT-05"],
+      "input": {
+        "harness": "companion-guard-invocation-and-core-control",
+        "subject": "[ 1 + ]",
+        "contract": "requires (eq (in x) 5), ensures true",
+        "arguments": ["5", "6", "-5"],
+        "substituted_binding": "a core control presents the evidence admitted for requires (eq (in x) 6) (EqI64Literal 6) as the eq-5 contract's companion"
+      },
+      "expected": {
+        "stage": "applicability",
+        "outcome": "accept-only-the-literal-and-refuse-the-substituted-binding",
+        "outcomes": [
+          { "argument": "5", "outcome": "certified-invocation", "output": "6" },
+          { "argument": "6", "outcome": "precondition-reject", "candidate_body_started": false },
+          { "argument": "-5", "outcome": "precondition-reject", "candidate_body_started": false }
+        ],
+        "wrapper_source": "[ swap dup 5 = [ swap run inr ] [ drop drop 1 inl ] if ]",
+        "substituted_binding": { "stage": "binding", "outcome": "correspondence-mismatch", "guard_executed": false },
+        "accepts_6_under_eq_5": false
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "GUARD-CASE-03",
+      "profile": "Bounded-Applicability-Design",
+      "kind": "runtime",
+      "requirements": ["VC-LOGIC-02", "VC-USE-01", "VC-ADMIT-05"],
+      "input": {
+        "harness": "companion-guard-invocation",
+        "subject": "[ [ 0 ] [ drop ] list.case ]",
+        "contract": "head-of-nonempty: input (xs (List I64)), requires (not (is-nil (in xs))), ensures (eq (out y) (head (in xs)))",
+        "arguments": ["nil dup 0 swap cons drop", "-9223372036854775808 nil cons", "7 8 nil cons cons"],
+        "argument_spelling": "the design's `[]` is an empty `List I64`: a bare `nil` submission leaves the element type open, so its slot is not the retained `List I64` interface and is refused at injection typing (GUARD-CASE-12's refusal); `nil dup 0 swap cons drop` fixes the element type through a discarded cons and leaves exactly the empty list",
+        "tail": "an I64 cell 41 at the bottom of the session, below the subject, the companion cells and the list argument",
+        "nested": {
+          "contract": "head-of-nonempty-nested: input (xs (List (List I64))), requires (not (is-nil (in xs))), ensures true",
+          "subject": "[ [ nil ] [ drop ] list.case ]",
+          "argument": "nil dup 0 swap cons drop nil cons"
+        }
+      },
+      "expected": {
+        "stage": "applicability",
+        "outcome": "reject-empty-accept-nonempty-with-the-session-preserved",
+        "outcomes": [
+          { "argument": "nil dup 0 swap cons drop", "outcome": "precondition-reject", "output": "1", "candidate_body_started": false },
+          { "argument": "-9223372036854775808 nil cons", "outcome": "certified-invocation", "output": "-9223372036854775808" },
+          { "argument": "7 8 nil cons cons", "outcome": "certified-invocation", "output": "7" }
+        ],
+        "nested": { "outcome": "certified-invocation", "output_type": "List", "output_items": 0 },
+        "session_preserved": true,
+        "tail_preserved": true,
+        "guard_template_set_version": 2,
+        "wrapper_source": "[ swap dup [ true ] [ drop drop false ] list.case [ drop drop 1 inl ] [ swap run inr ] if ]",
+        "invocation_prelude": "[ run ] dip",
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "GUARD-CASE-04",
+      "profile": "Bounded-Applicability-Design",
+      "kind": "admission",
+      "requirements": ["VC-LOGIC-02", "VC-USE-01"],
+      "input": {
+        "harness": "companion-guard-invocation",
+        "contracts": [
+          "input (xs (List I64)), requires (lt 0 (head (in xs))), ensures true",
+          "input (s (Sum I64 I64)), requires (is-left (in s)), ensures true",
+          "input (s (Sum I64 I64)), requires (eq (left (in s)) 1), ensures true"
+        ],
+        "invocation": "each admitted, certified and invoked on an argument that satisfies its precondition"
+      },
+      "expected": {
+        "stage": "applicability",
+        "outcome": "unsupported-guard-template",
+        "per_contract": ["unsupported-guard-template", "unsupported-guard-template", "unsupported-guard-template"],
+        "treated_as_precondition_reject": false,
+        "candidate_body_started": false,
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "GUARD-CASE-05",
+      "profile": "Bounded-Applicability-Design",
+      "kind": "admission",
+      "requirements": ["VC-LOGIC-02", "VC-USE-01"],
+      "input": {
+        "harness": "companion-guard-invocation",
+        "contracts": [
+          "input (xs (List I64)), requires (and (not (is-nil (in xs))) (lt 0 (head (in xs)))), ensures true",
+          "input (x I64), requires (and (lt (in x) 9223372036854775807) (not (eq (in x) -9223372036854775808))), ensures true"
+        ],
+        "invocation": "each admitted, certified and invoked on an argument that satisfies both conjuncts"
+      },
+      "expected": {
+        "stage": "applicability",
+        "outcome": "unsupported-guard-template",
+        "per_contract": ["unsupported-guard-template", "unsupported-guard-template"],
+        "conjunct_guard_yields_applies": false,
+        "candidate_body_started": false,
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "GUARD-CASE-06",
+      "profile": "Bounded-Applicability-Design",
+      "kind": "admission",
+      "requirements": ["VC-LOGIC-02", "VC-USE-01"],
+      "input": {
+        "harness": "companion-guard-invocation",
+        "contracts": [
+          "input (xs (List I64)), requires (lt 0 (length (in xs))), ensures true",
+          "input (xs (List I64)), requires (not (eq (length (in xs)) 0)), ensures true",
+          "input (xs (List I64)), requires (not (not (not (is-nil (in xs))))), ensures true",
+          "input (xs (List I64)), requires (is-nil (in xs)), ensures true",
+          "input (xs (List I64)) (y I64), requires (not (is-nil (in xs))), ensures true"
+        ],
+        "invocation": "each admitted, certified and invoked on an argument that satisfies its precondition"
+      },
+      "expected": {
+        "stage": "applicability",
+        "outcome": "unsupported-guard-template",
+        "per_contract": ["unsupported-guard-template", "unsupported-guard-template", "unsupported-guard-template", "unsupported-guard-template", "unsupported-guard-template"],
+        "candidate_body_started": false,
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "GUARD-CASE-07",
+      "profile": "Bounded-Applicability-Design",
+      "kind": "admission",
+      "requirements": ["VC-LOGIC-02", "VC-USE-01", "VC-ADMIT-05"],
+      "input": {
+        "harness": "companion-guard-invocation",
+        "subject": "[ [ 0 ] [ drop ] list.case ]",
+        "original": "requires (not (is-nil (in xs))), ensures true",
+        "changed": "the same subject and ensures with requires true",
+        "policy_change": "policy revision 2 selected after certifying under the original, then the original contract re-admitted under revision 2",
+        "argument": "7 8 nil cons cons"
+      },
+      "expected": {
+        "stage": "applicability",
+        "outcome": "changed-predicate-unguarded-and-changed-policy-stale",
+        "changed_predicate": { "outcome": "unsupported-guard-template", "candidate_body_started": false },
+        "after_policy_change": { "outcome": "stale-context", "candidate_body_started": false },
+        "after_readmission": { "outcome": "certified-invocation", "output": "7" },
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "GUARD-CASE-08",
+      "profile": "Bounded-Applicability-Design",
+      "kind": "identity",
+      "requirements": ["VC-LOGIC-02", "VC-ADMIT-05"],
+      "input": {
+        "harness": "companion-guard-invocation",
+        "contract": "head-of-nonempty",
+        "certified_subject": "[ [ 0 ] [ drop ] list.case ]",
+        "changed_subject": "[ [ 1 ] [ drop ] list.case ]",
+        "family": "the reviewed builder family certified for its own builder, then presented with a builder whose captured constant differs"
+      },
+      "expected": {
+        "stage": "binding",
+        "outcome": "mismatched-subject-before-any-guard",
+        "changed_subject": { "outcome": "mismatched-subject", "published_companion": false },
+        "changed_family_capture": { "outcome": "mismatched-subject", "published_companion": false },
+        "original_companion_identity_unchanged": true,
+        "guard_executed": false
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "GUARD-CASE-09",
+      "profile": "Bounded-Applicability-Design",
+      "kind": "runtime",
+      "requirements": ["VC-LOGIC-02", "VC-USE-01", "VC-ADMIT-05"],
+      "input": {
+        "harness": "companion-guard-invocation",
+        "contract": "head-of-nonempty",
+        "erased_evidence": "the certified slot projected to its plain subject Program; the fixed live wrapper text then run on [list, Program] as an ordinary submission",
+        "arguments": ["nil dup 0 swap cons drop", "7 8 nil cons cons"],
+        "erased_static_proof": "noble build --require-proof on the subject and contract with no proof supplied"
+      },
+      "expected": {
+        "stage": "applicability",
+        "outcome": "erased-metadata-runs-identically-and-claims-nothing",
+        "projected": {
+          "outcomes": [
+            { "argument": "nil dup 0 swap cons drop", "runtime_return": "left", "output": "1" },
+            { "argument": "7 8 nil cons cons", "runtime_return": "right", "output": "7" }
+          ],
+          "behavioral_certification_claimed": false,
+          "same_results_as_certified_invocation": true
+        },
+        "static_without_proof": { "release": "blocked" }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "GUARD-CASE-10",
+      "profile": "Bounded-Applicability-Design",
+      "kind": "admission",
+      "requirements": ["VC-COMPOSE-01", "VC-LOGIC-02", "VC-USE-01"],
+      "input": {
+        "harness": "companion-composition",
+        "guarded_then_unguarded": "the eq-5 guarded [ 1 + ] companion composed with the reviewed increment companion at 5",
+        "two_guarded": "two conditional-monotonicity (LtI64Max) companions composed at 0",
+        "derived_composite": "two reviewed increment companions composed at 41 (the only rule the composer has), the composite then invoked at 41",
+        "static_witness": "a [ 5 nil cons ] list producer companion (ensures (not (is-nil (out xs)))) composed with the head-of-nonempty companion"
+      },
+      "expected": {
+        "stage": "companion-composition",
+        "outcome": "no-composite-inherits-a-guard",
+        "guarded_then_unguarded": { "outcome": "unresolved-implication", "new_certified_status": false },
+        "two_guarded": { "outcome": "unresolved-implication", "new_certified_status": false },
+        "derived_composite": { "composition": "certified-composition", "composite_invocation": "unsupported-guard-template", "inherits_guard": false },
+        "static_witness": { "outcome": "unresolved-implication", "new_certified_status": false },
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "GUARD-CASE-11",
+      "profile": "Bounded-Applicability-Design",
+      "kind": "runtime",
+      "requirements": ["VC-LOGIC-02", "VC-USE-01"],
+      "input": {
+        "harness": "companion-guard-invocation-with-harness-fault",
+        "contract": "head-of-nonempty",
+        "argument": "7 8 nil cons cons",
+        "reject_argument": "nil dup 0 swap cons drop",
+        "faults": ["the guard's engine call exhausts its quota", "the guard's engine call traps"],
+        "fault_model": "the test-only live-test-barrier feature build's one-shot NOBLE_LIVE_TEST_GUARD_FAULT selection, keyed by the SHA-256 of the guard's checked source (owner decisions 33 and 33a): exhaust:CAP lowers that one execution's step cap so the guest's own meter exhausts, and trap raises a Wasm trap at the top of its guest frame",
+        "step_cap": 1
+      },
+      "expected": {
+        "stage": "applicability",
+        "outcome": "fault-distinct-from-rejection",
+        "baseline": { "accepted": "certified-invocation", "rejected": "precondition-reject" },
+        "exhaustion": {
+          "outcome": "guard-runtime",
+          "engine_outcome": "runtime-exhausted",
+          "quota_reason": "reflection/type-observation work",
+          "native_trap": null,
+          "execution_steps": 0,
+          "reflection_steps": 1,
+          "session_state": "terminated-after-runtime-failure",
+          "frame_restored": false,
+          "guest_requests": 0,
+          "protected_operations": 0,
+          "distinct_from_precondition_reject": true,
+          "candidate_body_started": false,
+          "later_operation": { "outcome": "terminated-after-runtime-failure", "code": "session-terminated" }
+        },
+        "trap": {
+          "outcome": "guard-runtime",
+          "engine_outcome": "trap",
+          "quota_reason": null,
+          "native_trap": "RuntimeError: test-only guard fault at the top of the guest frame",
+          "execution_steps": 0,
+          "reflection_steps": 0,
+          "session_state": "terminated-after-runtime-failure",
+          "frame_restored": false,
+          "guest_requests": 0,
+          "protected_operations": 0,
+          "distinct_from_precondition_reject": true,
+          "candidate_body_started": false,
+          "later_operation": { "outcome": "terminated-after-runtime-failure", "code": "session-terminated" }
+        }
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    },
+    {
+      "id": "GUARD-CASE-12",
+      "profile": "Bounded-Applicability-Design",
+      "kind": "admission",
+      "requirements": ["VC-LOGIC-02", "VC-ADMIT-05"],
+      "input": {
+        "harness": "companion-guard-invocation",
+        "contract": "head-of-nonempty",
+        "wrong_slots": ["an I64 slot", "a List Program slot"]
+      },
+      "expected": {
+        "stage": "injection-typing",
+        "outcome": "stack-type-before-execution",
+        "per_slot": ["stack-type", "stack-type"],
+        "guard_executed": false,
+        "session_preserved": true,
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
+      "evidence": []
+    }
+  ]
+}

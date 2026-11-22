@@ -6,9 +6,10 @@
 //! "program" cell are ordinary values, so the text-level semantics, the
 //! rejection payload and the fact that the body never runs on `nil` are
 //! observable directly. The companion-level invocation path (evidence
-//! applicability, `op_invoke`, the v2 slot injection) additionally needs an
-//! admitted list contract and the pinned Lean sandbox tools, so its case
-//! execution belongs to the change's GUARD-CASE lane rather than this module.
+//! applicability, `op_invoke`, the v2 slot copy and parked frame) additionally
+//! needs an admitted list contract and the pinned Lean sandbox tools, so its
+//! case execution belongs to the change's GUARD-CASE lane rather than this
+//! module; the texts it composes are executed here.
 
 use std::io::Write;
 
@@ -119,17 +120,16 @@ fn invocation_wrapper_text_preserves_the_argument_cell() -> Result<(), Box<dyn s
 }
 
 #[test]
-fn invocation_prelude_removes_the_companion_cell_before_the_guard(
+fn invocation_prelude_replays_the_copied_argument_below_the_subject(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    // The companion-level path runs on `[list, companion cell, Program]` and
-    // drops the companion operand cell, so the fixed live text sees exactly
-    // `[list, Program]`. A Program stands in for the companion cell here: the
-    // prelude is type-generic and the guard never reads that slot.
+    // The companion-level path copies the list out of its slot with `dup
+    // quote`, parks the session and injects `[copy, subject]` into a fresh
+    // frame; the prelude `[ run ] dip` replays the copy below the subject, so
+    // the fixed live text sees exactly `[list, Program]`.
     let mut reports = session(&[
-        "nil",
+        "nil quote",
         BODY,
-        BODY,
-        "swap drop",
+        "[ run ] dip",
         &format!("{LIVE_WRAPPER} run"),
     ])?;
     let guarded = reports.pop().ok_or("no guard report")?;
@@ -150,14 +150,36 @@ fn invocation_prelude_removes_the_companion_cell_before_the_guard(
     assert_eq!(stack[1]["type"], "Program", "the Program cell stays on top");
     // The nonempty case reaches the body and tags its result.
     let mut reports = session(&[
-        "unit nil cons",
+        "unit nil cons quote",
         BODY,
-        BODY,
-        "swap drop",
+        "[ run ] dip",
         &format!("{LIVE_WRAPPER} run"),
     ])?;
     let guarded = reports.pop().ok_or("no guard report")?;
     assert_invocation(&guarded, 99, "nonempty list behind the prelude")?;
+    Ok(())
+}
+
+#[test]
+fn argument_copy_leaves_the_slot_and_the_cells_above_it_in_place(
+) -> Result<(), Box<dyn std::error::Error>> {
+    // `dup quote` at the list slot, carried past one cell above it: the tail,
+    // the list and the cell above keep their order and the copy lands on top.
+    let reports = session(&["5", "7 nil cons", "unit", "[ dup quote ] dip swap"])?;
+    let copied = reports.last().ok_or("no copy report")?;
+    assert_eq!(copied["outcome"], "normal");
+    let stack = copied["stack"]
+        .as_array()
+        .ok_or("copy stack is not an array")?;
+    let types: Vec<&str> = stack
+        .iter()
+        .map(|cell| cell["type"].as_str().unwrap_or_default())
+        .collect();
+    assert_eq!(types, ["I64", "List", "Unit", "Program"]);
+    assert_eq!(
+        stack[0]["value"], "5",
+        "the tail below the list is untouched"
+    );
     Ok(())
 }
 

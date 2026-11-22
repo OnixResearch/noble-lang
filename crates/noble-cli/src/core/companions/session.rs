@@ -15,6 +15,7 @@ impl crate::core::companions::Driver {
             policy: 0,
             timeout_ms,
             optimized,
+            terminated: None,
         }
     }
 
@@ -102,6 +103,10 @@ impl crate::core::companions::Driver {
             attempt!(self.engine()).execute_inputs(&frame)
         }
         .map_err(crate::core::companions::Refused::engine));
+        // A terminal guest exit poisons the engine; its worker has exited.
+        if reply.is_terminal() {
+            self.terminated = Some(reply.outcome.clone());
+        }
         let report = attempt!(crate::core::companions::reporting::parse_report(
             &reply.json
         ));
