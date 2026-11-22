@@ -39,6 +39,9 @@
   lemmas also on `Classical.choice`). No bridge at arbitrary named frames is claimed. The box
   is ticked with the MC1 lane receipt of the batch that carries this module.
 - [ ] [serial] Implement the law-bundle record, explicit selection, ambiguity refusal, checked specialization and bundle invalidation. Execute the negative and import-stability cases. r[PREUSE-BUNDLE-01]
+  Moved here (2026-11-22, owner decision 52): packaging `wire@1.seq-laws` from
+  resource-safe-wiring-laws' `Wire.*` task, once bundles exist; its laws (L1-L8, L10-L14 and the
+  frame lemma `exec_frame`) are already proved and pinned in `ContractGate.lean`.
 - [ ] [serial] At sync, register PREUSE-S01 to S22 and the bundle cases as conformance designs, add a `PREUSE` evidence route to `tools/check-specs.mjs` `ROUTES`, refresh generated views and the ledger, then execute and retain source-bound receipts. Promote no status beyond its receipts. r[PREUSE-EVID-01]
 - [ ] [serial] Discharge or explicitly keep open correspondence obligations C1-C8 (PO-15/16/17/18/19/20) through their own routes, with artifact correspondence coordinated with #10. Consider archive only after implementation, evidence and separately reviewed gates. r[PREUSE-EVID-01]
 

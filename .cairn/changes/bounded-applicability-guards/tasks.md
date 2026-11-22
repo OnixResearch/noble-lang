@@ -145,4 +145,9 @@
   receipt. The registration, the GUARD-CASE-11 amendment and the run were accepted by the
   integrator review [`review-integrator-2026-11-22-guard-cases.md`](review-integrator-2026-11-22-guard-cases.md)
   (owner decision 28). C1 for `templates_of`, C6 and PO-21 remain open.
-- [ ] [serial] Coordinate C6 (Wasm lowering/loading of wrappers, PO-17/PO-18) through #10. Static-witness companion rules wait for #7; resource-bearing applicability waits for #3. r[GUARD-FACT-01]
+- [x] [serial] Coordinate C6 (Wasm lowering/loading of wrappers, PO-17/PO-18) through #10. Static-witness companion rules wait for #7; resource-bearing applicability waits for #3. r[GUARD-FACT-01]
+  Coordinated (2026-11-22, owner decision 53): C6 is tracked in artifact-correspondence-extension
+  (#10) as its open obligation "PO-21 C6" (task "Pursue O1–O7 separately", kept open by owner
+  decision 31); it is not discharged here. Static-witness companion rules wait for
+  reusable-contract-calls (#7) and resource-bearing applicability for ownership-lifetime-contract
+  (#3); neither is selected by this change.
