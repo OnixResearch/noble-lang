@@ -2,6 +2,15 @@
   "schema_version": 1,
   "revision": "0.1.0-draft.5",
   "origin": "bounded-applicability-guards-guard-cases",
+  "amendments": [
+    {
+      "date": "2026-11-22",
+      "case": "GUARD-CASE-11",
+      "changed": "the design's 'frame restored' becomes 'the session ends': an abnormal guard exit reports guard-runtime with the engine's classification and charged work, the session is terminated and every later operation is refused; the exhaustion quota expires in the guard's reflection/type-observation work before its first execution step instead of inside dup/list.case",
+      "reason": "The engine poisons itself on every abnormal guest exit and its worker exits, so no parked frame can be restored; restoring one would need the exact-release evidence decision 6 requires for live slots, and the Wasm instance state after a trap is not established. The engine charges guard and body work to one meter without marking where the body starts, so only a fault before the first execution step shows the body unstarted; caps of 2 to 32 already exhaust in execution work, where the body's start is not observable.",
+      "decision": "OWNER DECISION 2026-11-22 (decision 33, delegated: 'do what is most correct/best long term'), refined by the integrator as decision 33a"
+    }
+  ],
   "cases": [
     {
       "id": "GUARD-CASE-01",
@@ -82,19 +91,20 @@
         "harness": "companion-guard-invocation",
         "subject": "[ [ 0 ] [ drop ] list.case ]",
         "contract": "head-of-nonempty: input (xs (List I64)), requires (not (is-nil (in xs))), ensures (eq (out y) (head (in xs)))",
-        "arguments": ["nil", "-9223372036854775808 nil cons", "7 8 nil cons cons"],
+        "arguments": ["nil dup 0 swap cons drop", "-9223372036854775808 nil cons", "7 8 nil cons cons"],
+        "argument_spelling": "the design's `[]` is an empty `List I64`: a bare `nil` submission leaves the element type open, so its slot is not the retained `List I64` interface and is refused at injection typing (GUARD-CASE-12's refusal); `nil dup 0 swap cons drop` fixes the element type through a discarded cons and leaves exactly the empty list",
         "tail": "an I64 cell 41 at the bottom of the session, below the subject, the companion cells and the list argument",
         "nested": {
           "contract": "head-of-nonempty-nested: input (xs (List (List I64))), requires (not (is-nil (in xs))), ensures true",
           "subject": "[ [ nil ] [ drop ] list.case ]",
-          "argument": "nil nil cons"
+          "argument": "nil dup 0 swap cons drop nil cons"
         }
       },
       "expected": {
         "stage": "applicability",
         "outcome": "reject-empty-accept-nonempty-with-the-session-preserved",
         "outcomes": [
-          { "argument": "nil", "outcome": "precondition-reject", "output": "1", "candidate_body_started": false },
+          { "argument": "nil dup 0 swap cons drop", "outcome": "precondition-reject", "output": "1", "candidate_body_started": false },
           { "argument": "-9223372036854775808 nil cons", "outcome": "certified-invocation", "output": "-9223372036854775808" },
           { "argument": "7 8 nil cons cons", "outcome": "certified-invocation", "output": "7" }
         ],
@@ -245,7 +255,7 @@
         "harness": "companion-guard-invocation",
         "contract": "head-of-nonempty",
         "erased_evidence": "the certified slot projected to its plain subject Program; the fixed live wrapper text then run on [list, Program] as an ordinary submission",
-        "arguments": ["nil", "7 8 nil cons cons"],
+        "arguments": ["nil dup 0 swap cons drop", "7 8 nil cons cons"],
         "erased_static_proof": "noble build --require-proof on the subject and contract with no proof supplied"
       },
       "expected": {
@@ -253,7 +263,7 @@
         "outcome": "erased-metadata-runs-identically-and-claims-nothing",
         "projected": {
           "outcomes": [
-            { "argument": "nil", "runtime_return": "left", "output": "1" },
+            { "argument": "nil dup 0 swap cons drop", "runtime_return": "left", "output": "1" },
             { "argument": "7 8 nil cons cons", "runtime_return": "right", "output": "7" }
           ],
           "behavioral_certification_claimed": false,
@@ -298,14 +308,45 @@
         "harness": "companion-guard-invocation-with-harness-fault",
         "contract": "head-of-nonempty",
         "argument": "7 8 nil cons cons",
+        "reject_argument": "nil dup 0 swap cons drop",
         "faults": ["the guard's engine call exhausts its quota", "the guard's engine call traps"],
-        "fault_model": "a feature-gated harness hook in the real binary (owner decision 33)"
+        "fault_model": "the test-only live-test-barrier feature build's one-shot NOBLE_LIVE_TEST_GUARD_FAULT selection, keyed by the SHA-256 of the guard's checked source (owner decisions 33 and 33a): exhaust:CAP lowers that one execution's step cap so the guest's own meter exhausts, and trap raises a Wasm trap at the top of its guest frame",
+        "step_cap": 1
       },
       "expected": {
         "stage": "applicability",
         "outcome": "fault-distinct-from-rejection",
-        "exhaustion": { "outcome": "guard-runtime", "distinct_from_precondition_reject": true, "candidate_body_started": false, "frame_restored": true },
-        "trap": { "outcome": "guard-runtime", "distinct_from_precondition_reject": true, "candidate_body_started": false, "frame_restored": true }
+        "baseline": { "accepted": "certified-invocation", "rejected": "precondition-reject" },
+        "exhaustion": {
+          "outcome": "guard-runtime",
+          "engine_outcome": "runtime-exhausted",
+          "quota_reason": "reflection/type-observation work",
+          "native_trap": null,
+          "execution_steps": 0,
+          "reflection_steps": 1,
+          "session_state": "terminated-after-runtime-failure",
+          "frame_restored": false,
+          "guest_requests": 0,
+          "protected_operations": 0,
+          "distinct_from_precondition_reject": true,
+          "candidate_body_started": false,
+          "later_operation": { "outcome": "terminated-after-runtime-failure", "code": "session-terminated" }
+        },
+        "trap": {
+          "outcome": "guard-runtime",
+          "engine_outcome": "trap",
+          "quota_reason": null,
+          "native_trap": "RuntimeError: test-only guard fault at the top of the guest frame",
+          "execution_steps": 0,
+          "reflection_steps": 0,
+          "session_state": "terminated-after-runtime-failure",
+          "frame_restored": false,
+          "guest_requests": 0,
+          "protected_operations": 0,
+          "distinct_from_precondition_reject": true,
+          "candidate_body_started": false,
+          "later_operation": { "outcome": "terminated-after-runtime-failure", "code": "session-terminated" }
+        }
       },
       "state": { "implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed" },
       "evidence": []

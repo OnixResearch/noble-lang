@@ -7,6 +7,9 @@
 // composition and projection. Every command line and report is retained. A case is promotable only
 // when every registered expectation was observed; a variant whose execution route does not exist
 // yet is reported `not-executed` with its reason, never as passed.
+// GUARD-CASE-11 alone runs a second binary built from the same checkout with the test-only
+// `live-test-barrier` feature, whose one-shot guard fault selection is its harness fault model
+// (owner decision 33); that binary is never the shipped one.
 //
 // Usage (inside the pinned devShell, with `proofs/mc1` built for the contract library):
 //   node verification/guard-cases/gate.mjs --out NEW_DIRECTORY
@@ -101,12 +104,14 @@ function recordRaw(output, name, text) {
   raw.push({ name, file: path.relative(output, file), sha256: sha(text), bytes: Buffer.byteLength(text) });
 }
 
-function buildNoble(output) {
-  const build = spawnSync('cargo', ['build', '--locked', '-p', 'noble-cli', '--bin', 'noble',
+function buildNoble(output, features = []) {
+  const selected = features.length ? ['--features', features.join(',')] : [];
+  const suffix = features.length ? `-${features.join('-')}` : '';
+  const build = spawnSync('cargo', ['build', '--locked', '-p', 'noble-cli', '--bin', 'noble', ...selected,
     '--message-format=json-render-diagnostics'],
   { cwd: root, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
-  recordRaw(output, 'build.stdout', build.stdout ?? '');
-  recordRaw(output, 'build.stderr', build.stderr ?? '');
+  recordRaw(output, `build${suffix}.stdout`, build.stdout ?? '');
+  recordRaw(output, `build${suffix}.stderr`, build.stderr ?? '');
   assert.equal(build.status, 0, `cargo build failed:\n${build.stderr}`);
   const artifacts = build.stdout.split('\n').filter(Boolean).map(line => JSON.parse(line))
     .filter(message => message.reason === 'compiler-artifact'
@@ -149,11 +154,13 @@ const sessions = [];
 let sourceSerial = 0;
 
 // One `noble companions` session: each line is answered by exactly one report.
-async function withSession(binary, output, label, action) {
+// `selection` adds private test-hook variables, which only the feature-built binary forwards.
+async function withSession(binary, output, label, action, selection = {}) {
   const record = { label, args: ['companions', '--timeout-ms', '600000', '--opt', 'off'],
-    operations: [], exit: null, signal: null, stderr: '', error: null };
+    binary: path.basename(binary), selection, operations: [], exit: null, signal: null, stderr: '',
+    error: null };
   sessions.push(record);
-  const child = spawn(binary, record.args, { cwd: root, env: environment,
+  const child = spawn(binary, record.args, { cwd: root, env: { ...environment, ...selection },
     stdio: ['pipe', 'pipe', 'pipe'] });
   let pending = null;
   const ended = new Promise(resolveEnd => {
@@ -331,6 +338,11 @@ const binary = path.join(out, 'noble');
 fs.copyFileSync(built.executable, binary);
 fs.chmodSync(binary, 0o500);
 const binarySha = hash(binary);
+const faultBuilt = buildNoble(out, ['live-test-barrier']);
+const faultBinary = path.join(out, 'noble-guard-fault');
+fs.copyFileSync(faultBuilt.executable, faultBinary);
+fs.chmodSync(faultBinary, 0o500);
+const faultBinarySha = hash(faultBinary);
 const expectedOf = id => byId.get(id).expected;
 const observations = {};
 
@@ -658,8 +670,68 @@ observations['GUARD-CASE-10'] = await observe('GUARD-CASE-10', async () => {
     static_witness: witness };
 });
 
-observations['GUARD-CASE-11'] = { case: 'not-executed',
-  reason: 'the feature-gated guard fault hook (owner decision 33) is not implemented yet' };
+// GUARD-CASE-11: the guard's exact engine execution faults under the feature binary's one-shot
+// selection, keyed by the SHA-256 of the guard's checked source (the fixed prelude and wrapper
+// the baseline invocation reports, then `run`): `exhaust:CAP` lowers that execution's step cap so
+// the guest's own meter exhausts; `trap` raises a Wasm trap before its first guest instruction.
+// The engine poisons itself on either, so the session must end rather than restore the frame.
+// Guard and body work share one meter that does not mark where the body starts, so the body is
+// observed unstarted only when no execution step was charged; any other count claims nothing.
+observations['GUARD-CASE-11'] = await observe('GUARD-CASE-11', async () => {
+  const expected = expectedOf('GUARD-CASE-11');
+  const input = byId.get('GUARD-CASE-11').input;
+  const listArgument = async session => {
+    const { companion } = await listSession(session, listSubject, fixture('head-of-nonempty.contract'),
+      fixture('head-of-nonempty.proof.lean'));
+    await session.push('argument', input.argument);
+    return { companion, slot: (await session.stack()).length - 1 };
+  };
+  const baseline = await withSession(faultBinary, out, 'guard-fault-baseline', async session => {
+    const { companion, slot } = await listArgument(session);
+    const accepted = await session.call(`invoke ${companion} ${slot}`);
+    await session.push('release', 'drop');
+    await session.push('empty', input.reject_argument);
+    const rejected = await session.call(`invoke ${companion} ${slot}`);
+    return { accepted, rejected };
+  });
+  const guardSource = `${baseline.accepted.invocation_prelude} ${baseline.accepted.wrapper_source} run`;
+  const guardDigest = sha(guardSource);
+  const faults = {};
+  for (const [name, selection] of [['exhaustion', `exhaust:${input.step_cap}:${guardDigest}`],
+    ['trap', `trap:${guardDigest}`]]) {
+    const run = await withSession(faultBinary, out, `guard-fault-${name}`, async session => {
+      const { companion, slot } = await listArgument(session);
+      const invoked = await session.call(`invoke ${companion} ${slot}`);
+      const later = await session.call('stack');
+      return { invoked, later };
+    }, { NOBLE_LIVE_TEST_GUARD_FAULT: selection });
+    const { invoked, later } = run;
+    faults[name] = {
+      selection,
+      outcome: invoked.outcome,
+      engine_outcome: invoked.engine_outcome ?? null,
+      quota_reason: invoked.quota_reason ?? null,
+      native_trap: invoked.native_trap ?? null,
+      execution_steps: invoked.execution_steps ?? null,
+      reflection_steps: invoked.reflection_steps ?? null,
+      session_state: invoked.session_state ?? null,
+      frame_restored: invoked.frame_restored ?? null,
+      guest_requests: invoked.guest_requests ?? null,
+      protected_operations: invoked.protected_operations ?? null,
+      distinct_from_precondition_reject: invoked.outcome !== baseline.rejected.outcome,
+      candidate_body_started: invoked.execution_steps === 0 ? false : null,
+      later_operation: { outcome: later.outcome, code: later.diagnostic?.code ?? null },
+    };
+  }
+  expectValue('baseline', { accepted: baseline.accepted.outcome, rejected: baseline.rejected.outcome },
+    expected.baseline);
+  for (const name of ['exhaustion', 'trap']) {
+    const { selection, ...observed } = faults[name];
+    expectValue(name, observed, expected[name]);
+  }
+  return { guard_source: guardSource, guard_source_sha256: guardDigest,
+    baseline: { accepted: baseline.accepted.outcome, rejected: baseline.rejected.outcome }, faults };
+});
 
 observations['GUARD-CASE-12'] = await observe('GUARD-CASE-12', async () => {
   const expected = expectedOf('GUARD-CASE-12');
@@ -686,7 +758,8 @@ observations['GUARD-CASE-12'] = await observe('GUARD-CASE-12', async () => {
 
 const { promotable, unmet, failed, not_executed: notExecuted } = deriveVerdicts(observations);
 const binaryAfter = hash(binary);
-const binaryChanged = binaryAfter !== binarySha;
+const faultBinaryAfter = hash(faultBinary);
+const binaryChanged = binaryAfter !== binarySha || faultBinaryAfter !== faultBinarySha;
 const verdictPromotable = binaryChanged ? [] : promotable;
 const failures = [...unmet.map(id => `${id}: ${observations[id].diagnostic}`),
   ...failed.map(id => `${id}: ${observations[id].diagnostic?.split('\n')[0]}`),
@@ -707,9 +780,13 @@ const acceptance = {
   projections: { sha256: projectionDigest, ids: CASE_IDS },
   binary: { built: built.executable_sha256, executed_sha256: binarySha, executed_sha256_after: binaryAfter },
   build: 'cargo build --locked -p noble-cli --bin noble',
+  guard_fault_binary: { built: faultBuilt.executable_sha256, executed_sha256: faultBinarySha,
+    executed_sha256_after: faultBinaryAfter,
+    build: 'cargo build --locked -p noble-cli --bin noble --features live-test-barrier',
+    used_by: ['GUARD-CASE-11'] },
   environment: Object.fromEntries(Object.keys(REVIEWED).map(key => [key, environment[key]])),
-  sessions: sessions.map(({ label, args, exit, signal, error, operations }) =>
-    ({ label, args, exit, signal, error, operations: operations.length })),
+  sessions: sessions.map(({ label, binary: executable, selection, args, exit, signal, error, operations }) =>
+    ({ label, binary: executable, selection, args, exit, signal, error, operations: operations.length })),
   raw_outputs: raw,
   observations,
   promotable: verdictPromotable,
@@ -719,6 +796,7 @@ const acceptance = {
   non_claims: [
     'No proof is claimed: promoted cases keep proof open; C1 for templates_of, C6 (Wasm lowering of wrappers) and PO-21 stay open.',
     'Admission uses the reviewed Lean sandbox and the repository MC1 contract library; their soundness is an explicit assumption (VC-GATE-03).',
+    'GUARD-CASE-11 is observed under a harness fault model (owner decisions 33 and 33a): a test-only feature build lowers one guard execution\'s step cap or traps it at the top of its guest frame. Faults the shipped binary could meet (allocation failure, a V8 trap mid-guard) are not injected, the quota expires before the guard\'s first execution step rather than inside dup/list.case, and that the body did not start rests on zero charged execution steps, not on a body-side witness.',
   ],
 };
 const receiptPath = path.join(out, 'acceptance.json');
