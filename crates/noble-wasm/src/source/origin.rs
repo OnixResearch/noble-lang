@@ -1264,7 +1264,6 @@ struct TemplateWalk {
     owner: OriginOwner,
     /// The `statics` row of each resolved static quotation body, by program index.
     static_rows: Vec<Option<u32>>,
-    static_visiting: Vec<bool>,
 }
 
 /// A bounded row index for a table of at most `MAX_ORIGIN_OPERATIONS` rows.
@@ -1377,95 +1376,147 @@ fn intern_static(statics: &mut Vec<OriginStaticBody>, body: OriginStaticBody) ->
     Some(row)
 }
 
-/// The content operation of one static body operation; a nested static
-/// quotation is resolved to its own row first. The selected call is never
-/// part of a classified static body.
-#[expect(
-    tigerstyle::mutating_input_in_pure,
-    reason = "Owner: noble-wasm-maintainers; it mutates only the walk's own exclusively borrowed derivation state; its mutual recursion with `static_row` follows the bounded, acyclic nesting of checked static quotation bodies."
-)]
-fn static_operation(
-    action: OriginAction,
-    programs: &[OriginProgram],
-    walk: &mut TemplateWalk,
-    depth: usize,
-) -> Option<OriginStaticOperation> {
+/// One static body operation looked up against the rows already resolved: a
+/// nested static quotation needs its own row first. The selected call is
+/// never part of a classified static body.
+enum StaticLookup {
+    Operation(OriginStaticOperation),
+    Need(usize),
+    Refuse,
+}
+
+fn static_operation(action: OriginAction, rows: &[Option<u32>]) -> StaticLookup {
     match action {
-        OriginAction::I64(value) => Some(OriginStaticOperation::I64(value)),
-        OriginAction::Add => Some(OriginStaticOperation::Add),
-        OriginAction::Sub => Some(OriginStaticOperation::Sub),
-        OriginAction::Mul => Some(OriginStaticOperation::Mul),
-        OriginAction::Dup => Some(OriginStaticOperation::Dup),
-        OriginAction::Drop => Some(OriginStaticOperation::Drop),
-        OriginAction::Swap => Some(OriginStaticOperation::Swap),
-        OriginAction::Dip => Some(OriginStaticOperation::Dip),
-        OriginAction::Run => Some(OriginStaticOperation::Run),
-        OriginAction::Compose => Some(OriginStaticOperation::Compose),
-        OriginAction::Quote { .. } => Some(OriginStaticOperation::Quote),
-        OriginAction::StaticProgram(child) => Some(OriginStaticOperation::Static(static_row(
-            child,
-            programs,
-            walk,
-            depth.checked_add(1)?,
-        )?)),
-        OriginAction::CallSelected(_) => None,
+        OriginAction::I64(value) => StaticLookup::Operation(OriginStaticOperation::I64(value)),
+        OriginAction::Add => StaticLookup::Operation(OriginStaticOperation::Add),
+        OriginAction::Sub => StaticLookup::Operation(OriginStaticOperation::Sub),
+        OriginAction::Mul => StaticLookup::Operation(OriginStaticOperation::Mul),
+        OriginAction::Dup => StaticLookup::Operation(OriginStaticOperation::Dup),
+        OriginAction::Drop => StaticLookup::Operation(OriginStaticOperation::Drop),
+        OriginAction::Swap => StaticLookup::Operation(OriginStaticOperation::Swap),
+        OriginAction::Dip => StaticLookup::Operation(OriginStaticOperation::Dip),
+        OriginAction::Run => StaticLookup::Operation(OriginStaticOperation::Run),
+        OriginAction::Compose => StaticLookup::Operation(OriginStaticOperation::Compose),
+        OriginAction::Quote { .. } => StaticLookup::Operation(OriginStaticOperation::Quote),
+        OriginAction::StaticProgram(child) => match rows.get(child) {
+            Some(Some(row)) => StaticLookup::Operation(OriginStaticOperation::Static(*row)),
+            Some(None) => StaticLookup::Need(child),
+            None => StaticLookup::Refuse,
+        },
+        OriginAction::CallSelected(_) => StaticLookup::Refuse,
     }
 }
 
-/// The row of one static quotation body, resolved by content after recipe
-/// normalization rather than by compiled program index, so two independently
-/// written but equal bodies share one row.
+/// One step of static-row resolution for the body at `index`: its row when
+/// every nested static body already has one, or the first nested body that
+/// does not.
+enum StaticStep {
+    Row(u32),
+    Need(usize),
+    Refuse,
+}
+
+/// Resolve the body at `index` when its nested bodies are resolved. Equal
+/// bodies share one row by content, after recipe normalization, rather than
+/// by compiled program index.
 #[expect(
     tigerstyle::mutating_input_in_pure,
-    reason = "Owner: noble-wasm-maintainers; it mutates only the walk's own exclusively borrowed derivation state; its mutual recursion with `static_operation` follows the bounded, acyclic nesting of checked static quotation bodies, refusing a revisited body."
+    reason = "Owner: noble-wasm-maintainers; it mutates only the walk's own exclusively borrowed static tables."
 )]
-fn static_row(
-    index: usize,
-    programs: &[OriginProgram],
-    walk: &mut TemplateWalk,
-    depth: usize,
-) -> Option<u32> {
-    if depth > MAX_ORIGIN_DEPTH {
-        return None;
+fn static_step(index: usize, programs: &[OriginProgram], walk: &mut TemplateWalk) -> StaticStep {
+    match walk.static_rows.get(index) {
+        Some(Some(row)) => return StaticStep::Row(*row),
+        Some(None) => {}
+        None => return StaticStep::Refuse,
     }
-    if let Some(row) = *walk.static_rows.get(index)? {
-        return Some(row);
-    }
-    if *walk.static_visiting.get(index)? {
-        return None;
-    }
-    let program = programs.get(index)?;
+    let Some(program) = programs.get(index) else {
+        return StaticStep::Refuse;
+    };
     if program.source_artifact != OriginSource::Definition
         || program.body_node.is_none()
         || program.operations.len() > MAX_ORIGIN_OPERATIONS
     {
-        return None;
+        return StaticStep::Refuse;
     }
-    *walk.static_visiting.get_mut(index)? = true;
     let mut operations = Vec::with_capacity(program.operations.len());
+    let mut pending = None;
     let mut at = 0usize;
-    let mut is_resolved = true;
-    while is_resolved && at < program.operations.len() {
-        match static_operation(program.operations[at].action, programs, walk, depth) {
-            Some(operation) => operations.push(operation),
-            None => is_resolved = false,
+    while pending.is_none() && at < program.operations.len() {
+        match static_operation(program.operations[at].action, &walk.static_rows) {
+            StaticLookup::Operation(operation) => operations.push(operation),
+            StaticLookup::Need(child) => pending = Some(StaticStep::Need(child)),
+            StaticLookup::Refuse => pending = Some(StaticStep::Refuse),
         }
         at += 1;
     }
-    if !is_resolved {
-        return None;
+    if let Some(step) = pending {
+        return step;
     }
-    let row = intern_static(
-        &mut walk.statics,
-        OriginStaticBody {
-            input_signature: program.input_signature,
-            output_signature: program.output_signature,
-            operations,
-        },
-    )?;
-    *walk.static_visiting.get_mut(index)? = false;
-    *walk.static_rows.get_mut(index)? = Some(row);
-    Some(row)
+    let body = OriginStaticBody {
+        input_signature: program.input_signature,
+        output_signature: program.output_signature,
+        operations,
+    };
+    let Some(row) = intern_static(&mut walk.statics, body) else {
+        return StaticStep::Refuse;
+    };
+    // A `?` on a mutable slot borrow extracts to an untyped control-flow pair
+    // under the pinned Aeneas Lean backend, so the slot write is a match.
+    match walk.static_rows.get_mut(index) {
+        Some(slot) => *slot = Some(row),
+        None => return StaticStep::Refuse,
+    }
+    StaticStep::Row(row)
+}
+
+/// Whether `index` is already on the pending resolution stack.
+fn is_pending(pending: &[usize], index: usize) -> bool {
+    let mut at = 0usize;
+    let mut is_found = false;
+    while !is_found && at < pending.len() {
+        is_found = pending[at] == index;
+        at += 1;
+    }
+    is_found
+}
+
+/// The row of one static quotation body. Nested bodies are resolved first
+/// with an explicit stack bounded by `MAX_ORIGIN_DEPTH`, and a body that is
+/// already pending is a cycle and refused. No step recurses back into the
+/// walk: the pinned Lean backend cannot prove a loop inside a recursive group
+/// monotone.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-wasm-maintainers; it mutates only the walk's own exclusively borrowed static tables."
+)]
+fn static_row(index: usize, programs: &[OriginProgram], walk: &mut TemplateWalk) -> Option<u32> {
+    // `pending` holds the ancestors of `current`; only owned indices move
+    // between them, so no borrow of the stack outlives one step.
+    let mut pending = Vec::with_capacity(MAX_ORIGIN_DEPTH);
+    let mut current = index;
+    let mut resolved = None;
+    let mut is_refused = false;
+    while !is_refused && resolved.is_none() {
+        match static_step(current, programs, walk) {
+            StaticStep::Row(row) => match pending.pop() {
+                Some(parent) => current = parent,
+                None => resolved = Some(row),
+            },
+            StaticStep::Need(child) => {
+                if pending.len() >= MAX_ORIGIN_DEPTH
+                    || child == current
+                    || is_pending(&pending, child)
+                {
+                    is_refused = true;
+                } else {
+                    pending.push(current);
+                    current = child;
+                }
+            }
+            StaticStep::Refuse => is_refused = true,
+        }
+    }
+    resolved
 }
 
 /// The class row a cell already visited in this walk keeps, if any.
@@ -1509,8 +1560,10 @@ fn intern_class(classes: &mut Vec<OriginClass>, binding: OriginBinding) -> Optio
         at += 1;
     }
     if found < classes.len() {
-        let class = classes.get_mut(found)?;
-        class.occurrences = class.occurrences.checked_add(1)?;
+        match classes.get_mut(found) {
+            Some(class) => class.occurrences = class.occurrences.checked_add(1)?,
+            None => return None,
+        }
         return u32::try_from(found).ok();
     }
     if classes.len() >= MAX_ORIGIN_PROGRAMS {
@@ -1556,7 +1609,6 @@ fn cell_binding(
                 *program_index,
                 programs,
                 walk,
-                0,
             )?))
         }
         OriginProgramValue::Quote {
@@ -1642,7 +1694,6 @@ fn template_projection(
         captures: Vec::new(),
         owner: OriginOwner::Absent,
         static_rows: alloc::vec![None; programs.len()],
-        static_visiting: alloc::vec![false; programs.len()],
     };
     let mut fixed_nodes = 0usize;
     template_class(value, programs, named, &mut walk, 0, &mut fixed_nodes)?;
@@ -1706,7 +1757,12 @@ fn verified_template(output: &OriginOutput, programs: &[OriginProgram], named: u
 /// projection and requires no lexical recursive owner. A stored projection that
 /// is absent, forged, truncated or stale is refused.
 pub(super) fn verified_templates(origin: &SelectedOriginMetadata) -> bool {
-    let mut is_verified = !origin.outputs.is_empty() && origin.outputs.len() <= MAX_ORIGIN_PROGRAMS;
+    // The bound check returns early: a comparison bound to a loop flag
+    // extracts as a proposition rather than a Bool.
+    if origin.outputs.is_empty() || origin.outputs.len() > MAX_ORIGIN_PROGRAMS {
+        return false;
+    }
+    let mut is_verified = true;
     let mut at = 0usize;
     while is_verified && at < origin.outputs.len() {
         is_verified = verified_template(
