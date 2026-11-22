@@ -1,0 +1,1 @@
+module logic@1 [ proof 1 twice-refl : [ (Pi (x I64) (Pi (h (Eq I64 x x)) (Eq I64 x x))) ] [ (intro (x I64) (intro (h (Eq I64 x x)) (refl x))) ] proof 1 c06 infer : [ (Pi (x I64) (Pi (h1 (Eq I64 x x)) (Pi (h2 (Eq I64 x x)) (Eq I64 x x)))) ] [ (intro (x I64) (intro (h1 (Eq I64 x x)) (intro (h2 (Eq I64 x x)) (app (use twice-refl) x (infer))))) ] ]

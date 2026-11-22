@@ -1,0 +1,1 @@
+module logic@1 [ proof 1 poly-refl : [ (Pi (A Type0) (Pi (x A) (Eq A x x))) ] [ (intro (A Type0) (intro (x A) (refl x))) ] proof 1 context infer : [ (Pi (B Type0) (Pi (y (List B)) (Eq (List B) y y))) ] [ (intro (B Type0) (intro (y (List B)) (app (use poly-refl) y))) ] ]

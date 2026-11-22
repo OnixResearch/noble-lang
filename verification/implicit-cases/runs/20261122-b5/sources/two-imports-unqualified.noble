@@ -1,0 +1,1 @@
+module user@1 [ proof 1 c07u infer : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (app (use assoc) x)) ] ]

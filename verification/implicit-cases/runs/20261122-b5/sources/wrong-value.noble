@@ -1,0 +1,1 @@
+module logic@1 [ proof 1 base : [ (Pi (x I64) (Pi (h (Eq I64 x x)) (Pi (A Type0) (Pi (y (Pair (List A) I64)) (Eq (Pair (List A) I64) y y))))) ] [ (intro (x I64) (intro (h (Eq I64 x x)) (intro (A Type0) (intro (y (Pair (List A) I64)) (refl y))))) ] proof 1 c09 infer : [ (Pi (x I64) (Pi (w Bool) (Eq Bool w w))) ] [ (intro (x I64) (intro (w Bool) (app (use base) x (refl x) w))) ] ]

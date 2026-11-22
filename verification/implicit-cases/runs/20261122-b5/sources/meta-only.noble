@@ -1,0 +1,1 @@
+module logic@1 [ proof 1 t : [ (Pi (A Type0) (Pi (x A) (Pi (y A) (Eq A y y)))) ] [ (intro (A Type0) (intro (x A) (intro (y A) (refl y)))) ] proof 1 c08 infer : [ (Pi (w I64) (Eq I64 w w)) ] [ (intro (w I64) (apply (apply (apply (use t) (infer)) (infer)) w)) ] ]

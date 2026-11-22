@@ -1,0 +1,1 @@
+module imported@1 [ proof 1 imported-list infer : [ (Pi (x (List I64)) (Eq (List I64) x x)) ] [ (intro (x (List I64)) (app (use alias.poly-refl) x)) ] ]

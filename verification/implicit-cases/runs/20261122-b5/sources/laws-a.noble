@@ -1,0 +1,1 @@
+module lawsA@1 [ proof 1 assoc : [ (Pi (A Type0) (Pi (x A) (Eq A x x))) ] [ (intro (A Type0) (intro (x A) (refl x))) ] export assoc ]

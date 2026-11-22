@@ -1,0 +1,1 @@
+module logic@2 [ proof 1 poly-refl : [ (Pi (A Type0) (Pi (B Type0) (Pi (x A) (Eq A x x)))) ] [ (intro (A Type0) (intro (B Type0) (intro (x A) (refl x)))) ] export poly-refl ]

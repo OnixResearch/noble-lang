@@ -39,7 +39,7 @@
   SHA-256, the model and checker revisions and the consumer policy
   (`elaboration_record_maps_every_explicit_node_to_the_abbreviated_source`, on a real staged and
   checked module).
-- [ ] [serial] Execute IMPL-CASE-01 to IMPL-CASE-20 with source-bound receipts, checking explicit expansions through the source checker and the pinned Lean consumer. r[IMPL-ELAB-01] r[IMPL-TRUST-01] r[IMPL-EXPOSE-01]
+- [x] [serial] Execute IMPL-CASE-01 to IMPL-CASE-20 with source-bound receipts, checking explicit expansions through the source checker and the pinned Lean consumer. r[IMPL-ELAB-01] r[IMPL-TRUST-01] r[IMPL-EXPOSE-01]
   Progress (2026-11-22): every case input was first run through the production `verify-module`
   (and, for IMPL-CASE-20, `session --declared-modules`) to check the designs before writing the
   gate. That run found three gaps against the requirements, now closed in the elaborator:
@@ -60,6 +60,15 @@
   IMPL-CASE-14's module-version change is a different head identity (`logic@2/poly-refl`), not a
   changed revision, and IMPL-CASE-16's `?` holes are tokenized as atoms and refused where they
   stand.
+  Ticked 2026-11-22 (Cairn batch 5). The seven amendments are recorded in the case file
+  (integrator decision 37, accepted by the owner as decision 38). `verification/implicit-cases/gate.mjs`
+  ran at commit `b4c63a1e` with 100 determinism runs per pair
+  ([`runs/20261122-b5`](../../../verification/implicit-cases/runs/20261122-b5/acceptance.json),
+  sha256 `1641c70c…`, source revision `sha256:ed0941eb…`, binary `38d1e33d…` before and after):
+  verdict `all-passed`, IMPL-CASE-01..20 promotable. Every case is promoted to
+  implemented/passed with proof open and explicit trust; the batch-5 review is the integrator
+  self-review `review-integrator-2026-11-22-batch5.md` under owner decision 38 (owner veto at the
+  push).
 - [ ] [serial] Prove first-order unification uniqueness and fragment completeness for the constraint algebra in reviewed Lean. Pursue Rust elaborator refinement under the existing Charon/Aeneas policy. Keep source-to-Lean translation correctness as its separate open obligation. r[IMPL-ELAB-01]
   Progress (2026-10-31): the Lean half is proved at model level in
   `proofs/foundation/NobleFoundation/ImplicitUnification.lean`.
