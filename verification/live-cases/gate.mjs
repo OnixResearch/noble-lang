@@ -2103,14 +2103,17 @@ async function observeLive08(feature) {
     && after.arena.protected_operations === before.arena.protected_operations
     && after.arena.source_generation === before.arena.source_generation;
 
-  // Variant 1 and the fresh-evidence publication, on the default binary.
+  // Variant 1 and the fresh-evidence publication, on the default binary. A
+  // saved Program runs only on a stack holding exactly its input, so the
+  // retained `[ addone ]` is run once, after the publication; the namespace is
+  // observed with `addone` calls above it.
   const live = start('LIVE-08-proof', args, live08Consumer);
   const missing = await live.submit(`:reload ${files.source}`);
   const stagedOld = await live.submit(`:evidence ${oldOffer}`);
   const initial = await live.submit(`:reload ${files.source}`, live08ProofTimeout);
-  const saved = await live.submit(input.retained_old_program);
-  const oldBefore = await live.submit(`dup ${input.old_claim.input} swap run`);
+  const oldBefore = await live.submit(`${input.old_claim.input} addone`);
   await live.submit('drop');
+  const saved = await live.submit(input.retained_old_program);
   const arenaBefore = await live.submit(':arena');
   replace(files.source, newBytes);
   const stagedReplay = await live.submit(`:evidence ${oldOffer}`);
@@ -2118,19 +2121,17 @@ async function observeLive08(feature) {
   const arenaAfter = await live.submit(':arena');
   const namespace = await live.submit(`${input.old_claim.input} addone`);
   await live.submit('drop');
-  const oldAfterRefusal = await live.submit(`dup ${input.old_claim.input} swap run`);
-  await live.submit('drop');
   const consumed = await live.submit(`:reload ${files.source}`);
   const stagedFresh = await live.submit(`:evidence ${newOffer}`);
   const published = await live.submit(`:reload ${files.source}`, live08ProofTimeout);
   const fresh = await live.submit(`${input.new_claim.input} addone`);
   await live.submit('drop');
-  const oldAfterPublication = await live.submit(`dup ${input.old_claim.input} swap run`);
+  const oldAfterPublication = await live.submit(`${input.old_claim.input} swap run`);
   const optional = await live.submit('def other [ 3 + ]');
   await live.close(0);
   keep('LIVE-08', 'proof-required', {
     missing, stagedOld, initial, saved, oldBefore, arenaBefore, stagedReplay, replayed, arenaAfter, namespace,
-    oldAfterRefusal, consumed, stagedFresh, published, fresh, oldAfterPublication, optional,
+    consumed, stagedFresh, published, fresh, oldAfterPublication, optional,
   });
 
   // Variant 2: capture the bytes emitted for the old source in one feature
@@ -2169,7 +2170,7 @@ async function observeLive08(feature) {
   const replayArenaAfter = await replay.submit(':arena');
   const replayNamespace = await replay.submit(`${input.old_claim.input} addone`);
   await replay.submit('drop');
-  const replayOld = await replay.submit(`dup ${input.old_claim.input} swap run`);
+  const replayOld = await replay.submit(`${input.old_claim.input} swap run`);
   await replay.close(0);
   keep('LIVE-08', 'artifact-replay', {
     captured, replayInitial, replaySaved, replayArenaBefore, bytecode, replayArenaAfter, replayNamespace, replayOld,
@@ -2191,7 +2192,7 @@ async function observeLive08(feature) {
     optional: optional.outcome,
   });
   observe('LIVE-08', 'input.initial_definition', committedAt(initial, 1)
-    && initial.source_sha256 === sha256(initialBytes) && isStack(oldBefore, ['Program:', oldResult]), {
+    && initial.source_sha256 === sha256(initialBytes) && isStack(oldBefore, [oldResult]), {
     source_sha256: initial.source_sha256, old_before: stackOf(oldBefore),
   });
   observe('LIVE-08', 'input.new_definition', committedAt(published, 2) && published.source_sha256 === sha256(newBytes)
@@ -2200,7 +2201,7 @@ async function observeLive08(feature) {
     saved: stackOf(saved),
   });
   observe('LIVE-08', 'input.old_claim', stagedOld.outcome === 'evidence-staged'
-    && initial.proof_admission.contract_sha256 === sha256(oldContract) && isStack(oldBefore, ['Program:', oldResult]), {
+    && initial.proof_admission.contract_sha256 === sha256(oldContract) && isStack(oldBefore, [oldResult]), {
     contract_sha256: initial.proof_admission.contract_sha256, core_subject: initial.proof_admission.core_subject,
   });
   observe('LIVE-08', 'input.new_claim', stagedFresh.outcome === 'evidence-staged'
@@ -2251,9 +2252,8 @@ async function observeLive08(feature) {
     });
   observe('LIVE-08', 'expected.old_saved_program_still_uses_old_definition',
     expected.old_saved_program_still_uses_old_definition === true
-      && isStack(oldAfterRefusal, ['Program:', oldResult]) && isStack(oldAfterPublication, ['Program:', oldResult])
-      && isStack(replayOld, ['Program:', oldResult]), {
-      after_refusal: stackOf(oldAfterRefusal), after_publication: stackOf(oldAfterPublication),
+      && isStack(oldAfterPublication, [oldResult]) && isStack(replayOld, [oldResult]), {
+      after_publication: stackOf(oldAfterPublication), after_refusal: stackOf(replayOld),
     });
 }
 
