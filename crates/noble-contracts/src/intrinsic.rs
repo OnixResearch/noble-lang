@@ -3905,6 +3905,10 @@ fn contract_proof(
 /// Refuse a contract outside the selected unary I64 rule. An interface other
 /// than one I64 input and one I64 output is an unsupported goal; a
 /// precondition other than the atom `true` is a rejected proof.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; this helper refuses hostile source contracts with typed diagnostics, so an assertion would turn a refusal into a panic"
+)]
 fn check_unary_true_rule(
     obligation: &ProofObligation,
     contract: &ContractGoal,

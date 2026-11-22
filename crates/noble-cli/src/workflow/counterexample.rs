@@ -237,69 +237,68 @@ fn node(
 /// semantics, and whether any step wrapped. `None` when the body does not
 /// leave exactly one `I64`.
 fn execute(plan: &Plan, input: i64) -> Option<(i64, bool)> {
-    let mut stack = std::vec::Vec::with_capacity(plan.operations.len().saturating_add(1));
-    stack.push(Scalar::I64(input));
-    let mut has_wrapped = false;
+    let mut machine = Machine {
+        stack: std::vec::Vec::with_capacity(plan.operations.len().saturating_add(1)),
+        has_wrapped: false,
+    };
+    machine.stack.push(Scalar::I64(input));
     for operation in &plan.operations {
         match operation {
-            Operation::Literal(value) => stack.push(*value),
+            Operation::Literal(value) => machine.stack.push(*value),
             Operation::Dup => {
-                let top = *stack.last()?;
-                stack.push(top);
+                let top = *machine.stack.last()?;
+                machine.stack.push(top);
             }
             Operation::Drop => {
-                stack.pop()?;
+                machine.stack.pop()?;
             }
             Operation::Swap => {
-                let top = stack.pop()?;
-                let below = stack.pop()?;
-                stack.push(top);
-                stack.push(below);
+                let top = machine.stack.pop()?;
+                let below = machine.stack.pop()?;
+                machine.stack.push(top);
+                machine.stack.push(below);
             }
-            Operation::Add => {
-                let (sum, overflowed) = arithmetic(&mut stack, i64::overflowing_add)?;
-                has_wrapped |= overflowed;
-                stack.push(Scalar::I64(sum));
-            }
-            Operation::Sub => {
-                let (difference, overflowed) = arithmetic(&mut stack, i64::overflowing_sub)?;
-                has_wrapped |= overflowed;
-                stack.push(Scalar::I64(difference));
-            }
-            Operation::Mul => {
-                let (product, overflowed) = arithmetic(&mut stack, i64::overflowing_mul)?;
-                has_wrapped |= overflowed;
-                stack.push(Scalar::I64(product));
-            }
+            Operation::Add => machine.arithmetic(i64::overflowing_add)?,
+            Operation::Sub => machine.arithmetic(i64::overflowing_sub)?,
+            Operation::Mul => machine.arithmetic(i64::overflowing_mul)?,
             Operation::Equals => {
-                let (below, top) = operands(&mut stack)?;
-                stack.push(Scalar::Bool(below == top));
+                let (below, top) = machine.operands()?;
+                machine.stack.push(Scalar::Bool(below == top));
             }
         }
     }
-    match stack.as_slice() {
-        [Scalar::I64(output)] => Some((*output, has_wrapped)),
+    match machine.stack.as_slice() {
+        [Scalar::I64(output)] => Some((*output, machine.has_wrapped)),
         _ => None,
     }
 }
 
-/// Pop the top two `I64` values, the top last: MC1 `a b op` is `op a b`.
-fn operands(stack: &mut std::vec::Vec<Scalar>) -> Option<(i64, i64)> {
-    let Some(Scalar::I64(top)) = stack.pop() else {
-        return None;
-    };
-    let Some(Scalar::I64(below)) = stack.pop() else {
-        return None;
-    };
-    Some((below, top))
+/// The operand stack of one semantic replay, bottom first.
+struct Machine {
+    stack: std::vec::Vec<Scalar>,
+    has_wrapped: bool,
 }
 
-fn arithmetic(
-    stack: &mut std::vec::Vec<Scalar>,
-    apply: fn(i64, i64) -> (i64, bool),
-) -> Option<(i64, bool)> {
-    let (below, top) = operands(stack)?;
-    Some(apply(below, top))
+impl Machine {
+    /// Pop the top two `I64` values, the top last: MC1 `a b op` is `op a b`.
+    fn operands(&mut self) -> Option<(i64, i64)> {
+        let Some(Scalar::I64(top)) = self.stack.pop() else {
+            return None;
+        };
+        let Some(Scalar::I64(below)) = self.stack.pop() else {
+            return None;
+        };
+        Some((below, top))
+    }
+
+    /// Apply one wrapping arithmetic word and record whether it wrapped.
+    fn arithmetic(&mut self, apply: fn(i64, i64) -> (i64, bool)) -> Option<()> {
+        let (below, top) = self.operands()?;
+        let (value, has_overflowed) = apply(below, top);
+        self.has_wrapped |= has_overflowed;
+        self.stack.push(Scalar::I64(value));
+        Some(())
+    }
 }
 
 /// Evaluate a predicate node under MC1 `evaluate`, at one input and an
