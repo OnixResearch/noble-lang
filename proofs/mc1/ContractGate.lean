@@ -1,6 +1,7 @@
 import NobleContracts
 import NobleContracts.Refutation
 import NobleContracts.NamedV3
+import NobleContracts.NamedV3Lifted
 import NobleContracts.Merge
 import NobleContracts.SpecQuality
 import NobleContracts.Wire
@@ -113,7 +114,18 @@ elab "check_contract_library" : command => do
     ``NobleContracts.mergeRel_identical_increment, ``NobleContracts.mergeRel_independent_changes,
     ``NobleContracts.conflict_incompatible_increments,
     ``NobleContracts.no_candidate_for_incompatible_increments,
-    ``NobleContracts.wrapping_boundary_is_not_merge]
+    ``NobleContracts.wrapping_boundary_is_not_merge,
+    -- Reusable contract calls, the follow-up of the NamedV3 amendment of 2026-11-20: T4, T2 and
+    -- T5 restricted to lifted frames (`exportedLiftedClaim`), their witnesses (two segments with
+    -- a postcondition over the input, and the PREUSE-S04 shape as a caller's lifted claim through
+    -- a concrete caller table), and the public `Holds₂` evaluation lemmas (review m7).
+    ``NobleContracts.NamedV3.liftedClaim_of_mc1, ``NobleContracts.NamedV3.liftedCallFrame,
+    ``NobleContracts.NamedV3.liftedChainExec, ``NobleContracts.NamedV3.liftedChainClaim,
+    ``NobleContracts.NamedV3.twoIncrementSegments, ``NobleContracts.NamedV3.swap_exported,
+    ``NobleContracts.NamedV3.incrementSubject_lifted, ``NobleContracts.NamedV3.swapCall_lifted,
+    ``NobleContracts.NamedV2.holds₂_bool, ``NobleContracts.NamedV2.not_holds₂_false,
+    ``NobleContracts.NamedV2.holds₂_not, ``NobleContracts.NamedV2.holds₂_and,
+    ``NobleContracts.NamedV2.holds₂_lt, ``NobleContracts.NamedV2.holds₂_le]
   for name in required do
     match env.find? name with
     | some (.thmInfo _) => pure ()

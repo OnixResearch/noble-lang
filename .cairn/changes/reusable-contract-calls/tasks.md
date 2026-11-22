@@ -26,6 +26,18 @@
   generalization stay open: `exportedClaim` is partial correctness, so it does not yield a run
   on the bare input stack, and a frame result for profile code needs its own underflow
   argument before any tail outside the MC1 preimage can be admitted.
+  Progress (2026-11-22, later): closed by restriction, as the task allows ("restrict both and
+  record it"); see the design amendment of 2026-11-22. `NobleContracts/NamedV3Lifted.lean`
+  defines `exportedLiftedClaim` (frame, input and result are lifts of MC1 stacks) and proves
+  T4 (`liftedClaim_of_mc1`), T2 (`liftedCallFrame`) and T5 (`liftedChainExec`,
+  `liftedChainClaim`) for it. Lifted chains mix call steps with caller code segments of MC1
+  profile code, carry caller values below a callee's arguments, and give the caller a lifted
+  claim whose postcondition relates input and result. Witnesses: `twoIncrementSegments` and
+  `swapCall_lifted` (the S04 shape `[ swap d.sub2 ]` with an `increment` callee through a
+  concrete caller table). `ContractGate.lean` pins these eight theorems and the six `Holds₂`
+  lemmas (169 required theorems; each depends on `propext` and `Quot.sound` only, the `Holds₂`
+  lemmas also on `Classical.choice`). No bridge at arbitrary named frames is claimed. The box
+  is ticked with the MC1 lane receipt of the batch that carries this module.
 - [ ] [serial] Implement the law-bundle record, explicit selection, ambiguity refusal, checked specialization and bundle invalidation. Execute the negative and import-stability cases. r[PREUSE-BUNDLE-01]
 - [ ] [serial] At sync, register PREUSE-S01 to S22 and the bundle cases as conformance designs, add a `PREUSE` evidence route to `tools/check-specs.mjs` `ROUTES`, refresh generated views and the ledger, then execute and retain source-bound receipts. Promote no status beyond its receipts. r[PREUSE-EVID-01]
 - [ ] [serial] Discharge or explicitly keep open correspondence obligations C1-C8 (PO-15/16/17/18/19/20) through their own routes, with artifact correspondence coordinated with #10. Consider archive only after implementation, evidence and separately reviewed gates. r[PREUSE-EVID-01]
