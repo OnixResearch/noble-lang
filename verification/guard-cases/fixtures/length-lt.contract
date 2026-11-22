@@ -1,0 +1,6 @@
+(contract 1 length-lt
+  (input (xs (List I64)))
+  (output (y I64))
+  (program [ (block () (I64) [ 0 ]) (block (I64 (List I64)) (I64) [ drop ]) list.case ])
+  (requires (lt 0 (length (in xs))))
+  (ensures true))

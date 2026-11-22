@@ -1181,12 +1181,15 @@ await import('data:text/javascript;base64,'+Buffer.from(parts.join('')).toString
         // Only a deliberately feature-built test binary can propagate this
         // private one-shot FIFO barrier into its otherwise env-cleared worker.
         // The hook delays a real guest or candidate, never grants authority
-        // or changes source/byte admission.
+        // or changes source/byte admission. The guard fault selection makes
+        // one selected guest execution exhaust a lowered step cap or trap at
+        // its first instruction (GUARD-CASE-11's harness fault model).
         for key in [
             "NOBLE_LIVE_TEST_BARRIER_DIR",
             "NOBLE_LIVE_TEST_BARRIER_POINT",
             "NOBLE_LIVE_TEST_BARRIER_EXPECTED",
             "NOBLE_LIVE_TEST_PROPOSAL_TAMPER",
+            "NOBLE_LIVE_TEST_GUARD_FAULT",
         ] {
             if let Some(value) = std::env::var_os(key) {
                 command.env(key, value);

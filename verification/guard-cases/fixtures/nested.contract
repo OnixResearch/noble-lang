@@ -1,0 +1,6 @@
+(contract 1 head-of-nonempty-nested
+  (input (xs (List (List I64))))
+  (output (y (List I64)))
+  (program [ (block () ((List I64)) [ 0 nil cons ]) (block ((List I64) (List (List I64))) ((List I64)) [ drop ]) list.case ])
+  (requires (not (is-nil (in xs))))
+  (ensures true))

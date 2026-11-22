@@ -7,8 +7,10 @@
 // and every raw output file it wrote. Promotion verdicts are derived from the observations: a case
 // is `promotable` only when its lane observed every registered expectation.
 //
-// OWN-CASE-03 is the design's case: 8-leaf `compose` trees of captured I64 Programs. The lane
-// records whether each tree executed; a refused deep chain is an unmet case, never a narrowed one.
+// OWN-CASE-03 runs `compose` trees of captured I64 Programs as amended by owner decision 35: the
+// 8-leaf balanced tree, the 8-leaf deep chains (registered as refused at compose 5 by the summary
+// bound) and 4-leaf balanced, left-deep and right-deep trees. A variant whose observation differs
+// from its registration makes the case unmet, never narrowed.
 // OWN-CASE-05 uses a policy-denied effect inside a dispatched frame after the Program is produced;
 // `test.abort` is not installable in this profile and its internal-diagnostic refusal is recorded
 // as a frontend-defect witness, not as the case's success condition.
@@ -218,8 +220,8 @@ observe('OWN-CASE-01', 'crates/noble-cli/tests/live_slot_direct_quote.mjs', expe
   };
 });
 
-// OWN-CASE-02 and OWN-CASE-03: shared duplicates in both orders and the design's captured-I64
-// trees. A deep chain refused by the summary node bound makes OWN-CASE-03 unmet, with the refusal
+// OWN-CASE-02 and OWN-CASE-03: shared duplicates in both orders and the captured-I64 trees. Each
+// tree is compared with its registered variant (executed result, or the bound's refusal),
 // recorded exactly as observed.
 observe('OWN-CASE-02', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', expected => {
   const executed = run(out, 'own-02-03',
@@ -250,8 +252,21 @@ observe('OWN-CASE-03', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', e
         + `registered ${JSON.stringify(registered)}`);
     }
   };
+  // Each registered variant is either an executed tree (result and releases) or, under the
+  // amended design (owner decision 35), the summary bound's refusal at a stated compose.
   const treeOf = (name, row) => {
     const registered = expected.variants[name];
+    if (registered.refused_at_compose !== undefined) {
+      if (!row || row.refused !== true) {
+        mismatches.push(`OWN-CASE-03 ${name} was expected to be refused: ${JSON.stringify(row ?? null)}`);
+        return { name, executed: true, refused: false, row: row ?? null };
+      }
+      check(`OWN-CASE-03 ${name} refusal point`, row.refused_at_compose, registered.refused_at_compose);
+      check(`OWN-CASE-03 ${name} diagnostic`, row.diagnostic, registered.diagnostic);
+      check(`OWN-CASE-03 ${name} session`, row.session_state, registered.session_state);
+      return { name, executed: false, refused: true, refused_at_compose: row.refused_at_compose,
+        diagnostic: row.diagnostic, session_state: row.session_state };
+    }
     if (!row || row.refused === true) {
       mismatches.push(`OWN-CASE-03 ${name} did not execute: ${JSON.stringify(row ?? null)}`);
       return { name, executed: false, refusal: row ?? null };
@@ -266,9 +281,8 @@ observe('OWN-CASE-03', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', e
     return { name, executed: true, released_before_root: row.released_before_root,
       before: row.before, after: row.after };
   };
-  const balanced = treeOf('balanced', trees.balanced);
-  const left = treeOf('left-deep', trees.left_deep);
-  const right = treeOf('right-deep', trees.right_deep);
+  const variants = Object.fromEntries(Object.keys(expected.variants)
+    .map(name => [name, treeOf(name, trees[name.replace(/-/g, '_')])]));
   const control = trees.bounded_control;
   check('OWN-CASE-03 control refusal point', control?.refused_at_compose,
     expected.bounded_control.refused_at_compose);
@@ -277,7 +291,7 @@ observe('OWN-CASE-03', 'crates/noble-cli/tests/live_slot_ownership_cases.mjs', e
   check('OWN-CASE-03 control session', control?.session_state,
     expected.bounded_control.session_state);
   check('OWN-CASE-03 control exit', control?.exit, 2);
-  const results = { balanced, left_deep: left, right_deep: right, bounded_control: control };
+  const results = { variants, bounded_control: control };
   if (mismatches.length) {
     // Every observed variant travels with the mismatch list, so the receipt carries them all.
     throw new Mismatch(`${mismatches.join('; ')} :: ${JSON.stringify(results)}`);
@@ -452,7 +466,7 @@ const acceptance = {
   failed_cases: failedCases,
   withheld,
   non_claims: [
-    'OWN-CASE-03 executes the design\'s captured-I64 leaves (`quote [ + ] compose`, one dynamic I64 capture each). The balanced tree runs (36 before and after 14 releases); the left- and right-deep 8-leaf chains are refused at compose 5 by the anonymous summary\'s 32-node bound. The design\'s deep trees are therefore not executed, and the case is not promoted on this receipt.',
+    'OWN-CASE-03 executes captured-I64 leaves (`quote [ + ] compose`, one dynamic I64 capture each) under owner decision 35: the 8-leaf deep chains are registered as refused at compose 5 by the anonymous summary\'s 32-node bound, so 8-leaf deep shape independence is not observed; it is observed for 4 leaves (balanced, left-deep and right-deep alike) and the 8-leaf balanced tree.',
     'OWN-CASE-05 is withheld. The lane records the abnormal exit of a root that produced a Program (no saved owner, request trace [dispatch allowed, effect denied], poisoned session) and the frame pins the failed root still held; the host neither releases nor counts them, so "frame pins are released exactly once" is not observed. Per-frame release accounting belongs to live-reference-lifetimes (decision 6, LREF-EXIT-01). `test.abort` is not installable in this profile and its internal-diagnostic refusal is a frontend-defect witness, not success.',
     'OWN-CASE-02 observes shared-owner order independence through the surviving owner running and released owners being refused; the runtime exposes no live-cell count, so reclamation timing is not directly observed.',
     'OWN-CASE-04 registers and executes the design\'s `Account@1` opaque nominal and source programs through the real CLI. The borrow variants are inapplicable (owner decision 2026-11-20, decision 7: no borrow profile is selected).',

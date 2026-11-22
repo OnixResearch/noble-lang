@@ -48,6 +48,14 @@ pub(in crate::core::companions) fn dispatch(
     operation: &str,
     args: &[&str],
 ) -> crate::core::companions::Attempt<crate::workflow::encoding::Json> {
+    // A poisoned engine never runs again and nothing it parked is restored.
+    if let Some(outcome) = &driver.terminated {
+        return Err(crate::core::companions::Refused::new(
+            "terminated-after-runtime-failure",
+            "session-terminated",
+            std::format!("the session ended after a {outcome} guest exit; no later operation runs"),
+        ));
+    }
     match operation {
         "contract" => {
             attempt!(crate::core::companions::entry::require(args, 1));

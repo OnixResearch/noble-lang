@@ -60,5 +60,48 @@
   `eq 5` accept/reject). Still open from this task: an execution of the companion-level
   `op_invoke` path against a frozen executable with an admitted list-contract proof (GUARD-CASE
   lane, task 3).
+  Reworked 2026-11-22 (owner decision 32, delegated: "do what is most correct/best long term").
+  The `[list, companion]`-only layout and its `swap drop` prelude consumed the session and could
+  not observe GUARD-CASE-03's tail clause, while the design names "the existing op_invoke route"
+  with an argument injection taken from a session slot. `invoke_list` now copies the selected
+  slot's list into a Program cell (`dup quote`, carried to the top past the cells above the slot;
+  `quote` captures only data, K-PROG-07), parks the whole frame as the v1 path does, injects the
+  copy and the retained subject into a fresh frame, runs the unchanged live text after the
+  `[ run ] dip` prelude, restores the frame (tail and companion preserved, identity re-checked)
+  and drops the copy on every path; a slot more than 32 cells below the top is refused at
+  `stack-depth`. Reports carry `invocation_prelude` and `invocation_argument_copy`. Observed:
+  `cargo test -p noble-cli --test smoke guardv2` -> 5 passed, including the new prelude
+  composition and the copy past a cell above the slot.
 - [ ] [serial] Register and execute GUARD-CASE-01…12 against frozen executables, retaining stacks, identities, counters and refusal stages; keep exhaustion/trap distinct from rejection. r[GUARD-BIND-01] r[GUARD-CORR-01]
+  Progress (2026-11-22): registered in `specs/conformance/guard-cases.json` (profile
+  `Bounded-Applicability-Design`, all twelve absent/not-run/open/unassessed, citing the canonical
+  VC-LOGIC-02, VC-USE-01, VC-ADMIT-05 and VC-COMPOSE-01). A separate file, not
+  `contract-cases.json` as the design suggested, because the MC2 gate treats any other case in
+  that file as unscoped. Case designs follow owner decisions 32-34: GUARD-CASE-03 keeps its tail
+  clause; GUARD-CASE-11 uses a harness-level fault model; GUARD-CASE-02's substituted binding runs
+  as a core control (`controls/guard.rs`); its registered refusal is `correspondence-mismatch`,
+  the code `release::correspond` returns for evidence presented under another contract, where
+  the design had guessed `MismatchedContext`/`StaleContext`. Three designs were made executable:
+  GUARD-CASE-07's changed predicate uses
+  `ensures true` on both contracts (the design's unchanged `head` postcondition is unprovable
+  under `requires true`, so that contract could never be admitted); GUARD-CASE-10 records every
+  guarded composition refusing at the implication (`rules/derive.rs::composition` composes only
+  two `IncrementBy` premises, so no composite with a guard can form) and keeps the existing
+  control that a derived increment composite carries no guard; GUARD-CASE-08's family variant
+  presents a builder with a changed captured constant.
+  Progress (2026-11-22, before the first gate run): the design's empty `[]` arguments in
+  GUARD-CASE-03 and -09 were registered as a bare `nil`, whose submission leaves the element type
+  open, so its slot is refused at injection typing (`stack-type`, GUARD-CASE-12's refusal); they
+  are now spelled `nil dup 0 swap cons drop`, an empty `List I64` (the nested argument likewise).
+  GUARD-CASE-11 is implemented under decision 33 and amended under decision 33a (the case file's
+  `amendments` block): the test-only `live-test-barrier` feature build's one-shot
+  `NOBLE_LIVE_TEST_GUARD_FAULT` selection, keyed by the SHA-256 of the guard's checked source,
+  either lowers that one execution's step cap or raises a Wasm trap at the top of its guest
+  frame. `noble companions` reports an abnormal guard exit as an `invoke` line with outcome
+  `guard-runtime`, the engine's classification, quota reason, trap text and charged work, ends
+  the session (`terminated-after-runtime-failure`) and refuses every later operation
+  (`session-terminated`): the poisoned engine's parked frame is never restored. A step-cap sweep
+  showed a cap of 1 exhausting in reflection/type-observation work with no execution step and
+  caps of 2 to 32 exhausting in execution work, where the body's start is not observable, so the
+  case uses cap 1.
 - [ ] [serial] Coordinate C6 (Wasm lowering/loading of wrappers, PO-17/PO-18) through #10. Static-witness companion rules wait for #7; resource-bearing applicability waits for #3. r[GUARD-FACT-01]
