@@ -219,13 +219,16 @@ fn stage_obligation<'m>(
     let mut dependency_at = 0usize;
     while dependency_at < dependencies.len() {
         let dependency = &dependencies[dependency_at];
+        // The visible name is the dependency's own (alias-qualified for an
+        // import, e.g. `alias.poly-refl`), exactly as the explicit checker
+        // resolves `use`; the declaration name only enters the identity.
         push_available(
             &mut available,
             format!(
                 "{}@{}/{}",
                 dependency.module, dependency.version, dependency.declaration.name
             ),
-            dependency.declaration.name.clone(),
+            dependency.name.clone(),
             &dependency.declaration.goal,
         );
         dependency_at = dependency_at.saturating_add(1);

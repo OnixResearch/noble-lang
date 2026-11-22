@@ -268,7 +268,7 @@ export const reviewedAnnotations = {
   ],
   "crates/noble-contracts/src/intrinsic/elaborate.rs": [
     { annotation: "opaque", item: "fn stage_obligation<'m>(",
-      lines: 78, sha256: "da1544ffb88269320504881f6c0f1df9f9843961dd7129ad643c023b16002385" },
+      lines: 81, sha256: "733a0b09f535d505c3d6aa45044ff82139bb388373c948a20509252d172cc3ad" },
     { annotation: "opaque", item: "fn contract_rule(",
       lines: 47, sha256: "afd5ecc0ced5388ecb3eb3a3d6e73ae8d2d9e6169772265019e808df0bb5cc65" },
     { annotation: "opaque", item: "fn rewrite_exec_literal(",

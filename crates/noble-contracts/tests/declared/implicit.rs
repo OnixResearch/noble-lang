@@ -175,6 +175,50 @@ fn infer_opt_in_is_recorded_and_expanded() {
     assert_eq!(checked[1].claim, "(∀ (v0 : El (.list .i64)), v0 = v0)");
 }
 
+/// IMPL-CASE-01 (P1): an imported proof is named by its alias-qualified
+/// reference in `(infer)` mode exactly as in the explicit core, and its
+/// identity is the exporting module's declaration.
+#[test]
+fn imported_proof_elaborates_under_its_alias() -> Result<(), String> {
+    let session = noble_contracts::source::ModuleSession::new(&[], super::retained())
+        .map_err(|error| format!("{error:?}"))?;
+    let exporter = format!("module logic@1 [ {POLY_REFL} export poly-refl ]");
+    let prepared = session
+        .prepare(exporter.as_bytes(), &[], super::LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    let (published, result) = session.commit_verified(prepared, |batch| {
+        let mut checked =
+            check_batch(batch, super::LIMITS).map_err(|error| format!("{error:?}"))?;
+        for proof in &mut checked {
+            proof.model_revision = "a".repeat(64);
+            proof.checker_revision = "b".repeat(64);
+        }
+        Ok(checked)
+    });
+    result.map_err(|error| format!("{error:?}"))?;
+    let session = super::commit(published, b"import logic@1 as alias")?;
+    let prepared = session
+        .prepare(
+            b"module imported@1 [ proof 1 imported-list infer : [ (Pi (x (List I64)) (Eq (List I64) x x)) ] [ (intro (x (List I64)) (app (use alias.poly-refl) x)) ] ]",
+            &[],
+            super::LIMITS,
+        )
+        .map_err(|error| error.diagnostic().message.clone())?;
+    let recorded = records(&prepared);
+    assert_eq!(recorded.len(), 1);
+    assert_eq!(
+        recorded[0].explicit,
+        "(intro (x (List I64)) (apply (apply (use alias.poly-refl) (List I64)) x))"
+    );
+    assert_eq!(recorded[0].inserted.len(), 1);
+    assert_eq!(recorded[0].inserted[0].head, "logic@1/poly-refl");
+    assert_eq!(recorded[0].inserted[0].solution, "(List I64)");
+    let checked = check_batch(obligations(&prepared), super::LIMITS)
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(checked[0].claim, "(∀ (v0 : El (.list .i64)), v0 = v0)");
+    Ok(())
+}
+
 /// IMPL-1: an opted-in proof with no abbreviation passes through unchanged and
 /// records nothing.
 #[test]
