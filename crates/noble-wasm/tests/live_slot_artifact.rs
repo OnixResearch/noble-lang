@@ -457,7 +457,7 @@ fn spelled(template: &noble_wasm::source::OriginTemplate) -> Vec<(String, u32)> 
         OriginBinding, OriginFixedArithmetic, OriginRecipe, OriginStaticOperation,
     };
     let row = |spellings: &[String], at: u32| spellings[at as usize].clone();
-    let mut recipes = Vec::new();
+    let mut recipes = Vec::with_capacity(template.recipes.len());
     for recipe in &template.recipes {
         let spelling = match *recipe {
             OriginRecipe::Literal(value) => format!("#{value}"),
@@ -472,7 +472,7 @@ fn spelled(template: &noble_wasm::source::OriginTemplate) -> Vec<(String, u32)> 
         };
         recipes.push(spelling);
     }
-    let mut statics = Vec::new();
+    let mut statics = Vec::with_capacity(template.statics.len());
     for body in &template.statics {
         let operations = body
             .operations
@@ -499,7 +499,7 @@ fn spelled(template: &noble_wasm::source::OriginTemplate) -> Vec<(String, u32)> 
             operations.join(";")
         ));
     }
-    let mut classes = Vec::<String>::new();
+    let mut classes = Vec::<String>::with_capacity(template.classes.len());
     for class in &template.classes {
         let spelling = match class.binding {
             OriginBinding::Named => "p:named".to_owned(),
@@ -521,6 +521,10 @@ fn spelled(template: &noble_wasm::source::OriginTemplate) -> Vec<(String, u32)> 
     spelled
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the harness helper renders a checked template's class rows and scans them linearly, which is not const-compatible; it asserts only fixture observations."
+)]
 fn class_occurrences(template: &noble_wasm::source::OriginTemplate, binding: &str) -> Option<u32> {
     spelled(template)
         .into_iter()
