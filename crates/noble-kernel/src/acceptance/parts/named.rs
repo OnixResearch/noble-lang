@@ -91,18 +91,22 @@ pub(crate) fn check_eligibility(
 /// Fast path: skip pattern walking when every value and stack binding is `Data`.
 fn has_non_data_binding(scheme: &crate::words::Scheme, resolved: &crate::words::Inst) -> bool {
     let mut index = 0usize;
-    let mut found = false;
-    while index < scheme.var_kinds.len() && !found {
-        found = first_non_data_at(scheme.var_kinds[index], resolved, index).is_some();
+    let mut has_non_data = false;
+    while index < scheme.var_kinds.len() && !has_non_data {
+        has_non_data = first_non_data_at(scheme.var_kinds[index], resolved, index).is_some();
         index += 1;
     }
-    found
+    has_non_data
 }
 
 /// The first non-`Data` type bound to variable `index`, if any.
 #[expect(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; first_non_data_at inspects runtime Inst bindings and clones the first violating Ty for the Eligibility diagnostic."
+)]
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; every VariableKind must decide how its resolved witness bindings are checked for Data eligibility so new variable kinds fail compilation until classified."
 )]
 fn first_non_data_at(
     kind: crate::words::VariableKind,
@@ -139,26 +143,32 @@ fn first_non_data_in_stack(stack: &[crate::types::Ty]) -> Option<crate::types::T
 }
 
 /// Iteratively count signed occurrences of each variable in `scheme`.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; collect_usage bounds the pattern walk by WORK_CAP and reports LimitKind::Work exhaustion instead of panicking on oversized external schemes."
+)]
 fn collect_usage(
     scheme: &crate::words::Scheme,
 ) -> Result<alloc::vec::Vec<VarUsage>, super::super::Fail> {
     let mut usage = alloc::vec![VarUsage::empty(); scheme.var_kinds.len()];
-    let mut work = alloc::vec::Vec::with_capacity(
+    let initial = alloc::vec::Vec::with_capacity(
         scheme.stack_in.len().saturating_add(scheme.stack_out.len()),
     );
-    push_slice(&scheme.stack_in, Role::SupplyOuter, &mut work);
-    push_slice(&scheme.stack_out, Role::DemandBare, &mut work);
+    let work = push_slice(&scheme.stack_in, Role::SupplyOuter, initial);
+    let mut work = push_slice(&scheme.stack_out, Role::DemandBare, work);
     let mut steps = 0usize;
-    let mut exhausted = false;
+    let mut is_exhausted = false;
     while let Some(step) = work.pop() {
         if steps >= WORK_CAP {
-            exhausted = true;
+            is_exhausted = true;
             break;
         }
         steps += 1;
-        visit_pattern(step.pattern, step.role, &mut usage, &mut work);
+        let (next_usage, next_work) = visit_pattern(step.pattern, step.role, usage, work);
+        usage = next_usage;
+        work = next_work;
     }
-    if exhausted {
+    if is_exhausted {
         Err(super::super::Fail::Exhausted(
             crate::untrusted::LimitKind::Work,
         ))
@@ -167,7 +177,11 @@ fn collect_usage(
     }
 }
 
-fn push_slice(patterns: &[crate::shapes::Pattern], role: Role, work: &mut alloc::vec::Vec<Step>) {
+fn push_slice(
+    patterns: &[crate::shapes::Pattern],
+    role: Role,
+    mut work: alloc::vec::Vec<Step>,
+) -> alloc::vec::Vec<Step> {
     let mut index = 0usize;
     while index < patterns.len() {
         work.push(Step {
@@ -176,39 +190,46 @@ fn push_slice(patterns: &[crate::shapes::Pattern], role: Role, work: &mut alloc:
         });
         index += 1;
     }
+    work
 }
 
-fn record_var(usage: &mut [VarUsage], var: crate::words::Variable, role: Role) {
-    let Ok(index) = usize::try_from(var.0) else {
-        return;
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; every polarity Role maps explicitly to its VarUsage counters so new roles cannot silently skip linearity accounting."
+)]
+const fn apply_role(entry: VarUsage, role: Role) -> VarUsage {
+    let (add_sup, add_dem, direct, returned, bare) = match role {
+        Role::SupplyOuter => (1, 0, true, false, false),
+        Role::SupplyInner { in_returned } => (1, 0, false, in_returned, false),
+        Role::DemandBare => (0, 1, false, false, true),
+        Role::DemandGuarded { in_returned } => (0, 1, false, in_returned, false),
     };
-    let Some(entry) = usage.get_mut(index) else {
-        return;
-    };
-    match role {
-        Role::SupplyOuter => {
-            entry.supplied = entry.supplied.saturating_add(1);
-            entry.direct_in = true;
-        }
-        Role::SupplyInner { in_returned } => {
-            entry.supplied = entry.supplied.saturating_add(1);
-            if in_returned {
-                entry.in_returned_program = true;
-            }
-        }
-        Role::DemandBare => {
-            entry.demanded = entry.demanded.saturating_add(1);
-            entry.bare_out = true;
-        }
-        Role::DemandGuarded { in_returned } => {
-            entry.demanded = entry.demanded.saturating_add(1);
-            if in_returned {
-                entry.in_returned_program = true;
-            }
-        }
+    VarUsage {
+        supplied: entry.supplied.saturating_add(add_sup),
+        demanded: entry.demanded.saturating_add(add_dem),
+        direct_in: entry.direct_in || direct,
+        in_returned_program: entry.in_returned_program || returned,
+        bare_out: entry.bare_out || bare,
     }
 }
 
+fn record_var(
+    mut usage: alloc::vec::Vec<VarUsage>,
+    var: crate::words::Variable,
+    role: Role,
+) -> alloc::vec::Vec<VarUsage> {
+    if let Ok(index) = usize::try_from(var.0) {
+        if let Some(entry) = usage.get_mut(index) {
+            *entry = apply_role(*entry, role);
+        }
+    }
+    usage
+}
+
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; every polarity Role must map explicitly across container constructors so new roles fail compilation until classified."
+)]
 const fn guarded_child_role(role: Role) -> Role {
     match role {
         Role::DemandBare => Role::DemandGuarded { in_returned: false },
@@ -216,6 +237,10 @@ const fn guarded_child_role(role: Role) -> Role {
     }
 }
 
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; every polarity Role must map explicitly across Program/LiveRef boundaries so quotation capture and variance remain complete."
+)]
 const fn program_child_roles(role: Role) -> (Role, Role) {
     match role {
         Role::SupplyOuter | Role::SupplyInner { in_returned: false } => (
@@ -232,18 +257,22 @@ const fn program_child_roles(role: Role) -> (Role, Role) {
 }
 
 #[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; visit_pattern pushes onto the owned worklist Vec and invokes non-const record_var/push_slice; reassess only if Vec push and Box moves become const-capable."
+)]
+#[expect(
     tigerstyle::fragile_exhaustive_enum_match,
     reason = "Owner: noble-maintainers; every Pattern constructor must classify its children's linearity role explicitly so new pattern forms cannot silently bypass named-scheme Data eligibility."
 )]
 fn visit_pattern(
     pattern: crate::shapes::Pattern,
     role: Role,
-    usage: &mut [VarUsage],
-    work: &mut alloc::vec::Vec<Step>,
-) {
+    usage: alloc::vec::Vec<VarUsage>,
+    mut work: alloc::vec::Vec<Step>,
+) -> (alloc::vec::Vec<VarUsage>, alloc::vec::Vec<Step>) {
     match pattern {
         crate::shapes::Pattern::Var(var) | crate::shapes::Pattern::StackVar(var) => {
-            record_var(usage, var, role);
+            (record_var(usage, var, role), work)
         }
         crate::shapes::Pattern::Pair(left, right) => {
             work.push(Step {
@@ -254,6 +283,7 @@ fn visit_pattern(
                 pattern: *right,
                 role,
             });
+            (usage, work)
         }
         crate::shapes::Pattern::Sum(left, right) => {
             let child = guarded_child_role(role);
@@ -265,6 +295,7 @@ fn visit_pattern(
                 pattern: *right,
                 role: child,
             });
+            (usage, work)
         }
         crate::shapes::Pattern::List(elem) => {
             let child = guarded_child_role(role);
@@ -272,16 +303,17 @@ fn visit_pattern(
                 pattern: *elem,
                 role: child,
             });
+            (usage, work)
         }
         crate::shapes::Pattern::GenericNominal(_, args, _) => {
             let child = guarded_child_role(role);
-            push_slice(args.as_slice(), child, work);
+            (usage, push_slice(args.as_slice(), child, work))
         }
         crate::shapes::Pattern::Program(stack_in, stack_out, _)
         | crate::shapes::Pattern::LiveRef(stack_in, stack_out, _) => {
             let (in_role, out_role) = program_child_roles(role);
-            push_slice(&stack_in, in_role, work);
-            push_slice(&stack_out, out_role, work);
+            let work = push_slice(&stack_in, in_role, work);
+            (usage, push_slice(&stack_out, out_role, work))
         }
         crate::shapes::Pattern::Unit
         | crate::shapes::Pattern::Bool
@@ -292,6 +324,6 @@ fn visit_pattern(
         | crate::shapes::Pattern::Evidence
         | crate::shapes::Pattern::Certified
         | crate::shapes::Pattern::Resource(_)
-        | crate::shapes::Pattern::Nominal(_, _) => {}
+        | crate::shapes::Pattern::Nominal(_, _) => (usage, work),
     }
 }

@@ -319,7 +319,8 @@ fn signed_recursive_duplication_scheme_rejects_resource() -> Result<(), String> 
     let owner_module = 7_u64;
     env.caller_module = Some(owner_module);
     env.definition_owners = vec![None; env.defs.len()];
-    env.definition_owners[def.0 as usize] = Some(owner_module);
+    let def_index = usize::try_from(def.0).map_err(|_| "definition index overflow".to_string())?;
+    env.definition_owners[def_index] = Some(owner_module);
 
     let res = resource();
     let owner_inst = Inst {

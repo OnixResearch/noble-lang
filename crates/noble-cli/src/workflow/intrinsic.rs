@@ -1156,33 +1156,18 @@ fn ensure_all_nodes_derived(
     checked: &noble_kernel::untrusted::Checked,
     detail: &str,
 ) -> Result<(), output::Failure> {
+    let fail = || output::Failure::error("named-report-derivation", detail.into());
     let mut visited = std::vec![false; candidate.nodes.len()];
     for row in &checked.derivations {
-        let Some(index) = usize::try_from(row.node.0).ok() else {
-            return Err(output::Failure::error(
-                "named-report-derivation",
-                detail.into(),
-            ));
-        };
-        let Some(slot) = visited.get_mut(index) else {
-            return Err(output::Failure::error(
-                "named-report-derivation",
-                detail.into(),
-            ));
-        };
+        let index = usize::try_from(row.node.0).map_err(|_| fail())?;
+        let slot = visited.get_mut(index).ok_or_else(fail)?;
         if *slot {
-            return Err(output::Failure::error(
-                "named-report-derivation",
-                detail.into(),
-            ));
+            return Err(fail());
         }
         *slot = true;
     }
     if visited.iter().any(|seen| !*seen) {
-        return Err(output::Failure::error(
-            "named-report-derivation",
-            detail.into(),
-        ));
+        return Err(fail());
     }
     Ok(())
 }
