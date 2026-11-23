@@ -147,17 +147,8 @@ mutual
     replaceTail stack a b = mid →
     Derives env cand rest mid out tail →
     Derives env cand (id :: rest) stack out (head.union tail)
-  /-- QUOTATION: the body is checked even when unused; the quotation node's
-interface joined onto the running stack ends the derivation. -/
-  | quotationBody {id : Nat} {rest : List Nat} {stack a b out : TyList}
-      {head : EffSet} {body : List Nat} {inst resolved : Inst} :
-    cand.nodes[id]? = some (Node.quotation body inst) →
-    ResolvesTo inst resolved →
-    QuotationDerives env cand body resolved a b head →
-    tailEquals stack a = true →
-    replaceTail stack a b = out →
-    Derives env cand (id :: rest) stack out head
-  /-- A quotation node also sequences like any other node. -/
+  /-- QUOTATION: the body is checked even when unused, and the quotation node
+  sequences onto the rest of the body like any other node. -/
   | quotationSequence {id : Nat} {rest : List Nat} {stack a b mid out : TyList}
       {head tail : EffSet} {body : List Nat} {inst resolved : Inst} :
     cand.nodes[id]? = some (Node.quotation body inst) →
@@ -301,14 +292,36 @@ end NobleM2
 
 namespace NobleM2
 
+/-- A node identifier reached by `body`, either directly in `body` or inside
+the body of a quotation node reached by `body`. -/
+inductive NodeInBody (cand : Candidate) : List Nat → Nat → Prop where
+  /-- Directly listed in the body. -/
+  | here {body : List Nat} {id : Nat} :
+      id ∈ body → NodeInBody cand body id
+  /-- Reached inside the body of a quotation node listed in `body`. -/
+  | nested {body qbody : List Nat} {qid id : Nat} {inst : Inst} :
+      qid ∈ body →
+      cand.nodes[qid]? = some (Node.quotation qbody inst) →
+      NodeInBody cand qbody id →
+      NodeInBody cand body id
+
+/-- Reachability is monotone under body inclusion. -/
+theorem NodeInBody.mono {cand : Candidate} {b1 b2 : List Nat} {id : Nat}
+    (hsub : ∀ x, x ∈ b1 → x ∈ b2) (h : NodeInBody cand b1 id) :
+    NodeInBody cand b2 id := by
+  cases h with
+  | here hmem => exact NodeInBody.here (hsub _ hmem)
+  | nested hmem hq hinner => exact NodeInBody.nested (hsub _ hmem) hq hinner
+
 /-- The acceptance-theorem shape's well-formedness premise: the checked
-interface matches the expected stacks and allowed bound, and the retained
-derivation records name nodes the body actually uses. -/
+interface matches the expected stacks and allowed bound, and every retained
+derivation record names an existing node reached by the entry body. -/
 def WellFormed (request : Request) (cand : Candidate) (checked : Checked) : Prop :=
   checked.interface.stackIn = request.expected.stackIn ∧
     checked.interface.stackOut = request.expected.stackOut ∧
     checked.interface.effects.Subset request.expected.allowedEffects ∧
-    ∀ entry, entry ∈ checked.derivations → entry.node ∈ cand.body ∨ True
+    ∀ entry, entry ∈ checked.derivations →
+      NodeInBody cand cand.body entry.node ∧ (cand.nodes[entry.node]?).isSome = true
 
 /-- The acceptance theorem's typing derivation: the entry body derives the
 checked interface at the expected stacks. -/

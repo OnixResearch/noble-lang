@@ -31,11 +31,11 @@ theorem quotationDerives_bound {env : Env} {cand : Candidate} {body : List Nat}
   cases hq
   rfl
 
-/-- One derivation step over a nonempty body is a SEQUENCE-rooted step (a
-node rule under the frame join, the rest of the body deriving from the
-joined stack) or one of the two quotation forms of the same shape; both
-quotation forms expose the node's QUOTATION derivation over the resolved
-witness. -/
+/-- One derivation step over a nonempty body is either a SEQUENCE-rooted step
+(a node rule under the frame join, the rest of the body deriving from the
+joined stack) or a QUOTATION sequence step of the same shape, exposing the
+node's QUOTATION derivation over the resolved witness and the rest of the body's
+derivation from the joined stack. -/
 theorem derives_cons_inv {env : Env} {cand : Candidate} {id : Nat} {rest : List Nat}
     {stack out : TyList} {effects : EffSet}
     (h : Derives env cand (id :: rest) stack out effects) :
@@ -43,22 +43,17 @@ theorem derives_cons_inv {env : Env} {cand : Candidate} {id : Nat} {rest : List 
         cand.nodes[id]? = some node ∧ NodeDerives env cand node a b head ∧
         tailEquals stack a = true ∧ replaceTail stack a b = mid ∧
         Derives env cand rest mid out tail ∧ effects = head.union tail)
-    ∨ ∃ body inst resolved a b head mid,
+    ∨ ∃ body inst resolved a b head mid tail,
         cand.nodes[id]? = some (Node.quotation body inst) ∧
         ResolvesTo inst resolved ∧
         QuotationDerives env cand body resolved a b head ∧
         tailEquals stack a = true ∧ replaceTail stack a b = mid ∧
-        ((∃ tail, Derives env cand rest mid out tail ∧ effects = head.union tail)
-          ∨ out = mid ∧ effects = head) := by
+        Derives env cand rest mid out tail ∧ effects = head.union tail := by
   cases h with
   | sequence hnode hnd htail hreplace hrest =>
       exact Or.inl ⟨_, _, _, _, _, _, hnode, hnd, htail, hreplace, hrest, rfl⟩
-  | quotationBody hnode hres hq htail hreplace =>
-      exact Or.inr ⟨_, _, _, _, _, _, _, hnode, hres, hq, htail, hreplace,
-        Or.inr ⟨rfl, rfl⟩⟩
   | quotationSequence hnode hres hq htail hreplace hrest =>
-      exact Or.inr ⟨_, _, _, _, _, _, _, hnode, hres, hq, htail, hreplace,
-        Or.inl ⟨_, hrest, rfl⟩⟩
+      exact Or.inr ⟨_, _, _, _, _, _, _, _, hnode, hres, hq, htail, hreplace, hrest, rfl⟩
 
 /-- Any derivation of an invocation node yields the WORD instance: the
 eliminator rules carry the word rule's premises (the same lookup,
@@ -108,7 +103,7 @@ theorem rule_literal_sound (h : check env request cand = .accepted checked)
   rw [hbody] at hd
   rcases derives_cons_inv hd with
     ⟨node, a, b, head, mid, tail, hnode', hnd, htail, hreplace, hrest, heff⟩ |
-    ⟨body', inst', resolved, a', b', head', mid', hnode', _, _, _, _, _⟩
+    ⟨body', inst', resolved, a', b', head', mid', tail', hnode', _, _, _, _, _, _⟩
   · rw [hnode] at hnode'
     cases hnode'
     exact ⟨a, b, head, mid, tail, hnd, htail, hreplace, hrest, heff⟩
@@ -133,7 +128,7 @@ theorem rule_sequence_sound (h : check env request cand = .accepted checked)
   rw [hbody] at hd
   rcases derives_cons_inv hd with
     ⟨_, a, b, head, mid, tail, hnode', hnd, htail, hreplace, hrest', heff⟩ |
-    ⟨body', inst', resolved, a', b', head', mid', hnode', _, _, _, _, _⟩
+    ⟨body', inst', resolved, a', b', head', mid', tail', hnode', _, _, _, _, _, _⟩
   · rw [hnode] at hnode'
     cases hnode'
     exact ⟨a, b, head, mid, tail, hnd, htail, hreplace, hrest', heff⟩
@@ -160,18 +155,15 @@ theorem rule_quotation_sound (h : check env request cand = .accepted checked)
   rw [hbody] at hd
   rcases derives_cons_inv hd with
     ⟨node, a', b', head', mid, tail, hnode', hnd, htail, hreplace, hrest', heff⟩ |
-    ⟨body', inst', resolved, a, b, head, mid, hnode', hres, hq, htail, hreplace, hout⟩
+    ⟨body', inst', resolved, a, b, head, mid, tail, hnode', hres, hq, htail, hreplace, hrest', _⟩
   · rw [hnode] at hnode'
     cases hnode'
     cases hnd
   · rw [hnode] at hnode'
     cases hnode'
     have hbd : head = EffSet.empty := quotationDerives_bound hq
-    rcases hout with ⟨_, hrest', _⟩ | ⟨hmid, _⟩
-    · cases hrest' with
-      | empty => exact ⟨resolved, a, b, head, hres, hq, htail, hreplace, hbd⟩
-    · rw [← hmid] at hreplace
-      exact ⟨resolved, a, b, head, hres, hq, htail, hreplace, hbd⟩
+    cases hrest' with
+    | empty => exact ⟨resolved, a, b, head, hres, hq, htail, hreplace, hbd⟩
 
 /-- WORD: acceptance through an invocation node at the body's head carries a
 WORD rule instance at that node, joined onto the expected entry stack. -/
@@ -190,7 +182,7 @@ theorem rule_word_sound (h : check env request cand = .accepted checked)
   rw [hbody] at hd
   rcases derives_cons_inv hd with
     ⟨node, a, b, head, mid, tail, hnode', hnd, htail, hreplace, hrest, heff⟩ |
-    ⟨body', inst', resolved', a, b, head, mid, hnode', hres, hq, htail, hreplace, hout⟩
+    ⟨body', inst', resolved', a, b, head, mid, tail', hnode', hres, hq, htail, hreplace, _, _⟩
   · rw [hnode] at hnode'
     cases hnode'
     obtain ⟨resolved, scheme, hlook, hres, hinst, hdata⟩ := invocation_word hnd
@@ -226,7 +218,7 @@ theorem rule_case_sound {request : Request} {cand : Candidate} {checked : Checke
   rw [hbody] at hd
   rcases derives_cons_inv hd with
     ⟨node, a, b, head, mid, tail, hnode', hnd, htail, hreplace, hrest, heff⟩ |
-    ⟨body', inst', resolved', a, b, head, mid, hnode', _, _, _, _, _⟩
+    ⟨body', inst', resolved', a, b, head, mid, tail', hnode', _, _, _, _, _, _⟩
   · rw [hnode] at hnode'
     cases hnode'
     obtain ⟨resolved, scheme, hlook, hres, hinst, hdata⟩ := invocation_word hnd
@@ -268,7 +260,7 @@ theorem rule_if_sound {request : Request} {cand : Candidate} {checked : Checked}
   rw [hbody] at hd
   rcases derives_cons_inv hd with
     ⟨node, a, b, head, mid, tail, hnode', hnd, htail, hreplace, hrest, heff⟩ |
-    ⟨body', inst', resolved', a, b, head, mid, hnode', _, _, _, _, _⟩
+    ⟨body', inst', resolved', a, b, head, mid, tail', hnode', _, _, _, _, _, _⟩
   · rw [hnode] at hnode'
     cases hnode'
     obtain ⟨resolved, scheme, hlook, hres, hinst, hdata⟩ := invocation_word hnd
@@ -310,7 +302,7 @@ theorem rule_listcase_sound {request : Request} {cand : Candidate} {checked : Ch
   rw [hbody] at hd
   rcases derives_cons_inv hd with
     ⟨node, a, b, head, mid, tail, hnode', hnd, htail, hreplace, hrest, heff⟩ |
-    ⟨body', inst', resolved', a, b, head, mid, hnode', _, _, _, _, _⟩
+    ⟨body', inst', resolved', a, b, head, mid, tail', hnode', _, _, _, _, _, _⟩
   · rw [hnode] at hnode'
     cases hnode'
     obtain ⟨resolved, scheme, hlook, hres, hinst, hdata⟩ := invocation_word hnd
