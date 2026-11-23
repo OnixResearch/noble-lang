@@ -457,9 +457,18 @@ class SlotEngine {
     const instance = new WebAssembly.Instance(compiled.module,
       { [this.abi.module]: this.imports(request.id) });
     const handle = instance.exports.install_target() >>> 0;
-    if (handle === 0) throw Error(`checked inert install failed: failure=${this.shared.failure.value}, `
-      + `quota_reason=${this.shared.quota_reason.value}, phase=${this.shared.phase.value}, `
-      + `generation=${this.shared.generation.value}`);
+    if (handle === 0) {
+      const quotaCode = this.shared.quota_reason.value;
+      const quotaReason = this.abi.quota_reason[String(quotaCode)] ?? null;
+      const failureClass = classifyFailure(this.abi, {
+        status: this.shared.failure.value,
+        quotaCode,
+      });
+      throw Error(`checked inert install failed: failure=${this.shared.failure.value}, `
+        + `quota_reason=${quotaCode}${quotaReason ? ` (${quotaReason})` : ''}, `
+        + `failure_class=${failureClass ?? 'none'}, phase=${this.shared.phase.value}, `
+        + `generation=${this.shared.generation.value}`);
+    }
     const count = instance.exports.module_program_count();
     if (!Number.isInteger(count) || count < 1 || count > 256
       || checked.root_program_index >= count || request.program_metadata.length !== count
@@ -2513,8 +2522,20 @@ class SlotEngine {
       this.retainFramePins(framePins === null
         ? { root: this.rootSequence, error: 'frame-pin ledger unavailable: abortRoot failed' }
         : { root: this.rootSequence, ...framePins });
+      const failureCode = this.shared.failure.value;
+      const quotaCode = this.shared.quota_reason.value;
+      const quotaReason = (failureCode === 1 || failureCode === 2)
+        ? (this.abi.quota_reason[String(quotaCode)] ?? null)
+        : null;
+      const failureClass = classifyFailure(this.abi, {
+        status: failureCode,
+        quotaCode,
+        oom: isEngineOomError(error),
+      });
       return slotReply('execution-failed', { diagnostic: String(error)
         + (this.checkpointFailure === null ? '' : `; checkpoint: ${this.checkpointFailure}`),
+        quota_reason: quotaReason,
+        failure_class: failureClass,
         request_trace: trace, control_events: this.controlEvents.splice(0),
         frame_pins: framePins,
         guest_requests: trace.length,

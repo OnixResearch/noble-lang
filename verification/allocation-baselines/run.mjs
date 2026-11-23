@@ -816,7 +816,7 @@ async function main() {
       cell_capacity: config.cell_capacity,
       declared_limits: config.limits,
       maximum_limits: config.maximum_limits,
-      accounting_revision: 'pre-F1-F4-split (box 1 baseline): quota reason 1 covers F1/F2/F3',
+      accounting_revision: 'F1-F4 split: reason 1 logical quota, 8 strategy exhaustion, 9 memory growth, F4 host/engine classification',
       node_flags: ['--no-liftoff', '--no-wasm-lazy-compilation', '--no-wasm-tier-up',
         '--stack-size=1024', '--max-old-space-size=256'],
       pinned_node: config.tools.node,

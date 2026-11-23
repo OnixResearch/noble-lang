@@ -2093,6 +2093,7 @@ export class CoreEngine {
     if (Object.keys(limits).some(key => !keys.includes(key))) fail('unknown runtime limit');
     const selectedLimits = keys.map(key => integer(limits[key] ?? defaults[key], defaults[key], key));
     let nativeTrap = null;
+    let engineOom = false;
     let status = 0;
     // Calculator-v1 compacts its arena at the submission boundary, before
     // begin fixes the per-submission baseline. A refusal poisons the session.
@@ -2103,6 +2104,7 @@ export class CoreEngine {
         status = runtime.collect();
       } catch (error) {
         nativeTrap = `${error.name}: ${error.message}`;
+        if (isEngineOomError(error)) engineOom = true;
         status = 6;
       }
       collection = { cells_before: before, cells_after: this.shared.heap_cursor.value };
@@ -2186,6 +2188,7 @@ export class CoreEngine {
       }
     } catch (error) {
       nativeTrap = `${error.name}: ${error.message}`;
+      if (isEngineOomError(error)) engineOom = true;
       if (typedValues !== null && (error.message === 'worker text budget exhausted'
         || error.message === 'worker value budget exhausted'
         || error.message === 'worker list budget exhausted')) {
@@ -2260,6 +2263,14 @@ export class CoreEngine {
         count: binding.invocations - adapterStarts.get(slot),
       })) : null;
     const unrecordedBound = this.boundRequestsTotal - boundTotalStart - (boundRequests?.length ?? 0);
+    const quotaReason = inputExhausted ?? observationExhausted
+      ?? this.abi.quota_reason[String(metrics.quota_reason)] ?? null;
+    const failureClass = classifyFailure(this.abi, {
+      status,
+      quotaCode: metrics.quota_reason,
+      extraExhausted: inputExhausted ?? observationExhausted,
+      oom: engineOom,
+    });
     const report = { schema: 'noble-core-report/v1', profile: this.profile, backend: 'managed-linear-memory',
       submission: record.submission ?? null, stage: 'wasm', outcome, status,
       ...(this.inProcessLive ? { generation: this.shared.generation.value,
@@ -2279,8 +2290,7 @@ export class CoreEngine {
           cancelled_proposal_unrelated_root_state_before: cancelledProposal.unrelated_root_state_before,
           cancelled_proposal_unrelated_root_state_after: cancelledProposal.unrelated_root_state_after,
         } : {}) } : {}),
-      quota_reason: inputExhausted ?? observationExhausted
-        ?? this.abi.quota_reason[String(metrics.quota_reason)] ?? null, stack,
+      quota_reason: quotaReason, failure_class: failureClass, stack,
       ...(observedInterruption ? { interruption: observedInterruption } : {}),
       request_trace: isDeclared
         ? boundRequests : this.trace.slice(traceStart),

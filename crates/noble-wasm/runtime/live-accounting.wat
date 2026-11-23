@@ -29,13 +29,16 @@
    (i32.ge_u (local.get $live) (global.get $heap_baseline))
    (then (i32.mul (i32.sub (local.get $live) (global.get $heap_baseline)) (i32.const 48)))
    (else (i32.const 0))))
- (if (i32.or (i32.or (i32.gt_u (local.get $slot) (i32.const 4096))
-                      (i32.gt_u (local.get $live) (i32.const 4096)))
-             (i32.gt_u (local.get $bytes) (global.get $allocation_limit)))
+ ;; Check pool/slot strategy exhaustion before logical byte quota so full-pool
+ ;; or epoch-retired exhaustion at the default ceiling reports F2 (8), not F1 (1).
+ (if (i32.or (i32.gt_u (local.get $slot) (i32.const 4096))
+             (i32.gt_u (local.get $live) (i32.const 4096)))
+  (then (call $quota (i32.const 8)) (return (i32.const 0))))
+ (if (i32.gt_u (local.get $bytes) (global.get $allocation_limit))
   (then (call $quota (i32.const 1)) (return (i32.const 0))))
  ;; No reservation or child inspection occurs before the physical check.
  (if (i32.eqz (call $storage_ensure (local.get $slot)))
-  (then (call $quota (i32.const 1)) (return (i32.const 0))))
+  (then (call $quota (i32.const 9)) (return (i32.const 0))))
  (local.set $slot (call $storage_take_slot))
  (global.set $allocated_total (i64.add (global.get $allocated_total) (i64.const 48)))
  (if (i32.gt_u (local.get $bytes) (global.get $allocation_peak))

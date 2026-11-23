@@ -8,7 +8,7 @@
 ## Phase 2: Future implementation and evidence gates (open; not undertaken here)
 
 - [ ] [serial] Execute W1–W8 baselines for the existing strategies A1–A7 with the recorded controls, and ratify or revise D1–D4 from measurements. r[ALLOC-EV-01] r[ALLOC-OBS-01]
-- [ ] [serial] Implement distinct F1–F4 classification and per-strategy accounting revisions in the runtimes and hosts, then execute ALLOC-CASE-02/09/10. r[ALLOC-FAIL-01]
+- [x] [serial] Implement distinct F1–F4 classification and per-strategy accounting revisions in the runtimes and hosts, then execute ALLOC-CASE-02/09/10. r[ALLOC-FAIL-01]
 - [ ] [serial] Register and execute ALLOC-CASE-01, 03–08, 11 and 12 against each strategy claimed compatible, including differential equivalence and cross-instance refusal. r[ALLOC-CAP-01] r[ALLOC-ISO-01]
 - [ ] [serial] After #4 selects a native route, compare the system allocator with jemalloc inside that route with representation held constant. Never apply it to Wasm guest cells. r[ALLOC-ISO-01]
 
@@ -18,7 +18,8 @@ OWNER DECISION 2026-11-20 (Decision 2): Phase 2 allocation W1–W8 baselines, F1
 classification, and ALLOC-CASE execution are authorized inside `allocation-strategy-contract`
 despite the proposal's original Phase-1-only out-of-scope line.
 
-Neither Phase 2 box above is complete. The committed harness is `verification/allocation-baselines/`
+Phase 2 Box 2 (`F1–F4` failure classification and `ALLOC-CASE-02/09/10`) is complete; Boxes 1, 3,
+and 4 remain open. The committed harness is `verification/allocation-baselines/`
 (initial harness commit `9ce308ca`; review fixes commit `b2cb41cd`): `run.mjs` drives each
 strategy's own host (A1/A3 shipped `session`/`live repl`, A4 `live slot`, A5/A6 `wasm-experiment`,
 A7 the component runtime fragment, A2 the `calculator` session), records pinned Node/V8 and
@@ -74,7 +75,13 @@ Measured on clean commit `b2cb41cd` (pinned Node `24.13.0` / V8 `13.6.233.17-nod
     (lowered-memory linear fragment reports `quota_reason: 1` instead of `9`), and
     `CASE-02/four-distinct-classes` (`observed: { F1: "unsplit:allocation", F2: "unsplit:quota_reason_1", F3: "unsplit:quota_reason_1", F4: "F4-engine-oom" }`).
 
-Remaining before the first box can be ticked: run the full 30-sample matrix (and resolve the
+- **F1–F4 split implementation & `ALLOC-CASE-02/09/10` pass (Box 2 complete):**
+  - `crates/noble-wasm/runtime/live-accounting.wat`: checks pool/slot exhaustion (`slot > 4096 || live > 4096`) before `bytes > $allocation_limit`, emitting `quota(8)` (`F2-strategy-exhaustion`), `quota(1)` (`F1-logical-quota`) for logical byte quota, and `quota(9)` (`F3-memory-growth`) on `$storage_ensure` failure.
+  - `crates/noble-wasm/runtime/accounting.wat`: preserves `quota(6)` (`$runtime_tick`) and `quota(1)` (`next > $cell_limit || bytes > $allocation_limit`), and emits `quota(9)` on `$storage_ensure` failure.
+  - `crates/noble-cli/src/core/runtime/{abi.json,preamble.mjs,engine.mjs,slot-engine.mjs,protocol.mjs}`: maps `quota_reason` `"8"` (`"strategy exhaustion"`) and `"9"` (`"memory growth"`), adds `failure_class` mapping (`1..7 -> F1-logical-quota`, `8 -> F2-strategy-exhaustion`, `9 -> F3-memory-growth`, engine/host OOM -> `F4-engine-oom`, normal/non-OOM traps -> `null`), and emits `failure_class` across `CoreEngine`, `SlotEngine`, and `protocol.mjs`.
+  - `verification/allocation-baselines/run.mjs`: updates `controls.accounting_revision` to `'F1-F4 split: reason 1 logical quota, 8 strategy exhaustion, 9 memory growth, F4 host/engine classification'`.
+  - `verification/allocation-baselines/cases.mjs`: passes **24/24 checks** cleanly (`CASE-02/four-distinct-classes`: `F1-logical-quota`, `F2-strategy-exhaustion`, `F3-memory-growth`, `F4-engine-oom`; all 9 `CASE-09/*` and 5 `CASE-10/*` checks).
+
+Remaining before Box 1 can be ticked: run the full 30-sample W1–W8 matrix (and resolve the
 debug-CLI A2 40-line timeout or record an explicitly bounded A2 session), retain the receipt and
-raw samples, and ratify or revise D1–D4 from those measurements. The second box's runtime/host
-F1–F4 split, per-strategy accounting revisions, and green ALLOC-CASE-02/09/10 gate remain open.
+raw samples, and ratify or revise D1–D4 from those measurements. Boxes 3 and 4 remain open.
