@@ -2060,6 +2060,54 @@
       "test_design": "test-design-open"
     },
     {
+      "id": "GUARD-BIND-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "GUARD-CORR-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "GUARD-FACT-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "GUARD-LIST-01",
+      "document": "../.cairn/specs/program-contracts/spec.md",
+      "document_id": "SPEC-V002",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
       "id": "H-AUTH-01",
       "document": "../.cairn/specs/language/spec.md",
       "document_id": "SPEC-0001",
@@ -3574,6 +3622,66 @@
         "bounded-execution",
         "model-proof-or-explicit-refinement-no-go",
         "policy-refusal",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "LREF-CTR-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "LREF-ESCAPE-01",
+      "document": "../.cairn/specs/language/spec.md",
+      "document_id": "SPEC-0001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "LREF-EV-01",
+      "document": "../.cairn/specs/evidence/spec.md",
+      "document_id": "SPEC-EV001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "LREF-EXIT-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "LREF-PKG-01",
+      "document": "../.cairn/specs/safety/spec.md",
+      "document_id": "SPEC-S001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
         "review"
       ],
       "scenarios": [],

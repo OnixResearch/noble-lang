@@ -69,7 +69,7 @@
   `cargo test -p noble-wasm --test live_slot_artifact` asserts the projection matrix, alias/owner
   distinctions and every negative provenance case. No LSLOT-05/08 case state or evidence was
   promoted.
-- [ ] [serial] Add an actual-target Lean consumer with explicit statement/source/artifact premises; separately test ID-05 capture2→3 and LSLOT-05/08 proof-required versus replay-only adversarial boundaries without inheriting builder proof or real-effect authority. r[P-ID-03] `V-MODEL-01` `VC-LSLOT-01` `EV-LSLOT-01`
+- [x] [serial] Add an actual-target Lean consumer with explicit statement/source/artifact premises; separately test ID-05 capture2→3 and LSLOT-05/08 proof-required versus replay-only adversarial boundaries without inheriting builder proof or real-effect authority. r[P-ID-03] `V-MODEL-01` `VC-LSLOT-01` `EV-LSLOT-01`
   Progress 2026-11-22 (integrator decision 43): the proof-required half is implemented for live
   slots. The statement premise is the slot authority's exact MC2 contract, the source premise is
   the target's closed subject rendered from its verified template and captured values, and the
@@ -79,6 +79,23 @@
   capture boundary holds: the valid proof for capture 2 is refused for the capture-1 target by the
   core's correspondence check. Still open: LSLOT-08's replay-only boundary and an ID-05
   capture 2→3 receipt of its own.
+  Done 2026-11-23 (Cairn push B): the actual-target Lean consumer is the proof-required half
+  (decision 43; LSLOT-05 promoted), and LSLOT-08's replay-only boundary runs from two actual
+  baselines (decision 45; LSLOT-08 promoted); both from
+  `verification/lslot-cases/acceptance-2026-11-23-pb.json` (sha256 `455597be…`, clean source
+  `0fffc7d8`). Exact replay eligibility is neither behavioral proof nor real-effect authority.
+  ID-05's capture 2→3 has its own record in
+  `verification/live-slot-lanes/runs/20261123-0fffc7d8/receipt.json` (sha256 `98313669…`): one
+  definition template, two ProgramValueIds for captures 2 and 3, and fixed-literal builders with
+  different templates. ID-05 is a ProgramsData-Draft case and stays absent/not-run.
 - [ ] [serial] After independent source-bound review, decide any canonical sync, generated views/ledger/receipt, evidence/status promotion and archive under the existing gates; leave all nine LSLOT states and historical evidence untouched until then. r[P-ID-03] `EV-LSLOT-01`
+  Progress 2026-11-23 (owner decisions 50 and 55): the integrator closeout review
+  [`review-integrator-2026-11-22-closeout.md`](review-integrator-2026-11-22-closeout.md) accepts
+  the sync with notes; the owner did not veto it. The delta's stale status paragraph was rewritten
+  (N-1), `P-ID-03` was synced in push B with regenerated views and ledger, and the LSLOT-05/08
+  states were promoted only from the push-B LSLOT gate receipt. The archive follows with the next
+  ladder, because `crates/` tests and the live-slot lanes receipt tool cite this change's path.
 
 LSLOT-02's separate atomic physical epoch-1 A+B and A+B+C genesis is an approved implementation choice, not a P-ID-03 requirement or a completed task here. The integrated selected CLI exercise includes both complete maps, an old-root pin through epoch 2 and worker-side later-member quota refusal without partial installation; see `/tmp/noble-lslot-approved-integrated-final-20261006/receipt.json` (SHA-256 `b217d63192e42293398da7592ddc6024fdd971787d142ab3d5b9aeaf6716ce38`). Canonical LSLOT-02 case execution/evidence and all nine LSLOT implementation/execution/proof/trust states remain absent/not-run/open/unassessed in the existing `explicit-live-references` change under `K-LSLOT-02`, `H-LSLOT-01` and `EV-LSLOT-01`; neither sequential publication nor rewriting the frozen fixture can close them. The unsynced P-ID-03 draft and selected captured-target Wasm/Lean proof/replay remain open.
+
+Superseded 2026-11-23 (Cairn push B): the paragraph above records the state before the LSLOT gate. All nine LSLOT cases are now implemented/passed with proof open from `verification/lslot-cases/acceptance-2026-11-23-pb.json`, `P-ID-03` is synced, and the selected captured-target evidence (LSLOT-05) and replay-only boundary (LSLOT-08) are executed; a proof that the derivation is correct and general returned-target admission remain open.

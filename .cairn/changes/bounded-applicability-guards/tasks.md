@@ -8,7 +8,7 @@
 
 ## Future implementation and evidence gates (not undertaken by this change)
 
-- [ ] [serial] Prove C1 recognizer-link theorems for the three v1 templates and `NonEmptyList` over the reviewed MC1 `Holds`, and an extracted-Rust correspondence for `templates_of`; record them as scoped PO-21 evidence only. r[GUARD-CORR-01]
+- [x] [serial] Prove C1 recognizer-link theorems for the three v1 templates and `NonEmptyList` over the reviewed MC1 `Holds`, and an extracted-Rust correspondence for `templates_of`; record them as scoped PO-21 evidence only. r[GUARD-CORR-01]
   Progress (2026-11-09): C1 is proved at model level for the three v1 templates.
   `proofs/mc2/NobleCertificates/GuardLink.lean` proves `Holds e [.i64 x] [] params ↔
   GuardPrecondition t x` for each of the five spellings `recognize` accepts: `(lt x0 i64::MAX)`,
@@ -48,6 +48,14 @@
   export renders for the same arena is not proved, and the bounded `is_type0` check is not shown
   to accept every `Type0` code. The box is ticked with the MC2/M4 receipt of the batch that
   carries this module.
+  Done 2026-11-23 (Cairn push B): the MC2 lane on clean source `0fffc7d8`
+  (`verification/mc2/implementation-20261123-0fffc7d8.json`, `MC2-IMPLEMENTATION-GATE passed:
+  sha256:985b1fde…`) rebuilt `GuardExtracted.lean` over the regenerated contracts subject, and
+  `MC2ExtractionGate` audited the ten guard correspondence theorems (`expression_eq`,
+  `is_nil_input_zero_eq`, `recognize_eq`, `templates_of_sound`, `templates_of_link`,
+  `templates_of_complete` and the four `templates_of_v2_*`) under the strict axioms; its embedded
+  M4 check passed (`sha256:30f47a93…`). Recorded as scoped PO-21 evidence only; the scope limits
+  above stay recorded, not closed.
 - [x] [serial] Implement the versioned v2 template set (`NonEmptyList` recognizer, wrappers, `List A` slot injection for `op_invoke`, registry/digest version) with v1 bytes and gate unchanged; prove C2–C5 for `NonEmptyList` in a v2 MC2 gate. r[GUARD-LIST-01]
   Progress (2026-11-20): Lean model. `proofs/mc2/NobleCertificates/GuardsV2.lean` adds a separate
   `GuardTemplateV2` set (the three frozen v1 templates plus `nonEmptyList`), the pure

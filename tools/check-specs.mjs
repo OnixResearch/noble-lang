@@ -130,6 +130,8 @@ const ROUTES = {
   FSUB: ['experiment-test', 'model-proof', 'review'],
   SMERGE: ['experiment-test', 'model-proof', 'review'],
   IMPL: ['proof-or-explicit-assumption', 'implementation-test', 'review'],
+  LREF: ['boundary-test', 'correspondence', 'review'],
+  GUARD: ['proof-or-explicit-assumption', 'implementation-test', 'review'],
 };
 
 // Document scope only. This discovery is not the compiler/source inventory.

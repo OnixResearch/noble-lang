@@ -50,4 +50,32 @@
   - **Not covered.** The package is approximated by the modules whose code the saved graph
     enters; table and capture members count only as far as that graph walk observes them. No
     LREF or LSLOT case is promoted.
-- [ ] [serial] Execute LREF-CASE-02, 04, 05 and 06 together with LSLOT-01..09 against an implemented profile, recording source-bound evidence separately per case. r[LREF-CTR-01] r[LREF-ESCAPE-01] r[LREF-EV-01]
+- [x] [serial] Execute LREF-CASE-02, 04, 05 and 06 together with LSLOT-01..09 against an implemented profile, recording source-bound evidence separately per case. r[LREF-CTR-01] r[LREF-ESCAPE-01] r[LREF-EV-01]
+  Done 2026-11-23 (Cairn push B; integrator decision 47). LSLOT-01..09 are promoted from
+  `verification/lslot-cases/acceptance-2026-11-23-pb.json` (sha256 `455597be…`).
+  `verification/live-slot-lanes/runs/20261123-0fffc7d8/receipt.json` (sha256
+  `983136698624f431fc95ab802556d158436094aab295cdb525498db42a9858d5`, written by
+  `verification/live-slot-lanes/receipt.mjs` against the CLI built from clean source
+  `0fffc7d842b0e656461fbf7f33d085a199f853fb`, binary `2b29568c…`) records each LREF case
+  separately:
+  - **LREF-CASE-02.** In-process registries seeded by a fixture-only constructor option (the slot
+    engine never passes one): at the last epoch, publication and deletion refuse `epoch-exhausted`;
+    at S's last generation, its replacement refuses `generation-exhausted`; past S's last
+    incarnation, recreation refuses `incarnation-exhausted` (these were partly one shared
+    outcome). Each refusal leaves the epoch unchanged and a root pinned before it still selects its
+    version. The live-slot code-retention counter is the compiler's u32 install generation: the
+    noble-wasm unit test `install_generation_refuses_at_its_maximum_without_wrapping` shows
+    `Exhausted` at `u32::MAX` instead of a wrap (maximum 2^32-1, not the design's 2^64-1;
+    decision 47).
+  - **LREF-CASE-04.** O, saved from v1 (`1 quote [ + ] compose`), still gives 21 after v2
+    publishes; a new root's fresh result gives 22; O's saved record names no slot, epoch or
+    reference, and its recorded cells are v1's recipe (Program cells, the captured 1 and its recipe
+    nodes).
+  - **LREF-CASE-05.** One installed generic caller selects S-v1 for R1 (epoch 1) and S-v2 for R2
+    (epoch 2) with an unchanged reflected site. The retained-ref variant has no request form (a
+    ref exists only as the refs binding of its own invocation; the LSLOT-06 `retain` precedent).
+  - **LREF-CASE-06.** R1, held at its second selection while S-v2 commits (epoch 3), selects S-v1
+    for both dispatches at epoch 2 and runs P (S-v0's exact Program) with v0's code (122); R2 then
+    selects S-v2 (124). The serial host runs R2 after R1 resumes, not while R1 is held.
+  No LREF design is registered as a conformance case (that needs its own reviewed change); this
+  is execution evidence, not a proof.

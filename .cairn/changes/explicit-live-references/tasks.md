@@ -60,7 +60,7 @@
 > impossible by design, with this reason. LSLOT-06 may be promoted from its remaining variants'
 > real boundary refusals." The drop is recorded as the second `amendments` entry dated 2026-11-20.
 
-- [ ] [serial] Implement independently checked `Live-Slot-Design` admission, root-issued typed ref inputs/pass-through, root pinning and nested dispatch with current host authorization. r[K-LSLOT-02] r[S-LSLOT-01] r[B-LSLOT-01]
+- [x] [serial] Implement independently checked `Live-Slot-Design` admission, root-issued typed ref inputs/pass-through, root pinning and nested dispatch with current host authorization. r[K-LSLOT-02] r[S-LSLOT-01] r[B-LSLOT-01]
   Progress 2026-11-20 (round 4): executed, not yet complete. `verification/lslot-cases/gate.mjs`
   builds the selected CLI from a committed clean tree, requires one projection entry for every
   canonical leaf path and every variant, and refuses a case for each machine-expressible field
@@ -107,7 +107,15 @@
     with zero guest requests; only the checked generic borrow executes (one guest request, result
     21). `serialize`/`forge` (decision 19) and `retain` (decision 25) are the by-design drops;
     `ref_authority` is observed from a host-issued ref whose dispatch grant is revoked.
-- [ ] [serial] Implement exact immutable target admission and bounded global-epoch/slot-incarnation/generation CAS publication, rollback-as-publication and last-pin retirement/reclamation across maps, frames and saved Programs. r[H-LSLOT-01] r[S-LSLOT-01]
+  Done 2026-11-23 (Cairn push B): admission, root-issued typed refs and pass-through, root
+  pinning and nested dispatch with current host authorization are implemented and executed by the
+  promoted LSLOT-01/02/03/06/07/09 records of `verification/lslot-cases/acceptance-2026-11-23-pb.json`
+  (sha256 `455597be2346634db712a6d4876ce011d91e3f6b2d91fa66cfe4995cc7dbce2c`, clean source
+  `0fffc7d842b0e656461fbf7f33d085a199f853fb`, source revision
+  `sha256:f0827fcaa12d647807b5f7021335fcf85939188bdedb9049e3f7b249e0b73199`, binary sha256
+  `f82595adb402be01df821cfd5a90880d0cd2d118cd8399d0414d9cf33d00b383`; raw lane evidence and the
+  run's 32 command outputs under `verification/lslot-cases/raw/pb-071700/`). Proof stays open.
+- [x] [serial] Implement exact immutable target admission and bounded global-epoch/slot-incarnation/generation CAS publication, rollback-as-publication and last-pin retirement/reclamation across maps, frames and saved Programs. r[H-LSLOT-01] r[S-LSLOT-01]
   Progress 2026-11-20 (round 2): executed, not yet complete. **LSLOT-04** still refuses
   `successful_rollback_requires_fresh_admission_authorization_and_evidence`: re-admission and the
   rollback grant are observed, but no publication or rollback request carries evidence, and a
@@ -120,7 +128,18 @@
   the epoch by one, same-slot and unrelated stale writers `stale-reject`, a deleted-and-recreated
   slot uses incarnation 8 without ABA, and rollback publishes a new epoch/generation without
   replaying prior roots.
-- [ ] [serial] Execute every LSLOT case and adversarial variants including cross-slot pinning, retry after last owner release and hostile frozen-replay bindings against actual runtime; record separately bound trace, evidence, proof and trust results without inheriting LIVE acceptance. r[EV-LSLOT-01] r[VC-LSLOT-01] r[DX-LSLOT-01]
+  Done 2026-11-23 (Cairn push B; integrator decisions 45 and 46): exact immutable target
+  admission, the epoch/incarnation/generation CAS, rollback-as-publication and last-pin
+  retirement are executed by LSLOT-04/05/08 from the push-B receipt
+  (`verification/lslot-cases/acceptance-2026-11-23-pb.json`). LSLOT-04's evidence conjunct is
+  observed on a proof-required slot (decision 46): the rollback that re-publishes v1's saved
+  target is refused without evidence, with v2's record and without the current grant, and
+  publishes with v1's exact record at a new epoch and generation. LSLOT-08 runs the retention
+  phases (quota-1 refusals while the root and the saved v1 own it, publication and v1 retirement
+  after the last release) and its replay variants from the two baselines of decision 45. Building
+  the evidence lane found that every dispatch from a proof-required slot was refused (dispatch
+  re-ran the publication's one-shot attestation); fixed in `2238d9bb`.
+- [x] [serial] Execute every LSLOT case and adversarial variants including cross-slot pinning, retry after last owner release and hostile frozen-replay bindings against actual runtime; record separately bound trace, evidence, proof and trust results without inheriting LIVE acceptance. r[EV-LSLOT-01] r[VC-LSLOT-01] r[DX-LSLOT-01]
   Progress 2026-11-20 (round 4): seven of nine cases are projected; LSLOT-01/02/03/06/09 are
   promotable from one receipt, LSLOT-04 and LSLOT-07 stay refused on the fields named above
   (evidence-carrying publication), and LSLOT-05/LSLOT-08 are not executed: the gate has no
@@ -138,3 +157,10 @@
   proof is about another subject (`proof-rejected`) and the slot's valid proof offered for the
   capture-1 target (`correspondence-mismatch`), and published the exact record at epoch 1. LSLOT-05
   is promoted only from a retained gate receipt. LSLOT-04/07/08 stay as recorded above.
+  Done 2026-11-23 (Cairn push B): all nine LSLOT cases are executed and promoted
+  implemented/passed from `verification/lslot-cases/acceptance-2026-11-23-pb.json`, each with its
+  own projection over the canonical {id,input,expected} digest and no mismatch or integrity issue;
+  cross-slot pinning (LSLOT-02), retry after last owner release (LSLOT-08 retention) and hostile
+  frozen-replay bindings (LSLOT-08 replay) included. LSLOT-05's claim names the host-rendered
+  closed subject as an explicit assumption (push-B review R-1). No case inherits LIVE acceptance;
+  every promoted case keeps `proof: open` and `trust: explicit`.
