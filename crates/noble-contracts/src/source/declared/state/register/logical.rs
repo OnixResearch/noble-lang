@@ -503,7 +503,9 @@ const fn valid_hole_label(label: &str) -> bool {
     let mut is_valid = true;
     while is_valid && at < bytes.len() {
         let byte = bytes[at];
-        is_valid = byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-';
+        if !byte.is_ascii_lowercase() && !byte.is_ascii_digit() && byte != b'-' {
+            is_valid = false;
+        }
         at += 1;
     }
     is_valid
