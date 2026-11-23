@@ -129,6 +129,7 @@ const ROUTES = {
   EPROTO: ['boundary-test', 'model-proof', 'review'],
   FSUB: ['experiment-test', 'model-proof', 'review'],
   SMERGE: ['experiment-test', 'model-proof', 'review'],
+  IMPL: ['proof-or-explicit-assumption', 'implementation-test', 'review'],
 };
 
 // Document scope only. This discovery is not the compiler/source inventory.
