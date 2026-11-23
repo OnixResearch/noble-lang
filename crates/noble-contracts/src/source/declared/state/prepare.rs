@@ -944,6 +944,8 @@ fn expected_kind(obligation: &crate::intrinsic::ProofObligation) -> crate::intri
         crate::intrinsic::PendingGoal::Contract { contract } => {
             if contract.revision == 2 && obligation.revision == 2 {
                 crate::intrinsic::ProofKind::NamedContract
+            } else if contract.revision == 3 && obligation.revision == 3 {
+                crate::intrinsic::ProofKind::NamedV3Contract
             } else {
                 crate::intrinsic::ProofKind::Contract
             }

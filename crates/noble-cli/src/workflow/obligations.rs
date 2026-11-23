@@ -928,22 +928,28 @@ fn contract_entry(
         goal.contract_name,
         goal.revision
     );
-    let named = goal.revision == 2;
-    let prepared: Result<(std::string::String, &'static str, &'static str), String> = if named {
-        noble_contracts::intrinsic::prepare_named_contract(goal, limits)
-            .map(|text| (text, "prepare_named_contract", "NamedV2Obligation.claim"))
-            .map_err(|problem| problem.message)
-    } else {
-        noble_contracts::intrinsic::prepare_contract(goal, limits)
-            .map(|prepared| {
-                (
-                    noble_contracts::export_lean(&prepared),
-                    "export_lean",
-                    "MC1Obligation.claim",
-                )
-            })
-            .map_err(|problem| problem.message)
-    };
+    let named = goal.revision >= 2;
+    let prepared: Result<(std::string::String, &'static str, &'static str), String> =
+        match goal.revision {
+            2 => noble_contracts::intrinsic::prepare_named_contract(goal, limits)
+                .map(|text| (text, "prepare_named_contract", "NamedV2Obligation.claim"))
+                .map_err(|problem| problem.message),
+            // Revision 3 reports its regenerated canonical claim; its reviewed
+            // Lean lowering is not implemented yet, so the projection is not a
+            // Lean statement and says so at `statement_source`.
+            3 => noble_contracts::intrinsic::claim_shape(goal, limits)
+                .map(|text| (text, "claim_shape", "NamedV3Obligation.claim"))
+                .map_err(|problem| problem.message),
+            _ => noble_contracts::intrinsic::prepare_contract(goal, limits)
+                .map(|prepared| {
+                    (
+                        noble_contracts::export_lean(&prepared),
+                        "export_lean",
+                        "MC1Obligation.claim",
+                    )
+                })
+                .map_err(|problem| problem.message),
+        };
     let (statement, statement_source, statement_ref, refusal) = match prepared {
         Ok((text, source, reference)) => (Some(text), source, reference, None),
         Err(message) => (
@@ -1080,7 +1086,7 @@ fn module_report(
 ) -> encoding::Json {
     let limits = Limits::default();
     let batch = prepared.proof_obligations();
-    let named = prepared.contract_goals().any(|goal| goal.revision == 2)
+    let named = prepared.contract_goals().any(|goal| goal.revision >= 2)
         || batch.is_some_and(|batch| {
             batch
                 .obligations

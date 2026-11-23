@@ -2,6 +2,13 @@
 
 mod sizechange;
 
+/// The contract-time projection: a generated Lean statement, or the
+/// regenerated revision-3 claim that has no reviewed Lean lowering yet.
+enum Generated {
+    Statement(std::string::String),
+    Claim(std::string::String),
+}
+
 impl super::Session {
     pub(super) fn commit_declared(
         &mut self,
@@ -139,10 +146,17 @@ impl super::Session {
             .map(|binding| (binding.adapter_identity.clone(), binding.adapter_slot));
         let mut contract_reports = std::vec::Vec::new();
         for goal in prepared.contract_goals() {
-            let generated_statement = match goal.revision {
+            // Revisions 1 and 2 report a generated Lean statement; revision 3
+            // reports its regenerated canonical claim and envelope identity,
+            // because no reviewed Lean lowering of a revision-3 chain exists yet.
+            let generated = match goal.revision {
                 1 => noble_contracts::intrinsic::prepare_contract(goal, options.limits)
-                    .map(|typed| noble_contracts::export_lean(&typed)),
-                2 => noble_contracts::intrinsic::prepare_named_contract(goal, options.limits),
+                    .map(|typed| noble_contracts::export_lean(&typed))
+                    .map(Generated::Statement),
+                2 => noble_contracts::intrinsic::prepare_named_contract(goal, options.limits)
+                    .map(Generated::Statement),
+                3 => noble_contracts::intrinsic::claim_shape(goal, options.limits)
+                    .map(Generated::Claim),
                 _ => {
                     return Err(super::output::Failure::new(
                         super::output::ErrorContext {
@@ -153,9 +167,9 @@ impl super::Session {
                     ))
                 }
             };
-            let generated_statement =
+            let generated =
                 attempt!(
-                    generated_statement.map_err(|problem| super::output::Failure::new(
+                    generated.map_err(|problem| super::output::Failure::new(
                         super::output::ErrorContext {
                             stage: "check",
                             outcome: "internal-failure"
@@ -190,6 +204,15 @@ impl super::Session {
                 ),
             ]);
             if goal.revision == 2 {
+                let Generated::Statement(generated_statement) = &generated else {
+                    return Err(super::output::Failure::new(
+                        super::output::ErrorContext {
+                            stage: "check",
+                            outcome: "internal-failure",
+                        },
+                        "named contract revision produced no statement",
+                    ));
+                };
                 fields.push((
                     "generated_statement_sha256",
                     crate::workflow::encoding::string(crate::workflow::intrinsic::sha256(
@@ -200,10 +223,43 @@ impl super::Session {
                     "generated_claim",
                     crate::workflow::encoding::string("NamedV2Obligation.claim"),
                 ));
+            } else if goal.revision == 3 {
+                let Generated::Claim(claim) = &generated else {
+                    return Err(super::output::Failure::new(
+                        super::output::ErrorContext {
+                            stage: "check",
+                            outcome: "internal-failure",
+                        },
+                        "revision-3 contract produced no claim",
+                    ));
+                };
+                fields.push((
+                    "generated_claim_sha256",
+                    crate::workflow::encoding::string(crate::workflow::intrinsic::sha256(
+                        claim.as_bytes(),
+                    )),
+                ));
+                fields.push((
+                    "generated_claim",
+                    crate::workflow::encoding::string(claim),
+                ));
+                fields.push((
+                    "generated_claim_source",
+                    crate::workflow::encoding::string("claim_shape"),
+                ));
             } else {
+                let Generated::Statement(generated_statement) = &generated else {
+                    return Err(super::output::Failure::new(
+                        super::output::ErrorContext {
+                            stage: "check",
+                            outcome: "internal-failure",
+                        },
+                        "revision-1 contract produced no statement",
+                    ));
+                };
                 fields.push((
                     "generated_statement",
-                    crate::workflow::encoding::string(&generated_statement),
+                    crate::workflow::encoding::string(generated_statement),
                 ));
             }
             fields.push((

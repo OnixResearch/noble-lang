@@ -12,6 +12,8 @@ use alloc::{boxed::Box, string::String, vec::Vec};
 
 mod named_v2;
 pub use named_v2::prepare_named_contract;
+mod named_v3;
+pub use named_v3::{claim_shape, prepare_named_v3, CallRecord, Envelope, PreparedV3};
 mod elaborate;
 pub use elaborate::{
     elaborate_obligations, Elaborated, ElaborationRecord, InsertedArgument, ELABORATION_REVISION,
@@ -550,6 +552,10 @@ pub enum ProofKind {
     Pure,
     Contract,
     NamedContract,
+    /// The opt-in revision-3 reusable-call contract proof. Its envelope is
+    /// checked at the source stage; no reviewed Lean lowering exists yet, so
+    /// no consumer may report it proved.
+    NamedV3Contract,
 }
 #[derive(Clone, Debug)]
 pub struct CheckedProof {
@@ -792,6 +798,20 @@ enum Code {
     Sum(Box<Code>, Box<Code>),
     List(Box<Code>),
 }
+/// A bounded scalar term of the revision-3 logical extension: a Type0 `I64`
+/// variable, an `I64` literal, or wrapping `add`/`sub`/`mul` over terms. It is
+/// used only as an equality operand of the opt-in revision-3 profile and of the
+/// reviewed arithmetic rule identities, so revisions 1 and 2 keep their
+/// variable-only `Eq`.
+#[derive(Clone, PartialEq, Eq)]
+#[cfg_attr(test, derive(Debug))]
+enum Term {
+    Variable(usize),
+    I64(i64),
+    Add(Box<Term>, Box<Term>),
+    Sub(Box<Term>, Box<Term>),
+    Mul(Box<Term>, Box<Term>),
+}
 // `Sort` and `Proposition` are mutually recursive (`Sort::Premise` and
 // `Proposition::Pi`). Their copy and equality recurse through plain functions,
 // with exactly the derived results, so the pinned Aeneas never sees a trait
@@ -809,6 +829,7 @@ enum Sort {
 enum Proposition {
     Pi(usize, Sort, Box<Proposition>),
     Eq(Code, usize, usize),
+    EqTerm(Code, Term, Term),
 }
 impl Clone for Sort {
     fn clone(&self) -> Self {
@@ -849,6 +870,9 @@ fn clone_proposition(prop: &Proposition) -> Proposition {
             Proposition::Pi(*index, clone_sort(sort), Box::new(clone_proposition(body)))
         }
         Proposition::Eq(code, left, right) => Proposition::Eq(code.clone(), *left, *right),
+        Proposition::EqTerm(code, left, right) => {
+            Proposition::EqTerm(code.clone(), left.clone(), right.clone())
+        }
     }
 }
 /// Variant-wise sort equality, as the derived `PartialEq` did.
@@ -889,9 +913,11 @@ fn proposition_equal(left: &Proposition, right: &Proposition) -> bool {
             Proposition::Eq(left_code, left_from, left_to),
             Proposition::Eq(right_code, right_from, right_to),
         ) => left_code == right_code && left_from == right_from && left_to == right_to,
-        (Proposition::Pi(..), Proposition::Eq(..)) | (Proposition::Eq(..), Proposition::Pi(..)) => {
-            false
-        }
+        (
+            Proposition::EqTerm(left_code, left_from, left_to),
+            Proposition::EqTerm(right_code, right_from, right_to),
+        ) => left_code == right_code && left_from == right_from && left_to == right_to,
+        _ => false,
     }
 }
 const INLINE_TREE_FRAMES: usize = 32;
@@ -1073,6 +1099,7 @@ enum SizeNode<'a> {
     Code(&'a Code),
     Sort(&'a Sort),
     Proposition(&'a Proposition),
+    Term(&'a Term),
 }
 #[expect(
     tigerstyle::assertion_density,
@@ -1147,6 +1174,18 @@ fn size_step<'a>(
             *size = size.checked_add(3)?;
             work_push!(pending, SizeNode::Code(code), bound).ok()?;
         }
+        SizeNode::Proposition(Proposition::EqTerm(code, left, right)) => {
+            *size = size.checked_add(2)?;
+            work_push!(pending, SizeNode::Term(right), bound).ok()?;
+            work_push!(pending, SizeNode::Term(left), bound).ok()?;
+            work_push!(pending, SizeNode::Code(code), bound).ok()?;
+        }
+        SizeNode::Term(Term::Add(left, right) | Term::Sub(left, right) | Term::Mul(left, right)) => {
+            *size = size.checked_add(1)?;
+            work_push!(pending, SizeNode::Term(right), bound).ok()?;
+            work_push!(pending, SizeNode::Term(left), bound).ok()?;
+        }
+        SizeNode::Term(Term::Variable(_) | Term::I64(_)) => *size = size.checked_add(1)?,
     }
     Some(())
 }
@@ -1159,6 +1198,9 @@ fn code_size(code: &Code, bound: usize) -> Option<usize> {
 fn proposition_size(prop: &Proposition, bound: usize) -> Option<usize> {
     tree_size(SizeNode::Proposition(prop), bound)
 }
+fn term_size(term: &Term, bound: usize) -> Option<usize> {
+    tree_size(SizeNode::Term(term), bound)
+}
 #[derive(Clone)]
 struct Binder {
     name: String,
@@ -1167,7 +1209,9 @@ struct Binder {
 #[derive(Clone)]
 struct Available {
     name: String,
-    goal: Proposition,
+    /// `None` for an admitted contract dependency: it is replayed and its
+    /// proof retained, but it is not a proposition any `use` may name.
+    goal: Option<Proposition>,
     lean_term: String,
 }
 #[derive(Clone, Copy)]
@@ -1186,6 +1230,7 @@ enum RewriteFrame<'a> {
     Premise,
     Pi(usize),
     Eq(usize, usize),
+    EqTerm(&'a Term, &'a Term),
 }
 enum Rewritten {
     Code(Code),
@@ -1354,6 +1399,10 @@ fn rewrite_step<'a>(
                 push_rewrite_frame!(frames, RewriteFrame::Eq(*left, *right), bound, span)?;
                 push_rewrite_frame!(frames, RewriteFrame::Code(code, false), bound, span)?;
             }
+            Proposition::EqTerm(code, left, right) => {
+                push_rewrite_frame!(frames, RewriteFrame::EqTerm(left, right), bound, span)?;
+                push_rewrite_frame!(frames, RewriteFrame::Code(code, false), bound, span)?;
+            }
         },
         RewriteFrame::Pair | RewriteFrame::Sum => {
             let right = take_code!(values, span)?;
@@ -1416,6 +1465,18 @@ fn rewrite_step<'a>(
                 span
             )?;
         }
+        RewriteFrame::EqTerm(left, right) => {
+            let code = take_code!(values, span)?;
+            let mut remaining = bound;
+            let left = rewrite_term(left, mode, span, &mut remaining)?;
+            let right = rewrite_term(right, mode, span, &mut remaining)?;
+            push_rewritten!(
+                values,
+                Rewritten::Proposition(Proposition::EqTerm(code, left, right)),
+                bound,
+                span
+            )?;
+        }
     }
     Ok(())
 }
@@ -1454,6 +1515,49 @@ fn variable_rewrite(
             None => Err(exhausted(span)),
         },
         Rewrite::Replace(..) => Ok(VariableRewrite::Index(index)),
+    }
+}
+/// Rewrite one scalar term: shift every level, replace the eliminated binder
+/// with an applied term argument, or lower the levels above it. `remaining` is
+/// the node budget of this walk, spent once per visited term node.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the walk follows a finite, already parsed term and spends one unit of its node budget per visit, so it terminates on every input"
+)]
+fn rewrite_term(
+    term: &Term,
+    mode: Rewrite<'_>,
+    span: Span,
+    remaining: &mut usize,
+) -> Result<Term, Diagnostic> {
+    let Some(left) = remaining.checked_sub(1) else {
+        return Err(exhausted(span));
+    };
+    *remaining = left;
+    match term {
+        Term::Variable(index) => match mode {
+            Rewrite::Shift(base) => Ok(Term::Variable(
+                index.checked_add(base).ok_or_else(|| exhausted(span))?,
+            )),
+            Rewrite::Replace(binder, Argument::Term(argument)) if *index == binder => {
+                Ok(argument.clone())
+            }
+            Rewrite::Replace(binder, _) if *index > binder => Ok(Term::Variable(
+                index.checked_sub(1).ok_or_else(|| exhausted(span))?,
+            )),
+            Rewrite::Replace(..) => Ok(Term::Variable(*index)),
+        },
+        Term::I64(value) => Ok(Term::I64(*value)),
+        Term::Add(left, right) | Term::Sub(left, right) | Term::Mul(left, right) => {
+            let left = rewrite_term(left, mode, span, remaining)?;
+            let right = rewrite_term(right, mode, span, remaining)?;
+            let pair = (Box::new(left), Box::new(right));
+            Ok(match term {
+                Term::Add(..) => Term::Add(pair.0, pair.1),
+                Term::Sub(..) => Term::Sub(pair.0, pair.1),
+                _ => Term::Mul(pair.0, pair.1),
+            })
+        }
     }
 }
 #[expect(
@@ -1510,6 +1614,7 @@ fn replace_index(
 enum Argument {
     Code(Code),
     Value(usize),
+    Term(Term),
     Premise,
 }
 enum ParseFrame<'a> {
@@ -1854,6 +1959,26 @@ fn parse_equality(
 ) -> Result<(), Diagnostic> {
     let ParseStacks { values, local, .. } = stacks;
     let ty = take_code!(values, left.span)?;
+    // An operand list is the opt-in bounded scalar extension; two atoms keep
+    // the published variable-only equality of revisions 1 and 2 unchanged.
+    if !matches!(
+        (&left.kind, &right.kind),
+        (FormKind::Atom(_), FormKind::Atom(_))
+    ) {
+        if ty != Code::I64 {
+            return Err(reject(left.span, "equality operand has wrong code"));
+        }
+        let mut remaining = bound;
+        let first = parse_term(left, context, local, 0, &mut remaining)?;
+        let second = parse_term(right, context, local, 0, &mut remaining)?;
+        push_rewritten!(
+            values,
+            Rewritten::Proposition(Proposition::EqTerm(ty, first, second)),
+            bound,
+            right.span
+        )?;
+        return Ok(());
+    }
     let left_name = atom(left)?;
     let (first, first_sort) = binder(context, local, left_name)
         .ok_or_else(|| reject(left.span, "unbound equality value"))?;
@@ -1873,6 +1998,56 @@ fn parse_equality(
         right.span
     )?;
     Ok(())
+}
+/// Parse one bounded scalar term: a bound `I64` value, an `I64` literal, or a
+/// wrapping `add`, `sub` or `mul` over terms. `remaining` is the node budget.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the walk follows the finite parsed logical form and spends one unit of its node budget per visit, so it terminates on every input"
+)]
+fn parse_term(
+    form: &Form,
+    context: &WorkStack<Binder>,
+    local: &WorkStack<Binder>,
+    depth: u32,
+    remaining: &mut usize,
+) -> Result<Term, Diagnostic> {
+    let Some(left) = remaining.checked_sub(1) else {
+        return Err(exhausted(form.span));
+    };
+    *remaining = left;
+    match &form.kind {
+        FormKind::Atom(text) => {
+            if let Some((index, sort)) = binder(context, local, text) {
+                return match sort {
+                    Sort::Value(Code::I64) => Ok(Term::Variable(index)),
+                    _ => Err(reject(form.span, "equality operand has wrong code")),
+                };
+            }
+            match text.parse::<i64>() {
+                Ok(value) => Ok(Term::I64(value)),
+                Err(_) => Err(reject(form.span, "expected bounded scalar term")),
+            }
+        }
+        FormKind::List(items) => {
+            let head = head_atom(items).ok_or_else(|| {
+                reject(form.span, "expected bounded scalar term")
+            })?;
+            if items.len() != 3 {
+                return Err(reject(form.span, "expected bounded scalar term"));
+            }
+            let next = deeper(depth, form.span)?;
+            let first = parse_term(&items[1], context, local, next, remaining)?;
+            let second = parse_term(&items[2], context, local, next, remaining)?;
+            let pair = (Box::new(first), Box::new(second));
+            match head {
+                "add" => Ok(Term::Add(pair.0, pair.1)),
+                "sub" => Ok(Term::Sub(pair.0, pair.1)),
+                "mul" => Ok(Term::Mul(pair.0, pair.1)),
+                _ => Err(reject(form.span, "expected bounded scalar term")),
+            }
+        }
+    }
 }
 /// Assemble a parsed value from its completed parts, or schedule the parts of
 /// a sort or of a `Pi` body.
@@ -2119,6 +2294,7 @@ enum LeanFrame<'a> {
     Code(&'a Code),
     Sort(&'a Sort),
     Proposition(&'a Proposition),
+    Term(&'a Term),
     Text(&'a str),
     Number(usize),
     /// The opening of a dependent Pi, `(` U+2200 ` (v`, as one text part.
@@ -2260,6 +2436,36 @@ fn lean_step<'a>(
                 push!(LeanFrame::Text(" = "));
                 push!(LeanFrame::Number(*left));
                 push!(LeanFrame::Text("v"));
+            }
+            Proposition::EqTerm(_, left, right) => {
+                push!(LeanFrame::Term(right));
+                push!(LeanFrame::Text(" = "));
+                push!(LeanFrame::Term(left));
+            }
+        },
+        LeanFrame::Term(term) => match term {
+            Term::Variable(index) => {
+                push!(LeanFrame::Number(*index));
+                push!(LeanFrame::Text("v"));
+            }
+            Term::I64(value) => {
+                let digits = signed_text(*value);
+                append!("(BitVec.ofInt 64 (");
+                append!(digits.as_str());
+                append!("))");
+            }
+            Term::Add(left, right) | Term::Sub(left, right) | Term::Mul(left, right) => {
+                push!(LeanFrame::Text(")"));
+                push!(LeanFrame::Term(right));
+                push!(
+                    LeanFrame::Text(match term {
+                        Term::Add(..) => " + ",
+                        Term::Sub(..) => " - ",
+                        _ => " * ",
+                    })
+                );
+                push!(LeanFrame::Term(left));
+                push!(LeanFrame::Text("("));
             }
         },
     }
@@ -2431,6 +2637,17 @@ fn lean_proposition(
         Proposition::Eq(_, left, right) => Ok(equation_text(*left, *right)),
         _ => lean_text(LeanFrame::Proposition(prop), span, bounds),
     }
+}
+/// `value` in decimal, with its sign, exactly as `format!("{value}")` writes
+/// the `i64` literals of an `Eq` term. `i64::MIN` needs its magnitude in
+/// `u64`, which `unsigned_abs` yields without overflow.
+fn signed_text(value: i64) -> String {
+    let mut text = String::new();
+    if value < 0 {
+        text.push('-');
+    }
+    crate::rendering::number(&mut text, value.unsigned_abs());
+    text
 }
 enum ProofGoal<'a> {
     Borrowed(&'a Proposition),
@@ -2684,7 +2901,7 @@ fn last_available<'a>(available: &'a [Available], name: &str) -> Option<&'a Avai
     reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
 fn is_available_named(item: &Available, name: &str) -> bool {
-    item.name == name
+    item.name == name && item.goal.is_some()
 }
 // Take the proposition and Lean text the last frame inferred into `$completed`.
 macro_rules! take_inferred {
@@ -2769,16 +2986,23 @@ fn infer_step<'a>(
                 "unresolved, private, forward or cyclic proof use",
             )
         })?;
+        let Some(dependency_goal) = &dependency.goal else {
+            return Err(reject(
+                term.span,
+                "a contract dependency is not a logical proposition",
+            ));
+        };
         advance!(*meter, meter.charge(dependency.lean_term.len(), term.span));
         advance!(
             *meter,
             meter.substitute(
-                proposition_size(&dependency.goal, bound).ok_or_else(|| exhausted(term.span))?,
+                proposition_size(dependency_goal, bound)
+                    .ok_or_else(|| exhausted(term.span))?,
                 term.span
             )
         );
         *completed = Some(ProofValue::Inferred(
-            shifted_prop(&dependency.goal, context.total, term.span, bound)?,
+            shifted_prop(dependency_goal, context.total, term.span, bound)?,
             dependency.lean_term.clone(),
         ));
         return Ok(());
@@ -2804,19 +3028,129 @@ fn infer_step<'a>(
         return Ok(());
     }
     if let Ok(args) = operation(term, "refl", 1) {
-        let name = atom(&args[0])?;
-        let (index, sort) = stack_binder(context, name)
-            .ok_or_else(|| reject(args[0].span, "unbound refl value"))?;
-        let Sort::Value(code) = sort else {
-            return Err(reject(term.span, "refl operand is not a total value"));
-        };
+        if let FormKind::Atom(name) = &args[0].kind {
+            if let Some((index, sort)) = stack_binder(context, name) {
+                let Sort::Value(code) = sort else {
+                    return Err(reject(term.span, "refl operand is not a total value"));
+                };
+                *completed = Some(ProofValue::Inferred(
+                    Proposition::Eq(code.clone(), index, index),
+                    refl_text(index),
+                ));
+                return Ok(());
+            }
+            if name.parse::<i64>().is_err() && !matches!(args[0].kind, FormKind::List(_)) {
+                return Err(reject(args[0].span, "unbound refl value"));
+            }
+        }
+        let local = WorkStack::new();
+        let mut remaining = bound;
+        let scalar = parse_term(&args[0], context, &local, 0, &mut remaining)?;
+        advance!(
+            *meter,
+            meter.normalize(
+                term_size(&scalar, bound).ok_or_else(|| exhausted(args[0].span))?,
+                args[0].span
+            )
+        );
+        let expression = lean_text(LeanFrame::Term(&scalar), args[0].span, meter.tree_bounds)?;
+        let mut body = String::from("(Eq.refl ");
+        body.push_str(&expression);
+        body.push(')');
         *completed = Some(ProofValue::Inferred(
-            Proposition::Eq(code.clone(), index, index),
-            refl_text(index),
+            Proposition::EqTerm(Code::I64, scalar.clone(), scalar.clone()),
+            body,
         ));
         return Ok(());
     }
+    // The reviewed revision-3 arithmetic rule identities: each names an exact
+    // Lean declaration pinned by `ContractGate.lean`; none is an axiom.
+    if let Ok(args) = operation(term, "bv-add-assoc", 3) {
+        let scalars = scalar_arguments(args, context, bound)?;
+        let (a, b, c) = (&scalars[0], &scalars[1], &scalars[2]);
+        let proposition = Proposition::EqTerm(
+            Code::I64,
+            Term::Add(
+                Box::new(Term::Add(Box::new(a.clone()), Box::new(b.clone()))),
+                Box::new(c.clone()),
+            ),
+            Term::Add(
+                Box::new(a.clone()),
+                Box::new(Term::Add(Box::new(b.clone()), Box::new(c.clone()))),
+            ),
+        );
+        let body = rule_text(
+            "BitVec.add_assoc",
+            &[a, b, c],
+            term.span,
+            meter.tree_bounds,
+        )?;
+        *completed = Some(ProofValue::Inferred(proposition, body));
+        return Ok(());
+    }
+    if let Ok(args) = operation(term, "bv-add-comm", 2) {
+        let scalars = scalar_arguments(args, context, bound)?;
+        let (a, b) = (&scalars[0], &scalars[1]);
+        let proposition = Proposition::EqTerm(
+            Code::I64,
+            Term::Add(Box::new(a.clone()), Box::new(b.clone())),
+            Term::Add(Box::new(b.clone()), Box::new(a.clone())),
+        );
+        let body = rule_text("BitVec.add_comm", &[a, b], term.span, meter.tree_bounds)?;
+        *completed = Some(ProofValue::Inferred(proposition, body));
+        return Ok(());
+    }
+    if let Ok(args) = operation(term, "bv-mul-add", 3) {
+        let scalars = scalar_arguments(args, context, bound)?;
+        let (a, b, c) = (&scalars[0], &scalars[1], &scalars[2]);
+        let proposition = Proposition::EqTerm(
+            Code::I64,
+            Term::Mul(
+                Box::new(a.clone()),
+                Box::new(Term::Add(Box::new(b.clone()), Box::new(c.clone()))),
+            ),
+            Term::Add(
+                Box::new(Term::Mul(Box::new(a.clone()), Box::new(b.clone()))),
+                Box::new(Term::Mul(Box::new(a.clone()), Box::new(c.clone()))),
+            ),
+        );
+        let body = rule_text("BitVec.mul_add", &[a, b, c], term.span, meter.tree_bounds)?;
+        *completed = Some(ProofValue::Inferred(proposition, body));
+        return Ok(());
+    }
     Err(reject(term.span, "proof term has no inferable proposition"))
+}
+/// The scalar arguments of one reviewed arithmetic rule.
+fn scalar_arguments(
+    args: &[Form],
+    context: &WorkStack<Binder>,
+    bound: usize,
+) -> Result<Vec<Term>, Diagnostic> {
+    let local = WorkStack::new();
+    let mut remaining = bound;
+    let mut scalars = Vec::with_capacity(args.len());
+    for argument in args {
+        scalars.push(parse_term(argument, context, &local, 0, &mut remaining)?);
+    }
+    Ok(scalars)
+}
+/// The lowered application `({declaration} {arguments...})` of one reviewed
+/// arithmetic rule.
+fn rule_text(
+    declaration: &str,
+    arguments: &[&Term],
+    span: Span,
+    bounds: TreeBounds,
+) -> Result<String, Diagnostic> {
+    let mut text = String::from("(");
+    text.push_str(declaration);
+    for argument in arguments {
+        let rendered = lean_text(LeanFrame::Term(argument), span, bounds)?;
+        text.push(' ');
+        text.push_str(&rendered);
+    }
+    text.push(')');
+    Ok(text)
 }
 /// Check `term` against `goal`: an `intro` for a Pi goal, a `subst`, or an
 /// inferred proposition compared with the goal once it is inferred.
@@ -3034,8 +3368,18 @@ fn subst_equation_step<'a>(
         depth,
     } = equation;
     let (equation, equality_lean) = take_inferred!(completed, evidence.span)?;
-    let Proposition::Eq(equation_code, left, right) = equation else {
-        return Err(reject(evidence.span, "subst requires equality evidence"));
+    let (equation_code, before_argument, after_argument) = match equation {
+        Proposition::Eq(equation_code, left, right) => (
+            equation_code,
+            Argument::Value(left),
+            Argument::Value(right),
+        ),
+        Proposition::EqTerm(equation_code, left, right) => {
+            (equation_code, Argument::Term(left), Argument::Term(right))
+        }
+        Proposition::Pi(..) => {
+            return Err(reject(evidence.span, "subst requires equality evidence"))
+        }
     };
     advance!(
         *meter,
@@ -3062,7 +3406,7 @@ fn subst_equation_step<'a>(
     *meter = next;
     work_pop!(context);
     let body = body?;
-    if !matches!(body, Proposition::Eq(..)) {
+    if !matches!(body, Proposition::Eq(..) | Proposition::EqTerm(..)) {
         return Err(reject(
             motive.span,
             "subst motive must be a total Eq proposition",
@@ -3076,8 +3420,8 @@ fn subst_equation_step<'a>(
         .and_then(|size| size.checked_mul(2))
         .ok_or_else(|| exhausted(term.span))?;
     advance!(*meter, meter.substitute(size, term.span));
-    let before = replace_prop(&body, index, &Argument::Value(left), term.span, bound)?;
-    let after = replace_prop(&body, index, &Argument::Value(right), term.span, bound)?;
+    let before = replace_prop(&body, index, &before_argument, term.span, bound)?;
+    let after = replace_prop(&body, index, &after_argument, term.span, bound)?;
     advance!(
         *meter,
         meter.normalize(
@@ -3211,27 +3555,57 @@ fn continuation_step<'a>(
                     );
                 }
                 Sort::Value(expected) => {
-                    let name = atom(argument)?;
-                    let (value, sort) = stack_binder(context, name)
-                        .ok_or_else(|| reject(argument.span, "apply value is unbound"))?;
+                    if let FormKind::Atom(name) = &argument.kind {
+                        if let Some((value, sort)) = stack_binder(context, name) {
+                            advance!(
+                                *meter,
+                                meter.normalize(
+                                    code_size(&expected, bound)
+                                        .ok_or_else(|| exhausted(argument.span))?,
+                                    argument.span
+                                )
+                            );
+                            if sort != &Sort::Value(expected) {
+                                return Err(reject(argument.span, "apply value has wrong code"));
+                            }
+                            finish_apply!(
+                                term,
+                                depth,
+                                body,
+                                index,
+                                Argument::Value(value),
+                                lowered,
+                                variable(value)
+                            );
+                            return Ok(());
+                        }
+                        if expected != Code::I64 || name.parse::<i64>().is_err() {
+                            return Err(reject(argument.span, "apply value is unbound"));
+                        }
+                    }
+                    if expected != Code::I64 {
+                        return Err(reject(argument.span, "apply value has wrong code"));
+                    }
+                    let local = WorkStack::new();
+                    let mut remaining = bound;
+                    let scalar = parse_term(argument, context, &local, 0, &mut remaining)?;
                     advance!(
                         *meter,
                         meter.normalize(
-                            code_size(&expected, bound).ok_or_else(|| exhausted(argument.span))?,
+                            term_size(&scalar, bound).ok_or_else(|| exhausted(argument.span))?,
                             argument.span
                         )
                     );
-                    if sort != &Sort::Value(expected) {
-                        return Err(reject(argument.span, "apply value has wrong code"));
-                    }
+                    let expression =
+                        lean_text(LeanFrame::Term(&scalar), argument.span, meter.tree_bounds)?;
                     finish_apply!(
                         term,
                         depth,
                         body,
                         index,
-                        Argument::Value(value),
+                        Argument::Term(scalar),
                         lowered,
-                        variable(value)
+                        expression
                     );
                 }
                 Sort::Premise(expected) => {
@@ -3379,17 +3753,35 @@ pub fn check_batch_with_budgets(
         result: Vec::new(),
         result_bound,
     };
+    // Contract proofs become importable dependencies only for a batch that
+    // carries a revision-3 obligation; every other batch keeps the published
+    // refusal of a contract in the pure fragment.
+    let allow_contracts = batch
+        .obligations
+        .iter()
+        .any(|obligation| obligation.revision == 3);
     let mut index = 0;
     let mut dependencies = Ok(());
     while dependencies.is_ok() && index < batch.dependencies.len() {
-        dependencies = admit_dependency(&batch.dependencies[index], &mut admitted, &mut meter);
+        dependencies = admit_dependency(
+            &batch.dependencies[index],
+            &mut admitted,
+            allow_contracts,
+            &mut meter,
+        );
         index += 1;
     }
     dependencies?;
     let mut index = 0;
     let mut obligations = Ok(());
     while obligations.is_ok() && index < batch.obligations.len() {
-        obligations = admit_obligation(&batch.obligations[index], &mut admitted, &mut meter);
+        obligations = admit_obligation(
+            &batch.obligations[index],
+            &mut admitted,
+            &batch.dependencies,
+            &batch.obligations[..index],
+            &mut meter,
+        );
         index += 1;
     }
     obligations?;
@@ -3417,6 +3809,7 @@ struct Admitted {
 fn admit_dependency(
     dependency: &ProofDependency,
     admitted: &mut Admitted,
+    allow_contracts: bool,
     meter: &mut Meter<'_>,
 ) -> Result<(), Diagnostic> {
     if !dependency.exported {
@@ -3425,7 +3818,7 @@ fn admit_dependency(
             "private proof cannot be imported",
         ));
     }
-    let checked = advance!(*meter, check_dependency(dependency, *meter));
+    let checked = advance!(*meter, check_dependency(dependency, allow_contracts, *meter));
     if admitted.available.len() >= admitted.available_bound {
         return Err(exhausted(dependency.declaration.span));
     }
@@ -3440,11 +3833,13 @@ fn admit_dependency(
 fn admit_obligation(
     obligation: &ProofObligation,
     admitted: &mut Admitted,
+    dependencies: &[ProofDependency],
+    local: &[ProofObligation],
     meter: &mut Meter<'_>,
 ) -> Result<(), Diagnostic> {
     let (checked, exported) = advance!(
         *meter,
-        check_obligation(obligation, &admitted.available, *meter)
+        check_obligation(obligation, &admitted.available, dependencies, local, *meter)
     );
     if let Some(goal) = exported {
         if admitted.available.len() >= admitted.available_bound {
@@ -3461,9 +3856,11 @@ fn admit_obligation(
 fn check_obligation<'m>(
     obligation: &ProofObligation,
     available: &[Available],
+    dependencies: &[ProofDependency],
+    local: &[ProofObligation],
     mut meter: Meter<'m>,
 ) -> Transition<'m, (CheckedProof, Option<Available>)> {
-    let result = obligation_proof(obligation, available, &mut meter);
+    let result = obligation_proof(obligation, available, dependencies, local, &mut meter);
     (meter, result)
 }
 /// Check one obligation against the proofs available before it.
@@ -3478,6 +3875,8 @@ fn check_obligation<'m>(
 fn obligation_proof(
     obligation: &ProofObligation,
     available: &[Available],
+    dependencies: &[ProofDependency],
+    local: &[ProofObligation],
     meter: &mut Meter<'_>,
 ) -> Result<(CheckedProof, Option<Available>), Diagnostic> {
     advance!(*meter, meter.visit(0, obligation.span));
@@ -3515,7 +3914,7 @@ fn obligation_proof(
                 checked,
                 Some(Available {
                     name: obligation.name.clone(),
-                    goal,
+                    goal: Some(goal),
                     lean_term: lowered,
                 }),
             ))
@@ -3532,6 +3931,10 @@ fn obligation_proof(
                 2 => advance!(
                     *meter,
                     named_v2::check_contract(obligation, contract, *meter)
+                ),
+                3 => advance!(
+                    *meter,
+                    named_v3::check_contract(obligation, contract, dependencies, local, *meter)
                 ),
                 _ => return Err(reject(obligation.span, "unknown contract revision")),
             };
@@ -3554,9 +3957,10 @@ enum DependencyFrame<'a> {
 }
 fn check_dependency<'m>(
     dependency: &ProofDependency,
+    allow_contracts: bool,
     mut meter: Meter<'m>,
 ) -> Transition<'m, Available> {
-    let result = dependency_proof(dependency, &mut meter);
+    let result = dependency_proof(dependency, allow_contracts, &mut meter);
     (meter, result)
 }
 /// The identity by which an active dependency detects a cycle.
@@ -3570,6 +3974,9 @@ struct DependencyWalk<'a> {
     frames: WorkStack<DependencyFrame<'a>>,
     active: WorkStack<DependencyIdentity>,
     completed: Option<Available>,
+    /// A revision-3 obligation's batch admits contract dependencies so they can
+    /// be replayed; the admission never turns one into a proposition.
+    allow_contracts: bool,
     // Contiguous siblings share one scratch buffer; a frame owns only its
     // starting offset. No per-dependency vector or eager fan-out reservation.
     available: Vec<Available>,
@@ -3586,6 +3993,7 @@ struct DependencyWalk<'a> {
 )]
 fn dependency_proof(
     dependency: &ProofDependency,
+    allow_contracts: bool,
     meter: &mut Meter<'_>,
 ) -> Result<Available, Diagnostic> {
     let bound = meter.tree_bounds.frames;
@@ -3606,6 +4014,7 @@ fn dependency_proof(
         frames,
         active: WorkStack::new(),
         completed: None,
+        allow_contracts,
         available: Vec::new(),
         available_bound,
     };
@@ -3648,6 +4057,7 @@ fn dependency_step<'a>(
         frames,
         active,
         completed,
+        allow_contracts,
         available,
         available_bound,
     } = walk;
@@ -3756,16 +4166,33 @@ fn dependency_step<'a>(
                 .ok_or_else(|| exhausted(dependency.declaration.span))?;
             let (_, closed) = advance!(
                 *meter,
-                check_obligation(&dependency.declaration, siblings, *meter)
+                check_obligation(
+                    &dependency.declaration,
+                    siblings,
+                    &dependency.dependencies,
+                    &[],
+                    *meter
+                )
             );
             available.truncate(start);
             work_pop!(active);
-            let mut closed = closed.ok_or_else(|| {
-                reject(
-                    dependency.declaration.span,
-                    "contract theorem dependency is not in the pure fragment",
-                )
-            })?;
+            let mut closed = match closed {
+                Some(closed) => closed,
+                // A revision-3 caller may depend on an accepted contract proof;
+                // its replay is the check itself, but it stays a non-proposition
+                // so no logical `use` can name it.
+                None if *allow_contracts => Available {
+                    name: dependency.declaration.name.clone(),
+                    goal: None,
+                    lean_term: String::new(),
+                },
+                None => {
+                    return Err(reject(
+                        dependency.declaration.span,
+                        "contract theorem dependency is not in the pure fragment",
+                    ))
+                }
+            };
             closed.name = dependency.name.clone();
             *completed = Some(closed);
         }
@@ -4771,6 +5198,101 @@ fn replace_all(text: &str, marker: &str, value: &str) -> String {
     replaced
 }
 
+/// Re-accept one flat, pure revision-3 candidate body: every listed node is
+/// visited exactly once, the recipe carries no text or quotation, and the
+/// independent kernel acceptance agrees with the body's derivations and with
+/// the request's complete ordered interface.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear admission dispatcher are enforced by its callers and the revision-3 contract suite"
+)]
+pub(crate) fn checked_flat(
+    body: &noble_kernel::execution::Body,
+    request: &noble_kernel::untrusted::Request,
+    environment: &noble_kernel::contracts::Env,
+    span: Span,
+    max_nodes: usize,
+) -> Result<noble_kernel::untrusted::Checked, Diagnostic> {
+    let count = body.candidate.nodes.len();
+    if !body.texts.is_empty()
+        || count != body.candidate.body.len()
+        || count == 0
+        || count > max_nodes
+        || u32::try_from(count).map_or(true, |nodes| nodes > request.limits.nodes)
+        || body.candidate.format != noble_kernel::untrusted::CANDIDATE_FORMAT
+        || body.candidate.revision != noble_kernel::untrusted::SEMANTIC_REVISION
+    {
+        return Err(reject(
+            span,
+            "revision-3 subject has orphan nodes, text or a wrong recipe revision",
+        ));
+    }
+    let mut seen = alloc::vec![false; count];
+    let mut position = 0;
+    while position < body.candidate.body.len() {
+        let id = body.candidate.body[position];
+        let index = usize::try_from(id.0)
+            .map_err(|_| reject(span, "revision-3 subject has an invalid node"))?;
+        let Some(slot) = seen.get_mut(index) else {
+            return Err(reject(
+                span,
+                "revision-3 subject node lies outside the flat recipe",
+            ));
+        };
+        if *slot {
+            return Err(reject(
+                span,
+                "revision-3 subject repeats or omits a node occurrence",
+            ));
+        }
+        *slot = true;
+        if matches!(
+            body.candidate.nodes[index],
+            noble_kernel::untrusted::Node::Quotation { .. }
+                | noble_kernel::untrusted::Node::SignedSelf { .. }
+                | noble_kernel::untrusted::Node::SlotInvoke { .. }
+        ) {
+            return Err(unsupported(
+                span,
+                "revision-3 subject node is outside the pure profile",
+            ));
+        }
+        position += 1;
+    }
+    let noble_kernel::untrusted::Outcome::Accepted(result) =
+        noble_kernel::acceptance::check(environment, request, &body.candidate)
+    else {
+        return Err(reject(
+            span,
+            "revision-3 subject is not independently kernel accepted",
+        ));
+    };
+    if result.derivations.len() != count
+        || result.interface.stack_in != request.expected.stack_in
+        || result.interface.stack_out != request.expected.stack_out
+        || result.interface.effects != request.expected.allowed_effects
+    {
+        return Err(reject(
+            span,
+            "revision-3 subject derivations differ from its complete accepted body",
+        ));
+    }
+    let mut position = 0;
+    let mut derivations_differ = false;
+    while !derivations_differ && position < result.derivations.len() && position < body.candidate.body.len()
+    {
+        derivations_differ = result.derivations[position].node != body.candidate.body[position];
+        position += 1;
+    }
+    if derivations_differ {
+        return Err(reject(
+            span,
+            "revision-3 subject derivations differ from its ordered body",
+        ));
+    }
+    Ok(result)
+}
+
 #[cfg(test)]
 mod form_impl_tests {
     //! The hand-written `Form`/`FormKind` and `ProofDependency` impls must agree
@@ -5089,6 +5611,11 @@ mod proposition_impl_tests {
             }
             Proposition::Eq(code, left, right) => {
                 mirror::Proposition::Eq(code.clone(), *left, *right)
+            }
+            // `Term` keeps its derived equality; the mirror exists to check the
+            // hand-written `Proposition` impls, and no sample carries a term.
+            Proposition::EqTerm(..) => {
+                unreachable!("the structural mirror samples no scalar equality")
             }
         }
     }

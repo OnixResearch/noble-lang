@@ -139,7 +139,7 @@ fn revision(mut cursor: super::Cursor<'_>) -> Result<(super::Cursor<'_>, u32), c
         ));
     };
     let version = attempt!(super::logical_revision(token).ok_or_else(|| {
-        super::parse_diagnostic(token.span, "expected logical declaration revision 1 or 2")
+        super::parse_diagnostic(token.span, "expected logical declaration revision 1, 2 or 3")
     }));
     cursor.at += 1;
     Ok((cursor, version))
@@ -392,10 +392,16 @@ fn proof(
     };
     let claim = match &head.kind {
         crate::source::lexer::TokenKind::ProofColon => {
-            if revision != 1 {
+            if revision == 2 {
                 return Err(super::parse_diagnostic(
                     head.span,
                     "proof revision 2 requires a contract claim",
+                ));
+            }
+            if revision == 3 {
+                return Err(super::parse_diagnostic(
+                    head.span,
+                    "proof revision 3 requires a contract claim",
                 ));
             }
             cursor.at += 1;

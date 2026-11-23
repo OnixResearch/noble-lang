@@ -75,6 +75,23 @@ const NAMED_MODEL: &[(&str, &str)] = &[
             "/../../proofs/mc1/NobleContracts/NamedV2.lean"
         )),
     ),
+    // Revision 3's reviewed model and its lifted-frame restriction. Both import
+    // only modules the closure above pins; the generated revision-3 obligation
+    // (when a lowering lands) imports the two of them.
+    (
+        "NobleContracts.NamedV3",
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../proofs/mc1/NobleContracts/NamedV3.lean"
+        )),
+    ),
+    (
+        "NobleContracts.NamedV3Lifted",
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../proofs/mc1/NobleContracts/NamedV3Lifted.lean"
+        )),
+    ),
 ];
 const TYPE_WITNESS: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -260,6 +277,13 @@ pub(crate) fn named_checker_revision(base: &str) -> std::string::String {
     digest.update(
         include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
+            "/../noble-contracts/src/intrinsic/named_v3.rs"
+        ))
+        .as_bytes(),
+    );
+    digest.update(
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
             "/../noble-contracts/src/source/declared/state/register/logical/origin.rs"
         ))
         .as_bytes(),
@@ -276,7 +300,8 @@ pub(crate) fn named_checker_revision(base: &str) -> std::string::String {
     digest.finish()
 }
 fn has_named_dependency(dependency: &noble_contracts::intrinsic::ProofDependency) -> bool {
-    dependency.declaration.revision == 2 || dependency.dependencies.iter().any(has_named_dependency)
+    dependency.declaration.revision >= 2
+        || dependency.dependencies.iter().any(has_named_dependency)
 }
 fn validate_dependency_revision(
     dependency: &noble_contracts::intrinsic::ProofDependency,
@@ -295,6 +320,9 @@ fn validate_dependency_revision(
         let (selected_model, selected_checker) =
             match (&node.declaration.goal, node.declaration.revision) {
                 (PendingGoal::Contract { contract }, 2) if contract.revision == 2 => {
+                    (named_model, named_checker)
+                }
+                (PendingGoal::Contract { contract }, 3) if contract.revision == 3 => {
                     (named_model, named_checker)
                 }
                 (PendingGoal::Contract { contract }, 1) if contract.revision == 1 => {
@@ -555,6 +583,7 @@ pub(crate) fn session_proof_report(
                                     ProofKind::Pure => "pure",
                                     ProofKind::Contract => "contract",
                                     ProofKind::NamedContract => "named-contract",
+                                    ProofKind::NamedV3Contract => "named-v3-contract",
                                 }),
                             ),
                             ("claim", encoding::string(&proof.claim)),
@@ -659,7 +688,10 @@ pub(crate) fn verify_with_evidence(
     let checker = checker_revision();
     let named = checked
         .iter()
-        .any(|proof| proof.kind == ProofKind::NamedContract)
+        .any(|proof| {
+            proof.kind == ProofKind::NamedContract
+                || proof.kind == ProofKind::NamedV3Contract
+        })
         || batch.dependencies.iter().any(has_named_dependency);
     let named_model = if named {
         named_model_revision()
@@ -724,6 +756,23 @@ pub(crate) fn verify_with_evidence(
                     acceptance,
                     contract_subject_evidence(contract, &typed, &claim),
                 )
+            }
+            (PendingGoal::Contract { contract }, ProofKind::NamedV3Contract) => {
+                if contract.revision != 3 || obligation.revision != 3 {
+                    return Err(output::Failure::error(
+                        "intrinsic-kind-mismatch",
+                        "revision-3 contract rule mismatch".into(),
+                    ));
+                }
+                // The source checker reconstructs and checks the envelope before
+                // this point. No reviewed Lean lowering of a revision-3 chain
+                // exists yet, so the strict consumer refuses instead of
+                // publishing an unproved theorem (Decision 5 step 8 is open).
+                return Err(output::Failure::unsupported(
+                    "named-v3-lowering-unavailable",
+                    "revision-3 source proof is checked; no reviewed Lean lowering exists yet"
+                        .into(),
+                ));
             }
             (PendingGoal::Contract { contract }, ProofKind::NamedContract) => {
                 if contract.revision != 2
@@ -826,7 +875,7 @@ fn accepted_report(
 ) -> encoding::Json {
     let named = proofs
         .iter()
-        .any(|proof| proof.kind == ProofKind::NamedContract);
+        .any(|proof| proof.kind == ProofKind::NamedContract || proof.kind == ProofKind::NamedV3Contract);
     let mut fields = std::vec::Vec::from([
         ("schema", encoding::string(schema.module_schema(named))),
         (
@@ -891,6 +940,7 @@ fn accepted_report(
                                     ProofKind::Pure => "pure",
                                     ProofKind::Contract => "contract",
                                     ProofKind::NamedContract => "named-contract",
+                                    ProofKind::NamedV3Contract => "named-v3-contract",
                                 }),
                             ),
                             ("claim", encoding::string(&proof.claim)),
