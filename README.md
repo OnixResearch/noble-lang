@@ -1263,8 +1263,9 @@ acceptance, interpreter execution, code retirement, general guest mutation,
 or PushGP evolution.
 `--engine interpreter` refuses rather than falling back to V8.
 Ordinary `run` and `session` are unchanged. The canonical LIVE-01–10 cases
-remain `absent`/`not-run`, proof open, with no accepted source-bound assurance;
-see the [active change](.cairn/changes/live-wasm-reload/tasks.md) and
+are implemented/passed with proof open from the batch-6 receipt
+(`verification/live-cases/acceptance-2026-11-22-b6.json`); see the
+[archived change](.cairn/archive/2026-11-22-live-wasm-reload/tasks.md) and
 [status ledger](specs/STATUS.json).
 
 ## Termination evidence (opt-in)

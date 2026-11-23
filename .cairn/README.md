@@ -50,7 +50,9 @@ Conversion began with empty `changes/` and `archive/` directories; it did not fa
 Subsequent implementation changes have their own lifecycle records. Active changes belong in `changes/<slug>/`, with explicit requirement deltas.
 `archive/2026-10-06-erlang-abstract-backend/` records the completed specification-only design for a nonselected arithmetic subset lowered through bounded annotated Erlang abstract forms and pinned OTP compilation. EA cases remain absent/not-run/proof-open/unassessed; no compiler, isolated VM, runtime acceptance or production selection is implemented.
 `changes/explicit-live-references/` remains active for future implementation after the separate issue #1 `Live-Slot-Design` contract was accepted into the canonical Cairn specifications. Its nine registered LSLOT scenario designs remain absent/not-run/open/unassessed with empty evidence; canonical design acceptance does not supply an opt-in slot runtime, accepted proof or LIVE case promotion.
-`changes/live-wasm-reload/` is an active design with guarded partial runtime:
+`archive/2026-11-22-live-wasm-reload/` records the live Wasm reload design,
+archived 2026-11-22 without a canonical sync because the canonical text is newer
+(owner decision 48), and its guarded partial runtime:
 a resident Node/V8 REPL, in-process Wasm byte emission, checked explicit reload
 and bounded cooperative Linux `noble live watch` on same-directory
 `fsync`-then-atomic-rename saves. Its selected-byte and watch-sequence checks
@@ -72,17 +74,17 @@ checks on its own binary SHA-256
 exact host revocation denied saved A without a protected operation, B remained
 allowed, and selected returned-target D/P, alias, old/new source and epoch CAS
 controls ran. This is not the donor's full suite, a current document-validation
-result or canonical LIVE/LSLOT acceptance. `specs/VALIDATION.json` still records
-only the older donor's inputs and must not be read as a pass for this checkout.
+result or canonical LIVE/LSLOT acceptance.
 Bounded host-granted guest self-edit refuses any current effective dependent
 rather than rebuilding it. Indirect self-rebind/cycle refusal is scoped, not
 established by general proof or accepted LIVE case evidence. General
-effectful watch, full in-flight source-change controls, interpreter execution,
-complete source-bound LIVE-02 and canonical LIVE-06 acceptance remain open.
-`changes/c-backend/` remains a specification-only active design. Their
-canonical scenarios remain absent/not-run with proof open, their roadmap
-acceptance milestones not-started, and neither complete profile changes
-historical M4 or Declared-Modules-v1 claims.
+effectful watch, full in-flight source-change controls and interpreter execution
+remain open. Canonical LIVE-01–10 are implemented/passed with proof open from
+the batch-6 receipt (`verification/live-cases/acceptance-2026-11-22-b6.json`).
+`changes/c-backend/` remains a specification-only active design. Its canonical
+scenarios remain absent/not-run with proof open, its roadmap acceptance
+milestone not-started, and the profile changes no historical M4 or
+Declared-Modules-v1 claim.
 
 ## Inspect and validate
 

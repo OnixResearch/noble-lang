@@ -19,13 +19,15 @@ Programs, captures, stack and immutable resolved bindings rather than replaying
 source. Static refusals preserve prior state and make no candidate-body host
 requests; runtime traps retain already observed request prefixes.
 
-The active [live Wasm reload design](../.cairn/changes/live-wasm-reload/proposal.md)
+The archived [live Wasm reload design](../.cairn/archive/2026-11-22-live-wasm-reload/proposal.md)
 specifies a separate opt-in in-process Wasm byte emitter and resident Node/V8
 REPL/watch transaction, not an implemented interpreter or changed M4 session.
 The [C11 backend design](../.cairn/specs/c-backend/spec.md) is a distinct,
 nonselected opt-in native AOT target requiring a pinned sandbox and separate
-artifact admission. All LIVE and CB scenarios remain absent/not-run, with
-proofs open; no historical acceptance receipt establishes either profile.
+artifact admission. LIVE-01–10 are implemented/passed with proofs open from
+the batch-6 receipt (`verification/live-cases/acceptance-2026-11-22-b6.json`);
+all CB scenarios remain absent/not-run with proofs open, and no acceptance
+receipt establishes the C11 profile.
 
 The M4 data/control scope includes wrapping `I64`, Bool/Text/Unit,
 Pair/Sum/List, quotation/composition/execution, inert exact reflection and

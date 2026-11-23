@@ -1507,7 +1507,7 @@ is claimed; independent review precedes any promotion.
 The [MLIVE milestone](roadmap.json) follows M4 and DXM1 and is specified by
 [the live namespace contract](../.cairn/specs/language/spec.md),
 [the backend boundary](BACKEND-EXPERIMENTS.md) and its
-[active change](../.cairn/changes/live-wasm-reload/proposal.md). It proposes
+[archived change](../.cairn/archive/2026-11-22-live-wasm-reload/proposal.md). It proposes
 an opt-in persistent WebAssembly bytecode VM REPL/watch with atomic next-call
 source reload and narrowly host-granted guest self-edit. A guarded resident
 Node/V8 REPL and in-process Wasm byte emitter support atomic Core rebuild
