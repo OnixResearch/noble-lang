@@ -101,6 +101,34 @@
   The task stays open: no Rust elaborator exists to refine against the model, and no Rust
   representation of the encoded propositions exists either. Which premise positions the surface
   grammar may infer stays a policy decision, and source-to-Lean translation stays V-INTRINSIC-01.
+  Progress (2026-11-23): the premise "no Rust elaborator exists" is out of date (batches 4-6
+  landed `intrinsic/elaborate.rs` with the `inference::unify` solver and promoted IMPL-CASE-01..20),
+  so the model fragment that a refinement proof must be checked against was restated inside the
+  Mathlib-free MC1 project: `proofs/mc1/NobleContractImpl/UnifyModel.lean` defines the model's
+  terms (metas with the arena `Value`/`Stack` sort and their ids, rigid atoms with the payloads the
+  extracted `PartialEq` compares, the binary constructors, list cells), substitution, occurrence
+  and size, and proves the semantics the extracted step's outcomes are checked against:
+  `sortOf_subst`; `sort_mismatch_no_unifier`, `atom_mismatch_no_unifier` and
+  `bin_kind_mismatch_no_unifier` (a sort disagreement, differing rigid atoms, and differing binary
+  constructors admit no sort-preserving unifier); `occurs_no_unifier` (an occurs failure admits
+  none); `bin_unifies_iff`, `list_unifies_iff` and `bind_unifies_iff` (the decomposition and
+  binding cases preserve exactly the model's solution set); and the head-decision bridges
+  `head_self`, `head_sortClash`, `head_atomClash`, `head_bin`, `head_list`. Measured:
+  `lake env lean NobleContractImpl/UnifyModel.lean` (proofs/mc1, pinned Lean 4.35.0) exits 0 with
+  no warnings. The module is compiled by the MC1 implementation gate's library step.
+  The extracted-step refinement itself is not yet proved and the box stays open. Measured
+  experiment: one `unify_step` lemma (left hole, 21 right-hand cases) reduces against the pinned
+  `NobleContractImpl.Funs` translation in about 45 s and only needs `hcharge`/`hroot`/`hget`/
+  `effectful = false` hypotheses; but the uniform per-constructor `simp` set applied to all 21
+  left constructors exceeds the 1,000,000-heartbeat `whnf` budget, because the generated
+  `unify_step` is a ~9,500-line duplicated decision tree (the effectful branches duplicate the
+  non-effectful one). What remains, precisely: (1) a cheaper reduction strategy for the extracted
+  step (a named pure step function proved equal to `unify_step`'s non-effectful path, or a WP/step
+  lane over `bind`), (2) the worklist composition — `Arena::unify` over the model's `solve`
+  (most general unifiers through the link graph, the same answer up to `toSubst`, completeness of
+  `Ok`), which needs a `partial_fixpoint` loop induction over the coinductive `Result` plus a
+  link-graph simulation, (3) the effect-equation side channel, and (4) source-to-Lean
+  translation, still V-INTRINSIC-01.
 - [x] [serial] Register scenarios in conformance JSON and sync the requirement deltas only after independent review. Consider archive only after implementation and evidence gates. r[IMPL-EXPOSE-01]
   Done 2026-11-22 (owner decision 44): the IMPL-CASE-01..20 designs were registered in
   `specs/conformance/implicit-cases.json` and promoted in batch 5 from the IMPL gate receipt
