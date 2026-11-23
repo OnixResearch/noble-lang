@@ -181,12 +181,13 @@ try {
   // `BitVec.add_comm`, `BitVec.mul_add`) (124), and then with the 31 semantic-merge
   // relation/termination theorems of `NobleContracts.Merge` (155), and then with the eight
   // lifted-frame claim/call/chain theorems and witnesses of `NobleContracts.NamedV3Lifted` and
-  // the six public `Holds₂` evaluation lemmas of `NamedV2`, so the strict verdict now
-  // pins 169 required theorems. The exact string keeps the verdict non-substitutable; a
+  // the six public `Holds₂` evaluation lemmas of `NamedV2` (169), and then with the 34 bounded
+  // Wasm small-step simulation pins of `NobleContracts.WasmStep`, so the strict verdict now
+  // pins 203 required theorems. The exact string keeps the verdict non-substitutable; a
   // merged branch that also adds pins must sum its additions here rather than read the
-  // gate's printed count. The library's globs build `NobleContracts.Merge` and
-  // `NobleContracts.NamedV3Lifted` too.
-  if (!library.includes('MC1-CONTRACT-LIBRARY: 169 required theorems; strict axioms accepted')) {
+  // gate's printed count. The library's globs build `NobleContracts.Merge`,
+  // `NobleContracts.NamedV3Lifted`, and `NobleContracts.WasmStep` too.
+  if (!library.includes('MC1-CONTRACT-LIBRARY: 203 required theorems; strict axioms accepted')) {
     throw Error('missing strict contract-library verdict');
   }
   const audit = run('implementation-audit', tool('lean', 'lake'), ['env', 'lean', 'ImplementationGate.lean'], proofRoot);
