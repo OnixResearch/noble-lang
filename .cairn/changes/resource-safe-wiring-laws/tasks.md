@@ -54,7 +54,7 @@
 
   Progress (2026-11-23): the T/O/F models are developed in
   `proofs/foundation/NobleFoundation/WiringLaws.lean` at commit
-  `521456ec47b9aaec02beeea6a4ddf070aa506c51` over `OwnershipModel` (the
+  `0a5e30c861b8bf047b2d4b5bfbf0d1d74cc55bf1` over `OwnershipModel` (the
   wiring words are instruction sequences in that language, so every
   ownership result is an `OwnershipModel.owners_step` instance). T:
   `step_trace_any`, `step_trace`, `effect_sound`, `trace_within_bound`,
@@ -96,7 +96,8 @@
   `list_with_resource_not_copy`, `program_interface_resource_is_copyable`,
   `fanout_at_resource_untypable`, `project_first_at_resource_untypable` and
   `quote_at_resource_untypable`; V-MODEL-03 through `typed_not_stuck`,
-  `underflow_stuck`, `wrong_shape_stuck` and `result_error_is_normal`;
+  `underflow_stuck`, `wrong_shape_stuck`, `result_error_is_normal`,
+  `no_waiting_status` and `untyped_loop_diverges`;
   V-RESOURCE-03 through `normal_cleanup_is_guest`,
   `abnormal_cleanup_is_host` and the separate host-boundary lemmas.
 
@@ -118,13 +119,13 @@
   (2026-11-23)" subsection records the same gap.
 
   Evidence, run on the committed clean tree
-  `521456ec47b9aaec02beeea6a4ddf070aa506c51`:
+  `0a5e30c861b8bf047b2d4b5bfbf0d1d74cc55bf1`:
   `verification/ci/lean-proofs.sh <output>` printed
   `m3-build=0`, `m3-gate=0`, `foundation-build=0`,
   `foundation-check=0`, `overall=0`. The checker receipt
   `foundation/foundation-check.json` has SHA-256
-  `bd8eedecf7f336b0f446657dee12dbad2b31e7db5f583e0c64d0dede469053c9`
-  and records `clean_source: true`, 2,802 theorems, 388 private
+  `f14add3700d84bad054a6ae39e2533f0753fa2ed4a06e284d7b8472c94e4c48c`
+  and records `clean_source: true`, 2,806 theorems, 388 private
   theorems, the allow-list `propext`, `Classical.choice`, `Quot.sound`,
   and `implementation_theorem: false`. `summary.txt` has SHA-256
   `6d2ba8f00dfc3d34ea5274843c3adc6df384f36481106d34e41d6714d35875e3`.

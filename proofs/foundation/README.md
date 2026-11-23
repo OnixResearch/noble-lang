@@ -4540,7 +4540,10 @@ instance and there is no second ownership judgment.
   (`FailureClass`, `Outcome`). `typed_not_stuck` shows typed running
   configurations are never stuck; `underflow_stuck` and `wrong_shape_stuck`
   are untyped stuck states, not traps; `result_error_is_normal` shows an
-  ordinary error value is a normal return. The host boundary model proves
+  ordinary error value is a normal return; `no_waiting_status` records that
+  the synchronous oracle has no waiting status, and `untyped_loop_diverges`
+  is the untyped self-call that still steps from every finite reach, so
+  divergence is distinct from a stuck state. The host boundary model proves
   `retireOne_live`, `retireOne_retired`, `retireOne_idempotent`,
   `retireOne_identity`, `retire_live`, `retire_retired`,
   `retire_single_idempotent`, `retire_next`, `retired_never_reacquired` and
