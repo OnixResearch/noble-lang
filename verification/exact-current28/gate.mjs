@@ -1032,12 +1032,12 @@ async function runSuite(opt) {
     // 1) Early release while value is still on the stack -> refused
     const early = await session.sendControl(
       `:release-observed-roots ${live.source_store_id} ${live.source_observation_id}`);
-    assert.equal(early.outcome, 'source-observation-release-refused');
+    assert.equal(early.outcome, 'source-observation-refused');
     counts.control_frames += 1;
     // 2) Forged store UUID -> refused
     const forged = await session.sendControl(
       `:release-observed-roots 00000000-0000-0000-0000-000000000000 ${live.source_observation_id}`);
-    assert.equal(forged.outcome, 'source-observation-release-refused');
+    assert.equal(forged.outcome, 'source-observation-refused');
     counts.control_frames += 1;
     // 3) Drop stack, then valid release -> retired with 0 heap cells and Core 0..3
     const dropped = await session.sendRawFrame('drop');
@@ -1054,12 +1054,13 @@ async function runSuite(opt) {
     // 4) Repeated release of same observation -> refused
     const repeat = await session.sendControl(
       `:release-observed-roots ${live.source_store_id} ${live.source_observation_id}`);
-    assert.equal(repeat.outcome, 'source-observation-release-refused');
+    assert.equal(repeat.outcome, 'source-observation-refused');
     counts.control_frames += 1;
   }
 
   const exit = await session.close();
   assert.equal(exit.signal, null, `session-${opt} killed by signal ${exit.signal}`);
+  assert.equal(exit.code, 2, `session-${opt} expected exit 2 after intentional control refusals, got ${exit.code}`);
   assert.equal(session.stderr, '', `session-${opt} unexpected stderr: ${session.stderr}`);
   const logBytes = fs.readFileSync(logPath);
   const totalChecks = Object.values(counts).reduce((a, b) => a + b, 0);
@@ -1136,11 +1137,9 @@ async function runEmitCheck(opt) {
   };
 }
 
-const optOff = await runSuite('off');
-const optOn = await runSuite('on');
+const [optOff, optOn] = await Promise.all([runSuite('off'), runSuite('on')]);
 assert.deepEqual(optOff.counts, optOn.counts, 'opt-off and opt-on check counts must match');
-const emitOff = await runEmitCheck('off');
-const emitOn = await runEmitCheck('on');
+const [emitOff, emitOn] = await Promise.all([runEmitCheck('off'), runEmitCheck('on')]);
 const mutant = runAuthenticityMutant();
 
 const receipt = {
