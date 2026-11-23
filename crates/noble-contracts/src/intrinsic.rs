@@ -3842,12 +3842,7 @@ fn contract_proof(
 ) -> Result<CheckedProof, Diagnostic> {
     advance!(*meter, meter.visit(0, obligation.span));
     let (_, literal) = prepare_checked_contract(contract, meter.limits)?;
-    if unary_true_rule_differs(contract)? {
-        return Err(reject(
-            obligation.span,
-            "selected unary I64 rule requires typed True precondition",
-        ));
-    }
+    check_unary_true_rule(obligation, contract)?;
     let literal = literal.ok_or_else(|| {
         reject(
             obligation.span,
@@ -3907,14 +3902,35 @@ fn contract_proof(
         checker_revision: String::new(),
     })
 }
-/// Whether the contract is not a unary I64 rule with a `true` precondition;
-/// refuses a precondition that is not an atom.
-fn unary_true_rule_differs(contract: &ContractGoal) -> Result<bool, Diagnostic> {
-    Ok(contract.inputs.len() != 1
+/// Refuse a contract outside the selected unary I64 rule. An interface other
+/// than one I64 input and one I64 output is an unsupported goal; a
+/// precondition other than the atom `true` is a rejected proof.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; this helper refuses hostile source contracts with typed diagnostics, so an assertion would turn a refusal into a panic"
+)]
+fn check_unary_true_rule(
+    obligation: &ProofObligation,
+    contract: &ContractGoal,
+) -> Result<(), Diagnostic> {
+    let is_outside_rule = contract.inputs.len() != 1
         || contract.outputs.len() != 1
         || contract.inputs[0].1 != "I64"
-        || contract.outputs[0].1 != "I64"
-        || atom(&contract.requires)? != "true")
+        || contract.outputs[0].1 != "I64";
+    if is_outside_rule {
+        return Err(Diagnostic::new(
+            DiagnosticKind::Unsupported,
+            contract.contract_span,
+            "selected unary I64 rule takes exactly one I64 input and one I64 output",
+        ));
+    }
+    if atom(&contract.requires)? != "true" {
+        return Err(reject(
+            obligation.span,
+            "selected unary I64 rule requires typed True precondition",
+        ));
+    }
+    Ok(())
 }
 /// Whether `binder` is not a two-part binder whose sort is the atom `sort`;
 /// refuses a sort that is not an atom.

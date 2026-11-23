@@ -845,10 +845,6 @@ fn reviewed_slices(goal: &ContractGoal, proof: Option<&ProofObligation>) -> enco
     ]))
 }
 
-fn precondition_is_true(form: &Form) -> bool {
-    matches!(&form.kind, FormKind::Atom(word) if word == "true")
-}
-
 fn contract_sites(
     key: &str,
     goal: &ContractGoal,
@@ -988,10 +984,10 @@ fn contract_entry(
         sites,
         inserted: encoding::Json::Array(std::vec::Vec::new()),
         assumptions: module_assumptions(versions, limits),
-        vacuity: if precondition_is_true(&goal.requires) {
-            "none"
-        } else {
-            "not-assessed"
+        vacuity: match &goal.requires.kind {
+            FormKind::Atom(word) if word == "true" => "none",
+            FormKind::Atom(word) if word == "false" => "suspected",
+            _ => "not-assessed",
         },
         staleness: module_staleness(
             &goal.subject,
@@ -1255,7 +1251,15 @@ fn contract_file_entry(
         sites,
         inserted: encoding::Json::Array(std::vec::Vec::new()),
         assumptions: contract_file_assumptions(limits),
-        vacuity: "not-assessed",
+        vacuity: match usize::try_from(prepared.requires())
+            .ok()
+            .and_then(|index| prepared.expressions().get(index))
+            .map(|expression| &expression.kind)
+        {
+            Some(noble_contracts::ExprKind::Bool(true)) => "none",
+            Some(noble_contracts::ExprKind::Bool(false)) => "suspected",
+            _ => "not-assessed",
+        },
         staleness: contract_file_staleness(source_sha256, Some(&statement_digest)),
     }
 }

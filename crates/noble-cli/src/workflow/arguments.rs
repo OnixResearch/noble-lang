@@ -1,11 +1,21 @@
 //! Command decoding, independent of source preparation or process execution.
 
+/// The counterexample producer a `verify` run selects.
+#[derive(Clone, Copy)]
+pub(super) enum Producer {
+    /// The P1 boundary-value generator.
+    Boundary,
+    /// One supplied candidate input, as an external model would return it.
+    Supplied(i64),
+}
+
 pub(super) struct Options {
     pub(super) is_explanation: bool,
     pub(super) contract: std::path::PathBuf,
     pub(super) emit: Option<std::path::PathBuf>,
     pub(super) proof: Option<std::path::PathBuf>,
     pub(super) is_refutation: bool,
+    pub(super) counterexample: Option<Producer>,
     pub(super) timeout_ms: u64,
 }
 
@@ -26,6 +36,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
         emit: None,
         proof: None,
         is_refutation: false,
+        counterexample: None,
         timeout_ms: super::DEFAULT_TIMEOUT,
     };
     let mut has_timeout = false;
@@ -45,9 +56,16 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             Some("--emit") if options.emit.is_none() => {
                 options.emit = Some(std::path::PathBuf::from(value));
             }
-            Some("--proof" | "--refutation") if options.proof.is_none() => {
+            Some("--proof" | "--refutation")
+                if options.proof.is_none() && options.counterexample.is_none() =>
+            {
                 options.is_refutation = arguments[index] == "--refutation";
                 options.proof = Some(std::path::PathBuf::from(value));
+            }
+            Some("--counterexample")
+                if options.proof.is_none() && options.counterexample.is_none() =>
+            {
+                options.counterexample = Some(attempt!(producer(value)));
             }
             Some("--timeout-ms") if !has_timeout => {
                 let parsed = value.to_str().and_then(|text| text.parse::<u64>().ok());
@@ -71,4 +89,19 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
         index += 2;
     }
     Ok(options)
+}
+
+/// `boundary`, or `input:N` for one supplied signed 64-bit candidate input.
+fn producer(value: &std::ffi::OsStr) -> Result<Producer, super::output::Failure> {
+    let text = value.to_str().unwrap_or_default();
+    if text == "boundary" {
+        return Ok(Producer::Boundary);
+    }
+    match text.strip_prefix("input:").map(str::parse::<i64>) {
+        Some(Ok(input)) => Ok(Producer::Supplied(input)),
+        Some(Err(_)) | None => Err(super::output::Failure::error(
+            "invalid-producer",
+            "--counterexample takes `boundary` or `input:N` with a signed 64-bit N".into(),
+        )),
+    }
 }

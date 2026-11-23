@@ -798,10 +798,21 @@ pub(crate) fn source_error(error: &noble_contracts::source::Error) -> output::Fa
         },
     };
     let message = std::format!("{:?}: {}", error.stage(), error.diagnostic().message);
-    match error.diagnostic().kind {
+    let mut failure = match error.diagnostic().kind {
         noble_contracts::DiagnosticKind::Unsupported => output::Failure::unsupported(code, message),
         _ => output::Failure::error(code, message),
-    }
+    };
+    // The source span of the refused construct, so an unsupported goal names
+    // what fell outside the profile.
+    let span = error.diagnostic().span;
+    failure.details = super::encoding::object([
+        (
+            "start",
+            super::encoding::Json::Number(u64::from(span.start)),
+        ),
+        ("end", super::encoding::Json::Number(u64::from(span.end))),
+    ]);
+    failure
 }
 
 fn accepted_report(

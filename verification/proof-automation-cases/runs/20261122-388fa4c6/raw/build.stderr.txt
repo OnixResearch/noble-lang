@@ -1,0 +1,2 @@
+   Compiling noble-cli v0.0.0 (/var/tmp/noble-cairn/wt/pauto/crates/noble-cli)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 12.34s
