@@ -1,0 +1,7 @@
+module exact_errors@1 [
+    variant ExactError DivisionByZero Unit public InvalidDecimal Unit public
+    export ExactError
+    export ExactError.DivisionByZero
+    export ExactError.InvalidDecimal
+    export ExactError.match
+]

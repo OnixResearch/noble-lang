@@ -1,0 +1,19 @@
+module exact_rat_prep@1 [
+    signature rat_prep forall<S:stack>
+        [ S Bool List<I64> Bool List<I64> -- S result@1.Result<Pair<Bool,Pair<List<I64>,List<I64>>>,exact_errors@1.ExactError> ! pure ]
+    export rat_prep
+    def rat_prep [
+        dup [ true ] [ drop drop false ] list.case
+        [ drop drop drop drop unit exact_errors@1.ExactError.DivisionByZero result@1.Result.Err ]
+        [
+            [ swap ] dip pair
+            [ [ [ false ] [ true ] if ] [ ] if ] dip
+            unpair swap
+            dup [ true ] [ drop drop false ] list.case
+            [ drop drop drop false nil 1 nil cons pair pair result@1.Result.Ok ]
+            [ swap pair pair result@1.Result.Ok ]
+            if
+        ]
+        if
+    ]
+]

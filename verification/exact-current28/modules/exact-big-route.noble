@@ -1,0 +1,38 @@
+module exact_big_route@1 [
+    variant BigAddRoute
+        Same Pair<Bool,Pair<List<I64>,List<I64>>> public
+        Diff Pair<Bool,Pair<List<I64>,List<I64>>> public
+    export BigAddRoute
+    export BigAddRoute.Same
+    export BigAddRoute.Diff
+    export BigAddRoute.match
+
+    # big_add_route: [ S sa ma sb mb cmp_mag -- S BigAddRoute ! pure ]
+    # B = 2! Pure guest sign/order routing given cmp_mag = mag_cmp_acc(0, ma, mb).
+    signature big_add_route forall<S:stack>
+        [ S Bool List<I64> Bool List<I64> I64 -- S BigAddRoute ! pure ]
+    export big_add_route
+    def big_add_route [
+        # Stack: [ S sa ma sb mb c ]
+        [ [ swap ] dip pair ] dip
+        # Stack: [ S sa sb Pair(ma,mb) c ]
+        swap
+        # Stack: [ S sa sb c Pair(ma,mb) ]
+        [ [ [ dup ] dip swap [ dup ] dip swap [ ] [ [ false ] [ true ] if ] if ] dip ] dip
+        # Stack: [ S sa sb same c Pair(ma,mb) ]
+        [ swap ] dip swap
+        # Stack: [ S sa sb c Pair(ma,mb) same ]
+        [
+            # Same sign: drop c, drop sb -> Same(sa, Pair(ma,mb))
+            [ drop drop ] dip pair BigAddRoute.Same
+        ]
+        [
+            # Diff sign: check c < 0
+            swap 0 <
+            [ unpair swap pair [ swap drop ] dip pair BigAddRoute.Diff ]
+            [ [ drop ] dip pair BigAddRoute.Diff ]
+            if
+        ]
+        if
+    ]
+]

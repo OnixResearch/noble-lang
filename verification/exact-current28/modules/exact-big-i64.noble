@@ -1,0 +1,28 @@
+module exact_big_i64@1 [
+    signature u64_to_limbs forall<S:stack> [ S I64 -- S List<I64> ! pure ]
+    export u64_to_limbs
+    def u64_to_limbs [
+        dup 0 =
+        [ drop nil ]
+        [
+            1000000000 exact_i64@1.divmod_pos
+            [ u64_to_limbs ] dip swap cons
+        ]
+        if
+    ]
+
+    signature i64_to_signed forall<S:stack> [ S I64 -- S Bool List<I64> ! pure ]
+    export i64_to_signed
+    def i64_to_signed [
+        dup -9223372036854775807 1 - =
+        [ drop true 854775808 223372036 9 nil cons cons cons ]
+        [
+            dup 0 <
+            [ 0 swap - true swap ]
+            [ false swap ]
+            if
+            u64_to_limbs
+        ]
+        if
+    ]
+]
