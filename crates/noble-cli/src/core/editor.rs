@@ -276,6 +276,107 @@ fn print(report: Json) {
     println!("{}", report.encode());
 }
 
+/// The most proof holes one editor document may carry.
+pub(crate) const PROOF_HOLES_LIMIT: usize = 64;
+
+/// A decoded `noble-proof-editor/v1` document: the module text with each hole
+/// rendered as the reserved `(editor-hole LABEL)` proof form, and the labels in
+/// document order. The rendered text is analysis input only; it is never
+/// written, never admitted and never returned as source.
+pub(crate) struct ProofHoles {
+    pub(crate) rendered: std::vec::Vec<u8>,
+    pub(crate) labels: std::vec::Vec<std::string::String>,
+    /// The rendered byte range of each hole, in document order.
+    pub(crate) spans: std::vec::Vec<noble_contracts::Span>,
+}
+
+/// Strict decoding of the editor-only proof-hole transport. The envelope is
+/// exactly `format` and `module`; `module` alternates verbatim text with
+/// `{"kind": "proof-hole", "label": LABEL}` objects, so every hole is
+/// surrounded by text and at least one hole exists. Byte, hole and label
+/// bounds are enforced before rendering; a malformed document is refused.
+pub(crate) fn decode_proof_holes(bytes: &[u8]) -> Result<ProofHoles, std::string::String> {
+    let bytes_limit = usize::try_from(super::SOURCE_LIMITS.bytes)
+        .map_err(|_| "proof-editor JSON byte limit exceeded".to_owned())?;
+    if bytes.len() > bytes_limit {
+        return Err("proof-editor JSON byte limit exceeded".into());
+    }
+    let text = std::str::from_utf8(bytes).map_err(|_| "proof-editor JSON is not UTF-8")?;
+    let value = super::report::parse(text)?;
+    let envelope = fields(&value, &["format", "module"])?;
+    if envelope.get("format").and_then(Value::number) != Some(1) {
+        return Err("unsupported proof-editor format".into());
+    }
+    let segments = envelope
+        .get("module")
+        .and_then(Value::items)
+        .ok_or("proof-editor module must be an array")?;
+    if segments.is_empty() || segments.len() % 2 == 0 {
+        return Err("proof-editor module must alternate text and holes".into());
+    }
+    let holes = segments.len() / 2;
+    if holes == 0 {
+        return Err("a hole-free document is ordinary source; use goal-view SOURCE".into());
+    }
+    if holes > PROOF_HOLES_LIMIT {
+        return Err("proof-editor hole limit exceeded".into());
+    }
+    let mut rendered = std::vec::Vec::new();
+    let mut labels: std::vec::Vec<std::string::String> = std::vec::Vec::new();
+    let mut spans = std::vec::Vec::new();
+    for (index, segment) in segments.iter().enumerate() {
+        if index % 2 == 0 {
+            let text = segment
+                .text()
+                .ok_or("proof-editor text segment must be a string")?;
+            rendered.extend_from_slice(text.as_bytes());
+        } else {
+            let hole = fields(segment, &["kind", "label"])?;
+            if hole.get("kind").and_then(Value::text) != Some("proof-hole") {
+                return Err("unsupported proof-editor segment kind".into());
+            }
+            let label = hole
+                .get("label")
+                .and_then(Value::text)
+                .ok_or("proof-hole label must be text")?;
+            if !valid_proof_label(label) {
+                return Err(
+                    "proof-hole label is not 1-32 lowercase ASCII, digits or hyphens".into(),
+                );
+            }
+            if labels.iter().any(|seen| seen == label) {
+                return Err("duplicate proof-hole label".into());
+            }
+            let start = u32::try_from(rendered.len())
+                .map_err(|_| "proof-editor rendered module exceeds u32".to_owned())?;
+            rendered.extend_from_slice(b"(editor-hole ");
+            rendered.extend_from_slice(label.as_bytes());
+            rendered.push(b')');
+            let end = u32::try_from(rendered.len())
+                .map_err(|_| "proof-editor rendered module exceeds u32".to_owned())?;
+            spans.push(noble_contracts::Span { start, end });
+            labels.push(std::string::String::from(label));
+        }
+        if rendered.len() > bytes_limit {
+            return Err("proof-editor rendered module exceeds the source byte limit".into());
+        }
+    }
+    Ok(ProofHoles {
+        rendered,
+        labels,
+        spans,
+    })
+}
+
+/// Whether `label` is the transport's label spelling.
+fn valid_proof_label(label: &str) -> bool {
+    !label.is_empty()
+        && label.len() <= 32
+        && label
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+}
+
 pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let result = run_inner(arguments);
     match result {

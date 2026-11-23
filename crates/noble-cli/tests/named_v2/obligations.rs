@@ -499,3 +499,342 @@ fn a_module_without_contracts_reports_no_obligations() -> Result<(), Box<dyn std
     );
     Ok(())
 }
+
+struct HoleReplacement<'a> {
+    needle: &'a str,
+    label: &'a str,
+}
+
+fn proof_hole_json(replacement: HoleReplacement<'_>) -> String {
+    let at = WITH_PROOF
+        .find(replacement.needle)
+        .expect("hole replacement target");
+    serde_json::json!({
+        "format": 1,
+        "module": [
+            &WITH_PROOF[..at],
+            {"kind": "proof-hole", "label": replacement.label},
+            &WITH_PROOF[at.saturating_add(replacement.needle.len())..],
+        ],
+    })
+    .to_string()
+}
+
+#[test]
+fn proof_hole_transport_reports_incomplete_and_ordinary_commands_refuse_holes(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let bridge_doc = proof_hole_json(HoleReplacement {
+        needle: "(bridge (by-exact-append-assoc))",
+        label: "bridge",
+    });
+    let ensures_doc = proof_hole_json(HoleReplacement {
+        needle: "(add (in x) 1)",
+        label: "pred",
+    });
+    let exec_doc = proof_hole_json(HoleReplacement {
+        needle: "1 +",
+        label: "body",
+    });
+    let raw_hole = WITH_PROOF.replacen(
+        "(bridge (by-exact-append-assoc))",
+        "(editor-hole bridge)",
+        1,
+    );
+    let fixture = Fixture::new(
+        "proof-holes",
+        &[
+            ("bridge-hole.json", &bridge_doc),
+            ("ensures-hole.json", &ensures_doc),
+            ("exec-hole.json", &exec_doc),
+            ("raw-hole.noble", &raw_hole),
+        ],
+    )?;
+
+    let bridge = source(&fixture.path("bridge-hole.json"));
+    let output = run(noble(&[
+        std::ffi::OsStr::new("goal-view"),
+        std::ffi::OsStr::new("--proof-holes"),
+        &bridge,
+    ]))?;
+    let view = report(&output)?;
+    assert_eq!(output.status.code(), Some(3), "{}", text(&output));
+    assert_eq!(view["schema"], "noble-goal-view/v1");
+    assert_eq!(view["outcome"], "unknown");
+    assert_eq!(view["category"], "incomplete-hole");
+    assert_eq!(view["acceptance"], false);
+    assert_eq!(view["transport"]["schema"], "noble-proof-editor/v1");
+    assert_eq!(view["transport"]["holes"][0]["label"], "bridge");
+    let site = &view["sites"][0];
+    assert_eq!(site["chip"], "incomplete");
+    assert_eq!(site["outcome"], "unknown");
+    assert_eq!(site["category"], "incomplete-hole");
+    assert_eq!(site["holes"], serde_json::json!(["bridge"]));
+    let hole_row = site["sites"]
+        .as_array()
+        .expect("site rows")
+        .iter()
+        .find(|row| row["constructor"] == "editor-hole")
+        .expect("editor-hole site");
+    assert_eq!(hole_row["chip"], "incomplete");
+    assert_eq!(hole_row["label"], "bridge");
+    assert_eq!(hole_row["parent_constructor"], "pc-sequence");
+    assert_eq!(hole_row["goal"]["declaration"], "increment-law");
+    assert_eq!(
+        hole_row["goal"]["statement_digest"],
+        site["statement_digest"]
+    );
+
+    let raw = source(&fixture.path("raw-hole.noble"));
+    for command in ["verify-module", "obligations", "goal-view"] {
+        let refused = run(noble(&[std::ffi::OsStr::new(command), &raw]))?;
+        let parsed = report(&refused)?;
+        assert_eq!(
+            refused.status.code(),
+            Some(2),
+            "{command}: {}",
+            text(&refused)
+        );
+        assert_eq!(parsed["outcome"], "error", "{command}");
+        assert!(
+            parsed["diagnostic"]["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("editor-only")),
+            "{command}: {}",
+            text(&refused)
+        );
+    }
+
+    for (label, file) in [("pred", "ensures-hole.json"), ("body", "exec-hole.json")] {
+        let path = source(&fixture.path(file));
+        let refused = run(noble(&[
+            std::ffi::OsStr::new("goal-view"),
+            std::ffi::OsStr::new("--proof-holes"),
+            &path,
+        ]))?;
+        let parsed = report(&refused)?;
+        assert_eq!(
+            refused.status.code(),
+            Some(2),
+            "{label}: {}",
+            text(&refused)
+        );
+        assert_eq!(
+            parsed["diagnostic"]["code"],
+            "proof-hole-transport",
+            "{label}: {}",
+            text(&refused)
+        );
+        assert!(
+            parsed["diagnostic"]["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("not in a proof-term position")),
+            "{label}: {}",
+            text(&refused)
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn retained_evidence_marks_stale_without_rewriting_and_never_grants_checked(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let changed_subject = WITH_PROOF.replacen("def increment [ 1 + ]", "def increment [ 2 + ]", 1);
+    let bridge_doc = proof_hole_json(HoleReplacement {
+        needle: "(bridge (by-exact-append-assoc))",
+        label: "bridge",
+    });
+    let fixture = Fixture::new(
+        "retained-evidence",
+        &[
+            ("v1.noble", WITH_PROOF),
+            ("v2.noble", &changed_subject),
+            ("bridge-hole.json", &bridge_doc),
+        ],
+    )?;
+    let v1 = source(&fixture.path("v1.noble"));
+    let v2 = source(&fixture.path("v2.noble"));
+    let bridge = source(&fixture.path("bridge-hole.json"));
+
+    let map_output = run(noble(&[std::ffi::OsStr::new("obligations"), &v1]))?;
+    assert_eq!(map_output.status.code(), Some(0), "{}", text(&map_output));
+    let map = report(&map_output)?;
+    let entry = &map["obligations"][0];
+    let evidence_dir = fixture.path("retained");
+    std::fs::create_dir(&evidence_dir)?;
+    std::fs::write(evidence_dir.join("source.noble"), WITH_PROOF)?;
+    let evidence_json = serde_json::json!({
+        "schema": "noble-intrinsic-evidence/v1",
+        "command": "verify-module",
+        "outcome": "proved",
+        "independent_recheck": true,
+        "source_sha256": map["source_sha256"],
+        "module": {"name": "arithmetic", "version": 1},
+        "revisions": {
+            "model": map["revisions"]["model"],
+            "checker": map["revisions"]["checker"],
+            "named_model": Value::Null,
+            "named_checker": Value::Null
+        },
+        "dependencies": [],
+        "proofs": [{
+            "name": "increment-correct",
+            "kind": "contract",
+            "statement_digest": entry["statement_digest"],
+            "statement_basis": "generated-statement",
+            "model_revision": map["revisions"]["model"],
+            "checker_revision": map["revisions"]["checker"],
+            "subject": {
+                "module": "arithmetic",
+                "version": 1,
+                "definition": "increment",
+                "module_source_sha256": entry["subject"]["module_source_sha256"],
+                "definition_source_sha256": entry["subject"]["definition_source_sha256"],
+                "generated_statement_sha256": entry["statement_digest"]
+            }
+        }]
+    });
+    let evidence_bytes = std::format!("{evidence_json}\n");
+    std::fs::write(evidence_dir.join("evidence.json"), &evidence_bytes)?;
+    let retained = source(&evidence_dir);
+
+    let matching_view = run(noble(&[
+        std::ffi::OsStr::new("goal-view"),
+        &v1,
+        std::ffi::OsStr::new("--evidence"),
+        &retained,
+    ]))?;
+    let matching = report(&matching_view)?;
+    assert_eq!(
+        matching_view.status.code(),
+        Some(0),
+        "{}",
+        text(&matching_view)
+    );
+    assert_eq!(matching["evidence"]["records"][0]["matches"], true);
+    assert_eq!(
+        matching["sites"][0]["chip"], "incomplete",
+        "retained evidence alone must never grant checked"
+    );
+
+    let hole_view = run(noble(&[
+        std::ffi::OsStr::new("goal-view"),
+        std::ffi::OsStr::new("--proof-holes"),
+        &bridge,
+        std::ffi::OsStr::new("--evidence"),
+        &retained,
+    ]))?;
+    let hole_parsed = report(&hole_view)?;
+    assert_eq!(hole_view.status.code(), Some(3), "{}", text(&hole_view));
+    assert_eq!(hole_parsed["outcome"], "unknown");
+    assert_eq!(hole_parsed["category"], "incomplete-hole");
+    assert_eq!(hole_parsed["sites"][0]["chip"], "incomplete");
+
+    let stale_view = run(noble(&[
+        std::ffi::OsStr::new("goal-view"),
+        &v2,
+        std::ffi::OsStr::new("--evidence"),
+        &retained,
+    ]))?;
+    let stale = report(&stale_view)?;
+    assert_eq!(stale_view.status.code(), Some(0), "{}", text(&stale_view));
+    assert_eq!(stale["evidence"]["records"][0]["matches"], false);
+    assert_eq!(stale["sites"][0]["chip"], "stale");
+    assert_eq!(stale["sites"][0]["outcome"], "unsupported");
+    assert_eq!(stale["sites"][0]["category"], "stale-dependency");
+    assert_eq!(
+        stale["sites"][0]["retained_evidence"][0]["recorded"]["subject"]["definition"],
+        "increment"
+    );
+
+    let stale_verify = run(noble(&[
+        std::ffi::OsStr::new("verify-module"),
+        &v2,
+        std::ffi::OsStr::new("--evidence"),
+        &retained,
+    ]))?;
+    let stale_report = report(&stale_verify)?;
+    assert_eq!(
+        stale_verify.status.code(),
+        Some(4),
+        "{}",
+        text(&stale_verify)
+    );
+    assert_eq!(stale_report["outcome"], "unsupported");
+    assert_eq!(stale_report["category"], "stale-dependency");
+    assert_eq!(stale_report["diagnostic"]["code"], "intrinsic-stale-proof");
+    let mismatches = stale_report["diagnostic"]["details"]["mismatches"]
+        .as_array()
+        .expect("mismatch list");
+    assert!(mismatches.iter().any(|item| item == "source_sha256"));
+    assert!(mismatches
+        .iter()
+        .any(|item| item == "proofs.increment-correct.statement_digest"));
+    assert_eq!(
+        std::fs::read_to_string(evidence_dir.join("evidence.json"))?,
+        evidence_bytes,
+        "retained evidence must never be rewritten"
+    );
+
+    let forged_dir = fixture.path("forged");
+    std::fs::create_dir(&forged_dir)?;
+    std::fs::write(forged_dir.join("source.noble"), "module forged@1 [ ]")?;
+    std::fs::write(forged_dir.join("evidence.json"), &evidence_bytes)?;
+    let forged = source(&forged_dir);
+    let forged_verify = run(noble(&[
+        std::ffi::OsStr::new("verify-module"),
+        &v1,
+        std::ffi::OsStr::new("--evidence"),
+        &forged,
+    ]))?;
+    let forged_report = report(&forged_verify)?;
+    assert_eq!(
+        forged_verify.status.code(),
+        Some(2),
+        "{}",
+        text(&forged_verify)
+    );
+    assert_eq!(forged_report["outcome"], "error");
+    assert_eq!(forged_report["category"], "forged-identity");
+    assert_eq!(forged_report["diagnostic"]["code"], "evidence-invalid");
+
+    let existing_emit = run(noble(&[
+        std::ffi::OsStr::new("verify-module"),
+        &v1,
+        std::ffi::OsStr::new("--emit"),
+        &retained,
+    ]))?;
+    let existing_report = report(&existing_emit)?;
+    assert_eq!(
+        existing_emit.status.code(),
+        Some(2),
+        "{}",
+        text(&existing_emit)
+    );
+    assert_eq!(existing_report["outcome"], "error");
+    assert_eq!(existing_report["category"], "unavailable");
+    assert_eq!(existing_report["diagnostic"]["code"], "emit-destination");
+
+    let unused_emit = fixture.path("never-created-emit");
+    let unused_emit_two = fixture.path("never-created-emit-two");
+    let repeated_emit = run(noble(&[
+        std::ffi::OsStr::new("verify-module"),
+        &v1,
+        std::ffi::OsStr::new("--emit"),
+        &source(&unused_emit),
+        std::ffi::OsStr::new("--emit"),
+        &source(&unused_emit_two),
+    ]))?;
+    let repeated_report = report(&repeated_emit)?;
+    assert_eq!(
+        repeated_emit.status.code(),
+        Some(2),
+        "{}",
+        text(&repeated_emit)
+    );
+    assert_eq!(repeated_report["category"], "usage");
+    assert!(
+        !unused_emit.exists(),
+        "a usage failure must not create the --emit directory"
+    );
+    Ok(())
+}

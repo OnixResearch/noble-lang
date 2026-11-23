@@ -181,6 +181,11 @@ fn stage_contract(
         requires: contract.requires.clone(),
         ensures: contract.ensures.clone(),
     };
+    // A proof hole is only valid in a proof term. A hole in either predicate
+    // is refused here, before the contract's expression preparation can
+    // report it as an unknown operator at a contract-level span.
+    attempt!(refuse_hole_outside_term(&goal.requires));
+    attempt!(refuse_hole_outside_term(&goal.ensures));
     let prepared = match contract.revision {
         1 => crate::intrinsic::prepare_contract(&goal, request.limits).map(|_| ()),
         2 => crate::intrinsic::prepare_named_contract(&goal, request.limits).map(|_| ()),
@@ -249,6 +254,7 @@ fn stage_proof(
 > {
     let goal = match &proof.claim {
         crate::source::declared::parsing::ProofClaim::Pure(proposition) => {
+            attempt!(refuse_hole_outside_term(proposition));
             crate::intrinsic::PendingGoal::Pure {
                 proposition: proposition.clone(),
             }
@@ -273,6 +279,10 @@ fn stage_proof(
         prior,
         dependencies
     ));
+    // A proof hole is editor transport only. The reserved form is refused as
+    // ordinary source before any checking, so no admission path can reach it;
+    // only the goal view's proof-editor session admits it for analysis.
+    attempt!(check_proof_holes(&term, request.session.proof_editor));
     Ok((
         crate::intrinsic::ProofObligation {
             revision: proof.revision,
@@ -284,6 +294,219 @@ fn stage_proof(
         },
         dependencies,
     ))
+}
+
+/// Where a reserved `(editor-hole ...)` form was encountered during staging.
+#[octet::sealed_enum]
+#[derive(Clone, Copy)]
+enum HoleMode {
+    ProofTerm { allow: bool },
+    OutsideTerm,
+}
+
+/// One entered list on the index path of `walk_proof_holes`.
+#[derive(Clone, Copy)]
+struct FormLevel {
+    index: usize,
+    len: usize,
+}
+
+/// Refuse or admit the reserved `(editor-hole LABEL)` proof form.
+///
+/// The walk uses an explicit index path instead of recursion or a borrowed work
+/// stack so the extracted model stays transparent. It reads only the proof
+/// term, so a hole in a contract predicate or an executable body is never
+/// mistaken for a proof hole.
+fn check_proof_holes(
+    term: &crate::intrinsic::Form,
+    proof_editor: bool,
+) -> Result<(), crate::source::Error> {
+    walk_proof_holes(
+        term,
+        HoleMode::ProofTerm {
+            allow: proof_editor,
+        },
+    )
+}
+
+/// Refuse a reserved proof-hole form outside a proof term. The walk is the same
+/// bounded index-path walk as `check_proof_holes`; the first hole in source
+/// order names itself as misplaced.
+fn refuse_hole_outside_term(form: &crate::intrinsic::Form) -> Result<(), crate::source::Error> {
+    walk_proof_holes(form, HoleMode::OutsideTerm)
+}
+
+/// Visits `root` and every nested list beneath it left-to-right via an index
+/// path, checking each `(editor-hole ...)` form under `mode`.
+fn walk_proof_holes(
+    root: &crate::intrinsic::Form,
+    mode: HoleMode,
+) -> Result<(), crate::source::Error> {
+    let mut levels = alloc::vec::Vec::with_capacity(LIST_DEPTH);
+    if let Some(first) = attempt!(visit_hole_node(root, 0, mode)) {
+        levels.push(first);
+    }
+    let mut failure = None;
+    while failure.is_none() && !levels.is_empty() {
+        match visit_hole_at(root, &levels, mode) {
+            Ok(Some(child)) => levels.push(child),
+            Ok(None) => levels = advance_hole_level(levels),
+            Err(problem) => failure = Some(problem),
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+/// Follows `path` from `root` and checks the reached form under `mode`.
+fn visit_hole_at(
+    root: &crate::intrinsic::Form,
+    path: &[FormLevel],
+    mode: HoleMode,
+) -> Result<Option<FormLevel>, crate::source::Error> {
+    let mut node = root;
+    let mut level = 0;
+    while level < path.len() {
+        match &node.kind {
+            crate::intrinsic::FormKind::List(items) => {
+                node = &items[path[level].index];
+            }
+            crate::intrinsic::FormKind::Atom(_) => return Ok(None),
+        }
+        level += 1;
+    }
+    visit_hole_node(node, path.len(), mode)
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+/// Checks one node of `walk_proof_holes`, returning the child level to descend
+/// into when `node` is a non-empty non-hole list.
+fn visit_hole_node(
+    node: &crate::intrinsic::Form,
+    depth: usize,
+    mode: HoleMode,
+) -> Result<Option<FormLevel>, crate::source::Error> {
+    let crate::intrinsic::FormKind::List(items) = &node.kind else {
+        return Ok(None);
+    };
+    if is_editor_hole_list(items) {
+        attempt!(check_hole_list(node.span, items, mode));
+        return Ok(None);
+    }
+    if items.is_empty() {
+        return Ok(None);
+    }
+    if depth >= LIST_DEPTH {
+        return Err(at(
+            crate::source::Stage::Check,
+            node.span,
+            "logical nesting exceeds supported depth",
+        ));
+    }
+    Ok(Some(FormLevel {
+        index: 0,
+        len: items.len(),
+    }))
+}
+
+/// Unwinds finished levels and advances to the next sibling on the index path.
+fn advance_hole_level(mut levels: alloc::vec::Vec<FormLevel>) -> alloc::vec::Vec<FormLevel> {
+    let mut is_advanced = false;
+    while !is_advanced && !levels.is_empty() {
+        if let Some(mut top) = levels.pop() {
+            let next = top.index.saturating_add(1);
+            if next < top.len {
+                top.index = next;
+                levels.push(top);
+                is_advanced = true;
+            }
+        }
+    }
+    levels
+}
+
+/// Whether a list is an `(editor-hole ...)` form: its first item is the atom
+/// `editor-hole`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; comparing the head atom uses str PartialEq, which is not a stable const trait (E0658)."
+)]
+fn is_editor_hole_list(items: &[crate::intrinsic::Form]) -> bool {
+    match items.first() {
+        Some(crate::intrinsic::Form {
+            kind: crate::intrinsic::FormKind::Atom(head),
+            ..
+        }) => head.as_str() == "editor-hole",
+        Some(_) | None => false,
+    }
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String::as_str and the declared::error diagnostics in `at` are not const (E0015)."
+)]
+/// Validates one `(editor-hole ...)` form against `mode`.
+fn check_hole_list(
+    span: crate::Span,
+    items: &[crate::intrinsic::Form],
+    mode: HoleMode,
+) -> Result<(), crate::source::Error> {
+    match mode {
+        HoleMode::OutsideTerm => Err(at(
+            crate::source::Stage::Check,
+            span,
+            "a proof hole is only valid in a proof term",
+        )),
+        HoleMode::ProofTerm { allow } => {
+            if items.len() != 2 {
+                return Err(at(
+                    crate::source::Stage::Check,
+                    span,
+                    "a proof hole carries exactly one lowercase label",
+                ));
+            }
+            let is_label = match &items[1].kind {
+                crate::intrinsic::FormKind::Atom(label) => valid_hole_label(label.as_str()),
+                crate::intrinsic::FormKind::List(_) => false,
+            };
+            if !is_label {
+                return Err(at(
+                    crate::source::Stage::Check,
+                    span,
+                    "a proof hole carries exactly one lowercase label",
+                ));
+            }
+            if !allow {
+                return Err(at(
+                    crate::source::Stage::Check,
+                    span,
+                    "a proof hole is editor-only and never .noble source",
+                ));
+            }
+            Ok(())
+        }
+    }
+}
+
+/// A transport label: 1-32 lowercase ASCII letters, digits or hyphens.
+const fn valid_hole_label(label: &str) -> bool {
+    let bytes = label.as_bytes();
+    if bytes.is_empty() || bytes.len() > 32 {
+        return false;
+    }
+    let mut at = 0;
+    let mut is_valid = true;
+    while is_valid && at < bytes.len() {
+        let byte = bytes[at];
+        is_valid = byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-';
+        at += 1;
+    }
+    is_valid
 }
 
 #[expect(
