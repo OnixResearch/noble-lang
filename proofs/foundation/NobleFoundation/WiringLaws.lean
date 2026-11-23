@@ -1843,4 +1843,56 @@ theorem owners_track_multiplicity :
   simp [resOwners, stackRes, frameRes, heapRes, Value.resIds] at hlen
 
 
+/-- The guest status has no `waiting` constructor: the synchronous host oracle
+always answers, so a waiting outcome is not modelled here. -/
+theorem no_waiting_status : ∀ s : Status, s = .running ∨ s = .denied ∨ s = .failed := by
+  intro s
+  cases s <;> simp
+
+/-- A definition whose body calls itself. The model's typing judgment refuses
+it (a cyclic call has no finite `CodeT` derivation), but the step relation
+still has the untyped loop, which is how divergence is represented. -/
+def loopDef : Def := ⟨[], [], [], [.call 0]⟩
+
+/-- The one-definition table for the untyped loop. -/
+def loopDefs : List Def := [loopDef]
+
+/-- The loop configuration. -/
+def loopConfig (s : List Value) (l : List Nat) (cs : List Nat)
+    (hp : List (Nat × Value)) (n : Nat) (tr : List Event) : Config :=
+  ⟨[.call 0], s, l, cs, hp, n, tr, .running⟩
+
+/-- The untyped self-call steps to itself. -/
+theorem untyped_loop_steps (s l cs hp n tr) :
+    Step loopDefs (H := H) (loopConfig s l cs hp n tr) (loopConfig s l cs hp n tr) := by
+  have hd : getDef loopDefs 0 = some loopDef := rfl
+  simpa [loopConfig, loopDef, loopDefs] using
+    (Step.call (D := loopDefs) (H := H) (i := 0) (d := loopDef) (k := [])
+      (s := s) (l := l) (cs := cs) (hp := hp) (n := n) (tr := tr) hd)
+
+/-- Every reach from the loop configuration is the loop configuration. -/
+theorem untyped_loop_reach_self {c'} (h : Reach loopDefs H (loopConfig s l cs hp n tr) c') :
+    c' = loopConfig s l cs hp n tr := by
+  induction h with
+  | refl => rfl
+  | tail hreach hstep ih =>
+      subst ih
+      cases hstep with
+      | call hd =>
+          simp [loopDef, loopDefs, getDef] at hd
+          subst hd
+          rfl
+
+/-- The untyped loop diverges: every finite reach still has a next step, so
+no normal-return or abnormal-termination claim applies. This is the
+divergence outcome V-MODEL-03 distinguishes from a forbidden stuck state. -/
+theorem untyped_loop_diverges :
+    ∀ c', Reach loopDefs H (loopConfig s l cs hp n tr) c' →
+      ∃ c'', Step loopDefs H c' c'' := by
+  intro c' h
+  have hc := untyped_loop_reach_self h
+  subst hc
+  exact ⟨_, untyped_loop_steps s l cs hp n tr⟩
+
+
 end NobleFoundation.WiringLaws

@@ -16820,6 +16820,30 @@
       "phase": 2,
       "role": "wiring-resource",
       "claim": "a pair holding the same resource id twice contributes two owners and cannot satisfy Own against a duplicate-free live set"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.no_waiting_status",
+      "phase": 2,
+      "role": "wiring-failure-class",
+      "claim": "the guest status has no waiting constructor: the synchronous host oracle always answers"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.untyped_loop_steps",
+      "phase": 2,
+      "role": "wiring-failure-class",
+      "claim": "the untyped self-call steps to itself"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.untyped_loop_reach_self",
+      "phase": 2,
+      "role": "wiring-failure-class",
+      "claim": "every reach from the untyped loop configuration is that configuration"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.untyped_loop_diverges",
+      "phase": 2,
+      "role": "wiring-failure-class",
+      "claim": "the untyped loop has a next step from every finite reach, so divergence is distinct from a stuck state"
     }
   ],
   "private_theorems": [
