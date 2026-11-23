@@ -1831,4 +1831,16 @@ theorem under_holds_resource_in_frame :
       (Step.releaseOk rfl)
 
 
+/-- Multiplicity is tracked, not collapsed: a value holding the same
+resource id twice contributes two owners, so it cannot satisfy `Own` with a
+duplicate-free live set. A set-valued ownership accounting would miss this. -/
+theorem owners_track_multiplicity :
+    (Value.pair (.res 0) (.res 0)).resIds = [0, 0] ∧
+      ¬ Own ⟨[], [.pair (.res 0) (.res 0)], [0], [], [], 1, [], .running⟩ := by
+  refine ⟨rfl, ?_⟩
+  intro h
+  have hlen := h.perm.length_eq
+  simp [resOwners, stackRes, frameRes, heapRes, Value.resIds] at hlen
+
+
 end NobleFoundation.WiringLaws
