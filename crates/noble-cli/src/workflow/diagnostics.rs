@@ -23,12 +23,14 @@ pub(crate) const DEFAULT_SCHEMA: Schema = Schema::V2;
 
 /// Options that consume the following argument; the revision scan must step
 /// over their values so an option-looking value is never read as a selector.
-const VALUE_OPTIONS: [&str; 5] = [
+const VALUE_OPTIONS: [&str; 7] = [
     "--module",
     "--timeout-ms",
     "--normalization-work",
     "--substitution-work",
     "--report-schema",
+    "--emit",
+    "--evidence",
 ];
 
 impl Schema {
@@ -129,7 +131,9 @@ pub(crate) fn classify(outcome: output::Outcome, code: &str) -> Category {
         "intrinsic-lowering-mismatch" | "intrinsic-kind-mismatch" => {
             category("claim-mismatch", "regenerate-the-claim")
         }
-        "intrinsic-source-binding" => category("forged-identity", "resubmit-the-pinned-subject"),
+        "intrinsic-source-binding" | "evidence-invalid" => {
+            category("forged-identity", "resubmit-the-pinned-subject")
+        }
         "intrinsic-parse-invalid"
         | "intrinsic-resolve-invalid"
         | "intrinsic-link-invalid"
@@ -152,11 +156,13 @@ pub(crate) fn classify(outcome: output::Outcome, code: &str) -> Category {
         | "library-import-cycle"
         | "toolchain-mismatch" => category("outside-profile", "select-a-supported-profile"),
         "artifact-io"
+        | "emit-destination"
+        | "evidence-io"
         | "temporary-root"
         | "library-read"
         | "proof-artifact"
         | "sandbox-unavailable" => category("unavailable", "fix-the-host-environment"),
-        "usage" | "module-limit" => category("usage", "correct-the-arguments"),
+        "usage" | "module-limit" | "evidence-limit" => category("usage", "correct-the-arguments"),
         _ => match outcome {
             output::Outcome::Timeout => category("checker-timeout", "raise-the-deadline"),
             _ => category("internal", "report-the-tool-defect"),
@@ -354,6 +360,10 @@ mod tests {
             "named-model-mismatch",
             "named-unpinned-import",
             "artifact-io",
+            "emit-destination",
+            "evidence-io",
+            "evidence-invalid",
+            "evidence-limit",
             "temporary-root",
             "library-read",
             "proof-artifact",

@@ -1070,7 +1070,15 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         }
     };
     let mut submitted_sha256 = None;
-    let result = execute(arguments, schema, &mut submitted_sha256);
+    let mut emit_dir: Option<std::path::PathBuf> = None;
+    let mut record: Option<super::evidence::Record> = None;
+    let result = execute(
+        arguments,
+        schema,
+        &mut submitted_sha256,
+        &mut emit_dir,
+        &mut record,
+    );
     let exit = match (&result, schema) {
         // The published v1 report never changes meaning: a module without a
         // proof obligation has always reported `unproved` with a success exit.
@@ -1099,6 +1107,19 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             &error,
         ),
     };
+    if let Some(directory) = emit_dir {
+        if let Err(error) = super::evidence::write(&directory, record.as_ref(), &report) {
+            let refused = super::diagnostics::failure_report(
+                schema,
+                PROFILE,
+                &source_path,
+                submitted_sha256.as_deref(),
+                &error,
+            );
+            std::println!("{}", refused.encode());
+            return std::process::ExitCode::from(error.outcome.exit());
+        }
+    }
     std::println!("{}", report.encode());
     exit
 }
@@ -1633,17 +1654,22 @@ fn execute(
     arguments: &[std::ffi::OsString],
     schema: super::diagnostics::Schema,
     submitted_sha256: &mut Option<std::string::String>,
+    emit_dir: &mut Option<std::path::PathBuf>,
+    record: &mut Option<super::evidence::Record>,
 ) -> Result<Option<encoding::Json>, output::Failure> {
     let path = arguments.get(1).ok_or_else(|| {
         output::Failure::error(
             "usage",
-            "verify-module SOURCE [--module FILE ...] [--timeout-ms N]".into(),
+            "verify-module SOURCE [--module FILE ...] [--timeout-ms N] [--emit NEW_DIR] [--evidence DIR ...]"
+                .into(),
         )
     })?;
     let mut modules = std::vec::Vec::new();
     let mut modules_exceeded = false;
     let mut timeout_ms = super::DEFAULT_TIMEOUT;
     let mut timeout_seen = false;
+    let mut emit: Option<std::path::PathBuf> = None;
+    let mut evidence = std::vec::Vec::new();
     let mut budgets =
         noble_contracts::intrinsic::ProofBudgets::from_limits(noble_contracts::Limits::default());
     let mut at = 2;
@@ -1681,6 +1707,24 @@ fn execute(
                         output::Failure::error("usage", "invalid proof deadline".into())
                     })?
             }
+            "--emit" => {
+                if emit.is_some() {
+                    return Err(output::Failure::error(
+                        "usage",
+                        "repeated evidence destination".into(),
+                    ));
+                }
+                emit = Some(std::path::PathBuf::from(value));
+            }
+            "--evidence" => {
+                if evidence.len() >= super::evidence::DIRECTORY_LIMIT {
+                    return Err(output::Failure::error(
+                        "evidence-limit",
+                        "too many retained evidence directories".into(),
+                    ));
+                }
+                evidence.push(std::path::PathBuf::from(value));
+            }
             // The revision selector was parsed and validated once, before
             // this loop; a repeated or unknown selector is already refused.
             "--report-schema" => {}
@@ -1713,6 +1757,7 @@ fn execute(
             "too many prior module units".into(),
         ));
     }
+    *emit_dir = emit.clone();
     let limits = noble_contracts::Limits::default();
     let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
         .expect("legacy verify-module retained source budget");
@@ -1730,6 +1775,33 @@ fn execute(
             .prepare(&source, &[], limits)
             .map_err(|error| source_error(&error))?;
         let has_proofs = prepared.proof_obligations().is_some();
+        // A retained evidence directory is offered for the target module. It
+        // never substitutes for checking: a record whose staleness key differs
+        // from the current prepared subject is refused before any consumer
+        // runs, and a matching record still goes through the ordinary recheck.
+        if module == &target && !evidence.is_empty() {
+            let Some(batch) = prepared.proof_obligations() else {
+                return Err(output::Failure::error(
+                    "usage",
+                    "--evidence requires a module with proof declarations".into(),
+                ));
+            };
+            let Some(digest) = submitted_sha256.as_deref() else {
+                return Err(output::Failure::error(
+                    "intrinsic-internal",
+                    "a target module with evidence must have been read".into(),
+                ));
+            };
+            let current =
+                super::evidence::current(batch, digest, &evidence_revisions(batch), limits)?;
+            for directory in &evidence {
+                let loaded = super::evidence::load(directory)?;
+                let mismatches = super::evidence::compare(&loaded.record, &current);
+                if !mismatches.is_empty() {
+                    return Err(super::evidence::stale_failure(&loaded, &mismatches));
+                }
+            }
+        }
         let mut accepted = None;
         let mut verification_failure = None;
         let (next, committed) = if has_proofs {
@@ -1768,6 +1840,16 @@ fn execute(
                         digest,
                         schema,
                     ));
+                    if emit.is_some() {
+                        match super::evidence::record(batch, &verified, limits) {
+                            Ok(value) => *record = Some(value),
+                            Err(error) => {
+                                let message = std::format!("{}: {}", error.code, error.message);
+                                verification_failure = Some(error);
+                                return Err(message);
+                            }
+                        }
+                    }
                 }
                 Ok(verified)
             })
@@ -1787,6 +1869,27 @@ fn execute(
         "intrinsic-internal",
         "no target module was selected".into(),
     ))
+}
+
+/// The revisions a prepared batch's proofs are selected and compared under.
+fn evidence_revisions(batch: &ProofBatch) -> super::evidence::Revisions {
+    let named = batch
+        .obligations
+        .iter()
+        .any(|obligation| match &obligation.goal {
+            noble_contracts::intrinsic::PendingGoal::Contract { contract } => {
+                contract.revision == 2
+            }
+            noble_contracts::intrinsic::PendingGoal::Pure { .. } => false,
+        })
+        || batch.dependencies.iter().any(has_named_dependency);
+    let checker = checker_revision();
+    super::evidence::Revisions {
+        model: model_revision(),
+        named_model: named.then(named_model_revision),
+        named_checker: named.then(|| named_checker_revision(&checker)),
+        checker,
+    }
 }
 
 #[cfg(test)]

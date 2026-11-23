@@ -17,10 +17,11 @@ use noble_contracts::intrinsic::{
 use noble_contracts::source::{ModulePrepared, ModuleSession};
 use noble_contracts::{Limits, Span};
 
-use super::{encoding, intrinsic, output};
+use super::{encoding, evidence, intrinsic, output};
 
 pub(crate) const MAP_SCHEMA: &str = "noble-obligation-map/v1";
 pub(crate) const VIEW_SCHEMA: &str = "noble-goal-view/v1";
+pub(crate) const HOLE_SCHEMA: &str = "noble-proof-editor/v1";
 
 /// The Lean release the pinned consumer accepts; `workflow::USAGE` states it.
 const LEAN_RELEASE: &str = "4.35.0";
@@ -32,6 +33,8 @@ const STACK_ORDER: &str = "bottom-first; the last entry is top";
 const PARTIAL_CORRECTNESS: &str = "partial-correctness";
 const INCOMPLETE_NOTICE: &str = "no independent checker result is bound to this statement digest; partial correctness is never shown as checked";
 const NO_VIEW_RESULT: &str = "status chips come only from independent checker output; this command runs no consumer, so every site is incomplete";
+const HOLE_NOTICE: &str = "this declaration contains an editor proof hole; no checker result is bound and the declaration is never checked";
+const STALE_NOTICE: &str = "the retained checker result no longer matches the current source, subject or dependency digests; re-check explicitly";
 
 /// Which read-only report one invocation prints.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -125,6 +128,15 @@ struct Entry {
     assumptions: encoding::Json,
     vacuity: &'static str,
     staleness: encoding::Json,
+    /// Editor proof-hole labels inside this declaration's proof.
+    holes: std::vec::Vec<std::string::String>,
+    chip: &'static str,
+    chip_source: &'static str,
+    outcome: &'static str,
+    category: &'static str,
+    notice: &'static str,
+    checker_result: encoding::Json,
+    retained_evidence: encoding::Json,
 }
 
 impl Entry {
@@ -157,6 +169,20 @@ impl Entry {
             ("vacuity", encoding::string(self.vacuity)),
             ("acceptance", encoding::Json::Bool(false)),
             ("staleness", self.staleness.clone()),
+            (
+                "holes",
+                encoding::strings(
+                    &self
+                        .holes
+                        .iter()
+                        .map(std::string::String::as_str)
+                        .collect::<std::vec::Vec<_>>(),
+                ),
+            ),
+            (
+                "contains_hole",
+                encoding::Json::Bool(!self.holes.is_empty()),
+            ),
         ]);
         if let Some(refusal) = &self.refusal {
             fields.push(("refusal", encoding::string(refusal)));
@@ -180,12 +206,13 @@ impl Entry {
                 "statement",
                 encoding::optional_string(self.statement.as_deref()),
             ),
-            ("chip", encoding::string("incomplete")),
-            ("chip_source", encoding::string("no-checker-result")),
-            ("outcome", encoding::string("not-run")),
-            ("category", encoding::string("explanation-only")),
-            ("checker_result", encoding::Json::Null),
-            ("notice", encoding::string(INCOMPLETE_NOTICE)),
+            ("chip", encoding::string(self.chip)),
+            ("chip_source", encoding::string(self.chip_source)),
+            ("outcome", encoding::string(self.outcome)),
+            ("category", encoding::string(self.category)),
+            ("checker_result", self.checker_result.clone()),
+            ("notice", encoding::string(self.notice)),
+            ("retained_evidence", self.retained_evidence.clone()),
             ("predicates", self.predicates.clone()),
             ("stacks", self.stacks.clone()),
             ("premises", self.premises.clone()),
@@ -194,8 +221,242 @@ impl Entry {
             ("assumptions", self.assumptions.clone()),
             ("acceptance", encoding::Json::Bool(false)),
             ("staleness", self.staleness.clone()),
+            (
+                "holes",
+                encoding::strings(
+                    &self
+                        .holes
+                        .iter()
+                        .map(std::string::String::as_str)
+                        .collect::<std::vec::Vec<_>>(),
+                ),
+            ),
         ]))
     }
+
+    /// Mark every site this declaration's proof holes occupy. A declaration
+    /// containing a hole is never `checked`, whatever evidence is offered.
+    fn mark_holes(&mut self, sites: &[HoleSite]) {
+        self.holes = sites
+            .iter()
+            .filter(|site| self.proof.as_deref() == Some(site.proof.as_str()))
+            .map(|site| site.label.clone())
+            .collect();
+        if self.holes.is_empty() {
+            return;
+        }
+        self.chip = "incomplete";
+        self.chip_source = "no-checker-result";
+        self.outcome = "unknown";
+        self.category = "incomplete-hole";
+        self.notice = HOLE_NOTICE;
+        self.checker_result = encoding::Json::Null;
+        self.retained_evidence = encoding::Json::Array(std::vec::Vec::new());
+        let encoding::Json::Array(rows) = &mut self.sites else {
+            return;
+        };
+        for row in rows {
+            let encoding::Json::Object(fields) = row else {
+                continue;
+            };
+            let label = fields
+                .iter()
+                .find(|(key, _)| *key == "hole_label")
+                .and_then(|(_, value)| match value {
+                    encoding::Json::String(text) => Some(text.clone()),
+                    _ => None,
+                });
+            let Some(label) = label else {
+                continue;
+            };
+            fields.push(("chip", encoding::string("incomplete")));
+            fields.push(("category", encoding::string("incomplete-hole")));
+            fields.push(("outcome", encoding::string("unknown")));
+            fields.push(("label", encoding::string(&label)));
+            fields.push((
+                "goal",
+                encoding::object([
+                    ("declaration", encoding::string(&self.declaration)),
+                    (
+                        "statement_digest",
+                        encoding::optional_string(self.statement_digest.as_deref()),
+                    ),
+                    ("stacks", self.stacks.clone()),
+                ]),
+            ));
+        }
+    }
+
+    /// List a retained record without granting it checker authority. A
+    /// mismatch makes the offered result stale; matching keys alone cannot
+    /// turn a parse-only goal view into an independent proof check.
+    fn apply_evidence(&mut self, loaded: &evidence::Loaded, mismatches: &[std::string::String]) {
+        if !self.holes.is_empty() {
+            return;
+        }
+        let Some(proof_name) = self.proof.as_deref() else {
+            return;
+        };
+        let Some(recorded) = evidence::recorded_proof(loaded, proof_name) else {
+            return;
+        };
+        let path = std::format!("proofs.{proof_name}.");
+        let applies: std::vec::Vec<std::string::String> = mismatches
+            .iter()
+            .filter(|mismatch| {
+                !mismatch.starts_with("proofs.") || mismatch.starts_with(path.as_str())
+            })
+            .cloned()
+            .collect();
+        if !applies.is_empty() {
+            self.chip = "stale";
+            self.chip_source = "retained-evidence";
+            self.outcome = "unsupported";
+            self.category = "stale-dependency";
+            self.notice = STALE_NOTICE;
+            self.checker_result = encoding::object([
+                ("checked", encoding::Json::Bool(false)),
+                ("evidence", encoding::string(&loaded.directory)),
+                ("evidence_sha256", encoding::string(&loaded.evidence_sha256)),
+                (
+                    "mismatches",
+                    encoding::strings(
+                        &applies
+                            .iter()
+                            .map(std::string::String::as_str)
+                            .collect::<std::vec::Vec<_>>(),
+                    ),
+                ),
+            ]);
+        }
+        let row = evidence::retained_json(loaded, recorded, &applies);
+        match &mut self.retained_evidence {
+            encoding::Json::Array(rows) => rows.push(row),
+            _ => self.retained_evidence = encoding::Json::Array(std::vec![row]),
+        }
+    }
+}
+
+/// One editor proof hole found in a prepared proof term.
+struct HoleSite {
+    label: std::string::String,
+    proof: std::string::String,
+    span: Span,
+}
+
+/// Every reserved `(editor-hole LABEL)` form in the prepared proof terms.
+/// The frontend already validated each hole's shape; this walk records where
+/// each one sits so the transport can prove every hole is in proof-term
+/// position and the goal view can name it.
+fn proof_hole_sites(
+    batch: Option<&ProofBatch>,
+) -> Result<std::vec::Vec<HoleSite>, output::Failure> {
+    let mut sites = std::vec::Vec::new();
+    let Some(batch) = batch else {
+        return Ok(sites);
+    };
+    for obligation in &batch.obligations {
+        let mut pending = std::vec::Vec::from([&obligation.term]);
+        while let Some(form) = pending.pop() {
+            let FormKind::List(items) = &form.kind else {
+                continue;
+            };
+            if items.first().and_then(atom) == Some("editor-hole") {
+                let label = items.get(1).and_then(atom).ok_or_else(|| {
+                    output::Failure::error(
+                        "proof-hole-transport",
+                        "a proof hole carries exactly one lowercase label".into(),
+                    )
+                })?;
+                if sites.iter().any(|site: &HoleSite| site.label == label) {
+                    return Err(output::Failure::error(
+                        "proof-hole-transport",
+                        std::format!("duplicate proof-hole label {label}"),
+                    ));
+                }
+                sites.push(HoleSite {
+                    label: std::string::String::from(label),
+                    proof: obligation.name.clone(),
+                    span: form.span,
+                });
+                continue;
+            }
+            for child in items {
+                if list(child).is_some() {
+                    pending.push(child);
+                }
+            }
+        }
+    }
+    Ok(sites)
+}
+
+/// The transport document's `(label, span)` holes must equal the prepared proof
+/// terms' holes exactly: a document hole outside a proof term, a commented-out
+/// document hole paired with a hand-written hole, and a hand-written hole in
+/// the document's verbatim text are all refused as transport errors.
+fn check_transport_holes(
+    holes: &super::super::core::editor::ProofHoles,
+    sites: &[HoleSite],
+) -> Result<(), output::Failure> {
+    if holes.labels.len() != sites.len() || holes.labels.len() != holes.spans.len() {
+        return Err(output::Failure::error(
+            "proof-hole-transport",
+            "the document's holes and the module's proof holes differ".into(),
+        ));
+    }
+    for (label, expected_span) in holes.labels.iter().zip(&holes.spans) {
+        let matched = sites.iter().find(|site| &site.label == label);
+        match matched {
+            None => {
+                return Err(output::Failure::error(
+                    "proof-hole-transport",
+                    std::format!("proof hole {label} is not in a proof-term position"),
+                ));
+            }
+            Some(site) if site.span != *expected_span => {
+                return Err(output::Failure::error(
+                    "proof-hole-transport",
+                    std::format!("proof hole {label} does not match its editor transport span"),
+                ));
+            }
+            Some(_) => {}
+        }
+    }
+    for site in sites {
+        if !holes.labels.iter().any(|label| label == &site.label) {
+            return Err(output::Failure::error(
+                "proof-hole-transport",
+                std::format!(
+                    "module text carries proof hole {} that is not editor transport input",
+                    site.label
+                ),
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn transport_json(labels: &[std::string::String], sites: &[HoleSite]) -> encoding::Json {
+    let rows = labels
+        .iter()
+        .filter_map(|label| {
+            let site = sites.iter().find(|site| &site.label == label)?;
+            Some(encoding::object([
+                ("label", encoding::string(label)),
+                ("proof", encoding::string(&site.proof)),
+                ("span", span_json(site.span)),
+                (
+                    "site_suffix",
+                    encoding::string(std::format!("/{}/{}", site.proof, "editor-hole")),
+                ),
+            ]))
+        })
+        .collect();
+    encoding::object([
+        ("schema", encoding::string(HOLE_SCHEMA)),
+        ("holes", encoding::Json::Array(rows)),
+    ])
 }
 
 /// The inserted-arguments row for `proof`: every argument the
@@ -245,6 +506,15 @@ struct Document {
     dependencies: std::vec::Vec<encoding::Json>,
     limits: Limits,
     entries: std::vec::Vec<Entry>,
+    /// The view's document outcome, when it is not the ordinary `not-run`.
+    outcome: Option<&'static str>,
+    category: Option<&'static str>,
+    notice: &'static str,
+    /// The proof-hole transport record, when the source came from one.
+    transport: encoding::Json,
+    /// Retained evidence records this view read, as `{}` or `{"records": [...]}`.
+    evidence: encoding::Json,
+    exit: u8,
 }
 
 impl Document {
@@ -275,7 +545,17 @@ impl Document {
             )),
             Report::View => {
                 fields.push(("checker_result", encoding::Json::Null));
-                fields.push(("notice", encoding::string(NO_VIEW_RESULT)));
+                fields.push((
+                    "outcome",
+                    encoding::string(self.outcome.unwrap_or("not-run")),
+                ));
+                fields.push((
+                    "category",
+                    encoding::string(self.category.unwrap_or("explanation-only")),
+                ));
+                fields.push(("notice", encoding::string(self.notice)));
+                fields.push(("transport", self.transport.clone()));
+                fields.push(("evidence", self.evidence.clone()));
                 fields.push((
                     "sites",
                     encoding::Json::Array(self.entries.iter().map(Entry::view_json).collect()),
@@ -725,9 +1005,9 @@ fn declared_skeleton(
     let mut premises = std::vec::Vec::new();
     let mut pending = std::vec::Vec::new();
     if let Some(root) = head(term) {
-        pending.push((std::string::String::from(root), term));
+        pending.push((std::string::String::from(root), term, ""));
     }
-    while let Some((path, form)) = pending.pop() {
+    while let Some((path, form, parent)) = pending.pop() {
         let Some(items) = list(form) else {
             continue;
         };
@@ -740,6 +1020,16 @@ fn declared_skeleton(
         ]);
         if let Some(rule) = discharged_by(items, constructor) {
             row.push(("discharged_by", encoding::string(rule)));
+        }
+        if constructor == "editor-hole" {
+            // The reserved proof-hole form carries exactly one label; the
+            // obligation map records it so the goal view can name the hole
+            // and the enclosing constructor whose goal the hole occupies.
+            row.push((
+                "hole_label",
+                encoding::optional_string(items.get(1).and_then(atom)),
+            ));
+            row.push(("parent_constructor", encoding::string(parent)));
         }
         sites.push(encoding::Json::Object(row));
         if constructor == "intro" {
@@ -761,7 +1051,11 @@ fn declared_skeleton(
             if let Some(child_head) = head(child) {
                 // Site path indices count the constructor's arguments, so the
                 // leading constructor atom is not position 0.
-                pending.push((std::format!("{path}.{}.{child_head}", position - 1), child));
+                pending.push((
+                    std::format!("{path}.{}.{child_head}", position - 1),
+                    child,
+                    constructor,
+                ));
             }
         }
     }
@@ -996,6 +1290,14 @@ fn contract_entry(
             dependency_digest,
             versions,
         ),
+        holes: std::vec::Vec::new(),
+        chip: "incomplete",
+        chip_source: "no-checker-result",
+        outcome: "not-run",
+        category: "explanation-only",
+        notice: INCOMPLETE_NOTICE,
+        checker_result: encoding::Json::Null,
+        retained_evidence: encoding::Json::Array(std::vec::Vec::new()),
     }
 }
 
@@ -1059,6 +1361,14 @@ fn pure_entry(
             statement_digest.as_deref(),
             versions,
         ),
+        holes: std::vec::Vec::new(),
+        chip: "incomplete",
+        chip_source: "no-checker-result",
+        outcome: "not-run",
+        category: "explanation-only",
+        notice: INCOMPLETE_NOTICE,
+        checker_result: encoding::Json::Null,
+        retained_evidence: encoding::Json::Array(std::vec::Vec::new()),
     }
 }
 
@@ -1077,7 +1387,9 @@ fn module_report(
     source_path: &str,
     source_sha256: &str,
     report: Report,
-) -> encoding::Json {
+    holes: Option<&super::super::core::editor::ProofHoles>,
+    offered: &[std::path::PathBuf],
+) -> Result<Document, output::Failure> {
     let limits = Limits::default();
     let batch = prepared.proof_obligations();
     let named = prepared.contract_goals().any(|goal| goal.revision == 2)
@@ -1130,7 +1442,54 @@ fn module_report(
             }
         }
     }
-    Document {
+    // Editor proof holes: every reserved site is marked incomplete, and a
+    // transport document must account for exactly the holes its module text
+    // carries. An ordinary session can no longer prepare a hole at all, so a
+    // found hole without a document is a frontend defect, refused closed.
+    let sites = proof_hole_sites(batch)?;
+    match holes {
+        Some(transport) => check_transport_holes(transport, &sites)?,
+        None if sites.is_empty() => {}
+        None => {
+            return Err(output::Failure::error(
+                "proof-hole-transport",
+                "a proof hole is editor-only and never .noble source".into(),
+            ))
+        }
+    }
+    for entry in &mut entries {
+        entry.mark_holes(&sites);
+    }
+    // Retained evidence: read each record, compare its full staleness key with
+    // the current prepared source and mark every matching declaration. A
+    // declaration with a hole stays incomplete.
+    let mut records = std::vec::Vec::new();
+    if !offered.is_empty() {
+        if report != Report::View {
+            return Err(usage("--evidence applies to the goal view"));
+        }
+        let Some(batch) = batch else {
+            return Err(usage(
+                "--evidence requires a module with proof declarations",
+            ));
+        };
+        let revisions = evidence_revisions(&versions);
+        let current = evidence::current(batch, source_sha256, &revisions, limits)?;
+        for directory in offered {
+            let loaded = evidence::load(directory)?;
+            let mismatches = evidence::compare(&loaded.record, &current);
+            for entry in &mut entries {
+                entry.apply_evidence(&loaded, &mismatches);
+            }
+            records.push(evidence::summary(&loaded, &mismatches));
+        }
+    }
+    let evidence = if records.is_empty() {
+        encoding::Json::Null
+    } else {
+        encoding::object([("records", encoding::Json::Array(records))])
+    };
+    let document = Document {
         report,
         profile: if named {
             "Named-Contracts-v2"
@@ -1154,8 +1513,29 @@ fn module_report(
         dependencies,
         limits,
         entries,
+        outcome: holes.map(|_| "unknown"),
+        category: holes.map(|_| "incomplete-hole"),
+        notice: if holes.is_some() {
+            HOLE_NOTICE
+        } else {
+            NO_VIEW_RESULT
+        },
+        transport: holes.map_or(encoding::Json::Null, |transport| {
+            transport_json(&transport.labels, &sites)
+        }),
+        evidence,
+        exit: u8::from(holes.is_some()) * 3,
+    };
+    Ok(document)
+}
+
+fn evidence_revisions(versions: &Versions) -> evidence::Revisions {
+    evidence::Revisions {
+        model: versions.model.clone().unwrap_or_default(),
+        checker: versions.checker.clone().unwrap_or_default(),
+        named_model: versions.named_model.clone(),
+        named_checker: versions.named_checker.clone(),
     }
-    .json()
 }
 
 fn contract_proof<'a>(batch: &'a ProofBatch, goal: &ContractGoal) -> Option<&'a ProofObligation> {
@@ -1261,6 +1641,14 @@ fn contract_file_entry(
             _ => "not-assessed",
         },
         staleness: contract_file_staleness(source_sha256, Some(&statement_digest)),
+        holes: std::vec::Vec::new(),
+        chip: "incomplete",
+        chip_source: "no-checker-result",
+        outcome: "not-run",
+        category: "explanation-only",
+        notice: INCOMPLETE_NOTICE,
+        checker_result: encoding::Json::Null,
+        retained_evidence: encoding::Json::Array(std::vec::Vec::new()),
     }
 }
 
@@ -1269,7 +1657,7 @@ fn contract_file_report(
     source_path: &str,
     source_sha256: &str,
     report: Report,
-) -> Result<encoding::Json, output::Failure> {
+) -> Result<Document, output::Failure> {
     let limits = Limits::default();
     let prepared = noble_contracts::prepare(source, limits).map_err(|problem| {
         let code = match problem.kind {
@@ -1305,13 +1693,20 @@ fn contract_file_report(
         dependencies: std::vec::Vec::new(),
         limits,
         entries: std::vec::Vec::from([entry]),
-    }
-    .json())
+        outcome: None,
+        category: None,
+        notice: NO_VIEW_RESULT,
+        transport: encoding::Json::Null,
+        evidence: encoding::Json::Null,
+        exit: 0,
+    })
 }
 
 struct Options {
     source: std::path::PathBuf,
+    proof_holes: bool,
     modules: std::vec::Vec<std::path::PathBuf>,
+    evidence: std::vec::Vec<std::path::PathBuf>,
 }
 
 fn usage(message: &str) -> output::Failure {
@@ -1319,14 +1714,35 @@ fn usage(message: &str) -> output::Failure {
 }
 
 fn options(arguments: &[std::ffi::OsString], report: Report) -> Result<Options, output::Failure> {
-    let source = arguments.get(1).ok_or_else(|| {
-        usage(match report {
-            Report::Map => "obligations SOURCE [--module FILE ...]",
-            Report::View => "goal-view SOURCE [--module FILE ...]",
-        })
-    })?;
+    let usage_text = match report {
+        Report::Map => "obligations SOURCE [--module FILE ...]",
+        Report::View => {
+            "goal-view SOURCE [--module FILE ...] [--evidence DIR ...], or \
+             goal-view --proof-holes FILE [--module FILE ...] [--evidence DIR ...]"
+        }
+    };
+    let mut source: Option<std::path::PathBuf> = None;
+    let mut proof_holes = false;
+    let mut at = 1usize;
+    if let Some(first) = arguments.get(1) {
+        if first.to_str() == Some("--proof-holes") {
+            if report != Report::View {
+                return Err(usage(usage_text));
+            }
+            let value = arguments
+                .get(2)
+                .ok_or_else(|| usage("missing proof-hole document"))?;
+            source = Some(std::path::PathBuf::from(value));
+            proof_holes = true;
+            at = 3usize;
+        } else {
+            source = Some(std::path::PathBuf::from(first));
+            at = 2usize;
+        }
+    }
+    let source = source.ok_or_else(|| usage(usage_text))?;
     let mut modules = std::vec::Vec::new();
-    let mut at = 2usize;
+    let mut evidence = std::vec::Vec::new();
     while at < arguments.len() {
         let option = arguments[at]
             .to_str()
@@ -1345,13 +1761,24 @@ fn options(arguments: &[std::ffi::OsString], report: Report) -> Result<Options, 
                 }
                 modules.push(std::path::PathBuf::from(value));
             }
+            "--evidence" if report == Report::View => {
+                if evidence.len() >= evidence::DIRECTORY_LIMIT {
+                    return Err(output::Failure::error(
+                        "evidence-limit",
+                        "too many retained evidence directories".into(),
+                    ));
+                }
+                evidence.push(std::path::PathBuf::from(value));
+            }
             _ => return Err(usage("unknown obligation-map option")),
         }
         at += 1;
     }
     Ok(Options {
-        source: std::path::PathBuf::from(source),
+        source,
+        proof_holes,
         modules,
+        evidence,
     })
 }
 
@@ -1359,13 +1786,48 @@ fn document(
     options: &Options,
     report: Report,
     source_path: &str,
-) -> Result<encoding::Json, output::Failure> {
+) -> Result<Document, output::Failure> {
+    if options.proof_holes {
+        let bytes = super::read_bounded(&options.source, super::SOURCE_LIMIT, "proof-editor")?;
+        let holes = super::super::core::editor::decode_proof_holes(&bytes)
+            .map_err(|message| output::Failure::error("proof-hole-transport", message))?;
+        let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("obligation map retained source budget");
+        let session = ModuleSession::new_proof_editor(&[], retained)
+            .map_err(|error| intrinsic::source_error(&error))?;
+        let digest = intrinsic::sha256(&holes.rendered);
+        let supplied = std::string::String::from(source_path);
+        return module_document(
+            options,
+            &session,
+            &holes.rendered,
+            &supplied,
+            &digest,
+            report,
+            Some(&holes),
+        );
+    }
     let source = super::read_bounded(&options.source, super::SOURCE_LIMIT, "module-source")?;
     let source_sha256 = intrinsic::sha256(&source);
     if contract_source(&source) {
+        if !options.evidence.is_empty() {
+            return Err(usage("--evidence applies to .noble module sources"));
+        }
         return contract_file_report(&source, source_path, &source_sha256, report);
     }
-    module_document(options, &source, source_path, &source_sha256, report)
+    let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+        .expect("obligation map retained source budget");
+    let session =
+        ModuleSession::new(&[], retained).map_err(|error| intrinsic::source_error(&error))?;
+    module_document(
+        options,
+        &session,
+        &source,
+        source_path,
+        &source_sha256,
+        report,
+        None,
+    )
 }
 
 /// Whether the file is an MC1 `.noble-contract` rather than a `.noble` module.
@@ -1384,16 +1846,15 @@ fn contract_source(source: &[u8]) -> bool {
 
 fn module_document(
     options: &Options,
+    session: &ModuleSession,
     source: &[u8],
     source_path: &str,
     source_sha256: &str,
     report: Report,
-) -> Result<encoding::Json, output::Failure> {
+    holes: Option<&super::super::core::editor::ProofHoles>,
+) -> Result<Document, output::Failure> {
     let limits = Limits::default();
-    let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
-        .expect("obligation map retained source budget");
-    let mut session =
-        ModuleSession::new(&[], retained).map_err(|error| intrinsic::source_error(&error))?;
+    let mut session = session.snapshot();
     let target = &options.source;
     for module in options.modules.iter().chain(core::iter::once(target)) {
         let owned;
@@ -1403,16 +1864,47 @@ fn module_document(
             owned = super::read_bounded(module, super::SOURCE_LIMIT, "module-source")?;
             &owned
         };
-        let prepared = session
-            .prepare(bytes, &[], limits)
-            .map_err(|error| intrinsic::source_error(&error))?;
+        let prepared = session.prepare(bytes, &[], limits).map_err(|error| {
+            // A hole outside a proof term fails its own preparation; when a
+            // target-module refusal lands inside a transported hole's span,
+            // report it as the transport misuse it is rather than as syntax.
+            let at = error.diagnostic().span;
+            let misplaced = if module == target {
+                holes.and_then(|transport| {
+                    transport
+                        .spans
+                        .iter()
+                        .position(|span| span.start <= at.start && at.end <= span.end)
+                        .and_then(|index| transport.labels.get(index))
+                })
+            } else {
+                None
+            };
+            match misplaced {
+                Some(label) => output::Failure::error(
+                    "proof-hole-transport",
+                    std::format!("proof hole {label} is not in a proof-term position"),
+                ),
+                None => intrinsic::source_error(&error),
+            }
+        })?;
         if module == target {
-            return Ok(module_report(
+            return module_report(
                 &prepared,
                 source,
                 source_path,
                 source_sha256,
                 report,
+                holes,
+                &options.evidence,
+            );
+        }
+        // Only the transported target may carry a hole; a prior module with a
+        // hand-written one is not transport input.
+        if !proof_hole_sites(prepared.proof_obligations())?.is_empty() {
+            return Err(output::Failure::error(
+                "proof-hole-transport",
+                "a prior module carries a proof hole that is not editor transport input".into(),
             ));
         }
         let (next, committed) = session.commit(prepared);
@@ -1426,8 +1918,10 @@ fn module_document(
 }
 
 fn emit(arguments: &[std::ffi::OsString], report: Report) -> std::process::ExitCode {
+    let path_at =
+        usize::from(arguments.get(1).and_then(|value| value.to_str()) == Some("--proof-holes"));
     let source_path = arguments
-        .get(1)
+        .get(1 + path_at)
         .map_or_else(std::string::String::new, |path| {
             path.to_string_lossy().into_owned()
         });
@@ -1435,8 +1929,8 @@ fn emit(arguments: &[std::ffi::OsString], report: Report) -> std::process::ExitC
         options(arguments, report).and_then(|options| document(&options, report, &source_path));
     match result {
         Ok(document) => {
-            std::println!("{}", document.encode());
-            std::process::ExitCode::SUCCESS
+            std::println!("{}", document.json().encode());
+            std::process::ExitCode::from(document.exit)
         }
         Err(error) => {
             let failure = encoding::object([
@@ -1598,7 +2092,18 @@ mod tests {
         let session = ModuleSession::new(&[], retained).expect("session");
         let prepared = session.prepare(source, &[], limits).expect("prepares");
         let digest = intrinsic::sha256(source);
-        let view = module_report(&prepared, source, "logic.noble", &digest, Report::View).encode();
+        let view = module_report(
+            &prepared,
+            source,
+            "logic.noble",
+            &digest,
+            Report::View,
+            None,
+            &[],
+        )
+        .unwrap_or_else(|failure| panic!("goal view failed: {}", failure.message))
+        .json()
+        .encode();
         let parsed: serde_json::Value = serde_json::from_str(&view).expect("goal view JSON");
         let sites = parsed["sites"].as_array().expect("goal view rows");
         let row = |declaration: &str| {
@@ -1649,5 +2154,347 @@ mod tests {
         assert!(contract_source(b"\n  (contract 1 c)"));
         assert!(!contract_source(MODULE));
         assert!(!contract_source(b""));
+    }
+
+    const MODULE_TWO: &[u8] = b"module arithmetic@1 [ export increment def increment [ 2 + ] contract 1 increment-law [ subject increment input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 2)) ] ] proof 1 increment-correct for increment-law [ (export-unary-I64 (intro (tail Stack) (intro (x I64) (pc-sequence (pc-exact (exec-literal 2)) (pc-exact (exec-add)) (bridge (by-exact-append-assoc)) (join (by-exact-result))))) (mc1-true-eq-wrap)) ] ]";
+
+    fn editor_session() -> ModuleSession {
+        let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("retained source budget");
+        ModuleSession::new_proof_editor(&[], retained).expect("proof editor session")
+    }
+
+    fn transport_document(source: &[u8], needle: &str) -> crate::core::editor::ProofHoles {
+        let text = std::str::from_utf8(source).expect("utf-8 module");
+        let at = text.find(needle).expect("needle");
+        let document = std::format!(
+            "{{\"format\":1,\"module\":[{},{{\"kind\":\"proof-hole\",\"label\":\"bridge\"}},{}]}}",
+            encoding::Json::String(text[..at].into()).encode(),
+            encoding::Json::String(text[at + needle.len()..].into()).encode()
+        );
+        crate::core::editor::decode_proof_holes(document.as_bytes()).expect("decodes")
+    }
+
+    #[test]
+    fn ordinary_sessions_refuse_a_proof_hole_and_the_editor_session_admits_it() {
+        let limits = Limits::default();
+        let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("retained source budget");
+        let holes = transport_document(MODULE, "(bridge (by-exact-append-assoc))");
+        let ordinary = ModuleSession::new(&[], retained).expect("ordinary session");
+        assert!(ordinary.prepare(MODULE, &[], limits).is_ok());
+        let error = ordinary
+            .prepare(&holes.rendered, &[], limits)
+            .expect_err("ordinary source must refuse a proof hole");
+        assert_eq!(error.stage(), noble_contracts::source::Stage::Check);
+        assert!(
+            error.diagnostic().message.contains("editor-only"),
+            "{}",
+            error.diagnostic().message
+        );
+        for other in [
+            ModuleSession::new_signed_self(&[], retained).expect("signed self session"),
+            ModuleSession::new_declared_text(&[], false, retained).expect("declared text session"),
+        ] {
+            let refused = other
+                .prepare(&holes.rendered, &[], limits)
+                .expect_err("every non-editor session must refuse a proof hole");
+            assert_eq!(refused.stage(), noble_contracts::source::Stage::Check);
+        }
+        assert_eq!(holes.labels, ["bridge"]);
+        let prepared = editor_session()
+            .prepare(&holes.rendered, &[], limits)
+            .expect("the editor session admits the reserved form");
+        let batch = prepared
+            .proof_obligations()
+            .expect("editor session preserves proof obligations");
+        let budgets = noble_contracts::intrinsic::ProofBudgets::from_limits(limits);
+        assert!(
+            noble_contracts::intrinsic::check_batch_with_budgets(batch, limits, budgets).is_err(),
+            "the explicit source proof checker must always reject an editor hole"
+        );
+        let sites = proof_hole_sites(Some(batch))
+            .unwrap_or_else(|failure| panic!("hole analysis failed: {}", failure.message));
+        assert_eq!(sites.len(), 1);
+        assert_eq!(sites[0].label, "bridge");
+        assert_eq!(sites[0].proof, "increment-correct");
+        assert_eq!(sites[0].span, holes.spans[0]);
+    }
+
+    #[test]
+    fn a_hole_outside_a_proof_term_is_refused_by_the_same_frontend() {
+        let limits = Limits::default();
+        let text = std::str::from_utf8(MODULE).expect("utf-8 module");
+        let at = text.find("(add (in x) 1)").expect("ensures fragment");
+        let document = std::format!(
+            "{{\"format\":1,\"module\":[{},{{\"kind\":\"proof-hole\",\"label\":\"pred\"}},{}]}}",
+            encoding::Json::String(text[..at].into()).encode(),
+            encoding::Json::String(text[at + "(add (in x) 1)".len()..].into()).encode()
+        );
+        let holes = crate::core::editor::decode_proof_holes(document.as_bytes()).expect("decodes");
+        let error = editor_session()
+            .prepare(&holes.rendered, &[], limits)
+            .expect_err("a predicate hole is never a proof-term hole");
+        assert!(
+            error
+                .diagnostic()
+                .message
+                .contains("only valid in a proof term"),
+            "{}",
+            error.diagnostic().message
+        );
+        assert_eq!(error.diagnostic().span, holes.spans[0]);
+
+        let pure =
+            "module m@1 [ proof 1 p : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] ]";
+        let at = pure.find("(Eq I64 x x)").expect("pure proposition");
+        let pure_doc = std::format!(
+            "{{\"format\":1,\"module\":[{},{{\"kind\":\"proof-hole\",\"label\":\"prop\"}},{}]}}",
+            encoding::Json::String(pure[..at].into()).encode(),
+            encoding::Json::String(pure[at + "(Eq I64 x x)".len()..].into()).encode()
+        );
+        let pure_holes =
+            crate::core::editor::decode_proof_holes(pure_doc.as_bytes()).expect("decodes");
+        let pure_error = editor_session()
+            .prepare(&pure_holes.rendered, &[], limits)
+            .expect_err("a proposition hole is never a proof-term hole");
+        assert!(
+            pure_error
+                .diagnostic()
+                .message
+                .contains("only valid in a proof term"),
+            "{}",
+            pure_error.diagnostic().message
+        );
+        assert_eq!(pure_error.diagnostic().span, pure_holes.spans[0]);
+    }
+
+    #[test]
+    fn a_commented_transport_hole_cannot_disguise_a_hand_written_hole() {
+        let limits = Limits::default();
+        let text = std::str::from_utf8(MODULE).expect("utf-8 module");
+        let needle = "(bridge (by-exact-append-assoc))";
+        let forged = text.replacen(needle, "(editor-hole bridge)", 1);
+        let document = std::format!(
+            "{{\"format\":1,\"module\":[{},{{\"kind\":\"proof-hole\",\"label\":\"bridge\"}},\"\\n\"]}}",
+            encoding::Json::String(std::format!("{forged} # ")).encode(),
+        );
+        let holes = crate::core::editor::decode_proof_holes(document.as_bytes()).expect("decodes");
+        let prepared = editor_session()
+            .prepare(&holes.rendered, &[], limits)
+            .expect("editor session parses rendered text");
+        let result = module_report(
+            &prepared,
+            &holes.rendered,
+            "spoofed.json",
+            &intrinsic::sha256(&holes.rendered),
+            Report::View,
+            Some(&holes),
+            &[],
+        );
+        let Err(failure) = result else {
+            panic!("a hand-written hole at a different span must be refused");
+        };
+        assert_eq!(failure.code, "proof-hole-transport");
+        assert!(
+            failure.message.contains("span"),
+            "expected span mismatch refusal: {}",
+            failure.message
+        );
+    }
+
+    #[test]
+    fn a_transport_hole_marks_its_site_incomplete_and_never_checked() {
+        let limits = Limits::default();
+        let holes = transport_document(MODULE, "(bridge (by-exact-append-assoc))");
+        let prepared = editor_session()
+            .prepare(&holes.rendered, &[], limits)
+            .expect("prepares");
+        let document = module_report(
+            &prepared,
+            &holes.rendered,
+            "increment-hole.json",
+            &intrinsic::sha256(&holes.rendered),
+            Report::View,
+            Some(&holes),
+            &[],
+        )
+        .unwrap_or_else(|failure| panic!("transport analysis failed: {}", failure.message));
+        assert_eq!(document.exit, 3);
+        let view: serde_json::Value =
+            serde_json::from_str(&document.json().encode()).expect("view JSON");
+        assert_eq!(view["outcome"], "unknown");
+        assert_eq!(view["category"], "incomplete-hole");
+        assert_eq!(view["transport"]["schema"], HOLE_SCHEMA);
+        assert_eq!(view["transport"]["holes"][0]["label"], "bridge");
+        let site = &view["sites"][0];
+        assert_eq!(site["chip"], "incomplete");
+        assert_eq!(site["outcome"], "unknown");
+        assert_eq!(site["category"], "incomplete-hole");
+        assert_eq!(site["holes"], serde_json::json!(["bridge"]));
+        let hole = site["sites"]
+            .as_array()
+            .expect("sites")
+            .iter()
+            .find(|row| row["constructor"] == "editor-hole")
+            .expect("the hole site is listed");
+        assert_eq!(hole["chip"], "incomplete");
+        assert_eq!(hole["category"], "incomplete-hole");
+        assert_eq!(hole["label"], "bridge");
+        assert_eq!(hole["parent_constructor"], "pc-sequence");
+        assert_eq!(hole["goal"]["declaration"], "increment-law");
+        assert_eq!(hole["goal"]["statement_digest"], site["statement_digest"]);
+        assert!(
+            view["sites"]
+                .as_array()
+                .expect("rows")
+                .iter()
+                .all(|row| row["chip"] != "checked"),
+            "a declaration with a hole is never checked"
+        );
+    }
+
+    fn checked_fixture(model: &str, checker: &str) -> noble_contracts::intrinsic::CheckedProof {
+        noble_contracts::intrinsic::CheckedProof {
+            name: "increment-correct".into(),
+            kind: noble_contracts::intrinsic::ProofKind::Contract,
+            lean_term: "(dummy)".into(),
+            claim: "MC1Obligation.claim".into(),
+            model_revision: model.into(),
+            checker_revision: checker.into(),
+        }
+    }
+
+    fn temp_directory(name: &str) -> std::path::PathBuf {
+        let base = std::env::temp_dir().join(std::format!(
+            "noble-pauto-holes-{}-{name}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&base);
+        std::fs::create_dir_all(&base).expect("temporary directory");
+        base
+    }
+
+    #[test]
+    fn saved_evidence_is_stale_after_a_subject_change_and_is_never_rewritten() {
+        let limits = Limits::default();
+        let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("retained source budget");
+        let first = ModuleSession::new(&[], retained)
+            .expect("session")
+            .prepare(MODULE, &[], limits)
+            .expect("prepares");
+        let batch = first.proof_obligations().expect("proof obligations");
+        let record = evidence::record(
+            batch,
+            &[checked_fixture(
+                &intrinsic::model_revision(),
+                &intrinsic::checker_revision(),
+            )],
+            limits,
+        )
+        .unwrap_or_else(|failure| panic!("evidence fixture rejected: {}", failure.message));
+        let base = temp_directory("stale");
+        let directory = base.join("emitted");
+        evidence::write(&directory, Some(&record), &encoding::Json::Null)
+            .unwrap_or_else(|failure| panic!("evidence write failed: {}", failure.message));
+        let before = std::fs::read(directory.join("evidence.json")).expect("evidence bytes");
+        let digest = intrinsic::sha256(&before);
+        let loaded = evidence::load(&directory)
+            .unwrap_or_else(|failure| panic!("evidence read failed: {}", failure.message));
+        assert_eq!(loaded.evidence_sha256, digest);
+        let view = module_report(
+            &first,
+            MODULE,
+            "increment.noble",
+            &intrinsic::sha256(MODULE),
+            Report::View,
+            None,
+            std::slice::from_ref(&directory),
+        )
+        .unwrap_or_else(|failure| panic!("matching record view failed: {}", failure.message));
+        let parsed: serde_json::Value =
+            serde_json::from_str(&view.json().encode()).expect("goal view JSON");
+        assert_eq!(parsed["evidence"]["records"][0]["matches"], true);
+        assert_ne!(parsed["sites"][0]["chip"], "checked");
+
+        let second = ModuleSession::new(&[], retained)
+            .expect("session")
+            .prepare(MODULE_TWO, &[], limits)
+            .expect("prepares the changed subject");
+        let changed = second.proof_obligations().expect("proof obligations");
+        let versions = module_versions(false);
+        let current = evidence::current(
+            changed,
+            &intrinsic::sha256(MODULE_TWO),
+            &evidence_revisions(&versions),
+            limits,
+        )
+        .unwrap_or_else(|failure| panic!("current key unavailable: {}", failure.message));
+        let mismatches = evidence::compare(&loaded.record, &current);
+        assert!(
+            mismatches.iter().any(|row| row == "source_sha256"),
+            "{mismatches:?}"
+        );
+        assert!(
+            mismatches
+                .iter()
+                .any(|row| row == "proofs.increment-correct.statement_digest"),
+            "{mismatches:?}"
+        );
+        let goal = second.contract_goals().next().expect("one contract");
+        let proof = changed.obligations.first().expect("one proof");
+        let mut entry = contract_entry(
+            goal,
+            Some(proof),
+            MODULE_TWO,
+            &module_versions(false),
+            None,
+            limits,
+        );
+        entry.apply_evidence(&loaded, &mismatches);
+        assert_eq!(entry.chip, "stale");
+        assert_eq!(entry.category, "stale-dependency");
+        assert_eq!(entry.outcome, "unsupported");
+        let retained = entry.retained_evidence.encode();
+        assert!(retained.contains("\"module\":\"arithmetic\""), "{retained}");
+        assert!(retained.contains("\"version\":1"), "{retained}");
+        assert!(
+            retained.contains("\"definition\":\"increment\""),
+            "{retained}"
+        );
+        assert!(retained.contains("\"mismatches\""), "{retained}");
+        let after = std::fs::read(directory.join("evidence.json")).expect("evidence bytes");
+        assert_eq!(after, before, "the retained record is never rewritten");
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn evidence_write_never_overwrites_and_load_rejects_a_forged_source() {
+        let limits = Limits::default();
+        let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+            .expect("retained source budget");
+        let prepared = ModuleSession::new(&[], retained)
+            .expect("session")
+            .prepare(MODULE, &[], limits)
+            .expect("prepares");
+        let batch = prepared.proof_obligations().expect("proof obligations");
+        let record = evidence::record(batch, &[checked_fixture("model", "checker")], limits)
+            .unwrap_or_else(|failure| panic!("evidence fixture rejected: {}", failure.message));
+        let directory = temp_directory("rewrite");
+        let target = directory.join("emitted");
+        evidence::write(&target, Some(&record), &encoding::Json::Null)
+            .unwrap_or_else(|failure| panic!("evidence write failed: {}", failure.message));
+        assert!(
+            evidence::write(&target, Some(&record), &encoding::Json::Null).is_err(),
+            "an existing evidence directory is never overwritten"
+        );
+        std::fs::write(target.join("source.noble"), b"module forged@1 [ ]")
+            .expect("forge the retained source");
+        assert!(
+            evidence::load(&target).is_err(),
+            "a source that differs from its recorded digest is refused"
+        );
+        let _ = std::fs::remove_dir_all(&directory);
     }
 }
