@@ -72500,7 +72500,7 @@ def intrinsic.elaborate.ElaborationRecord.Insts.CoreCmpEq : core.cmp.Eq
 }
 
 /-- [noble_contracts::intrinsic::{noble_contracts::intrinsic::TreeBounds}::new]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 602:4-625:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 605:4-628:5 -/
 def intrinsic.TreeBounds.new
   (limits : Limits) : Result (Option intrinsic.TreeBounds) := do
   let r ←
@@ -72897,7 +72897,7 @@ def intrinsic.ProofObligation.Insts.CoreCloneClone.clone
     }
 
 /-- [noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::pop_bounded]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 948:4-958:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 951:4-961:5 -/
 def intrinsic.WorkStack.pop_bounded
   {T : Type _} (self : intrinsic.WorkStack T) :
   Result ((Option T) × (intrinsic.WorkStack T))
@@ -72926,7 +72926,7 @@ def intrinsic.WorkStack.pop_bounded
     ok (o, { self with spill := v, total := i })
 
 /-- [noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::push_bounded::{impl core::ops::function::FnOnce<(&'_1 usize,), bool> for noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::push_bounded::{closure}<'_0, T>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 925:59-925:80 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 928:59-928:80 -/
 def
   intrinsic.WorkStack.push_bounded.closure.Insts.CoreOpsFunctionFnOnceTupleShared1UsizeBool.call_once
   {T : Type _} (c : intrinsic.WorkStack.push_bounded.closure T)
@@ -72936,7 +72936,7 @@ def
   ok (tupled_args <= c)
 
 /-- Trait implementation: [noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::push_bounded::{impl core::ops::function::FnOnce<(&'_1 usize,), bool> for noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::push_bounded::{closure}<'_0, T>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 925:59-925:80 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 928:59-928:80 -/
 @[reducible]
 def
   intrinsic.WorkStack.push_bounded.closure.Insts.CoreOpsFunctionFnOnceTupleShared1UsizeBool
@@ -72947,12 +72947,12 @@ def
 }
 
 /-- [noble_contracts::intrinsic::INLINE_TREE_FRAMES]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 894:0-894:37 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 897:0-897:37 -/
 @[global_simps, irreducible]
 def intrinsic.INLINE_TREE_FRAMES : Std.Usize := 32#usize
 
 /-- [noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::push_bounded]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 924:4-941:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 927:4-944:5 -/
 def intrinsic.WorkStack.push_bounded
   {T : Type _} (self : intrinsic.WorkStack T) (value : T) (limit : Std.Usize) :
   Result ((core.result.Result Unit Unit) × (intrinsic.WorkStack T))
@@ -72994,7 +72994,7 @@ def intrinsic.WorkStack.push_bounded
         ok (core.result.Result.Ok (), { self with spill := v, total })
 
 /-- [noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::new::{impl core::ops::function::FnMut<(usize,), core::option::Option<T>> for noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::new::{closure}<T>}::call_mut]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 904:41-904:49 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 907:41-907:49 -/
 def
   intrinsic.WorkStack.new.closure.Insts.CoreOpsFunctionFnMutTupleUsizeOption.call_mut
   {T : Type _} (c : intrinsic.WorkStack.new.closure T)
@@ -73004,7 +73004,7 @@ def
   ok (none, c)
 
 /-- [noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::new::{impl core::ops::function::FnOnce<(usize,), core::option::Option<T>> for noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::new::{closure}<T>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 904:41-904:49 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 907:41-907:49 -/
 def
   intrinsic.WorkStack.new.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOption.call_once
   {T : Type _} (c : intrinsic.WorkStack.new.closure T) (i : Std.Usize) :
@@ -73016,7 +73016,7 @@ def
   ok o
 
 /-- Trait implementation: [noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::new::{impl core::ops::function::FnOnce<(usize,), core::option::Option<T>> for noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::new::{closure}<T>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 904:41-904:49 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 907:41-907:49 -/
 @[reducible]
 def intrinsic.WorkStack.new.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOption
   (T : Type _) : core.ops.function.FnOnce (intrinsic.WorkStack.new.closure T)
@@ -73026,7 +73026,7 @@ def intrinsic.WorkStack.new.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOption
 }
 
 /-- Trait implementation: [noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::new::{impl core::ops::function::FnMut<(usize,), core::option::Option<T>> for noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::new::{closure}<T>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 904:41-904:49 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 907:41-907:49 -/
 @[reducible]
 def intrinsic.WorkStack.new.closure.Insts.CoreOpsFunctionFnMutTupleUsizeOption
   (T : Type _) : core.ops.function.FnMut (intrinsic.WorkStack.new.closure T)
@@ -73039,7 +73039,7 @@ def intrinsic.WorkStack.new.closure.Insts.CoreOpsFunctionFnMutTupleUsizeOption
 }
 
 /-- [noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::new]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 902:4-909:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 905:4-912:5 -/
 def intrinsic.WorkStack.new (T : Type _) : Result (intrinsic.WorkStack T) := do
   let a ←
     core.array.from_fn 32#usize
@@ -73059,7 +73059,7 @@ def intrinsic.reject (span : Span) (reason : Str) : Result Diagnostic := do
   Diagnostic.new DiagnosticKind.Invalid span reason
 
 /-- [noble_contracts::intrinsic::atom]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 752:0-757:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 755:0-760:1 -/
 def intrinsic.atom
   (form : intrinsic.Form) : Result (core.result.Result Str Diagnostic) := do
   match form.kind with
@@ -73071,7 +73071,7 @@ def intrinsic.atom
     ok (core.result.Result.Err d)
 
 /-- [noble_contracts::intrinsic::head_atom]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1591:0-1596:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1594:0-1599:1 -/
 def intrinsic.head_atom
   (items : Slice intrinsic.Form) : Result (Option Str) := do
   let o ← core.slice.Slice.first items
@@ -74532,7 +74532,7 @@ def intrinsic.elaborate.Position.refusal
     ok (toStr "infer is not admissible at this rule position")
 
 /-- [noble_contracts::intrinsic::digit_byte]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2293:0-2306:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2296:0-2309:1 -/
 def intrinsic.digit_byte (digit : Std.Usize) : Result Std.U8 := do
   match digit.val with
   | 0 => ok 48#u8
@@ -74547,7 +74547,7 @@ def intrinsic.digit_byte (digit : Std.Usize) : Result Std.U8 := do
   | _ => ok 57#u8
 
 /-- [noble_contracts::intrinsic::decimal]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2279:4-2282:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2282:4-2285:5 -/
 @[rust_loop_body]
 def intrinsic.decimal_loop0.body
   (reversed : String) (rest : Std.Usize) :
@@ -74564,7 +74564,7 @@ def intrinsic.decimal_loop0.body
   else ok (done reversed)
 
 /-- [noble_contracts::intrinsic::decimal]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2279:4-2282:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2282:4-2285:5 -/
 @[rust_loop]
 def intrinsic.decimal_loop0
   (reversed : String) (rest : Std.Usize) : Result String := do
@@ -74573,7 +74573,7 @@ def intrinsic.decimal_loop0
     (reversed, rest)
 
 /-- [noble_contracts::intrinsic::decimal]: loop body 1:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2286:4-2289:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2289:4-2292:5 -/
 @[rust_loop_body]
 def intrinsic.decimal_loop1.body
   (digits : Slice Std.U8) (text : String) (index1 : Std.Usize) :
@@ -74589,7 +74589,7 @@ def intrinsic.decimal_loop1.body
   else ok (done text)
 
 /-- [noble_contracts::intrinsic::decimal]: loop 1:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2286:4-2289:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2289:4-2292:5 -/
 @[rust_loop]
 def intrinsic.decimal_loop1
   (digits : Slice Std.U8) (text : String) (index1 : Std.Usize) :
@@ -74600,7 +74600,7 @@ def intrinsic.decimal_loop1
     (text, index1)
 
 /-- [noble_contracts::intrinsic::decimal]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2273:0-2291:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2276:0-2294:1 -/
 def intrinsic.decimal (value : Std.Usize) : Result String := do
   let reversed ← alloc.string.String.new
   let i ← value % 10#usize
@@ -81558,7 +81558,7 @@ def prepare
   frontend.prepare source limits
 
 /-- [noble_contracts::intrinsic::derivation_agrees]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4502:0-4510:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4523:0-4531:1 -/
 def intrinsic.derivation_agrees
   (left : noble_kernel.untrusted.Derivation)
   (right : noble_kernel.untrusted.Derivation) :
@@ -81588,7 +81588,7 @@ def intrinsic.derivation_agrees
   else ok false
 
 /-- [noble_contracts::intrinsic::derivations_agree]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4491:4-4494:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4512:4-4515:5 -/
 @[rust_loop_body]
 def intrinsic.derivations_agree_loop.body
   (left : Slice noble_kernel.untrusted.Derivation)
@@ -81614,7 +81614,7 @@ def intrinsic.derivations_agree_loop.body
   else ok (done is_agreed)
 
 /-- [noble_contracts::intrinsic::derivations_agree]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4491:4-4494:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4512:4-4515:5 -/
 @[rust_loop]
 def intrinsic.derivations_agree_loop
   (left : Slice noble_kernel.untrusted.Derivation)
@@ -81628,7 +81628,7 @@ def intrinsic.derivations_agree_loop
     (index1, is_agreed)
 
 /-- [noble_contracts::intrinsic::derivations_agree]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4485:0-4496:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4506:0-4517:1 -/
 @[reducible]
 def intrinsic.derivations_agree
   (left : Slice noble_kernel.untrusted.Derivation)
@@ -81638,7 +81638,7 @@ def intrinsic.derivations_agree
   intrinsic.derivations_agree_loop left right 0#usize true
 
 /-- [noble_contracts::intrinsic::same_binding]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4618:0-4627:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4639:0-4648:1 -/
 def intrinsic.same_binding
   (a : noble_kernel.words.Binding) (b : noble_kernel.words.Binding) :
   Result Bool
@@ -81675,7 +81675,7 @@ def intrinsic.same_binding
       noble_kernel.words.Variable.Insts.CoreCmpPartialEqVariable.eq a1 b1
 
 /-- [noble_contracts::intrinsic::same_inst]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4603:4-4606:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4624:4-4627:5 -/
 @[rust_loop_body]
 def intrinsic.same_inst_loop.body
   (v : alloc.vec.Vec noble_kernel.words.Binding)
@@ -81701,7 +81701,7 @@ def intrinsic.same_inst_loop.body
   else ok (done is_same)
 
 /-- [noble_contracts::intrinsic::same_inst]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4603:4-4606:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4624:4-4627:5 -/
 @[rust_loop]
 def intrinsic.same_inst_loop
   (v : alloc.vec.Vec noble_kernel.words.Binding)
@@ -81715,7 +81715,7 @@ def intrinsic.same_inst_loop
     (is_same, index1)
 
 /-- [noble_contracts::intrinsic::same_inst]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4600:0-4608:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4621:0-4629:1 -/
 def intrinsic.same_inst
   (a : noble_kernel.words.Inst) (b : noble_kernel.words.Inst) :
   Result Bool
@@ -81725,7 +81725,7 @@ def intrinsic.same_inst
   intrinsic.same_inst_loop a.bindings b.bindings (i = i1) 0#usize
 
 /-- [noble_contracts::intrinsic::candidate_node]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4420:0-4428:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4441:0-4449:1 -/
 def intrinsic.candidate_node
   (nodes : Slice noble_kernel.untrusted.Node)
   (id : noble_kernel.untrusted.NodeId) :
@@ -81739,7 +81739,7 @@ def intrinsic.candidate_node
   | core.result.Result.Err _ => ok none
 
 /-- [noble_contracts::intrinsic::same_subject_operation]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4456:0-4482:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4477:0-4503:1 -/
 def intrinsic.same_subject_operation
   (expected : noble_kernel.untrusted.Candidate)
   (actual : noble_kernel.untrusted.Candidate) (index1 : Std.Usize)
@@ -81865,7 +81865,7 @@ def intrinsic.same_subject_operation
         ok (core.result.Result.Err d)
 
 /-- [noble_contracts::intrinsic::identity_position]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4406:4-4411:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4427:4-4432:5 -/
 @[rust_loop_body]
 def intrinsic.identity_position_loop.body
   (definitions : Slice noble_kernel.execution.Definition) (identity : Std.U64)
@@ -81889,7 +81889,7 @@ def intrinsic.identity_position_loop.body
   else ok (done found)
 
 /-- [noble_contracts::intrinsic::identity_position]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4406:4-4411:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4427:4-4432:5 -/
 @[rust_loop]
 def intrinsic.identity_position_loop
   (definitions : Slice noble_kernel.execution.Definition) (identity : Std.U64)
@@ -81902,7 +81902,7 @@ def intrinsic.identity_position_loop
     (index1, found)
 
 /-- [noble_contracts::intrinsic::identity_position]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4399:0-4413:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4420:0-4434:1 -/
 @[reducible]
 def intrinsic.identity_position
   (definitions : Slice noble_kernel.execution.Definition) (identity : Std.U64)
@@ -81912,7 +81912,7 @@ def intrinsic.identity_position
   intrinsic.identity_position_loop definitions identity «from» none
 
 /-- [noble_contracts::intrinsic::is_own_module_origin]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4388:0-4396:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4409:0-4417:1 -/
 def intrinsic.is_own_module_origin
   (subject : intrinsic.SubjectBinding) : Result Bool := do
   let i := alloc.vec.Vec.len subject.source_dependencies
@@ -81935,7 +81935,7 @@ def intrinsic.is_own_module_origin
     else ok false
 
 /-- [noble_contracts::intrinsic::literal_then_add]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4517:0-4534:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4538:0-4555:1 -/
 def intrinsic.literal_then_add
   (nodes : Slice noble_kernel.untrusted.Node) : Result (Option Std.I64) := do
   let i := Slice.len nodes
@@ -81966,7 +81966,7 @@ def intrinsic.literal_then_add
     | noble_kernel.untrusted.Node.Quotation _ _ => ok none
 
 /-- [noble_contracts::intrinsic::is_unary_literal_add]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4370:0-4381:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4391:0-4402:1 -/
 def intrinsic.is_unary_literal_add
   (expected : noble_kernel.untrusted.Candidate)
   (subject : intrinsic.SubjectBinding) :
@@ -81992,7 +81992,7 @@ def intrinsic.is_unary_literal_add
   else ok false
 
 /-- [noble_contracts::intrinsic::unary_literal]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4353:0-4363:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4374:0-4384:1 -/
 def intrinsic.unary_literal
   (expected : noble_kernel.untrusted.Candidate)
   (subject : intrinsic.SubjectBinding) :
@@ -82012,7 +82012,7 @@ def intrinsic.unary_literal
       Std.I64 residual
 
 /-- [noble_contracts::intrinsic::is_i64_pattern]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4594:0-4596:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4615:0-4617:1 -/
 def intrinsic.is_i64_pattern
   (pattern : noble_kernel.shapes.Pattern) : Result Bool := do
   match pattern with
@@ -82036,7 +82036,7 @@ def intrinsic.is_i64_pattern
   | noble_kernel.shapes.Pattern.StackVarPattern _ => ok false
 
 /-- [noble_contracts::intrinsic::is_stack_zero]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4587:0-4592:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4608:0-4613:1 -/
 def intrinsic.is_stack_zero
   (pattern : noble_kernel.shapes.Pattern) : Result Bool := do
   match pattern with
@@ -82063,7 +82063,7 @@ def intrinsic.is_stack_zero
     | _ => ok false
 
 /-- [noble_contracts::intrinsic::is_stack_then_i64s]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4580:4-4583:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4601:4-4604:5 -/
 @[rust_loop_body]
 def intrinsic.is_stack_then_i64s_loop.body
   (rest : Slice noble_kernel.shapes.Pattern) (is_shape : Bool)
@@ -82083,7 +82083,7 @@ def intrinsic.is_stack_then_i64s_loop.body
   else ok (done is_shape)
 
 /-- [noble_contracts::intrinsic::is_stack_then_i64s]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4580:4-4583:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4601:4-4604:5 -/
 @[rust_loop]
 def intrinsic.is_stack_then_i64s_loop
   (rest : Slice noble_kernel.shapes.Pattern) (is_shape : Bool)
@@ -82096,7 +82096,7 @@ def intrinsic.is_stack_then_i64s_loop
     (is_shape, index1)
 
 /-- [noble_contracts::intrinsic::is_stack_then_i64s]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4574:0-4585:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4595:0-4606:1 -/
 def intrinsic.is_stack_then_i64s
   (patterns : Slice noble_kernel.shapes.Pattern) (i64s : Std.Usize) :
   Result Bool
@@ -82114,7 +82114,7 @@ def intrinsic.is_stack_then_i64s
     intrinsic.is_stack_then_i64s_loop rest is_shape 0#usize
 
 /-- [noble_contracts::intrinsic::deps_are]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4541:0-4550:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4562:0-4571:1 -/
 def intrinsic.deps_are
   (deps : Slice (alloc.vec.Vec noble_kernel.contracts.Definition))
   (slot : Std.Usize) (expected : Slice noble_kernel.contracts.Definition) :
@@ -82132,7 +82132,7 @@ def intrinsic.deps_are
       expected
 
 /-- [noble_contracts::intrinsic::canonical_wrapping_add]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4556:0-4571:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4577:0-4592:1 -/
 def intrinsic.canonical_wrapping_add
   (env : noble_kernel.contracts.Env) : Result Bool := do
   let o ← noble_kernel.contracts.Env.scheme env 4#u32
@@ -82187,7 +82187,7 @@ def intrinsic.canonical_wrapping_add
     else ok false
 
 /-- [noble_contracts::intrinsic::builtin_add_differs]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4343:0-4350:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4364:0-4371:1 -/
 def intrinsic.builtin_add_differs
   (environment : noble_kernel.contracts.Env) (slot : Std.Usize) :
   Result Bool
@@ -82202,7 +82202,7 @@ def intrinsic.builtin_add_differs
   else ok true
 
 /-- [noble_contracts::intrinsic::recipe_shape_differs::{impl core::ops::function::FnOnce<(u32,), bool> for noble_contracts::intrinsic::recipe_shape_differs::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4340:59-4340:87 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4361:59-4361:87 -/
 def
   intrinsic.recipe_shape_differs.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool.call_once
   (c : intrinsic.recipe_shape_differs.closure) (tupled_args : Std.U32) :
@@ -82211,7 +82211,7 @@ def
   ok (tupled_args > c)
 
 /-- Trait implementation: [noble_contracts::intrinsic::recipe_shape_differs::{impl core::ops::function::FnOnce<(u32,), bool> for noble_contracts::intrinsic::recipe_shape_differs::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4340:59-4340:87 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4361:59-4361:87 -/
 @[reducible]
 def
   intrinsic.recipe_shape_differs.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool
@@ -82222,7 +82222,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::recipe_shape_differs]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4328:0-4341:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4349:0-4362:1 -/
 def intrinsic.recipe_shape_differs
   (definition : noble_kernel.execution.Definition)
   (actual : noble_kernel.untrusted.Candidate) (limits : Limits) :
@@ -82261,7 +82261,7 @@ def intrinsic.recipe_shape_differs
   else ok true
 
 /-- [noble_contracts::intrinsic::interface_differs]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4270:0-4277:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4291:0-4298:1 -/
 def intrinsic.interface_differs
   (interface : noble_kernel.untrusted.Interface)
   (subject : intrinsic.SubjectBinding) :
@@ -82286,7 +82286,7 @@ def intrinsic.interface_differs
         interface.effects subject.effects
 
 /-- [noble_contracts::intrinsic::typed_contract_differs]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4317:0-4321:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4338:0-4342:1 -/
 def intrinsic.typed_contract_differs
   (result : Prepared) (contract : intrinsic.ContractGoal) : Result Bool := do
   let s ← Prepared.impl.inputs result
@@ -82305,7 +82305,7 @@ def intrinsic.typed_contract_differs
       intrinsic.interface_differs c.interface contract.subject
 
 /-- [noble_contracts::intrinsic::is_single_invocation]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4434:0-4445:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4455:0-4466:1 -/
 def intrinsic.is_single_invocation
   (candidate : noble_kernel.untrusted.Candidate)
   (definition : noble_kernel.contracts.Definition) :
@@ -82337,7 +82337,7 @@ def intrinsic.is_single_invocation
       | noble_kernel.untrusted.Node.Quotation _ _ => ok false
 
 /-- [noble_contracts::intrinsic::invocation_differs]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4298:0-4310:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4319:0-4331:1 -/
 def intrinsic.invocation_differs
   (subject : intrinsic.SubjectBinding)
   (definition : noble_kernel.execution.Definition) (slot : Std.Usize) :
@@ -82386,7 +82386,7 @@ def intrinsic.invocation_differs
       else ok true
 
 /-- [noble_contracts::intrinsic::expected_differs]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4284:0-4291:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4305:0-4312:1 -/
 def intrinsic.expected_differs
   (expected : noble_kernel.untrusted.Expected)
   (subject : intrinsic.SubjectBinding) :
@@ -82411,7 +82411,7 @@ def intrinsic.expected_differs
         expected.allowed_effects subject.effects
 
 /-- [noble_contracts::intrinsic::contract_binding]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4257:0-4264:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4278:0-4285:1 -/
 def intrinsic.contract_binding
   (text : String) («name» : Str) (ty : Str) : Result String := do
   let text1 ← alloc.string.String.push_str text (toStr " (")
@@ -82421,7 +82421,7 @@ def intrinsic.contract_binding
   alloc.string.String.push text4 ')'
 
 /-- [noble_contracts::intrinsic::contract_text]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4236:4-4238:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4257:4-4259:5 -/
 @[rust_loop_body]
 def intrinsic.contract_text_loop0.body
   (iter : core.slice.iter.Iter (String × String)) (text : String) :
@@ -82439,7 +82439,7 @@ def intrinsic.contract_text_loop0.body
     ok (cont (iter1, text1))
 
 /-- [noble_contracts::intrinsic::contract_text]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4236:4-4238:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4257:4-4259:5 -/
 @[rust_loop]
 def intrinsic.contract_text_loop0
   (iter : core.slice.iter.Iter (String × String)) (text : String) :
@@ -82450,7 +82450,7 @@ def intrinsic.contract_text_loop0
     (iter, text)
 
 /-- [noble_contracts::intrinsic::contract_text]: loop body 1:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4240:4-4242:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4261:4-4263:5 -/
 @[rust_loop_body]
 def intrinsic.contract_text_loop1.body
   (iter : core.slice.iter.Iter (String × String)) (text : String) :
@@ -82468,7 +82468,7 @@ def intrinsic.contract_text_loop1.body
     ok (cont (iter1, text1))
 
 /-- [noble_contracts::intrinsic::contract_text]: loop 1:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4240:4-4242:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4261:4-4263:5 -/
 @[rust_loop]
 def intrinsic.contract_text_loop1
   (iter : core.slice.iter.Iter (String × String)) (text : String) :
@@ -82479,7 +82479,7 @@ def intrinsic.contract_text_loop1
     (iter, text)
 
 /-- [noble_contracts::intrinsic::contract_text]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4227:0-4251:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4248:0-4272:1 -/
 def intrinsic.contract_text
   (contract : intrinsic.ContractGoal) (body : Str) (requires_text : Str)
   (ensures_text : Str) :
@@ -82510,7 +82510,7 @@ def intrinsic.contract_text
   alloc.string.String.push_str text11 (toStr "))")
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract::{impl core::ops::function::FnOnce<(core::str::error::Utf8Error,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::prepare_checked_contract::{closure#5}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4148:17-4148:86 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4169:17-4169:86 -/
 def
   intrinsic.prepare_checked_contract.closure_5.Insts.CoreOpsFunctionFnOnceTupleUtf8ErrorDiagnostic.call_once
   (c : intrinsic.prepare_checked_contract.closure_5)
@@ -82520,7 +82520,7 @@ def
   intrinsic.reject c.source_span (toStr "subject body must be UTF-8 for MC1")
 
 /-- Trait implementation: [noble_contracts::intrinsic::prepare_checked_contract::{impl core::ops::function::FnOnce<(core::str::error::Utf8Error,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::prepare_checked_contract::{closure#5}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4148:17-4148:86 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4169:17-4169:86 -/
 @[reducible]
 def
   intrinsic.prepare_checked_contract.closure_5.Insts.CoreOpsFunctionFnOnceTupleUtf8ErrorDiagnostic
@@ -82531,7 +82531,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::prepare_checked_contract::{closure#4}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4146:20-4146:90 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4167:20-4167:90 -/
 def
   intrinsic.prepare_checked_contract.closure_4.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.prepare_checked_contract.closure_4) (_ : Unit) :
@@ -82540,7 +82540,7 @@ def
   intrinsic.reject c (toStr "subject body is outside original module source")
 
 /-- Trait implementation: [noble_contracts::intrinsic::prepare_checked_contract::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::prepare_checked_contract::{closure#4}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4146:20-4146:90 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4167:20-4167:90 -/
 @[reducible]
 def
   intrinsic.prepare_checked_contract.closure_4.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -82551,7 +82551,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::prepare_checked_contract::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4142:17-4142:76 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4163:17-4163:76 -/
 def
   intrinsic.prepare_checked_contract.closure_3.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic.call_once
   (c : intrinsic.prepare_checked_contract.closure_3)
@@ -82561,7 +82561,7 @@ def
   intrinsic.reject c (toStr "subject body exceeds address space")
 
 /-- Trait implementation: [noble_contracts::intrinsic::prepare_checked_contract::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::prepare_checked_contract::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4142:17-4142:76 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4163:17-4163:76 -/
 @[reducible]
 def
   intrinsic.prepare_checked_contract.closure_3.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic
@@ -82572,7 +82572,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::prepare_checked_contract::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4140:17-4140:76 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4161:17-4161:76 -/
 def
   intrinsic.prepare_checked_contract.closure_2.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic.call_once
   (c : intrinsic.prepare_checked_contract.closure_2)
@@ -82582,7 +82582,7 @@ def
   intrinsic.reject c (toStr "subject body exceeds address space")
 
 /-- Trait implementation: [noble_contracts::intrinsic::prepare_checked_contract::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::prepare_checked_contract::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4140:17-4140:76 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4161:17-4161:76 -/
 @[reducible]
 def
   intrinsic.prepare_checked_contract.closure_2.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic
@@ -82593,7 +82593,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::prepare_checked_contract::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4109:64-4114:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4130:64-4135:5 -/
 def
   intrinsic.prepare_checked_contract.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic.call_once
   (c : intrinsic.prepare_checked_contract.closure_1)
@@ -82604,7 +82604,7 @@ def
     "subject definition slot exceeds address space")
 
 /-- Trait implementation: [noble_contracts::intrinsic::prepare_checked_contract::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::prepare_checked_contract::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4109:64-4114:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4130:64-4135:5 -/
 @[reducible]
 def
   intrinsic.prepare_checked_contract.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic
@@ -82615,13 +82615,13 @@ def
 }
 
 /-- [noble_contracts::intrinsic::exhausted]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 586:0-592:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 589:0-595:1 -/
 def intrinsic.exhausted (span : Span) : Result Diagnostic := do
   Diagnostic.new DiagnosticKind.Exhausted span (toStr
     "proof size, depth or work limit exhausted")
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::prepare_checked_contract::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4040:56-4040:92 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4061:56-4061:92 -/
 def
   intrinsic.prepare_checked_contract.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.prepare_checked_contract.closure) (_ : Unit) :
@@ -82630,7 +82630,7 @@ def
   intrinsic.exhausted c.contract_span
 
 /-- Trait implementation: [noble_contracts::intrinsic::prepare_checked_contract::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::prepare_checked_contract::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4040:56-4040:92 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4061:56-4061:92 -/
 @[reducible]
 def
   intrinsic.prepare_checked_contract.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -82641,14 +82641,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::mc1_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::mc1_step::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4010:25-4010:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4031:25-4031:50 -/
 def
   intrinsic.mc1_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.mc1_step.closure_3) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::mc1_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::mc1_step::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4010:25-4010:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4031:25-4031:50 -/
 @[reducible]
 def
   intrinsic.mc1_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -82658,14 +82658,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::mc1_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::mc1_step::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4008:25-4008:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4029:25-4029:50 -/
 def
   intrinsic.mc1_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.mc1_step.closure_2) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::mc1_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::mc1_step::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4008:25-4008:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4029:25-4029:50 -/
 @[reducible]
 def
   intrinsic.mc1_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -82675,14 +82675,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::mc1_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::mc1_step::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4006:55-4006:78 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4027:55-4027:78 -/
 def
   intrinsic.mc1_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.mc1_step.closure_1) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::mc1_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::mc1_step::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4006:55-4006:78 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4027:55-4027:78 -/
 @[reducible]
 def intrinsic.mc1_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
   core.ops.function.FnOnce intrinsic.mc1_step.closure_1 Unit Diagnostic := {
@@ -82691,14 +82691,14 @@ def intrinsic.mc1_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
 }
 
 /-- [noble_contracts::intrinsic::mc1_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::mc1_step::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3992:37-3992:62 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4013:37-4013:62 -/
 def
   intrinsic.mc1_step.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.mc1_step.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::mc1_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::mc1_step::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3992:37-3992:62 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4013:37-4013:62 -/
 @[reducible]
 def intrinsic.mc1_step.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
   : core.ops.function.FnOnce intrinsic.mc1_step.closure Unit Diagnostic := {
@@ -82707,7 +82707,7 @@ def intrinsic.mc1_step.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
 }
 
 /-- [noble_contracts::intrinsic::bytes_within]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1062:4-1066:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1065:4-1069:5 -/
 @[rust_loop_body]
 def intrinsic.bytes_within_loop.body
   (extra : Slice Std.U8) (bytes : Slice Std.U8) (index1 : Std.Usize)
@@ -82731,7 +82731,7 @@ def intrinsic.bytes_within_loop.body
   else ok (done is_within)
 
 /-- [noble_contracts::intrinsic::bytes_within]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1062:4-1066:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1065:4-1069:5 -/
 @[rust_loop]
 def intrinsic.bytes_within_loop
   (extra : Slice Std.U8) (bytes : Slice Std.U8) (index1 : Std.Usize)
@@ -82744,21 +82744,21 @@ def intrinsic.bytes_within_loop
     (index1, is_within)
 
 /-- [noble_contracts::intrinsic::bytes_within]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1058:0-1068:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1061:0-1071:1 -/
 def intrinsic.bytes_within
   (text : Str) (extra : Slice Std.U8) : Result Bool := do
   let bytes ← core.str.Str.as_bytes text
   intrinsic.bytes_within_loop extra bytes 0#usize true
 
 /-- [noble_contracts::intrinsic::{impl core::ops::deref::Deref<noble_contracts::intrinsic::MeterConfig> for noble_contracts::intrinsic::Meter<'_0>}::deref]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 645:4-647:5
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 648:4-650:5
     Visibility: public -/
 def intrinsic.Meter.Insts.CoreOpsDerefDerefMeterConfig.deref
   (self : intrinsic.IntrinsicMeter) : Result intrinsic.MeterConfig := do
   ok self.config
 
 /-- [noble_contracts::intrinsic::{noble_contracts::intrinsic::Meter<'a>}::visit]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 665:4-681:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 668:4-684:5 -/
 def intrinsic.Meter.visit
   (self : intrinsic.IntrinsicMeter) (depth : Std.U32) (span : Span) :
   Result (intrinsic.IntrinsicMeter × (core.result.Result Unit Diagnostic))
@@ -82795,14 +82795,14 @@ def intrinsic.Meter.visit
           else ok ({ self with nodes, work }, core.result.Result.Ok ())
 
 /-- [noble_contracts::intrinsic::deeper::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::deeper::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 594:36-594:54 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 597:36-597:54 -/
 def
   intrinsic.deeper.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.deeper.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::deeper::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::deeper::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 594:36-594:54 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 597:36-597:54 -/
 @[reducible]
 def intrinsic.deeper.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
   core.ops.function.FnOnce intrinsic.deeper.closure Unit Diagnostic := {
@@ -82811,7 +82811,7 @@ def intrinsic.deeper.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
 }
 
 /-- [noble_contracts::intrinsic::deeper]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 593:0-595:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 596:0-598:1 -/
 def intrinsic.deeper
   (depth : Std.U32) (span : Span) :
   Result (core.result.Result Std.U32 Diagnostic)
@@ -82821,7 +82821,7 @@ def intrinsic.deeper
     intrinsic.deeper.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic o span
 
 /-- [noble_contracts::intrinsic::mc1_step]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3969:0-4014:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3990:0-4035:1 -/
 def intrinsic.mc1_step
   (frame : intrinsic.Mc1Frame)
   (pending : intrinsic.WorkStack intrinsic.Mc1Frame) (text : String)
@@ -82957,14 +82957,14 @@ def intrinsic.mc1_step
         ok (r1, pending, text1, meter)
 
 /-- [noble_contracts::intrinsic::mc1_text::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::mc1_text::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3940:69-3940:94 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3961:69-3961:94 -/
 def
   intrinsic.mc1_text.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.mc1_text.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::mc1_text::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::mc1_text::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3940:69-3940:94 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3961:69-3961:94 -/
 @[reducible]
 def intrinsic.mc1_text.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
   : core.ops.function.FnOnce intrinsic.mc1_text.closure Unit Diagnostic := {
@@ -82973,7 +82973,7 @@ def intrinsic.mc1_text.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
 }
 
 /-- [noble_contracts::intrinsic::mc1_text]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 969:8-3948:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 972:8-3969:5 -/
 @[rust_loop_body]
 def intrinsic.mc1_text_loop.body
   (meter : intrinsic.IntrinsicMeter)
@@ -82996,7 +82996,7 @@ def intrinsic.mc1_text_loop.body
     else ok (cont (meter1, pending2, text1, outcome1))
 
 /-- [noble_contracts::intrinsic::mc1_text]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 969:8-3948:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 972:8-3969:5 -/
 @[rust_loop]
 def intrinsic.mc1_text_loop
   (meter : intrinsic.IntrinsicMeter)
@@ -83011,7 +83011,7 @@ def intrinsic.mc1_text_loop
     (meter, pending, text, outcome)
 
 /-- [noble_contracts::intrinsic::mc1_text]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3937:0-3951:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3958:0-3972:1 -/
 def intrinsic.mc1_text
   (form : intrinsic.Form) (meter : intrinsic.IntrinsicMeter) (depth : Std.U32)
   :
@@ -83048,7 +83048,7 @@ def intrinsic.mc1_text
     ok (r2, meter)
 
 /-- [noble_contracts::intrinsic::mc1_expression]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3928:0-3931:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3949:0-3952:1 -/
 def intrinsic.mc1_expression
   (form : intrinsic.Form) (meter : intrinsic.IntrinsicMeter) (depth : Std.U32)
   :
@@ -83058,7 +83058,7 @@ def intrinsic.mc1_expression
   ok (meter1, result)
 
 /-- [noble_contracts::intrinsic::{noble_contracts::intrinsic::Meter<'a>}::charge]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 686:4-698:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 689:4-701:5 -/
 def intrinsic.Meter.charge
   (self : intrinsic.IntrinsicMeter) (amount : Std.Usize) (span : Span) :
   Result (intrinsic.IntrinsicMeter × (core.result.Result Unit Diagnostic))
@@ -83092,7 +83092,7 @@ def intrinsic.ProofBudgets.from_limits
   ok { normalization_work := limits.work, substitution_work := limits.work }
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4173:4-4176:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4194:4-4197:5 -/
 @[rust_loop_body]
 def intrinsic.prepare_checked_contract_loop.body
   (s : Span) (expected : noble_kernel.untrusted.Candidate)
@@ -83119,7 +83119,7 @@ def intrinsic.prepare_checked_contract_loop.body
   else ok (done (expected, operations))
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4173:4-4176:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4194:4-4197:5 -/
 @[rust_loop]
 def intrinsic.prepare_checked_contract_loop
   (s : Span) (expected : noble_kernel.untrusted.Candidate)
@@ -83134,7 +83134,7 @@ def intrinsic.prepare_checked_contract_loop
     (index1, operations)
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4032:0-4216:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4053:0-4237:1 -/
 def intrinsic.prepare_checked_contract
   (contract : intrinsic.ContractGoal) (limits : Limits) :
   Result (core.result.Result (Prepared × (Option Std.I64)) Diagnostic)
@@ -84436,7 +84436,7 @@ def intrinsic.elaborate.contract_rule
           (core.convert.FromSame Diagnostic) residual
 
 /-- [noble_contracts::intrinsic::proposition::{impl core::ops::function::FnOnce<(noble_contracts::intrinsic::Rewritten,), core::result::Result<noble_contracts::intrinsic::Proposition, noble_contracts::Diagnostic>> for noble_contracts::intrinsic::proposition::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2109:24-2112:9 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2112:24-2115:9 -/
 def
   intrinsic.proposition.closure.Insts.CoreOpsFunctionFnOnceTupleRewrittenResultPropositionDiagnostic.call_once
   (c : intrinsic.proposition.closure) (tupled_args : intrinsic.Rewritten) :
@@ -84453,7 +84453,7 @@ def
     ok (core.result.Result.Ok proposition)
 
 /-- Trait implementation: [noble_contracts::intrinsic::proposition::{impl core::ops::function::FnOnce<(noble_contracts::intrinsic::Rewritten,), core::result::Result<noble_contracts::intrinsic::Proposition, noble_contracts::Diagnostic>> for noble_contracts::intrinsic::proposition::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2109:24-2112:9 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2112:24-2115:9 -/
 @[reducible]
 def
   intrinsic.proposition.closure.Insts.CoreOpsFunctionFnOnceTupleRewrittenResultPropositionDiagnostic
@@ -84464,7 +84464,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::list]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 762:0-767:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 765:0-770:1 -/
 def intrinsic.list
   (form : intrinsic.Form) :
   Result (core.result.Result (Slice intrinsic.Form) Diagnostic)
@@ -84478,7 +84478,7 @@ def intrinsic.list
     ok (core.result.Result.Ok s)
 
 /-- [noble_contracts::intrinsic::list_head_atom]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2035:0-2040:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2038:0-2043:1 -/
 def intrinsic.list_head_atom
   (form : intrinsic.Form) : Result (Option Str) := do
   let r ← intrinsic.list form
@@ -84487,7 +84487,7 @@ def intrinsic.list_head_atom
   | core.result.Result.Err _ => ok none
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1995:49-1995:65 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1998:49-1998:65 -/
 def
   intrinsic.assemble_parsed.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_2) (_ : Unit) :
@@ -84496,7 +84496,7 @@ def
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1995:49-1995:65 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1998:49-1998:65 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -84507,7 +84507,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1978:25-1978:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1981:25-1981:50 -/
 def
   intrinsic.assemble_parsed.closure_1.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_1) (_ : Unit) :
@@ -84516,7 +84516,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1978:25-1978:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1981:25-1981:50 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_1.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84527,14 +84527,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1974:28-1974:51 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1977:28-1977:51 -/
 def
   intrinsic.assemble_parsed.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1974:28-1974:51 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1977:28-1977:51 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -84545,7 +84545,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#15}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.assemble_parsed.closure_15.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_15) (_ : Unit) :
@@ -84554,7 +84554,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#15}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_15.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84565,7 +84565,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#14}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.assemble_parsed.closure_14.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_14) (_ : Unit) :
@@ -84574,7 +84574,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#14}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_14.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84585,7 +84585,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#11}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.assemble_parsed.closure_11.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_11) (_ : Unit) :
@@ -84594,7 +84594,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#11}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_11.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84605,7 +84605,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#10}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.assemble_parsed.closure_10.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_10) (_ : Unit) :
@@ -84614,7 +84614,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#10}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_10.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84625,7 +84625,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#9}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.assemble_parsed.closure_9.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_9) (_ : Unit) :
@@ -84634,7 +84634,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#9}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_9.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84645,7 +84645,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#8}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.assemble_parsed.closure_8.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_8) (_ : Unit) :
@@ -84654,7 +84654,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#8}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_8.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84665,7 +84665,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#4}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.assemble_parsed.closure_4.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_4) (_ : Unit) :
@@ -84674,7 +84674,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#4}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_4.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84685,7 +84685,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.assemble_parsed.closure_3.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_3) (_ : Unit) :
@@ -84694,7 +84694,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_3.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84705,7 +84705,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#16}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.assemble_parsed.closure_16.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_16) (_ : Unit) :
@@ -84714,7 +84714,7 @@ def
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#16}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_16.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84725,7 +84725,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#13}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.assemble_parsed.closure_13.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_13) (_ : Unit) :
@@ -84734,7 +84734,7 @@ def
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#13}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_13.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84745,7 +84745,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#12}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.assemble_parsed.closure_12.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_12) (_ : Unit) :
@@ -84754,7 +84754,7 @@ def
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#12}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_12.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84765,7 +84765,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#7}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.assemble_parsed.closure_7.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_7) (_ : Unit) :
@@ -84774,7 +84774,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#7}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_7.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84785,7 +84785,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#6}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.assemble_parsed.closure_6.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_6) (_ : Unit) :
@@ -84794,7 +84794,7 @@ def
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#6}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_6.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84805,7 +84805,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#5}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.assemble_parsed.closure_5.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.assemble_parsed.closure_5) (_ : Unit) :
@@ -84814,7 +84814,7 @@ def
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::assemble_parsed::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::assemble_parsed::{closure#5}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.assemble_parsed.closure_5.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -84825,7 +84825,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::assemble_parsed]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1892:0-2008:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1895:0-2011:1 -/
 def intrinsic.assemble_parsed
   (frame : intrinsic.ParseFrame) («stacks» : intrinsic.ParseStacks)
   (context : intrinsic.WorkStack intrinsic.Binder) (bound : Std.Usize) :
@@ -85375,7 +85375,7 @@ def intrinsic.assemble_parsed
   | intrinsic.ParseFrame.EqAfterCode _ _ => fail panic
 
 /-- [noble_contracts::intrinsic::{impl core::cmp::PartialEq<noble_contracts::intrinsic::Code> for noble_contracts::intrinsic::Code}::eq]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 777:16-777:25
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 780:16-780:25
     Visibility: public -/
 def intrinsic.Code.Insts.CoreCmpPartialEqCode.eq
   (self : intrinsic.Code) (other : intrinsic.Code) : Result Bool := do
@@ -85444,7 +85444,7 @@ def intrinsic.Code.Insts.CoreCmpPartialEqCode.eq
 partial_fixpoint
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::cmp::PartialEq<noble_contracts::intrinsic::Code> for noble_contracts::intrinsic::Code}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 777:16-777:25 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 780:16-780:25 -/
 @[reducible]
 impl_def intrinsic.Code.Insts.CoreCmpPartialEqCode : core.cmp.PartialEq
   intrinsic.Code intrinsic.Code := {
@@ -85454,7 +85454,7 @@ impl_def intrinsic.Code.Insts.CoreCmpPartialEqCode : core.cmp.PartialEq
 }
 
 /-- [noble_contracts::intrinsic::is_value_of]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2014:0-2016:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2017:0-2019:1 -/
 def intrinsic.is_value_of
   (sort : intrinsic.Sort) (code : intrinsic.Code) : Result Bool := do
   match sort with
@@ -85467,14 +85467,14 @@ def intrinsic.is_value_of
   | intrinsic.Sort.Premise _ => ok false
 
 /-- [noble_contracts::intrinsic::parse_equality::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_equality::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1862:20-1862:67 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1865:20-1865:67 -/
 def
   intrinsic.parse_equality.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.parse_equality.closure_1) (_ : Unit) : Result Diagnostic := do
   intrinsic.reject c.span (toStr "unbound equality value")
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_equality::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_equality::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1862:20-1862:67 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1865:20-1865:67 -/
 @[reducible]
 def
   intrinsic.parse_equality.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -85485,14 +85485,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::parse_equality::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_equality::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1856:20-1856:66 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1859:20-1859:66 -/
 def
   intrinsic.parse_equality.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.parse_equality.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.reject c.span (toStr "unbound equality value")
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_equality::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_equality::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1856:20-1856:66 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1859:20-1859:66 -/
 @[reducible]
 def intrinsic.parse_equality.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
   : core.ops.function.FnOnce intrinsic.parse_equality.closure Unit Diagnostic
@@ -85502,13 +85502,13 @@ def intrinsic.parse_equality.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
 }
 
 /-- [noble_contracts::intrinsic::is_binder_named]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1572:0-1574:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1575:0-1577:1 -/
 def intrinsic.is_binder_named
   (binder : intrinsic.Binder) («name» : Str) : Result Bool := do
   alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq binder.name «name»
 
 /-- [noble_contracts::intrinsic::is_slot_named]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1580:0-1585:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1583:0-1588:1 -/
 def intrinsic.is_slot_named
   (slot : Option intrinsic.Binder) («name» : Str) : Result Bool := do
   match slot with
@@ -85516,7 +85516,7 @@ def intrinsic.is_slot_named
   | some binder => intrinsic.is_binder_named binder «name»
 
 /-- [noble_contracts::intrinsic::last_inline_binder]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1559:4-1564:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1562:4-1567:5 -/
 @[rust_loop_body]
 def intrinsic.last_inline_binder_loop.body
   (a : Array (Option intrinsic.Binder) 32#usize) («name» : Str)
@@ -85538,7 +85538,7 @@ def intrinsic.last_inline_binder_loop.body
   else ok (done found)
 
 /-- [noble_contracts::intrinsic::last_inline_binder]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1559:4-1564:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1562:4-1567:5 -/
 @[rust_loop]
 def intrinsic.last_inline_binder_loop
   (a : Array (Option intrinsic.Binder) 32#usize) («name» : Str)
@@ -85551,7 +85551,7 @@ def intrinsic.last_inline_binder_loop
     (remaining, found)
 
 /-- [noble_contracts::intrinsic::last_inline_binder]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1556:0-1566:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1559:0-1569:1 -/
 @[reducible]
 def intrinsic.last_inline_binder
   (stack : intrinsic.WorkStack intrinsic.Binder) («name» : Str) :
@@ -85560,7 +85560,7 @@ def intrinsic.last_inline_binder
   intrinsic.last_inline_binder_loop stack.inline «name» stack.inline_len none
 
 /-- [noble_contracts::intrinsic::last_spilled_binder]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1546:4-1551:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1549:4-1554:5 -/
 @[rust_loop_body]
 def intrinsic.last_spilled_binder_loop.body
   (v : alloc.vec.Vec intrinsic.Binder) («name» : Str) (remaining : Std.Usize)
@@ -85584,7 +85584,7 @@ def intrinsic.last_spilled_binder_loop.body
   else ok (done found)
 
 /-- [noble_contracts::intrinsic::last_spilled_binder]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1546:4-1551:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1549:4-1554:5 -/
 @[rust_loop]
 def intrinsic.last_spilled_binder_loop
   (v : alloc.vec.Vec intrinsic.Binder) («name» : Str) (remaining : Std.Usize)
@@ -85597,7 +85597,7 @@ def intrinsic.last_spilled_binder_loop
     (remaining, found)
 
 /-- [noble_contracts::intrinsic::last_spilled_binder]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1543:0-1553:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1546:0-1556:1 -/
 def intrinsic.last_spilled_binder
   (stack : intrinsic.WorkStack intrinsic.Binder) («name» : Str) :
   Result (Option Std.Usize)
@@ -85606,7 +85606,7 @@ def intrinsic.last_spilled_binder
   intrinsic.last_spilled_binder_loop stack.spill «name» remaining none
 
 /-- [noble_contracts::intrinsic::stack_binder]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1529:0-1541:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1532:0-1544:1 -/
 def intrinsic.stack_binder
   (stack : intrinsic.WorkStack intrinsic.Binder) («name» : Str) :
   Result (Option (Std.Usize × intrinsic.Sort))
@@ -85636,7 +85636,7 @@ def intrinsic.stack_binder
         (Std.Usize × intrinsic.Sort) residual
 
 /-- [noble_contracts::intrinsic::binder]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1597:0-1606:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1600:0-1609:1 -/
 def intrinsic.binder
   (context : intrinsic.WorkStack intrinsic.Binder)
   («local» : intrinsic.WorkStack intrinsic.Binder) («name» : Str) :
@@ -85656,14 +85656,14 @@ def intrinsic.binder
         (Std.Usize × intrinsic.Sort) residual
 
 /-- [noble_contracts::intrinsic::parse_equality::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_equality::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.parse_equality.closure_2.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.parse_equality.closure_2) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_equality::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_equality::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.parse_equality.closure_2.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -85674,7 +85674,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::parse_equality]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1845:0-1873:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1848:0-1876:1 -/
 def intrinsic.parse_equality
   (left : intrinsic.Form) (right : intrinsic.Form)
   («stacks» : intrinsic.ParseStacks)
@@ -85794,7 +85794,7 @@ def intrinsic.parse_equality
     ok (r1, { «stacks» with values := values1 })
 
 /-- [noble_contracts::intrinsic::parse_proposition::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_proposition::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.parse_proposition.closure_3.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.parse_proposition.closure_3) (_ : Unit) :
@@ -85804,7 +85804,7 @@ def
   intrinsic.exhausted f.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_proposition::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_proposition::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.parse_proposition.closure_3.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -85815,7 +85815,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::parse_proposition::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_proposition::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.parse_proposition.closure_2.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.parse_proposition.closure_2) (_ : Unit) :
@@ -85824,7 +85824,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_proposition::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_proposition::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.parse_proposition.closure_2.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -85835,7 +85835,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::parse_proposition::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_proposition::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.parse_proposition.closure_1.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.parse_proposition.closure_1) (_ : Unit) :
@@ -85845,7 +85845,7 @@ def
   intrinsic.exhausted f.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_proposition::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_proposition::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.parse_proposition.closure_1.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -85856,7 +85856,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::parse_proposition::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_proposition::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.parse_proposition.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.parse_proposition.closure) (_ : Unit) :
@@ -85865,7 +85865,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_proposition::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_proposition::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.parse_proposition.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -85876,7 +85876,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::parse_proposition]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1776:0-1834:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1779:0-1837:1 -/
 def intrinsic.parse_proposition
   (form : intrinsic.Form) (depth : Std.U32)
   («stacks» : intrinsic.ParseStacks) (meter : intrinsic.IntrinsicMeter) :
@@ -86060,14 +86060,14 @@ def intrinsic.parse_proposition
     ok (r, «stacks», m)
 
 /-- [noble_contracts::intrinsic::parse_code::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_code::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1720:32-1720:78 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1723:32-1723:78 -/
 def
   intrinsic.parse_code.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.parse_code.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.reject c.span (toStr "not a bound Type0 code")
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_code::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_code::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1720:32-1720:78 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1723:32-1723:78 -/
 @[reducible]
 def intrinsic.parse_code.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
   core.ops.function.FnOnce intrinsic.parse_code.closure Unit Diagnostic := {
@@ -86076,7 +86076,7 @@ def intrinsic.parse_code.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
 }
 
 /-- [noble_contracts::intrinsic::parse_code::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_code::{closure#5}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.parse_code.closure_5.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.parse_code.closure_5) (_ : Unit) : Result Diagnostic := do
@@ -86084,7 +86084,7 @@ def
   intrinsic.exhausted f.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_code::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_code::{closure#5}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.parse_code.closure_5.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -86095,14 +86095,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::parse_code::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_code::{closure#4}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.parse_code.closure_4.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.parse_code.closure_4) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_code::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_code::{closure#4}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.parse_code.closure_4.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -86113,7 +86113,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::parse_code::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_code::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.parse_code.closure_3.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.parse_code.closure_3) (_ : Unit) : Result Diagnostic := do
@@ -86121,7 +86121,7 @@ def
   intrinsic.exhausted f.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_code::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_code::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.parse_code.closure_3.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -86132,14 +86132,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::parse_code::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_code::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.parse_code.closure_2.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.parse_code.closure_2) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_code::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_code::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.parse_code.closure_2.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -86150,14 +86150,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::parse_code::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_code::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.parse_code.closure_1.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.parse_code.closure_1) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_code::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_code::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.parse_code.closure_1.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -86170,7 +86170,7 @@ def
 mutual
 
 /-- [noble_contracts::intrinsic::sort_equal]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 856:0-865:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 859:0-868:1 -/
 def intrinsic.sort_equal
   (left : intrinsic.Sort) (right : intrinsic.Sort) : Result Bool := do
   match left with
@@ -86193,7 +86193,7 @@ def intrinsic.sort_equal
 partial_fixpoint
 
 /-- [noble_contracts::intrinsic::proposition_equal]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 875:0-893:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 878:0-896:1 -/
 def intrinsic.proposition_equal
   (left : intrinsic.Proposition) (right : intrinsic.Proposition) :
   Result Bool
@@ -86229,14 +86229,14 @@ partial_fixpoint
 end
 
 /-- [noble_contracts::intrinsic::{impl core::cmp::PartialEq<noble_contracts::intrinsic::Sort> for noble_contracts::intrinsic::Sort}::eq]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 821:4-823:5
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 824:4-826:5
     Visibility: public -/
 def intrinsic.Sort.Insts.CoreCmpPartialEqSort.eq
   (self : intrinsic.Sort) (other : intrinsic.Sort) : Result Bool := do
   intrinsic.sort_equal self other
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::cmp::PartialEq<noble_contracts::intrinsic::Sort> for noble_contracts::intrinsic::Sort}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 820:0-824:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 823:0-827:1 -/
 @[reducible]
 impl_def intrinsic.Sort.Insts.CoreCmpPartialEqSort : core.cmp.PartialEq
   intrinsic.Sort intrinsic.Sort := {
@@ -86246,7 +86246,7 @@ impl_def intrinsic.Sort.Insts.CoreCmpPartialEqSort : core.cmp.PartialEq
 }
 
 /-- [noble_contracts::intrinsic::parse_code]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1698:0-1761:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1701:0-1764:1 -/
 def intrinsic.parse_code
   (form : intrinsic.Form) (depth : Std.U32)
   («stacks» : intrinsic.ParseStacks)
@@ -86611,7 +86611,7 @@ def intrinsic.parse_code
     ok (r, «stacks», m)
 
 /-- [noble_contracts::intrinsic::parse_step]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1669:0-1683:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1672:0-1686:1 -/
 def intrinsic.parse_step
   (frame : intrinsic.ParseFrame) («stacks» : intrinsic.ParseStacks)
   (context : intrinsic.WorkStack intrinsic.Binder)
@@ -86672,14 +86672,14 @@ def intrinsic.parse_step
     ok (r, stacks1, meter)
 
 /-- [noble_contracts::intrinsic::parse_tree::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_tree::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1651:43-1651:61 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1654:43-1654:61 -/
 def
   intrinsic.parse_tree.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.parse_tree.closure_1) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_tree::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_tree::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1651:43-1651:61 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1654:43-1654:61 -/
 @[reducible]
 def intrinsic.parse_tree.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
   core.ops.function.FnOnce intrinsic.parse_tree.closure_1 Unit Diagnostic := {
@@ -86688,14 +86688,14 @@ def intrinsic.parse_tree.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
 }
 
 /-- [noble_contracts::intrinsic::parse_tree::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_tree::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1635:44-1635:64 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1638:44-1638:64 -/
 def
   intrinsic.parse_tree.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.parse_tree.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::parse_tree::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::parse_tree::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1635:44-1635:64 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1638:44-1638:64 -/
 @[reducible]
 def
   intrinsic.parse_tree.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -86705,7 +86705,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::parse_tree]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1644:4-1649:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1647:4-1652:5 -/
 @[rust_loop_body]
 def intrinsic.parse_tree_loop.body
   (context : intrinsic.WorkStack intrinsic.Binder)
@@ -86727,7 +86727,7 @@ def intrinsic.parse_tree_loop.body
     else ok (cont (meter1, stacks1, outcome1))
 
 /-- [noble_contracts::intrinsic::parse_tree]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1644:4-1649:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1647:4-1652:5 -/
 @[rust_loop]
 def intrinsic.parse_tree_loop
   (context : intrinsic.WorkStack intrinsic.Binder)
@@ -86742,7 +86742,7 @@ def intrinsic.parse_tree_loop
     (meter, «stacks», outcome)
 
 /-- [noble_contracts::intrinsic::parse_tree]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1627:0-1652:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1630:0-1655:1 -/
 def intrinsic.parse_tree
   (root : intrinsic.ParseFrame)
   (context : intrinsic.WorkStack intrinsic.Binder)
@@ -86788,7 +86788,7 @@ def intrinsic.parse_tree
     ok (r2, meter)
 
 /-- [noble_contracts::intrinsic::parsed]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1607:0-1615:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1610:0-1618:1 -/
 def intrinsic.parsed
   (root : intrinsic.ParseFrame)
   (context : intrinsic.WorkStack intrinsic.Binder)
@@ -86800,7 +86800,7 @@ def intrinsic.parsed
   ok (meter1, result)
 
 /-- [noble_contracts::intrinsic::proposition]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2095:0-2114:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2098:0-2117:1 -/
 def intrinsic.proposition
   (form : intrinsic.Form) (context : intrinsic.WorkStack intrinsic.Binder)
   (meter : intrinsic.IntrinsicMeter) (depth : Std.U32) :
@@ -87912,7 +87912,7 @@ def intrinsic.elaborate.Elaborator.finish_out
   ok (r, { self1 with deferred_forms := v })
 
 /-- [noble_contracts::intrinsic::sort::{impl core::ops::function::FnOnce<(noble_contracts::intrinsic::Rewritten,), core::result::Result<noble_contracts::intrinsic::Sort, noble_contracts::Diagnostic>> for noble_contracts::intrinsic::sort::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2081:24-2084:9 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2084:24-2087:9 -/
 def
   intrinsic.sort.closure.Insts.CoreOpsFunctionFnOnceTupleRewrittenResultSortDiagnostic.call_once
   (c : intrinsic.sort.closure) (tupled_args : intrinsic.Rewritten) :
@@ -87928,7 +87928,7 @@ def
     ok (core.result.Result.Err d)
 
 /-- Trait implementation: [noble_contracts::intrinsic::sort::{impl core::ops::function::FnOnce<(noble_contracts::intrinsic::Rewritten,), core::result::Result<noble_contracts::intrinsic::Sort, noble_contracts::Diagnostic>> for noble_contracts::intrinsic::sort::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2081:24-2084:9 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2084:24-2087:9 -/
 @[reducible]
 def
   intrinsic.sort.closure.Insts.CoreOpsFunctionFnOnceTupleRewrittenResultSortDiagnostic
@@ -87939,7 +87939,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::sort]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2072:0-2086:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2075:0-2089:1 -/
 def intrinsic.sort
   (form : intrinsic.Form) (context : intrinsic.WorkStack intrinsic.Binder)
   (meter : intrinsic.IntrinsicMeter) (depth : Std.U32) :
@@ -87956,14 +87956,14 @@ def intrinsic.sort
   ok (m, r)
 
 /-- [noble_contracts::intrinsic::replace_index::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::replace_index::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1502:40-1502:58 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1505:40-1505:58 -/
 def
   intrinsic.replace_index.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.replace_index.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::replace_index::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::replace_index::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1502:40-1502:58 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1505:40-1505:58 -/
 @[reducible]
 def intrinsic.replace_index.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
   : core.ops.function.FnOnce intrinsic.replace_index.closure Unit Diagnostic
@@ -87973,7 +87973,7 @@ def intrinsic.replace_index.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
 }
 
 /-- [noble_contracts::intrinsic::replace_index]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1489:0-1506:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1492:0-1509:1 -/
 def intrinsic.replace_index
   (index1 : Std.Usize) (binder : Std.Usize) (argument : intrinsic.Argument)
   (span : Span) :
@@ -87995,7 +87995,7 @@ def intrinsic.replace_index
     else ok (core.result.Result.Ok index1)
 
 /-- [noble_contracts::intrinsic::variable_rewrite]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1435:0-1455:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1438:0-1458:1 -/
 def intrinsic.variable_rewrite
   (index1 : Std.Usize) (mode : intrinsic.Rewrite) (span : Span) :
   Result (core.result.Result intrinsic.VariableRewrite Diagnostic)
@@ -88052,14 +88052,14 @@ def intrinsic.variable_rewrite
       else ok (core.result.Result.Ok (intrinsic.VariableRewrite.Index index1))
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1402:55-1402:73 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1405:55-1405:73 -/
 def
   intrinsic.rewrite_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_3) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1402:55-1402:73 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1405:55-1405:73 -/
 @[reducible]
 def intrinsic.rewrite_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
   : core.ops.function.FnOnce intrinsic.rewrite_step.closure_3 Unit Diagnostic
@@ -88069,14 +88069,14 @@ def intrinsic.rewrite_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1401:54-1401:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1404:54-1404:72 -/
 def
   intrinsic.rewrite_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_2) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1401:54-1401:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1404:54-1404:72 -/
 @[reducible]
 def intrinsic.rewrite_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
   : core.ops.function.FnOnce intrinsic.rewrite_step.closure_2 Unit Diagnostic
@@ -88086,14 +88086,14 @@ def intrinsic.rewrite_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1344:76-1344:94 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1347:76-1347:94 -/
 def
   intrinsic.rewrite_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_1) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1344:76-1344:94 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1347:76-1347:94 -/
 @[reducible]
 def intrinsic.rewrite_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
   : core.ops.function.FnOnce intrinsic.rewrite_step.closure_1 Unit Diagnostic
@@ -88103,14 +88103,14 @@ def intrinsic.rewrite_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1342:59-1342:77 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1345:59-1345:77 -/
 def
   intrinsic.rewrite_step.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1342:59-1342:77 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1345:59-1345:77 -/
 @[reducible]
 def intrinsic.rewrite_step.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
   core.ops.function.FnOnce intrinsic.rewrite_step.closure Unit Diagnostic := {
@@ -88119,14 +88119,14 @@ def intrinsic.rewrite_step.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#30}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.rewrite_step.closure_30.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_30) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#30}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_30.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88137,14 +88137,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#29}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.rewrite_step.closure_29.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_29) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#29}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_29.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88155,14 +88155,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#28}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.rewrite_step.closure_28.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_28) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#28}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_28.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88173,14 +88173,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#27}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.rewrite_step.closure_27.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_27) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#27}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_27.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88191,14 +88191,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#26}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.rewrite_step.closure_26.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_26) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#26}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_26.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88209,14 +88209,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#25}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.rewrite_step.closure_25.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_25) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#25}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_25.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88227,14 +88227,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#15}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.rewrite_step.closure_15.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_15) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#15}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_15.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88245,14 +88245,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#14}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.rewrite_step.closure_14.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_14) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#14}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_14.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88263,14 +88263,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#13}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.rewrite_step.closure_13.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_13) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#13}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_13.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88281,14 +88281,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#12}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.rewrite_step.closure_12.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_12) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#12}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_12.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88299,14 +88299,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#11}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.rewrite_step.closure_11.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_11) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#11}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_11.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88317,14 +88317,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#10}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 def
   intrinsic.rewrite_step.closure_10.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_10) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#10}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1199:51-1199:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_10.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88335,14 +88335,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#24}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_24.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_24) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#24}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_24.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88353,14 +88353,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#23}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_23.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_23) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#23}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_23.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88371,14 +88371,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#22}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_22.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_22) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#22}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_22.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88389,14 +88389,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#21}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_21.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_21) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#21}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_21.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88407,14 +88407,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#20}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_20.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_20) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#20}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_20.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88425,14 +88425,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#19}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_19.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_19) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#19}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_19.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88443,14 +88443,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#18}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_18.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_18) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#18}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_18.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88461,14 +88461,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#17}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_17.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_17) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#17}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_17.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88479,14 +88479,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#16}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_16.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_16) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#16}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_16.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88497,14 +88497,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#9}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_9.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_9) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#9}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_9.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88515,14 +88515,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#8}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_8.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_8) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#8}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_8.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88533,14 +88533,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#7}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_7.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_7) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#7}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_7.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88551,14 +88551,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#6}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_6.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_6) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#6}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_6.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88569,14 +88569,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#5}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_5.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_5) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#5}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_5.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88587,14 +88587,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#4}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_step.closure_4) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_step::{closure#4}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -88605,7 +88605,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_step]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1270:0-1418:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1273:0-1421:1 -/
 def intrinsic.rewrite_step
   (frame : intrinsic.RewriteFrame) (scope : intrinsic.RewriteScope)
   (frames : intrinsic.WorkStack intrinsic.RewriteFrame)
@@ -89592,14 +89592,14 @@ def intrinsic.rewrite_step
       ok (r1, frames, values2)
 
 /-- [noble_contracts::intrinsic::rewrite_prop::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_prop::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 def
   intrinsic.rewrite_prop.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.rewrite_prop.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::rewrite_prop::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::rewrite_prop::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1194:51-1194:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
 @[reducible]
 def
   intrinsic.rewrite_prop.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -89610,7 +89610,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::rewrite_prop]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 969:8-1242:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 972:8-1245:5 -/
 @[rust_loop_body]
 def intrinsic.rewrite_prop_loop.body
   (mode : intrinsic.Rewrite) (span : Span) (bound : Std.Usize)
@@ -89634,7 +89634,7 @@ def intrinsic.rewrite_prop_loop.body
     else ok (cont (frames2, values1, outcome1))
 
 /-- [noble_contracts::intrinsic::rewrite_prop]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 969:8-1242:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 972:8-1245:5 -/
 @[rust_loop]
 def intrinsic.rewrite_prop_loop
   (frames : intrinsic.WorkStack intrinsic.RewriteFrame)
@@ -89650,7 +89650,7 @@ def intrinsic.rewrite_prop_loop
     (frames, values, outcome)
 
 /-- [noble_contracts::intrinsic::rewrite_prop]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1226:0-1245:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1229:0-1248:1 -/
 def intrinsic.rewrite_prop
   (prop : intrinsic.Proposition) (mode : intrinsic.Rewrite) (span : Span)
   (bound : Std.Usize) :
@@ -89697,7 +89697,7 @@ def intrinsic.rewrite_prop
       intrinsic.Proposition (core.convert.FromSame Diagnostic) residual
 
 /-- [noble_contracts::intrinsic::replace_prop]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1472:0-1480:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1475:0-1483:1 -/
 def intrinsic.replace_prop
   (prop : intrinsic.Proposition) (binder : Std.Usize)
   (argument : intrinsic.Argument) (span : Span) (bound : Std.Usize) :
@@ -89707,7 +89707,7 @@ def intrinsic.replace_prop
     bound
 
 /-- [noble_contracts::intrinsic::operation]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 768:0-774:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 771:0-777:1 -/
 def intrinsic.operation
   (form : intrinsic.Form) (head : Str) (count : Std.Usize) :
   Result (core.result.Result (Slice intrinsic.Form) Diagnostic)
@@ -89759,7 +89759,7 @@ def intrinsic.elaborate.out_atom
   ok (intrinsic.elaborate.Out.Done f)
 
 /-- [noble_contracts::intrinsic::code::{impl core::ops::function::FnOnce<(noble_contracts::intrinsic::Rewritten,), core::result::Result<noble_contracts::intrinsic::Code, noble_contracts::Diagnostic>> for noble_contracts::intrinsic::code::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2058:24-2061:9 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2061:24-2064:9 -/
 def
   intrinsic.code.closure.Insts.CoreOpsFunctionFnOnceTupleRewrittenResultCodeDiagnostic.call_once
   (c : intrinsic.code.closure) (tupled_args : intrinsic.Rewritten) :
@@ -89775,7 +89775,7 @@ def
     ok (core.result.Result.Err d)
 
 /-- Trait implementation: [noble_contracts::intrinsic::code::{impl core::ops::function::FnOnce<(noble_contracts::intrinsic::Rewritten,), core::result::Result<noble_contracts::intrinsic::Code, noble_contracts::Diagnostic>> for noble_contracts::intrinsic::code::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2058:24-2061:9 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2061:24-2064:9 -/
 @[reducible]
 def
   intrinsic.code.closure.Insts.CoreOpsFunctionFnOnceTupleRewrittenResultCodeDiagnostic
@@ -89786,7 +89786,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::code]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2049:0-2063:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2052:0-2066:1 -/
 def intrinsic.code
   (form : intrinsic.Form) (context : intrinsic.WorkStack intrinsic.Binder)
   (meter : intrinsic.IntrinsicMeter) (depth : Std.U32) :
@@ -90782,7 +90782,7 @@ def intrinsic.elaborate.span_at
     | some _ => ok o
 
 /-- [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::Code}::clone]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 777:9-777:14
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 780:9-780:14
     Visibility: public -/
 def intrinsic.Code.Insts.CoreCloneClone.clone
   (self : intrinsic.Code) : Result intrinsic.Code := do
@@ -90810,7 +90810,7 @@ partial_fixpoint
 mutual
 
 /-- [noble_contracts::intrinsic::clone_sort]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 831:0-837:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 834:0-840:1 -/
 def intrinsic.clone_sort (sort : intrinsic.Sort) : Result intrinsic.Sort := do
   match sort with
   | intrinsic.Sort.Codes => ok intrinsic.Sort.Codes
@@ -90823,7 +90823,7 @@ def intrinsic.clone_sort (sort : intrinsic.Sort) : Result intrinsic.Sort := do
 partial_fixpoint
 
 /-- [noble_contracts::intrinsic::clone_proposition]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 843:0-850:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 846:0-853:1 -/
 def intrinsic.clone_proposition
   (prop : intrinsic.Proposition) : Result intrinsic.Proposition := do
   match prop with
@@ -90839,7 +90839,7 @@ partial_fixpoint
 end
 
 /-- [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::Sort}::clone]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 811:4-813:5
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 814:4-816:5
     Visibility: public -/
 def intrinsic.Sort.Insts.CoreCloneClone.clone
   (self : intrinsic.Sort) : Result intrinsic.Sort := do
@@ -91275,7 +91275,7 @@ def intrinsic.elaborate.Elaborator.refl_term
     ok (r1, self)
 
 /-- [noble_contracts::intrinsic::shifted_prop]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1460:0-1467:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1463:0-1470:1 -/
 def intrinsic.shifted_prop
   (prop : intrinsic.Proposition) (base : Std.Usize) (span : Span)
   (bound : Std.Usize) :
@@ -91601,7 +91601,7 @@ partial_fixpoint
 end
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::Sort}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 810:0-814:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 813:0-817:1 -/
 @[reducible]
 impl_def intrinsic.Sort.Insts.CoreCloneClone : core.clone.Clone intrinsic.Sort
   := {
@@ -91766,7 +91766,7 @@ def intrinsic.elaborate.Elaborator.bind_code
       ok (r1, self)
 
 /-- [noble_contracts::intrinsic::{noble_contracts::intrinsic::Meter<'a>}::substitute]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 727:4-746:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 730:4-749:5 -/
 def intrinsic.Meter.substitute
   (self : intrinsic.IntrinsicMeter) (amount : Std.Usize) (span : Span) :
   Result (intrinsic.IntrinsicMeter × (core.result.Result Unit Diagnostic))
@@ -91795,7 +91795,7 @@ def intrinsic.Meter.substitute
     ok (self, core.result.Result.Err d)
 
 /-- [noble_contracts::intrinsic::{noble_contracts::intrinsic::Meter<'a>}::normalize]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 703:4-722:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 706:4-725:5 -/
 def intrinsic.Meter.normalize
   (self : intrinsic.IntrinsicMeter) (amount : Std.Usize) (span : Span) :
   Result (intrinsic.IntrinsicMeter × (core.result.Result Unit Diagnostic))
@@ -101963,7 +101963,7 @@ def intrinsic.named_v2.use_entry
       String (core.convert.FromSame Diagnostic) residual
 
 /-- [noble_contracts::intrinsic::push_code_point]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2382:0-2387:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2385:0-2390:1 -/
 def intrinsic.push_code_point
   (out : String) (code : Std.U32) : Result String := do
   let o ← core.char.methods.Char.from_u32 code
@@ -103498,15 +103498,21 @@ def intrinsic.ProofWork.Insts.CoreMarkerCopy : core.marker.Copy
   cloneInst := intrinsic.ProofWork.Insts.CoreCloneClone
 }
 
+/-- [noble_contracts::intrinsic::unsupported]:
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 586:0-588:1 -/
+def intrinsic.unsupported
+  (span : Span) (reason : Str) : Result Diagnostic := do
+  Diagnostic.new DiagnosticKind.Unsupported span reason
+
 /-- [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::TreeBounds}::clone]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 596:9-596:14
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 599:9-599:14
     Visibility: public -/
 def intrinsic.TreeBounds.Insts.CoreCloneClone.clone
   (self : intrinsic.TreeBounds) : Result intrinsic.TreeBounds := do
   ok self
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::TreeBounds}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 596:9-596:14 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 599:9-599:14 -/
 @[reducible]
 impl_def intrinsic.TreeBounds.Insts.CoreCloneClone : core.clone.Clone
   intrinsic.TreeBounds := {
@@ -103516,7 +103522,7 @@ impl_def intrinsic.TreeBounds.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::marker::Copy for noble_contracts::intrinsic::TreeBounds}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 596:16-596:20 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 599:16-599:20 -/
 @[reducible]
 def intrinsic.TreeBounds.Insts.CoreMarkerCopy : core.marker.Copy
   intrinsic.TreeBounds := {
@@ -103524,14 +103530,14 @@ def intrinsic.TreeBounds.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::Meter<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 627:9-627:14
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 630:9-630:14
     Visibility: public -/
 def intrinsic.Meter.Insts.CoreCloneClone.clone
   (self : intrinsic.IntrinsicMeter) : Result intrinsic.IntrinsicMeter := do
   ok self
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::Meter<'a>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 627:9-627:14 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 630:9-630:14 -/
 @[reducible]
 impl_def intrinsic.Meter.Insts.CoreCloneClone : core.clone.Clone
   intrinsic.IntrinsicMeter := {
@@ -103541,7 +103547,7 @@ impl_def intrinsic.Meter.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::marker::Copy for noble_contracts::intrinsic::Meter<'a>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 627:16-627:20 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 630:16-630:20 -/
 @[reducible]
 def intrinsic.Meter.Insts.CoreMarkerCopy : core.marker.Copy
   intrinsic.IntrinsicMeter := {
@@ -103549,7 +103555,7 @@ def intrinsic.Meter.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::ops::deref::Deref<noble_contracts::intrinsic::MeterConfig> for noble_contracts::intrinsic::Meter<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 643:0-648:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 646:0-651:1 -/
 @[reducible]
 def intrinsic.Meter.Insts.CoreOpsDerefDerefMeterConfig : core.ops.deref.Deref
   intrinsic.IntrinsicMeter intrinsic.MeterConfig := {
@@ -103557,7 +103563,7 @@ def intrinsic.Meter.Insts.CoreOpsDerefDerefMeterConfig : core.ops.deref.Deref
 }
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::Code}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 777:9-777:14 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 780:9-780:14 -/
 @[reducible]
 impl_def intrinsic.Code.Insts.CoreCloneClone : core.clone.Clone intrinsic.Code
   := {
@@ -103567,21 +103573,21 @@ impl_def intrinsic.Code.Insts.CoreCloneClone : core.clone.Clone intrinsic.Code
 }
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::marker::StructuralPartialEq for noble_contracts::intrinsic::Code}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 777:16-777:25 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 780:16-780:25 -/
 @[reducible]
 def intrinsic.Code.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq intrinsic.Code := {
 }
 
 /-- [noble_contracts::intrinsic::{impl core::cmp::Eq for noble_contracts::intrinsic::Code}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 777:27-777:29
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 780:27-780:29
     Visibility: public -/
 def intrinsic.Code.Insts.CoreCmpEq.assert_fields_are_eq
   (self : intrinsic.Code) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::cmp::Eq for noble_contracts::intrinsic::Code}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 777:27-777:29 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 780:27-780:29 -/
 @[reducible]
 def intrinsic.Code.Insts.CoreCmpEq : core.cmp.Eq intrinsic.Code := {
   partialEqInst := intrinsic.Code.Insts.CoreCmpPartialEqCode
@@ -103589,14 +103595,14 @@ def intrinsic.Code.Insts.CoreCmpEq : core.cmp.Eq intrinsic.Code := {
 }
 
 /-- [noble_contracts::intrinsic::{impl core::cmp::Eq for noble_contracts::intrinsic::Sort}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 797:9-797:11
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 800:9-800:11
     Visibility: public -/
 def intrinsic.Sort.Insts.CoreCmpEq.assert_fields_are_eq
   (self : intrinsic.Sort) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::cmp::Eq for noble_contracts::intrinsic::Sort}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 797:9-797:11 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 800:9-800:11 -/
 @[reducible]
 def intrinsic.Sort.Insts.CoreCmpEq : core.cmp.Eq intrinsic.Sort := {
   partialEqInst := intrinsic.Sort.Insts.CoreCmpPartialEqSort
@@ -103604,7 +103610,7 @@ def intrinsic.Sort.Insts.CoreCmpEq : core.cmp.Eq intrinsic.Sort := {
 }
 
 /-- [noble_contracts::intrinsic::{impl core::cmp::PartialEq<noble_contracts::intrinsic::Proposition> for noble_contracts::intrinsic::Proposition}::eq]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 826:4-828:5
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 829:4-831:5
     Visibility: public -/
 def intrinsic.Proposition.Insts.CoreCmpPartialEqProposition.eq
   (self : intrinsic.Proposition) (other : intrinsic.Proposition) :
@@ -103613,7 +103619,7 @@ def intrinsic.Proposition.Insts.CoreCmpPartialEqProposition.eq
   intrinsic.proposition_equal self other
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::cmp::PartialEq<noble_contracts::intrinsic::Proposition> for noble_contracts::intrinsic::Proposition}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 825:0-829:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 828:0-832:1 -/
 @[reducible]
 impl_def intrinsic.Proposition.Insts.CoreCmpPartialEqProposition :
   core.cmp.PartialEq intrinsic.Proposition intrinsic.Proposition := {
@@ -103623,14 +103629,14 @@ impl_def intrinsic.Proposition.Insts.CoreCmpPartialEqProposition :
 }
 
 /-- [noble_contracts::intrinsic::{impl core::cmp::Eq for noble_contracts::intrinsic::Proposition}::assert_fields_are_eq]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 804:9-804:11
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 807:9-807:11
     Visibility: public -/
 def intrinsic.Proposition.Insts.CoreCmpEq.assert_fields_are_eq
   (self : intrinsic.Proposition) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::cmp::Eq for noble_contracts::intrinsic::Proposition}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 804:9-804:11 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 807:9-807:11 -/
 @[reducible]
 def intrinsic.Proposition.Insts.CoreCmpEq : core.cmp.Eq intrinsic.Proposition
   := {
@@ -103640,14 +103646,14 @@ def intrinsic.Proposition.Insts.CoreCmpEq : core.cmp.Eq intrinsic.Proposition
 }
 
 /-- [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::Proposition}::clone]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 816:4-818:5
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 819:4-821:5
     Visibility: public -/
 def intrinsic.Proposition.Insts.CoreCloneClone.clone
   (self : intrinsic.Proposition) : Result intrinsic.Proposition := do
   intrinsic.clone_proposition self
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::Proposition}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 815:0-819:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 818:0-822:1 -/
 @[reducible]
 impl_def intrinsic.Proposition.Insts.CoreCloneClone : core.clone.Clone
   intrinsic.Proposition := {
@@ -103657,7 +103663,7 @@ impl_def intrinsic.Proposition.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_contracts::intrinsic::validation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::validation_step::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1051:25-1051:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1054:25-1054:50 -/
 def
   intrinsic.validation_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.validation_step.closure_3) (_ : Unit) :
@@ -103666,7 +103672,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::validation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::validation_step::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1051:25-1051:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1054:25-1054:50 -/
 @[reducible]
 def
   intrinsic.validation_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -103677,7 +103683,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::validation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::validation_step::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1048:25-1048:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1051:25-1051:50 -/
 def
   intrinsic.validation_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.validation_step.closure_2) (_ : Unit) :
@@ -103686,7 +103692,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::validation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::validation_step::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1048:25-1048:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1051:25-1051:50 -/
 @[reducible]
 def
   intrinsic.validation_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -103697,7 +103703,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::validation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::validation_step::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1041:55-1041:78 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1044:55-1044:78 -/
 def
   intrinsic.validation_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.validation_step.closure_1) (_ : Unit) :
@@ -103706,7 +103712,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::validation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::validation_step::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1041:55-1041:78 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1044:55-1044:78 -/
 @[reducible]
 def
   intrinsic.validation_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -103717,14 +103723,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::validation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::validation_step::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1031:37-1031:62 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1034:37-1034:62 -/
 def
   intrinsic.validation_step.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.validation_step.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::validation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::validation_step::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1031:37-1031:62 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1034:37-1034:62 -/
 @[reducible]
 def
   intrinsic.validation_step.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -103735,7 +103741,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::validation_step]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1012:0-1055:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1015:0-1058:1 -/
 def intrinsic.validation_step
   (frame : intrinsic.ValidationFrame)
   (pending : intrinsic.WorkStack intrinsic.ValidationFrame) (bound : Std.Usize)
@@ -103888,14 +103894,14 @@ def intrinsic.validation_step
         ok (r1, pending, meter)
 
 /-- [noble_contracts::intrinsic::validate_tree::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::validate_tree::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 989:17-989:42 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 992:17-992:42 -/
 def
   intrinsic.validate_tree.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.validate_tree.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::validate_tree::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::validate_tree::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 989:17-989:42 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 992:17-992:42 -/
 @[reducible]
 def
   intrinsic.validate_tree.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -103906,7 +103912,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::validate_tree]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 969:8-996:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 972:8-999:5 -/
 @[rust_loop_body]
 def intrinsic.validate_tree_loop.body
   (bound : Std.Usize) (meter : intrinsic.IntrinsicMeter)
@@ -103928,7 +103934,7 @@ def intrinsic.validate_tree_loop.body
     else ok (cont (meter1, pending2, outcome1))
 
 /-- [noble_contracts::intrinsic::validate_tree]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 969:8-996:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 972:8-999:5 -/
 @[rust_loop]
 def intrinsic.validate_tree_loop
   (meter : intrinsic.IntrinsicMeter)
@@ -103942,7 +103948,7 @@ def intrinsic.validate_tree_loop
     (meter, pending, outcome)
 
 /-- [noble_contracts::intrinsic::validate_tree]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 985:0-998:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 988:0-1001:1 -/
 def intrinsic.validate_tree
   (form : intrinsic.Form) (meter : intrinsic.IntrinsicMeter) (depth : Std.U32)
   :
@@ -103971,7 +103977,7 @@ def intrinsic.validate_tree
     ok (outcome, meter)
 
 /-- [noble_contracts::intrinsic::validated]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 976:0-979:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 979:0-982:1 -/
 def intrinsic.validated
   (form : intrinsic.Form) (meter : intrinsic.IntrinsicMeter) (depth : Std.U32)
   :
@@ -103981,7 +103987,7 @@ def intrinsic.validated
   ok (meter1, result)
 
 /-- [noble_contracts::intrinsic::size_step]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1115:0-1149:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1118:0-1152:1 -/
 def intrinsic.size_step
   (node : intrinsic.SizeNode)
   (pending : intrinsic.WorkStack intrinsic.SizeNode) (size : Std.Usize)
@@ -104243,7 +104249,7 @@ def intrinsic.size_step
         ok (o1, pending, size)
 
 /-- [noble_contracts::intrinsic::tree_size]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 969:8-1095:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 972:8-1098:5 -/
 @[rust_loop_body]
 def intrinsic.tree_size_loop.body
   (bound : Std.Usize) (pending : intrinsic.WorkStack intrinsic.SizeNode)
@@ -104261,7 +104267,7 @@ def intrinsic.tree_size_loop.body
     | some _ => ok (cont (pending2, size1))
 
 /-- [noble_contracts::intrinsic::tree_size]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 969:8-1095:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 972:8-1098:5 -/
 @[rust_loop]
 def intrinsic.tree_size_loop
   (bound : Std.Usize) (pending : intrinsic.WorkStack intrinsic.SizeNode)
@@ -104274,7 +104280,7 @@ def intrinsic.tree_size_loop
     (pending, size)
 
 /-- [noble_contracts::intrinsic::tree_size]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1078:0-1101:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1081:0-1104:1 -/
 def intrinsic.tree_size
   (root : intrinsic.SizeNode) (bound : Std.Usize) :
   Result (Option Std.Usize)
@@ -104294,7 +104300,7 @@ def intrinsic.tree_size
       Std.Usize residual
 
 /-- [noble_contracts::intrinsic::code_size]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1150:0-1155:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1153:0-1158:1 -/
 def intrinsic.code_size
   (code : intrinsic.Code) (bound : Std.Usize) : Result (Option Std.Usize) := do
   let b ←
@@ -104312,7 +104318,7 @@ def intrinsic.code_size
   else ok (some 1#usize)
 
 /-- [noble_contracts::intrinsic::proposition_size]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1156:0-1158:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1159:0-1161:1 -/
 def intrinsic.proposition_size
   (prop : intrinsic.Proposition) (bound : Std.Usize) :
   Result (Option Std.Usize)
@@ -104320,7 +104326,7 @@ def intrinsic.proposition_size
   intrinsic.tree_size (intrinsic.SizeNode.Proposition prop) bound
 
 /-- [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::Binder}::clone]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1159:9-1159:14
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1162:9-1162:14
     Visibility: public -/
 def intrinsic.Binder.Insts.CoreCloneClone.clone
   (self : intrinsic.Binder) : Result intrinsic.Binder := do
@@ -104329,7 +104335,7 @@ def intrinsic.Binder.Insts.CoreCloneClone.clone
   ok { «name» := s, sort := s1 }
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::Binder}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1159:9-1159:14 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1162:9-1162:14 -/
 @[reducible]
 impl_def intrinsic.Binder.Insts.CoreCloneClone : core.clone.Clone
   intrinsic.Binder := {
@@ -104339,7 +104345,7 @@ impl_def intrinsic.Binder.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::Available}::clone]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1164:9-1164:14
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1167:9-1167:14
     Visibility: public -/
 def intrinsic.Available.Insts.CoreCloneClone.clone
   (self : intrinsic.Available) : Result intrinsic.Available := do
@@ -104349,7 +104355,7 @@ def intrinsic.Available.Insts.CoreCloneClone.clone
   ok { «name» := s, goal := p, lean_term := s1 }
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::Available}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1164:9-1164:14 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1167:9-1167:14 -/
 @[reducible]
 impl_def intrinsic.Available.Insts.CoreCloneClone : core.clone.Clone
   intrinsic.Available := {
@@ -104359,14 +104365,14 @@ impl_def intrinsic.Available.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::Rewrite<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1170:9-1170:14
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1173:9-1173:14
     Visibility: public -/
 def intrinsic.Rewrite.Insts.CoreCloneClone.clone
   (self : intrinsic.Rewrite) : Result intrinsic.Rewrite := do
   ok self
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::Rewrite<'a>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1170:9-1170:14 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1173:9-1173:14 -/
 @[reducible]
 impl_def intrinsic.Rewrite.Insts.CoreCloneClone : core.clone.Clone
   intrinsic.Rewrite := {
@@ -104376,7 +104382,7 @@ impl_def intrinsic.Rewrite.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::marker::Copy for noble_contracts::intrinsic::Rewrite<'a>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1170:16-1170:20 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1173:16-1173:20 -/
 @[reducible]
 def intrinsic.Rewrite.Insts.CoreMarkerCopy : core.marker.Copy intrinsic.Rewrite
   := {
@@ -104384,14 +104390,14 @@ def intrinsic.Rewrite.Insts.CoreMarkerCopy : core.marker.Copy intrinsic.Rewrite
 }
 
 /-- [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::RewriteScope<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1247:9-1247:14
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1250:9-1250:14
     Visibility: public -/
 def intrinsic.RewriteScope.Insts.CoreCloneClone.clone
   (self : intrinsic.RewriteScope) : Result intrinsic.RewriteScope := do
   ok self
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::clone::Clone for noble_contracts::intrinsic::RewriteScope<'a>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1247:9-1247:14 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1250:9-1250:14 -/
 @[reducible]
 impl_def intrinsic.RewriteScope.Insts.CoreCloneClone : core.clone.Clone
   intrinsic.RewriteScope := {
@@ -104401,7 +104407,7 @@ impl_def intrinsic.RewriteScope.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_contracts::intrinsic::{impl core::marker::Copy for noble_contracts::intrinsic::RewriteScope<'a>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1247:16-1247:20 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1250:16-1250:20 -/
 @[reducible]
 def intrinsic.RewriteScope.Insts.CoreMarkerCopy : core.marker.Copy
   intrinsic.RewriteScope := {
@@ -104409,14 +104415,14 @@ def intrinsic.RewriteScope.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_contracts::intrinsic::infer_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::infer_step::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.infer_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.infer_step.closure_3) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::infer_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::infer_step::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.infer_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104427,7 +104433,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::infer_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::infer_step::{closure#4}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.infer_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.infer_step.closure_4) (_ : Unit) : Result Diagnostic := do
@@ -104435,7 +104441,7 @@ def
   intrinsic.exhausted f.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::infer_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::infer_step::{closure#4}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.infer_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104446,14 +104452,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.check_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.check_step.closure_1) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.check_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104464,14 +104470,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.check_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.check_step.closure_2) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.check_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104482,14 +104488,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#4}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.check_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.check_step.closure_4) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#4}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.check_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104500,7 +104506,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#5}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.check_step.closure_5.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.check_step.closure_5) (_ : Unit) : Result Diagnostic := do
@@ -104508,7 +104514,7 @@ def
   intrinsic.exhausted f.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#5}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.check_step.closure_5.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104519,14 +104525,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#6}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.check_step.closure_6.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.check_step.closure_6) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#6}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.check_step.closure_6.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104537,7 +104543,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#7}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.check_step.closure_7.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.check_step.closure_7) (_ : Unit) : Result Diagnostic := do
@@ -104545,7 +104551,7 @@ def
   intrinsic.exhausted f.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#7}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.check_step.closure_7.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104556,14 +104562,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#8}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.check_step.closure_8.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.check_step.closure_8) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#8}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.check_step.closure_8.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104574,14 +104580,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#9}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.check_step.closure_9.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.check_step.closure_9) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#9}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.check_step.closure_9.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104592,7 +104598,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::subst_equation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::subst_equation_step::{closure#5}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.subst_equation_step.closure_5.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.subst_equation_step.closure_5) (_ : Unit) :
@@ -104601,7 +104607,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::subst_equation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::subst_equation_step::{closure#5}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.subst_equation_step.closure_5.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104612,7 +104618,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::subst_equation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::subst_equation_step::{closure#6}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.subst_equation_step.closure_6.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.subst_equation_step.closure_6) (_ : Unit) :
@@ -104621,7 +104627,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::subst_equation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::subst_equation_step::{closure#6}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.subst_equation_step.closure_6.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104632,7 +104638,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#10}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.continuation_step.closure_10.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure_10) (_ : Unit) :
@@ -104641,7 +104647,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#10}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_10.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104652,7 +104658,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#11}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 def
   intrinsic.continuation_step.closure_11.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure_11) (_ : Unit) :
@@ -104661,7 +104667,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#11}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1657:52-1657:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_11.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104672,14 +104678,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::is_pi]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2018:0-2020:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2021:0-2023:1 -/
 def intrinsic.is_pi (prop : intrinsic.Proposition) : Result Bool := do
   match prop with
   | intrinsic.Proposition.Pi _ _ _ => ok true
   | intrinsic.Proposition.Eq _ _ _ => ok false
 
 /-- [noble_contracts::intrinsic::pi_goal_size]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2022:0-2028:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2025:0-2031:1 -/
 def intrinsic.pi_goal_size
   (prop : intrinsic.Proposition) (bound : Std.Usize) :
   Result (Bool × (Option Std.Usize))
@@ -104691,7 +104697,7 @@ def intrinsic.pi_goal_size
   else ok (false, none)
 
 /-- [noble_contracts::intrinsic::pi_opening]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2266:0-2270:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2269:0-2273:1 -/
 def intrinsic.pi_opening : Result String := do
   let s ←
     alloc.string.String.Insts.CoreConvertFromShared0Str.from (toStr "(")
@@ -104699,7 +104705,7 @@ def intrinsic.pi_opening : Result String := do
   alloc.string.String.push_str opening (toStr " (v")
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2204:28-2204:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2207:28-2207:52 -/
 def
   intrinsic.lean_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
   (c : intrinsic.lean_step.closure_2) (tupled_args : Std.Usize) :
@@ -104708,7 +104714,7 @@ def
   ok (tupled_args > c)
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2204:28-2204:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2207:28-2207:52 -/
 @[reducible]
 def intrinsic.lean_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
   core.ops.function.FnOnce intrinsic.lean_step.closure_2 Std.Usize Bool := {
@@ -104717,14 +104723,14 @@ def intrinsic.lean_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2199:32-2199:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2202:32-2202:50 -/
 def
   intrinsic.lean_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_1) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2199:32-2199:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2202:32-2202:50 -/
 @[reducible]
 def intrinsic.lean_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
   core.ops.function.FnOnce intrinsic.lean_step.closure_1 Unit Diagnostic := {
@@ -104733,7 +104739,7 @@ def intrinsic.lean_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2197:29-2197:48 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2200:29-2200:48 -/
 def
   intrinsic.lean_step.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic.call_once
   (c : intrinsic.lean_step.closure)
@@ -104743,7 +104749,7 @@ def
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2197:29-2197:48 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2200:29-2200:48 -/
 @[reducible]
 def
   intrinsic.lean_step.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic
@@ -104754,7 +104760,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#19}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2179:28-2179:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
 def
   intrinsic.lean_step.closure_19.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
   (c : intrinsic.lean_step.closure_19) (tupled_args : Std.Usize) :
@@ -104763,7 +104769,7 @@ def
   ok (tupled_args > c)
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#19}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2179:28-2179:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
 @[reducible]
 def intrinsic.lean_step.closure_19.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
   core.ops.function.FnOnce intrinsic.lean_step.closure_19 Std.Usize Bool := {
@@ -104772,7 +104778,7 @@ def intrinsic.lean_step.closure_19.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#8}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2179:28-2179:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
 def
   intrinsic.lean_step.closure_8.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
   (c : intrinsic.lean_step.closure_8) (tupled_args : Std.Usize) :
@@ -104781,7 +104787,7 @@ def
   ok (tupled_args > c)
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#8}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2179:28-2179:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
 @[reducible]
 def intrinsic.lean_step.closure_8.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
   core.ops.function.FnOnce intrinsic.lean_step.closure_8 Std.Usize Bool := {
@@ -104790,7 +104796,7 @@ def intrinsic.lean_step.closure_8.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#7}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2179:28-2179:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
 def
   intrinsic.lean_step.closure_7.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
   (c : intrinsic.lean_step.closure_7) (tupled_args : Std.Usize) :
@@ -104799,7 +104805,7 @@ def
   ok (tupled_args > c)
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#7}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2179:28-2179:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
 @[reducible]
 def intrinsic.lean_step.closure_7.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
   core.ops.function.FnOnce intrinsic.lean_step.closure_7 Std.Usize Bool := {
@@ -104808,7 +104814,7 @@ def intrinsic.lean_step.closure_7.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#6}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2179:28-2179:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
 def
   intrinsic.lean_step.closure_6.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
   (c : intrinsic.lean_step.closure_6) (tupled_args : Std.Usize) :
@@ -104817,7 +104823,7 @@ def
   ok (tupled_args > c)
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#6}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2179:28-2179:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
 @[reducible]
 def intrinsic.lean_step.closure_6.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
   core.ops.function.FnOnce intrinsic.lean_step.closure_6 Std.Usize Bool := {
@@ -104826,7 +104832,7 @@ def intrinsic.lean_step.closure_6.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#5}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2179:28-2179:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
 def
   intrinsic.lean_step.closure_5.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
   (c : intrinsic.lean_step.closure_5) (tupled_args : Std.Usize) :
@@ -104835,7 +104841,7 @@ def
   ok (tupled_args > c)
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#5}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2179:28-2179:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
 @[reducible]
 def intrinsic.lean_step.closure_5.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
   core.ops.function.FnOnce intrinsic.lean_step.closure_5 Std.Usize Bool := {
@@ -104844,7 +104850,7 @@ def intrinsic.lean_step.closure_5.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#4}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2179:28-2179:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
 def
   intrinsic.lean_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
   (c : intrinsic.lean_step.closure_4) (tupled_args : Std.Usize) :
@@ -104853,7 +104859,7 @@ def
   ok (tupled_args > c)
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#4}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2179:28-2179:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
 @[reducible]
 def intrinsic.lean_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
   core.ops.function.FnOnce intrinsic.lean_step.closure_4 Std.Usize Bool := {
@@ -104862,7 +104868,7 @@ def intrinsic.lean_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2179:28-2179:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
 def
   intrinsic.lean_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
   (c : intrinsic.lean_step.closure_3) (tupled_args : Std.Usize) :
@@ -104871,7 +104877,7 @@ def
   ok (tupled_args > c)
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<(usize,), bool> for noble_contracts::intrinsic::lean_step::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2179:28-2179:52 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
 @[reducible]
 def intrinsic.lean_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
   core.ops.function.FnOnce intrinsic.lean_step.closure_3 Std.Usize Bool := {
@@ -104880,14 +104886,14 @@ def intrinsic.lean_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleUsizeBool :
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#34}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_34.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_34) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#34}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_34.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104898,14 +104904,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#33}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_33.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_33) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#33}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_33.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104916,14 +104922,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#32}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_32.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_32) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#32}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_32.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104934,14 +104940,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#31}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_31.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_31) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#31}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_31.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104952,14 +104958,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#30}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_30.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_30) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#30}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_30.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104970,14 +104976,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#29}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_29.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_29) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#29}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_29.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -104988,14 +104994,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#28}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_28.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_28) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#28}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_28.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105006,14 +105012,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#27}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_27.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_27) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#27}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_27.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105024,14 +105030,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#26}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_26.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_26) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#26}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_26.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105042,14 +105048,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#25}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_25.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_25) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#25}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_25.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105060,14 +105066,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#24}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_24.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_24) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#24}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_24.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105078,14 +105084,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#23}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_23.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_23) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#23}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_23.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105096,14 +105102,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#22}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_22.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_22) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#22}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_22.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105114,14 +105120,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#21}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_21.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_21) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#21}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_21.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105132,14 +105138,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#20}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_20.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_20) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#20}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_20.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105150,14 +105156,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#18}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_18.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_18) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#18}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_18.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105168,14 +105174,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#17}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_17.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_17) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#17}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_17.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105186,14 +105192,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#16}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_16.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_16) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#16}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_16.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105204,14 +105210,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#15}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_15.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_15) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#15}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_15.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105222,14 +105228,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#14}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_14.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_14) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#14}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_14.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105240,14 +105246,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#13}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_13.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_13) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#13}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_13.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105258,14 +105264,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#12}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_12.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_12) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#12}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_12.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105276,14 +105282,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#11}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_11.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_11) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#11}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_11.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105294,14 +105300,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#10}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_10.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_10) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#10}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_10.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105312,14 +105318,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#9}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 def
   intrinsic.lean_step.closure_9.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_step.closure_9) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_step::{closure#9}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2170:63-2170:83 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
 @[reducible]
 def
   intrinsic.lean_step.closure_9.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -105329,7 +105335,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::lean_step]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2161:0-2264:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2164:0-2267:1 -/
 def intrinsic.lean_step
   (frame : intrinsic.LeanFrame)
   (pending : intrinsic.WorkStack intrinsic.LeanFrame) (output : String)
@@ -105981,14 +105987,14 @@ def intrinsic.lean_step
       ok (core.result.Result.Ok (), pending, output1)
 
 /-- [noble_contracts::intrinsic::lean_text::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_text::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2126:53-2126:73 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2129:53-2129:73 -/
 def
   intrinsic.lean_text.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.lean_text.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::lean_text::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::lean_text::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2126:53-2126:73 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2129:53-2129:73 -/
 @[reducible]
 def intrinsic.lean_text.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
   : core.ops.function.FnOnce intrinsic.lean_text.closure Unit Diagnostic := {
@@ -105997,7 +106003,7 @@ def intrinsic.lean_text.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
 }
 
 /-- [noble_contracts::intrinsic::lean_text]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 969:8-2136:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 972:8-2139:5 -/
 @[rust_loop_body]
 def intrinsic.lean_text_loop.body
   (span : Span) (i : Std.Usize) (i1 : Std.Usize)
@@ -106020,7 +106026,7 @@ def intrinsic.lean_text_loop.body
     else ok (cont (pending2, output1, outcome1))
 
 /-- [noble_contracts::intrinsic::lean_text]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 969:8-2136:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 972:8-2139:5 -/
 @[rust_loop]
 def intrinsic.lean_text_loop
   (span : Span) (i : Std.Usize) (i1 : Std.Usize)
@@ -106034,7 +106040,7 @@ def intrinsic.lean_text_loop
     (pending, output, outcome)
 
 /-- [noble_contracts::intrinsic::lean_text]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2124:0-2139:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2127:0-2142:1 -/
 def intrinsic.lean_text
   (root : intrinsic.LeanFrame) (span : Span) (bounds : intrinsic.TreeBounds) :
   Result (core.result.Result String Diagnostic)
@@ -106065,7 +106071,7 @@ def intrinsic.lean_text
       String (core.convert.FromSame Diagnostic) residual
 
 /-- [noble_contracts::intrinsic::variable]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2309:0-2313:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2312:0-2316:1 -/
 def intrinsic.variable (index1 : Std.Usize) : Result String := do
   let «name» ←
     alloc.string.String.Insts.CoreConvertFromShared0Str.from (toStr "v")
@@ -106074,7 +106080,7 @@ def intrinsic.variable (index1 : Std.Usize) : Result String := do
   alloc.string.String.push_str «name» s1
 
 /-- [noble_contracts::intrinsic::equation_text]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2319:0-2324:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2322:0-2327:1 -/
 def intrinsic.equation_text
   (left : Std.Usize) (right : Std.Usize) : Result String := do
   let text ← intrinsic.variable left
@@ -106084,7 +106090,7 @@ def intrinsic.equation_text
   alloc.string.String.push_str text1 s1
 
 /-- [noble_contracts::intrinsic::intro_text]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2330:0-2339:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2333:0-2342:1 -/
 def intrinsic.intro_text
   (index1 : Std.Usize) (sort : Str) (body : Str) : Result String := do
   let text ←
@@ -106099,7 +106105,7 @@ def intrinsic.intro_text
   alloc.string.String.push text5 ')'
 
 /-- [noble_contracts::intrinsic::refl_text]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2341:0-2346:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2344:0-2349:1 -/
 def intrinsic.refl_text (index1 : Std.Usize) : Result String := do
   let text ←
     alloc.string.String.Insts.CoreConvertFromShared0Str.from (toStr
@@ -106110,7 +106116,7 @@ def intrinsic.refl_text (index1 : Std.Usize) : Result String := do
   alloc.string.String.push text1 ')'
 
 /-- [noble_contracts::intrinsic::application_text]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2352:0-2359:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2355:0-2362:1 -/
 def intrinsic.application_text
   (function : Str) (argument : Str) : Result String := do
   let text ←
@@ -106121,7 +106127,7 @@ def intrinsic.application_text
   alloc.string.String.push text3 ')'
 
 /-- [noble_contracts::intrinsic::transport_text]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2366:0-2379:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2369:0-2382:1 -/
 def intrinsic.transport_text
   (index1 : Std.Usize) (code : Str) (motive : Str) (premise : Str)
   (equality : Str) :
@@ -106144,7 +106150,7 @@ def intrinsic.transport_text
   alloc.string.String.push text9 ')'
 
 /-- [noble_contracts::intrinsic::lean_code]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2392:0-2401:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2395:0-2404:1 -/
 def intrinsic.lean_code
   (code : intrinsic.Code) (span : Span) (bounds : intrinsic.TreeBounds) :
   Result (core.result.Result String Diagnostic)
@@ -106181,7 +106187,7 @@ def intrinsic.lean_code
     intrinsic.lean_text (intrinsic.LeanFrame.Code code) span bounds
 
 /-- [noble_contracts::intrinsic::lean_proposition]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2422:0-2431:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2425:0-2434:1 -/
 def intrinsic.lean_proposition
   (prop : intrinsic.Proposition) (span : Span) (bounds : intrinsic.TreeBounds)
   :
@@ -106195,7 +106201,7 @@ def intrinsic.lean_proposition
     ok (core.result.Result.Ok s)
 
 /-- [noble_contracts::intrinsic::lean_sort]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2402:0-2417:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2405:0-2420:1 -/
 def intrinsic.lean_sort
   (sort : intrinsic.Sort) (span : Span) (bounds : intrinsic.TreeBounds) :
   Result (core.result.Result String Diagnostic)
@@ -106248,7 +106254,7 @@ def intrinsic.lean_sort
   | intrinsic.Sort.Premise prop => intrinsic.lean_proposition prop span bounds
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#17}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3310:36-3310:59 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3313:36-3313:59 -/
 def
   intrinsic.continuation_step.closure_17.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure_17) (_ : Unit) :
@@ -106257,7 +106263,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#17}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3310:36-3310:59 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3313:36-3313:59 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_17.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -106268,7 +106274,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#16}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3281:36-3281:59 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3284:36-3284:59 -/
 def
   intrinsic.continuation_step.closure_16.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure_16) (_ : Unit) :
@@ -106277,7 +106283,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#16}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3281:36-3281:59 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3284:36-3284:59 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_16.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -106288,7 +106294,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#5}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3217:67-3217:94 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3220:67-3220:94 -/
 def
   intrinsic.continuation_step.closure_5.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure_5) (_ : Unit) :
@@ -106297,7 +106303,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#5}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3217:67-3217:94 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3220:67-3220:94 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_5.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -106308,7 +106314,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3213:36-3213:86 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3216:36-3216:86 -/
 def
   intrinsic.continuation_step.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure) (_ : Unit) :
@@ -106317,7 +106323,7 @@ def
   intrinsic.reject c.span (toStr "apply value is unbound")
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3213:36-3213:86 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3216:36-3216:86 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -106328,7 +106334,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#15}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3170:62-3170:85 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3173:62-3173:85 -/
 def
   intrinsic.continuation_step.closure_15.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure_15) (_ : Unit) :
@@ -106337,7 +106343,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#15}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3170:62-3170:85 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3173:62-3173:85 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_15.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -106348,7 +106354,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#9}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3170:62-3170:85 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3173:62-3173:85 -/
 def
   intrinsic.continuation_step.closure_9.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure_9) (_ : Unit) :
@@ -106357,7 +106363,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#9}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3170:62-3170:85 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3173:62-3173:85 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_9.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -106368,7 +106374,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#4}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3170:62-3170:85 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3173:62-3173:85 -/
 def
   intrinsic.continuation_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure_4) (_ : Unit) :
@@ -106377,7 +106383,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#4}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3170:62-3170:85 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3173:62-3173:85 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -106388,7 +106394,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#14}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3163:36-3163:59 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3166:36-3166:59 -/
 def
   intrinsic.continuation_step.closure_14.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure_14) (_ : Unit) :
@@ -106397,7 +106403,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#14}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3163:36-3163:59 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3166:36-3166:59 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_14.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -106408,7 +106414,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#8}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3163:36-3163:59 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3166:36-3166:59 -/
 def
   intrinsic.continuation_step.closure_8.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure_8) (_ : Unit) :
@@ -106417,7 +106423,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#8}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3163:36-3163:59 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3166:36-3166:59 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_8.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -106428,7 +106434,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3163:36-3163:59 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3166:36-3166:59 -/
 def
   intrinsic.continuation_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure_3) (_ : Unit) :
@@ -106437,7 +106443,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3163:36-3163:59 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3166:36-3166:59 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -106448,7 +106454,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#13}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3155:28-3155:51 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3158:28-3158:51 -/
 def
   intrinsic.continuation_step.closure_13.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure_13) (_ : Unit) :
@@ -106457,7 +106463,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#13}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3155:28-3155:51 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3158:28-3158:51 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_13.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -106468,7 +106474,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#7}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3155:28-3155:51 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3158:28-3158:51 -/
 def
   intrinsic.continuation_step.closure_7.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure_7) (_ : Unit) :
@@ -106477,7 +106483,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#7}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3155:28-3155:51 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3158:28-3158:51 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_7.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -106488,7 +106494,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3155:28-3155:51 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3158:28-3158:51 -/
 def
   intrinsic.continuation_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.continuation_step.closure_2) (_ : Unit) :
@@ -106497,7 +106503,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::continuation_step::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3155:28-3155:51 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3158:28-3158:51 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -106508,7 +106514,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::intrinsic::continuation_step::{closure#12}}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3154:26-3154:54 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3157:26-3157:54 -/
 def
   intrinsic.continuation_step.closure_12.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
   (c : intrinsic.continuation_step.closure_12) (tupled_args : Std.Usize) :
@@ -106517,7 +106523,7 @@ def
   ok (Usize.checked_add tupled_args 1#usize)
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::intrinsic::continuation_step::{closure#12}}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3154:26-3154:54 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3157:26-3157:54 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_12.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
@@ -106528,7 +106534,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::intrinsic::continuation_step::{closure#6}}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3154:26-3154:54 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3157:26-3157:54 -/
 def
   intrinsic.continuation_step.closure_6.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
   (c : intrinsic.continuation_step.closure_6) (tupled_args : Std.Usize) :
@@ -106537,7 +106543,7 @@ def
   ok (Usize.checked_add tupled_args 1#usize)
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::intrinsic::continuation_step::{closure#6}}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3154:26-3154:54 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3157:26-3157:54 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_6.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
@@ -106548,7 +106554,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::intrinsic::continuation_step::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3154:26-3154:54 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3157:26-3157:54 -/
 def
   intrinsic.continuation_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
   (c : intrinsic.continuation_step.closure_1) (tupled_args : Std.Usize) :
@@ -106557,7 +106563,7 @@ def
   ok (Usize.checked_add tupled_args 1#usize)
 
 /-- Trait implementation: [noble_contracts::intrinsic::continuation_step::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::intrinsic::continuation_step::{closure#1}}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3154:26-3154:54 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3157:26-3157:54 -/
 @[reducible]
 def
   intrinsic.continuation_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
@@ -106568,7 +106574,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::continuation_step]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3129:0-3330:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3132:0-3333:1 -/
 def intrinsic.continuation_step
   (frame : intrinsic.ProofFrame) (walk : intrinsic.ProofWalk)
   (meter : intrinsic.IntrinsicMeter) :
@@ -107317,7 +107323,7 @@ def intrinsic.continuation_step
       ok (r1, { walk with completed := completed1 }, meter)
 
 /-- [noble_contracts::intrinsic::subst_equation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::subst_equation_step::{closure#4}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3082:28-3082:51 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3085:28-3085:51 -/
 def
   intrinsic.subst_equation_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.subst_equation_step.closure_4) (_ : Unit) :
@@ -107326,7 +107332,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::subst_equation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::subst_equation_step::{closure#4}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3082:28-3082:51 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3085:28-3085:51 -/
 @[reducible]
 def
   intrinsic.subst_equation_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -107337,7 +107343,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::subst_equation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::subst_equation_step::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3074:20-3074:43 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3077:20-3077:43 -/
 def
   intrinsic.subst_equation_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.subst_equation_step.closure_2) (_ : Unit) :
@@ -107346,7 +107352,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::subst_equation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::subst_equation_step::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3074:20-3074:43 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3077:20-3077:43 -/
 @[reducible]
 def
   intrinsic.subst_equation_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -107357,7 +107363,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::subst_equation_step::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::intrinsic::subst_equation_step::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3073:18-3073:44 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3076:18-3076:44 -/
 def
   intrinsic.subst_equation_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize.call_once
   (c : intrinsic.subst_equation_step.closure_1) (tupled_args : Std.Usize) :
@@ -107366,7 +107372,7 @@ def
   ok (Usize.checked_mul tupled_args 2#usize)
 
 /-- Trait implementation: [noble_contracts::intrinsic::subst_equation_step::{impl core::ops::function::FnOnce<(usize,), core::option::Option<usize>> for noble_contracts::intrinsic::subst_equation_step::{closure#1}}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3073:18-3073:44 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3076:18-3076:44 -/
 @[reducible]
 def
   intrinsic.subst_equation_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionUsize
@@ -107377,7 +107383,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::subst_equation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::subst_equation_step::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3057:13-3057:40 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3060:13-3060:40 -/
 def
   intrinsic.subst_equation_step.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.subst_equation_step.closure) (_ : Unit) :
@@ -107386,7 +107392,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::subst_equation_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::subst_equation_step::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3057:13-3057:40 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3060:13-3060:40 -/
 @[reducible]
 def
   intrinsic.subst_equation_step.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -107397,7 +107403,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::subst_equation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::subst_equation_step::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3040:47-3040:74 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3043:47-3043:74 -/
 def
   intrinsic.subst_equation_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.subst_equation_step.closure_3) (_ : Unit) :
@@ -107406,7 +107412,7 @@ def
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::subst_equation_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::subst_equation_step::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3040:47-3040:74 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3043:47-3043:74 -/
 @[reducible]
 def
   intrinsic.subst_equation_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -107417,7 +107423,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::subst_equation_step]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3010:0-3110:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3013:0-3113:1 -/
 def intrinsic.subst_equation_step
   (equation : intrinsic.SubstEquation) (walk : intrinsic.ProofWalk)
   (meter : intrinsic.IntrinsicMeter) :
@@ -107806,7 +107812,7 @@ def intrinsic.subst_equation_step
     ok (r1, { walk with completed := completed1 }, meter)
 
 /-- [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2909:21-2909:49 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2912:21-2912:49 -/
 def
   intrinsic.check_step.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.check_step.closure) (_ : Unit) : Result Diagnostic := do
@@ -107814,7 +107820,7 @@ def
   intrinsic.exhausted f.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2909:21-2909:49 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2912:21-2912:49 -/
 @[reducible]
 def
   intrinsic.check_step.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -107824,7 +107830,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2888:37-2888:63 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2891:37-2891:63 -/
 def
   intrinsic.check_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.check_step.closure_3) (_ : Unit) : Result Diagnostic := do
@@ -107832,7 +107838,7 @@ def
   intrinsic.exhausted f.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_step::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2888:37-2888:63 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2891:37-2891:63 -/
 @[reducible]
 def intrinsic.check_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
   core.ops.function.FnOnce intrinsic.check_step.closure_3 Unit Diagnostic := {
@@ -107841,7 +107847,7 @@ def intrinsic.check_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
 }
 
 /-- [noble_contracts::intrinsic::check_step]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2832:0-2995:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2835:0-2998:1 -/
 def intrinsic.check_step
   (term : intrinsic.Form) (goal : intrinsic.ProofGoal) (depth : Std.U32)
   (walk : intrinsic.ProofWalk) (meter : intrinsic.IntrinsicMeter) :
@@ -108390,7 +108396,7 @@ def intrinsic.check_step
     ok (r, walk, m)
 
 /-- [noble_contracts::intrinsic::infer_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::infer_step::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2806:24-2806:69 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2809:24-2809:69 -/
 def
   intrinsic.infer_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.infer_step.closure_1) (_ : Unit) : Result Diagnostic := do
@@ -108398,7 +108404,7 @@ def
   intrinsic.reject f.span (toStr "unbound refl value")
 
 /-- Trait implementation: [noble_contracts::intrinsic::infer_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::infer_step::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2806:24-2806:69 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2809:24-2809:69 -/
 @[reducible]
 def intrinsic.infer_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
   core.ops.function.FnOnce intrinsic.infer_step.closure_1 Unit Diagnostic := {
@@ -108407,14 +108413,14 @@ def intrinsic.infer_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
 }
 
 /-- [noble_contracts::intrinsic::infer_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::infer_step::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2773:69-2773:92 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2776:69-2776:92 -/
 def
   intrinsic.infer_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.infer_step.closure_2) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::infer_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::infer_step::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2773:69-2773:92 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2776:69-2776:92 -/
 @[reducible]
 def intrinsic.infer_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
   core.ops.function.FnOnce intrinsic.infer_step.closure_2 Unit Diagnostic := {
@@ -108423,7 +108429,7 @@ def intrinsic.infer_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
 }
 
 /-- [noble_contracts::intrinsic::infer_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::infer_step::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2763:68-2768:9 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2766:68-2771:9 -/
 def
   intrinsic.infer_step.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.infer_step.closure) (_ : Unit) : Result Diagnostic := do
@@ -108431,7 +108437,7 @@ def
     "unresolved, private, forward or cyclic proof use")
 
 /-- Trait implementation: [noble_contracts::intrinsic::infer_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::infer_step::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2763:68-2768:9 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2766:68-2771:9 -/
 @[reducible]
 def intrinsic.infer_step.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
   core.ops.function.FnOnce intrinsic.infer_step.closure Unit Diagnostic := {
@@ -108440,13 +108446,13 @@ def intrinsic.infer_step.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
 }
 
 /-- [noble_contracts::intrinsic::is_available_named]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2683:0-2685:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2686:0-2688:1 -/
 def intrinsic.is_available_named
   (item : intrinsic.Available) («name» : Str) : Result Bool := do
   alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq item.name «name»
 
 /-- [noble_contracts::intrinsic::last_available]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2667:4-2672:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2670:4-2675:5 -/
 @[rust_loop_body]
 def intrinsic.last_available_loop.body
   (available : Slice intrinsic.Available) («name» : Str)
@@ -108468,7 +108474,7 @@ def intrinsic.last_available_loop.body
   else ok (done found)
 
 /-- [noble_contracts::intrinsic::last_available]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2667:4-2672:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2670:4-2675:5 -/
 @[rust_loop]
 def intrinsic.last_available_loop
   (available : Slice intrinsic.Available) («name» : Str)
@@ -108481,7 +108487,7 @@ def intrinsic.last_available_loop
     (remaining, found)
 
 /-- [noble_contracts::intrinsic::last_available]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2664:0-2677:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2667:0-2680:1 -/
 def intrinsic.last_available
   (available : Slice intrinsic.Available) («name» : Str) :
   Result (Option intrinsic.Available)
@@ -108494,7 +108500,7 @@ def intrinsic.last_available
                    ok (some a)
 
 /-- [noble_contracts::intrinsic::infer_step]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2739:0-2817:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2742:0-2820:1 -/
 def intrinsic.infer_step
   (term : intrinsic.Form) (depth : Std.U32) (walk : intrinsic.ProofWalk)
   (available : Slice intrinsic.Available) (meter : intrinsic.IntrinsicMeter) :
@@ -108726,7 +108732,7 @@ def intrinsic.infer_step
     ok (r, walk, m)
 
 /-- [noble_contracts::intrinsic::proof_step]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2713:0-2725:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2716:0-2728:1 -/
 def intrinsic.proof_step
   (frame : intrinsic.ProofFrame) (walk : intrinsic.ProofWalk)
   (available : Slice intrinsic.Available) (meter : intrinsic.IntrinsicMeter) :
@@ -108752,14 +108758,14 @@ def intrinsic.proof_step
     intrinsic.continuation_step frame walk meter
 
 /-- [noble_contracts::intrinsic::charge_intro::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::charge_intro::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2659:20-2659:38 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2662:20-2662:38 -/
 def
   intrinsic.charge_intro.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.charge_intro.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::charge_intro::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::charge_intro::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2659:20-2659:38 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2662:20-2662:38 -/
 @[reducible]
 def intrinsic.charge_intro.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
   core.ops.function.FnOnce intrinsic.charge_intro.closure Unit Diagnostic := {
@@ -108768,7 +108774,7 @@ def intrinsic.charge_intro.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
 }
 
 /-- [noble_contracts::intrinsic::charge_intro]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2646:0-2662:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2649:0-2665:1 -/
 def intrinsic.charge_intro
   (expected : intrinsic.Sort) (body_bytes : Std.Usize) (span : Span)
   (meter : intrinsic.IntrinsicMeter) :
@@ -108810,14 +108816,14 @@ def intrinsic.charge_intro
     ok (r1, meter)
 
 /-- [noble_contracts::intrinsic::finish_intro::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::finish_intro::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2634:43-2634:66 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2637:43-2637:66 -/
 def
   intrinsic.finish_intro.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.finish_intro.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::finish_intro::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::finish_intro::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2634:43-2634:66 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2637:43-2637:66 -/
 @[reducible]
 def intrinsic.finish_intro.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
   core.ops.function.FnOnce intrinsic.finish_intro.closure Unit Diagnostic := {
@@ -108826,7 +108832,7 @@ def intrinsic.finish_intro.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
 }
 
 /-- [noble_contracts::intrinsic::finish_intro]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2599:0-2640:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2602:0-2643:1 -/
 def intrinsic.finish_intro
   (term : intrinsic.Form) (index1 : Std.Usize) (expected : intrinsic.ProofSort)
   (walk : intrinsic.ProofWalk) (meter : intrinsic.IntrinsicMeter) :
@@ -108910,14 +108916,14 @@ def intrinsic.finish_intro
       meter1)
 
 /-- [noble_contracts::intrinsic::proof_tree::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::proof_tree::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2583:30-2583:48 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2586:30-2586:48 -/
 def
   intrinsic.proof_tree.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.proof_tree.closure_1) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::proof_tree::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::proof_tree::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2583:30-2583:48 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2586:30-2586:48 -/
 @[reducible]
 def intrinsic.proof_tree.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
   core.ops.function.FnOnce intrinsic.proof_tree.closure_1 Unit Diagnostic := {
@@ -108926,14 +108932,14 @@ def intrinsic.proof_tree.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic :
 }
 
 /-- [noble_contracts::intrinsic::proof_tree::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::proof_tree::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2545:44-2545:64 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2548:44-2548:64 -/
 def
   intrinsic.proof_tree.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.proof_tree.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c
 
 /-- Trait implementation: [noble_contracts::intrinsic::proof_tree::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::proof_tree::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2545:44-2545:64 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2548:44-2548:64 -/
 @[reducible]
 def
   intrinsic.proof_tree.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -108943,7 +108949,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::proof_tree]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2553:4-2576:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2556:4-2579:5 -/
 @[rust_loop_body]
 def intrinsic.proof_tree_loop.body
   (available : Slice intrinsic.Available) (meter : intrinsic.IntrinsicMeter)
@@ -109049,7 +109055,7 @@ def intrinsic.proof_tree_loop.body
             { walk1 with completed := none, failure := (some error) }))
 
 /-- [noble_contracts::intrinsic::proof_tree]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2553:4-2576:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2556:4-2579:5 -/
 @[rust_loop]
 def intrinsic.proof_tree_loop
   (available : Slice intrinsic.Available) (meter : intrinsic.IntrinsicMeter)
@@ -109063,7 +109069,7 @@ def intrinsic.proof_tree_loop
     (meter, walk)
 
 /-- [noble_contracts::intrinsic::proof_tree]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2537:0-2584:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2540:0-2587:1 -/
 def intrinsic.proof_tree
   (root : intrinsic.ProofFrame) (available : Slice intrinsic.Available)
   (meter : intrinsic.IntrinsicMeter) (span : Span) :
@@ -109104,7 +109110,7 @@ def intrinsic.proof_tree
     ok (r2, meter)
 
 /-- [noble_contracts::intrinsic::proof_walk]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2511:0-2519:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2514:0-2522:1 -/
 def intrinsic.proof_walk
   (root : intrinsic.ProofFrame) (available : Slice intrinsic.Available)
   (meter : intrinsic.IntrinsicMeter) (span : Span) :
@@ -109115,7 +109121,7 @@ def intrinsic.proof_walk
   ok (meter1, result)
 
 /-- [noble_contracts::intrinsic::replace_all]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4737:4-4748:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4758:4-4769:5 -/
 @[rust_loop_body]
 def intrinsic.replace_all_loop.body
   (text : Str) (value : Str) (haystack : Slice Std.U8) (needle : Slice Std.U8)
@@ -109146,7 +109152,7 @@ def intrinsic.replace_all_loop.body
   else ok (done (replaced, copied))
 
 /-- [noble_contracts::intrinsic::replace_all]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4737:4-4748:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4758:4-4769:5 -/
 @[rust_loop]
 def intrinsic.replace_all_loop
   (text : Str) (value : Str) (haystack : Slice Std.U8) (needle : Slice Std.U8)
@@ -109159,7 +109165,7 @@ def intrinsic.replace_all_loop
     (replaced, copied, index1)
 
 /-- [noble_contracts::intrinsic::replace_all]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4730:0-4751:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4751:0-4772:1 -/
 def intrinsic.replace_all
   (text : Str) (marker : Str) (value : Str) : Result String := do
   let b ← core.str.Str.is_empty marker
@@ -109177,14 +109183,14 @@ def intrinsic.replace_all
   alloc.string.String.push_str replaced1 s
 
 /-- [noble_contracts::intrinsic::lower_unary_add::TERM]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4665:4-4711:3 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4686:4-4732:3 -/
 @[global_simps, irreducible]
 def intrinsic.lower_unary_add.TERM : Str :=
   toStr
     "\n(exportedClaim_consequence\n  (exportedClaim_unaryI64\n    (code := [.lit (.i64 __N__)] ++ [.word 4])\n    (f := fun x => x + (__N__ : BitVec 64))\n    (fun tail x final execution =>\n      let first : PC [.lit (.i64 __N__)]\n          (fun before => before = tail ++ [.i64 x])\n          (fun _ middle => middle = (tail ++ [.i64 x]) ++ [.i64 __N__]) :=\n        pc_exact (code := [.lit (.i64 __N__)]) (s := tail ++ [.i64 x])\n          (expected := (tail ++ [.i64 x]) ++ [.i64 __N__])\n          (fun actual => exec_lit_iff (v := .i64 __N__)\n            (s := tail ++ [.i64 x]) (t := actual))\n      let second : PC [.word 4]\n          (fun middle => middle = tail ++ [.i64 x, .i64 __N__])\n          (fun _ actual => actual = tail ++ [.i64 (x + (__N__ : BitVec 64))]) :=\n        pc_exact (code := [.word 4]) (s := tail ++ [.i64 x, .i64 __N__])\n          (expected := tail ++ [.i64 (x + (__N__ : BitVec 64))])\n          (fun actual => exec_add_iff (a := x) (b := __N__)\n            (s := tail) (t := actual))\n      let composed : PC ([.lit (.i64 __N__)] ++ [.word 4])\n          (fun before => before = tail ++ [.i64 x])\n          (fun before actual => before = tail ++ [.i64 x] __AND__\n            actual = tail ++ [.i64 (x + (__N__ : BitVec 64))]) :=\n        @pc_sequence\n          [.lit (.i64 __N__)] [.word 4]\n          (fun (before : Stack) => before = tail ++ [.i64 x])\n          (fun (_ middle : Stack) => middle = (tail ++ [.i64 x]) ++ [.i64 __N__])\n          (fun (middle : Stack) => middle = tail ++ [.i64 x, .i64 __N__])\n          (fun (_ actual : Stack) => actual = tail ++ [.i64 (x + (__N__ : BitVec 64))])\n          (fun (before actual : Stack) => before = tail ++ [.i64 x] __AND__\n            actual = tail ++ [.i64 (x + (__N__ : BitVec 64))])\n          first second\n          (fun _ middle _ exactMiddle =>\n            exactMiddle.trans (List.append_assoc tail [.i64 x] [.i64 __N__]))\n          (fun _ _ _ initial _ exactFinal => __LANGLE__initial, exactFinal__RANGLE__)\n      ((composed (tail ++ [.i64 x]) final rfl execution).2)))\n  (fun _ _ _ => True.intro)\n  (fun before after params _ exactPost =>\n    match exactPost with\n    | __LANGLE__x, hbefore, hafter__RANGLE__ =>\n      hbefore.symm __REWRITE__ hafter.symm __REWRITE__\n      (holds_eq (.output 0) (.add (.input 0) (.i64 __N__))\n        __LANGLE__[.i64 x], [.i64 (x + (__N__ : BitVec 64))], params__RANGLE__\n        (.i64 (x + (__N__ : BitVec 64))) (.i64 (x + (__N__ : BitVec 64)))\n        rfl rfl).mpr rfl))\n"
 
 /-- [noble_contracts::intrinsic::lower_unary_add]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4664:0-4723:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4685:0-4744:1 -/
 def intrinsic.lower_unary_add (literal : Std.I64) : Result String := do
   let digits ← alloc.string.String.new
   let digits1 ← rendering.integer digits literal
@@ -109209,7 +109215,7 @@ def intrinsic.lower_unary_add (literal : Std.I64) : Result String := do
   intrinsic.replace_all s10 (toStr "__REWRITE__") s12
 
 /-- [noble_contracts::intrinsic::matches_eq_add::{impl core::ops::function::FnOnce<(&'_0 str,), core::option::Option<i64>> for noble_contracts::intrinsic::matches_eq_add::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4651:39-4651:70 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4672:39-4672:70 -/
 def
   intrinsic.matches_eq_add.closure.Insts.CoreOpsFunctionFnOnceTupleShared0StrOptionI64.call_once
   (c : intrinsic.matches_eq_add.closure) (tupled_args : Str) :
@@ -109220,7 +109226,7 @@ def
   core.result.Result.ok r
 
 /-- Trait implementation: [noble_contracts::intrinsic::matches_eq_add::{impl core::ops::function::FnOnce<(&'_0 str,), core::option::Option<i64>> for noble_contracts::intrinsic::matches_eq_add::{closure}}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4651:39-4651:70 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4672:39-4672:70 -/
 @[reducible]
 def
   intrinsic.matches_eq_add.closure.Insts.CoreOpsFunctionFnOnceTupleShared0StrOptionI64
@@ -109231,7 +109237,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::matches_eq_add]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4636:0-4652:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4657:0-4673:1 -/
 def intrinsic.matches_eq_add
   (form : intrinsic.Form) (input_name : Str) (output_name : Str)
   (literal : Std.I64) :
@@ -109287,7 +109293,7 @@ def intrinsic.matches_eq_add
   | core.result.Result.Err _ => ok false
 
 /-- [noble_contracts::intrinsic::typed_binder_differs]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3921:0-3923:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3942:0-3944:1 -/
 def intrinsic.typed_binder_differs
   (binder : Slice intrinsic.Form) (sort : Str) :
   Result (core.result.Result Bool Diagnostic)
@@ -109309,19 +109315,30 @@ def intrinsic.typed_binder_differs
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
         Bool (core.convert.FromSame Diagnostic) residual
 
-/-- [noble_contracts::intrinsic::unary_true_rule_differs]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3912:0-3918:1 -/
-def intrinsic.unary_true_rule_differs
-  (contract : intrinsic.ContractGoal) :
-  Result (core.result.Result Bool Diagnostic)
-  := do
+/-- [noble_contracts::intrinsic::UNARY_PRECONDITION_REFUSAL]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3939:0-3939:100 -/
+@[global_simps, irreducible]
+def intrinsic.UNARY_PRECONDITION_REFUSAL : Str :=
+  toStr "selected unary I64 rule requires typed True precondition"
+
+/-- [noble_contracts::intrinsic::UNARY_SHAPE_REFUSAL]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3937:0-3938:77 -/
+@[global_simps, irreducible]
+def intrinsic.UNARY_SHAPE_REFUSAL : Str :=
+  toStr
+    "selected unary I64 rule takes exactly one I64 input and one I64 output"
+
+/-- [noble_contracts::intrinsic::unary_shape_differs]:
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3931:0-3936:1 -/
+def intrinsic.unary_shape_differs
+  (contract : intrinsic.ContractGoal) : Result Bool := do
   let i := alloc.vec.Vec.len contract.inputs
   if i != 1#usize
-  then ok (core.result.Result.Ok true)
+  then ok true
   else
     let i1 := alloc.vec.Vec.len contract.outputs
     if i1 != 1#usize
-    then ok (core.result.Result.Ok true)
+    then ok true
     else
       let (_, s) ←
         alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (String ×
@@ -109329,31 +109346,48 @@ def intrinsic.unary_true_rule_differs
       let b ←
         alloc.string.String.Insts.CoreCmpPartialEqShared0Str.ne s (toStr "I64")
       if b
-      then ok (core.result.Result.Ok true)
+      then ok true
       else
         let (_, s1) ←
           alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (String ×
             String)) contract.outputs 0#usize
-        let b1 ←
-          alloc.string.String.Insts.CoreCmpPartialEqShared0Str.ne s1 (toStr
-            "I64")
-        if b1
-        then ok (core.result.Result.Ok true)
-        else
-          let r ← intrinsic.atom contract.requires
-          let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-          match cf with
-          | core.ops.control_flow.ControlFlow.Continue val =>
-            let b2 ←
-              core.cmp.impls.PartialEqShared.ne Str.Insts.CoreCmpPartialEqStr
-                val (toStr "true")
-            ok (core.result.Result.Ok b2)
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Bool (core.convert.FromSame Diagnostic) residual
+        alloc.string.String.Insts.CoreCmpPartialEqShared0Str.ne s1 (toStr
+          "I64")
+
+/-- [noble_contracts::intrinsic::check_unary_true_rule]:
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3911:0-3922:1 -/
+def intrinsic.check_unary_true_rule
+  (obligation : intrinsic.ProofObligation) (contract : intrinsic.ContractGoal)
+  :
+  Result (core.result.Result Unit Diagnostic)
+  := do
+  let b ← intrinsic.unary_shape_differs contract
+  if b
+  then
+    let d ←
+      intrinsic.unsupported contract.contract_span
+        intrinsic.UNARY_SHAPE_REFUSAL
+    ok (core.result.Result.Err d)
+  else
+    let r ← intrinsic.atom contract.requires
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let b1 ←
+        core.cmp.impls.PartialEqShared.ne Str.Insts.CoreCmpPartialEqStr val
+          (toStr "true")
+      if b1
+      then
+        let d ←
+          intrinsic.reject obligation.span intrinsic.UNARY_PRECONDITION_REFUSAL
+        ok (core.result.Result.Err d)
+      else ok (core.result.Result.Ok ())
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Unit (core.convert.FromSame Diagnostic) residual
 
 /-- [noble_contracts::intrinsic::contract_proof::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::contract_proof::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3851:37-3856:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3849:37-3854:5 -/
 def
   intrinsic.contract_proof.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.contract_proof.closure) (_ : Unit) : Result Diagnostic := do
@@ -109361,7 +109395,7 @@ def
     "selected proof rules require exact literal then wrapping-add subject slices")
 
 /-- Trait implementation: [noble_contracts::intrinsic::contract_proof::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::contract_proof::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3851:37-3856:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3849:37-3854:5 -/
 @[reducible]
 def intrinsic.contract_proof.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
   : core.ops.function.FnOnce intrinsic.contract_proof.closure Unit Diagnostic
@@ -109371,7 +109405,7 @@ def intrinsic.contract_proof.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
 }
 
 /-- [noble_contracts::intrinsic::contract_proof]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3838:0-3909:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3841:0-3907:1 -/
 def intrinsic.contract_proof
   (obligation : intrinsic.ProofObligation) (contract : intrinsic.ContractGoal)
   (meter : intrinsic.IntrinsicMeter) :
@@ -109388,333 +109422,306 @@ def intrinsic.contract_proof
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (_, literal) := val
-      let r1 ← intrinsic.unary_true_rule_differs contract
+      let r1 ← intrinsic.check_unary_true_rule obligation contract
       let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r1
       match cf2 with
-      | core.ops.control_flow.ControlFlow.Continue val1 =>
-        if val1
-        then
-          let d ←
-            intrinsic.reject obligation.span (toStr
-              "selected unary I64 rule requires typed True precondition")
-          ok (core.result.Result.Err d, m)
-        else
-          let r2 ←
-            core.option.Option.ok_or_else
-              intrinsic.contract_proof.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
-              literal obligation
-          let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r2
-          match cf3 with
-          | core.ops.control_flow.ControlFlow.Continue val2 =>
-            let (s, _) ←
-              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                (String × String)) contract.inputs 0#usize
-            let s1 ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref s
-            let (s2, _) ←
-              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                (String × String)) contract.outputs 0#usize
-            let s3 ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref s2
-            let b ← intrinsic.matches_eq_add contract.ensures s1 s3 val2
-            if b
-            then
-              let r3 ←
-                intrinsic.operation obligation.term (toStr "export-unary-I64")
-                  2#usize
-              let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r3
-              match cf4 with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        let r2 ←
+          core.option.Option.ok_or_else
+            intrinsic.contract_proof.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
+            literal obligation
+        let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf3 with
+        | core.ops.control_flow.ControlFlow.Continue val1 =>
+          let (s, _) ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (String
+              × String)) contract.inputs 0#usize
+          let s1 ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref s
+          let (s2, _) ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice (String
+              × String)) contract.outputs 0#usize
+          let s3 ← alloc.string.String.Insts.CoreOpsDerefDerefStr.deref s2
+          let b ← intrinsic.matches_eq_add contract.ensures s1 s3 val1
+          if b
+          then
+            let r3 ←
+              intrinsic.operation obligation.term (toStr "export-unary-I64")
+                2#usize
+            let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r3
+            match cf4 with
+            | core.ops.control_flow.ControlFlow.Continue val2 =>
+              let f ← Slice.index_usize val2 0#usize
+              let r4 ← intrinsic.operation f (toStr "intro") 2#usize
+              let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r4
+              match cf5 with
               | core.ops.control_flow.ControlFlow.Continue val3 =>
-                let f ← Slice.index_usize val3 0#usize
-                let r4 ← intrinsic.operation f (toStr "intro") 2#usize
-                let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r4
-                match cf5 with
+                let f1 ← Slice.index_usize val3 0#usize
+                let r5 ← intrinsic.list f1
+                let cf6 ← core.result.Result.Insts.CoreOpsTry.branch r5
+                match cf6 with
                 | core.ops.control_flow.ControlFlow.Continue val4 =>
-                  let f1 ← Slice.index_usize val4 0#usize
-                  let r5 ← intrinsic.list f1
-                  let cf6 ← core.result.Result.Insts.CoreOpsTry.branch r5
-                  match cf6 with
+                  let r6 ←
+                    intrinsic.typed_binder_differs val4 (toStr "Stack")
+                  let cf7 ← core.result.Result.Insts.CoreOpsTry.branch r6
+                  match cf7 with
                   | core.ops.control_flow.ControlFlow.Continue val5 =>
-                    let r6 ←
-                      intrinsic.typed_binder_differs val5 (toStr "Stack")
-                    let cf7 ← core.result.Result.Insts.CoreOpsTry.branch r6
-                    match cf7 with
-                    | core.ops.control_flow.ControlFlow.Continue val6 =>
-                      if val6
-                      then
-                        let d ←
-                          intrinsic.reject f1.span (toStr
-                            "expected explicit Stack tail binder")
-                        ok (core.result.Result.Err d, m)
-                      else
-                        let f2 ← Slice.index_usize val5 0#usize
-                        let r7 ← intrinsic.atom f2
-                        let cf8 ←
-                          core.result.Result.Insts.CoreOpsTry.branch r7
-                        match cf8 with
+                    if val5
+                    then
+                      let d ←
+                        intrinsic.reject f1.span (toStr
+                          "expected explicit Stack tail binder")
+                      ok (core.result.Result.Err d, m)
+                    else
+                      let f2 ← Slice.index_usize val4 0#usize
+                      let r7 ← intrinsic.atom f2
+                      let cf8 ← core.result.Result.Insts.CoreOpsTry.branch r7
+                      match cf8 with
+                      | core.ops.control_flow.ControlFlow.Continue val6 =>
+                        let f3 ← Slice.index_usize val3 1#usize
+                        let r8 ←
+                          intrinsic.operation f3 (toStr "intro") 2#usize
+                        let cf9 ←
+                          core.result.Result.Insts.CoreOpsTry.branch r8
+                        match cf9 with
                         | core.ops.control_flow.ControlFlow.Continue val7 =>
-                          let f3 ← Slice.index_usize val4 1#usize
-                          let r8 ←
-                            intrinsic.operation f3 (toStr "intro") 2#usize
-                          let cf9 ←
-                            core.result.Result.Insts.CoreOpsTry.branch r8
-                          match cf9 with
+                          let f4 ← Slice.index_usize val7 0#usize
+                          let r9 ← intrinsic.list f4
+                          let cf10 ←
+                            core.result.Result.Insts.CoreOpsTry.branch r9
+                          match cf10 with
                           | core.ops.control_flow.ControlFlow.Continue val8 =>
-                            let f4 ← Slice.index_usize val8 0#usize
-                            let r9 ← intrinsic.list f4
-                            let cf10 ←
-                              core.result.Result.Insts.CoreOpsTry.branch r9
-                            match cf10 with
+                            let r10 ←
+                              intrinsic.typed_binder_differs val8 (toStr "I64")
+                            let cf11 ←
+                              core.result.Result.Insts.CoreOpsTry.branch r10
+                            match cf11 with
                             | core.ops.control_flow.ControlFlow.Continue val9
                               =>
-                              let r10 ←
-                                intrinsic.typed_binder_differs val9 (toStr
-                                  "I64")
-                              let cf11 ←
-                                core.result.Result.Insts.CoreOpsTry.branch r10
-                              match cf11 with
-                              | core.ops.control_flow.ControlFlow.Continue
-                                val10 =>
-                                if val10
-                                then
-                                  let d ←
-                                    intrinsic.reject f4.span (toStr
-                                      "expected distinct explicit I64 input binder")
-                                  ok (core.result.Result.Err d, m)
-                                else
-                                  let f5 ← Slice.index_usize val9 0#usize
-                                  let r11 ← intrinsic.atom f5
-                                  let cf12 ←
-                                    core.result.Result.Insts.CoreOpsTry.branch
-                                      r11
-                                  match cf12 with
-                                  | core.ops.control_flow.ControlFlow.Continue
-                                    val11 =>
-                                    let b1 ←
-                                      Str.Insts.CoreCmpPartialEqStr.eq val11
-                                        val7
-                                    if b1
-                                    then
-                                      let d ←
-                                        intrinsic.reject f4.span (toStr
-                                          "expected distinct explicit I64 input binder")
-                                      ok (core.result.Result.Err d, m)
-                                    else
-                                      let f6 ← Slice.index_usize val8 1#usize
-                                      let r12 ←
-                                        intrinsic.operation f6 (toStr
-                                          "pc-sequence") 4#usize
-                                      let cf13 ←
+                              if val9
+                              then
+                                let d ←
+                                  intrinsic.reject f4.span (toStr
+                                    "expected distinct explicit I64 input binder")
+                                ok (core.result.Result.Err d, m)
+                              else
+                                let f5 ← Slice.index_usize val8 0#usize
+                                let r11 ← intrinsic.atom f5
+                                let cf12 ←
+                                  core.result.Result.Insts.CoreOpsTry.branch
+                                    r11
+                                match cf12 with
+                                | core.ops.control_flow.ControlFlow.Continue
+                                  val10 =>
+                                  let b1 ←
+                                    Str.Insts.CoreCmpPartialEqStr.eq val10 val6
+                                  if b1
+                                  then
+                                    let d ←
+                                      intrinsic.reject f4.span (toStr
+                                        "expected distinct explicit I64 input binder")
+                                    ok (core.result.Result.Err d, m)
+                                  else
+                                    let f6 ← Slice.index_usize val7 1#usize
+                                    let r12 ←
+                                      intrinsic.operation f6 (toStr
+                                        "pc-sequence") 4#usize
+                                    let cf13 ←
+                                      core.result.Result.Insts.CoreOpsTry.branch
+                                        r12
+                                    match cf13 with
+                                    |
+                                      core.ops.control_flow.ControlFlow.Continue
+                                      val11 =>
+                                      let f7 ←
+                                        Slice.index_usize val11 0#usize
+                                      let r13 ←
+                                        intrinsic.operation f7 (toStr
+                                          "pc-exact") 1#usize
+                                      let cf14 ←
                                         core.result.Result.Insts.CoreOpsTry.branch
-                                          r12
-                                      match cf13 with
+                                          r13
+                                      match cf14 with
                                       |
                                         core.ops.control_flow.ControlFlow.Continue
                                         val12 =>
-                                        let f7 ←
+                                        let f8 ←
                                           Slice.index_usize val12 0#usize
-                                        let r13 ←
-                                          intrinsic.operation f7 (toStr
-                                            "pc-exact") 1#usize
-                                        let cf14 ←
+                                        let r14 ←
+                                          intrinsic.operation f8 (toStr
+                                            "exec-literal") 1#usize
+                                        let cf15 ←
                                           core.result.Result.Insts.CoreOpsTry.branch
-                                            r13
-                                        match cf14 with
+                                            r14
+                                        match cf15 with
                                         |
                                           core.ops.control_flow.ControlFlow.Continue
                                           val13 =>
-                                          let f8 ←
+                                          let f9 ←
                                             Slice.index_usize val13 0#usize
-                                          let r14 ←
-                                            intrinsic.operation f8 (toStr
-                                              "exec-literal") 1#usize
-                                          let cf15 ←
+                                          let r15 ← intrinsic.atom f9
+                                          let cf16 ←
                                             core.result.Result.Insts.CoreOpsTry.branch
-                                              r14
-                                          match cf15 with
+                                              r15
+                                          match cf16 with
                                           |
                                             core.ops.control_flow.ControlFlow.Continue
                                             val14 =>
-                                            let f9 ←
-                                              Slice.index_usize val14 0#usize
-                                            let r15 ← intrinsic.atom f9
-                                            let cf16 ←
-                                              core.result.Result.Insts.CoreOpsTry.branch
-                                                r15
-                                            match cf16 with
-                                            |
-                                              core.ops.control_flow.ControlFlow.Continue
-                                              val15 =>
-                                              let r16 ←
-                                                core.str.Str.parse
-                                                  I64.Insts.CoreStrTraitsFromStrParseIntError
-                                                  val15
-                                              let o ←
-                                                core.result.Result.ok r16
-                                              let b2 ←
-                                                core.cmp.PartialEq.ne.trait_default
-                                                  (core.option.Option.Insts.CoreCmpPartialEqOption
-                                                  core.cmp.PartialEqI64) o
-                                                  (some val2)
-                                              if b2
-                                              then
-                                                let d ←
-                                                  intrinsic.reject f9.span
-                                                    (toStr
-                                                    "literal rule does not match first subject slice")
-                                                ok (core.result.Result.Err d,
-                                                  m)
-                                              else
-                                                let f10 ←
-                                                  Slice.index_usize val12
-                                                    1#usize
-                                                let r17 ←
-                                                  intrinsic.operation f10
-                                                    (toStr "pc-exact") 1#usize
-                                                let cf17 ←
+                                            let r16 ←
+                                              core.str.Str.parse
+                                                I64.Insts.CoreStrTraitsFromStrParseIntError
+                                                val14
+                                            let o ← core.result.Result.ok r16
+                                            let b2 ←
+                                              core.cmp.PartialEq.ne.trait_default
+                                                (core.option.Option.Insts.CoreCmpPartialEqOption
+                                                core.cmp.PartialEqI64) o (some
+                                                val1)
+                                            if b2
+                                            then
+                                              let d ←
+                                                intrinsic.reject f9.span (toStr
+                                                  "literal rule does not match first subject slice")
+                                              ok (core.result.Result.Err d, m)
+                                            else
+                                              let f10 ←
+                                                Slice.index_usize val11 1#usize
+                                              let r17 ←
+                                                intrinsic.operation f10 (toStr
+                                                  "pc-exact") 1#usize
+                                              let cf17 ←
+                                                core.result.Result.Insts.CoreOpsTry.branch
+                                                  r17
+                                              match cf17 with
+                                              |
+                                                core.ops.control_flow.ControlFlow.Continue
+                                                val15 =>
+                                                let f11 ←
+                                                  Slice.index_usize val15
+                                                    0#usize
+                                                let r18 ←
+                                                  intrinsic.operation f11
+                                                    (toStr "exec-add") 0#usize
+                                                let cf18 ←
                                                   core.result.Result.Insts.CoreOpsTry.branch
-                                                    r17
-                                                match cf17 with
+                                                    r18
+                                                match cf18 with
                                                 |
                                                   core.ops.control_flow.ControlFlow.Continue
-                                                  val16 =>
-                                                  let f11 ←
-                                                    Slice.index_usize val16
-                                                      0#usize
-                                                  let r18 ←
-                                                    intrinsic.operation f11
-                                                      (toStr "exec-add")
-                                                      0#usize
-                                                  let cf18 ←
+                                                  _ =>
+                                                  let f12 ←
+                                                    Slice.index_usize val11
+                                                      2#usize
+                                                  let r19 ←
+                                                    intrinsic.operation f12
+                                                      (toStr "bridge") 1#usize
+                                                  let cf19 ←
                                                     core.result.Result.Insts.CoreOpsTry.branch
-                                                      r18
-                                                  match cf18 with
+                                                      r19
+                                                  match cf19 with
                                                   |
                                                     core.ops.control_flow.ControlFlow.Continue
-                                                    _ =>
-                                                    let f12 ←
-                                                      Slice.index_usize val12
-                                                        2#usize
-                                                    let r19 ←
-                                                      intrinsic.operation f12
-                                                        (toStr "bridge")
-                                                        1#usize
-                                                    let cf19 ←
+                                                    val16 =>
+                                                    let f13 ←
+                                                      Slice.index_usize val16
+                                                        0#usize
+                                                    let r20 ←
+                                                      intrinsic.operation f13
+                                                        (toStr
+                                                        "by-exact-append-assoc")
+                                                        0#usize
+                                                    let cf20 ←
                                                       core.result.Result.Insts.CoreOpsTry.branch
-                                                        r19
-                                                    match cf19 with
+                                                        r20
+                                                    match cf20 with
                                                     |
                                                       core.ops.control_flow.ControlFlow.Continue
-                                                      val17 =>
-                                                      let f13 ←
-                                                        Slice.index_usize val17
-                                                          0#usize
-                                                      let r20 ←
-                                                        intrinsic.operation f13
-                                                          (toStr
-                                                          "by-exact-append-assoc")
-                                                          0#usize
-                                                      let cf20 ←
+                                                      _ =>
+                                                      let f14 ←
+                                                        Slice.index_usize val11
+                                                          3#usize
+                                                      let r21 ←
+                                                        intrinsic.operation f14
+                                                          (toStr "join")
+                                                          1#usize
+                                                      let cf21 ←
                                                         core.result.Result.Insts.CoreOpsTry.branch
-                                                          r20
-                                                      match cf20 with
+                                                          r21
+                                                      match cf21 with
                                                       |
                                                         core.ops.control_flow.ControlFlow.Continue
-                                                        _ =>
-                                                        let f14 ←
+                                                        val17 =>
+                                                        let f15 ←
                                                           Slice.index_usize
-                                                            val12 3#usize
-                                                        let r21 ←
+                                                            val17 0#usize
+                                                        let r22 ←
                                                           intrinsic.operation
-                                                            f14 (toStr "join")
-                                                            1#usize
-                                                        let cf21 ←
+                                                            f15 (toStr
+                                                            "by-exact-result")
+                                                            0#usize
+                                                        let cf22 ←
                                                           core.result.Result.Insts.CoreOpsTry.branch
-                                                            r21
-                                                        match cf21 with
+                                                            r22
+                                                        match cf22 with
                                                         |
                                                           core.ops.control_flow.ControlFlow.Continue
-                                                          val18 =>
-                                                          let f15 ←
+                                                          _ =>
+                                                          let f16 ←
                                                             Slice.index_usize
-                                                              val18 0#usize
-                                                          let r22 ←
+                                                              val2 1#usize
+                                                          let r23 ←
                                                             intrinsic.operation
-                                                              f15 (toStr
-                                                              "by-exact-result")
+                                                              f16 (toStr
+                                                              "mc1-true-eq-wrap")
                                                               0#usize
-                                                          let cf22 ←
+                                                          let cf23 ←
                                                             core.result.Result.Insts.CoreOpsTry.branch
-                                                              r22
-                                                          match cf22 with
+                                                              r23
+                                                          match cf23 with
                                                           |
                                                             core.ops.control_flow.ControlFlow.Continue
                                                             _ =>
-                                                            let f16 ←
-                                                              Slice.index_usize
-                                                                val3 1#usize
-                                                            let r23 ←
-                                                              intrinsic.operation
-                                                                f16 (toStr
-                                                                "mc1-true-eq-wrap")
-                                                                0#usize
-                                                            let cf23 ←
+                                                            let lean_term ←
+                                                              intrinsic.lower_unary_add
+                                                                val1
+                                                            let i ←
+                                                              alloc.string.String.len
+                                                                lean_term
+                                                            let (m1, result1)
+                                                              ←
+                                                              intrinsic.Meter.charge
+                                                                m i
+                                                                obligation.span
+                                                            let cf24 ←
                                                               core.result.Result.Insts.CoreOpsTry.branch
-                                                                r23
-                                                            match cf23 with
+                                                                result1
+                                                            match cf24 with
                                                             |
                                                               core.ops.control_flow.ControlFlow.Continue
                                                               _ =>
-                                                              let lean_term ←
-                                                                intrinsic.lower_unary_add
-                                                                  val2
-                                                              let i ←
-                                                                alloc.string.String.len
-                                                                  lean_term
-                                                              let (m1, result1)
-                                                                ←
-                                                                intrinsic.Meter.charge
-                                                                  m i
-                                                                  obligation.span
-                                                              let cf24 ←
-                                                                core.result.Result.Insts.CoreOpsTry.branch
-                                                                  result1
-                                                              match cf24 with
-                                                              |
-                                                                core.ops.control_flow.ControlFlow.Continue
-                                                                _ =>
-                                                                let s4 ←
-                                                                  alloc.string.String.Insts.CoreCloneClone.clone
-                                                                    obligation.name
-                                                                let s5 ←
-                                                                  core.convert.IntoFrom.into
-                                                                    alloc.string.String.Insts.CoreConvertFromShared0Str
-                                                                    (toStr
-                                                                    "MC1Obligation.claim")
-                                                                let s6 ←
-                                                                  alloc.string.String.new
-                                                                ok
-                                                                  (core.result.Result.Ok
-                                                                  {
-                                                                    «name» :=
+                                                              let s4 ←
+                                                                alloc.string.String.Insts.CoreCloneClone.clone
+                                                                  obligation.name
+                                                              let s5 ←
+                                                                core.convert.IntoFrom.into
+                                                                  alloc.string.String.Insts.CoreConvertFromShared0Str
+                                                                  (toStr
+                                                                  "MC1Obligation.claim")
+                                                              let s6 ←
+                                                                alloc.string.String.new
+                                                              ok
+                                                                (core.result.Result.Ok
+                                                                {
+                                                                  «name» :=
                                                                     s4,
-                                                                    kind :=
+                                                                  kind :=
                                                                     intrinsic.ProofKind.Contract,
-                                                                    lean_term,
-                                                                    claim := s5,
-                                                                    model_revision :=
+                                                                  lean_term,
+                                                                  claim := s5,
+                                                                  model_revision :=
                                                                     s6,
-                                                                    checker_revision :=
+                                                                  checker_revision :=
                                                                     s6
-                                                                  }, m1)
-                                                              |
-                                                                core.ops.control_flow.ControlFlow.Break
-                                                                residual =>
-                                                                let r24 ←
-                                                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                                                    intrinsic.CheckedProof
-                                                                    (core.convert.FromSame
-                                                                    Diagnostic)
-                                                                    residual
-                                                                ok (r24, m1)
+                                                                }, m1)
                                                             |
                                                               core.ops.control_flow.ControlFlow.Break
                                                               residual =>
@@ -109724,168 +109731,175 @@ def intrinsic.contract_proof
                                                                   (core.convert.FromSame
                                                                   Diagnostic)
                                                                   residual
-                                                              ok (r24, m)
+                                                              ok (r24, m1)
                                                           |
                                                             core.ops.control_flow.ControlFlow.Break
                                                             residual =>
-                                                            let r23 ←
+                                                            let r24 ←
                                                               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                                                 intrinsic.CheckedProof
                                                                 (core.convert.FromSame
                                                                 Diagnostic)
                                                                 residual
-                                                            ok (r23, m)
+                                                            ok (r24, m)
                                                         |
                                                           core.ops.control_flow.ControlFlow.Break
                                                           residual =>
-                                                          let r22 ←
+                                                          let r23 ←
                                                             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                                               intrinsic.CheckedProof
                                                               (core.convert.FromSame
                                                               Diagnostic)
                                                               residual
-                                                          ok (r22, m)
+                                                          ok (r23, m)
                                                       |
                                                         core.ops.control_flow.ControlFlow.Break
                                                         residual =>
-                                                        let r21 ←
+                                                        let r22 ←
                                                           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                                             intrinsic.CheckedProof
                                                             (core.convert.FromSame
                                                             Diagnostic)
                                                             residual
-                                                        ok (r21, m)
+                                                        ok (r22, m)
                                                     |
                                                       core.ops.control_flow.ControlFlow.Break
                                                       residual =>
-                                                      let r20 ←
+                                                      let r21 ←
                                                         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                                           intrinsic.CheckedProof
                                                           (core.convert.FromSame
                                                           Diagnostic) residual
-                                                      ok (r20, m)
+                                                      ok (r21, m)
                                                   |
                                                     core.ops.control_flow.ControlFlow.Break
                                                     residual =>
-                                                    let r19 ←
+                                                    let r20 ←
                                                       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                                         intrinsic.CheckedProof
                                                         (core.convert.FromSame
                                                         Diagnostic) residual
-                                                    ok (r19, m)
+                                                    ok (r20, m)
                                                 |
                                                   core.ops.control_flow.ControlFlow.Break
                                                   residual =>
-                                                  let r18 ←
+                                                  let r19 ←
                                                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                                       intrinsic.CheckedProof
                                                       (core.convert.FromSame
                                                       Diagnostic) residual
-                                                  ok (r18, m)
-                                            |
-                                              core.ops.control_flow.ControlFlow.Break
-                                              residual =>
-                                              let r16 ←
-                                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                                  intrinsic.CheckedProof
-                                                  (core.convert.FromSame
-                                                  Diagnostic) residual
-                                              ok (r16, m)
+                                                  ok (r19, m)
+                                              |
+                                                core.ops.control_flow.ControlFlow.Break
+                                                residual =>
+                                                let r18 ←
+                                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                                    intrinsic.CheckedProof
+                                                    (core.convert.FromSame
+                                                    Diagnostic) residual
+                                                ok (r18, m)
                                           |
                                             core.ops.control_flow.ControlFlow.Break
                                             residual =>
-                                            let r15 ←
+                                            let r16 ←
                                               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                                 intrinsic.CheckedProof
                                                 (core.convert.FromSame
                                                 Diagnostic) residual
-                                            ok (r15, m)
+                                            ok (r16, m)
                                         |
                                           core.ops.control_flow.ControlFlow.Break
                                           residual =>
-                                          let r14 ←
+                                          let r15 ←
                                             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                               intrinsic.CheckedProof
                                               (core.convert.FromSame
                                               Diagnostic) residual
-                                          ok (r14, m)
+                                          ok (r15, m)
                                       | core.ops.control_flow.ControlFlow.Break
                                         residual =>
-                                        let r13 ←
+                                        let r14 ←
                                           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                             intrinsic.CheckedProof
                                             (core.convert.FromSame Diagnostic)
                                             residual
-                                        ok (r13, m)
-                                  | core.ops.control_flow.ControlFlow.Break
-                                    residual =>
-                                    let r12 ←
-                                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                        intrinsic.CheckedProof
-                                        (core.convert.FromSame Diagnostic)
-                                        residual
-                                    ok (r12, m)
-                              | core.ops.control_flow.ControlFlow.Break
-                                residual =>
-                                let r11 ←
-                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                    intrinsic.CheckedProof
-                                    (core.convert.FromSame Diagnostic) residual
-                                ok (r11, m)
+                                        ok (r14, m)
+                                    | core.ops.control_flow.ControlFlow.Break
+                                      residual =>
+                                      let r13 ←
+                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                          intrinsic.CheckedProof
+                                          (core.convert.FromSame Diagnostic)
+                                          residual
+                                      ok (r13, m)
+                                | core.ops.control_flow.ControlFlow.Break
+                                  residual =>
+                                  let r12 ←
+                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                      intrinsic.CheckedProof
+                                      (core.convert.FromSame Diagnostic)
+                                      residual
+                                  ok (r12, m)
                             | core.ops.control_flow.ControlFlow.Break residual
                               =>
-                              let r10 ←
+                              let r11 ←
                                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                   intrinsic.CheckedProof (core.convert.FromSame
                                   Diagnostic) residual
-                              ok (r10, m)
+                              ok (r11, m)
                           | core.ops.control_flow.ControlFlow.Break residual =>
-                            let r9 ←
+                            let r10 ←
                               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                                 intrinsic.CheckedProof (core.convert.FromSame
                                 Diagnostic) residual
-                            ok (r9, m)
+                            ok (r10, m)
                         | core.ops.control_flow.ControlFlow.Break residual =>
-                          let r8 ←
+                          let r9 ←
                             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                               intrinsic.CheckedProof (core.convert.FromSame
                               Diagnostic) residual
-                          ok (r8, m)
-                    | core.ops.control_flow.ControlFlow.Break residual =>
-                      let r7 ←
-                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                          intrinsic.CheckedProof (core.convert.FromSame
-                          Diagnostic) residual
-                      ok (r7, m)
+                          ok (r9, m)
+                      | core.ops.control_flow.ControlFlow.Break residual =>
+                        let r8 ←
+                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                            intrinsic.CheckedProof (core.convert.FromSame
+                            Diagnostic) residual
+                        ok (r8, m)
                   | core.ops.control_flow.ControlFlow.Break residual =>
-                    let r6 ←
+                    let r7 ←
                       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                         intrinsic.CheckedProof (core.convert.FromSame
                         Diagnostic) residual
-                    ok (r6, m)
+                    ok (r7, m)
                 | core.ops.control_flow.ControlFlow.Break residual =>
-                  let r5 ←
+                  let r6 ←
                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                       intrinsic.CheckedProof (core.convert.FromSame Diagnostic)
                       residual
-                  ok (r5, m)
+                  ok (r6, m)
               | core.ops.control_flow.ControlFlow.Break residual =>
-                let r4 ←
+                let r5 ←
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                     intrinsic.CheckedProof (core.convert.FromSame Diagnostic)
                     residual
-                ok (r4, m)
-            else
-              let d ←
-                intrinsic.reject contract.ensures.span (toStr
-                  "proof consequence does not match exact typed MC1 postcondition")
-              ok (core.result.Result.Err d, m)
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r3 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                intrinsic.CheckedProof (core.convert.FromSame Diagnostic)
-                residual
-            ok (r3, m)
+                ok (r5, m)
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r4 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  intrinsic.CheckedProof (core.convert.FromSame Diagnostic)
+                  residual
+              ok (r4, m)
+          else
+            let d ←
+              intrinsic.reject contract.ensures.span (toStr
+                "proof consequence does not match exact typed MC1 postcondition")
+            ok (core.result.Result.Err d, m)
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r3 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              intrinsic.CheckedProof (core.convert.FromSame Diagnostic)
+              residual
+          ok (r3, m)
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r2 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -109903,7 +109917,7 @@ def intrinsic.contract_proof
     ok (r, m)
 
 /-- [noble_contracts::intrinsic::check_contract]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3821:0-3828:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3824:0-3831:1 -/
 def intrinsic.check_contract
   (obligation : intrinsic.ProofObligation) (contract : intrinsic.ContractGoal)
   (meter : intrinsic.IntrinsicMeter) :
@@ -109914,7 +109928,7 @@ def intrinsic.check_contract
   ok (meter1, result)
 
 /-- [noble_contracts::intrinsic::obligation_proof]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3475:0-3538:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3478:0-3541:1 -/
 def intrinsic.obligation_proof
   (obligation : intrinsic.ProofObligation)
   (available : Slice intrinsic.Available) (meter : intrinsic.IntrinsicMeter) :
@@ -110064,7 +110078,7 @@ def intrinsic.obligation_proof
     ok (r, m)
 
 /-- [noble_contracts::intrinsic::check_obligation]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3458:0-3465:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3461:0-3468:1 -/
 def intrinsic.check_obligation
   (obligation : intrinsic.ProofObligation)
   (available : Slice intrinsic.Available) (meter : intrinsic.IntrinsicMeter) :
@@ -110076,7 +110090,7 @@ def intrinsic.check_obligation
   ok (meter1, result)
 
 /-- [noble_contracts::intrinsic::admit_obligation]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3437:0-3457:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3440:0-3460:1 -/
 def intrinsic.admit_obligation
   (obligation : intrinsic.ProofObligation) (admitted : intrinsic.Admitted)
   (meter : intrinsic.IntrinsicMeter) :
@@ -110123,7 +110137,7 @@ def intrinsic.admit_obligation
     ok (r, admitted, m)
 
 /-- [noble_contracts::intrinsic::is_identity_of]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3816:0-3820:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3819:0-3823:1 -/
 def intrinsic.is_identity_of
   (ancestor : intrinsic.DependencyIdentity)
   (dependency : intrinsic.ProofDependency) :
@@ -110142,7 +110156,7 @@ def intrinsic.is_identity_of
   else ok false
 
 /-- [noble_contracts::intrinsic::slot_is_identity_of]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3805:0-3810:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3808:0-3813:1 -/
 def intrinsic.slot_is_identity_of
   (slot : Option intrinsic.DependencyIdentity)
   (dependency : intrinsic.ProofDependency) :
@@ -110153,7 +110167,7 @@ def intrinsic.slot_is_identity_of
   | some ancestor => intrinsic.is_identity_of ancestor dependency
 
 /-- [noble_contracts::intrinsic::repeats_active]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3789:4-3792:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3792:4-3795:5 -/
 @[rust_loop_body]
 def intrinsic.repeats_active_loop0.body
   (active : intrinsic.WorkStack intrinsic.DependencyIdentity)
@@ -110174,7 +110188,7 @@ def intrinsic.repeats_active_loop0.body
     else ok (done (active, is_repeat))
 
 /-- [noble_contracts::intrinsic::repeats_active]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3789:4-3792:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3792:4-3795:5 -/
 @[rust_loop]
 def intrinsic.repeats_active_loop0
   (active : intrinsic.WorkStack intrinsic.DependencyIdentity)
@@ -110188,7 +110202,7 @@ def intrinsic.repeats_active_loop0
     (is_repeat, index1)
 
 /-- [noble_contracts::intrinsic::repeats_active]: loop body 1:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3794:4-3797:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3797:4-3800:5 -/
 @[rust_loop_body]
 def intrinsic.repeats_active_loop1.body
   (active : intrinsic.WorkStack intrinsic.DependencyIdentity)
@@ -110211,7 +110225,7 @@ def intrinsic.repeats_active_loop1.body
     else ok (done is_repeat)
 
 /-- [noble_contracts::intrinsic::repeats_active]: loop 1:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3794:4-3797:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3797:4-3800:5 -/
 @[rust_loop]
 def intrinsic.repeats_active_loop1
   (active : intrinsic.WorkStack intrinsic.DependencyIdentity)
@@ -110225,7 +110239,7 @@ def intrinsic.repeats_active_loop1
     (is_repeat, index1)
 
 /-- [noble_contracts::intrinsic::repeats_active]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3786:0-3799:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3789:0-3802:1 -/
 def intrinsic.repeats_active
   (active : intrinsic.WorkStack intrinsic.DependencyIdentity)
   (dependency : intrinsic.ProofDependency) :
@@ -110236,7 +110250,7 @@ def intrinsic.repeats_active
   intrinsic.repeats_active_loop1 active1 dependency is_repeat 0#usize
 
 /-- [noble_contracts::intrinsic::is_private_local_of]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3778:0-3783:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3781:0-3786:1 -/
 def intrinsic.is_private_local_of
   (dependency : intrinsic.ProofDependency) (parent : intrinsic.ProofDependency)
   :
@@ -110260,7 +110274,7 @@ def intrinsic.is_private_local_of
   else ok false
 
 /-- [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure#7}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3760:47-3765:13 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3763:47-3768:13 -/
 def
   intrinsic.dependency_step.closure_7.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.dependency_step.closure_7) (_ : Unit) :
@@ -110270,7 +110284,7 @@ def
     "contract theorem dependency is not in the pure fragment")
 
 /-- Trait implementation: [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure#7}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3760:47-3765:13 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3763:47-3768:13 -/
 @[reducible]
 def
   intrinsic.dependency_step.closure_7.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -110281,7 +110295,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure#6}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3753:28-3753:69 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3756:28-3756:69 -/
 def
   intrinsic.dependency_step.closure_6.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.dependency_step.closure_6) (_ : Unit) :
@@ -110290,7 +110304,7 @@ def
   intrinsic.exhausted c.declaration.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure#6}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3753:28-3753:69 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3756:28-3756:69 -/
 @[reducible]
 def
   intrinsic.dependency_step.closure_6.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -110301,7 +110315,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure#5}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3748:25-3748:70 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3751:25-3751:70 -/
 def
   intrinsic.dependency_step.closure_5.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.dependency_step.closure_5) (_ : Unit) :
@@ -110310,7 +110324,7 @@ def
   intrinsic.exhausted c.declaration.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure#5}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3748:25-3748:70 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3751:25-3751:70 -/
 @[reducible]
 def
   intrinsic.dependency_step.closure_5.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -110321,7 +110335,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure#4}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3738:25-3738:70 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3741:25-3741:70 -/
 def
   intrinsic.dependency_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.dependency_step.closure_4) (_ : Unit) :
@@ -110330,7 +110344,7 @@ def
   intrinsic.exhausted c.declaration.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure#4}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3738:25-3738:70 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3741:25-3741:70 -/
 @[reducible]
 def
   intrinsic.dependency_step.closure_4.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -110341,7 +110355,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3727:32-3727:75 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3730:32-3730:75 -/
 def
   intrinsic.dependency_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.dependency_step.closure_3) (_ : Unit) :
@@ -110350,7 +110364,7 @@ def
   intrinsic.exhausted c.declaration.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3727:32-3727:75 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3730:32-3730:75 -/
 @[reducible]
 def
   intrinsic.dependency_step.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -110361,7 +110375,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3714:32-3714:73 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3717:32-3717:73 -/
 def
   intrinsic.dependency_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.dependency_step.closure_2) (_ : Unit) :
@@ -110370,7 +110384,7 @@ def
   intrinsic.exhausted c.declaration.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3714:32-3714:73 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3717:32-3717:73 -/
 @[reducible]
 def
   intrinsic.dependency_step.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -110381,7 +110395,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3702:21-3702:64 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3705:21-3705:64 -/
 def
   intrinsic.dependency_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.dependency_step.closure_1) (_ : Unit) :
@@ -110390,7 +110404,7 @@ def
   intrinsic.exhausted c.declaration.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3702:21-3702:64 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3705:21-3705:64 -/
 @[reducible]
 def
   intrinsic.dependency_step.closure_1.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -110401,14 +110415,14 @@ def
 }
 
 /-- [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3691:21-3691:64 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3694:21-3694:64 -/
 def
   intrinsic.dependency_step.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.dependency_step.closure) (_ : Unit) : Result Diagnostic := do
   intrinsic.exhausted c.declaration.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::dependency_step::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_step::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3691:21-3691:64 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3694:21-3694:64 -/
 @[reducible]
 def
   intrinsic.dependency_step.closure.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -110419,7 +110433,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::dependency_step]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3638:0-3771:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3641:0-3774:1 -/
 def intrinsic.dependency_step
   (frame : intrinsic.DependencyFrame) (walk : intrinsic.DependencyWalk)
   (meter : intrinsic.IntrinsicMeter) :
@@ -110936,7 +110950,7 @@ def intrinsic.dependency_step
         ok (r1, { walk with completed }, meter)
 
 /-- [noble_contracts::intrinsic::dependency_proof::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_proof::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3618:20-3618:61 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3621:20-3621:61 -/
 def
   intrinsic.dependency_proof.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.dependency_proof.closure_2) (_ : Unit) :
@@ -110945,7 +110959,7 @@ def
   intrinsic.exhausted c.declaration.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::dependency_proof::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_proof::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3618:20-3618:61 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3621:20-3621:61 -/
 @[reducible]
 def
   intrinsic.dependency_proof.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -110956,7 +110970,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::dependency_proof::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_proof::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3601:13-3601:56 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3604:13-3604:56 -/
 def
   intrinsic.dependency_proof.closure_1.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic.call_once
   (c : intrinsic.dependency_proof.closure_1) (_ : Unit) :
@@ -110965,7 +110979,7 @@ def
   intrinsic.exhausted c.declaration.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::dependency_proof::{impl core::ops::function::FnOnce<((),), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_proof::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3601:13-3601:56 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3604:13-3604:56 -/
 @[reducible]
 def
   intrinsic.dependency_proof.closure_1.Insts.CoreOpsFunctionFnOnceTupleTupleDiagnostic
@@ -110976,7 +110990,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::dependency_proof::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_proof::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3590:52-3590:94 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3593:52-3593:94 -/
 def
   intrinsic.dependency_proof.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic.call_once
   (c : intrinsic.dependency_proof.closure)
@@ -110986,7 +111000,7 @@ def
   intrinsic.exhausted c.declaration.span
 
 /-- Trait implementation: [noble_contracts::intrinsic::dependency_proof::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::dependency_proof::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3590:52-3590:94 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3593:52-3593:94 -/
 @[reducible]
 def
   intrinsic.dependency_proof.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic
@@ -110997,7 +111011,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::dependency_proof]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3610:4-3615:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3613:4-3618:5 -/
 @[rust_loop_body]
 def intrinsic.dependency_proof_loop.body
   (meter : intrinsic.IntrinsicMeter) (walk : intrinsic.DependencyWalk)
@@ -111018,7 +111032,7 @@ def intrinsic.dependency_proof_loop.body
     else ok (cont (meter1, walk1, outcome1))
 
 /-- [noble_contracts::intrinsic::dependency_proof]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3610:4-3615:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3613:4-3618:5 -/
 @[rust_loop]
 def intrinsic.dependency_proof_loop
   (meter : intrinsic.IntrinsicMeter) (walk : intrinsic.DependencyWalk)
@@ -111032,7 +111046,7 @@ def intrinsic.dependency_proof_loop
     (meter, walk, outcome)
 
 /-- [noble_contracts::intrinsic::dependency_proof]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3584:0-3619:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3587:0-3622:1 -/
 def intrinsic.dependency_proof
   (dependency : intrinsic.ProofDependency) (meter : intrinsic.IntrinsicMeter) :
   Result ((core.result.Result intrinsic.Available Diagnostic) ×
@@ -111094,7 +111108,7 @@ def intrinsic.dependency_proof
     ok (r2, meter)
 
 /-- [noble_contracts::intrinsic::check_dependency]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3552:0-3558:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3555:0-3561:1 -/
 def intrinsic.check_dependency
   (dependency : intrinsic.ProofDependency) (meter : intrinsic.IntrinsicMeter) :
   Result (intrinsic.IntrinsicMeter × (core.result.Result intrinsic.Available
@@ -111104,7 +111118,7 @@ def intrinsic.check_dependency
   ok (meter1, result)
 
 /-- [noble_contracts::intrinsic::admit_dependency]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3414:0-3431:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3417:0-3434:1 -/
 def intrinsic.admit_dependency
   (dependency : intrinsic.ProofDependency) (admitted : intrinsic.Admitted)
   (meter : intrinsic.IntrinsicMeter) :
@@ -111137,7 +111151,7 @@ def intrinsic.admit_dependency
     ok (core.result.Result.Err d, admitted, meter)
 
 /-- [noble_contracts::intrinsic::check_batch_with_budgets::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_batch_with_budgets::{closure#3}}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3372:20-3372:59 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3375:20-3375:59 -/
 def
   intrinsic.check_batch_with_budgets.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.check_batch_with_budgets.closure_3) (_ : Unit) :
@@ -111146,7 +111160,7 @@ def
   intrinsic.exhausted { start := 0#u32, «end» := 0#u32 }
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_batch_with_budgets::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_batch_with_budgets::{closure#3}}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3372:20-3372:59 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3375:20-3375:59 -/
 @[reducible]
 def
   intrinsic.check_batch_with_budgets.closure_3.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -111157,7 +111171,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::check_batch_with_budgets::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_batch_with_budgets::{closure#2}}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3367:46-3367:86 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3370:46-3370:86 -/
 def
   intrinsic.check_batch_with_budgets.closure_2.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic.call_once
   (c : intrinsic.check_batch_with_budgets.closure_2)
@@ -111167,7 +111181,7 @@ def
   intrinsic.exhausted { start := 0#u32, «end» := 0#u32 }
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_batch_with_budgets::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_batch_with_budgets::{closure#2}}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3367:46-3367:86 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3370:46-3370:86 -/
 @[reducible]
 def
   intrinsic.check_batch_with_budgets.closure_2.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic
@@ -111178,7 +111192,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::check_batch_with_budgets::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_batch_with_budgets::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3352:56-3352:95 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3355:56-3355:95 -/
 def
   intrinsic.check_batch_with_budgets.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic.call_once
   (c : intrinsic.check_batch_with_budgets.closure_1) (_ : Unit) :
@@ -111187,7 +111201,7 @@ def
   intrinsic.exhausted { start := 0#u32, «end» := 0#u32 }
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_batch_with_budgets::{impl core::ops::function::FnOnce<(), noble_contracts::Diagnostic> for noble_contracts::intrinsic::check_batch_with_budgets::{closure#1}}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3352:56-3352:95 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3355:56-3355:95 -/
 @[reducible]
 def
   intrinsic.check_batch_with_budgets.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnostic
@@ -111198,7 +111212,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::check_batch_with_budgets::{impl core::ops::function::FnOnce<(u32,), bool> for noble_contracts::intrinsic::check_batch_with_budgets::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3346:54-3346:78 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3349:54-3349:78 -/
 def
   intrinsic.check_batch_with_budgets.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool.call_once
   (c : intrinsic.check_batch_with_budgets.closure) (tupled_args : Std.U32) :
@@ -111207,7 +111221,7 @@ def
   ok (tupled_args > c)
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_batch_with_budgets::{impl core::ops::function::FnOnce<(u32,), bool> for noble_contracts::intrinsic::check_batch_with_budgets::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3346:54-3346:78 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3349:54-3349:78 -/
 @[reducible]
 def
   intrinsic.check_batch_with_budgets.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool
@@ -111218,7 +111232,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::check_batch_with_budgets]: loop body 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3381:4-3384:5
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3384:4-3387:5
     Visibility: public -/
 @[rust_loop_body]
 def intrinsic.check_batch_with_budgets_loop0.body
@@ -111251,7 +111265,7 @@ def intrinsic.check_batch_with_budgets_loop0.body
       meter.config, admitted, dependencies))
 
 /-- [noble_contracts::intrinsic::check_batch_with_budgets]: loop 0:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3381:4-3384:5
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3384:4-3387:5
     Visibility: public -/
 @[rust_loop]
 def intrinsic.check_batch_with_budgets_loop0
@@ -111268,7 +111282,7 @@ def intrinsic.check_batch_with_budgets_loop0
     (meter, admitted, index1, dependencies)
 
 /-- [noble_contracts::intrinsic::check_batch_with_budgets]: loop body 1:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3388:4-3391:5
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3391:4-3394:5
     Visibility: public -/
 @[rust_loop_body]
 def intrinsic.check_batch_with_budgets_loop1.body
@@ -111300,7 +111314,7 @@ def intrinsic.check_batch_with_budgets_loop1.body
       obligations))
 
 /-- [noble_contracts::intrinsic::check_batch_with_budgets]: loop 1:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3388:4-3391:5
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3391:4-3394:5
     Visibility: public -/
 @[rust_loop]
 def intrinsic.check_batch_with_budgets_loop1
@@ -111317,7 +111331,7 @@ def intrinsic.check_batch_with_budgets_loop1
     (meter, admitted, index1, obligations)
 
 /-- [noble_contracts::intrinsic::check_batch_with_budgets]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3341:0-3401:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3344:0-3404:1
     Visibility: public -/
 def intrinsic.check_batch_with_budgets
   (batch : intrinsic.ProofBatch) (limits : Limits)
@@ -111417,7 +111431,7 @@ def intrinsic.check_batch_with_budgets
         (core.convert.FromSame Diagnostic) residual
 
 /-- [noble_contracts::intrinsic::check_batch::{impl core::ops::function::FnOnce<((alloc::vec::Vec<noble_contracts::intrinsic::CheckedProof>, noble_contracts::intrinsic::ProofWork),), alloc::vec::Vec<noble_contracts::intrinsic::CheckedProof>> for noble_contracts::intrinsic::check_batch::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3335:13-3335:35 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3338:13-3338:35 -/
 def
   intrinsic.check_batch.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecCheckedProofProofWorkVecCheckedProof.call_once
   (c : intrinsic.check_batch.closure)
@@ -111429,7 +111443,7 @@ def
   ok checked
 
 /-- Trait implementation: [noble_contracts::intrinsic::check_batch::{impl core::ops::function::FnOnce<((alloc::vec::Vec<noble_contracts::intrinsic::CheckedProof>, noble_contracts::intrinsic::ProofWork),), alloc::vec::Vec<noble_contracts::intrinsic::CheckedProof>> for noble_contracts::intrinsic::check_batch::{closure}}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3335:13-3335:35 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3338:13-3338:35 -/
 @[reducible]
 def
   intrinsic.check_batch.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecCheckedProofProofWorkVecCheckedProof
@@ -111441,7 +111455,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::check_batch]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3333:0-3336:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3336:0-3339:1
     Visibility: public -/
 def intrinsic.check_batch
   (batch : intrinsic.ProofBatch) (limits : Limits) :
@@ -111454,7 +111468,7 @@ def intrinsic.check_batch
     r ()
 
 /-- [noble_contracts::intrinsic::prepare_contract::{impl core::ops::function::FnOnce<((noble_contracts::Prepared, core::option::Option<i64>),), noble_contracts::Prepared> for noble_contracts::intrinsic::prepare_contract::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4022:51-4022:75 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4043:51-4043:75 -/
 def
   intrinsic.prepare_contract.closure.Insts.CoreOpsFunctionFnOnceTuplePairPreparedOptionI64Prepared.call_once
   (c : intrinsic.prepare_contract.closure)
@@ -111465,7 +111479,7 @@ def
   ok prepared
 
 /-- Trait implementation: [noble_contracts::intrinsic::prepare_contract::{impl core::ops::function::FnOnce<((noble_contracts::Prepared, core::option::Option<i64>),), noble_contracts::Prepared> for noble_contracts::intrinsic::prepare_contract::{closure}}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4022:51-4022:75 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4043:51-4043:75 -/
 @[reducible]
 def
   intrinsic.prepare_contract.closure.Insts.CoreOpsFunctionFnOnceTuplePairPreparedOptionI64Prepared
@@ -111476,7 +111490,7 @@ def
 }
 
 /-- [noble_contracts::intrinsic::prepare_contract]:
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4018:0-4023:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4039:0-4044:1
     Visibility: public -/
 def intrinsic.prepare_contract
   (contract : intrinsic.ContractGoal) (limits : Limits) :
