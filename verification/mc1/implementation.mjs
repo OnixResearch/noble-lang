@@ -161,8 +161,13 @@ try {
   // library's globs (`lakefile.toml`) cover every `NobleContracts` submodule,
   // including `NobleContracts.Refutation`, which is outside the root import
   // closure, so no explicit submodule targets are needed here.
+  // `NobleContractImpl.UnifyModel` restates the implicit-arguments constraint model inside this
+  // Mathlib-free project (implicit-proof-arguments task 4). It is compiled here, but it carries no
+  // gate pins: the extracted-step refinement it prepares is still open, so nothing in this gate
+  // depends on it.
   run('lean-build', tool('lean', 'lake'), ['build', 'NobleContracts',
-    'NobleContractImpl', 'NobleContractImpl.Projection', 'NobleContractImpl.Statement'], proofRoot);
+    'NobleContractImpl', 'NobleContractImpl.Projection', 'NobleContractImpl.Statement',
+    'NobleContractImpl.UnifyModel'], proofRoot);
   // This CLI-embedded witness is a standalone file, not a lake library target.
   run('intrinsic-type-witness', tool('lean', 'lake'), ['env', 'lean', 'IntrinsicTypeWitness.lean'], proofRoot);
   const library = run('contract-library', tool('lean', 'lake'), ['env', 'lean', 'ContractGate.lean'], proofRoot);
