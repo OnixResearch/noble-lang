@@ -24,8 +24,9 @@ env -i HOME="$HOME" USER="$USER" LOGNAME="$USER" LANG=C.UTF-8 TMPDIR=/some/priva
 `.sha256`) there; lane evidence directories are created under `TMPDIR` and hashed into the receipt.
 
 Retained receipts live beside the gate: `acceptance.json` is the round-1 receipt,
-`acceptance-2026-11-20-r3.json` its retained round-3 successor, and
-`acceptance-2026-11-20-r4.json` the receipt the current promotions cite. A run never writes,
+`acceptance-2026-11-20-r3.json` its retained round-3 successor,
+`acceptance-2026-11-20-r4.json` the receipt the first five promotions cited, and
+`acceptance-2026-11-23-pb.json` the receipt the current promotions cite. A run never writes,
 overwrites or binds a retained receipt — every retained receipt file is excluded from the receipt's
 manifest, and promoting copies a run's new receipt to a new retained name. The raw mirror of a
 promoted run keeps the lane evidence and the run's own command outputs.
@@ -47,6 +48,13 @@ variant; `live-baseline.mjs` now admits exactly that drop beside decision 21a's 
 The same five cases are promotable, LSLOT-04 and LSLOT-07 are refused, LSLOT-05 and LSLOT-08 are
 not executed, and there are no mismatches or integrity issues. The case records keep citing the
 r4 receipt.
+`acceptance-2026-11-23-pb.json` (sha256 `455597be…`, mirror `raw/pb-071700`) runs the gate on the
+Cairn push-B tree `0fffc7d8` (source revision `sha256:f0827fca…`, binary `f82595ad…`), which adds
+the LSLOT-05 selected-target evidence lane, the LSLOT-04/07 evidence conjuncts on a proof-required
+slot (integrator decision 46) and LSLOT-08's replay from two actual baselines (integrator decision
+45). All nine cases are promotable, with no mismatches or integrity issues. LSLOT-04, 05, 07 and 08
+are promoted from it, and the records of LSLOT-01, 02, 03, 06 and 09 now cite it (their designs and
+observed values are unchanged).
 
 ## What a promotion means
 
@@ -67,11 +75,11 @@ executes behavior, it does not prove it.
 | LSLOT-01 | `live_slot_capture_legacy.mjs`, plus `live_slot_late_control.mjs` and `live_slot_selected_origin.mjs` as controls | yes |
 | LSLOT-02 | `live_slot_nested_roots.mjs` | yes |
 | LSLOT-03 | `live_slot_resource_ref_admission.mjs` | yes, under the owner decision 19 amendment: the unselectable `fs.write` and impossible under-declare variants are the drops, the input-only variant is replaced by the both-sides `Account@2` candidate, and `generic_dispatch_effect` is observed from a constructible generic caller's reflected site |
-| LSLOT-04 | `live_slot_cas_policy.mjs` | no: the rollback `evidence` conjunct has no runtime representation |
-| LSLOT-05 | not run | no: the gate has no projector for the positive selected-target proof; the positive target and proof-carrying publication are still absent |
+| LSLOT-04 | `live_slot_cas_policy.mjs`, with the rollback `evidence` conjunct from `live_slot_evidence_policy.mjs` | yes: the conjunct is observed on a proof-required slot whose evidence is the LSLOT-05 lane's (integrator decision 46) |
+| LSLOT-05 | `live_slot_selected_target_evidence.mjs` | yes: the selected returned target's exact evidence record, rechecked by the `noble build --require-proof` consumer (integrator decision 43); the host-rendered closed subject is an explicit assumption |
 | LSLOT-06 | `live_slot_resource_ref_static.mjs` | yes, under the owner decisions 19 and 25: `serialize`/`forge` and `retain` are dropped as impossible by design, `guest_requests` counts the rejected attempts only, and `aggregate-capture`/`export-or-return` accept their earliest refusal |
-| LSLOT-07 | `live_slot_cas_policy.mjs` | no: `publication-without-grant` needs an admitted proof to be present |
-| LSLOT-08 | not run | no: the gate has no projector for the exact replay case; the positive target and proof-carrying publication are still absent |
+| LSLOT-07 | `live_slot_cas_policy.mjs`, with `publication-without-grant` from `live_slot_evidence_policy.mjs` | yes: the admitted proof present in `publication-without-grant` is the LSLOT-05 lane's exact record (integrator decision 46) |
+| LSLOT-08 | `live_slot_quota_replay.mjs` | yes, as amended by integrator decision 45: the replay variants run from two actual baselines (the captured `adder` target and the effectful `traced` target); exact replay eligibility is neither behavioral proof nor real-effect authority |
 | LSLOT-09 | `live_slot_legacy_refusal.mjs`, `live_repl_slot_exclusion.mjs` | yes |
 
 ## Regressions the gate runs before projecting

@@ -15,16 +15,16 @@
           "revision": "0.1.0-draft.5",
           "kind": "test",
           "result": "passed",
-          "source_revision": "sha256:c4430e9b78aff231cc74c88eba0958880cdcf6ee52b96808355a03a96aabeb61",
+          "source_revision": "sha256:f0827fcaa12d647807b5f7021335fcf85939188bdedb9049e3f7b249e0b73199",
           "configuration": {
             "profile": "Live-Slot-Design",
             "harness": "saved-capture-versus-opt-in-generic-root",
-            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r4.json",
-            "receipt_sha256": "9a925e75eda4c04a5968234ef1540a322ef3430fbe1bfb003174c058242c39d4",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-23-pb.json",
+            "receipt_sha256": "455597be2346634db712a6d4876ce011d91e3f6b2d91fa66cfe4995cc7dbce2c",
             "gate": "verification/lslot-cases/gate.mjs",
             "case": "LSLOT-01",
-            "tested_commit": "ab1b16476a44b7a2175b331624c38c83d6e3868c",
-            "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+            "tested_commit": "0fffc7d842b0e656461fbf7f33d085a199f853fb",
+            "binary_sha256": "f82595adb402be01df821cfd5a90880d0cd2d118cd8399d0414d9cf33d00b383",
             "command": "node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY",
             "prepromotion_case_sha256": "5c017bb9f6a4683f994823d2b9cd85ced2284bee3fdeeb38acd604f9084e5a4f",
             "workload_binding": "Exact projection over the canonical {id,input,expected} digest (5c017bb9f6a4683f994823d2b9cd85ced2284bee3fdeeb38acd604f9084e5a4f): 22 observed field(s), 2 declared prose field(s), 0 unobserved, 0 mismatched; every observed value equals the canonical value and every leaf has exactly one entry."
@@ -49,16 +49,16 @@
           "revision": "0.1.0-draft.5",
           "kind": "test",
           "result": "passed",
-          "source_revision": "sha256:c4430e9b78aff231cc74c88eba0958880cdcf6ee52b96808355a03a96aabeb61",
+          "source_revision": "sha256:f0827fcaa12d647807b5f7021335fcf85939188bdedb9049e3f7b249e0b73199",
           "configuration": {
             "profile": "Live-Slot-Design",
             "harness": "parent-child-transitive-snapshot-and-new-root",
-            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r4.json",
-            "receipt_sha256": "9a925e75eda4c04a5968234ef1540a322ef3430fbe1bfb003174c058242c39d4",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-23-pb.json",
+            "receipt_sha256": "455597be2346634db712a6d4876ce011d91e3f6b2d91fa66cfe4995cc7dbce2c",
             "gate": "verification/lslot-cases/gate.mjs",
             "case": "LSLOT-02",
-            "tested_commit": "ab1b16476a44b7a2175b331624c38c83d6e3868c",
-            "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+            "tested_commit": "0fffc7d842b0e656461fbf7f33d085a199f853fb",
+            "binary_sha256": "f82595adb402be01df821cfd5a90880d0cd2d118cd8399d0414d9cf33d00b383",
             "command": "node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY",
             "prepromotion_case_sha256": "5faeb05d62c71e410a16b337e83a9dd68465e97d240cc8e82a510bb3fc84b17f",
             "workload_binding": "Exact projection over the canonical {id,input,expected} digest (5faeb05d62c71e410a16b337e83a9dd68465e97d240cc8e82a510bb3fc84b17f): 43 observed field(s), 8 declared prose field(s), 0 unobserved, 0 mismatched; every observed value equals the canonical value and every leaf has exactly one entry."
@@ -85,16 +85,16 @@
           "revision": "0.1.0-draft.5",
           "kind": "test",
           "result": "passed",
-          "source_revision": "sha256:c4430e9b78aff231cc74c88eba0958880cdcf6ee52b96808355a03a96aabeb61",
+          "source_revision": "sha256:f0827fcaa12d647807b5f7021335fcf85939188bdedb9049e3f7b249e0b73199",
           "configuration": {
             "profile": "Live-Slot-Design",
             "harness": "independent-exact-ordered-candidate-admission",
-            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r4.json",
-            "receipt_sha256": "9a925e75eda4c04a5968234ef1540a322ef3430fbe1bfb003174c058242c39d4",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-23-pb.json",
+            "receipt_sha256": "455597be2346634db712a6d4876ce011d91e3f6b2d91fa66cfe4995cc7dbce2c",
             "gate": "verification/lslot-cases/gate.mjs",
             "case": "LSLOT-03",
-            "tested_commit": "ab1b16476a44b7a2175b331624c38c83d6e3868c",
-            "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+            "tested_commit": "0fffc7d842b0e656461fbf7f33d085a199f853fb",
+            "binary_sha256": "f82595adb402be01df821cfd5a90880d0cd2d118cd8399d0414d9cf33d00b383",
             "command": "node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY",
             "prepromotion_case_sha256": "44242e3de20b19f0d85eae9978d7fcf4d9f995fd1e92f2910ad1fd48d9fb9687",
             "workload_binding": "Exact projection over the canonical {id,input,expected} digest (44242e3de20b19f0d85eae9978d7fcf4d9f995fd1e92f2910ad1fd48d9fb9687): 18 observed field(s), 3 declared prose field(s), 0 unobserved, 0 mismatched; every observed value equals the canonical value and every leaf has exactly one entry."
@@ -112,13 +112,68 @@
       "id": "LSLOT-04", "profile": "Live-Slot-Design", "kind": "admission", "requirements": ["H-LSLOT-01", "S-LSLOT-01", "EV-LSLOT-01"],
       "input": {"harness": "global-epoch-slot-incarnation-CAS", "initial": {"global_epoch": 18, "slot_A": {"incarnation": 7, "generation": 3, "target": "A-v1"}, "slot_B": {"incarnation": 2, "generation": 1, "target": "B-v1"}}, "variants": [{"name": "same-slot-writers", "writers": ["A-v2 expecting epoch 18 A:7/3", "A-v3 expecting epoch 18 A:7/3"], "first_commit": "A-v2 at epoch 19", "second_result": "stale-reject"}, {"name": "unrelated-slot-race", "writers": ["B-v2 expecting epoch 18 B:2/1", "A-v2 expecting epoch 18 A:7/3"], "first_commit": "B-v2 at epoch 19", "second_result": "stale-reject"}, {"name": "delete-recreate-ABA", "steps": ["delete A:7/3 epoch 19", "recreate same visible ID A with new incarnation 8/1 and same target A-v1 epoch 20", "old A:7/3 epoch-18 writer submits"], "last_result": "stale-reject"}, {"name": "authorized-rollback", "steps": ["A-v2 committed at epoch 19", "independently readmit A-v1 and exact applicable evidence", "authorize new CAS expected epoch 19 A:7/4"], "result": "A-v1 new generation 5 and epoch 20"}, {"name": "rollback-denied", "steps": ["A-v2 committed", "A-v1 lacks current authorization or applicable evidence"], "result": "reject-before-publication"}]},
       "expected": {"stage": "slot-publication", "outcome": "global-CAS-no-ABA", "every_committed_update_increments_epoch": true, "stale_same_or_unrelated_writer_publishes": false, "recreated_slot_reuses_incarnation": false, "rollback_restores_old_epoch_or_effects": false, "successful_rollback_requires_fresh_admission_authorization_and_evidence": true, "failed_candidate_executions": 0, "guest_requests": 0, "protected_operations": 0},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "From the registered initial registry (global epoch 18; slot A incarnation 7 generation 3 holding A-v1; slot B 2/1 holding B-v1) every committed update increments the single global epoch and a stale same-slot or unrelated-slot writer is refused as stale: the delete-recreate sequence gives the recreated A a new incarnation (8/1) so the old A:7/3 expectation cannot succeed (no ABA), and a rollback to A-v1 publishes only as a fresh admission at a new epoch and generation with current authorization and, on the proof-required slot, A-v1's own exact evidence; without either it is refused before publication. No candidate executed for a refused update, and guest requests and protected operations stay 0. This executes behavior; it is not a proof.",
+          "subject": "LSLOT-04",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:f0827fcaa12d647807b5f7021335fcf85939188bdedb9049e3f7b249e0b73199",
+          "configuration": {
+            "profile": "Live-Slot-Design",
+            "harness": "global-epoch-slot-incarnation-CAS",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-23-pb.json",
+            "receipt_sha256": "455597be2346634db712a6d4876ce011d91e3f6b2d91fa66cfe4995cc7dbce2c",
+            "gate": "verification/lslot-cases/gate.mjs",
+            "case": "LSLOT-04",
+            "tested_commit": "0fffc7d842b0e656461fbf7f33d085a199f853fb",
+            "binary_sha256": "f82595adb402be01df821cfd5a90880d0cd2d118cd8399d0414d9cf33d00b383",
+            "command": "node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY",
+            "prepromotion_case_sha256": "e7a4d0202735ae49c781e0f71bc344cc53dadda8bdcc9473cb4c1af2136b56dd",
+            "workload_binding": "Exact projection over the canonical {id,input,expected} digest (e7a4d0202735ae49c781e0f71bc344cc53dadda8bdcc9473cb4c1af2136b56dd): 22 observed field(s), 2 declared prose field(s), 0 unobserved, 0 mismatched; every observed value equals the canonical value and every leaf has exactly one entry."
+          },
+          "assumptions": [
+            "The pinned selected Rust toolchain, the compiled `noble` CLI and the Node slot engine are trusted only at the recorded source revision and binary sha256; this receipt executes behavior and is not a proof.",
+            "The rollback's evidence conjunct is observed on a proof-required slot (integrator decision 46): the evidence record and the slot's selected claim are the LSLOT-05 evidence lane's, and their Lean recheck is the shared `noble build --require-proof` consumer with its explicit assumptions."
+          ]
+        }
+      ]
     },
     {
       "id": "LSLOT-05", "profile": "Live-Slot-Design", "kind": "admission", "requirements": ["VC-LSLOT-01", "H-LSLOT-01", "EV-LSLOT-01"],
       "input": {"harness": "proof-required-selected-target-admission", "policy": "proof-required-for-this-slot", "target": {"program_value_id": "P2", "definition_id": "D2", "captures": ["I64:2"], "context": "C2", "claim": "Q2", "assumptions": "A2", "artifact": "Wasm2"}, "variants": [{"name": "old-version-proof", "evidence_subject": "P1/D1", "result": "reject"}, {"name": "same-recipe-different-capture", "evidence_capture": "I64:1", "result": "reject"}, {"name": "wrong-context", "evidence_context": "C1", "result": "reject"}, {"name": "wrong-claim", "evidence_claim": "Q1", "result": "reject"}, {"name": "wrong-assumption", "evidence_assumptions": "A1", "result": "reject"}, {"name": "right-recipe-wrong-artifact", "evidence_artifact": "Wasm1", "result": "reject"}, {"name": "generic-wrapper-proof-only", "evidence_subject": "caller-generic", "result": "reject"}, {"name": "exact-selected-subject", "evidence_subject": "P2/D2", "evidence_capture": "I64:2", "evidence_context": "C2", "evidence_claim": "Q2", "evidence_assumptions": "A2", "evidence_artifact": "Wasm2", "result": "admit"}]},
       "expected": {"stage": "selected-target-evidence", "outcome": "only-exact-applicable-evidence-admitted", "proof_transfer_from_old_or_wrapper": false, "failed_variants_publish_or_execute": false, "selected_version_identity_not_altered_by_proof": true, "guest_requests": 0, "protected_operations": 0},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "A proof-required slot admits a publication of the selected returned target (captures `I64:2`) only with the exact applicable evidence record: evidence for the old version's subject, for the same recipe with another capture, for another semantic context, claim or assumption set, for the right recipe with another installed artifact, and a proof about a generic wrapper are each refused at stage selected-target-evidence before the worker publishes or executes anything, while the exact record publishes. The accepted proof never changes the selected version's identity, no proof transfers from the old version or a wrapper, and guest requests and protected operations stay 0. This executes behavior; it is not a proof of the target.",
+          "subject": "LSLOT-05",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:f0827fcaa12d647807b5f7021335fcf85939188bdedb9049e3f7b249e0b73199",
+          "configuration": {
+            "profile": "Live-Slot-Design",
+            "harness": "proof-required-selected-target-admission",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-23-pb.json",
+            "receipt_sha256": "455597be2346634db712a6d4876ce011d91e3f6b2d91fa66cfe4995cc7dbce2c",
+            "gate": "verification/lslot-cases/gate.mjs",
+            "case": "LSLOT-05",
+            "tested_commit": "0fffc7d842b0e656461fbf7f33d085a199f853fb",
+            "binary_sha256": "f82595adb402be01df821cfd5a90880d0cd2d118cd8399d0414d9cf33d00b383",
+            "command": "node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY",
+            "prepromotion_case_sha256": "dd4f97f20ff937c0a8a9d0612a85437ab4d24e1fde9251e24c8b80597e7069f1",
+            "workload_binding": "Exact projection over the canonical {id,input,expected} digest (dd4f97f20ff937c0a8a9d0612a85437ab4d24e1fde9251e24c8b80597e7069f1): 17 observed field(s), 8 declared prose field(s), 0 unobserved, 0 mismatched; every observed value equals the canonical value and every leaf has exactly one entry."
+          },
+          "assumptions": [
+            "The pinned selected Rust toolchain, the compiled `noble` CLI and the Node slot engine are trusted only at the recorded source revision and binary sha256; this receipt executes behavior and is not a proof.",
+            "The evidence is rechecked by the `noble build --require-proof` consumer route (integrator decision 43); the pinned Lean consumer and the MC1/MC2 library are explicit assumptions (VC-GATE-03).",
+            "The closed subject the claim binds is rendered by trusted host code from the verified template rows (composition as concatenation, quoted root inputs as their captured values); there is no independent model of that rendering, and the installed bytes' correspondence to the subject is an artifact premise, not proved here."
+          ]
+        }
+      ]
     },
     {
       "id": "LSLOT-06", "profile": "Live-Slot-Design", "kind": "static", "requirements": ["K-LSLOT-01", "K-LSLOT-02", "S-LSLOT-01", "B-LSLOT-01"],
@@ -132,16 +187,16 @@
           "revision": "0.1.0-draft.5",
           "kind": "test",
           "result": "passed",
-          "source_revision": "sha256:c4430e9b78aff231cc74c88eba0958880cdcf6ee52b96808355a03a96aabeb61",
+          "source_revision": "sha256:f0827fcaa12d647807b5f7021335fcf85939188bdedb9049e3f7b249e0b73199",
           "configuration": {
             "profile": "Live-Slot-Design",
             "harness": "host-issued-input-ref-noncapture-and-lifetime",
-            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r4.json",
-            "receipt_sha256": "9a925e75eda4c04a5968234ef1540a322ef3430fbe1bfb003174c058242c39d4",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-23-pb.json",
+            "receipt_sha256": "455597be2346634db712a6d4876ce011d91e3f6b2d91fa66cfe4995cc7dbce2c",
             "gate": "verification/lslot-cases/gate.mjs",
             "case": "LSLOT-06",
-            "tested_commit": "ab1b16476a44b7a2175b331624c38c83d6e3868c",
-            "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+            "tested_commit": "0fffc7d842b0e656461fbf7f33d085a199f853fb",
+            "binary_sha256": "f82595adb402be01df821cfd5a90880d0cd2d118cd8399d0414d9cf33d00b383",
             "command": "node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY",
             "prepromotion_case_sha256": "0100a26cdbe76ab95fcd6355df86a5fff671eed80b5cf14ec21aebe49be4e826",
             "workload_binding": "Exact projection over the canonical {id,input,expected} digest (0100a26cdbe76ab95fcd6355df86a5fff671eed80b5cf14ec21aebe49be4e826): 15 observed field(s), 3 declared prose field(s), 0 unobserved, 0 mismatched; every observed value equals the canonical value and every leaf has exactly one entry."
@@ -160,13 +215,67 @@
       "id": "LSLOT-07", "profile": "Live-Slot-Design", "kind": "runtime", "requirements": ["K-LSLOT-02", "S-LSLOT-01", "VC-LSLOT-01", "EV-LSLOT-01"],
       "input": {"harness": "current-host-policy-at-publication-dispatch-and-effect", "slot": "emit", "pinned_epoch": 1, "old_target": "emit-v1 uses test.emit", "variants": [{"name": "publication-without-grant", "candidate": "emit-v2", "slot_id_and_proof_present": true, "host_publication_grant": false, "result": "deny"}, {"name": "dispatch-without-grant", "live_ref_and_effect_declaration_present": true, "host_dispatch_grant": false, "result": "deny"}, {"name": "revoked-after-root-pin", "host_dispatch_grant_at_pin": true, "revoke_dispatch_before_nested_call": true, "result": "deny"}, {"name": "old-version-effect-revoked-after-pin", "host_dispatch_grant": true, "effect_grant_at_pin": true, "revoke_test_emit_before_effect_request": true, "result": "deny-actual-effect"}]},
       "expected": {"stage": "live-slot-policy", "outcome": "current-grant-is-independent", "publication_or_dispatch_authorized_by_id_ref_effect_or_evidence": false, "revoked_effect_protected_operations": 0, "revoked_effect_request_recorded": true, "old_pinned_target_may_bypass_revocation": false, "already_completed_prior_effects_rolled_back": false},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "Current host policy governs each action independently: a publication of `emit-v2` with the slot id and an admitted proof present but no publication grant is denied, a dispatch with a LiveRef and the effect declaration but no dispatch grant is denied, revoking dispatch after a root pinned epoch 1 denies the next nested call, and revoking `test.emit` after the pin refuses the old pinned target's effect request with zero protected operations while recording the request. Neither an id, a ref, an effect declaration nor evidence authorizes publication or dispatch, an old pinned target cannot bypass revocation, and already completed prior effects are not rolled back. This executes behavior; it is not a proof.",
+          "subject": "LSLOT-07",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:f0827fcaa12d647807b5f7021335fcf85939188bdedb9049e3f7b249e0b73199",
+          "configuration": {
+            "profile": "Live-Slot-Design",
+            "harness": "current-host-policy-at-publication-dispatch-and-effect",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-23-pb.json",
+            "receipt_sha256": "455597be2346634db712a6d4876ce011d91e3f6b2d91fa66cfe4995cc7dbce2c",
+            "gate": "verification/lslot-cases/gate.mjs",
+            "case": "LSLOT-07",
+            "tested_commit": "0fffc7d842b0e656461fbf7f33d085a199f853fb",
+            "binary_sha256": "f82595adb402be01df821cfd5a90880d0cd2d118cd8399d0414d9cf33d00b383",
+            "command": "node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY",
+            "prepromotion_case_sha256": "0c0b6fe2090636e86b9cafdc07f0ec7a377bfdbb61f9dc58128ddab7851bd5e1",
+            "workload_binding": "Exact projection over the canonical {id,input,expected} digest (0c0b6fe2090636e86b9cafdc07f0ec7a377bfdbb61f9dc58128ddab7851bd5e1): 13 observed field(s), 3 declared prose field(s), 0 unobserved, 0 mismatched; every observed value equals the canonical value and every leaf has exactly one entry."
+          },
+          "assumptions": [
+            "The pinned selected Rust toolchain, the compiled `noble` CLI and the Node slot engine are trusted only at the recorded source revision and binary sha256; this receipt executes behavior and is not a proof.",
+            "The admitted proof in `publication-without-grant` is the LSLOT-05 evidence lane's exact record (integrator decision 46); the test host grants and revokes through its authority callback, not through a production host policy."
+          ]
+        }
+      ]
     },
     {
       "id": "LSLOT-08", "profile": "Live-Slot-Design", "kind": "runtime", "requirements": ["H-LSLOT-01", "S-LSLOT-01", "DX-LSLOT-01", "EV-LSLOT-01"],
       "input": {"harness": "last-pin-reclamation-reflection-and-hostile-replay", "retention_fixture": {"registry_epoch_1": {"slot": {"incarnation": 1, "generation": 1, "target": "v1"}}, "retained_version_quota": 1, "owners": ["current registry map epoch 1", "in-flight-root-R pinned epoch 1", "independently saved exact Program v1"], "phases": [{"name": "both-old-owners-live", "attempt": "independently admitted host-authorized v2 publication at expected epoch 1 slot 1/1", "expected": "quota-refusal-no-candidate-execution"}, {"name": "root-only-exits", "release": "root R and all in-flight frames", "saved_program": "still independently pinned", "attempt": "fresh authorized v2 publication at expected epoch 1 slot 1/1", "expected": "quota-refusal-v1-still-callable"}, {"name": "last-old-owner-releases", "release": "saved exact Program v1", "attempt": "fresh candidate admission, current host authorization and CAS expected epoch 1 slot 1/1 for v2", "expected": "atomic-epoch-2-generation-2-publication; now-obsolete-unpinned-epoch-1-map-and-unowned-v1-code-retire; reclaim-v1-budget"}], "reflection": "reflect the same generic caller before/after every phase"}, "replay_fixture": {"independent_from_retention_fixture": true, "frozen_admitted_registry": {"epoch": 9, "slot_id": "emit", "incarnation": 4, "generation": 3}, "root_inputs": ["I64:5", "host-issued LiveRef<[I64],[I64],{test.emit}> for emit"], "baselines": {"captured": {"target": "Pcap/Dcap", "source": "def adder [ quote [ + ] compose ]", "selected_artifact": "Wcap", "captures": ["I64:5"], "semantic_context": "Ccap", "host_policy_inputs": "current authorized dispatch; the target requests no host effect", "ordered_trace": []}, "effectful": {"target": "Ptrace/Dtrace", "source": "def traced [ drop \"A\" test.emit drop \"B\" test.emit drop 42 ]", "selected_artifact": "Wtrace", "captures": [], "semantic_context": "Ctrace", "host_policy_inputs": "current authorized scripted test.emit:A/B", "ordered_trace": [{"request": "test.emit:A", "response": "emitted:A", "accounting": "request-1/protected-operation-1"}, {"request": "test.emit:B", "response": "emitted:B", "accounting": "request-2/protected-operation-2"}]}}, "variant_protocol": "each variant starts from the exact baselines it names, changes only the named field, and independently admits every frozen target and artifact; the captured baseline selects the returned Program of adder applied to the root input 5, the effectful baseline the named definition traced", "variants": [{"name": "bare-slot-id", "omit": "frozen admitted registry", "result": "reject", "baselines": ["captured", "effectful"]}, {"name": "bare-LiveRef", "omit": "frozen admitted registry", "result": "reject", "baselines": ["captured", "effectful"]}, {"name": "wrong-registry-epoch", "epoch": 10, "result": "reject", "baselines": ["captured", "effectful"]}, {"name": "wrong-slot-incarnation", "incarnation": 5, "result": "reject", "baselines": ["captured", "effectful"]}, {"name": "wrong-slot-generation", "generation": 4, "result": "reject", "baselines": ["captured", "effectful"]}, {"name": "substituted-selected-artifact", "selected_artifact": "Wother", "result": "reject", "baselines": ["captured", "effectful"]}, {"name": "substituted-captures", "captures": ["I64:6"], "result": "reject", "baselines": ["captured"]}, {"name": "wrong-semantic-context", "semantic_context": "Cother", "result": "reject", "baselines": ["captured", "effectful"]}, {"name": "reordered-host-requests", "ordered_requests": ["test.emit:B", "test.emit:A"], "result": "reject", "baselines": ["effectful"]}, {"name": "substituted-host-response", "response_for_first_request": "ok-other", "result": "reject", "baselines": ["effectful"]}, {"name": "wrong-host-accounting", "protected_operations": 1, "result": "reject", "baselines": ["effectful"]}, {"name": "exact-frozen-admitted-and-ordered", "result": "eligible-deterministic-replay-not-proof-or-real-effect-authorization", "baselines": ["captured", "effectful"]}]}},
       "expected": {"stage": "retention-reflection-and-replay", "outcome": "last-pin-reclamation-and-exact-replay", "first_two_publications_refused_without_candidate_execution": true, "old_root_and_saved_program_usable_until_own_release": true, "published_epoch_after_last_pin_release": 2, "published_slot_generation_after_last_pin_release": 2, "v1_retired_and_budget_reclaimed_after_new_commit": true, "reflection_all_phases": "inert typed generic slot.invoke and effect only", "hostile_replay_variants_all_refuse": true, "exact_variant_replay_eligibility_is_behavioral_proof": false, "exact_variant_authorizes_real_host_effects": false, "trace_fields": ["root_epoch", "slot_incarnation", "slot_generation", "selected_ProgramValueId", "selected_DefinitionId", "captures", "admitted_artifact", "semantic_context", "host_policy", "ordered_host_request_response_accounting"]},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "With a retained-version quota of 1 and the current map, an in-flight root pinned at epoch 1 and an independently saved exact `Program v1` as owners, the first two independently admitted, host-authorized publications of v2 are refused without executing the candidate while each old owner stays usable; after the last owner's release v2 publishes at epoch 2 and slot generation 2, v1 is retired and its budget reclaimed, and the generic `slot.invoke` caller reflects the same inert typed recipe in every phase. From the frozen admitted registry (epoch 9, `emit` 4/3) both baselines (the captured `adder` target over `I64:5` and the effectful `traced` target with its ordered `test.emit` trace) refuse every hostile replay variant; the exact variant is replay-eligible only and neither a behavioral proof nor an authorization of real host effects. This executes behavior; it is not a proof.",
+          "subject": "LSLOT-08",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:f0827fcaa12d647807b5f7021335fcf85939188bdedb9049e3f7b249e0b73199",
+          "configuration": {
+            "profile": "Live-Slot-Design",
+            "harness": "last-pin-reclamation-reflection-and-hostile-replay",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-23-pb.json",
+            "receipt_sha256": "455597be2346634db712a6d4876ce011d91e3f6b2d91fa66cfe4995cc7dbce2c",
+            "gate": "verification/lslot-cases/gate.mjs",
+            "case": "LSLOT-08",
+            "tested_commit": "0fffc7d842b0e656461fbf7f33d085a199f853fb",
+            "binary_sha256": "f82595adb402be01df821cfd5a90880d0cd2d118cd8399d0414d9cf33d00b383",
+            "command": "node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY",
+            "prepromotion_case_sha256": "32dc0cdb296c7fce1a2bf40fd9c4c037ff4df8d1dff453159abe118c35672084",
+            "workload_binding": "Exact projection over the canonical {id,input,expected} digest (32dc0cdb296c7fce1a2bf40fd9c4c037ff4df8d1dff453159abe118c35672084): 30 observed field(s), 12 declared prose field(s), 0 unobserved, 0 mismatched; every observed value equals the canonical value and every leaf has exactly one entry."
+          },
+          "assumptions": [
+            "The pinned selected Rust toolchain, the compiled `noble` CLI and the Node slot engine are trusted only at the recorded source revision and binary sha256; this receipt executes behavior and is not a proof.",
+            "The replay fixture runs from two actual baselines (integrator decision 45, case amended in place with its amendments record); exact replay eligibility is not behavioral proof or real-effect authority."
+          ]
+        }
+      ]
     },
     {
       "id": "LSLOT-09", "profile": "Live-Slot-Design", "kind": "static", "requirements": ["B-LSLOT-01", "K-LSLOT-01", "EV-LSLOT-01"],
@@ -180,16 +289,16 @@
           "revision": "0.1.0-draft.5",
           "kind": "test",
           "result": "passed",
-          "source_revision": "sha256:c4430e9b78aff231cc74c88eba0958880cdcf6ee52b96808355a03a96aabeb61",
+          "source_revision": "sha256:f0827fcaa12d647807b5f7021335fcf85939188bdedb9049e3f7b249e0b73199",
           "configuration": {
             "profile": "Live-Slot-Design",
             "harness": "legacy-profile-exclusion",
-            "receipt": "../../verification/lslot-cases/acceptance-2026-11-20-r4.json",
-            "receipt_sha256": "9a925e75eda4c04a5968234ef1540a322ef3430fbe1bfb003174c058242c39d4",
+            "receipt": "../../verification/lslot-cases/acceptance-2026-11-23-pb.json",
+            "receipt_sha256": "455597be2346634db712a6d4876ce011d91e3f6b2d91fa66cfe4995cc7dbce2c",
             "gate": "verification/lslot-cases/gate.mjs",
             "case": "LSLOT-09",
-            "tested_commit": "ab1b16476a44b7a2175b331624c38c83d6e3868c",
-            "binary_sha256": "422cfa959b53987480158ef4ed995f10e79788fff47ac70afe1d7e5cb05909bb",
+            "tested_commit": "0fffc7d842b0e656461fbf7f33d085a199f853fb",
+            "binary_sha256": "f82595adb402be01df821cfd5a90880d0cd2d118cd8399d0414d9cf33d00b383",
             "command": "node verification/lslot-cases/gate.mjs ABSOLUTE_NEW_OUTPUT_DIRECTORY",
             "prepromotion_case_sha256": "60e9366e629c69cfcd024752c2fe04b2901330052c482b03b49441b629a3d340",
             "workload_binding": "Exact projection over the canonical {id,input,expected} digest (60e9366e629c69cfcd024752c2fe04b2901330052c482b03b49441b629a3d340): 8 observed field(s), 5 declared prose field(s), 0 unobserved, 0 mismatched; every observed value equals the canonical value and every leaf has exactly one entry."

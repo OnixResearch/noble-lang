@@ -1,0 +1,3569 @@
+{
+  "retention": {
+    "owner": "program-1",
+    "oldEpoch": "1",
+    "newEpoch": "2",
+    "retired": [
+      {
+        "generation": 2,
+        "length": 3,
+        "start": 5
+      }
+    ],
+    "keeper": {
+      "artifact_sha256": "486b7f989c6fa31911933bf3a49e892aba1ff17bf739dc083f048355cfcebdb8",
+      "generation": "2"
+    },
+    "saved_program": {
+      "kind": 4,
+      "owner": "program-1",
+      "program_index": 1,
+      "source_id": "keeper"
+    },
+    "initial": {
+      "epoch": "1",
+      "generation": "1",
+      "guest_requests": 0,
+      "incarnation": "1",
+      "outcome": "published",
+      "protected_operations": 0,
+      "retire_code_spans": [],
+      "schema": "noble-live-slot-report/v1",
+      "stage": "slot"
+    },
+    "entered": {
+      "checkpoint": 1,
+      "import": "live_select",
+      "ordinal": 0,
+      "outcome": "checkpoint-entered",
+      "root": "2",
+      "schema": "noble-live-slot-report/v1",
+      "site": 0,
+      "stage": "operator-control"
+    },
+    "refused_while_pinned": {
+      "checkpoint": 1,
+      "control_id": "1",
+      "epoch": "1",
+      "outcome": "retention-budget-refused",
+      "root": "2",
+      "schema": "noble-live-slot-report/v1",
+      "stage": "operator-control"
+    },
+    "old_root": {
+      "control_events": [
+        {
+          "control_id": "1",
+          "epoch": "1",
+          "operation": "publish",
+          "outcome": "retention-budget-refused",
+          "scope": "Q"
+        }
+      ],
+      "epoch": "1",
+      "frame_pins": {
+        "active": 0,
+        "entered": 2,
+        "released": 2
+      },
+      "guest_requests": 1,
+      "outcome": "executed",
+      "protected_operations": 0,
+      "request_trace": [
+        {
+          "artifactSha256": "486b7f989c6fa31911933bf3a49e892aba1ff17bf739dc083f048355cfcebdb8",
+          "captures": [],
+          "definitionId": null,
+          "generation": "1",
+          "incarnation": "1",
+          "operation": "dispatch",
+          "outcome": "allowed",
+          "policyAllowed": true,
+          "policyInput": {
+            "operation": "dispatch",
+            "rootEpoch": "1",
+            "slotId": "Q",
+            "version": {
+              "artifactSha256": "486b7f989c6fa31911933bf3a49e892aba1ff17bf739dc083f048355cfcebdb8",
+              "assumptions": "unverified",
+              "captures": [],
+              "claim": "unverified",
+              "definitionId": null,
+              "effects": [],
+              "handle": 4101,
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:486b7f989c6fa31911933bf3a49e892aba1ff17bf739dc083f048355cfcebdb8:cell:4101",
+              "recipeSha256": "8f19f89f300e7e6f6b0a36903ac31d6087b34682cd009c024ced061cebe1e001",
+              "semanticContext": "definition-source:unavailable:selection-source:5b80081c2c84663c7b182154e20d11cacc606f807ea58e901f7a5c5d29bf5244:artifact:486b7f989c6fa31911933bf3a49e892aba1ff17bf739dc083f048355cfcebdb8:occurrence:1:recipe:8f19f89f300e7e6f6b0a36903ac31d6087b34682cd009c024ced061cebe1e001"
+            }
+          },
+          "programValueId": "artifact:486b7f989c6fa31911933bf3a49e892aba1ff17bf739dc083f048355cfcebdb8:cell:4101",
+          "recipeSha256": "8f19f89f300e7e6f6b0a36903ac31d6087b34682cd009c024ced061cebe1e001",
+          "rootEpoch": "1",
+          "semanticContext": "definition-source:unavailable:selection-source:5b80081c2c84663c7b182154e20d11cacc606f807ea58e901f7a5c5d29bf5244:artifact:486b7f989c6fa31911933bf3a49e892aba1ff17bf739dc083f048355cfcebdb8:occurrence:1:recipe:8f19f89f300e7e6f6b0a36903ac31d6087b34682cd009c024ced061cebe1e001",
+          "slotId": "Q"
+        }
+      ],
+      "retire_code_spans": [],
+      "schema": "noble-live-slot-report/v1",
+      "stack": [
+        {
+          "kind": 1,
+          "value": "6"
+        }
+      ],
+      "stage": "slot"
+    },
+    "refused_after_root": {
+      "epoch": "1",
+      "generation": null,
+      "guest_requests": 0,
+      "incarnation": null,
+      "outcome": "retention-budget-refused",
+      "protected_operations": 0,
+      "retire_code_spans": [],
+      "schema": "noble-live-slot-report/v1",
+      "stage": "slot"
+    },
+    "still_callable": {
+      "control_events": [],
+      "epoch": "1",
+      "frame_pins": {
+        "active": 0,
+        "entered": 1,
+        "released": 1
+      },
+      "guest_requests": 0,
+      "outcome": "executed",
+      "protected_operations": 0,
+      "request_trace": [],
+      "retire_code_spans": [],
+      "schema": "noble-live-slot-report/v1",
+      "stack": [
+        {
+          "kind": 1,
+          "value": "11"
+        }
+      ],
+      "stage": "slot"
+    },
+    "released": {
+      "guest_requests": 0,
+      "outcome": "program-released",
+      "owner": "program-1",
+      "protected_operations": 0,
+      "retire_code_spans": [],
+      "schema": "noble-live-slot-report/v1",
+      "stage": "slot"
+    },
+    "published": {
+      "epoch": "2",
+      "generation": "2",
+      "guest_requests": 0,
+      "incarnation": "1",
+      "outcome": "published",
+      "protected_operations": 0,
+      "retire_code_spans": [
+        {
+          "generation": 2,
+          "length": 3,
+          "start": 5
+        }
+      ],
+      "schema": "noble-live-slot-report/v1",
+      "stage": "slot"
+    },
+    "new_root": {
+      "control_events": [],
+      "epoch": "2",
+      "frame_pins": {
+        "active": 0,
+        "entered": 2,
+        "released": 2
+      },
+      "guest_requests": 1,
+      "outcome": "executed",
+      "protected_operations": 0,
+      "request_trace": [
+        {
+          "artifactSha256": "f800e7f279e5d183b34c3f675b1059c5bb4369ea2c9ecf3ffbde4933966409d4",
+          "captures": [],
+          "definitionId": null,
+          "generation": "2",
+          "incarnation": "1",
+          "operation": "dispatch",
+          "outcome": "allowed",
+          "policyAllowed": true,
+          "policyInput": {
+            "operation": "dispatch",
+            "rootEpoch": "2",
+            "slotId": "Q",
+            "version": {
+              "artifactSha256": "f800e7f279e5d183b34c3f675b1059c5bb4369ea2c9ecf3ffbde4933966409d4",
+              "assumptions": "unverified",
+              "captures": [],
+              "claim": "unverified",
+              "definitionId": null,
+              "effects": [],
+              "handle": 4109,
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:f800e7f279e5d183b34c3f675b1059c5bb4369ea2c9ecf3ffbde4933966409d4:cell:4109",
+              "recipeSha256": "00dca030824a8d8fcf01c741e040b6c3ed1c1a1ae2253cb94ab5c8014d6befd2",
+              "semanticContext": "definition-source:unavailable:selection-source:e587aabc0d6f5e75daf6494fe20c5b7c8ea1359f228e0f0d2bfb2db44b493101:artifact:f800e7f279e5d183b34c3f675b1059c5bb4369ea2c9ecf3ffbde4933966409d4:occurrence:0:recipe:00dca030824a8d8fcf01c741e040b6c3ed1c1a1ae2253cb94ab5c8014d6befd2"
+            }
+          },
+          "programValueId": "artifact:f800e7f279e5d183b34c3f675b1059c5bb4369ea2c9ecf3ffbde4933966409d4:cell:4109",
+          "recipeSha256": "00dca030824a8d8fcf01c741e040b6c3ed1c1a1ae2253cb94ab5c8014d6befd2",
+          "rootEpoch": "2",
+          "semanticContext": "definition-source:unavailable:selection-source:e587aabc0d6f5e75daf6494fe20c5b7c8ea1359f228e0f0d2bfb2db44b493101:artifact:f800e7f279e5d183b34c3f675b1059c5bb4369ea2c9ecf3ffbde4933966409d4:occurrence:0:recipe:00dca030824a8d8fcf01c741e040b6c3ed1c1a1ae2253cb94ab5c8014d6befd2",
+          "slotId": "Q"
+        }
+      ],
+      "retire_code_spans": [],
+      "schema": "noble-live-slot-report/v1",
+      "stack": [
+        {
+          "kind": 1,
+          "value": "7"
+        }
+      ],
+      "stage": "slot"
+    },
+    "reflected_sites": [
+      {
+        "effects": [
+          "live.dispatch"
+        ],
+        "input": [
+          "I64"
+        ],
+        "instruction": "slot.invoke",
+        "output": [
+          "I64"
+        ],
+        "siteId": 0
+      },
+      {
+        "effects": [
+          "live.dispatch"
+        ],
+        "input": [
+          "I64"
+        ],
+        "instruction": "slot.invoke",
+        "output": [
+          "I64"
+        ],
+        "siteId": 0
+      },
+      {
+        "effects": [
+          "live.dispatch"
+        ],
+        "input": [
+          "I64"
+        ],
+        "instruction": "slot.invoke",
+        "output": [
+          "I64"
+        ],
+        "siteId": 0
+      },
+      {
+        "effects": [
+          "live.dispatch"
+        ],
+        "input": [
+          "I64"
+        ],
+        "instruction": "slot.invoke",
+        "output": [
+          "I64"
+        ],
+        "siteId": 0
+      },
+      {
+        "effects": [
+          "live.dispatch"
+        ],
+        "input": [
+          "I64"
+        ],
+        "instruction": "slot.invoke",
+        "output": [
+          "I64"
+        ],
+        "siteId": 0
+      },
+      {
+        "effects": [
+          "live.dispatch"
+        ],
+        "input": [
+          "I64"
+        ],
+        "instruction": "slot.invoke",
+        "output": [
+          "I64"
+        ],
+        "siteId": 0
+      },
+      {
+        "effects": [
+          "live.dispatch"
+        ],
+        "input": [
+          "I64"
+        ],
+        "instruction": "slot.invoke",
+        "output": [
+          "I64"
+        ],
+        "siteId": 0
+      }
+    ],
+    "raw": "retention.raw.jsonl",
+    "requests": "retention.requests.jsonl"
+  },
+  "replay": [
+    {
+      "baseline": "captured",
+      "name": "bare-slot-id",
+      "outcome": "refused",
+      "stage": "command",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "10"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+            "captures": [
+              "I64:5"
+            ],
+            "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+                "assumptions": "unverified",
+                "captures": [
+                  "I64:5"
+                ],
+                "claim": "unverified",
+                "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+                "effects": [],
+                "handle": 4127,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+                "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+                "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4"
+              }
+            },
+            "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+            "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+            "rootEpoch": "9",
+            "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "bef5612e8caf83cd91cc1980a2f2ae491cad1ed1018d1b7bf37874336cac9844",
+            "handle": 4107,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+              "captures": [
+                "I64:5"
+              ],
+              "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+              "effects": [],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+              "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+              "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-captured-bare-slot-id.raw.jsonl",
+      "requests": "replay-captured-bare-slot-id.requests.jsonl"
+    },
+    {
+      "baseline": "effectful",
+      "name": "bare-slot-id",
+      "outcome": "refused",
+      "stage": "command",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "42"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "A",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 1,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "A",
+            "response": "emitted:A",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "B",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 2,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "B",
+            "response": "emitted:B",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "8e044d6b44ac20785b0c60f004a399da91b1879a148975290f2403260639655b",
+            "handle": 4097,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+              "captures": [],
+              "definitionId": "checked:0:1:5",
+              "effects": [
+                "test.emit"
+              ],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+              "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-effectful-bare-slot-id.raw.jsonl",
+      "requests": "replay-effectful-bare-slot-id.requests.jsonl"
+    },
+    {
+      "baseline": "captured",
+      "name": "bare-LiveRef",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "10"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+            "captures": [
+              "I64:5"
+            ],
+            "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+                "assumptions": "unverified",
+                "captures": [
+                  "I64:5"
+                ],
+                "claim": "unverified",
+                "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+                "effects": [],
+                "handle": 4127,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+                "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+                "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4"
+              }
+            },
+            "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+            "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+            "rootEpoch": "9",
+            "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "bef5612e8caf83cd91cc1980a2f2ae491cad1ed1018d1b7bf37874336cac9844",
+            "handle": 4107,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+              "captures": [
+                "I64:5"
+              ],
+              "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+              "effects": [],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+              "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+              "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-captured-bare-LiveRef.raw.jsonl",
+      "requests": "replay-captured-bare-LiveRef.requests.jsonl"
+    },
+    {
+      "baseline": "effectful",
+      "name": "bare-LiveRef",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "42"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "A",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 1,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "A",
+            "response": "emitted:A",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "B",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 2,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "B",
+            "response": "emitted:B",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "8e044d6b44ac20785b0c60f004a399da91b1879a148975290f2403260639655b",
+            "handle": 4097,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+              "captures": [],
+              "definitionId": "checked:0:1:5",
+              "effects": [
+                "test.emit"
+              ],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+              "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-effectful-bare-LiveRef.raw.jsonl",
+      "requests": "replay-effectful-bare-LiveRef.requests.jsonl"
+    },
+    {
+      "baseline": "captured",
+      "name": "wrong-registry-epoch",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "retire_code_spans",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "10"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+            "captures": [
+              "I64:5"
+            ],
+            "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+                "assumptions": "unverified",
+                "captures": [
+                  "I64:5"
+                ],
+                "claim": "unverified",
+                "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+                "effects": [],
+                "handle": 4127,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+                "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+                "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4"
+              }
+            },
+            "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+            "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+            "rootEpoch": "9",
+            "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "bef5612e8caf83cd91cc1980a2f2ae491cad1ed1018d1b7bf37874336cac9844",
+            "handle": 4107,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+              "captures": [
+                "I64:5"
+              ],
+              "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+              "effects": [],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+              "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+              "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-captured-wrong-registry-epoch.raw.jsonl",
+      "requests": "replay-captured-wrong-registry-epoch.requests.jsonl"
+    },
+    {
+      "baseline": "effectful",
+      "name": "wrong-registry-epoch",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "retire_code_spans",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "42"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "A",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 1,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "A",
+            "response": "emitted:A",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "B",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 2,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "B",
+            "response": "emitted:B",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "8e044d6b44ac20785b0c60f004a399da91b1879a148975290f2403260639655b",
+            "handle": 4097,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+              "captures": [],
+              "definitionId": "checked:0:1:5",
+              "effects": [
+                "test.emit"
+              ],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+              "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-effectful-wrong-registry-epoch.raw.jsonl",
+      "requests": "replay-effectful-wrong-registry-epoch.requests.jsonl"
+    },
+    {
+      "baseline": "captured",
+      "name": "wrong-slot-incarnation",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "10"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+            "captures": [
+              "I64:5"
+            ],
+            "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+                "assumptions": "unverified",
+                "captures": [
+                  "I64:5"
+                ],
+                "claim": "unverified",
+                "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+                "effects": [],
+                "handle": 4127,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+                "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+                "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4"
+              }
+            },
+            "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+            "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+            "rootEpoch": "9",
+            "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "bef5612e8caf83cd91cc1980a2f2ae491cad1ed1018d1b7bf37874336cac9844",
+            "handle": 4107,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+              "captures": [
+                "I64:5"
+              ],
+              "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+              "effects": [],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+              "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+              "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-captured-wrong-slot-incarnation.raw.jsonl",
+      "requests": "replay-captured-wrong-slot-incarnation.requests.jsonl"
+    },
+    {
+      "baseline": "effectful",
+      "name": "wrong-slot-incarnation",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "42"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "A",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 1,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "A",
+            "response": "emitted:A",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "B",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 2,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "B",
+            "response": "emitted:B",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "8e044d6b44ac20785b0c60f004a399da91b1879a148975290f2403260639655b",
+            "handle": 4097,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+              "captures": [],
+              "definitionId": "checked:0:1:5",
+              "effects": [
+                "test.emit"
+              ],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+              "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-effectful-wrong-slot-incarnation.raw.jsonl",
+      "requests": "replay-effectful-wrong-slot-incarnation.requests.jsonl"
+    },
+    {
+      "baseline": "captured",
+      "name": "wrong-slot-generation",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "10"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+            "captures": [
+              "I64:5"
+            ],
+            "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+                "assumptions": "unverified",
+                "captures": [
+                  "I64:5"
+                ],
+                "claim": "unverified",
+                "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+                "effects": [],
+                "handle": 4127,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+                "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+                "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4"
+              }
+            },
+            "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+            "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+            "rootEpoch": "9",
+            "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "bef5612e8caf83cd91cc1980a2f2ae491cad1ed1018d1b7bf37874336cac9844",
+            "handle": 4107,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+              "captures": [
+                "I64:5"
+              ],
+              "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+              "effects": [],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+              "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+              "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-captured-wrong-slot-generation.raw.jsonl",
+      "requests": "replay-captured-wrong-slot-generation.requests.jsonl"
+    },
+    {
+      "baseline": "effectful",
+      "name": "wrong-slot-generation",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "42"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "A",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 1,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "A",
+            "response": "emitted:A",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "B",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 2,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "B",
+            "response": "emitted:B",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "8e044d6b44ac20785b0c60f004a399da91b1879a148975290f2403260639655b",
+            "handle": 4097,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+              "captures": [],
+              "definitionId": "checked:0:1:5",
+              "effects": [
+                "test.emit"
+              ],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+              "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-effectful-wrong-slot-generation.raw.jsonl",
+      "requests": "replay-effectful-wrong-slot-generation.requests.jsonl"
+    },
+    {
+      "baseline": "captured",
+      "name": "substituted-selected-artifact",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "10"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+            "captures": [
+              "I64:5"
+            ],
+            "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+                "assumptions": "unverified",
+                "captures": [
+                  "I64:5"
+                ],
+                "claim": "unverified",
+                "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+                "effects": [],
+                "handle": 4127,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+                "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+                "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4"
+              }
+            },
+            "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+            "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+            "rootEpoch": "9",
+            "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "bef5612e8caf83cd91cc1980a2f2ae491cad1ed1018d1b7bf37874336cac9844",
+            "handle": 4107,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+              "captures": [
+                "I64:5"
+              ],
+              "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+              "effects": [],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+              "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+              "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-captured-substituted-selected-artifact.raw.jsonl",
+      "requests": "replay-captured-substituted-selected-artifact.requests.jsonl"
+    },
+    {
+      "baseline": "effectful",
+      "name": "substituted-selected-artifact",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "42"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "A",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 1,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "A",
+            "response": "emitted:A",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "B",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 2,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "B",
+            "response": "emitted:B",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "8e044d6b44ac20785b0c60f004a399da91b1879a148975290f2403260639655b",
+            "handle": 4097,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+              "captures": [],
+              "definitionId": "checked:0:1:5",
+              "effects": [
+                "test.emit"
+              ],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+              "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-effectful-substituted-selected-artifact.raw.jsonl",
+      "requests": "replay-effectful-substituted-selected-artifact.requests.jsonl"
+    },
+    {
+      "baseline": "captured",
+      "name": "substituted-captures",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "10"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+            "captures": [
+              "I64:5"
+            ],
+            "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+                "assumptions": "unverified",
+                "captures": [
+                  "I64:5"
+                ],
+                "claim": "unverified",
+                "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+                "effects": [],
+                "handle": 4127,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+                "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+                "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4"
+              }
+            },
+            "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+            "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+            "rootEpoch": "9",
+            "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "bef5612e8caf83cd91cc1980a2f2ae491cad1ed1018d1b7bf37874336cac9844",
+            "handle": 4107,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+              "captures": [
+                "I64:5"
+              ],
+              "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+              "effects": [],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+              "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+              "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-captured-substituted-captures.raw.jsonl",
+      "requests": "replay-captured-substituted-captures.requests.jsonl"
+    },
+    {
+      "baseline": "captured",
+      "name": "wrong-semantic-context",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "10"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+            "captures": [
+              "I64:5"
+            ],
+            "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+                "assumptions": "unverified",
+                "captures": [
+                  "I64:5"
+                ],
+                "claim": "unverified",
+                "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+                "effects": [],
+                "handle": 4127,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+                "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+                "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4"
+              }
+            },
+            "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+            "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+            "rootEpoch": "9",
+            "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "bef5612e8caf83cd91cc1980a2f2ae491cad1ed1018d1b7bf37874336cac9844",
+            "handle": 4107,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+              "captures": [
+                "I64:5"
+              ],
+              "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+              "effects": [],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+              "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+              "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-captured-wrong-semantic-context.raw.jsonl",
+      "requests": "replay-captured-wrong-semantic-context.requests.jsonl"
+    },
+    {
+      "baseline": "effectful",
+      "name": "wrong-semantic-context",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "42"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "A",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 1,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "A",
+            "response": "emitted:A",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "B",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 2,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "B",
+            "response": "emitted:B",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "8e044d6b44ac20785b0c60f004a399da91b1879a148975290f2403260639655b",
+            "handle": 4097,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+              "captures": [],
+              "definitionId": "checked:0:1:5",
+              "effects": [
+                "test.emit"
+              ],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+              "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-effectful-wrong-semantic-context.raw.jsonl",
+      "requests": "replay-effectful-wrong-semantic-context.requests.jsonl"
+    },
+    {
+      "baseline": "effectful",
+      "name": "reordered-host-requests",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "retire_code_spans",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "42"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "A",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 1,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "A",
+            "response": "emitted:A",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "B",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 2,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "B",
+            "response": "emitted:B",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "8e044d6b44ac20785b0c60f004a399da91b1879a148975290f2403260639655b",
+            "handle": 4097,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+              "captures": [],
+              "definitionId": "checked:0:1:5",
+              "effects": [
+                "test.emit"
+              ],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+              "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-effectful-reordered-host-requests.raw.jsonl",
+      "requests": "replay-effectful-reordered-host-requests.requests.jsonl"
+    },
+    {
+      "baseline": "effectful",
+      "name": "substituted-host-response",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "retire_code_spans",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "42"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "A",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 1,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "A",
+            "response": "emitted:A",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "B",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 2,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "B",
+            "response": "emitted:B",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "8e044d6b44ac20785b0c60f004a399da91b1879a148975290f2403260639655b",
+            "handle": 4097,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+              "captures": [],
+              "definitionId": "checked:0:1:5",
+              "effects": [
+                "test.emit"
+              ],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+              "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-effectful-substituted-host-response.raw.jsonl",
+      "requests": "replay-effectful-substituted-host-response.requests.jsonl"
+    },
+    {
+      "baseline": "effectful",
+      "name": "wrong-host-accounting",
+      "outcome": "replay-diverged",
+      "stage": "slot",
+      "reply_keys": [
+        "diagnostic",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "retire_code_spans",
+        "schema",
+        "stage"
+      ],
+      "guest_requests": 0,
+      "protected_operations": 0,
+      "scripted_operations": null,
+      "actual_stack": null,
+      "actual_trace": null,
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "42"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "A",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 1,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "A",
+            "response": "emitted:A",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "B",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 2,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "B",
+            "response": "emitted:B",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "8e044d6b44ac20785b0c60f004a399da91b1879a148975290f2403260639655b",
+            "handle": 4097,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+              "captures": [],
+              "definitionId": "checked:0:1:5",
+              "effects": [
+                "test.emit"
+              ],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+              "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-effectful-wrong-host-accounting.raw.jsonl",
+      "requests": "replay-effectful-wrong-host-accounting.requests.jsonl"
+    },
+    {
+      "baseline": "captured",
+      "name": "exact-frozen-admitted-and-ordered",
+      "outcome": "replay-matched",
+      "stage": "slot",
+      "reply_keys": [
+        "actual_stack",
+        "actual_trace",
+        "control_events",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "retire_code_spans",
+        "schema",
+        "scripted_operations",
+        "stage",
+        "token"
+      ],
+      "guest_requests": 1,
+      "protected_operations": 0,
+      "scripted_operations": 0,
+      "actual_stack": [
+        {
+          "kind": 1,
+          "value": "10"
+        }
+      ],
+      "actual_trace": [
+        {
+          "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+          "captures": [
+            "I64:5"
+          ],
+          "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+          "generation": "3",
+          "incarnation": "4",
+          "operation": "dispatch",
+          "outcome": "allowed",
+          "policyAllowed": true,
+          "policyInput": {
+            "operation": "dispatch",
+            "rootEpoch": "9",
+            "slotId": "emit",
+            "version": {
+              "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+              "assumptions": "unverified",
+              "captures": [
+                "I64:5"
+              ],
+              "claim": "unverified",
+              "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+              "effects": [],
+              "handle": 4127,
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+              "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+              "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4"
+            }
+          },
+          "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+          "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+          "rootEpoch": "9",
+          "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+          "slotId": "emit"
+        }
+      ],
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "10"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+            "captures": [
+              "I64:5"
+            ],
+            "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+                "assumptions": "unverified",
+                "captures": [
+                  "I64:5"
+                ],
+                "claim": "unverified",
+                "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+                "effects": [],
+                "handle": 4127,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+                "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+                "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4"
+              }
+            },
+            "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+            "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+            "rootEpoch": "9",
+            "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "bef5612e8caf83cd91cc1980a2f2ae491cad1ed1018d1b7bf37874336cac9844",
+            "handle": 4107,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9",
+              "captures": [
+                "I64:5"
+              ],
+              "definitionId": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+              "effects": [],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "anonymous-program-experimental-v4-sha256:9a15c30fdcd6818b47db81eaa3b1b079e1a76d0d33e238ffbc3b15f192090eb1",
+              "recipeSha256": "b9b0f416126688f27494eaa96952c09ca4606f5c1a2df8452354c2a83d7cb3fb",
+              "semanticContext": "returned-target:c6402c3ea27dbde0b6bf62860bd4d3fbcdc30580cf77d9ae1818011ea957c1e9:graph:0d75628fe6ffdddc059af3aeda44520ab05abf9f14174f92558bc41fb08adca4",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-captured-exact-frozen-admitted-and-ordered.raw.jsonl",
+      "requests": "replay-captured-exact-frozen-admitted-and-ordered.requests.jsonl"
+    },
+    {
+      "baseline": "effectful",
+      "name": "exact-frozen-admitted-and-ordered",
+      "outcome": "replay-matched",
+      "stage": "slot",
+      "reply_keys": [
+        "actual_stack",
+        "actual_trace",
+        "control_events",
+        "guest_requests",
+        "outcome",
+        "protected_operations",
+        "retire_code_spans",
+        "schema",
+        "scripted_operations",
+        "stage",
+        "token"
+      ],
+      "guest_requests": 3,
+      "protected_operations": 0,
+      "scripted_operations": 2,
+      "actual_stack": [
+        {
+          "kind": 1,
+          "value": "42"
+        }
+      ],
+      "actual_trace": [
+        {
+          "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+          "captures": [],
+          "definitionId": "checked:0:1:5",
+          "generation": "3",
+          "incarnation": "4",
+          "operation": "dispatch",
+          "outcome": "allowed",
+          "policyAllowed": true,
+          "policyInput": {
+            "operation": "dispatch",
+            "rootEpoch": "9",
+            "slotId": "emit",
+            "version": {
+              "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+              "assumptions": "unverified",
+              "captures": [],
+              "claim": "unverified",
+              "definitionId": "checked:0:1:5",
+              "effects": [
+                "test.emit"
+              ],
+              "handle": 16403,
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+              "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+            }
+          },
+          "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+          "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+          "rootEpoch": "9",
+          "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+          "slotId": "emit"
+        },
+        {
+          "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+          "captures": [],
+          "definitionId": "checked:0:1:5",
+          "effect": "test.emit",
+          "operation": "effect",
+          "outcome": "performed",
+          "policyAllowed": true,
+          "policyInput": {
+            "effect": "test.emit",
+            "operation": "effect",
+            "request": "A",
+            "rootEpoch": "9",
+            "slotId": "emit",
+            "version": {
+              "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+              "assumptions": "unverified",
+              "captures": [],
+              "claim": "unverified",
+              "definitionId": "checked:0:1:5",
+              "effects": [
+                "test.emit"
+              ],
+              "handle": 16403,
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+              "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+            }
+          },
+          "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+          "protectedOperations": 1,
+          "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+          "request": "A",
+          "response": "emitted:A",
+          "rootEpoch": "9",
+          "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+          "slotId": "emit"
+        },
+        {
+          "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+          "captures": [],
+          "definitionId": "checked:0:1:5",
+          "effect": "test.emit",
+          "operation": "effect",
+          "outcome": "performed",
+          "policyAllowed": true,
+          "policyInput": {
+            "effect": "test.emit",
+            "operation": "effect",
+            "request": "B",
+            "rootEpoch": "9",
+            "slotId": "emit",
+            "version": {
+              "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+              "assumptions": "unverified",
+              "captures": [],
+              "claim": "unverified",
+              "definitionId": "checked:0:1:5",
+              "effects": [
+                "test.emit"
+              ],
+              "handle": 16403,
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+              "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+            }
+          },
+          "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+          "protectedOperations": 2,
+          "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+          "request": "B",
+          "response": "emitted:B",
+          "rootEpoch": "9",
+          "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+          "slotId": "emit"
+        }
+      ],
+      "recorded": {
+        "epoch": "9",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "42"
+          }
+        ],
+        "request_trace": [
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "generation": "3",
+            "incarnation": "4",
+            "operation": "dispatch",
+            "outcome": "allowed",
+            "policyAllowed": true,
+            "policyInput": {
+              "operation": "dispatch",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "A",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 1,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "A",
+            "response": "emitted:A",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          },
+          {
+            "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+            "captures": [],
+            "definitionId": "checked:0:1:5",
+            "effect": "test.emit",
+            "operation": "effect",
+            "outcome": "performed",
+            "policyAllowed": true,
+            "policyInput": {
+              "effect": "test.emit",
+              "operation": "effect",
+              "request": "B",
+              "rootEpoch": "9",
+              "slotId": "emit",
+              "version": {
+                "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+                "assumptions": "unverified",
+                "captures": [],
+                "claim": "unverified",
+                "definitionId": "checked:0:1:5",
+                "effects": [
+                  "test.emit"
+                ],
+                "handle": 16403,
+                "input": [
+                  "I64"
+                ],
+                "output": [
+                  "I64"
+                ],
+                "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+                "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+                "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68"
+              }
+            },
+            "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+            "protectedOperations": 2,
+            "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "request": "B",
+            "response": "emitted:B",
+            "rootEpoch": "9",
+            "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+            "slotId": "emit"
+          }
+        ],
+        "frozen_identity": {
+          "caller": {
+            "artifactSha256": "8e044d6b44ac20785b0c60f004a399da91b1879a148975290f2403260639655b",
+            "handle": 4097,
+            "id": "caller",
+            "sourceSha256": "c610c6e22deccafb04b7e8d7c96a9a23c947d1a6dc20b194126c90e2eb2afedf"
+          },
+          "slots": [
+            {
+              "artifactSha256": "7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222",
+              "captures": [],
+              "definitionId": "checked:0:1:5",
+              "effects": [
+                "test.emit"
+              ],
+              "generation": "3",
+              "incarnation": "4",
+              "input": [
+                "I64"
+              ],
+              "output": [
+                "I64"
+              ],
+              "programValueId": "artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:cell:16403",
+              "recipeSha256": "b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "semanticContext": "definition-source:448ab38799cdd8d21d2796166524027152fc220403012f70139f2d13020b437e:selection-source:d84973128c82104ddb9b0b207288b07b646098ce975e65dd6b72bbebaa3c6f3a:artifact:7c2782315d7b453e5c9e061eb4a8a670a93d24939f6314a16a6ff33338561222:occurrence:0:recipe:b63d74c24072d02f39f41670d1650517b1d9e553557c08740e342290600f4c68",
+              "slotId": "emit"
+            }
+          ]
+        }
+      },
+      "raw": "replay-effectful-exact-frozen-admitted-and-ordered.raw.jsonl",
+      "requests": "replay-effectful-exact-frozen-admitted-and-ordered.requests.jsonl"
+    }
+  ],
+  "boundedTrace": {
+    "completed": 642,
+    "retained_rows": 642,
+    "retained_utf8_bytes": 966853
+  },
+  "failures": []
+}

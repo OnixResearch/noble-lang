@@ -80,7 +80,7 @@ rather than rebuilding it. Indirect self-rebind/cycle refusal is scoped, not
 established by general proof or accepted LIVE case evidence. General
 effectful watch, full in-flight source-change controls and interpreter execution
 remain open. Canonical LIVE-01–10 are implemented/passed with proof open from
-the batch-6 receipt (`verification/live-cases/acceptance-2026-11-22-b6.json`).
+the push-B receipt (`verification/live-cases/acceptance-2026-11-23-pb.json`).
 `changes/c-backend/` remains a specification-only active design. Its canonical
 scenarios remain absent/not-run with proof open, its roadmap acceptance
 milestone not-started, and the profile changes no historical M4 or

@@ -37,3 +37,9 @@ change's review task.
   (`sha256:50c8fd78…`): clean commit `388fa4c6`, verdict `all-passed`,
   PAUTO-CASE-02..06 promotable, with the raw reports, fixtures and the honest
   increment build the release step used.
+- [`runs/20261123-0fffc7d8/acceptance.json`](runs/20261123-0fffc7d8/acceptance.json)
+  (`sha256:58878425…`): clean commit `0fffc7d8` (Cairn push B, after the merge
+  onto the batches 4-6 head and the Aeneas-translatable unary-rule comparison of
+  `6fe17303`), source revision `sha256:9f4f7dd7…`, verdict `all-passed`,
+  PAUTO-CASE-02..06 promotable, with the same kinds of retained raw reports,
+  fixtures and build.

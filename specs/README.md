@@ -25,7 +25,7 @@ REPL/watch transaction, not an implemented interpreter or changed M4 session.
 The [C11 backend design](../.cairn/specs/c-backend/spec.md) is a distinct,
 nonselected opt-in native AOT target requiring a pinned sandbox and separate
 artifact admission. LIVE-01–10 are implemented/passed with proofs open from
-the batch-6 receipt (`verification/live-cases/acceptance-2026-11-22-b6.json`);
+the push-B receipt (`verification/live-cases/acceptance-2026-11-23-pb.json`);
 all CB scenarios remain absent/not-run with proofs open, and no acceptance
 receipt establishes the C11 profile.
 

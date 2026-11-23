@@ -21,16 +21,21 @@ It promotes nothing by itself.
 | [`runs/20261121-b3`](runs/20261121-b3) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `c9343972` (combined Cairn tree: batch 2 plus LIVE round 3) | `completed` / `unmet-cases`; the same verdicts, projection `7aa15017…` and gate `828ff88e…` as b2; the case records keep citing b2 |
 | [`runs/20261122-b4`](runs/20261122-b4) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `88e90add` (Cairn batch-4 tree, with the OWN-CASE-03 amendment of owner decision 35) | `completed` / `all-passed`; OWN-CASE-01, 02, 03, 04, 06, 07 promotable, OWN-CASE-05 withheld |
 | [`runs/20261122-b5`](runs/20261122-b5) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `8b62827a` (Cairn batch-5 tree, with LREF-EXIT-01 and the OWN-CASE-03/05 amendments of integrator decision 39) | `completed` / `all-passed`; OWN-CASE-01..07 promotable |
+| [`runs/20261123-pb`](runs/20261123-pb) | `node verification/own-cases/gate.mjs --out <new dir>` at commit `0fffc7d8` (Cairn push B) | `completed` / `all-passed`; OWN-CASE-01..07 promotable, with the same projection `3130b4c6…` and gate as b5 |
 
 [`acceptance.json`](acceptance.json) is the **first** run's receipt (`sha256 e873df58…`, tested
 commit `5c9e38f4`), kept byte-for-byte as the immutable path the first OWN promotions cite. Later
 runs live under `runs/` and are cited by their own paths; superseded receipts stay immutable and
 rework receipts are added beside them, never edited. The current promotion facts come from
-[`runs/20261122-b5/acceptance.json`](runs/20261122-b5/acceptance.json) (`sha256 c9bbeb56…`,
-`source_revision sha256:897a5ebf…`, binary `7f32e4e1…` before and after, tested commit
-`8b62827a`, projection digest `3130b4c6…`). The OWN-CASE-03/05 amendments (integrator decision
-39, after LREF-EXIT-01) changed the projection and the gate, so every case record moved to this
-run; OWN-CASE-03 is re-promoted and OWN-CASE-05 promoted on it, every registered field observed.
+[`runs/20261123-pb/acceptance.json`](runs/20261123-pb/acceptance.json) (`sha256 78253c54…`,
+`source_revision sha256:435c8281…`, binary `1ad938a5…` before and after, tested commit
+`0fffc7d8`, projection digest `3130b4c6…`): the push-B tree re-runs the unchanged gate with the
+same projection, and every case record now cites it with its claim and assumptions unchanged.
+The batch-5 run [`runs/20261122-b5/acceptance.json`](runs/20261122-b5/acceptance.json)
+(`sha256 c9bbeb56…`, `source_revision sha256:897a5ebf…`, binary `7f32e4e1…`, tested commit
+`8b62827a`) was current before it: the OWN-CASE-03/05 amendments (integrator decision 39, after
+LREF-EXIT-01) changed the projection and the gate, so every case record moved to that run;
+OWN-CASE-03 was re-promoted and OWN-CASE-05 promoted on it, every registered field observed.
 An earlier run of the same tree at `da8d475e` is not retained: it reported OWN-CASE-05 `unmet`
 only because the gate compared objects by key order (the CLI host sorts reply keys), which
 `8b62827a` fixes. The batch-4 run [`runs/20261122-b4/acceptance.json`](runs/20261122-b4/acceptance.json)

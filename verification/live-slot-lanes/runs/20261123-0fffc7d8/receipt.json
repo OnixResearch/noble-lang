@@ -1,0 +1,296 @@
+{
+  "schema": "noble-live-slot-lanes-receipt/v1",
+  "claim": "selected host execution evidence for LREF-CASE-02 (in-process registry fixtures), LREF-CASE-04, 05 and 06 and ID-05's capture change (against one CLI built from the source below); not a proof and not a conformance promotion",
+  "source": {
+    "commit": "0fffc7d842b0e656461fbf7f33d085a199f853fb",
+    "tree": "d5c0c79e2bb89e24dc39862b5c62f149a51d7245",
+    "clean": true,
+    "bound": [
+      {
+        "path": "crates/noble-cli/tests/live_slot_counter_exhaustion.mjs",
+        "sha256": "6670fdd5064eab055ec314d5624d85bff1ea023f6ee37a2c02d27fb567f46196"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_escaped_result.mjs",
+        "sha256": "1ffee031a91bd4044082b266a968f9fd877a4c539c77dd28e56ef13747ed6916"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_generic_caller_roots.mjs",
+        "sha256": "9d2afcd23e93dcf9745bb4480d7f23646e72685826f40d92d61497b6d7d75a99"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_held_root_mixing.mjs",
+        "sha256": "da7b78ac4baefa20de538ab3c00dcafd3feffc97c6e9c824fed9d4c3878b2f2b"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_capture_identity.mjs",
+        "sha256": "7056b280a2a05f8e03805a2fe303abd0569c37e76b492d860460c1c9b2f7a1da"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_resource_ref_cli.mjs",
+        "sha256": "32e07f7dde12bba2b90bfc6d72cdfb30ddb7b19f43303a5b6b3b6ad919f72c03"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_direct_quote.rs",
+        "sha256": "bce54d567e93d634ed8bb91ca310e9b4f4bb1ecd45690ef3a663a9c10d18ff27"
+      },
+      {
+        "path": "crates/noble-cli/src/core/live_slot.rs",
+        "sha256": "c030e4906f222127d139d80600503849eff35d24e25e63811bf8286587854a96"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-engine.mjs",
+        "sha256": "9a79fc3565f8d1a41d534eb63c9c6694316aa866602782ad7b4b4e38bf822d2e"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+        "sha256": "e2e01325d5be054c3e7cc25d0ee9f60b215216654fb48b5ff16aefe72ff8f726"
+      },
+      {
+        "path": "crates/noble-wasm/src/source/mod.rs",
+        "sha256": "bce9cbd22da1113b9110ae1f90e8dcbb31ef76b85a3c1cd1ef96a25f18ce073e"
+      },
+      {
+        "path": "verification/live-slot-lanes/receipt.mjs",
+        "sha256": "0074d27bb74505e3fdb2cb5120ca2062bf0379472066f1046995e2e981784099"
+      }
+    ]
+  },
+  "binary_sha256": "2b29568c6c211797ec529f0fdfc79879639480999e66eff9a5ece30d8365c8f6",
+  "cases": {
+    "LREF-CASE-02": {
+      "lane": "crates/noble-cli/tests/live_slot_counter_exhaustion.mjs",
+      "summary": {
+        "case": "LREF-CASE-02",
+        "epoch": {
+          "publication": "epoch-exhausted",
+          "deletion": "epoch-exhausted",
+          "epoch_after": "18446744073709551615",
+          "pinned_root_selects": 101
+        },
+        "generation": {
+          "publication": "generation-exhausted",
+          "epoch_after": "1",
+          "pinned_root_selects": 101
+        },
+        "incarnation": {
+          "recreation": "incarnation-exhausted",
+          "epoch_after": "2",
+          "pinned_root_selects": 101
+        },
+        "code_retention": "compiler install generation at u32::MAX: noble-wasm unit test"
+      },
+      "unit_test": "cargo test -p noble-wasm --lib retention_tests::install_generation_refuses_at_its_maximum_without_wrapping",
+      "non_claims": [
+        "the registry runs in process from fixtures (a fixture-only constructor option the slot engine never passes); no CLI input reaches a counter maximum",
+        "the live-slot code-retention counter is the compiler's u32 install generation (maximum 2^32-1, refused with the compiler's general `Exhausted` diagnostic at the next installation); the declared-text `retention_revision` is outside Live-Slot-Design (integrator decision 47)",
+        "the unit test result is not executed by this script; it is a Cargo test of the same source tree",
+        "guest handle epochs are not part of the case: an exhausted physical slot is retired, never wrapped"
+      ]
+    },
+    "LREF-CASE-04": {
+      "lane": "crates/noble-cli/tests/live_slot_escaped_result.mjs",
+      "summary": {
+        "case": "LREF-CASE-04",
+        "o_after_publication": [
+          {
+            "kind": 1,
+            "value": "21"
+          }
+        ],
+        "fresh_result": [
+          {
+            "kind": 1,
+            "value": "22"
+          }
+        ],
+        "o_cells": [
+          [
+            4,
+            "0"
+          ],
+          [
+            1,
+            "1"
+          ],
+          [
+            8,
+            "1"
+          ],
+          [
+            4,
+            "0"
+          ],
+          [
+            8,
+            "4"
+          ]
+        ],
+        "o_epoch": "1",
+        "fresh_epoch": "2",
+        "selected_binary_sha256": "2b29568c6c211797ec529f0fdfc79879639480999e66eff9a5ece30d8365c8f6"
+      },
+      "non_claims": [
+        "one slot whose versions return a Program composed from a literal; O is observed through its saved record and by running it, not through a reflection operation on saved Programs, which the live-slot protocol does not offer",
+        "the recorded cell graph is the host's bounded observation of O; that a LiveRef cannot appear in it follows from LiveRefs being root bindings rather than cells"
+      ]
+    },
+    "LREF-CASE-05": {
+      "lane": "crates/noble-cli/tests/live_slot_generic_caller_roots.mjs",
+      "summary": {
+        "case": "LREF-CASE-05",
+        "g": {
+          "artifact_sha256": "59f8ee3f1804e475095296815ea59d9cddff91413cf58c271d0f5838a3216cb4",
+          "handle": 4105,
+          "site": {
+            "effects": [
+              "live.dispatch"
+            ],
+            "input": [
+              "I64"
+            ],
+            "instruction": "slot.invoke",
+            "output": [
+              "I64"
+            ],
+            "siteId": 0
+          }
+        },
+        "r1": {
+          "epoch": "1",
+          "stack": [
+            {
+              "kind": 1,
+              "value": "21"
+            }
+          ],
+          "selected": "25e28d943b9fd2f609e59530f58107d0587a06070fa4834143db73e56e86172c"
+        },
+        "r2": {
+          "epoch": "2",
+          "stack": [
+            {
+              "kind": 1,
+              "value": "22"
+            }
+          ],
+          "selected": "1812b73577274b403e0211b20f4eb8d33d18bc7a778e6cd4ad30609576fee454"
+        },
+        "retained_ref_variant": "no request form: a ref exists only as the refs binding of its own invocation",
+        "selected_binary_sha256": "2b29568c6c211797ec529f0fdfc79879639480999e66eff9a5ece30d8365c8f6"
+      },
+      "non_claims": [
+        "G is the installed generic caller module, reused across roots; a quotation of `slot.invoke` is refused (LSLOT-06), so no saved Program value can be a generic caller",
+        "the design's variant in which R2 retains R1's ref has no request form: a ref exists only as the refs binding of the invocation that issued it"
+      ]
+    },
+    "LREF-CASE-06": {
+      "lane": "crates/noble-cli/tests/live_slot_held_root_mixing.mjs",
+      "summary": {
+        "case": "LREF-CASE-06",
+        "p": {
+          "source_id": "s0",
+          "program_index": 1
+        },
+        "r1": {
+          "epoch": "2",
+          "stack": [
+            {
+              "kind": 1,
+              "value": "122"
+            }
+          ],
+          "trace": [
+            [
+              "S",
+              "2",
+              "2",
+              "779b824bde7baa48625ed1b265f6fed6434ec16cd814e74bf24f082b1ac380a2"
+            ],
+            [
+              "S",
+              "2",
+              "2",
+              "779b824bde7baa48625ed1b265f6fed6434ec16cd814e74bf24f082b1ac380a2"
+            ]
+          ]
+        },
+        "publication_while_held": {
+          "epoch": "3",
+          "root": "2"
+        },
+        "r2": {
+          "epoch": "3",
+          "stack": [
+            {
+              "kind": 1,
+              "value": "124"
+            }
+          ],
+          "trace": [
+            [
+              "S",
+              "3",
+              "3",
+              "d6b9b1e2a075ec4212462484aafe7ea3fe6805b39e1d3995da299b9442a483f1"
+            ],
+            [
+              "S",
+              "3",
+              "3",
+              "d6b9b1e2a075ec4212462484aafe7ea3fe6805b39e1d3995da299b9442a483f1"
+            ]
+          ]
+        },
+        "selected_binary_sha256": "2b29568c6c211797ec529f0fdfc79879639480999e66eff9a5ece30d8365c8f6"
+      },
+      "non_claims": [
+        "the serial live host accepts only operator controls during a held checkpoint, so R2 runs after R1 resumes rather than while R1 is held; the publication itself commits while R1 is held",
+        "the design numbers R1's epoch 1; here S-v0 is published first (epoch 1), so S-v1 and R1 are at epoch 2 and S-v2 at epoch 3"
+      ]
+    },
+    "ID-05": {
+      "lane": "crates/noble-cli/tests/live_slot_capture_identity.mjs",
+      "summary": {
+        "case": "ID-05",
+        "capture_before": {
+          "program_value_id": "anonymous-program-experimental-v4-sha256:c4e177bf59286b19080dc9aea870186a6e53d28f32a69c40cb78dd33feaac5bc",
+          "definition_id": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+          "captures": [
+            {
+              "type": "I64",
+              "value": "2"
+            }
+          ]
+        },
+        "capture_after": {
+          "program_value_id": "anonymous-program-experimental-v4-sha256:ba022c82693ac6a9977085494bf6f0be5e7b37ca71684f32f1dbd07ec181fe1e",
+          "definition_id": "anonymous-template-experimental-v4-sha256:e68d115d5bab57afce73c206c9a776d06e06f33712cef6badbec2ec1550d3eb9",
+          "captures": [
+            {
+              "type": "I64",
+              "value": "3"
+            }
+          ]
+        },
+        "fixed_control": {
+          "fixed2": {
+            "program_value_id": "anonymous-program-experimental-v4-sha256:a701049e88bec32e00597f0400e7e6ba454d4de78ff11916d031f5c021ddaeda",
+            "definition_id": "anonymous-template-experimental-v4-sha256:68eac940f7ec39354903af18ad760ad0cdbf0b69c665f38fea15cf430d5e5466",
+            "captures": []
+          },
+          "fixed3": {
+            "program_value_id": "anonymous-program-experimental-v4-sha256:4cf9bae9ab57ede25ea8ca21e3090b42dc5f9a18f6bfa72de96e95f2b9629fce",
+            "definition_id": "anonymous-template-experimental-v4-sha256:df18e456d1e5860ba7c4c60f7bfa855ad179b7acb0cfb1df1347a0a6e4516485",
+            "captures": []
+          }
+        },
+        "selected_binary_sha256": "2b29568c6c211797ec529f0fdfc79879639480999e66eff9a5ece30d8365c8f6"
+      },
+      "non_claims": [
+        "the identities are the live-slot runtime's experimental local v4 identities of checked returned targets; ID-05 is registered for ProgramsData-Draft, which this run does not execute, so the case is not promoted",
+        "the fixed-literal control shows the shared template comes from the varying root input; it does not prove the template domain canonical"
+      ]
+    }
+  }
+}

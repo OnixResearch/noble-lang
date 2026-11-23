@@ -47,7 +47,7 @@ const fixtureFile = 'specs/conformance/live-reference-cases.json';
 const liveWasmFile = 'specs/conformance/live-wasm-cases.json';
 // The retained receipt the committed promotions cite. A run writes a new file
 // and never rewrites this one.
-const promotedReceiptPath = '../../verification/lslot-cases/acceptance-2026-11-20-r4.json';
+const promotedReceiptPath = '../../verification/lslot-cases/acceptance-2026-11-23-pb.json';
 const fixtureBytes = fs.readFileSync(path.join(root, fixtureFile));
 const fixture = JSON.parse(fixtureBytes);
 assert.deepEqual(fixture.cases.map(row => row.id),
@@ -210,6 +210,8 @@ const retainedReceipts = [
   'verification/lslot-cases/acceptance-2026-11-21-b2.sha256',
   'verification/lslot-cases/acceptance-2026-11-21-b3.json',
   'verification/lslot-cases/acceptance-2026-11-21-b3.sha256',
+  'verification/lslot-cases/acceptance-2026-11-23-pb.json',
+  'verification/lslot-cases/acceptance-2026-11-23-pb.sha256',
 ];
 const presentReceipts = fs.readdirSync(path.join(root, 'verification/lslot-cases'))
   .filter(name => name.startsWith('acceptance'))

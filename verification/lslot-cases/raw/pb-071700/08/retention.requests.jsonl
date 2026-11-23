@@ -1,0 +1,23 @@
+{"operation":"install","id":"caller","source":"slot.invoke","inputs":["I64","LiveRef<I64,I64,pure>"]}
+{"operation":"reflect","id":"caller","site_id":0}
+{"operation":"install","id":"keeper","source":"[ 1 + ]","inputs":[]}
+{"operation":"publish","slot":"Q","id":"keeper","program_index":1,"expected_epoch":"0"}
+{"operation":"invoke","id":"keeper","inputs":[],"refs":[]}
+{"operation":"reflect","id":"caller","site_id":0}
+{"operation":"install","id":"use_saved","source":"run","inputs":["I64","Program<I64,I64,pure>"]}
+{"operation":"install","id":"increment","source":"2 +","inputs":["I64"]}
+{"operation":"candidate","id":"increment"}
+{"operation":"hold-checkpoint","import":"live_select","occurrence":1}
+{"operation":"invoke","id":"caller","inputs":[{"kind":"i64","value":"5"}],"refs":[{"position":1,"ordinal":0,"slot":"Q"}]}
+{"operation":"publish","slot":"Q","id":"increment","program_index":0,"expected_epoch":"1","expected_incarnation":"1","expected_generation":"1"}
+{"operation":"resume-checkpoint"}
+{"operation":"reflect","id":"caller","site_id":0}
+{"operation":"publish","slot":"Q","id":"increment","program_index":0,"expected_epoch":"1","expected_incarnation":"1","expected_generation":"1"}
+{"operation":"reflect","id":"caller","site_id":0}
+{"operation":"invoke","id":"use_saved","inputs":[{"kind":"i64","value":"10"},{"kind":"program","owner":"program-1"}],"refs":[]}
+{"operation":"release-program","owner":"program-1"}
+{"operation":"reflect","id":"caller","site_id":0}
+{"operation":"publish","slot":"Q","id":"increment","program_index":0,"expected_epoch":"1","expected_incarnation":"1","expected_generation":"1"}
+{"operation":"reflect","id":"caller","site_id":0}
+{"operation":"invoke","id":"caller","inputs":[{"kind":"i64","value":"5"}],"refs":[{"position":1,"ordinal":0,"slot":"Q"}]}
+{"operation":"reflect","id":"caller","site_id":0}

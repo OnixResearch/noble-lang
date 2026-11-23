@@ -997,8 +997,11 @@ use retained roots rather than replacing live effect policy. Every reply is
 JSON; inspect each `outcome`, not only the process exit status. Source-bound
 named selection requires `install` with `selected_name` after the corresponding
 `define`. A narrow checked anonymous returned target can receive experimental
-local D/P in its saved-owner receipt, but has no independently installed
-captured-target Wasm candidate, proof, or source-bound frozen replay. Recorded
+local D/P in its saved-owner receipt. When its composite code-donor attestation
+checks, its saved owner can `publish` it into a slot with the same interface and
+an empty effect set; the publication carries the checked donor manifest, not an
+independently compiled captured-target Wasm module, and a proof-required slot
+also needs the exact evidence record described below. Recorded
 protected responses are replayed as an
 exact ordered script without executing another real host effect; they do not
 grant permission for a new live effect. An optional `expected_identity` on
@@ -1012,9 +1015,21 @@ The selected-Node registry smoke exercises this frozen binding and retained
 target; the fresh CLI worker smoke for this isolated change stopped before
 `configured` because its exact selected wasm-tools executable was unavailable.
 That is not an exercised worker replay result.
-Proof-required publication currently fails closed: there is no independently
-pinned Lean receipt for the exact selected, installed target. Neither this
-opt-in CLI nor its unit tests constitute LSLOT-01..09 canonical acceptance.
+A proof-required slot's authority row may select one exact MC2 contract, and a
+`publish` naming a checked returned target may carry one evidence record: the
+target's ProgramValueId/DefinitionId, captures, the host's semantic context, the
+claim's SHA-256, the consumer's assumptions, the target's composite code-donor
+manifest and a Lean proof. The host compares every declared field, rechecks the
+proof with the `noble build --require-proof` consumer and binds the accepted claim
+to the target's closed subject, its verified template with the captured values.
+Any mismatch refuses at stage `selected-target-evidence` before the worker sees
+the publication, and a publication without evidence still fails closed; a later
+dispatch re-checks that the admitted record still binds the selected version.
+The host renders the closed subject itself, so the subject's correspondence to
+the installed bytes is an explicit assumption, not a proof. The canonical
+LSLOT-01..09 records are implemented/passed with proof open from the LSLOT gate
+receipt `verification/lslot-cases/acceptance-2026-11-23-pb.json`; this CLI's
+unit tests are not that evidence.
 
 A directly returned I64 `quote` is also a saved Program: its value is read from
 the actual boxed I64 capture, not from the Program's latent-effect payload.
@@ -1088,11 +1103,12 @@ source/Wasm/graph correspondence from compiler-emitted Wasm; the custom Wasm
 name section alone does not authenticate arbitrary replacement runtime helper
 bodies or the installer's complete control flow. The bounded local D/P receipt
 is **not** symbolic P2/D2, captured P/D/C/Q/A/Wasm Lean proof, effect
-permission, publication permission, or frozen replay authorization. Saved
-dynamic targets still refuse publication even into a non-proof slot until the
-exact target's installed Wasm correspondence exists; proof-required slots
-also refuse without independently checked exact-target evidence. Canonical
-LSLOT-05 and LSLOT-08 remain blocked.
+permission, publication permission, or frozen replay authorization. A saved
+dynamic target publishes only with its checked composite code-donor
+attestation, and a proof-required slot also requires the target's exact
+evidence record. Canonical LSLOT-05 (selected-target evidence) and LSLOT-08
+(retention and frozen replay from two actual baselines, integrator decision 45)
+are promoted from `verification/lslot-cases/acceptance-2026-11-23-pb.json`.
 
 The selected dynamic owner also has a narrower retention consequence: with
 `def builder [ quote [ 1 + ] compose ]`, the same builder module's independently
@@ -1143,16 +1159,20 @@ the new target. Checked nested-site reflection reports the exact effect set
 contains it; exact slot effect ceilings and current per-dispatch host policy
 remain distinct checks. Both selected real-CLI LSLOT-02 variants match their
 canonical fixture inputs/expected observations in this external diagnostic;
-the canonical case records still remain absent/not-run/open/unassessed, with no
+the canonical case records then remained absent/not-run/open/unassessed, with no
 evidence or proof promotion. LSLOT-04 authorized
-rollback and LSLOT-07 publication denial retain runnable controls but remain
+rollback and LSLOT-07 publication denial retained runnable controls but remained
 blocked canonically without their respective exact-evidence/proof premises. A
 separate LSLOT-05 control observes the real host's generic missing-proof
 refusal, not selective evidence applicability; a typed checked legacy-compiler
 control does not substitute for LSLOT-09's typed CLI caller. A nonzero
 `blocked` result is also intentional while exact LSLOT-05 selected-target
-proof, captured LSLOT-08 replay, and other variants remain open; this external
-receipt must not be copied into canonical case evidence.
+proof, captured LSLOT-08 replay, and other variants remained open; this external
+receipt must not be copied into canonical case evidence. The diagnostic is
+historical-only (owner decision 20; see
+`verification/live-slot-current-source/HISTORICAL.md`): it asserts the case
+states of its own source, and the canonical LSLOT-01..09 records are now
+promoted only by `verification/lslot-cases/gate.mjs`.
 
 ### Guarded live REPL (opt-in, partial)
 
@@ -1263,8 +1283,8 @@ acceptance, interpreter execution, code retirement, general guest mutation,
 or PushGP evolution.
 `--engine interpreter` refuses rather than falling back to V8.
 Ordinary `run` and `session` are unchanged. The canonical LIVE-01–10 cases
-are implemented/passed with proof open from the batch-6 receipt
-(`verification/live-cases/acceptance-2026-11-22-b6.json`); see the
+are implemented/passed with proof open from the push-B receipt
+(`verification/live-cases/acceptance-2026-11-23-pb.json`); see the
 [archived change](.cairn/archive/2026-11-22-live-wasm-reload/tasks.md) and
 [status ledger](specs/STATUS.json).
 

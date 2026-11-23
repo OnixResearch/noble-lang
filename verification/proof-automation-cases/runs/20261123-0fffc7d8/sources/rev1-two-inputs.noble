@@ -1,0 +1,1 @@
+module arithmetic@1 [ export add def add [ + ] contract 1 add-law [ subject add input [ a I64 b I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in a) (in b))) ] ] proof 1 add-correct for add-law [ (export-unary-I64 (intro (tail Stack) (intro (x I64) (pc-sequence (pc-exact (exec-add)) (join (by-exact-result))))) (mc1-true-eq-wrap)) ] ]
