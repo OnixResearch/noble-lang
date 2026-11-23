@@ -116,7 +116,7 @@
   theorems, the allow-list `propext`, `Classical.choice`, `Quot.sound`,
   and `implementation_theorem: false`. `summary.txt` has SHA-256
   `6d2ba8f00dfc3d34ea5274843c3adc6df384f36481106d34e41d6714d35875e3`.
-  The same-run Rust backend refusal sites above are from the pinned
-  sources, not from an implementation change; no Rust file was edited.
+  The Rust refusal sites cited above are read from the pinned sources;
+  this slice edited no Rust file and ran no Rust test.
 - [ ] [serial] At sync, register WIRE-CASE-01 to 24 as conformance designs and add a `WIRE` route to `tools/check-specs.mjs` `ROUTES`. Then execute with independent expectations and retain receipts without promoting proof status. r[WIRE-EVID-01]
 - [ ] [serial] Implement the optional known-graph analysis and validate any flattening optimization by artifact correspondence (#10, PO-17) under the declared quota policy. Consider archive only after implementation, evidence and separately reviewed gates. r[WIRE-GRAPH-01]
