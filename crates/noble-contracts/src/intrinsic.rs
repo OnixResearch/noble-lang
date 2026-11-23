@@ -583,6 +583,9 @@ pub struct ProofWork {
 fn reject(span: Span, reason: &str) -> Diagnostic {
     Diagnostic::new(DiagnosticKind::Invalid, span, reason)
 }
+fn unsupported(span: Span, reason: &str) -> Diagnostic {
+    Diagnostic::new(DiagnosticKind::Unsupported, span, reason)
+}
 fn exhausted(span: Span) -> Diagnostic {
     Diagnostic::new(
         DiagnosticKind::Exhausted,
@@ -3905,33 +3908,35 @@ fn contract_proof(
 /// Refuse a contract outside the selected unary I64 rule. An interface other
 /// than one I64 input and one I64 output is an unsupported goal; a
 /// precondition other than the atom `true` is a rejected proof.
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; this helper refuses hostile source contracts with typed diagnostics, so an assertion would turn a refusal into a panic"
-)]
 fn check_unary_true_rule(
     obligation: &ProofObligation,
     contract: &ContractGoal,
 ) -> Result<(), Diagnostic> {
-    let is_outside_rule = contract.inputs.len() != 1
-        || contract.outputs.len() != 1
-        || contract.inputs[0].1 != "I64"
-        || contract.outputs[0].1 != "I64";
-    if is_outside_rule {
-        return Err(Diagnostic::new(
-            DiagnosticKind::Unsupported,
-            contract.contract_span,
-            "selected unary I64 rule takes exactly one I64 input and one I64 output",
-        ));
+    if unary_shape_differs(contract) {
+        return Err(unsupported(contract.contract_span, UNARY_SHAPE_REFUSAL));
     }
     if atom(&contract.requires)? != "true" {
-        return Err(reject(
-            obligation.span,
-            "selected unary I64 rule requires typed True precondition",
-        ));
+        return Err(reject(obligation.span, UNARY_PRECONDITION_REFUSAL));
     }
     Ok(())
 }
+/// Whether the contract's interface is anything other than one I64 input and
+/// one I64 output. The comparison stays in return position: the pinned Aeneas
+/// refuses the nested borrow a `let`-bound chain of these string comparisons
+/// creates.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String equality through PartialEq<&str> is not const on the pinned compiler"
+)]
+fn unary_shape_differs(contract: &ContractGoal) -> bool {
+    contract.inputs.len() != 1
+        || contract.outputs.len() != 1
+        || contract.inputs[0].1 != "I64"
+        || contract.outputs[0].1 != "I64"
+}
+const UNARY_SHAPE_REFUSAL: &str =
+    "selected unary I64 rule takes exactly one I64 input and one I64 output";
+const UNARY_PRECONDITION_REFUSAL: &str = "selected unary I64 rule requires typed True precondition";
 /// Whether `binder` is not a two-part binder whose sort is the atom `sort`;
 /// refuses a sort that is not an atom.
 fn typed_binder_differs(binder: &[Form], sort: &str) -> Result<bool, Diagnostic> {
