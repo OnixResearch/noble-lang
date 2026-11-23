@@ -52,4 +52,11 @@ obligation.
 
 ## Retained runs
 
-(Populated upon clean-tree execution.)
+| Run | Command | Result |
+|---|---|---|
+| [`runs/20261123/receipt.json`](runs/20261123/receipt.json) | `node verification/gpu-cost/study.mjs --out <new-output-dir> --noble <noble-bin>` on clean commit `21f636e6` (`source_revision` `sha256:c1c2a4df64fccbaad42f20826f0a85eff266923d20e874a070b78fb4a55f0711`) | `all_passed: true`; 390/390 K-NUM-01 boundary oracle checks passed; 10/10 ceiling controls passed; 100% helper and kernel samples verified; receipt sha256 `cdc61643ffc10893dbe5f2b26981f8eb8e597b968316ad50776ff8199cb9ec1c`. Decision: **NO-GO** for GPU offload on `List<I64>` and current limits (packed batch type and larger limits are prerequisites). |
+
+The raw per-sample JSON files (`raw/emitted-digests.json`, `raw/boundary-oracle.json`,
+`raw/ceilings.json`, `raw/helpers-samples.json`, `raw/kernels-samples.json`) are retained
+outside the repository; their exact SHA-256 digests and byte lengths are recorded in
+`runs/20261123/receipt.json`.

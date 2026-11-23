@@ -149,8 +149,69 @@ select GPU  ⇔  policy ≠ cpu ∧ eligible ∧ device ok ∧ n ≥ n_min
 
 - **Compile-time costs** (eligibility, SSA and IR generation) are paid at preparation and amortized. `T_pipe` is a cold per-process driver compile, cached by kernel identity.
 - **Break-even:** output allocation `c_alloc` is paid on both paths and cancels, giving `n* ≈ (T_pipe·[cold] + L_h2d + L_d2h + T_launch + T_sync) / (c_disp(w) − c_pack − c_unpack − 8/B_h2d − 8/B_d2h − w·c_op/lanes)`. With the current linked-list representation, `c_pack + c_unpack` is paid on the GPU path every time, so the denominator is small or negative unless `w` is large. Together with the 682/2048-element ceiling, this suggests the GPU path cannot win at current limits [INFERENCE].
-- **Measured evidence still needed:** `c_disp`, `c_alloc`, `c_pack`, `c_unpack` on the selected CPU route; `L_h2d`, `L_d2h`, `B_*`, `T_launch`, `T_sync`, `T_pipe` and `c_op` for each lowering variant on pinned hardware and drivers; and the values of `n*` for representative `w`.
-- **Prerequisites the model exposes:** a packed `I64` batch representation and larger declared limits (coordinate with #3/#5/#14).
+- **Measured evidence still needed:** `c_disp`, `c_alloc`, `c_pack`, `c_unpack` on the selected CPU route (**now measured below**); `L_h2d`, `L_d2h`, `B_*`, `T_launch`, `T_sync`, `T_pipe` and `c_op` for each lowering variant on pinned hardware and drivers (deferred by the NO-GO decision below).
+- **Prerequisites the model exposes:** a packed `I64` batch representation and larger declared limits (coordinate with #3/#5/#14), plus benchmarking straight-line CPU Wasm compilation of `GPU-Map-Draft` kernels against per-word continuation dispatch.
+
+### Phase 2 CPU-side cost study & GO/NO-GO decision
+
+> `OWNER DECISION 2026-11-20` (Decisions 2 & 3): carry out the Phase-2 CPU-side cost study inside `gpu-offload-research`, and complete conditional downstream GPU implementation/device tasks by recording a negative outcome with measured evidence if the CPU-side study refutes their precondition.
+
+**Evidence source [MEASURED]:** Clean-tree run of `verification/gpu-cost/study.mjs` on commit `21f636e6` (`source_revision` `sha256:c1c2a4df64fccbaad42f20826f0a85eff266923d20e874a070b78fb4a55f0711`), retained receipt [`verification/gpu-cost/runs/20261123/receipt.json`](../../../verification/gpu-cost/runs/20261123/receipt.json) (sha256 `cdc61643ffc10893dbe5f2b26981f8eb8e597b968316ad50776ff8199cb9ec1c`), executed on the selected Node 24.13.0 / V8 13.6.233.17-node.37 engine with the pinned `config.json` flags (`--no-liftoff --no-wasm-lazy-compilation --no-wasm-tier-up --stack-size=1024 --max-old-space-size=256`), `wasm-tools 1.245.1`, and `wasm-opt 125` (`-O2`), on x86_64 Linux (AMD Ryzen AI Max+ 395). All 390 K-NUM-01 boundary oracle checks (13 eligible kernels × 15 boundary inputs × `{off, on}`), all 10 ceiling controls, and 100% of timed samples (15 samples per cell) passed against the independent arbitrary-precision mathematical oracle `((z + 2^63) mod 2^64) - 2^63`.
+
+#### 1. Empirically verified reachable `List<I64>` and work ceilings [MEASURED]
+
+| Limit regime | At-bound pass | Over-bound refusal (`quota_reason`) | Observed memory / steps |
+|---|---|---|---|
+| Default `65,536` B, single `List<I64>` | `n = 682` (`status = 0`) | `n = 683` (`quota_reason = 1`, allocation) | `65,520` B (`1,365` cells) |
+| Default `65,536` B, input + output `batch.map` | `n = 340` (`status = 0`) | `n = 341` (`quota_reason = 1`, allocation) | `65,376` B (`1,362` cells) |
+| Max `196,608` B / `4096` cells, single `List<I64>` (`w2_add`, 6 init cells) | `n = 2,044` (`status = 0`) | `n = 2,045` (`quota_reason = 1`, allocation) | `4,095 / 4,096` cells (`196,272` B; zero-init theoretical max `2,047`, since `Nil` takes 1 cell) |
+| Max `196,608` B / `4096` cells, input + output `batch.map` (`w2_add`) | `n = 1,022` (`status = 0`) | `n = 1,023` (`quota_reason = 1`, allocation) | `4,096 / 4,096` cells (`196,320` B) |
+| Step limit `100,000` (`w64_arith`, `w = 64`) | `n = 1,562` (`status = 0`) | `n = 1,563` (`quota_reason = 6`, execution work) | `99,968` steps (`100,032` refused) |
+
+Because Core sessions allocate from a fixed 4,096-cell non-reclaiming arena (`96` B/element for boxed `I64` + `List.Cons`), a single `batch.map` that holds both input and output `List<I64>` is capped at **`n <= 340`** under default limits and **`n <= 1,022`** at maximum limits (and even with a pre-existing input list from a prior submission, the total session cell cap still bounds input + output simultaneously to `<= 1,022` elements).
+
+#### 2. Measured CPU helper costs at `n = 682` (medians across 15 samples) [MEASURED]
+
+| Helper term (ns / element) | `opt: off` (IQR) | `opt: on` (`wasm-opt -O2`, IQR) | Notes |
+|---|---:|---:|---|
+| `c_alloc` (box `I64` + `List.Cons`, 2 cells) | `30.94` (`2.01`) | `29.57` (`2.82`) | Paid on both CPU and GPU (`List<I64>`) paths; cancels in `T_cpu - T_gpu` |
+| `c_traverse` (linked-list read `$payload($a(node))`) | `6.38` | `6.32` | Pointer-chasing input walk |
+| `c_pack` (traverse + contiguous `i64.store`) | `6.30` (`0.56`) | `5.94` (`0.53`) | Marginal flat store beyond traversal ≈ `0` ns/el (`-0.13` / `-0.28` ns) |
+| `c_unpack_total` (flat `i64.load` + 2-cell rebuild) | `31.97` | `31.19` | Dominated by `c_alloc`; `c_load_only` ≈ `0.00` / `-0.01` ns/el |
+| `c_unpack` (`max(0, unpack - alloc)`) | `0.62` | `1.32` | Marginal unpack beyond `c_alloc` is ~1 ns/el |
+
+Under TurboFan (`--no-liftoff`), `c_pack + c_unpack` is small (`~6.9` ns/el `opt: off`, `~7.3` ns/el `opt: on`). Unlike naive Liftoff estimates, packing/unpacking does **not** make the break-even denominator negative; instead, the bottleneck is **batch size `n`** (the `340` / `682` / `1,022` linked-list ceiling) combined with **per-element dispatch time** and **GPU fixed launch/transfer/sync overhead**.
+
+#### 3. Measured kernel dispatch `c_disp(w)`, end-to-end map `c_cpu_map(w)` and crossover bounds (`n = 682`)
+
+Per-element medians (`ns/el`) are **[MEASURED]**; `n*(L_fixed)` and `L_max(n)` are derived from the measured denominator `denom_list = c_disp(w) - c_pack - c_unpack` under the **optimistic** assumption of zero GPU execution time and infinite H2D/D2H bandwidth (`1/B_* = c_op = 0`; any real device cost strictly raises `n*` and lowers `L_max`) **[INFERENCE / parametric lower bound]**:
+
+| Kernel (`w` steps/el) | `opt` | `c_disp` (ns/el) | `c_disp/w` (ns/step) | `c_cpu_map` (ns/el) | `denom_list` (ns/el) | Optimistic `n*` at `L_fixed` = `50 / 100 / 200 / 500 µs` | Max affordable `L_fixed` at `n = 340 / 682 / 1,022` (`µs`) |
+|---|---|---:|---:|---:|---:|---|---|
+| `w2_add` (`[ 1 + ]`, `w=2`) | off / on | `26.41` / `53.46` | `13.2` / `26.7` | `79.30` / `130.74` | `19.49` / `46.20` | `2565/5130/10260/25649` / `1083/2165/4329/10823` | `6.6 / 13.3 / 19.9` / `15.7 / 31.5 / 47.2` |
+| `m2_sq` (`[ dup * ]`, `w=2`) | off / on | `50.29` / `27.91` | `25.1` / `14.0` | `128.42` / `84.26` | `43.37` / `20.65` | `1153/2306/4612/11530` / `2422/4843/9685/24211` | `14.7 / 29.6 / 44.3` / `7.0 / 14.1 / 21.1` |
+| `w3_sub_order` (`[ 10 swap - ]`, `w=3`) | off / on | `51.77` / `80.38` | `17.3` / `26.8` | `103.51` / `163.52` | `44.85` / `73.13` | `1115/2230/4460/11149` / `684/1368/2736/6838` | `15.3 / 30.6 / 45.8` / `24.9 / 49.9 / 74.7` |
+| `w4_add2` (`[ 1 + 1 + ]`, `w=4`) | off / on | `76.68` / `76.90` | `19.2` / `19.2` | `168.29` / `115.30` | `69.76` / `69.65` | `717/1434/2867/7168` / `718/1436/2872/7180` | `23.7 / 47.6 / 71.3` / `23.7 / 47.5 / 71.2` |
+| `m4_sub_sq` (`[ 3 - dup * ]`, `w=4`) | off / on | `91.84` / `61.76` | `23.0` / `15.4` | `166.41` / `123.95` | `84.93` / `54.50` | `589/1178/2356/5888` / `918/1835/3670/9175` | `28.9 / 57.9 / 86.8` / `18.5 / 37.2 / 55.7` |
+| `w8_add4` (`w=8`) | off / on | `170.94` / `118.30` | `21.4` / `14.8` | `261.00` / `166.03` | `164.02` / `111.04` | `305/610/1220/3049` / `451/901/1802/4503` | `55.8 / 111.9 / 167.6` / `37.8 / 75.7 / 113.5` |
+| `br_if` (`[ dup 0 = [ drop 7 ] [ 3 * ] if ]`, `w=8`) | off / on | `177.81` / `146.27` | `22.2` / `18.3` | `280.16` / `181.79` | `170.89` / `139.01` | `293/586/1171/2926` / `360/720/1439/3597` | `58.1 / 116.6 / 174.7` / `47.3 / 94.8 / 142.1` |
+| `m9_poly` (`x^2+3x+7`, `w=9`) | off / on | `218.44` / `167.78` | `24.3` / `18.6` | `284.46` / `210.88` | `211.52` / `160.52` | `237/473/946/2364` / `312/623/1246/3115` | `71.9 / 144.3 / 216.2` / `54.6 / 109.5 / 164.1` |
+| `w16_arith` (`w=16`) | off / on | `339.40` / `239.26` | `21.2` / `15.0` | `440.53` / `290.59` | `332.48` / `232.00` | `151/301/602/1504` / `216/432/863/2156` | `113.0 / 226.8 / 339.8` / `78.9 / 158.2 / 237.1` |
+| `w32_arith` (`w=32`) | off / on | `743.33` / `474.83` | `23.2` / `14.8` | `907.59` / `525.41` | `736.41` / `467.57` | `68/136/272/679` / `107/214/428/1070` | `250.4 / 502.2 / 752.6` / `159.0 / 318.9 / 477.9` |
+| `w64_arith` (`w=64`) | off / on | `1621.98` / `919.31` | `25.3` / `14.4` | `1559.78` / `907.87` | `1615.06` / `912.06` | `31/62/124/310` / `55/110/220/549` | `549.1 / 1101.5 / 1650.6` / `310.1 / 622.0 / 932.1` |
+
+*(Full 13-kernel table including `w3_swap_add` and `w6_add3`, plus `n = 64, 256, 1000` sweeps and IQRs, is recorded in `verification/gpu-cost/runs/20261123/receipt.json`.)*
+
+#### 4. GO / NO-GO Decision
+
+**Decision: NO-GO for GPU offload on the current `List<I64>` representation and limits.**
+
+1. **Reachable batches are far too small for typical kernels (`w = 2..9`) [MEASURED + INFERENCE]:** At `w = 2..4`, even under an optimistic warm GPU round-trip `L_fixed = 100 µs` with zero device compute and infinite bandwidth, `n* = 1,178–5,130` exceeds both the default `batch.map` ceiling (`n = 340`), the default single-list ceiling (`n = 682`), and the maximum `batch.map` ceiling (`n = 1,022`). At `w = 8..9`, `L_max` at `n = 340` is only `38–72 µs` (`opt: on` / `off`), and at `n = 1,022` only `113–216 µs` — below realistic warm Vulkan/WebGPU submit + sync + H2D/D2H latency plus kernel execution and cold `T_pipe` compilation.
+2. **Wide-kernel `c_disp(w)` is continuation-dispatch overhead, not arithmetic cost [MEASURED]:** `c_disp(w)` scales linearly at **`~14–25 ns/word`** (`~919–1,622 ns/el` at `w = 64`) solely because the current Wasm backend lowers every word to an indirect continuation step (`$enqueue` + `call_indirect` + `$runtime_tick`). For the same straight-line `GPU-Map-Draft` scalar SSA subset, a direct CPU Wasm loop avoids per-word `call_indirect` and would cut CPU time by an order of magnitude without introducing GPU launch latency or an `unsafe` native driver trust boundary [INFERENCE]. Even against the current unspecialized Wasm dispatcher, the entire maximum-size `w = 64` batch (`n = 1,022`, `opt: on`) finishes on CPU in **`~0.93 ms`**, leaving no margin to amortize cold driver pipeline compilation (`T_pipe`) or device round-trips.
+3. **Hard prerequisites before reopening GPU offload:**
+   - A **packed contiguous `I64` batch representation** and **larger declared allocation/cell/work limits** (coordinate with `#3`/`#5`/`#14`), raising reachable `n` by orders of magnitude (`>= 10^4..10^6`) and removing per-element `List<I64>` cell overhead (`c_alloc`, `c_pack`, `c_unpack`).
+   - A **straight-line CPU Wasm baseline** for `GPU-Map-Draft` kernels, so any future GPU candidate is compared against a compiled CPU loop rather than per-word continuation dispatch.
+4. **Consequence for Phase 2 tasks 2–4 (Owner Decision 3, 2026-11-20):** Because task 1 refuted the economic precondition for GPU offload at current representations and limits, tasks 2–4 (independent eligibility checker & SPIR-V/WGSL kernel generator, GPU-PLAN-01…12 device runs, and hardware device cost measurements) are **not undertaken** and are closed as recorded negative conditional outcomes without introducing an inventoried native GPU binding.
 
 ## Correctness test plan (unexecuted)
 
@@ -182,11 +243,12 @@ select GPU  ⇔  policy ≠ cpu ∧ eligible ∧ device ok ∧ n ≥ n_min
 
 ## Tests
 
-This change runs only the structural Cairn gates and validation. GPU-PLAN-01…12 are designs with positive controls (01–05, 10–12) and negative controls (06–09). None has executed.
+Phase 1 ran only the structural Cairn gates and validation. Under `OWNER DECISION 2026-11-20` (Decisions 2 & 3), Phase 2 executed `verification/gpu-cost/study.mjs` (both `--self-test` and clean-tree run on commit `21f636e6`, receipt [`verification/gpu-cost/runs/20261123/receipt.json`](../../../verification/gpu-cost/runs/20261123/receipt.json), sha256 `cdc61643ffc10893dbe5f2b26981f8eb8e597b968316ad50776ff8199cb9ec1c`), verifying 390 K-NUM-01 boundary oracle evaluations, 10 reachable-ceiling quota controls, and 100% of helper/kernel timing samples on the selected Node/V8 Wasm route. GPU-PLAN-01…12 remain unexecuted because the CPU-side study recorded a NO-GO decision for GPU offload without a packed batch representation and larger limits.
 
 ## Claim boundaries
 
-- No GPU feasibility *measurement* and no performance claim. Every cost figure is [INFERENCE].
+- **CPU-side measurements [MEASURED]:** `c_disp(w)`, `c_alloc`, `c_traverse`, `c_pack`, `c_unpack`, `c_cpu_map(w)` and the empirical `List<I64>` / step ceilings are measured on the selected Node 24.13.0 / V8 Wasm route (`verification/gpu-cost/runs/20261123/receipt.json`, clean commit `21f636e6`).
+- **No GPU hardware measurement:** no GPU API, driver compiler, SPIR-V/WGSL/PTX kernel or device run has been executed. Parametric crossover `n*` and `L_max` figures assume zero GPU compute and infinite bandwidth as optimistic lower/upper bounds [INFERENCE].
 - API facts are quoted from the cited spec revisions (SPIR-V unified, Vulkan 1.4.365, WGSL CRD 21 Sept 2026, PTX ISA 9.4). OpenCL, MSL and HIP facts are [INFERENCE] pending pinned spec review.
 - Observational equivalence between sequential and parallel evaluation of the subset is a design argument, not a proof. It needs a separate proof obligation.
 - No change to canonical semantics, conformance state, evidence or proofs.
