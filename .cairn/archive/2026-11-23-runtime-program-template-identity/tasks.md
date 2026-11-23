@@ -88,13 +88,18 @@
   `verification/live-slot-lanes/runs/20261123-0fffc7d8/receipt.json` (sha256 `98313669…`): one
   definition template, two ProgramValueIds for captures 2 and 3, and fixed-literal builders with
   different templates. ID-05 is a ProgramsData-Draft case and stays absent/not-run.
-- [ ] [serial] After independent source-bound review, decide any canonical sync, generated views/ledger/receipt, evidence/status promotion and archive under the existing gates; leave all nine LSLOT states and historical evidence untouched until then. r[P-ID-03] `EV-LSLOT-01`
+- [x] [serial] After independent source-bound review, decide any canonical sync, generated views/ledger/receipt, evidence/status promotion and archive under the existing gates; leave all nine LSLOT states and historical evidence untouched until then. r[P-ID-03] `EV-LSLOT-01`
   Progress 2026-11-23 (owner decisions 50 and 55): the integrator closeout review
   [`review-integrator-2026-11-22-closeout.md`](review-integrator-2026-11-22-closeout.md) accepts
   the sync with notes; the owner did not veto it. The delta's stale status paragraph was rewritten
   (N-1), `P-ID-03` was synced in push B with regenerated views and ledger, and the LSLOT-05/08
   states were promoted only from the push-B LSLOT gate receipt. The archive follows with the next
   ladder, because `crates/` tests and the live-slot lanes receipt tool cite this change's path.
+  Done 2026-11-23: decided and executed as above. The sync landed in `942aaef3` (check-specs
+  `--refresh-ledger --self-test --report` passed, `cairn validate` valid), LSLOT-05/08 were
+  promoted in `d0417282` from `verification/lslot-cases/acceptance-2026-11-23-pb.json`, ID-05
+  stays a ProgramsData-Draft case with its own lane record, and the change is archived with the
+  proposal, design and tasks gates passing.
 
 LSLOT-02's separate atomic physical epoch-1 A+B and A+B+C genesis is an approved implementation choice, not a P-ID-03 requirement or a completed task here. The integrated selected CLI exercise includes both complete maps, an old-root pin through epoch 2 and worker-side later-member quota refusal without partial installation; see `/tmp/noble-lslot-approved-integrated-final-20261006/receipt.json` (SHA-256 `b217d63192e42293398da7592ddc6024fdd971787d142ab3d5b9aeaf6716ce38`). Canonical LSLOT-02 case execution/evidence and all nine LSLOT implementation/execution/proof/trust states remain absent/not-run/open/unassessed in the existing `explicit-live-references` change under `K-LSLOT-02`, `H-LSLOT-01` and `EV-LSLOT-01`; neither sequential publication nor rewriting the frozen fixture can close them. The unsynced P-ID-03 draft and selected captured-target Wasm/Lean proof/replay remain open.
 

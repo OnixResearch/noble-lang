@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Source-bound receipt for LREF-CASE-01 (`.cairn/changes/live-reference-lifetimes`,
+ * Source-bound receipt for LREF-CASE-01 (`.cairn/archive/2026-11-23-live-reference-lifetimes`,
  * r[LREF-EXIT-01], owner decision 6): an abnormal root exit releases the root's map pin and every
  * frame pin exactly once from the host ledger, and the session continues only when that release is
  * provably exact.

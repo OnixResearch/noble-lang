@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { cli, expectOutcome, selectedAuthority } from './live_slot_resource_ref_cli.mjs';
 
-// ID-05's capture change (`.cairn/changes/runtime-program-template-identity`, task 5, P-ID-03):
-// the builder `quote [ + ] compose` applied to the root inputs 2 and 3 yields two Programs with
+// ID-05's capture change (`.cairn/archive/2026-11-23-runtime-program-template-identity`, task 5,
+// P-ID-03): the builder `quote [ + ] compose` applied to the root inputs 2 and 3 yields two
+// Programs with
 // the same anonymous definition template and different ProgramValueIds, whose captures are the
 // root inputs. Control: builders that fix the literal (`2 quote [ + ] compose`,
 // `3 quote [ + ] compose`) yield different templates, so the shared template above comes from the

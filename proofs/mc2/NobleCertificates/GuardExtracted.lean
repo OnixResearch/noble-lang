@@ -5,7 +5,7 @@ import NobleCertificates.Correspondence
 /-!
 # C1 for the extracted guard recognizers
 
-`.cairn/changes/bounded-applicability-guards`, task "Prove C1 recognizer-link theorems": the
+`.cairn/archive/2026-11-23-bounded-applicability-guards`, task "Prove C1 recognizer-link theorems": the
 extracted-Rust correspondence for `noble_contracts::companion::guard::templates_of` (v1) and
 `guard_v2::templates_of`, as translated by the pinned whole-crate Charon/Aeneas lane
 (`NobleContractImpl.Funs`).

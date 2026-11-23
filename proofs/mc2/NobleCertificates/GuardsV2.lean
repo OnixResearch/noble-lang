@@ -4,7 +4,7 @@ import NobleContracts.Expression
 /-!
 # MC2 v2 guard templates: the bounded `NonEmptyList` extension
 
-`.cairn/changes/bounded-applicability-guards` selects exactly one v2 extension:
+`.cairn/archive/2026-11-23-bounded-applicability-guards` selects exactly one v2 extension:
 a whole-root `(not (is-nil (in x0)))` on a one-element `[List A]` interface with
 `A` a pure `Type0` code. The v1 set (`GuardTemplate`, version 1) stays frozen:
 `MC2Gate` still pins exactly its three constructors, `guard.rs` keeps its bytes

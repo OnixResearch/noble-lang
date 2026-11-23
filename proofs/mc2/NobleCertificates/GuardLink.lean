@@ -4,7 +4,7 @@ import NobleContracts.Expression
 /-!
 # C1 at model level: recognized preconditions mean the template preconditions
 
-`.cairn/changes/bounded-applicability-guards` states C1: when the guard recognizer selects a
+`.cairn/archive/2026-11-23-bounded-applicability-guards` states C1: when the guard recognizer selects a
 template `t` for a contract, the MC1 meaning of the contract's own `requires` on the single
 `I64` input is `GuardPrecondition t`. The recognizer (`companion::guard::recognize`) accepts a
 whole precondition in exactly five MC1 spellings, with `x0` the input and a literal being

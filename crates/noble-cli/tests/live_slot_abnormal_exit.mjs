@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import { SlotRegistry } from '../src/core/runtime/slot-registry.mjs';
 import { cli, expectOutcome, selectedAuthority } from './live_slot_resource_ref_cli.mjs';
 
-// LREF-CASE-01 (`.cairn/changes/live-reference-lifetimes`, r[LREF-EXIT-01], owner decision 6): an
-// abnormal root exit releases the root's map pin and both frame pins exactly once, issues no saved
+// LREF-CASE-01 (`.cairn/archive/2026-11-23-live-reference-lifetimes`, r[LREF-EXIT-01], owner
+// decision 6): an abnormal root exit releases the root's map pin and both frame pins exactly once,
+// issues no saved
 // owner and rolls back no effect. A quota-1 registry holds slot B at epoch 1; root R runs caller A,
 // which dispatches B through `slot.invoke`, so R holds two frame pins (A's root frame and B's).
 //

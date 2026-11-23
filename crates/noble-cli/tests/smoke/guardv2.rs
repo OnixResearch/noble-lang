@@ -1,7 +1,7 @@
 //! The v2 `NonEmptyList` guard texts, executed on the real runtime.
 //!
 //! These controls run the exact rendered texts from
-//! `.cairn/changes/bounded-applicability-guards` (and the frozen v1 texts) in a
+//! `.cairn/archive/2026-11-23-bounded-applicability-guards` (and the frozen v1 texts) in a
 //! live session. They do not need an admitted companion: the body and the
 //! "program" cell are ordinary values, so the text-level semantics, the
 //! rejection payload and the fact that the body never runs on `nil` are

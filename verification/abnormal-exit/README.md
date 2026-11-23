@@ -1,7 +1,7 @@
 # Abnormal root exit (LREF-CASE-01)
 
 `receipt.mjs` runs `crates/noble-cli/tests/live_slot_abnormal_exit.mjs` against two CLIs and binds
-the clean source tree it ran from (`.cairn/changes/live-reference-lifetimes`, r[LREF-EXIT-01],
+the clean source tree it ran from (`.cairn/archive/2026-11-23-live-reference-lifetimes`, r[LREF-EXIT-01],
 owner decision 6):
 
 - **fixed**, built from the recorded source: the lane must pass;

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Source-bound receipt for LREF-CASE-03 (`.cairn/changes/live-reference-lifetimes`): a Program
+ * Source-bound receipt for LREF-CASE-03 (`.cairn/archive/2026-11-23-live-reference-lifetimes`): a Program
  * saved from a slot dispatch keeps its version's package across replacement, and is charged for it
  * against the retained-version quota until it is released.
  *

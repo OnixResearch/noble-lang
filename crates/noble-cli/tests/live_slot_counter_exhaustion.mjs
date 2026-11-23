@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { SlotRegistry } from '../src/core/runtime/slot-registry.mjs';
 
-// LREF-CASE-02 (`.cairn/changes/live-reference-lifetimes`, r[LREF-CTR-01], integrator decision
+// LREF-CASE-02 (`.cairn/archive/2026-11-23-live-reference-lifetimes`, r[LREF-CTR-01], integrator decision
 // 47): live-slot counters never wrap. In process, three registries start from fixtures at a
 // counter's maximum: the global epoch, slot S's generation and S's incarnation. Each would-be
 // publication, deletion or recreation refuses with its own exhaustion diagnostic and leaves the
