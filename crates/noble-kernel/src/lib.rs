@@ -47,6 +47,7 @@ pub mod contracts;
 pub mod dataspace;
 pub mod execution;
 pub mod integer;
+pub mod ledger;
 #[path = "region/read.rs"]
 pub mod region_read;
 pub mod resources;
