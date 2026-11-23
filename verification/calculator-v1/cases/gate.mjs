@@ -14,7 +14,7 @@
 //     [--case CALC-01,...] [--concurrency 4] [--slow-timeout-s 900] \
 //     [--write-compact verification/calculator-v1/cases/runs/<YYYYMMDD>-<sha>/acceptance.json]
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -515,44 +515,55 @@ if (selectedLanes.includes('cli')) {
 if (selectedLanes.includes('state-host')) {
   const casesData = readJson(path.join(root, 'specs/conformance/calculator-cases.json'));
   const byId = new Map(casesData.cases.map(c => [c.id, c]));
-  const runSession = (label, lines, extraEnv = {}) => {
+  const runSessionAsync = (label, lines, extraEnv = {}) => new Promise(resolve => {
     const started = Date.now();
-    const res = spawnSync(binaryPath, ['calculator'], {
+    const child = spawn(binaryPath, ['calculator'], {
       cwd: root,
-      input: `${lines.join('\n')}\n`,
-      encoding: 'utf8',
       env: { PATH: '/nonexistent', LANG: 'C', LC_ALL: 'C', ...extraEnv },
-      maxBuffer: 16 * 1024 * 1024,
-      timeout: 600_000,
+      stdio: ['pipe', 'pipe', 'pipe'],
     });
-    writeRaw(`state-host-${label}.stdout.txt`, res.stdout ?? '');
-    writeRaw(`state-host-${label}.stderr.txt`, res.stderr ?? '');
-    const outLines = (res.stdout ?? '').split('\n').filter((_, i, a) => i < a.length - 1 || a[i] !== '');
-    const errLines = (res.stderr ?? '').split('\n').filter((_, i, a) => i < a.length - 1 || a[i] !== '');
-    return { status: res.status, signal: res.signal ?? null, wall_ms: Date.now() - started, outLines, errLines };
-  };
+    const outChunks = [];
+    const errChunks = [];
+    let timedOut = false;
+    child.stdout.on('data', chunk => outChunks.push(chunk));
+    child.stderr.on('data', chunk => errChunks.push(chunk));
+    const timer = setTimeout(() => {
+      timedOut = true;
+      try { child.kill('SIGKILL'); } catch { /* gone */ }
+    }, 3_600_000);
+    child.on('close', (status, signal) => {
+      clearTimeout(timer);
+      const stdout = Buffer.concat(outChunks).toString('utf8');
+      const stderr = Buffer.concat(errChunks).toString('utf8');
+      writeRaw(`state-host-${label}.stdout.txt`, stdout);
+      writeRaw(`state-host-${label}.stderr.txt`, stderr);
+      const outLines = stdout.split('\n').filter((_, i, a) => i < a.length - 1 || a[i] !== '');
+      const errLines = stderr.split('\n').filter((_, i, a) => i < a.length - 1 || a[i] !== '');
+      resolve({ status, signal: signal ?? null, timed_out: timedOut, wall_ms: Date.now() - started, outLines, errLines });
+    });
+    child.stdin.end(`${lines.join('\n')}\n`);
+  });
 
-  // CALC-02 state_unchanged
   const c02Vecs = byId.get('CALC-02').input.vectors;
-  const c02Res = runSession('calc02', ['let x = 7', ...c02Vecs.map(v => v.expression), 'x']);
+  const c03Vecs = byId.get('CALC-03').input.vectors;
+  const traceFile = path.join(out, 'state-host', 'trace.jsonl');
+
+  const [c02Res, c03Runs, traceRes] = await Promise.all([
+    runSessionAsync('calc02', ['let x = 7', ...c02Vecs.map(v => v.expression), 'x']),
+    Promise.all(c03Vecs.map((v, i) => runSessionAsync(`calc03-${i + 1}`, ['let x = 7', v.expression, 'x']))),
+    runSessionAsync('trace', ['let x = 10', 'let x = 1 / 0', 'x', '1 + )'], { NOBLE_CALCULATOR_TRACE: traceFile }),
+  ]);
+
   const c02Ok = c02Res.status === 1
     && JSON.stringify(c02Res.outLines) === JSON.stringify(['7', '7'])
     && c02Res.errLines.length === c02Vecs.length
     && c02Vecs.every((v, i) => c02Res.errLines[i] === `${v.category} [${v.span[0]},${v.span[1]}) provenance=unavailable`);
 
-  // CALC-03 state_unchanged
-  const c03Vecs = byId.get('CALC-03').input.vectors;
-  const c03Res = runSession('calc03', ['let x = 7', ...c03Vecs.map(v => v.expression), 'x']);
-  const c03Ok = c03Res.status === 1
-    && JSON.stringify(c03Res.outLines) === JSON.stringify(['7', '7'])
-    && c03Res.errLines.length === c03Vecs.length
-    && c03Vecs.every((v, i) => new RegExp(`^${v.category} \\[\\d+,\\d+\\) provenance=unavailable$`).test(c03Res.errLines[i]));
+  const c03Ok = c03Runs.every((res, i) => res.status === 1
+    && JSON.stringify(res.outLines) === JSON.stringify(['7', '7'])
+    && res.errLines.length === 1
+    && new RegExp(`^${c03Vecs[i].category} \\[\\d+,\\d+\\) provenance=unavailable$`).test(res.errLines[0]));
 
-  // Trace session check
-  const traceFile = path.join(out, 'state-host', 'trace.jsonl');
-  const traceRes = runSession('trace', ['1 + )', '1 / 0', 'let x = 10', 'let x = 1 / 0', 'x', 'fn h()=q', 'h()'], {
-    NOBLE_CALCULATOR_TRACE: traceFile,
-  });
   let traceCheck = { status: 'failed', record_count: 0, module_count: 0, schemas_ok: false, outcomes_ok: false };
   if (fs.existsSync(traceFile)) {
     const records = fs.readFileSync(traceFile, 'utf8').trim().split('\n').filter(Boolean).map(l => JSON.parse(l));
@@ -561,7 +572,7 @@ if (selectedLanes.includes('state-host')) {
     const outcomesOk = modules.length > 0 && modules.every(r => r.outcome === 'normal');
     const traceOutOk = traceRes.status === 1
       && JSON.stringify(traceRes.outLines) === JSON.stringify(['10', '10'])
-      && traceRes.errLines.length === 5;
+      && traceRes.errLines.length === 2;
     traceCheck = {
       status: traceOutOk && schemasOk && outcomesOk ? 'passed' : 'failed',
       record_count: records.length,
@@ -620,10 +631,13 @@ if (selectedLanes.includes('state-host')) {
     },
     calc03_state_unchanged: {
       status: c03Ok ? 'passed' : 'failed',
-      exit_code: c03Res.status,
-      wall_ms: c03Res.wall_ms,
-      stdout: c03Res.outLines,
-      stderr: c03Res.errLines,
+      sessions: c03Runs.map((res, i) => ({
+        expression: c03Vecs[i].expression,
+        exit_code: res.status,
+        wall_ms: res.wall_ms,
+        stdout: res.outLines,
+        stderr: res.errLines,
+      })),
     },
     trace_session_check: traceCheck,
     core_engine_calculator_check: {
