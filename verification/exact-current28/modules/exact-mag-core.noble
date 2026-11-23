@@ -1,0 +1,31 @@
+module exact_mag_core@1 [
+    signature mag_rev_loop forall<S:stack> [ S List<I64> List<I64> -- S List<I64> ! pure ]
+    export mag_rev_loop
+    def mag_rev_loop [
+        [ ] [ [ swap cons ] dip mag_rev_loop ] list.case
+    ]
+
+    signature mag_rev forall<S:stack> [ S List<I64> -- S List<I64> ! pure ]
+    export mag_rev
+    def mag_rev [ nil swap mag_rev_loop ]
+
+    signature mag_norm forall<S:stack> [ S List<I64> -- S List<I64> ! pure ]
+    export mag_norm
+    def mag_norm [
+        [ nil ]
+        [
+            swap [ mag_norm ] dip swap
+            dup [ true ] [ drop drop false ] list.case
+            [ swap dup 0 = [ drop ] [ swap cons ] if ]
+            [ cons ]
+            if
+        ]
+        list.case
+    ]
+
+    signature mag_len_acc forall<S:stack> [ S I64 List<I64> -- S I64 ! pure ]
+    export mag_len_acc
+    def mag_len_acc [
+        [ ] [ [ drop 1 + ] dip mag_len_acc ] list.case
+    ]
+]

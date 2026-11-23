@@ -1,0 +1,34 @@
+module exact_i64@1 [
+    signature divmod_pos forall<S:stack> [ S I64 I64 -- S I64 I64 ! pure ]
+    export divmod_pos
+    def divmod_pos [
+        swap [ dup ] dip swap -
+        dup 0 <
+        [ + 0 swap ]
+        [
+            [ dup ] dip swap [ dup ] dip <
+            [ swap drop 1 swap ]
+            [
+                [ dup ] dip +
+                swap dup dup + swap
+                [ divmod_pos ] dip
+                swap [ dup ] dip swap -
+                dup 0 <
+                [ + [ dup + ] dip ]
+                [ swap drop [ dup + 1 + ] dip ]
+                if
+            ]
+            if
+        ]
+        if
+    ]
+
+    signature i64_gcd forall<S:stack> [ S I64 I64 -- S I64 ! pure ]
+    export i64_gcd
+    def i64_gcd [
+        dup 0 =
+        [ drop ]
+        [ dup [ divmod_pos swap drop ] dip swap i64_gcd ]
+        if
+    ]
+]

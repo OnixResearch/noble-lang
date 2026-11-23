@@ -1,0 +1,29 @@
+module exact_knuth@1 [
+    signature knuth_scale forall<S:stack> [ S I64 -- S I64 ! pure ]
+    export knuth_scale
+    def knuth_scale [
+        dup 500000000 <
+        [ 1 + 1000000000 swap exact_i64@1.divmod_pos drop ]
+        [ drop 1 ]
+        if
+    ]
+
+    signature knuth_est forall<S:stack> [ S List<I64> I64 -- S I64 ! pure ]
+    export knuth_est
+    def knuth_est [
+        swap
+        [ drop 0 ]
+        [
+            [
+                swap exact_i64@1.divmod_pos drop
+            ]
+            [
+                drop 1000000000 * +
+                swap exact_i64@1.divmod_pos drop
+                dup 999999999 < [ ] [ drop 999999999 ] if
+            ]
+            list.case
+        ]
+        list.case
+    ]
+]

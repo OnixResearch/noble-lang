@@ -1,0 +1,44 @@
+module exact_mag_add@1 [
+    signature mag_cmp_acc forall<S:stack> [ S I64 List<I64> List<I64> -- S I64 ! pure ]
+    export mag_cmp_acc
+    def mag_cmp_acc [
+        swap
+        [ [ ] [ drop drop drop -1 ] list.case ]
+        [
+            [ swap ] dip swap
+            [ drop drop drop 1 ]
+            [
+                [ swap ] dip
+                [
+                    [
+                        [ dup ] dip swap [ dup ] dip swap <
+                        [ drop drop drop -1 ]
+                        [ swap < [ drop 1 ] [ ] if ]
+                        if
+                    ] dip
+                ] dip
+                mag_cmp_acc
+            ]
+            list.case
+        ]
+        list.case
+    ]
+
+    signature mag_add_carry forall<S:stack> [ S I64 List<I64> List<I64> -- S List<I64> ! pure ]
+    export mag_add_carry
+    def mag_add_carry [
+        [
+            dup [ true ] [ drop drop false ] list.case
+            [ drop dup 0 = [ drop nil ] [ nil cons ] if ]
+            [ nil swap mag_add_carry ]
+            if
+        ]
+        [
+            [ [ [ 0 nil ] [ ] list.case ] dip ] dip
+            [ swap ] dip
+            [ [ + + dup 1000000000 < [ 0 swap ] [ 1000000000 - 1 swap ] if ] dip ] dip
+            [ swap ] dip swap [ mag_add_carry ] dip swap cons
+        ]
+        list.case
+    ]
+]

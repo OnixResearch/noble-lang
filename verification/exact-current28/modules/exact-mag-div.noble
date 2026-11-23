@@ -1,0 +1,55 @@
+module exact_mag_div@1 [
+    signature mag_div_limb_msb forall<S:stack>
+        [ S I64 I64 List<I64> List<I64> -- S List<I64> I64 ! pure ]
+    export mag_div_limb_msb
+    def mag_div_limb_msb [
+        [ [ swap drop ] dip swap ]
+        [
+            [
+                swap
+                [
+                    [ 1000000000 * ] dip +
+                    [ dup ] dip swap
+                    exact_i64@1.divmod_pos
+                ] dip
+                swap
+                [
+                    dup [ true ] [ drop drop false ] list.case
+                    [ swap dup 0 = [ drop ] [ swap cons ] if ]
+                    [ cons ]
+                    if
+                ] dip
+                swap
+            ] dip
+            mag_div_limb_msb
+        ]
+        list.case
+    ]
+
+    signature mag_msb_top forall<S:stack> [ S List<I64> -- S I64 ! pure ]
+    export mag_msb_top
+    def mag_msb_top [
+        [ 0 ]
+        [
+            dup [ true ] [ drop drop false ] list.case
+            [ drop ]
+            [ swap drop mag_msb_top ]
+            if
+        ]
+        list.case
+    ]
+
+    signature mag_drop_k forall<S:stack> [ S I64 List<I64> -- S List<I64> ! pure ]
+    export mag_drop_k
+    def mag_drop_k [
+        swap dup 0 =
+        [ drop ]
+        [
+            swap
+            [ drop nil ]
+            [ [ drop 1 - ] dip mag_drop_k ]
+            list.case
+        ]
+        if
+    ]
+]

@@ -1,0 +1,23 @@
+module exact_parse_limbs@1 [
+    signature pack_limbs forall<S:stack> [ S Text I64 I64 -- S Text List<I64> ! pure ]
+    export pack_limbs
+    def pack_limbs [
+        [ dup ] dip swap [ dup ] dip swap <
+        [
+            dup 9 -
+            [ [ dup ] dip swap ] dip
+            [ dup ] dip swap [ dup ] dip swap <
+            [ swap drop ] [ drop ] if
+            dup [ swap ] dip swap
+            [ [ pack_limbs ] dip ] dip
+            [ swap ] dip swap
+            [ 0 exact_parse_scan@1.chunk9 ] dip
+            dup [ true ] [ drop drop false ] list.case
+            [ swap dup 0 = [ drop ] [ swap cons ] if ]
+            [ cons ]
+            if
+        ]
+        [ drop drop nil ]
+        if
+    ]
+]

@@ -1,0 +1,18 @@
+module exact_mag_ml@1 [
+    signature mag_mul_limb forall<S:stack> [ S I64 I64 List<I64> -- S List<I64> ! pure ]
+    export mag_mul_limb
+    def mag_mul_limb [
+        [ swap drop dup 0 = [ drop nil ] [ nil cons ] if ]
+        [
+            [
+                swap [ [ dup ] dip * ] dip +
+                dup 1000000000 <
+                [ 0 swap ]
+                [ 1000000000 exact_i64@1.divmod_pos ]
+                if
+            ] dip
+            swap [ mag_mul_limb ] dip swap cons
+        ]
+        list.case
+    ]
+]

@@ -1,0 +1,19 @@
+module exact_pow10@1 [
+    signature pow10_small forall<S:stack> [ S I64 -- S I64 ! pure ]
+    export pow10_small
+    def pow10_small [
+        dup 0 =
+        [ drop 1 ]
+        [ 1 - pow10_small 10 * ]
+        if
+    ]
+
+    signature pow10_mag forall<S:stack> [ S I64 -- S List<I64> ! pure ]
+    export pow10_mag
+    def pow10_mag [
+        dup 9 <
+        [ pow10_small nil cons ]
+        [ 9 - pow10_mag 0 swap cons ]
+        if
+    ]
+]

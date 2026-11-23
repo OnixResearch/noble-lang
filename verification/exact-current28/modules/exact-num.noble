@@ -1,0 +1,62 @@
+module exact_num@1 [
+    opaque BigInt Pair<Bool,List<I64>> private
+    export BigInt
+
+    opaque Rat Pair<BigInt,BigInt> private
+    export Rat
+
+    signature big_make forall<S:stack> [ S Bool List<I64> -- S BigInt ! pure ]
+    export big_make
+    def big_make [
+        dup [ true ] [ drop drop false ] list.case
+        [ swap drop false swap pair BigInt.new ]
+        [ pair BigInt.new ]
+        if
+    ]
+
+    signature big_unpack forall<S:stack> [ S BigInt -- S Bool List<I64> ! pure ]
+    export big_unpack
+    def big_unpack [ BigInt.into unpair ]
+
+    signature big_neg forall<S:stack> [ S BigInt -- S BigInt ! pure ]
+    export big_neg
+    def big_neg [
+        BigInt.into unpair
+        dup [ true ] [ drop drop false ] list.case
+        [ swap drop false swap pair BigInt.new ]
+        [ [ [ false ] [ true ] if ] dip pair BigInt.new ]
+        if
+    ]
+
+    signature rat_unpack forall<S:stack> [ S Rat -- S BigInt BigInt ! pure ]
+    export rat_unpack
+    def rat_unpack [ Rat.into unpair ]
+
+    signature rat_neg forall<S:stack> [ S Rat -- S Rat ! pure ]
+    export rat_neg
+    def rat_neg [ Rat.into unpair [ big_neg ] dip pair Rat.new ]
+
+    signature rat_seal forall<S:stack>
+        [ S Bool List<I64> List<I64> -- S result@1.Result<Rat,exact_errors@1.ExactError> ! pure ]
+    export rat_seal
+    def rat_seal [
+        dup [ true ] [ drop drop false ] list.case
+        [ drop drop drop unit exact_errors@1.ExactError.DivisionByZero result@1.Result.Err ]
+        [
+            [ dup [ true ] [ drop drop false ] list.case ] dip swap
+            [
+                drop drop drop
+                false nil pair BigInt.new
+                false 1 nil cons pair BigInt.new
+                pair Rat.new result@1.Result.Ok
+            ]
+            [
+                [ pair BigInt.new ] dip
+                false swap pair BigInt.new
+                pair Rat.new result@1.Result.Ok
+            ]
+            if
+        ]
+        if
+    ]
+]
