@@ -35,6 +35,9 @@
     reason = "test crate: positional fixture parameters are named at each call site"
 )]
 
+#[path = "live_slots/ledger.rs"]
+mod ledger;
+
 use noble_kernel::acceptance::check;
 use noble_kernel::contracts::{environment, Env, NominalDecl, LIVE_DISPATCH, TEST_EMIT};
 use noble_kernel::types::{EffId, EffSet, NominalShape, NominalTypeId, ResourceKind, Ty};
