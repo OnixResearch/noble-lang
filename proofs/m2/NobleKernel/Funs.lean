@@ -1213,7 +1213,7 @@ impl_def types.Ty.Insts.CoreCmpPartialEqTy : core.cmp.PartialEq types.Ty
 }
 
 /-- [noble_kernel::acceptance::parts::invalid]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 335:0-362:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 336:0-363:1 -/
 def acceptance.parts.invalid
   (ctx : acceptance.parts.Ctx) («at» : acceptance.parts.Site)
   (expected : alloc.vec.Vec types.Ty) (actual : alloc.vec.Vec types.Ty)
@@ -1375,7 +1375,7 @@ def acceptance.parts.multiset.same
     acceptance.parts.multiset.same_loop left right used true 0#usize
 
 /-- [noble_kernel::acceptance::parts::mismatch_constraint]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 288:0-297:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 289:0-298:1 -/
 def acceptance.parts.mismatch_constraint
   (expected : Slice types.Ty) (actual : Slice types.Ty) :
   Result untrusted.Constraint
@@ -1554,7 +1554,7 @@ def types.EffSet.union
   ok out1
 
 /-- [noble_kernel::acceptance::parts::tail_copy]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 303:0-312:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 304:0-313:1 -/
 def acceptance.parts.tail_copy
   (stack : Slice types.Ty) (needed : Std.Usize) :
   Result (alloc.vec.Vec types.Ty)
@@ -1572,7 +1572,7 @@ def acceptance.parts.tail_copy
   else alloc.slice.Slice.to_vec types.Ty.Insts.CoreCloneClone stack
 
 /-- [noble_kernel::acceptance::parts::match_tail]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 275:4-283:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 276:4-284:5 -/
 @[rust_loop_body]
 def acceptance.parts.match_tail_loop.body
   (stack : Slice types.Ty) (expected : Slice types.Ty) (tail_start : Std.Usize)
@@ -1599,7 +1599,7 @@ def acceptance.parts.match_tail_loop.body
   else ok (done none)
 
 /-- [noble_kernel::acceptance::parts::match_tail]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 275:4-283:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 276:4-284:5 -/
 @[rust_loop]
 def acceptance.parts.match_tail_loop
   (stack : Slice types.Ty) (expected : Slice types.Ty) (tail_start : Std.Usize)
@@ -1612,7 +1612,7 @@ def acceptance.parts.match_tail_loop
     index
 
 /-- [noble_kernel::acceptance::parts::match_tail]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 265:0-285:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 266:0-286:1 -/
 def acceptance.parts.match_tail
   (stack : Slice types.Ty) (expected : Slice types.Ty) :
   Result (Option untrusted.Constraint)
@@ -2026,7 +2026,7 @@ def words.bounds.check_sizes
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_kernel::acceptance::parts::invalid_without_stacks]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 316:0-329:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 317:0-330:1 -/
 def acceptance.parts.invalid_without_stacks
   («at» : acceptance.parts.Site) (constraint : untrusted.Constraint) :
   Result acceptance.Fail
@@ -4097,7 +4097,7 @@ def contracts.Env.valid_live_ref
   contracts.live.valid_ref self ty
 
 /-- [noble_kernel::acceptance::parts::valid_limited_entry]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 140:0-151:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 141:0-152:1 -/
 def acceptance.parts.valid_limited_entry
   (stack : Slice types.Ty) (index : Std.Usize) (env : contracts.Env)
   (allow_borrowed : Bool) :
@@ -4130,7 +4130,7 @@ def acceptance.parts.valid_limited_entry
   else contracts.nominal.type.walk.Env.valid_type env entry 512#u32
 
 /-- [noble_kernel::acceptance::parts::valid_limited_stack]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 132:4-135:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 133:4-136:5 -/
 @[rust_loop_body]
 def acceptance.parts.valid_limited_stack_loop.body
   (stack : Slice types.Ty) (env : contracts.Env) (allow_borrowed : Bool)
@@ -4150,7 +4150,7 @@ def acceptance.parts.valid_limited_stack_loop.body
   else ok (done is_valid)
 
 /-- [noble_kernel::acceptance::parts::valid_limited_stack]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 132:4-135:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 133:4-136:5 -/
 @[rust_loop]
 def acceptance.parts.valid_limited_stack_loop
   (stack : Slice types.Ty) (env : contracts.Env) (allow_borrowed : Bool)
@@ -4163,7 +4163,7 @@ def acceptance.parts.valid_limited_stack_loop
     (index, is_valid)
 
 /-- [noble_kernel::acceptance::parts::valid_limited_stack]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 125:0-137:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 126:0-138:1 -/
 @[reducible]
 def acceptance.parts.valid_limited_stack
   (stack : Slice types.Ty) (env : contracts.Env) (allow_borrowed : Bool) :
@@ -4173,7 +4173,7 @@ def acceptance.parts.valid_limited_stack
     true
 
 /-- [noble_kernel::acceptance::parts::site]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 29:0-34:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 30:0-35:1 -/
 def acceptance.parts.site
   (node : Option untrusted.NodeId) («def» : Option contracts.Definition) :
   Result acceptance.parts.Site
@@ -4181,7 +4181,7 @@ def acceptance.parts.site
   ok { node, «def» }
 
 /-- [noble_kernel::acceptance::parts::limits_of_with]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 87:0-117:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 88:0-118:1 -/
 def acceptance.parts.limits_of_with
   (stack : Slice types.Ty) (ctx : acceptance.parts.Ctx) (allow_borrowed : Bool)
   :
@@ -4219,7 +4219,7 @@ def acceptance.parts.limits_of_with
       untrusted.LimitKind.StackHeight))
 
 /-- [noble_kernel::acceptance::parts::limits_of]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 69:0-71:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 70:0-72:1 -/
 def acceptance.parts.limits_of
   (stack : Slice types.Ty) (ctx : acceptance.parts.Ctx) :
   Result (core.result.Result Unit acceptance.Fail)
@@ -4227,7 +4227,7 @@ def acceptance.parts.limits_of
   acceptance.parts.limits_of_with stack ctx false
 
 /-- [noble_kernel::acceptance::parts::limits_of_join]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 239:0-258:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 240:0-259:1 -/
 def acceptance.parts.limits_of_join
   (height : Std.Usize) (appended : Slice types.Ty) (ctx : acceptance.parts.Ctx)
   :
@@ -4248,7 +4248,7 @@ def acceptance.parts.limits_of_join
       untrusted.LimitKind.StackHeight))
 
 /-- [noble_kernel::acceptance::parts::join::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::acceptance::parts::join::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 228:19-228:80 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 229:19-229:80 -/
 def
   acceptance.parts.join.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool.call_once
   (c : acceptance.parts.join.closure) (tupled_args : Std.U64) :
@@ -4258,7 +4258,7 @@ def
   ok (tupled_args <= i)
 
 /-- Trait implementation: [noble_kernel::acceptance::parts::join::{impl core::ops::function::FnOnce<(u64,), bool> for noble_kernel::acceptance::parts::join::{closure}<'_0>}]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 228:19-228:80 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 229:19-229:80 -/
 @[reducible]
 def acceptance.parts.join.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool :
   core.ops.function.FnOnce acceptance.parts.join.closure Std.U64 Bool := {
@@ -4267,7 +4267,7 @@ def acceptance.parts.join.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool :
 }
 
 /-- [noble_kernel::acceptance::parts::join]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 197:0-230:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 198:0-231:1 -/
 def acceptance.parts.join
   (frame : acceptance.Frame) (interface : untrusted.Interface)
   («at» : acceptance.parts.Site) (ctx : acceptance.parts.Ctx) :
@@ -4314,7 +4314,7 @@ def acceptance.parts.join
     ok (core.result.Result.Err f)
 
 /-- [noble_kernel::acceptance::parts::definition_of]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 176:0-194:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 177:0-195:1 -/
 def acceptance.parts.definition_of
   (candidate : untrusted.Candidate) (node : untrusted.NodeId) :
   Result (Option contracts.Definition)
@@ -4338,7 +4338,7 @@ def acceptance.parts.definition_of
   | core.result.Result.Err _ => ok none
 
 /-- [noble_kernel::acceptance::parts::join_cost]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 56:0-66:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 57:0-67:1 -/
 def acceptance.parts.join_cost
   (interface : untrusted.Interface) :
   Result (core.result.Result Std.U32 acceptance.Fail)
@@ -7103,7 +7103,7 @@ def acceptance.parts.instantiate.resolve_witness
         untrusted.LimitKind.Work))
 
 /-- [noble_kernel::acceptance::parts::valid_stack_type_at]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 167:0-173:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 168:0-174:1 -/
 def acceptance.parts.valid_stack_type_at
   (stack : Slice types.Ty) (index : Std.Usize) (env : contracts.Env) :
   Result Bool
@@ -7112,7 +7112,7 @@ def acceptance.parts.valid_stack_type_at
   contracts.nominal.type.walk.Env.valid_type env t 512#u32
 
 /-- [noble_kernel::acceptance::parts::valid_stack_types]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 157:4-163:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 158:4-164:5 -/
 @[rust_loop_body]
 def acceptance.parts.valid_stack_types_loop.body
   (stack : Slice types.Ty) (env : contracts.Env) (index : Std.Usize) :
@@ -7129,7 +7129,7 @@ def acceptance.parts.valid_stack_types_loop.body
   else ok (done true)
 
 /-- [noble_kernel::acceptance::parts::valid_stack_types]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 157:4-163:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 158:4-164:5 -/
 @[rust_loop]
 def acceptance.parts.valid_stack_types_loop
   (stack : Slice types.Ty) (env : contracts.Env) (index : Std.Usize) :
@@ -7141,7 +7141,7 @@ def acceptance.parts.valid_stack_types_loop
     index
 
 /-- [noble_kernel::acceptance::parts::valid_stack_types]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 154:0-165:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 155:0-166:1 -/
 @[reducible]
 def acceptance.parts.valid_stack_types
   (stack : Slice types.Ty) (env : contracts.Env) : Result Bool := do
@@ -19123,7 +19123,7 @@ def contracts.nominal.validation.Env.validate_contracts
           else ok false
 
 /-- [noble_kernel::acceptance::parts::charge]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 41:0-46:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 42:0-47:1 -/
 def acceptance.parts.charge
   (work : Std.U32) (cost : Std.U32) :
   Result (core.result.Result Std.U32 acceptance.Fail)
@@ -19136,7 +19136,7 @@ def acceptance.parts.charge
   | some remaining => ok (core.result.Result.Ok remaining)
 
 /-- [noble_kernel::acceptance::preflight::declared_definition_budget]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 625:0-640:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 631:0-646:1 -/
 def acceptance.preflight.declared_definition_budget
   (env : contracts.Env) (request : untrusted.Request) (remaining : Std.U32) :
   Result (core.result.Result Std.U32 acceptance.Fail)
@@ -19164,7 +19164,7 @@ def acceptance.preflight.declared_definition_budget
       untrusted.LimitKind.Nodes))
 
 /-- [noble_kernel::acceptance::preflight::nominal_budget]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 597:0-619:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 603:0-625:1 -/
 def acceptance.preflight.nominal_budget
   (env : contracts.Env) (request : untrusted.Request) (remaining : Std.U32) :
   Result (core.result.Result Std.U32 acceptance.Fail)
@@ -19345,7 +19345,7 @@ def contracts.nominal.type.walk.Env.validate_decl
             else ok false
 
 /-- [noble_kernel::acceptance::preflight::nominal_size_within_limit]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 676:0-687:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 682:0-693:1 -/
 def acceptance.preflight.nominal_size_within_limit
   (payload_node_count : Option Std.U32) (limits : untrusted.Limits) :
   Result Bool
@@ -19359,7 +19359,7 @@ def acceptance.preflight.nominal_size_within_limit
     | some total_node_count => ok (total_node_count <= limits.type_size)
 
 /-- [noble_kernel::acceptance::preflight::nominal_payload_size::{impl core::ops::function::FnOnce<((u32, u32),), core::option::Option<u32>> for noble_kernel::acceptance::preflight::nominal_payload_size::{closure}}::call_once]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 669:22-669:61 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 675:22-675:61 -/
 def
   acceptance.preflight.nominal_payload_size.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32U32OptionU32.call_once
   (c : acceptance.preflight.nominal_payload_size.closure)
@@ -19370,7 +19370,7 @@ def
   ok (U32.checked_add left right)
 
 /-- Trait implementation: [noble_kernel::acceptance::preflight::nominal_payload_size::{impl core::ops::function::FnOnce<((u32, u32),), core::option::Option<u32>> for noble_kernel::acceptance::preflight::nominal_payload_size::{closure}}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 669:22-669:61 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 675:22-675:61 -/
 @[reducible]
 def
   acceptance.preflight.nominal_payload_size.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32U32OptionU32
@@ -19381,7 +19381,7 @@ def
 }
 
 /-- [noble_kernel::acceptance::preflight::nominal_payload_size]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 661:0-672:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 667:0-678:1 -/
 def acceptance.preflight.nominal_payload_size
   (shape : types.NominalShape) : Result (Option Std.U32) := do
   match shape with
@@ -19395,7 +19395,7 @@ def acceptance.preflight.nominal_payload_size
       o2 ()
 
 /-- [noble_kernel::acceptance::preflight::nominal_failure_at]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 643:0-659:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 649:0-665:1 -/
 def acceptance.preflight.nominal_failure_at
   (env : contracts.Env) (limits : untrusted.Limits) (index : Std.Usize) :
   Result (Option acceptance.preflight.NominalFailure)
@@ -19414,7 +19414,7 @@ def acceptance.preflight.nominal_failure_at
   else ok (some { is_invalid_type := true })
 
 /-- [noble_kernel::acceptance::preflight::first_nominal_failure]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 588:4-591:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 594:4-597:5 -/
 @[rust_loop_body]
 def acceptance.preflight.first_nominal_failure_loop.body
   (env : contracts.Env) (limits : untrusted.Limits) (index : Std.Usize)
@@ -19436,7 +19436,7 @@ def acceptance.preflight.first_nominal_failure_loop.body
   else ok (done first)
 
 /-- [noble_kernel::acceptance::preflight::first_nominal_failure]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 588:4-591:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 594:4-597:5 -/
 @[rust_loop]
 def acceptance.preflight.first_nominal_failure_loop
   (env : contracts.Env) (limits : untrusted.Limits) (index : Std.Usize)
@@ -19450,7 +19450,7 @@ def acceptance.preflight.first_nominal_failure_loop
     (index, first)
 
 /-- [noble_kernel::acceptance::preflight::first_nominal_failure]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 582:0-593:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 588:0-599:1 -/
 @[reducible]
 def acceptance.preflight.first_nominal_failure
   (env : contracts.Env) (limits : untrusted.Limits) :
@@ -19459,7 +19459,7 @@ def acceptance.preflight.first_nominal_failure
   acceptance.preflight.first_nominal_failure_loop env limits 0#usize none
 
 /-- [noble_kernel::acceptance::preflight::nominal_failure]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 572:0-580:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 578:0-586:1 -/
 def acceptance.preflight.nominal_failure
   (failure : acceptance.preflight.NominalFailure) :
   Result acceptance.Fail
@@ -19471,7 +19471,7 @@ def acceptance.preflight.nominal_failure
   else ok (acceptance.Fail.Exhausted untrusted.LimitKind.TypeSize)
 
 /-- [noble_kernel::acceptance::preflight::validate_nominals]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 544:0-565:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 550:0-571:1 -/
 def acceptance.preflight.validate_nominals
   (env : contracts.Env) (request : untrusted.Request) (remaining : Std.U32) :
   Result (core.result.Result Std.U32 acceptance.Fail)
@@ -19554,7 +19554,7 @@ def contracts.Env.ambient_test_emit_visible
         else ok false
 
 /-- [noble_kernel::acceptance::preflight::ambient_emit]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 532:4-540:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 538:4-546:5 -/
 @[rust_loop_body]
 def acceptance.preflight.ambient_emit_loop.body
   (env : contracts.Env) (candidate : untrusted.Candidate) (index : Std.Usize) :
@@ -19592,7 +19592,7 @@ def acceptance.preflight.ambient_emit_loop.body
   else ok (done none)
 
 /-- [noble_kernel::acceptance::preflight::ambient_emit]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 532:4-540:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 538:4-546:5 -/
 @[rust_loop]
 def acceptance.preflight.ambient_emit_loop
   (env : contracts.Env) (candidate : untrusted.Candidate) (index : Std.Usize) :
@@ -19604,7 +19604,7 @@ def acceptance.preflight.ambient_emit_loop
     index
 
 /-- [noble_kernel::acceptance::preflight::ambient_emit]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 526:0-542:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 532:0-548:1 -/
 @[reducible]
 def acceptance.preflight.ambient_emit
   (env : contracts.Env) (candidate : untrusted.Candidate) :
@@ -19613,7 +19613,7 @@ def acceptance.preflight.ambient_emit
   acceptance.preflight.ambient_emit_loop env candidate 0#usize
 
 /-- [noble_kernel::acceptance::preflight::reject_ambient_emit]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 505:0-523:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 511:0-529:1 -/
 def acceptance.preflight.reject_ambient_emit
   (env : contracts.Env) (candidate : untrusted.Candidate) :
   Result (core.result.Result Unit acceptance.Fail)
@@ -19641,7 +19641,7 @@ def acceptance.preflight.reject_ambient_emit
           untrusted.LimitKind.Nodes))
 
 /-- [noble_kernel::acceptance::preflight::guard_ty::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_kernel::acceptance::Fail> for noble_kernel::acceptance::preflight::guard_ty::{closure#1}}::call_once]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 460:29-460:90 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 466:29-466:90 -/
 def
   acceptance.preflight.guard_ty.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorFail.call_once
   (c : acceptance.preflight.guard_ty.closure_1)
@@ -19651,7 +19651,7 @@ def
   ok (acceptance.Fail.Exhausted untrusted.LimitKind.Work)
 
 /-- Trait implementation: [noble_kernel::acceptance::preflight::guard_ty::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_kernel::acceptance::Fail> for noble_kernel::acceptance::preflight::guard_ty::{closure#1}}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 460:29-460:90 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 466:29-466:90 -/
 @[reducible]
 def
   acceptance.preflight.guard_ty.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorFail
@@ -19662,7 +19662,7 @@ def
 }
 
 /-- [noble_kernel::acceptance::preflight::guard_ty::{impl core::ops::function::FnOnce<(u32,), bool> for noble_kernel::acceptance::preflight::guard_ty::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 453:32-453:68 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 459:32-459:68 -/
 def
   acceptance.preflight.guard_ty.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool.call_once
   (c : acceptance.preflight.guard_ty.closure) (tupled_args : Std.U32) :
@@ -19671,7 +19671,7 @@ def
   ok (tupled_args > c.limits.type_size)
 
 /-- Trait implementation: [noble_kernel::acceptance::preflight::guard_ty::{impl core::ops::function::FnOnce<(u32,), bool> for noble_kernel::acceptance::preflight::guard_ty::{closure}<'_0>}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 453:32-453:68 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 459:32-459:68 -/
 @[reducible]
 def
   acceptance.preflight.guard_ty.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool
@@ -19682,7 +19682,7 @@ def
 }
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop body 1:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 463:16-465:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 469:16-471:17 -/
 @[rust_loop_body]
 def acceptance.preflight.guard_ty_loop0_loop0.body
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19697,7 +19697,7 @@ def acceptance.preflight.guard_ty_loop0_loop0.body
     ok (cont (iter1, pending1))
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop 1:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 463:16-465:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 469:16-471:17 -/
 @[rust_loop]
 def acceptance.preflight.guard_ty_loop0_loop0
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19709,7 +19709,7 @@ def acceptance.preflight.guard_ty_loop0_loop0
     (iter, pending)
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop body 2:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 466:16-468:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 472:16-474:17 -/
 @[rust_loop_body]
 def acceptance.preflight.guard_ty_loop0_loop1.body
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19724,7 +19724,7 @@ def acceptance.preflight.guard_ty_loop0_loop1.body
     ok (cont (iter1, pending1))
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop 2:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 466:16-468:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 472:16-474:17 -/
 @[rust_loop]
 def acceptance.preflight.guard_ty_loop0_loop1
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19736,7 +19736,7 @@ def acceptance.preflight.guard_ty_loop0_loop1
     (iter, pending)
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop body 3:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 463:16-465:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 469:16-471:17 -/
 @[rust_loop_body]
 def acceptance.preflight.guard_ty_loop0_loop2.body
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19751,7 +19751,7 @@ def acceptance.preflight.guard_ty_loop0_loop2.body
     ok (cont (iter1, pending1))
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop 3:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 463:16-465:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 469:16-471:17 -/
 @[rust_loop]
 def acceptance.preflight.guard_ty_loop0_loop2
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19763,7 +19763,7 @@ def acceptance.preflight.guard_ty_loop0_loop2
     (iter, pending)
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop body 4:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 466:16-468:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 472:16-474:17 -/
 @[rust_loop_body]
 def acceptance.preflight.guard_ty_loop0_loop3.body
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19778,7 +19778,7 @@ def acceptance.preflight.guard_ty_loop0_loop3.body
     ok (cont (iter1, pending1))
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop 4:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 466:16-468:17 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 472:16-474:17 -/
 @[rust_loop]
 def acceptance.preflight.guard_ty_loop0_loop3
   (iter : core.slice.iter.Iter types.Ty) (pending : alloc.vec.Vec types.Ty) :
@@ -19790,7 +19790,7 @@ def acceptance.preflight.guard_ty_loop0_loop3
     (iter, pending)
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 434:4-500:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 440:4-506:1 -/
 @[rust_loop_body]
 def acceptance.preflight.guard_ty_loop0.body
   (request : untrusted.Request) (pending : alloc.vec.Vec types.Ty)
@@ -19967,7 +19967,7 @@ def acceptance.preflight.guard_ty_loop0.body
       ok (done (core.result.Result.Err failure))
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 434:4-500:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 440:4-506:1 -/
 @[rust_loop]
 def acceptance.preflight.guard_ty_loop0
   (pending : alloc.vec.Vec types.Ty) (request : untrusted.Request)
@@ -19981,7 +19981,7 @@ def acceptance.preflight.guard_ty_loop0
     (pending, visited, reserved, remaining)
 
 /-- [noble_kernel::acceptance::preflight::guard_ty]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 424:0-500:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 430:0-506:1 -/
 def acceptance.preflight.guard_ty
   (ty : types.Ty) (request : untrusted.Request) (remaining : Std.U32) :
   Result (core.result.Result (Std.U32 × Std.U32) acceptance.Fail)
@@ -19991,7 +19991,7 @@ def acceptance.preflight.guard_ty
   acceptance.preflight.guard_ty_loop0 pending1 request 0#u32 0#u32 remaining
 
 /-- [noble_kernel::acceptance::preflight::guard_stack_entries]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 372:4-381:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 378:4-387:5 -/
 @[rust_loop_body]
 def acceptance.preflight.guard_stack_entries_loop.body
   (stack : Slice types.Ty) (request : untrusted.Request) (index : Std.Usize)
@@ -20024,7 +20024,7 @@ def acceptance.preflight.guard_stack_entries_loop.body
   else ok (done (cost, remaining, walked))
 
 /-- [noble_kernel::acceptance::preflight::guard_stack_entries]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 372:4-381:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 378:4-387:5 -/
 @[rust_loop]
 def acceptance.preflight.guard_stack_entries_loop
   (stack : Slice types.Ty) (request : untrusted.Request) (index : Std.Usize)
@@ -20039,7 +20039,7 @@ def acceptance.preflight.guard_stack_entries_loop
     (index, cost, remaining, walked)
 
 /-- [noble_kernel::acceptance::preflight::guard_stack_entries]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 363:0-384:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 369:0-390:1 -/
 def acceptance.preflight.guard_stack_entries
   (stack : Slice types.Ty) (request : untrusted.Request) (remaining : Std.U32)
   :
@@ -20053,7 +20053,7 @@ def acceptance.preflight.guard_stack_entries
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::acceptance::preflight::guard_one_binding::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_kernel::acceptance::Fail> for noble_kernel::acceptance::preflight::guard_one_binding::{closure#1}}::call_once]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 353:25-353:86 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 359:25-359:86 -/
 def
   acceptance.preflight.guard_one_binding.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorFail.call_once
   (c : acceptance.preflight.guard_one_binding.closure_1)
@@ -20063,7 +20063,7 @@ def
   ok (acceptance.Fail.Exhausted untrusted.LimitKind.Work)
 
 /-- Trait implementation: [noble_kernel::acceptance::preflight::guard_one_binding::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_kernel::acceptance::Fail> for noble_kernel::acceptance::preflight::guard_one_binding::{closure#1}}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 353:25-353:86 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 359:25-359:86 -/
 @[reducible]
 def
   acceptance.preflight.guard_one_binding.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorFail
@@ -20074,7 +20074,7 @@ def
 }
 
 /-- [noble_kernel::acceptance::preflight::guard_one_binding::{impl core::ops::function::FnOnce<(u32,), bool> for noble_kernel::acceptance::preflight::guard_one_binding::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 337:28-337:67 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 343:28-343:67 -/
 def
   acceptance.preflight.guard_one_binding.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool.call_once
   (c : acceptance.preflight.guard_one_binding.closure) (tupled_args : Std.U32)
@@ -20084,7 +20084,7 @@ def
   ok (tupled_args > c.limits.stack_height)
 
 /-- Trait implementation: [noble_kernel::acceptance::preflight::guard_one_binding::{impl core::ops::function::FnOnce<(u32,), bool> for noble_kernel::acceptance::preflight::guard_one_binding::{closure}<'_0>}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 337:28-337:67 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 343:28-343:67 -/
 @[reducible]
 def
   acceptance.preflight.guard_one_binding.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool
@@ -20095,7 +20095,7 @@ def
 }
 
 /-- [noble_kernel::acceptance::preflight::guard_one_binding]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 327:0-359:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 333:0-365:1 -/
 def acceptance.preflight.guard_one_binding
   (binding : words.Binding) (request : untrusted.Request) (remaining : Std.U32)
   :
@@ -20158,7 +20158,7 @@ def acceptance.preflight.guard_one_binding
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::acceptance::preflight::guard_inst]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 395:4-404:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 401:4-410:5 -/
 @[rust_loop_body]
 def acceptance.preflight.guard_inst_loop.body
   (inst : words.Inst) (request : untrusted.Request) (index : Std.Usize)
@@ -20193,7 +20193,7 @@ def acceptance.preflight.guard_inst_loop.body
   else ok (done (cost, remaining, walked))
 
 /-- [noble_kernel::acceptance::preflight::guard_inst]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 395:4-404:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 401:4-410:5 -/
 @[rust_loop]
 def acceptance.preflight.guard_inst_loop
   (inst : words.Inst) (request : untrusted.Request) (index : Std.Usize)
@@ -20208,7 +20208,7 @@ def acceptance.preflight.guard_inst_loop
     (index, cost, remaining, walked)
 
 /-- [noble_kernel::acceptance::preflight::guard_inst]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 386:0-407:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 392:0-413:1 -/
 def acceptance.preflight.guard_inst
   (inst : words.Inst) (request : untrusted.Request) (remaining : Std.U32) :
   Result (core.result.Result (Std.U32 × Std.U32) acceptance.Fail)
@@ -20221,7 +20221,7 @@ def acceptance.preflight.guard_inst
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::acceptance::preflight::same_owner_binding]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 308:0-316:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 314:0-322:1 -/
 def acceptance.preflight.same_owner_binding
   (left : words.Binding) (right : words.Binding) : Result Bool := do
   match left with
@@ -20255,7 +20255,7 @@ def acceptance.preflight.same_owner_binding
       words.Variable.Insts.CoreCmpPartialEqVariable.eq a b
 
 /-- [noble_kernel::acceptance::preflight::same_owner_bindings]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 295:4-300:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 301:4-306:5 -/
 @[rust_loop_body]
 def acceptance.preflight.same_owner_bindings_loop.body
   (owner_inst : words.Inst) (inst : words.Inst) (index : Std.Usize)
@@ -20283,7 +20283,7 @@ def acceptance.preflight.same_owner_bindings_loop.body
   else ok (done is_agree)
 
 /-- [noble_kernel::acceptance::preflight::same_owner_bindings]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 295:4-300:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 301:4-306:5 -/
 @[rust_loop]
 def acceptance.preflight.same_owner_bindings_loop
   (owner_inst : words.Inst) (inst : words.Inst) (index : Std.Usize)
@@ -20297,14 +20297,14 @@ def acceptance.preflight.same_owner_bindings_loop
     (index, is_agree)
 
 /-- [noble_kernel::acceptance::preflight::same_owner_bindings]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 292:0-302:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 298:0-308:1 -/
 @[reducible]
 def acceptance.preflight.same_owner_bindings
   (owner_inst : words.Inst) (inst : words.Inst) : Result Bool := do
   acceptance.preflight.same_owner_bindings_loop owner_inst inst 0#usize true
 
 /-- [noble_kernel::acceptance::parts::scheme_cost]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 48:0-54:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 49:0-55:1 -/
 def acceptance.parts.scheme_cost
   (scheme : words.Scheme) :
   Result (core.result.Result Std.U32 acceptance.Fail)
@@ -20322,7 +20322,7 @@ def acceptance.parts.scheme_cost
       untrusted.LimitKind.Work))
 
 /-- [noble_kernel::acceptance::preflight::charge_signed_site]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 261:0-287:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 267:0-293:1 -/
 def acceptance.preflight.charge_signed_site
   (owner : acceptance.preflight.SignedOwner) (inst : words.Inst)
   (context : acceptance.parts.Ctx) (remaining : Std.U32) :
@@ -20358,7 +20358,7 @@ def acceptance.preflight.charge_signed_site
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::acceptance::preflight::signed_site_check]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 228:0-249:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 234:0-255:1 -/
 def acceptance.preflight.signed_site_check
   (owner : acceptance.preflight.SignedOwner) (site : Option words.Inst)
   (context : acceptance.parts.Ctx) (remaining : Std.U32) :
@@ -20390,7 +20390,7 @@ def acceptance.preflight.signed_site_check
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::acceptance::preflight::reject_slot_invoke]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 206:0-213:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 212:0-219:1 -/
 def acceptance.preflight.reject_slot_invoke
   (node : untrusted.Node) :
   Result (core.result.Result Unit acceptance.Fail)
@@ -20409,7 +20409,7 @@ def acceptance.preflight.reject_slot_invoke
   else ok (core.result.Result.Ok ())
 
 /-- [noble_kernel::acceptance::preflight::signed_self_valid]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 182:0-203:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 188:0-209:1 -/
 def acceptance.preflight.signed_self_valid
   (env : contracts.Env) («def» : contracts.Definition)
   (signed_owner : Option (contracts.Definition × words.Inst)) :
@@ -20454,7 +20454,7 @@ def acceptance.preflight.signed_self_valid
           | core.result.Result.Err _ => ok false
 
 /-- [noble_kernel::acceptance::preflight::signed_self_check]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 155:0-171:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 161:0-177:1 -/
 def acceptance.preflight.signed_self_check
   (env : contracts.Env) (node : untrusted.Node)
   (signed_owner : Option (contracts.Definition × words.Inst))
@@ -20479,7 +20479,7 @@ def acceptance.preflight.signed_self_check
   | untrusted.Node.Quotation _ _ => ok (core.result.Result.Ok remaining)
 
 /-- [noble_kernel::acceptance::preflight::node_signed_self]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 146:0-151:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 152:0-157:1 -/
 def acceptance.preflight.node_signed_self
   (node : untrusted.Node) : Result (Option words.Inst) := do
   match node with
@@ -20490,7 +20490,7 @@ def acceptance.preflight.node_signed_self
   | untrusted.Node.Quotation _ _ => ok none
 
 /-- [noble_kernel::acceptance::preflight::check_request::{impl core::ops::function::FnOnce<((noble_kernel::contracts::Definition, &'_0 noble_kernel::words::Inst),), noble_kernel::contracts::Definition> for noble_kernel::acceptance::preflight::check_request::{closure}}::call_once]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 121:39-121:57 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 127:39-127:57 -/
 def
   acceptance.preflight.check_request.closure.Insts.CoreOpsFunctionFnOnceTuplePairDefinitionShared0InstDefinition.call_once
   (c : acceptance.preflight.check_request.closure)
@@ -20501,7 +20501,7 @@ def
   ok owner
 
 /-- Trait implementation: [noble_kernel::acceptance::preflight::check_request::{impl core::ops::function::FnOnce<((noble_kernel::contracts::Definition, &'_0 noble_kernel::words::Inst),), noble_kernel::contracts::Definition> for noble_kernel::acceptance::preflight::check_request::{closure}}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 121:39-121:57 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 127:39-127:57 -/
 @[reducible]
 def
   acceptance.preflight.check_request.closure.Insts.CoreOpsFunctionFnOnceTuplePairDefinitionShared0InstDefinition
@@ -20512,12 +20512,611 @@ def
 }
 
 /-- [noble_kernel::acceptance::parts::limits_of_entry]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 75:0-77:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 76:0-78:1 -/
 def acceptance.parts.limits_of_entry
   (stack : Slice types.Ty) (ctx : acceptance.parts.Ctx) :
   Result (core.result.Result Unit acceptance.Fail)
   := do
   acceptance.parts.limits_of_with stack ctx true
+
+/-- [noble_kernel::acceptance::parts::named::program_child_roles]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 244:0-257:1 -/
+def acceptance.parts.named.program_child_roles
+  (role : acceptance.parts.named.Role) :
+  Result (acceptance.parts.named.Role × acceptance.parts.named.Role)
+  := do
+  match role with
+  | acceptance.parts.named.Role.SupplyOuter =>
+    ok (acceptance.parts.named.Role.DemandGuarded false,
+      acceptance.parts.named.Role.SupplyInner false)
+  | acceptance.parts.named.Role.SupplyInner b =>
+    if b
+    then ok (role, acceptance.parts.named.Role.DemandGuarded true)
+    else ok (acceptance.parts.named.Role.DemandGuarded false, role)
+  | acceptance.parts.named.Role.DemandBare =>
+    ok (acceptance.parts.named.Role.SupplyInner true,
+      acceptance.parts.named.Role.DemandGuarded true)
+  | acceptance.parts.named.Role.DemandGuarded _ =>
+    ok (acceptance.parts.named.Role.SupplyInner true,
+      acceptance.parts.named.Role.DemandGuarded true)
+
+/-- [noble_kernel::acceptance::parts::named::guarded_child_role]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 233:0-238:1 -/
+def acceptance.parts.named.guarded_child_role
+  (role : acceptance.parts.named.Role) :
+  Result acceptance.parts.named.Role
+  := do
+  match role with
+  | acceptance.parts.named.Role.SupplyOuter =>
+    ok acceptance.parts.named.Role.SupplyOuter
+  | acceptance.parts.named.Role.SupplyInner _ => ok role
+  | acceptance.parts.named.Role.DemandBare =>
+    ok (acceptance.parts.named.Role.DemandGuarded false)
+  | acceptance.parts.named.Role.DemandGuarded _ => ok role
+
+/-- [noble_kernel::acceptance::parts::named::apply_role]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 200:0-214:1 -/
+def acceptance.parts.named.apply_role
+  (entry : acceptance.parts.named.VarUsage)
+  (role : acceptance.parts.named.Role) :
+  Result acceptance.parts.named.VarUsage
+  := do
+  let (add_sup, add_dem, direct, returned, bare) ←
+    match role with
+    | acceptance.parts.named.Role.SupplyOuter =>
+      ok (1#u32, 0#u32, true, false, false)
+    | acceptance.parts.named.Role.SupplyInner in_returned =>
+      ok (1#u32, 0#u32, false, in_returned, false)
+    | acceptance.parts.named.Role.DemandBare =>
+      ok (0#u32, 1#u32, false, false, true)
+    | acceptance.parts.named.Role.DemandGuarded in_returned =>
+      ok (0#u32, 1#u32, false, in_returned, false)
+  let i ← lift (core.num.U32.saturating_add entry.supplied add_sup)
+  let i1 ← lift (core.num.U32.saturating_add entry.demanded add_dem)
+  let b ← if entry.direct_in
+            then ok true
+            else ok direct
+  let b1 ← if entry.in_returned_program
+             then ok true
+             else ok returned
+  if entry.bare_out
+  then
+    ok
+      {
+        supplied := i,
+        demanded := i1,
+        direct_in := b,
+        in_returned_program := b1,
+        bare_out := true
+      }
+  else
+    ok
+      {
+        supplied := i,
+        demanded := i1,
+        direct_in := b,
+        in_returned_program := b1,
+        bare_out := bare
+      }
+
+/-- [noble_kernel::acceptance::parts::named::record_var]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 216:0-227:1 -/
+def acceptance.parts.named.record_var
+  (usage : alloc.vec.Vec acceptance.parts.named.VarUsage)
+  (var : words.Variable) (role : acceptance.parts.named.Role) :
+  Result (alloc.vec.Vec acceptance.parts.named.VarUsage)
+  := do
+  let r ← Usize.Insts.CoreConvertTryFromU32TryFromIntError.try_from var
+  match r with
+  | core.result.Result.Ok index =>
+    let (s, deref_mut_back) ← lift (alloc.vec.Vec.deref_mut usage)
+    let (o, get_mut_back) ←
+      core.slice.Slice.get_mut (core.slice.index.SliceIndexUsizeSlice
+        acceptance.parts.named.VarUsage) s index
+    match o with
+    | none => let s1 := get_mut_back none
+              ok (deref_mut_back s1)
+    | some entry =>
+      let entry1 ← acceptance.parts.named.apply_role entry role
+      let s1 := get_mut_back (some entry1)
+      ok (deref_mut_back s1)
+  | core.result.Result.Err _ => ok usage
+
+/-- [noble_kernel::acceptance::parts::named::push_slice]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 186:4-192:5 -/
+@[rust_loop_body]
+def acceptance.parts.named.push_slice_loop.body
+  (patterns : Slice shapes.Pattern) (role : acceptance.parts.named.Role)
+  (work : alloc.vec.Vec acceptance.parts.named.Step) (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec acceptance.parts.named.Step) ×
+    Std.Usize) (alloc.vec.Vec acceptance.parts.named.Step))
+  := do
+  let i := Slice.len patterns
+  if index < i
+  then
+    let p ← Slice.index_usize patterns index
+    let p1 ← shapes.Pattern.Insts.CoreCloneClone.clone p
+    let work1 ←
+      alloc.vec.Vec.push work ({ pattern := p1, role } :
+        acceptance.parts.named.Step)
+    let index1 ← index + 1#usize
+    ok (cont (work1, index1))
+  else ok (done work)
+
+/-- [noble_kernel::acceptance::parts::named::push_slice]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 186:4-192:5 -/
+@[rust_loop]
+def acceptance.parts.named.push_slice_loop
+  (patterns : Slice shapes.Pattern) (role : acceptance.parts.named.Role)
+  (work : alloc.vec.Vec acceptance.parts.named.Step) (index : Std.Usize) :
+  Result (alloc.vec.Vec acceptance.parts.named.Step)
+  := do
+  loop
+    (fun (work1, index1) => acceptance.parts.named.push_slice_loop.body
+      patterns role work1 index1)
+    (work, index)
+
+/-- [noble_kernel::acceptance::parts::named::push_slice]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 180:0-194:1 -/
+@[reducible]
+def acceptance.parts.named.push_slice
+  (patterns : Slice shapes.Pattern) (role : acceptance.parts.named.Role)
+  (work : alloc.vec.Vec acceptance.parts.named.Step) :
+  Result (alloc.vec.Vec acceptance.parts.named.Step)
+  := do
+  acceptance.parts.named.push_slice_loop patterns role work 0#usize
+
+/-- [noble_kernel::acceptance::parts::named::visit_pattern]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 267:0-329:1 -/
+def acceptance.parts.named.visit_pattern
+  (pattern : shapes.Pattern) (role : acceptance.parts.named.Role)
+  (usage : alloc.vec.Vec acceptance.parts.named.VarUsage)
+  (work : alloc.vec.Vec acceptance.parts.named.Step) :
+  Result ((alloc.vec.Vec acceptance.parts.named.VarUsage) × (alloc.vec.Vec
+    acceptance.parts.named.Step))
+  := do
+  match pattern with
+  | shapes.Pattern.UnitPattern => ok (usage, work)
+  | shapes.Pattern.BoolPattern => ok (usage, work)
+  | shapes.Pattern.I64Pattern => ok (usage, work)
+  | shapes.Pattern.TextPattern => ok (usage, work)
+  | shapes.Pattern.SyntaxPattern => ok (usage, work)
+  | shapes.Pattern.ContractPattern => ok (usage, work)
+  | shapes.Pattern.EvidencePattern => ok (usage, work)
+  | shapes.Pattern.CertifiedPattern => ok (usage, work)
+  | shapes.Pattern.PairPattern left right =>
+    let work1 ←
+      alloc.vec.Vec.push work ({ pattern := left, role } :
+        acceptance.parts.named.Step)
+    let work2 ←
+      alloc.vec.Vec.push work1 ({ pattern := right, role } :
+        acceptance.parts.named.Step)
+    ok (usage, work2)
+  | shapes.Pattern.SumPattern left right =>
+    let child ← acceptance.parts.named.guarded_child_role role
+    let work1 ←
+      alloc.vec.Vec.push work ({ pattern := left, role := child } :
+        acceptance.parts.named.Step)
+    let work2 ←
+      alloc.vec.Vec.push work1 ({ pattern := right, role := child } :
+        acceptance.parts.named.Step)
+    ok (usage, work2)
+  | shapes.Pattern.ListPattern elem =>
+    let child ← acceptance.parts.named.guarded_child_role role
+    let work1 ←
+      alloc.vec.Vec.push work ({ pattern := elem, role := child } :
+        acceptance.parts.named.Step)
+    ok (usage, work1)
+  | shapes.Pattern.ProgramPattern stack_in stack_out _ =>
+    let (in_role, out_role) ← acceptance.parts.named.program_child_roles role
+    let s := alloc.vec.Vec.deref stack_in
+    let work1 ← acceptance.parts.named.push_slice s in_role work
+    let s1 := alloc.vec.Vec.deref stack_out
+    let v ← acceptance.parts.named.push_slice s1 out_role work1
+    ok (usage, v)
+  | shapes.Pattern.LiveRefPattern stack_in stack_out _ =>
+    let (in_role, out_role) ← acceptance.parts.named.program_child_roles role
+    let s := alloc.vec.Vec.deref stack_in
+    let work1 ← acceptance.parts.named.push_slice s in_role work
+    let s1 := alloc.vec.Vec.deref stack_out
+    let v ← acceptance.parts.named.push_slice s1 out_role work1
+    ok (usage, v)
+  | shapes.Pattern.ResourcePattern _ => ok (usage, work)
+  | shapes.Pattern.NominalPattern _ _ => ok (usage, work)
+  | shapes.Pattern.GenericNominalPattern _ args _ =>
+    let child ← acceptance.parts.named.guarded_child_role role
+    let s ← lift (Array.to_slice args)
+    let v ← acceptance.parts.named.push_slice s child work
+    ok (usage, v)
+  | shapes.Pattern.VarPattern var =>
+    let v ← acceptance.parts.named.record_var usage var role
+    ok (v, work)
+  | shapes.Pattern.StackVarPattern var =>
+    let v ← acceptance.parts.named.record_var usage var role
+    ok (v, work)
+
+/-- [noble_kernel::acceptance::parts::named::{noble_kernel::acceptance::parts::named::VarUsage}::empty]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 23:4-31:5 -/
+def acceptance.parts.named.VarUsage.empty
+  : Result acceptance.parts.named.VarUsage := do
+  ok
+    {
+      supplied := 0#u32,
+      demanded := 0#u32,
+      direct_in := false,
+      in_returned_program := false,
+      bare_out := false
+    }
+
+/-- [noble_kernel::acceptance::parts::named::{impl core::clone::Clone for noble_kernel::acceptance::parts::named::VarUsage}::clone]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 13:9-13:14
+    Visibility: public -/
+def acceptance.parts.named.VarUsage.Insts.CoreCloneClone.clone
+  (self : acceptance.parts.named.VarUsage) :
+  Result acceptance.parts.named.VarUsage
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::acceptance::parts::named::{impl core::clone::Clone for noble_kernel::acceptance::parts::named::VarUsage}]
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 13:9-13:14 -/
+@[reducible]
+def acceptance.parts.named.VarUsage.Insts.CoreCloneClone : core.clone.Clone
+  acceptance.parts.named.VarUsage := {
+  clone := acceptance.parts.named.VarUsage.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::acceptance::parts::named::WORK_CAP]
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 10:0-10:28 -/
+@[global_simps, irreducible]
+def acceptance.parts.named.WORK_CAP : Std.Usize := 512#usize
+
+/-- [noble_kernel::acceptance::parts::named::collect_usage]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 161:4-170:5 -/
+@[rust_loop_body]
+def acceptance.parts.named.collect_usage_loop.body
+  (work : alloc.vec.Vec acceptance.parts.named.Step)
+  (usage : alloc.vec.Vec acceptance.parts.named.VarUsage) (steps : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec acceptance.parts.named.Step) ×
+    (alloc.vec.Vec acceptance.parts.named.VarUsage) × Std.Usize)
+    ((alloc.vec.Vec acceptance.parts.named.VarUsage) × Bool))
+  := do
+  let (o, work1) ← alloc.vec.Vec.pop Global work
+  match o with
+  | none => ok (done (usage, false))
+  | some step =>
+    if steps >= acceptance.parts.named.WORK_CAP
+    then ok (done (usage, true))
+    else
+      let steps1 ← steps + 1#usize
+      let (next_usage, next_work) ←
+        acceptance.parts.named.visit_pattern step.pattern step.role usage work1
+      ok (cont (next_work, next_usage, steps1))
+
+/-- [noble_kernel::acceptance::parts::named::collect_usage]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 161:4-170:5 -/
+@[rust_loop]
+def acceptance.parts.named.collect_usage_loop
+  (work : alloc.vec.Vec acceptance.parts.named.Step)
+  (usage : alloc.vec.Vec acceptance.parts.named.VarUsage) (steps : Std.Usize) :
+  Result ((alloc.vec.Vec acceptance.parts.named.VarUsage) × Bool)
+  := do
+  loop
+    (fun (work1, usage1, steps1) =>
+      acceptance.parts.named.collect_usage_loop.body work1 usage1 steps1)
+    (work, usage, steps)
+
+/-- [noble_kernel::acceptance::parts::named::collect_usage]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 150:0-178:1 -/
+def acceptance.parts.named.collect_usage
+  (scheme : words.Scheme) :
+  Result (core.result.Result (alloc.vec.Vec acceptance.parts.named.VarUsage)
+    acceptance.Fail)
+  := do
+  let vu ← acceptance.parts.named.VarUsage.empty
+  let i := alloc.vec.Vec.len scheme.var_kinds
+  let usage ←
+    alloc.vec.from_elem acceptance.parts.named.VarUsage.Insts.CoreCloneClone vu
+      i
+  let i1 := alloc.vec.Vec.len scheme.stack_in
+  let i2 := alloc.vec.Vec.len scheme.stack_out
+  let i3 ← lift (core.num.Usize.saturating_add i1 i2)
+  let initial := alloc.vec.Vec.with_capacity acceptance.parts.named.Step i3
+  let s := alloc.vec.Vec.deref scheme.stack_in
+  let work ←
+    acceptance.parts.named.push_slice s acceptance.parts.named.Role.SupplyOuter
+      initial
+  let s1 := alloc.vec.Vec.deref scheme.stack_out
+  let work1 ←
+    acceptance.parts.named.push_slice s1 acceptance.parts.named.Role.DemandBare
+      work
+  let (usage1, is_exhausted) ←
+    acceptance.parts.named.collect_usage_loop work1 usage 0#usize
+  if is_exhausted
+  then
+    ok (core.result.Result.Err (acceptance.Fail.Exhausted
+      untrusted.LimitKind.Work))
+  else ok (core.result.Result.Ok usage1)
+
+/-- [noble_kernel::acceptance::parts::named::first_non_data_in_stack]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 136:4-141:5 -/
+@[rust_loop_body]
+def acceptance.parts.named.first_non_data_in_stack_loop.body
+  (stack : Slice types.Ty) (index : Std.Usize) (found : Option types.Ty) :
+  Result (ControlFlow (Std.Usize × (Option types.Ty)) (Option types.Ty))
+  := do
+  let i := Slice.len stack
+  if index < i
+  then
+    let b := core.option.Option.is_none found
+    if b
+    then
+      let t ← Slice.index_usize stack index
+      let b1 ← types.data.Ty.is_data t
+      let found1 ←
+        if b1
+        then ok found
+        else do
+             let t1 ← types.Ty.Insts.CoreCloneClone.clone t
+             ok (some t1)
+      let index1 ← index + 1#usize
+      ok (cont (index1, found1))
+    else ok (done found)
+  else ok (done found)
+
+/-- [noble_kernel::acceptance::parts::named::first_non_data_in_stack]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 136:4-141:5 -/
+@[rust_loop]
+def acceptance.parts.named.first_non_data_in_stack_loop
+  (stack : Slice types.Ty) (index : Std.Usize) (found : Option types.Ty) :
+  Result (Option types.Ty)
+  := do
+  loop
+    (fun (index1, found1) =>
+      acceptance.parts.named.first_non_data_in_stack_loop.body stack index1
+      found1)
+    (index, found)
+
+/-- [noble_kernel::acceptance::parts::named::first_non_data_in_stack]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 133:0-143:1 -/
+@[reducible]
+def acceptance.parts.named.first_non_data_in_stack
+  (stack : Slice types.Ty) : Result (Option types.Ty) := do
+  acceptance.parts.named.first_non_data_in_stack_loop stack 0#usize none
+
+/-- [noble_kernel::acceptance::parts::named::first_non_data_at]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 111:0-131:1 -/
+def acceptance.parts.named.first_non_data_at
+  (kind : words.VariableKind) (resolved : words.Inst) (index : Std.Usize) :
+  Result (Option types.Ty)
+  := do
+  let r ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from index
+  match r with
+  | core.result.Result.Ok slot =>
+    match kind with
+    | words.VariableKind.Stack =>
+      let o ← words.Inst.stack resolved slot
+      match o with
+      | none => ok none
+      | some stack => acceptance.parts.named.first_non_data_in_stack stack
+    | words.VariableKind.Value =>
+      let o ← words.Inst.value resolved slot
+      match o with
+      | none => ok none
+      | some ty =>
+        let b ← types.data.Ty.is_data ty
+        if b
+        then ok none
+        else let t ← types.Ty.Insts.CoreCloneClone.clone ty
+             ok (some t)
+    | words.VariableKind.Effect => ok none
+  | core.result.Result.Err _ => ok none
+
+/-- [noble_kernel::acceptance::parts::named::has_non_data_binding]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 95:4-98:5 -/
+@[rust_loop_body]
+def acceptance.parts.named.has_non_data_binding_loop.body
+  (scheme : words.Scheme) (resolved : words.Inst) (index : Std.Usize)
+  (has_non_data : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  let i := alloc.vec.Vec.len scheme.var_kinds
+  if index < i
+  then
+    if has_non_data
+    then ok (done has_non_data)
+    else
+      let vk ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          words.VariableKind) scheme.var_kinds index
+      let o ← acceptance.parts.named.first_non_data_at vk resolved index
+      let has_non_data1 := core.option.Option.is_some o
+      let index1 ← index + 1#usize
+      ok (cont (index1, has_non_data1))
+  else ok (done has_non_data)
+
+/-- [noble_kernel::acceptance::parts::named::has_non_data_binding]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 95:4-98:5 -/
+@[rust_loop]
+def acceptance.parts.named.has_non_data_binding_loop
+  (scheme : words.Scheme) (resolved : words.Inst) (index : Std.Usize)
+  (has_non_data : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (index1, has_non_data1) =>
+      acceptance.parts.named.has_non_data_binding_loop.body scheme resolved
+      index1 has_non_data1)
+    (index, has_non_data)
+
+/-- [noble_kernel::acceptance::parts::named::has_non_data_binding]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 92:0-100:1 -/
+@[reducible]
+def acceptance.parts.named.has_non_data_binding
+  (scheme : words.Scheme) (resolved : words.Inst) : Result Bool := do
+  acceptance.parts.named.has_non_data_binding_loop scheme resolved 0#usize
+    false
+
+/-- [noble_kernel::acceptance::parts::named::{noble_kernel::acceptance::parts::named::VarUsage}::requires_data]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 33:4-37:5 -/
+def acceptance.parts.named.VarUsage.requires_data
+  (self : acceptance.parts.named.VarUsage) : Result Bool := do
+  if self.direct_in
+  then
+    if self.in_returned_program
+    then ok true
+    else
+      if self.supplied > 0#u32
+      then
+        if self.supplied != self.demanded
+        then ok true
+        else if self.supplied = 0#u32
+             then ok self.bare_out
+             else ok false
+      else if self.supplied = 0#u32
+           then ok self.bare_out
+           else ok false
+  else
+    if self.supplied > 0#u32
+    then
+      if self.supplied != self.demanded
+      then ok true
+      else if self.supplied = 0#u32
+           then ok self.bare_out
+           else ok false
+    else if self.supplied = 0#u32
+         then ok self.bare_out
+         else ok false
+
+/-- [noble_kernel::acceptance::parts::named::check_eligibility]: loop body 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 76:4-81:5 -/
+@[rust_loop_body]
+def acceptance.parts.named.check_eligibility_loop.body
+  (scheme : words.Scheme) (resolved : words.Inst)
+  (usage : alloc.vec.Vec acceptance.parts.named.VarUsage) (index : Std.Usize)
+  (violating : Option types.Ty) :
+  Result (ControlFlow (Std.Usize × (Option types.Ty)) (Option types.Ty))
+  := do
+  let i := alloc.vec.Vec.len scheme.var_kinds
+  if index < i
+  then
+    let b := core.option.Option.is_none violating
+    if b
+    then
+      let vu ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          acceptance.parts.named.VarUsage) usage index
+      let b1 ← acceptance.parts.named.VarUsage.requires_data vu
+      let violating1 ←
+        if b1
+        then
+          do
+          let vk ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              words.VariableKind) scheme.var_kinds index
+          acceptance.parts.named.first_non_data_at vk resolved index
+        else ok violating
+      let index1 ← index + 1#usize
+      ok (cont (index1, violating1))
+    else ok (done violating)
+  else ok (done violating)
+
+/-- [noble_kernel::acceptance::parts::named::check_eligibility]: loop 0:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 76:4-81:5 -/
+@[rust_loop]
+def acceptance.parts.named.check_eligibility_loop
+  (scheme : words.Scheme) (resolved : words.Inst)
+  (usage : alloc.vec.Vec acceptance.parts.named.VarUsage) (index : Std.Usize)
+  (violating : Option types.Ty) :
+  Result (Option types.Ty)
+  := do
+  loop
+    (fun (index1, violating1) =>
+      acceptance.parts.named.check_eligibility_loop.body scheme resolved usage
+      index1 violating1)
+    (index, violating)
+
+/-- [noble_kernel::acceptance::parts::named::check_eligibility]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 61:0-89:1 -/
+def acceptance.parts.named.check_eligibility
+  (kind : Option contracts.Behavior) (scheme : words.Scheme)
+  (resolved : words.Inst) («at» : acceptance.parts.Site) :
+  Result (core.result.Result Unit acceptance.Fail)
+  := do
+  let b ←
+    match kind with
+    | none => ok false
+    | some b1 =>
+      match b1 with
+      | contracts.Behavior.DupBehavior => ok false
+      | contracts.Behavior.DropBehavior => ok false
+      | contracts.Behavior.SwapBehavior => ok false
+      | contracts.Behavior.DipBehavior => ok false
+      | contracts.Behavior.ArithBehavior => ok false
+      | contracts.Behavior.EqualsBehavior => ok false
+      | contracts.Behavior.QuoteBehavior => ok false
+      | contracts.Behavior.ComposeBehavior => ok false
+      | contracts.Behavior.RunBehavior => ok false
+      | contracts.Behavior.ReflectBehavior => ok false
+      | contracts.Behavior.UnitBehavior => ok false
+      | contracts.Behavior.PairBehavior => ok false
+      | contracts.Behavior.UnpairBehavior => ok false
+      | contracts.Behavior.InlBehavior => ok false
+      | contracts.Behavior.InrBehavior => ok false
+      | contracts.Behavior.CaseBehavior => ok false
+      | contracts.Behavior.IfBehavior => ok false
+      | contracts.Behavior.NilBehavior => ok false
+      | contracts.Behavior.ConsBehavior => ok false
+      | contracts.Behavior.ListCaseBehavior => ok false
+      | contracts.Behavior.TestEmitBehavior => ok false
+      | contracts.Behavior.TextByteBehavior => ok false
+      | contracts.Behavior.I64LessBehavior => ok false
+      | contracts.Behavior.CheckedI64AddBehavior => ok false
+      | contracts.Behavior.CheckedI64SubBehavior => ok false
+      | contracts.Behavior.CheckedI64MulBehavior => ok false
+      | contracts.Behavior.CheckedI64NegBehavior => ok false
+      | contracts.Behavior.CheckedI64AbsBehavior => ok false
+      | contracts.Behavior.CheckedI64LessBehavior => ok false
+      | contracts.Behavior.CheckedI64DivRemBehavior => ok false
+      | contracts.Behavior.CalculatorIterateBehavior => ok false
+      | contracts.Behavior.CalculatorCompareBehavior => ok false
+      | contracts.Behavior.CalculatorDivRemBehavior => ok false
+      | contracts.Behavior.CalculatorTextFromAsciiBehavior => ok false
+      | contracts.Behavior.CalculatorTextLengthBehavior => ok false
+      | contracts.Behavior.ReservedBehavior => ok false
+      | contracts.Behavior.BoundEmitBehavior _ => ok false
+      | contracts.Behavior.BoundClockBehavior _ => ok false
+      | contracts.Behavior.BoundCodeExportBehavior _ => ok false
+      | contracts.Behavior.BoundSendBehavior _ => ok false
+      | contracts.Behavior.NominalNewBehavior _ => ok false
+      | contracts.Behavior.NominalIntoBehavior _ => ok false
+      | contracts.Behavior.NominalLeftBehavior _ => ok false
+      | contracts.Behavior.NominalRightBehavior _ => ok false
+      | contracts.Behavior.NominalMatchBehavior _ => ok false
+      | contracts.Behavior.GenericLeftBehavior _ => ok false
+      | contracts.Behavior.GenericRightBehavior _ => ok false
+      | contracts.Behavior.GenericMatchBehavior _ => ok false
+      | contracts.Behavior.NamedBehavior => ok true
+  if b
+  then
+    let b1 ← acceptance.parts.named.has_non_data_binding scheme resolved
+    if b1
+    then
+      let r ← acceptance.parts.named.collect_usage scheme
+      match r with
+      | core.result.Result.Ok value =>
+        let violating ←
+          acceptance.parts.named.check_eligibility_loop scheme resolved value
+            0#usize none
+        match violating with
+        | none => ok (core.result.Result.Ok ())
+        | some ty =>
+          let f ←
+            acceptance.parts.invalid_without_stacks «at»
+              (untrusted.Constraint.Eligibility ty)
+          ok (core.result.Result.Err f)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    else ok (core.result.Result.Ok ())
+  else ok (core.result.Result.Ok ())
 
 /-- [noble_kernel::acceptance::preflight::check_request]: loop body 0:
     Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 41:4-47:5 -/
@@ -20569,7 +21168,7 @@ def acceptance.preflight.check_request_loop0
     (remaining, node_index, signed_self_scan)
 
 /-- [noble_kernel::acceptance::preflight::check_request]: loop body 1:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 104:8-115:9 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 110:8-121:9 -/
 @[rust_loop_body]
 def acceptance.preflight.check_request_loop1.body
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -20657,7 +21256,7 @@ def acceptance.preflight.check_request_loop1.body
   else ok (done (remaining, site_scan))
 
 /-- [noble_kernel::acceptance::preflight::check_request]: loop 1:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 104:8-115:9 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 110:8-121:9 -/
 @[rust_loop]
 def acceptance.preflight.check_request_loop1
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -20725,7 +21324,7 @@ def acceptance.preflight.check_request_loop2
     (index, slot_scan)
 
 /-- [noble_kernel::acceptance::preflight::check_request]: loop body 3:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 104:8-115:9 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 110:8-121:9 -/
 @[rust_loop_body]
 def acceptance.preflight.check_request_loop3.body
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -20813,7 +21412,7 @@ def acceptance.preflight.check_request_loop3.body
   else ok (done (remaining, site_scan))
 
 /-- [noble_kernel::acceptance::preflight::check_request]: loop 3:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 104:8-115:9 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 110:8-121:9 -/
 @[rust_loop]
 def acceptance.preflight.check_request_loop3
   (v : alloc.vec.Vec words.Scheme) (v1 : alloc.vec.Vec contracts.Behavior)
@@ -20844,7 +21443,7 @@ def acceptance.preflight.check_request_loop3
     (remaining, site_index, site_scan)
 
 /-- [noble_kernel::acceptance::preflight::check_request]:
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 13:0-142:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 13:0-148:1 -/
 def acceptance.preflight.check_request
   (env : contracts.Env) (request : untrusted.Request)
   (candidate : untrusted.Candidate)
@@ -20973,116 +21572,111 @@ def acceptance.preflight.check_request
                                       } next_remaining
                                   match r7 with
                                   | core.result.Result.Ok value4 =>
-                                    let (interface, _, spent) := value4
+                                    let (interface, resolved, spent) := value4
                                     let r8 ←
-                                      acceptance.parts.scheme_cost scheme
+                                      acceptance.parts.named.check_eligibility
+                                        (some contracts.Behavior.NamedBehavior)
+                                        scheme resolved «at»
                                     match r8 with
-                                    | core.result.Result.Ok value5 =>
+                                    | core.result.Result.Ok _ =>
                                       let r9 ←
-                                        acceptance.parts.join_cost interface
+                                        acceptance.parts.scheme_cost scheme
                                       match r9 with
-                                      | core.result.Result.Ok value6 =>
-                                        let i2 ←
-                                          lift (core.num.U32.saturating_add
-                                            value5 value6)
-                                        let i3 ←
-                                          lift (core.num.U32.saturating_add i2
-                                            spent)
+                                      | core.result.Result.Ok value5 =>
                                         let r10 ←
-                                          acceptance.parts.charge
-                                            next_remaining i3
+                                          acceptance.parts.join_cost interface
                                         match r10 with
-                                        | core.result.Result.Ok value7 =>
-                                          let b1 ←
-                                            alloc.vec.partial_eq.PartialEqVec.ne
-                                              types.Ty.Insts.CoreCmpPartialEqTy
-                                              interface.stack_in
-                                              request.expected.stack_in
-                                          if b1
-                                          then
-                                            ok (core.result.Result.Err
-                                              (acceptance.Fail.Unsupported
-                                              untrusted.UnsupportedKind.NodeForm))
-                                          else
-                                            let b2 ←
+                                        | core.result.Result.Ok value6 =>
+                                          let i2 ←
+                                            lift (core.num.U32.saturating_add
+                                              value5 value6)
+                                          let i3 ←
+                                            lift (core.num.U32.saturating_add
+                                              i2 spent)
+                                          let r11 ←
+                                            acceptance.parts.charge
+                                              next_remaining i3
+                                          match r11 with
+                                          | core.result.Result.Ok value7 =>
+                                            let b1 ←
                                               alloc.vec.partial_eq.PartialEqVec.ne
                                                 types.Ty.Insts.CoreCmpPartialEqTy
-                                                interface.stack_out
-                                                request.expected.stack_out
-                                            if b2
+                                                interface.stack_in
+                                                request.expected.stack_in
+                                            if b1
                                             then
                                               ok (core.result.Result.Err
                                                 (acceptance.Fail.Unsupported
                                                 untrusted.UnsupportedKind.NodeForm))
                                             else
-                                              let b3 ←
-                                                core.cmp.PartialEq.ne.trait_default
-                                                  types.EffSet.Insts.CoreCmpPartialEqEffSet
-                                                  interface.effects
-                                                  request.expected.allowed_effects
-                                              if b3
+                                              let b2 ←
+                                                alloc.vec.partial_eq.PartialEqVec.ne
+                                                  types.Ty.Insts.CoreCmpPartialEqTy
+                                                  interface.stack_out
+                                                  request.expected.stack_out
+                                              if b2
                                               then
                                                 ok (core.result.Result.Err
                                                   (acceptance.Fail.Unsupported
                                                   untrusted.UnsupportedKind.NodeForm))
                                               else
-                                                let (value8, site_scan) ←
-                                                  acceptance.preflight.check_request_loop1
-                                                    env.defs env.kinds 
-                                                    env.deps env.schemas
-                                                    env.nominals
-                                                    env.generic_variants
-                                                    env.resource_kinds
-                                                    env.live_resource_nominals
-                                                    env.live_slots
-                                                    env.live_test_hosts
-                                                    env.caller_module
-                                                    env.declared_modules
-                                                    env.text_cursor
-                                                    env.calculator
-                                                    env.definition_owners
-                                                    env.bound_adapters
-                                                    env.effects
-                                                    request.input_bytes
-                                                    request.expected.stack_in
-                                                    request.expected.stack_out
+                                                let b3 ←
+                                                  core.cmp.PartialEq.ne.trait_default
+                                                    types.EffSet.Insts.CoreCmpPartialEqEffSet
+                                                    interface.effects
                                                     request.expected.allowed_effects
-                                                    request.limits.bytes
-                                                    request.limits.nodes
-                                                    request.limits.depth
-                                                    request.limits.type_size
-                                                    request.limits.stack_height
-                                                    request.limits.work
-                                                    request.limits.diagnostics
-                                                    candidate.nodes owner_inst
-                                                    value7 scheme owner
-                                                    owner_cost «at» 0#usize
-                                                    (core.result.Result.Ok ())
-                                                match site_scan with
-                                                | core.result.Result.Ok _ =>
-                                                  let o2 ←
-                                                    core.option.Option.map
-                                                      acceptance.preflight.check_request.closure.Insts.CoreOpsFunctionFnOnceTuplePairDefinitionShared0InstDefinition
-                                                      signed_owner ()
-                                                  let s :=
-                                                    alloc.vec.Vec.deref
+                                                if b3
+                                                then
+                                                  ok (core.result.Result.Err
+                                                    (acceptance.Fail.Unsupported
+                                                    untrusted.UnsupportedKind.NodeForm))
+                                                else
+                                                  let (value8, site_scan) ←
+                                                    acceptance.preflight.check_request_loop1
+                                                      env.defs env.kinds
+                                                      env.deps env.schemas
+                                                      env.nominals
+                                                      env.generic_variants
+                                                      env.resource_kinds
+                                                      env.live_resource_nominals
+                                                      env.live_slots
+                                                      env.live_test_hosts
+                                                      env.caller_module
+                                                      env.declared_modules
+                                                      env.text_cursor
+                                                      env.calculator
+                                                      env.definition_owners
+                                                      env.bound_adapters
+                                                      env.effects
+                                                      request.input_bytes
                                                       request.expected.stack_in
-                                                  let r11 ←
-                                                    acceptance.parts.limits_of_entry
-                                                      s
-                                                      {
-                                                        request,
-                                                        env,
-                                                        signed_owner := o2
-                                                      }
-                                                  match r11 with
+                                                      request.expected.stack_out
+                                                      request.expected.allowed_effects
+                                                      request.limits.bytes
+                                                      request.limits.nodes
+                                                      request.limits.depth
+                                                      request.limits.type_size
+                                                      request.limits.stack_height
+                                                      request.limits.work
+                                                      request.limits.diagnostics
+                                                      candidate.nodes
+                                                      owner_inst value7 scheme
+                                                      owner owner_cost «at»
+                                                      0#usize
+                                                      (core.result.Result.Ok
+                                                      ())
+                                                  match site_scan with
                                                   | core.result.Result.Ok _ =>
-                                                    let s1 :=
+                                                    let o2 ←
+                                                      core.option.Option.map
+                                                        acceptance.preflight.check_request.closure.Insts.CoreOpsFunctionFnOnceTuplePairDefinitionShared0InstDefinition
+                                                        signed_owner ()
+                                                    let s :=
                                                       alloc.vec.Vec.deref
-                                                        request.expected.stack_out
+                                                        request.expected.stack_in
                                                     let r12 ←
-                                                      acceptance.parts.limits_of
-                                                        s1
+                                                      acceptance.parts.limits_of_entry
+                                                        s
                                                         {
                                                           request,
                                                           env,
@@ -21091,32 +21685,51 @@ def acceptance.preflight.check_request
                                                     match r12 with
                                                     | core.result.Result.Ok _
                                                       =>
-                                                      let s2 ←
-                                                        types.EffSet.as_slice
-                                                          request.expected.allowed_effects
-                                                      let s3 :=
+                                                      let s1 :=
                                                         alloc.vec.Vec.deref
-                                                          env.effects
-                                                      let unknown ←
-                                                        acceptance.parts.effects.first_unknown
-                                                          s2 s3
-                                                      match unknown with
-                                                      | none =>
-                                                        ok
-                                                          (core.result.Result.Ok
-                                                          value8)
-                                                      | some id =>
-                                                        let s4 ←
-                                                          acceptance.parts.site
-                                                            none none
-                                                        let f ←
-                                                          acceptance.parts.invalid_without_stacks
-                                                            s4
-                                                            (untrusted.Constraint.UnknownEffect
-                                                            id)
+                                                          request.expected.stack_out
+                                                      let r13 ←
+                                                        acceptance.parts.limits_of
+                                                          s1
+                                                          {
+                                                            request,
+                                                            env,
+                                                            signed_owner := o2
+                                                          }
+                                                      match r13 with
+                                                      | core.result.Result.Ok _
+                                                        =>
+                                                        let s2 ←
+                                                          types.EffSet.as_slice
+                                                            request.expected.allowed_effects
+                                                        let s3 :=
+                                                          alloc.vec.Vec.deref
+                                                            env.effects
+                                                        let unknown ←
+                                                          acceptance.parts.effects.first_unknown
+                                                            s2 s3
+                                                        match unknown with
+                                                        | none =>
+                                                          ok
+                                                            (core.result.Result.Ok
+                                                            value8)
+                                                        | some id =>
+                                                          let s4 ←
+                                                            acceptance.parts.site
+                                                              none none
+                                                          let f ←
+                                                            acceptance.parts.invalid_without_stacks
+                                                              s4
+                                                              (untrusted.Constraint.UnknownEffect
+                                                              id)
+                                                          ok
+                                                            (core.result.Result.Err
+                                                            f)
+                                                      | core.result.Result.Err
+                                                        failure =>
                                                         ok
                                                           (core.result.Result.Err
-                                                          f)
+                                                          failure)
                                                     | core.result.Result.Err
                                                       failure =>
                                                       ok
@@ -21126,13 +21739,11 @@ def acceptance.preflight.check_request
                                                     failure =>
                                                     ok (core.result.Result.Err
                                                       failure)
-                                                | core.result.Result.Err
-                                                  failure =>
-                                                  ok (core.result.Result.Err
-                                                    failure)
+                                          | core.result.Result.Err _ => ok r11
                                         | core.result.Result.Err _ => ok r10
                                       | core.result.Result.Err _ => ok r9
-                                    | core.result.Result.Err _ => ok r8
+                                    | core.result.Result.Err failure =>
+                                      ok (core.result.Result.Err failure)
                                   | core.result.Result.Err failure =>
                                     ok (core.result.Result.Err failure)
                                 | core.result.Result.Err failure =>
@@ -21227,119 +21838,115 @@ def acceptance.preflight.check_request
                                         } next_remaining
                                     match r7 with
                                     | core.result.Result.Ok value4 =>
-                                      let (interface, _, spent) := value4
+                                      let (interface, resolved, spent) :=
+                                        value4
                                       let r8 ←
-                                        acceptance.parts.scheme_cost scheme
+                                        acceptance.parts.named.check_eligibility
+                                          (some
+                                          contracts.Behavior.NamedBehavior)
+                                          scheme resolved «at»
                                       match r8 with
-                                      | core.result.Result.Ok value5 =>
+                                      | core.result.Result.Ok _ =>
                                         let r9 ←
-                                          acceptance.parts.join_cost interface
+                                          acceptance.parts.scheme_cost scheme
                                         match r9 with
-                                        | core.result.Result.Ok value6 =>
-                                          let i2 ←
-                                            lift (core.num.U32.saturating_add
-                                              value5 value6)
-                                          let i3 ←
-                                            lift (core.num.U32.saturating_add
-                                              i2 spent)
+                                        | core.result.Result.Ok value5 =>
                                           let r10 ←
-                                            acceptance.parts.charge
-                                              next_remaining i3
+                                            acceptance.parts.join_cost
+                                              interface
                                           match r10 with
-                                          | core.result.Result.Ok value7 =>
-                                            let b1 ←
-                                              alloc.vec.partial_eq.PartialEqVec.ne
-                                                types.Ty.Insts.CoreCmpPartialEqTy
-                                                interface.stack_in
-                                                request.expected.stack_in
-                                            if b1
-                                            then
-                                              ok (core.result.Result.Err
-                                                (acceptance.Fail.Unsupported
-                                                untrusted.UnsupportedKind.NodeForm))
-                                            else
-                                              let b2 ←
+                                          | core.result.Result.Ok value6 =>
+                                            let i2 ←
+                                              lift (core.num.U32.saturating_add
+                                                value5 value6)
+                                            let i3 ←
+                                              lift (core.num.U32.saturating_add
+                                                i2 spent)
+                                            let r11 ←
+                                              acceptance.parts.charge
+                                                next_remaining i3
+                                            match r11 with
+                                            | core.result.Result.Ok value7 =>
+                                              let b1 ←
                                                 alloc.vec.partial_eq.PartialEqVec.ne
                                                   types.Ty.Insts.CoreCmpPartialEqTy
-                                                  interface.stack_out
-                                                  request.expected.stack_out
-                                              if b2
+                                                  interface.stack_in
+                                                  request.expected.stack_in
+                                              if b1
                                               then
                                                 ok (core.result.Result.Err
                                                   (acceptance.Fail.Unsupported
                                                   untrusted.UnsupportedKind.NodeForm))
                                               else
-                                                let b3 ←
-                                                  core.cmp.PartialEq.ne.trait_default
-                                                    types.EffSet.Insts.CoreCmpPartialEqEffSet
-                                                    interface.effects
-                                                    request.expected.allowed_effects
-                                                if b3
+                                                let b2 ←
+                                                  alloc.vec.partial_eq.PartialEqVec.ne
+                                                    types.Ty.Insts.CoreCmpPartialEqTy
+                                                    interface.stack_out
+                                                    request.expected.stack_out
+                                                if b2
                                                 then
                                                   ok (core.result.Result.Err
                                                     (acceptance.Fail.Unsupported
                                                     untrusted.UnsupportedKind.NodeForm))
                                                 else
-                                                  let (value8, site_scan) ←
-                                                    acceptance.preflight.check_request_loop3
-                                                      env.defs env.kinds
-                                                      env.deps env.schemas
-                                                      env.nominals
-                                                      env.generic_variants
-                                                      env.resource_kinds
-                                                      env.live_resource_nominals
-                                                      env.live_slots
-                                                      env.live_test_hosts
-                                                      env.caller_module
-                                                      env.declared_modules
-                                                      env.text_cursor
-                                                      env.calculator
-                                                      env.definition_owners
-                                                      env.bound_adapters
-                                                      env.effects
-                                                      request.input_bytes
-                                                      request.expected.stack_in
-                                                      request.expected.stack_out
+                                                  let b3 ←
+                                                    core.cmp.PartialEq.ne.trait_default
+                                                      types.EffSet.Insts.CoreCmpPartialEqEffSet
+                                                      interface.effects
                                                       request.expected.allowed_effects
-                                                      request.limits.bytes
-                                                      request.limits.nodes
-                                                      request.limits.depth
-                                                      request.limits.type_size
-                                                      request.limits.stack_height
-                                                      request.limits.work
-                                                      request.limits.diagnostics
-                                                      candidate.nodes
-                                                      owner_inst value7 scheme
-                                                      owner owner_cost «at»
-                                                      0#usize
-                                                      (core.result.Result.Ok
-                                                      ())
-                                                  match site_scan with
-                                                  | core.result.Result.Ok _ =>
-                                                    let o2 ←
-                                                      core.option.Option.map
-                                                        acceptance.preflight.check_request.closure.Insts.CoreOpsFunctionFnOnceTuplePairDefinitionShared0InstDefinition
-                                                        signed_owner ()
-                                                    let s :=
-                                                      alloc.vec.Vec.deref
+                                                  if b3
+                                                  then
+                                                    ok (core.result.Result.Err
+                                                      (acceptance.Fail.Unsupported
+                                                      untrusted.UnsupportedKind.NodeForm))
+                                                  else
+                                                    let (value8, site_scan) ←
+                                                      acceptance.preflight.check_request_loop3
+                                                        env.defs env.kinds
+                                                        env.deps env.schemas
+                                                        env.nominals
+                                                        env.generic_variants
+                                                        env.resource_kinds
+                                                        env.live_resource_nominals
+                                                        env.live_slots
+                                                        env.live_test_hosts
+                                                        env.caller_module
+                                                        env.declared_modules
+                                                        env.text_cursor
+                                                        env.calculator
+                                                        env.definition_owners
+                                                        env.bound_adapters
+                                                        env.effects
+                                                        request.input_bytes
                                                         request.expected.stack_in
-                                                    let r11 ←
-                                                      acceptance.parts.limits_of_entry
-                                                        s
-                                                        {
-                                                          request,
-                                                          env,
-                                                          signed_owner := o2
-                                                        }
-                                                    match r11 with
+                                                        request.expected.stack_out
+                                                        request.expected.allowed_effects
+                                                        request.limits.bytes
+                                                        request.limits.nodes
+                                                        request.limits.depth
+                                                        request.limits.type_size
+                                                        request.limits.stack_height
+                                                        request.limits.work
+                                                        request.limits.diagnostics
+                                                        candidate.nodes
+                                                        owner_inst value7
+                                                        scheme owner owner_cost
+                                                        «at» 0#usize
+                                                        (core.result.Result.Ok
+                                                        ())
+                                                    match site_scan with
                                                     | core.result.Result.Ok _
                                                       =>
-                                                      let s1 :=
+                                                      let o2 ←
+                                                        core.option.Option.map
+                                                          acceptance.preflight.check_request.closure.Insts.CoreOpsFunctionFnOnceTuplePairDefinitionShared0InstDefinition
+                                                          signed_owner ()
+                                                      let s :=
                                                         alloc.vec.Vec.deref
-                                                          request.expected.stack_out
+                                                          request.expected.stack_in
                                                       let r12 ←
-                                                        acceptance.parts.limits_of
-                                                          s1
+                                                        acceptance.parts.limits_of_entry
+                                                          s
                                                           {
                                                             request,
                                                             env,
@@ -21348,32 +21955,53 @@ def acceptance.preflight.check_request
                                                       match r12 with
                                                       | core.result.Result.Ok _
                                                         =>
-                                                        let s2 ←
-                                                          types.EffSet.as_slice
-                                                            request.expected.allowed_effects
-                                                        let s3 :=
+                                                        let s1 :=
                                                           alloc.vec.Vec.deref
-                                                            env.effects
-                                                        let unknown ←
-                                                          acceptance.parts.effects.first_unknown
-                                                            s2 s3
-                                                        match unknown with
-                                                        | none =>
-                                                          ok
-                                                            (core.result.Result.Ok
-                                                            value8)
-                                                        | some id =>
-                                                          let s4 ←
-                                                            acceptance.parts.site
-                                                              none none
-                                                          let f ←
-                                                            acceptance.parts.invalid_without_stacks
-                                                              s4
-                                                              (untrusted.Constraint.UnknownEffect
-                                                              id)
+                                                            request.expected.stack_out
+                                                        let r13 ←
+                                                          acceptance.parts.limits_of
+                                                            s1
+                                                            {
+                                                              request,
+                                                              env,
+                                                              signed_owner :=
+                                                                o2
+                                                            }
+                                                        match r13 with
+                                                        | core.result.Result.Ok
+                                                          _ =>
+                                                          let s2 ←
+                                                            types.EffSet.as_slice
+                                                              request.expected.allowed_effects
+                                                          let s3 :=
+                                                            alloc.vec.Vec.deref
+                                                              env.effects
+                                                          let unknown ←
+                                                            acceptance.parts.effects.first_unknown
+                                                              s2 s3
+                                                          match unknown with
+                                                          | none =>
+                                                            ok
+                                                              (core.result.Result.Ok
+                                                              value8)
+                                                          | some id =>
+                                                            let s4 ←
+                                                              acceptance.parts.site
+                                                                none none
+                                                            let f ←
+                                                              acceptance.parts.invalid_without_stacks
+                                                                s4
+                                                                (untrusted.Constraint.UnknownEffect
+                                                                id)
+                                                            ok
+                                                              (core.result.Result.Err
+                                                              f)
+                                                        |
+                                                          core.result.Result.Err
+                                                          failure =>
                                                           ok
                                                             (core.result.Result.Err
-                                                            f)
+                                                            failure)
                                                       | core.result.Result.Err
                                                         failure =>
                                                         ok
@@ -21384,13 +22012,12 @@ def acceptance.preflight.check_request
                                                       ok
                                                         (core.result.Result.Err
                                                         failure)
-                                                  | core.result.Result.Err
-                                                    failure =>
-                                                    ok (core.result.Result.Err
-                                                      failure)
+                                            | core.result.Result.Err _ =>
+                                              ok r11
                                           | core.result.Result.Err _ => ok r10
                                         | core.result.Result.Err _ => ok r9
-                                      | core.result.Result.Err _ => ok r8
+                                      | core.result.Result.Err failure =>
+                                        ok (core.result.Result.Err failure)
                                     | core.result.Result.Err failure =>
                                       ok (core.result.Result.Err failure)
                                   | core.result.Result.Err failure =>
@@ -21732,7 +22359,7 @@ def acceptance.nodes.node_of
     ok (core.result.Result.Err f)
 
 /-- [noble_kernel::acceptance::nodes::open_quotation]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 442:0-498:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 446:0-502:1 -/
 def acceptance.nodes.open_quotation
   (frame : acceptance.Frame) (node_id : untrusted.NodeId)
   (node : untrusted.Node) (context : acceptance.parts.Ctx) (fuel : Std.U32) :
@@ -22001,7 +22628,7 @@ def types.EffSet.with_id
        ok out2
 
 /-- [noble_kernel::acceptance::nodes::validate_forwarded_ref]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 409:0-432:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 413:0-436:1 -/
 def acceptance.nodes.validate_forwarded_ref
   (formal : types.Ty) (logical_position : Std.Usize)
   («at» : acceptance.parts.Site) (context : acceptance.parts.Ctx) :
@@ -22117,7 +22744,7 @@ def acceptance.nodes.validate_forwarded_ref
       ok (core.result.Result.Err f)
 
 /-- [noble_kernel::acceptance::nodes::forwarded_position]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 385:0-403:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 389:0-407:1 -/
 def acceptance.nodes.forwarded_position
   (forwarded : Slice Std.U32) (next_forward : Std.Usize)
   («at» : acceptance.parts.Site) :
@@ -22145,7 +22772,7 @@ def acceptance.nodes.forwarded_position
       ok (core.result.Result.Err f)
 
 /-- [noble_kernel::acceptance::nodes::is_live_ref]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 381:0-383:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 385:0-387:1 -/
 def acceptance.nodes.is_live_ref (formal : types.Ty) : Result Bool := do
   match formal with
   | types.Ty.UnitType => ok false
@@ -22166,7 +22793,7 @@ def acceptance.nodes.is_live_ref (formal : types.Ty) : Result Bool := do
   | types.Ty.GenericNominalType _ _ _ => ok false
 
 /-- [noble_kernel::acceptance::nodes::forwarded_ref_matches]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 360:0-378:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 364:0-382:1 -/
 def acceptance.nodes.forwarded_ref_matches
   (formal : types.Ty) (forwarded : Slice Std.U32) (next_forward : Std.Usize)
   («at» : acceptance.parts.Site) (context : acceptance.parts.Ctx) :
@@ -22187,7 +22814,7 @@ def acceptance.nodes.forwarded_ref_matches
   else ok (core.result.Result.Ok false)
 
 /-- [noble_kernel::acceptance::nodes::fold_formal]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 337:0-354:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 341:0-358:1 -/
 def acceptance.nodes.fold_formal
   (formal : types.Ty) (forwarded : Slice Std.U32) (next_forward : Std.Usize)
   («at» : acceptance.parts.Site) (context : acceptance.parts.Ctx) :
@@ -22206,7 +22833,7 @@ def acceptance.nodes.fold_formal
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_kernel::acceptance::nodes::fold_formals]: loop body 0:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 315:4-328:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 319:4-332:5 -/
 @[rust_loop_body]
 def acceptance.nodes.fold_formals_loop.body
   (stack_in : Slice types.Ty) (forwarded : Slice Std.U32)
@@ -22251,7 +22878,7 @@ def acceptance.nodes.fold_formals_loop.body
   else ok (done (value_in, next_forward, refusal))
 
 /-- [noble_kernel::acceptance::nodes::fold_formals]: loop 0:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 315:4-328:5 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 319:4-332:5 -/
 @[rust_loop]
 def acceptance.nodes.fold_formals_loop
   (stack_in : Slice types.Ty) (forwarded : Slice Std.U32)
@@ -22268,7 +22895,7 @@ def acceptance.nodes.fold_formals_loop
     (value_in, next_forward, formal_index, refusal)
 
 /-- [noble_kernel::acceptance::nodes::fold_formals]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 305:0-333:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 309:0-337:1 -/
 def acceptance.nodes.fold_formals
   (stack_in : Slice types.Ty) (forwarded : Slice Std.U32)
   («at» : acceptance.parts.Site) (context : acceptance.parts.Ctx) :
@@ -22286,7 +22913,7 @@ def acceptance.nodes.fold_formals
   | some refusal1 => ok (core.result.Result.Err refusal1)
 
 /-- [noble_kernel::acceptance::nodes::fold_slot]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 198:0-292:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 202:0-296:1 -/
 def acceptance.nodes.fold_slot
   (frame : acceptance.Frame) (node_id : untrusted.NodeId)
   (ref_ordinal : Std.U32) (site_id : Std.U32) (forwarded : Slice Std.U32)
@@ -23732,7 +24359,7 @@ def acceptance.nodes.visibility.check
       ok (core.result.Result.Err f)
 
 /-- [noble_kernel::acceptance::nodes::fold_node]:
-    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 97:0-174:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/nodes.rs', lines 97:0-178:1 -/
 def acceptance.nodes.fold_node
   (frame : acceptance.Frame) (node_id : untrusted.NodeId)
   (node : untrusted.Node) (context : acceptance.parts.Ctx) (fuel : Std.U32) :
@@ -23781,8 +24408,8 @@ def acceptance.nodes.fold_node
       | some scheme =>
         let scheme1 ← words.Scheme.Insts.CoreCloneClone.clone scheme
         let «at» ← acceptance.parts.site (some node_id) (some «def»)
-        let o1 ← contracts.Env.kind context.env «def»
-        let data_var ← acceptance.parts.instantiate.data_slot o1
+        let kind ← contracts.Env.kind context.env «def»
+        let data_var ← acceptance.parts.instantiate.data_slot kind
         let r1 ← acceptance.parts.scheme_cost scheme1
         match r1 with
         | core.result.Result.Ok value =>
@@ -23791,16 +24418,23 @@ def acceptance.nodes.fold_node
               context fuel
           match r2 with
           | core.result.Result.Ok value1 =>
-            let (interface, _, spent) := value1
-            let r3 ← acceptance.parts.join_cost interface
+            let (interface, resolved, spent) := value1
+            let r3 ←
+              acceptance.parts.named.check_eligibility kind scheme1 resolved
+                «at»
             match r3 with
-            | core.result.Result.Ok value2 =>
-              let i ← lift (core.num.U32.saturating_add value value2)
-              let cost ← lift (core.num.U32.saturating_add i spent)
-              let r4 ← acceptance.parts.join frame interface «at» context
+            | core.result.Result.Ok _ =>
+              let r4 ← acceptance.parts.join_cost interface
               match r4 with
-              | core.result.Result.Ok value3 =>
-                ok (core.result.Result.Ok (cost, value3, interface, none))
+              | core.result.Result.Ok value2 =>
+                let i ← lift (core.num.U32.saturating_add value value2)
+                let cost ← lift (core.num.U32.saturating_add i spent)
+                let r5 ← acceptance.parts.join frame interface «at» context
+                match r5 with
+                | core.result.Result.Ok value3 =>
+                  ok (core.result.Result.Ok (cost, value3, interface, none))
+                | core.result.Result.Err failure =>
+                  ok (core.result.Result.Err failure)
               | core.result.Result.Err failure =>
                 ok (core.result.Result.Err failure)
             | core.result.Result.Err failure =>
@@ -23835,8 +24469,8 @@ def acceptance.nodes.fold_node
         | some scheme =>
           let scheme1 ← words.Scheme.Insts.CoreCloneClone.clone scheme
           let «at» ← acceptance.parts.site (some node_id) (some «def»)
-          let o1 ← contracts.Env.kind context.env «def»
-          let data_var ← acceptance.parts.instantiate.data_slot o1
+          let kind ← contracts.Env.kind context.env «def»
+          let data_var ← acceptance.parts.instantiate.data_slot kind
           let r1 ← acceptance.parts.scheme_cost scheme1
           match r1 with
           | core.result.Result.Ok value =>
@@ -23845,16 +24479,24 @@ def acceptance.nodes.fold_node
                 context fuel
             match r2 with
             | core.result.Result.Ok value1 =>
-              let (interface, _, spent) := value1
-              let r3 ← acceptance.parts.join_cost interface
+              let (interface, resolved, spent) := value1
+              let r3 ←
+                acceptance.parts.named.check_eligibility kind scheme1 resolved
+                  «at»
               match r3 with
-              | core.result.Result.Ok value2 =>
-                let i ← lift (core.num.U32.saturating_add value value2)
-                let cost ← lift (core.num.U32.saturating_add i spent)
-                let r4 ← acceptance.parts.join frame interface «at» context
+              | core.result.Result.Ok _ =>
+                let r4 ← acceptance.parts.join_cost interface
                 match r4 with
-                | core.result.Result.Ok value3 =>
-                  ok (core.result.Result.Ok (cost, value3, interface, none))
+                | core.result.Result.Ok value2 =>
+                  let i ← lift (core.num.U32.saturating_add value value2)
+                  let cost ← lift (core.num.U32.saturating_add i spent)
+                  let r5 ←
+                    acceptance.parts.join frame interface «at» context
+                  match r5 with
+                  | core.result.Result.Ok value3 =>
+                    ok (core.result.Result.Ok (cost, value3, interface, none))
+                  | core.result.Result.Err failure =>
+                    ok (core.result.Result.Err failure)
                 | core.result.Result.Err failure =>
                   ok (core.result.Result.Err failure)
               | core.result.Result.Err failure =>
@@ -24234,15 +24876,48 @@ def acceptance.nodes.visibility.Access.Insts.CoreMarkerCopy : core.marker.Copy
   cloneInst := acceptance.nodes.visibility.Access.Insts.CoreCloneClone
 }
 
+/-- Trait implementation: [noble_kernel::acceptance::parts::named::{impl core::marker::Copy for noble_kernel::acceptance::parts::named::VarUsage}]
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 13:16-13:20 -/
+@[reducible]
+def acceptance.parts.named.VarUsage.Insts.CoreMarkerCopy : core.marker.Copy
+  acceptance.parts.named.VarUsage := {
+  cloneInst := acceptance.parts.named.VarUsage.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::acceptance::parts::named::{impl core::clone::Clone for noble_kernel::acceptance::parts::named::Role}::clone]:
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 41:9-41:14
+    Visibility: public -/
+def acceptance.parts.named.Role.Insts.CoreCloneClone.clone
+  (self : acceptance.parts.named.Role) :
+  Result acceptance.parts.named.Role
+  := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::acceptance::parts::named::{impl core::clone::Clone for noble_kernel::acceptance::parts::named::Role}]
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 41:9-41:14 -/
+@[reducible]
+def acceptance.parts.named.Role.Insts.CoreCloneClone : core.clone.Clone
+  acceptance.parts.named.Role := {
+  clone := acceptance.parts.named.Role.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::acceptance::parts::named::{impl core::marker::Copy for noble_kernel::acceptance::parts::named::Role}]
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 41:16-41:20 -/
+@[reducible]
+def acceptance.parts.named.Role.Insts.CoreMarkerCopy : core.marker.Copy
+  acceptance.parts.named.Role := {
+  cloneInst := acceptance.parts.named.Role.Insts.CoreCloneClone
+}
+
 /-- [noble_kernel::acceptance::parts::{impl core::clone::Clone for noble_kernel::acceptance::parts::Ctx<'a>}::clone]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 13:9-13:14
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 14:9-14:14
     Visibility: public -/
 def acceptance.parts.Ctx.Insts.CoreCloneClone.clone
   (self : acceptance.parts.Ctx) : Result acceptance.parts.Ctx := do
   ok self
 
 /-- Trait implementation: [noble_kernel::acceptance::parts::{impl core::clone::Clone for noble_kernel::acceptance::parts::Ctx<'a>}]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 13:9-13:14 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 14:9-14:14 -/
 @[reducible]
 def acceptance.parts.Ctx.Insts.CoreCloneClone : core.clone.Clone
   acceptance.parts.Ctx := {
@@ -24250,7 +24925,7 @@ def acceptance.parts.Ctx.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::acceptance::parts::{impl core::marker::Copy for noble_kernel::acceptance::parts::Ctx<'a>}]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 13:16-13:20 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 14:16-14:20 -/
 @[reducible]
 def acceptance.parts.Ctx.Insts.CoreMarkerCopy : core.marker.Copy
   acceptance.parts.Ctx := {
@@ -24258,14 +24933,14 @@ def acceptance.parts.Ctx.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_kernel::acceptance::parts::{impl core::clone::Clone for noble_kernel::acceptance::parts::Site}::clone]:
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 23:9-23:14
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 24:9-24:14
     Visibility: public -/
 def acceptance.parts.Site.Insts.CoreCloneClone.clone
   (self : acceptance.parts.Site) : Result acceptance.parts.Site := do
   ok self
 
 /-- Trait implementation: [noble_kernel::acceptance::parts::{impl core::clone::Clone for noble_kernel::acceptance::parts::Site}]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 23:9-23:14 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 24:9-24:14 -/
 @[reducible]
 def acceptance.parts.Site.Insts.CoreCloneClone : core.clone.Clone
   acceptance.parts.Site := {
@@ -24273,7 +24948,7 @@ def acceptance.parts.Site.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_kernel::acceptance::parts::{impl core::marker::Copy for noble_kernel::acceptance::parts::Site}]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 23:16-23:20 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 24:16-24:20 -/
 @[reducible]
 def acceptance.parts.Site.Insts.CoreMarkerCopy : core.marker.Copy
   acceptance.parts.Site := {
@@ -44320,8 +44995,3437 @@ def integer.I64.is_equal
   (self : integer.I64) (other : integer.I64) : Result Bool := do
   ok (self.value = other.value)
 
+/-- [noble_kernel::ledger::MAX_ACTIVE_FRAMES]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 74:0-74:42
+    Visibility: public -/
+@[global_simps, irreducible]
+def ledger.MAX_ACTIVE_FRAMES : Std.U32 := 14592#u32
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::RootToken}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 77:9-77:14
+    Visibility: public -/
+def ledger.RootToken.Insts.CoreCloneClone.clone
+  (self : ledger.RootToken) : Result ledger.RootToken := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::RootToken}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 77:9-77:14 -/
+@[reducible]
+def ledger.RootToken.Insts.CoreCloneClone : core.clone.Clone ledger.RootToken
+  := {
+  clone := ledger.RootToken.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::RootToken}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 77:16-77:20 -/
+@[reducible]
+def ledger.RootToken.Insts.CoreMarkerCopy : core.marker.Copy ledger.RootToken
+  := {
+  cloneInst := ledger.RootToken.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::RootToken}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 77:22-77:27
+    Visibility: public -/
+def ledger.RootToken.Insts.CoreFmtDebug.fmt
+  (self : ledger.RootToken) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "RootToken") dyn
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::RootToken}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 77:22-77:27 -/
+@[reducible]
+def ledger.RootToken.Insts.CoreFmtDebug : core.fmt.Debug ledger.RootToken := {
+  fmt := ledger.RootToken.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::RootToken}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 77:29-77:38 -/
+@[reducible]
+def ledger.RootToken.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.RootToken := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::RootToken> for noble_kernel::ledger::RootToken}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 77:29-77:38
+    Visibility: public -/
+def ledger.RootToken.Insts.CoreCmpPartialEqRootToken.eq
+  (self : ledger.RootToken) (other : ledger.RootToken) : Result Bool := do
+  ok (self = other)
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::RootToken> for noble_kernel::ledger::RootToken}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 77:29-77:38 -/
+@[reducible]
+impl_def ledger.RootToken.Insts.CoreCmpPartialEqRootToken : core.cmp.PartialEq
+  ledger.RootToken ledger.RootToken := {
+  eq := ledger.RootToken.Insts.CoreCmpPartialEqRootToken.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.RootToken.Insts.CoreCmpPartialEqRootToken
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::RootToken}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 77:40-77:42
+    Visibility: public -/
+def ledger.RootToken.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.RootToken) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::RootToken}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 77:40-77:42 -/
+@[reducible]
+def ledger.RootToken.Insts.CoreCmpEq : core.cmp.Eq ledger.RootToken := {
+  partialEqInst := ledger.RootToken.Insts.CoreCmpPartialEqRootToken
+  assert_fields_are_eq := ledger.RootToken.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::FrameToken}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 81:9-81:14
+    Visibility: public -/
+def ledger.FrameToken.Insts.CoreCloneClone.clone
+  (self : ledger.FrameToken) : Result ledger.FrameToken := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::FrameToken}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 81:9-81:14 -/
+@[reducible]
+def ledger.FrameToken.Insts.CoreCloneClone : core.clone.Clone ledger.FrameToken
+  := {
+  clone := ledger.FrameToken.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::FrameToken}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 81:16-81:20 -/
+@[reducible]
+def ledger.FrameToken.Insts.CoreMarkerCopy : core.marker.Copy ledger.FrameToken
+  := {
+  cloneInst := ledger.FrameToken.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::FrameToken}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 81:22-81:27
+    Visibility: public -/
+def ledger.FrameToken.Insts.CoreFmtDebug.fmt
+  (self : ledger.FrameToken) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "FrameToken") dyn
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::FrameToken}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 81:22-81:27 -/
+@[reducible]
+def ledger.FrameToken.Insts.CoreFmtDebug : core.fmt.Debug ledger.FrameToken
+  := {
+  fmt := ledger.FrameToken.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::FrameToken}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 81:29-81:38 -/
+@[reducible]
+def ledger.FrameToken.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.FrameToken := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::FrameToken> for noble_kernel::ledger::FrameToken}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 81:29-81:38
+    Visibility: public -/
+def ledger.FrameToken.Insts.CoreCmpPartialEqFrameToken.eq
+  (self : ledger.FrameToken) (other : ledger.FrameToken) : Result Bool := do
+  ok (self = other)
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::FrameToken> for noble_kernel::ledger::FrameToken}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 81:29-81:38 -/
+@[reducible]
+impl_def ledger.FrameToken.Insts.CoreCmpPartialEqFrameToken :
+  core.cmp.PartialEq ledger.FrameToken ledger.FrameToken := {
+  eq := ledger.FrameToken.Insts.CoreCmpPartialEqFrameToken.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.FrameToken.Insts.CoreCmpPartialEqFrameToken
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::FrameToken}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 81:40-81:42
+    Visibility: public -/
+def ledger.FrameToken.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.FrameToken) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::FrameToken}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 81:40-81:42 -/
+@[reducible]
+def ledger.FrameToken.Insts.CoreCmpEq : core.cmp.Eq ledger.FrameToken := {
+  partialEqInst := ledger.FrameToken.Insts.CoreCmpPartialEqFrameToken
+  assert_fields_are_eq :=
+    ledger.FrameToken.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::MapEpoch}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 85:9-85:14
+    Visibility: public -/
+def ledger.MapEpoch.Insts.CoreCloneClone.clone
+  (self : ledger.MapEpoch) : Result ledger.MapEpoch := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::MapEpoch}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 85:9-85:14 -/
+@[reducible]
+def ledger.MapEpoch.Insts.CoreCloneClone : core.clone.Clone ledger.MapEpoch
+  := {
+  clone := ledger.MapEpoch.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::MapEpoch}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 85:16-85:20 -/
+@[reducible]
+def ledger.MapEpoch.Insts.CoreMarkerCopy : core.marker.Copy ledger.MapEpoch
+  := {
+  cloneInst := ledger.MapEpoch.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::MapEpoch}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 85:22-85:27
+    Visibility: public -/
+def ledger.MapEpoch.Insts.CoreFmtDebug.fmt
+  (self : ledger.MapEpoch) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU64) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "MapEpoch") dyn
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::MapEpoch}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 85:22-85:27 -/
+@[reducible]
+def ledger.MapEpoch.Insts.CoreFmtDebug : core.fmt.Debug ledger.MapEpoch := {
+  fmt := ledger.MapEpoch.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::MapEpoch}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 85:29-85:38 -/
+@[reducible]
+def ledger.MapEpoch.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.MapEpoch := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::MapEpoch> for noble_kernel::ledger::MapEpoch}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 85:29-85:38
+    Visibility: public -/
+def ledger.MapEpoch.Insts.CoreCmpPartialEqMapEpoch.eq
+  (self : ledger.MapEpoch) (other : ledger.MapEpoch) : Result Bool := do
+  ok (self = other)
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::MapEpoch> for noble_kernel::ledger::MapEpoch}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 85:29-85:38 -/
+@[reducible]
+impl_def ledger.MapEpoch.Insts.CoreCmpPartialEqMapEpoch : core.cmp.PartialEq
+  ledger.MapEpoch ledger.MapEpoch := {
+  eq := ledger.MapEpoch.Insts.CoreCmpPartialEqMapEpoch.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.MapEpoch.Insts.CoreCmpPartialEqMapEpoch
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::MapEpoch}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 85:40-85:42
+    Visibility: public -/
+def ledger.MapEpoch.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.MapEpoch) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::MapEpoch}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 85:40-85:42 -/
+@[reducible]
+def ledger.MapEpoch.Insts.CoreCmpEq : core.cmp.Eq ledger.MapEpoch := {
+  partialEqInst := ledger.MapEpoch.Insts.CoreCmpPartialEqMapEpoch
+  assert_fields_are_eq := ledger.MapEpoch.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::RootStatus}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 89:9-89:14
+    Visibility: public -/
+def ledger.RootStatus.Insts.CoreCloneClone.clone
+  (self : ledger.RootStatus) : Result ledger.RootStatus := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::RootStatus}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 89:9-89:14 -/
+@[reducible]
+def ledger.RootStatus.Insts.CoreCloneClone : core.clone.Clone ledger.RootStatus
+  := {
+  clone := ledger.RootStatus.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::RootStatus}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 89:16-89:20 -/
+@[reducible]
+def ledger.RootStatus.Insts.CoreMarkerCopy : core.marker.Copy ledger.RootStatus
+  := {
+  cloneInst := ledger.RootStatus.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::RootStatus}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 89:22-89:27
+    Visibility: public -/
+def ledger.RootStatus.Insts.CoreFmtDebug.fmt
+  (self : ledger.RootStatus) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | ledger.RootStatus.Active => core.fmt.Formatter.write_str f (toStr "Active")
+  | ledger.RootStatus.Finished =>
+    core.fmt.Formatter.write_str f (toStr "Finished")
+  | ledger.RootStatus.Aborted =>
+    core.fmt.Formatter.write_str f (toStr "Aborted")
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::RootStatus}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 89:22-89:27 -/
+@[reducible]
+def ledger.RootStatus.Insts.CoreFmtDebug : core.fmt.Debug ledger.RootStatus
+  := {
+  fmt := ledger.RootStatus.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::RootStatus}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 89:29-89:38 -/
+@[reducible]
+def ledger.RootStatus.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.RootStatus := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::RootStatus> for noble_kernel::ledger::RootStatus}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 89:29-89:38
+    Visibility: public -/
+def ledger.RootStatus.Insts.CoreCmpPartialEqRootStatus.eq
+  (self : ledger.RootStatus) (other : ledger.RootStatus) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::RootStatus> for noble_kernel::ledger::RootStatus}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 89:29-89:38 -/
+@[reducible]
+impl_def ledger.RootStatus.Insts.CoreCmpPartialEqRootStatus :
+  core.cmp.PartialEq ledger.RootStatus ledger.RootStatus := {
+  eq := ledger.RootStatus.Insts.CoreCmpPartialEqRootStatus.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.RootStatus.Insts.CoreCmpPartialEqRootStatus
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::RootStatus}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 89:40-89:42 -/
+@[reducible]
+impl_def ledger.RootStatus.Insts.CoreCmpEq : core.cmp.Eq ledger.RootStatus := {
+  partialEqInst := ledger.RootStatus.Insts.CoreCmpPartialEqRootStatus
+  assert_fields_are_eq := core.cmp.Eq.assert_fields_are_eq.default
+    ledger.RootStatus.Insts.CoreCmpEq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::SessionHealth}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 98:9-98:14
+    Visibility: public -/
+def ledger.SessionHealth.Insts.CoreCloneClone.clone
+  (self : ledger.SessionHealth) : Result ledger.SessionHealth := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::SessionHealth}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 98:9-98:14 -/
+@[reducible]
+def ledger.SessionHealth.Insts.CoreCloneClone : core.clone.Clone
+  ledger.SessionHealth := {
+  clone := ledger.SessionHealth.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::SessionHealth}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 98:16-98:20 -/
+@[reducible]
+def ledger.SessionHealth.Insts.CoreMarkerCopy : core.marker.Copy
+  ledger.SessionHealth := {
+  cloneInst := ledger.SessionHealth.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::SessionHealth}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 98:22-98:27
+    Visibility: public -/
+def ledger.SessionHealth.Insts.CoreFmtDebug.fmt
+  (self : ledger.SessionHealth) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | ledger.SessionHealth.Healthy =>
+    core.fmt.Formatter.write_str f (toStr "Healthy")
+  | ledger.SessionHealth.Poisoned =>
+    core.fmt.Formatter.write_str f (toStr "Poisoned")
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::SessionHealth}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 98:22-98:27 -/
+@[reducible]
+def ledger.SessionHealth.Insts.CoreFmtDebug : core.fmt.Debug
+  ledger.SessionHealth := {
+  fmt := ledger.SessionHealth.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::SessionHealth}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 98:29-98:38 -/
+@[reducible]
+def ledger.SessionHealth.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.SessionHealth := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::SessionHealth> for noble_kernel::ledger::SessionHealth}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 98:29-98:38
+    Visibility: public -/
+def ledger.SessionHealth.Insts.CoreCmpPartialEqSessionHealth.eq
+  (self : ledger.SessionHealth) (other : ledger.SessionHealth) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::SessionHealth> for noble_kernel::ledger::SessionHealth}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 98:29-98:38 -/
+@[reducible]
+impl_def ledger.SessionHealth.Insts.CoreCmpPartialEqSessionHealth :
+  core.cmp.PartialEq ledger.SessionHealth ledger.SessionHealth := {
+  eq := ledger.SessionHealth.Insts.CoreCmpPartialEqSessionHealth.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.SessionHealth.Insts.CoreCmpPartialEqSessionHealth
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::SessionHealth}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 98:40-98:42 -/
+@[reducible]
+impl_def ledger.SessionHealth.Insts.CoreCmpEq : core.cmp.Eq
+  ledger.SessionHealth := {
+  partialEqInst := ledger.SessionHealth.Insts.CoreCmpPartialEqSessionHealth
+  assert_fields_are_eq := core.cmp.Eq.assert_fields_are_eq.default
+    ledger.SessionHealth.Insts.CoreCmpEq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::FramePinCounts}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 107:9-107:14
+    Visibility: public -/
+def ledger.FramePinCounts.Insts.CoreCloneClone.clone
+  (self : ledger.FramePinCounts) : Result ledger.FramePinCounts := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::FramePinCounts}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 107:9-107:14 -/
+@[reducible]
+def ledger.FramePinCounts.Insts.CoreCloneClone : core.clone.Clone
+  ledger.FramePinCounts := {
+  clone := ledger.FramePinCounts.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::FramePinCounts}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 107:16-107:20 -/
+@[reducible]
+def ledger.FramePinCounts.Insts.CoreMarkerCopy : core.marker.Copy
+  ledger.FramePinCounts := {
+  cloneInst := ledger.FramePinCounts.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::FramePinCounts}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 107:22-107:27
+    Visibility: public -/
+def ledger.FramePinCounts.Insts.CoreFmtDebug.fmt
+  (self : ledger.FramePinCounts) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugU32 self.entered
+  let dyn1 := Dyn.mk _ core.fmt.DebugU32 self.released
+  let dyn2 := Dyn.mk _ core.fmt.DebugU32 self.active
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self.released_on_abort
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "FramePinCounts")
+    (toStr "entered") dyn (toStr "released") dyn1 (toStr "active") dyn2 (toStr
+    "released_on_abort") dyn3
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::FramePinCounts}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 107:22-107:27 -/
+@[reducible]
+def ledger.FramePinCounts.Insts.CoreFmtDebug : core.fmt.Debug
+  ledger.FramePinCounts := {
+  fmt := ledger.FramePinCounts.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::FramePinCounts}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 107:29-107:38 -/
+@[reducible]
+def ledger.FramePinCounts.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.FramePinCounts := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::FramePinCounts> for noble_kernel::ledger::FramePinCounts}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 107:29-107:38
+    Visibility: public -/
+def ledger.FramePinCounts.Insts.CoreCmpPartialEqFramePinCounts.eq
+  (self : ledger.FramePinCounts) (other : ledger.FramePinCounts) :
+  Result Bool
+  := do
+  if self.entered = other.entered
+  then
+    if self.released = other.released
+    then
+      if self.active = other.active
+      then ok (self.released_on_abort = other.released_on_abort)
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::FramePinCounts> for noble_kernel::ledger::FramePinCounts}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 107:29-107:38 -/
+@[reducible]
+impl_def ledger.FramePinCounts.Insts.CoreCmpPartialEqFramePinCounts :
+  core.cmp.PartialEq ledger.FramePinCounts ledger.FramePinCounts := {
+  eq := ledger.FramePinCounts.Insts.CoreCmpPartialEqFramePinCounts.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.FramePinCounts.Insts.CoreCmpPartialEqFramePinCounts
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::FramePinCounts}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 107:40-107:42
+    Visibility: public -/
+def ledger.FramePinCounts.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.FramePinCounts) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::FramePinCounts}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 107:40-107:42 -/
+@[reducible]
+def ledger.FramePinCounts.Insts.CoreCmpEq : core.cmp.Eq ledger.FramePinCounts
+  := {
+  partialEqInst := ledger.FramePinCounts.Insts.CoreCmpPartialEqFramePinCounts
+  assert_fields_are_eq :=
+    ledger.FramePinCounts.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::Snapshot}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 116:9-116:14
+    Visibility: public -/
+def ledger.Snapshot.Insts.CoreCloneClone.clone
+  (self : ledger.Snapshot) : Result ledger.Snapshot := do
+  let rt ← ledger.RootToken.Insts.CoreCloneClone.clone self.root
+  let me ← ledger.MapEpoch.Insts.CoreCloneClone.clone self.map_epoch
+  let v ←
+    alloc.vec.CloneVec.clone ledger.FrameToken.Insts.CoreCloneClone self.frames
+  let i ← lift (core.clone.impls.CloneU32.clone self.entered)
+  let i1 ← lift (core.clone.impls.CloneU32.clone self.released)
+  let b ← lift (core.clone.impls.CloneBool.clone self.pending_dispatch)
+  let rs ← ledger.RootStatus.Insts.CoreCloneClone.clone self.status
+  let sh ← ledger.SessionHealth.Insts.CoreCloneClone.clone self.session
+  ok
+    {
+      root := rt,
+      map_epoch := me,
+      frames := v,
+      entered := i,
+      released := i1,
+      pending_dispatch := b,
+      status := rs,
+      session := sh
+    }
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::Snapshot}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 116:9-116:14 -/
+@[reducible]
+def ledger.Snapshot.Insts.CoreCloneClone : core.clone.Clone ledger.Snapshot
+  := {
+  clone := ledger.Snapshot.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::Snapshot}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 116:16-116:21
+    Visibility: public -/
+def ledger.Snapshot.Insts.CoreFmtDebug.fmt
+  (self : ledger.Snapshot) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ ledger.RootToken.Insts.CoreFmtDebug self.root
+  let dyn1 := Dyn.mk _ ledger.MapEpoch.Insts.CoreFmtDebug self.map_epoch
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugVec ledger.FrameToken.Insts.CoreFmtDebug)
+      self.frames
+  let dyn3 := Dyn.mk _ core.fmt.DebugU32 self.entered
+  let dyn4 := Dyn.mk _ core.fmt.DebugU32 self.released
+  let dyn5 := Dyn.mk _ core.fmt.DebugBool self.pending_dispatch
+  let dyn6 := Dyn.mk _ ledger.RootStatus.Insts.CoreFmtDebug self.status
+  let dyn7 :=
+    Dyn.mk _ (core.fmt.DebugShared ledger.SessionHealth.Insts.CoreFmtDebug)
+      self.session
+  let values :=
+    Array.to_slice
+      (Array.make 8#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 8#usize [
+        toStr "root", toStr "map_epoch", toStr "frames", toStr "entered", toStr
+        "released", toStr "pending_dispatch", toStr "status", toStr "session"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "Snapshot") s values
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::Snapshot}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 116:16-116:21 -/
+@[reducible]
+def ledger.Snapshot.Insts.CoreFmtDebug : core.fmt.Debug ledger.Snapshot := {
+  fmt := ledger.Snapshot.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::Snapshot}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 116:23-116:32 -/
+@[reducible]
+def ledger.Snapshot.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.Snapshot := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::Snapshot> for noble_kernel::ledger::Snapshot}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 116:23-116:32
+    Visibility: public -/
+def ledger.Snapshot.Insts.CoreCmpPartialEqSnapshot.eq
+  (self : ledger.Snapshot) (other : ledger.Snapshot) : Result Bool := do
+  if self.entered = other.entered
+  then
+    if self.released = other.released
+    then
+      if self.pending_dispatch = other.pending_dispatch
+      then
+        let b ←
+          ledger.RootToken.Insts.CoreCmpPartialEqRootToken.eq self.root
+            other.root
+        if b
+        then
+          let b1 ←
+            ledger.MapEpoch.Insts.CoreCmpPartialEqMapEpoch.eq self.map_epoch
+              other.map_epoch
+          if b1
+          then
+            let b2 ←
+              alloc.vec.partial_eq.PartialEqVec.eq
+                ledger.FrameToken.Insts.CoreCmpPartialEqFrameToken self.frames
+                other.frames
+            if b2
+            then
+              let b3 ←
+                ledger.RootStatus.Insts.CoreCmpPartialEqRootStatus.eq
+                  self.status other.status
+              if b3
+              then
+                ledger.SessionHealth.Insts.CoreCmpPartialEqSessionHealth.eq
+                  self.session other.session
+              else ok false
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::Snapshot> for noble_kernel::ledger::Snapshot}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 116:23-116:32 -/
+@[reducible]
+impl_def ledger.Snapshot.Insts.CoreCmpPartialEqSnapshot : core.cmp.PartialEq
+  ledger.Snapshot ledger.Snapshot := {
+  eq := ledger.Snapshot.Insts.CoreCmpPartialEqSnapshot.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.Snapshot.Insts.CoreCmpPartialEqSnapshot
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::Snapshot}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 116:34-116:36
+    Visibility: public -/
+def ledger.Snapshot.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.Snapshot) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::Snapshot}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 116:34-116:36 -/
+@[reducible]
+def ledger.Snapshot.Insts.CoreCmpEq : core.cmp.Eq ledger.Snapshot := {
+  partialEqInst := ledger.Snapshot.Insts.CoreCmpPartialEqSnapshot
+  assert_fields_are_eq := ledger.Snapshot.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{noble_kernel::ledger::Snapshot}::pinned]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 133:4-147:5
+    Visibility: public -/
+def ledger.Snapshot.pinned
+  (root : ledger.RootToken) (map_epoch : ledger.MapEpoch) :
+  Result (core.result.Result ledger.Snapshot ledger.Error)
+  := do
+  if root = 0#u64
+  then ok (core.result.Result.Err ledger.Error.InvalidRootToken)
+  else
+    ok (core.result.Result.Ok
+      {
+        root := root,
+        map_epoch,
+        frames := (alloc.vec.Vec.new ledger.FrameToken),
+        entered := 0#u32,
+        released := 0#u32,
+        pending_dispatch := false,
+        status := ledger.RootStatus.Active,
+        session := ledger.SessionHealth.Healthy
+      })
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::Error}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 151:9-151:14
+    Visibility: public -/
+def ledger.Error.Insts.CoreCloneClone.clone
+  (self : ledger.Error) : Result ledger.Error := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::Error}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 151:9-151:14 -/
+@[reducible]
+def ledger.Error.Insts.CoreCloneClone : core.clone.Clone ledger.Error := {
+  clone := ledger.Error.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::Error}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 151:16-151:20 -/
+@[reducible]
+def ledger.Error.Insts.CoreMarkerCopy : core.marker.Copy ledger.Error := {
+  cloneInst := ledger.Error.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::Error}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 151:22-151:27
+    Visibility: public -/
+def ledger.Error.Insts.CoreFmtDebug.fmt
+  (self : ledger.Error) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | ledger.Error.SessionPoisoned =>
+    core.fmt.Formatter.write_str f (toStr "SessionPoisoned")
+  | ledger.Error.InvalidRootToken =>
+    core.fmt.Formatter.write_str f (toStr "InvalidRootToken")
+  | ledger.Error.ForeignRoot =>
+    core.fmt.Formatter.write_str f (toStr "ForeignRoot")
+  | ledger.Error.InactiveRoot =>
+    core.fmt.Formatter.write_str f (toStr "InactiveRoot")
+  | ledger.Error.InvalidFrameToken =>
+    core.fmt.Formatter.write_str f (toStr "InvalidFrameToken")
+  | ledger.Error.DuplicateOrUnorderedFrame =>
+    core.fmt.Formatter.write_str f (toStr "DuplicateOrUnorderedFrame")
+  | ledger.Error.FrameBoundExceeded =>
+    core.fmt.Formatter.write_str f (toStr "FrameBoundExceeded")
+  | ledger.Error.FrameCounterExhausted =>
+    core.fmt.Formatter.write_str f (toStr "FrameCounterExhausted")
+  | ledger.Error.MalformedCounts =>
+    core.fmt.Formatter.write_str f (toStr "MalformedCounts")
+  | ledger.Error.PendingDispatch =>
+    core.fmt.Formatter.write_str f (toStr "PendingDispatch")
+  | ledger.Error.NonLifoFrameRelease =>
+    core.fmt.Formatter.write_str f (toStr "NonLifoFrameRelease")
+  | ledger.Error.ActiveFramesRemaining =>
+    core.fmt.Formatter.write_str f (toStr "ActiveFramesRemaining")
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::Error}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 151:22-151:27 -/
+@[reducible]
+def ledger.Error.Insts.CoreFmtDebug : core.fmt.Debug ledger.Error := {
+  fmt := ledger.Error.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::Error}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 151:29-151:38 -/
+@[reducible]
+def ledger.Error.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.Error := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::Error> for noble_kernel::ledger::Error}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 151:29-151:38
+    Visibility: public -/
+def ledger.Error.Insts.CoreCmpPartialEqError.eq
+  (self : ledger.Error) (other : ledger.Error) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::Error> for noble_kernel::ledger::Error}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 151:29-151:38 -/
+@[reducible]
+impl_def ledger.Error.Insts.CoreCmpPartialEqError : core.cmp.PartialEq
+  ledger.Error ledger.Error := {
+  eq := ledger.Error.Insts.CoreCmpPartialEqError.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.Error.Insts.CoreCmpPartialEqError
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::Error}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 151:40-151:42 -/
+@[reducible]
+impl_def ledger.Error.Insts.CoreCmpEq : core.cmp.Eq ledger.Error := {
+  partialEqInst := ledger.Error.Insts.CoreCmpPartialEqError
+  assert_fields_are_eq := core.cmp.Eq.assert_fields_are_eq.default
+    ledger.Error.Insts.CoreCmpEq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::UnprovenReason}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 170:9-170:14
+    Visibility: public -/
+def ledger.UnprovenReason.Insts.CoreCloneClone.clone
+  (self : ledger.UnprovenReason) : Result ledger.UnprovenReason := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::UnprovenReason}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 170:9-170:14 -/
+@[reducible]
+def ledger.UnprovenReason.Insts.CoreCloneClone : core.clone.Clone
+  ledger.UnprovenReason := {
+  clone := ledger.UnprovenReason.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::UnprovenReason}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 170:16-170:20 -/
+@[reducible]
+def ledger.UnprovenReason.Insts.CoreMarkerCopy : core.marker.Copy
+  ledger.UnprovenReason := {
+  cloneInst := ledger.UnprovenReason.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::UnprovenReason}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 170:22-170:27
+    Visibility: public -/
+def ledger.UnprovenReason.Insts.CoreFmtDebug.fmt
+  (self : ledger.UnprovenReason) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | ledger.UnprovenReason.FrozenReplayReleaseFailed =>
+    core.fmt.Formatter.write_str f (toStr "FrozenReplayReleaseFailed")
+  | ledger.UnprovenReason.ProvisionalSavedOwnerReleaseFailed =>
+    core.fmt.Formatter.write_str f (toStr "ProvisionalSavedOwnerReleaseFailed")
+  | ledger.UnprovenReason.RootTraceUnavailable =>
+    core.fmt.Formatter.write_str f (toStr "RootTraceUnavailable")
+  | ledger.UnprovenReason.GuestCallInterrupted =>
+    core.fmt.Formatter.write_str f (toStr "GuestCallInterrupted")
+  | ledger.UnprovenReason.GuestFailureRecorded =>
+    core.fmt.Formatter.write_str f (toStr "GuestFailureRecorded")
+  | ledger.UnprovenReason.GuestWorkOpen =>
+    core.fmt.Formatter.write_str f (toStr "GuestWorkOpen")
+  | ledger.UnprovenReason.GuestInsideBorrowedFrame =>
+    core.fmt.Formatter.write_str f (toStr "GuestInsideBorrowedFrame")
+  | ledger.UnprovenReason.AbortedFramePinsRetainBackendRefs =>
+    core.fmt.Formatter.write_str f (toStr "AbortedFramePinsRetainBackendRefs")
+  | ledger.UnprovenReason.PendingDispatchUnresolved =>
+    core.fmt.Formatter.write_str f (toStr "PendingDispatchUnresolved")
+  | ledger.UnprovenReason.SessionPoisonedDuringRoot =>
+    core.fmt.Formatter.write_str f (toStr "SessionPoisonedDuringRoot")
+  | ledger.UnprovenReason.UnexpectedGuestResumption =>
+    core.fmt.Formatter.write_str f (toStr "UnexpectedGuestResumption")
+  | ledger.UnprovenReason.OperandRootsNotCleared =>
+    core.fmt.Formatter.write_str f (toStr "OperandRootsNotCleared")
+  | ledger.UnprovenReason.OperandRootReleaseRefused =>
+    core.fmt.Formatter.write_str f (toStr "OperandRootReleaseRefused")
+  | ledger.UnprovenReason.OperandRootReleaseTrapped =>
+    core.fmt.Formatter.write_str f (toStr "OperandRootReleaseTrapped")
+  | ledger.UnprovenReason.VersionRetirementFailed =>
+    core.fmt.Formatter.write_str f (toStr "VersionRetirementFailed")
+  | ledger.UnprovenReason.RetirementSweepFailed =>
+    core.fmt.Formatter.write_str f (toStr "RetirementSweepFailed")
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::UnprovenReason}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 170:22-170:27 -/
+@[reducible]
+def ledger.UnprovenReason.Insts.CoreFmtDebug : core.fmt.Debug
+  ledger.UnprovenReason := {
+  fmt := ledger.UnprovenReason.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::UnprovenReason}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 170:29-170:38 -/
+@[reducible]
+def ledger.UnprovenReason.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.UnprovenReason := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::UnprovenReason> for noble_kernel::ledger::UnprovenReason}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 170:29-170:38
+    Visibility: public -/
+def ledger.UnprovenReason.Insts.CoreCmpPartialEqUnprovenReason.eq
+  (self : ledger.UnprovenReason) (other : ledger.UnprovenReason) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::UnprovenReason> for noble_kernel::ledger::UnprovenReason}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 170:29-170:38 -/
+@[reducible]
+impl_def ledger.UnprovenReason.Insts.CoreCmpPartialEqUnprovenReason :
+  core.cmp.PartialEq ledger.UnprovenReason ledger.UnprovenReason := {
+  eq := ledger.UnprovenReason.Insts.CoreCmpPartialEqUnprovenReason.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.UnprovenReason.Insts.CoreCmpPartialEqUnprovenReason
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::UnprovenReason}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 170:40-170:42 -/
+@[reducible]
+impl_def ledger.UnprovenReason.Insts.CoreCmpEq : core.cmp.Eq
+  ledger.UnprovenReason := {
+  partialEqInst := ledger.UnprovenReason.Insts.CoreCmpPartialEqUnprovenReason
+  assert_fields_are_eq := core.cmp.Eq.assert_fields_are_eq.default
+    ledger.UnprovenReason.Insts.CoreCmpEq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::GuestSettlement}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 193:9-193:14
+    Visibility: public -/
+def ledger.GuestSettlement.Insts.CoreCloneClone.clone
+  (self : ledger.GuestSettlement) : Result ledger.GuestSettlement := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::GuestSettlement}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 193:9-193:14 -/
+@[reducible]
+def ledger.GuestSettlement.Insts.CoreCloneClone : core.clone.Clone
+  ledger.GuestSettlement := {
+  clone := ledger.GuestSettlement.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::GuestSettlement}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 193:16-193:20 -/
+@[reducible]
+def ledger.GuestSettlement.Insts.CoreMarkerCopy : core.marker.Copy
+  ledger.GuestSettlement := {
+  cloneInst := ledger.GuestSettlement.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::GuestSettlement}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 193:22-193:27
+    Visibility: public -/
+def ledger.GuestSettlement.Insts.CoreFmtDebug.fmt
+  (self : ledger.GuestSettlement) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | ledger.GuestSettlement.Settled =>
+    core.fmt.Formatter.write_str f (toStr "Settled")
+  | ledger.GuestSettlement.Unsettled __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared ledger.UnprovenReason.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Unsettled")
+      __self_01
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::GuestSettlement}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 193:22-193:27 -/
+@[reducible]
+def ledger.GuestSettlement.Insts.CoreFmtDebug : core.fmt.Debug
+  ledger.GuestSettlement := {
+  fmt := ledger.GuestSettlement.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::GuestSettlement}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 193:29-193:38 -/
+@[reducible]
+def ledger.GuestSettlement.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.GuestSettlement := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::GuestSettlement> for noble_kernel::ledger::GuestSettlement}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 193:29-193:38
+    Visibility: public -/
+def ledger.GuestSettlement.Insts.CoreCmpPartialEqGuestSettlement.eq
+  (self : ledger.GuestSettlement) (other : ledger.GuestSettlement) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | ledger.GuestSettlement.Settled => ok true
+    | ledger.GuestSettlement.Unsettled __self_0 =>
+      match other with
+      | ledger.GuestSettlement.Settled => ok true
+      | ledger.GuestSettlement.Unsettled __arg1_0 =>
+        ledger.UnprovenReason.Insts.CoreCmpPartialEqUnprovenReason.eq __self_0
+          __arg1_0
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::GuestSettlement> for noble_kernel::ledger::GuestSettlement}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 193:29-193:38 -/
+@[reducible]
+impl_def ledger.GuestSettlement.Insts.CoreCmpPartialEqGuestSettlement :
+  core.cmp.PartialEq ledger.GuestSettlement ledger.GuestSettlement := {
+  eq := ledger.GuestSettlement.Insts.CoreCmpPartialEqGuestSettlement.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.GuestSettlement.Insts.CoreCmpPartialEqGuestSettlement
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::GuestSettlement}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 193:40-193:42
+    Visibility: public -/
+def ledger.GuestSettlement.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.GuestSettlement) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::GuestSettlement}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 193:40-193:42 -/
+@[reducible]
+def ledger.GuestSettlement.Insts.CoreCmpEq : core.cmp.Eq ledger.GuestSettlement
+  := {
+  partialEqInst := ledger.GuestSettlement.Insts.CoreCmpPartialEqGuestSettlement
+  assert_fields_are_eq :=
+    ledger.GuestSettlement.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::GuestObservation}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 201:9-201:14
+    Visibility: public -/
+def ledger.GuestObservation.Insts.CoreCloneClone.clone
+  (self : ledger.GuestObservation) : Result ledger.GuestObservation := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::GuestObservation}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 201:9-201:14 -/
+@[reducible]
+def ledger.GuestObservation.Insts.CoreCloneClone : core.clone.Clone
+  ledger.GuestObservation := {
+  clone := ledger.GuestObservation.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::GuestObservation}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 201:16-201:20 -/
+@[reducible]
+def ledger.GuestObservation.Insts.CoreMarkerCopy : core.marker.Copy
+  ledger.GuestObservation := {
+  cloneInst := ledger.GuestObservation.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::GuestObservation}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 201:22-201:27
+    Visibility: public -/
+def ledger.GuestObservation.Insts.CoreFmtDebug.fmt
+  (self : ledger.GuestObservation) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugBool self.guest_faulted
+  let dyn1 := Dyn.mk _ core.fmt.DebugU32 self.failure_flag
+  let dyn2 := Dyn.mk _ core.fmt.DebugU32 self.continuation_depth
+  let dyn3 := Dyn.mk _ core.fmt.DebugU32 self.reflection_depth
+  let dyn4 := Dyn.mk _ core.fmt.DebugU32 self.dispatch_flag
+  let dyn5 := Dyn.mk _ core.fmt.DebugU32 self.current_frame_ptr
+  let dyn6 :=
+    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugU32) self.live_frame_token
+  let values :=
+    Array.to_slice
+      (Array.make 7#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 7#usize [
+        toStr "guest_faulted", toStr "failure_flag", toStr
+        "continuation_depth", toStr "reflection_depth", toStr "dispatch_flag",
+        toStr "current_frame_ptr", toStr "live_frame_token"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "GuestObservation") s
+    values
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::GuestObservation}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 201:22-201:27 -/
+@[reducible]
+def ledger.GuestObservation.Insts.CoreFmtDebug : core.fmt.Debug
+  ledger.GuestObservation := {
+  fmt := ledger.GuestObservation.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::GuestObservation}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 201:29-201:38 -/
+@[reducible]
+def ledger.GuestObservation.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.GuestObservation := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::GuestObservation> for noble_kernel::ledger::GuestObservation}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 201:29-201:38
+    Visibility: public -/
+def ledger.GuestObservation.Insts.CoreCmpPartialEqGuestObservation.eq
+  (self : ledger.GuestObservation) (other : ledger.GuestObservation) :
+  Result Bool
+  := do
+  if self.guest_faulted = other.guest_faulted
+  then
+    if self.failure_flag = other.failure_flag
+    then
+      if self.continuation_depth = other.continuation_depth
+      then
+        if self.reflection_depth = other.reflection_depth
+        then
+          if self.dispatch_flag = other.dispatch_flag
+          then
+            if self.current_frame_ptr = other.current_frame_ptr
+            then ok (self.live_frame_token = other.live_frame_token)
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::GuestObservation> for noble_kernel::ledger::GuestObservation}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 201:29-201:38 -/
+@[reducible]
+impl_def ledger.GuestObservation.Insts.CoreCmpPartialEqGuestObservation :
+  core.cmp.PartialEq ledger.GuestObservation ledger.GuestObservation := {
+  eq := ledger.GuestObservation.Insts.CoreCmpPartialEqGuestObservation.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.GuestObservation.Insts.CoreCmpPartialEqGuestObservation
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::GuestObservation}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 201:40-201:42
+    Visibility: public -/
+def ledger.GuestObservation.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.GuestObservation) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::GuestObservation}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 201:40-201:42 -/
+@[reducible]
+def ledger.GuestObservation.Insts.CoreCmpEq : core.cmp.Eq
+  ledger.GuestObservation := {
+  partialEqInst :=
+    ledger.GuestObservation.Insts.CoreCmpPartialEqGuestObservation
+  assert_fields_are_eq :=
+    ledger.GuestObservation.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{noble_kernel::ledger::GuestObservation}::settled]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 222:4-232:5
+    Visibility: public -/
+def ledger.GuestObservation.settled : Result ledger.GuestObservation := do
+  ok
+    {
+      guest_faulted := false,
+      failure_flag := 0#u32,
+      continuation_depth := 0#u32,
+      reflection_depth := 0#u32,
+      dispatch_flag := 0#u32,
+      current_frame_ptr := 0#u32,
+      live_frame_token := 0#u32
+    }
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::PreAbortObservation}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 237:9-237:14
+    Visibility: public -/
+def ledger.PreAbortObservation.Insts.CoreCloneClone.clone
+  (self : ledger.PreAbortObservation) : Result ledger.PreAbortObservation := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::PreAbortObservation}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 237:9-237:14 -/
+@[reducible]
+def ledger.PreAbortObservation.Insts.CoreCloneClone : core.clone.Clone
+  ledger.PreAbortObservation := {
+  clone := ledger.PreAbortObservation.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::PreAbortObservation}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 237:16-237:20 -/
+@[reducible]
+def ledger.PreAbortObservation.Insts.CoreMarkerCopy : core.marker.Copy
+  ledger.PreAbortObservation := {
+  cloneInst := ledger.PreAbortObservation.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::PreAbortObservation}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 237:22-237:27
+    Visibility: public -/
+def ledger.PreAbortObservation.Insts.CoreFmtDebug.fmt
+  (self : ledger.PreAbortObservation) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugBool self.replay_release_ok
+  let dyn1 := Dyn.mk _ core.fmt.DebugBool self.provisional_owners_release_ok
+  let dyn2 := Dyn.mk _ core.fmt.DebugBool self.trace_available
+  let dyn3 := Dyn.mk _ core.fmt.DebugBool self.engine_poisoned_during_root
+  let dyn4 :=
+    Dyn.mk _ (core.fmt.DebugShared ledger.GuestObservation.Insts.CoreFmtDebug)
+      self.guest
+  core.fmt.Formatter.debug_struct_field5_finish f (toStr "PreAbortObservation")
+    (toStr "replay_release_ok") dyn (toStr "provisional_owners_release_ok")
+    dyn1 (toStr "trace_available") dyn2 (toStr "engine_poisoned_during_root")
+    dyn3 (toStr "guest") dyn4
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::PreAbortObservation}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 237:22-237:27 -/
+@[reducible]
+def ledger.PreAbortObservation.Insts.CoreFmtDebug : core.fmt.Debug
+  ledger.PreAbortObservation := {
+  fmt := ledger.PreAbortObservation.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::PreAbortObservation}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 237:29-237:38 -/
+@[reducible]
+def ledger.PreAbortObservation.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.PreAbortObservation := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::PreAbortObservation> for noble_kernel::ledger::PreAbortObservation}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 237:29-237:38
+    Visibility: public -/
+def ledger.PreAbortObservation.Insts.CoreCmpPartialEqPreAbortObservation.eq
+  (self : ledger.PreAbortObservation) (other : ledger.PreAbortObservation) :
+  Result Bool
+  := do
+  if self.replay_release_ok = other.replay_release_ok
+  then
+    if self.provisional_owners_release_ok = other.provisional_owners_release_ok
+    then
+      if self.trace_available = other.trace_available
+      then
+        if self.engine_poisoned_during_root = other.engine_poisoned_during_root
+        then
+          ledger.GuestObservation.Insts.CoreCmpPartialEqGuestObservation.eq
+            self.guest other.guest
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::PreAbortObservation> for noble_kernel::ledger::PreAbortObservation}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 237:29-237:38 -/
+@[reducible]
+impl_def ledger.PreAbortObservation.Insts.CoreCmpPartialEqPreAbortObservation :
+  core.cmp.PartialEq ledger.PreAbortObservation ledger.PreAbortObservation := {
+  eq := ledger.PreAbortObservation.Insts.CoreCmpPartialEqPreAbortObservation.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.PreAbortObservation.Insts.CoreCmpPartialEqPreAbortObservation
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::PreAbortObservation}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 237:40-237:42
+    Visibility: public -/
+def ledger.PreAbortObservation.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.PreAbortObservation) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::PreAbortObservation}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 237:40-237:42 -/
+@[reducible]
+def ledger.PreAbortObservation.Insts.CoreCmpEq : core.cmp.Eq
+  ledger.PreAbortObservation := {
+  partialEqInst :=
+    ledger.PreAbortObservation.Insts.CoreCmpPartialEqPreAbortObservation
+  assert_fields_are_eq :=
+    ledger.PreAbortObservation.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{noble_kernel::ledger::PreAbortObservation}::settled_clean]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 255:4-263:5
+    Visibility: public -/
+def ledger.PreAbortObservation.settled_clean
+  : Result ledger.PreAbortObservation := do
+  let go ← ledger.GuestObservation.settled
+  ok
+    {
+      replay_release_ok := true,
+      provisional_owners_release_ok := true,
+      trace_available := true,
+      engine_poisoned_during_root := false,
+      guest := go
+    }
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::ClearStackAck}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 267:9-267:14
+    Visibility: public -/
+def ledger.ClearStackAck.Insts.CoreCloneClone.clone
+  (self : ledger.ClearStackAck) : Result ledger.ClearStackAck := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::ClearStackAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 267:9-267:14 -/
+@[reducible]
+def ledger.ClearStackAck.Insts.CoreCloneClone : core.clone.Clone
+  ledger.ClearStackAck := {
+  clone := ledger.ClearStackAck.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::ClearStackAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 267:16-267:20 -/
+@[reducible]
+def ledger.ClearStackAck.Insts.CoreMarkerCopy : core.marker.Copy
+  ledger.ClearStackAck := {
+  cloneInst := ledger.ClearStackAck.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::ClearStackAck}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 267:22-267:27
+    Visibility: public -/
+def ledger.ClearStackAck.Insts.CoreFmtDebug.fmt
+  (self : ledger.ClearStackAck) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | ledger.ClearStackAck.NotAttempted =>
+    core.fmt.Formatter.write_str f (toStr "NotAttempted")
+  | ledger.ClearStackAck.Cleared =>
+    core.fmt.Formatter.write_str f (toStr "Cleared")
+  | ledger.ClearStackAck.Refused =>
+    core.fmt.Formatter.write_str f (toStr "Refused")
+  | ledger.ClearStackAck.Trapped =>
+    core.fmt.Formatter.write_str f (toStr "Trapped")
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::ClearStackAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 267:22-267:27 -/
+@[reducible]
+def ledger.ClearStackAck.Insts.CoreFmtDebug : core.fmt.Debug
+  ledger.ClearStackAck := {
+  fmt := ledger.ClearStackAck.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::ClearStackAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 267:29-267:38 -/
+@[reducible]
+def ledger.ClearStackAck.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.ClearStackAck := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::ClearStackAck> for noble_kernel::ledger::ClearStackAck}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 267:29-267:38
+    Visibility: public -/
+def ledger.ClearStackAck.Insts.CoreCmpPartialEqClearStackAck.eq
+  (self : ledger.ClearStackAck) (other : ledger.ClearStackAck) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::ClearStackAck> for noble_kernel::ledger::ClearStackAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 267:29-267:38 -/
+@[reducible]
+impl_def ledger.ClearStackAck.Insts.CoreCmpPartialEqClearStackAck :
+  core.cmp.PartialEq ledger.ClearStackAck ledger.ClearStackAck := {
+  eq := ledger.ClearStackAck.Insts.CoreCmpPartialEqClearStackAck.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.ClearStackAck.Insts.CoreCmpPartialEqClearStackAck
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::ClearStackAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 267:40-267:42 -/
+@[reducible]
+impl_def ledger.ClearStackAck.Insts.CoreCmpEq : core.cmp.Eq
+  ledger.ClearStackAck := {
+  partialEqInst := ledger.ClearStackAck.Insts.CoreCmpPartialEqClearStackAck
+  assert_fields_are_eq := core.cmp.Eq.assert_fields_are_eq.default
+    ledger.ClearStackAck.Insts.CoreCmpEq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::BackendAck}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 277:9-277:14
+    Visibility: public -/
+def ledger.BackendAck.Insts.CoreCloneClone.clone
+  (self : ledger.BackendAck) : Result ledger.BackendAck := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::BackendAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 277:9-277:14 -/
+@[reducible]
+def ledger.BackendAck.Insts.CoreCloneClone : core.clone.Clone ledger.BackendAck
+  := {
+  clone := ledger.BackendAck.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::BackendAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 277:16-277:20 -/
+@[reducible]
+def ledger.BackendAck.Insts.CoreMarkerCopy : core.marker.Copy ledger.BackendAck
+  := {
+  cloneInst := ledger.BackendAck.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::BackendAck}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 277:22-277:27
+    Visibility: public -/
+def ledger.BackendAck.Insts.CoreFmtDebug.fmt
+  (self : ledger.BackendAck) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | ledger.BackendAck.NotAttempted =>
+    core.fmt.Formatter.write_str f (toStr "NotAttempted")
+  | ledger.BackendAck.Succeeded =>
+    core.fmt.Formatter.write_str f (toStr "Succeeded")
+  | ledger.BackendAck.Failed => core.fmt.Formatter.write_str f (toStr "Failed")
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::BackendAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 277:22-277:27 -/
+@[reducible]
+def ledger.BackendAck.Insts.CoreFmtDebug : core.fmt.Debug ledger.BackendAck
+  := {
+  fmt := ledger.BackendAck.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::BackendAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 277:29-277:38 -/
+@[reducible]
+def ledger.BackendAck.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.BackendAck := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::BackendAck> for noble_kernel::ledger::BackendAck}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 277:29-277:38
+    Visibility: public -/
+def ledger.BackendAck.Insts.CoreCmpPartialEqBackendAck.eq
+  (self : ledger.BackendAck) (other : ledger.BackendAck) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::BackendAck> for noble_kernel::ledger::BackendAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 277:29-277:38 -/
+@[reducible]
+impl_def ledger.BackendAck.Insts.CoreCmpPartialEqBackendAck :
+  core.cmp.PartialEq ledger.BackendAck ledger.BackendAck := {
+  eq := ledger.BackendAck.Insts.CoreCmpPartialEqBackendAck.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.BackendAck.Insts.CoreCmpPartialEqBackendAck
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::BackendAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 277:40-277:42 -/
+@[reducible]
+impl_def ledger.BackendAck.Insts.CoreCmpEq : core.cmp.Eq ledger.BackendAck := {
+  partialEqInst := ledger.BackendAck.Insts.CoreCmpPartialEqBackendAck
+  assert_fields_are_eq := core.cmp.Eq.assert_fields_are_eq.default
+    ledger.BackendAck.Insts.CoreCmpEq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::ExitRelease}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 286:9-286:14
+    Visibility: public -/
+def ledger.ExitRelease.Insts.CoreCloneClone.clone
+  (self : ledger.ExitRelease) : Result ledger.ExitRelease := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::ExitRelease}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 286:9-286:14 -/
+@[reducible]
+def ledger.ExitRelease.Insts.CoreCloneClone : core.clone.Clone
+  ledger.ExitRelease := {
+  clone := ledger.ExitRelease.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::ExitRelease}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 286:16-286:20 -/
+@[reducible]
+def ledger.ExitRelease.Insts.CoreMarkerCopy : core.marker.Copy
+  ledger.ExitRelease := {
+  cloneInst := ledger.ExitRelease.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::ExitRelease}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 286:22-286:27
+    Visibility: public -/
+def ledger.ExitRelease.Insts.CoreFmtDebug.fmt
+  (self : ledger.ExitRelease) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | ledger.ExitRelease.Exact => core.fmt.Formatter.write_str f (toStr "Exact")
+  | ledger.ExitRelease.Unproven __self_0 =>
+    let __self_01 :=
+      Dyn.mk _ (core.fmt.DebugShared ledger.UnprovenReason.Insts.CoreFmtDebug)
+        __self_0
+    core.fmt.Formatter.debug_tuple_field1_finish f (toStr "Unproven") __self_01
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::ExitRelease}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 286:22-286:27 -/
+@[reducible]
+def ledger.ExitRelease.Insts.CoreFmtDebug : core.fmt.Debug ledger.ExitRelease
+  := {
+  fmt := ledger.ExitRelease.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::ExitRelease}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 286:29-286:38 -/
+@[reducible]
+def ledger.ExitRelease.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.ExitRelease := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::ExitRelease> for noble_kernel::ledger::ExitRelease}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 286:29-286:38
+    Visibility: public -/
+def ledger.ExitRelease.Insts.CoreCmpPartialEqExitRelease.eq
+  (self : ledger.ExitRelease) (other : ledger.ExitRelease) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  if self1 = other1
+  then
+    match self with
+    | ledger.ExitRelease.Exact => ok true
+    | ledger.ExitRelease.Unproven __self_0 =>
+      match other with
+      | ledger.ExitRelease.Exact => ok true
+      | ledger.ExitRelease.Unproven __arg1_0 =>
+        ledger.UnprovenReason.Insts.CoreCmpPartialEqUnprovenReason.eq __self_0
+          __arg1_0
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::ExitRelease> for noble_kernel::ledger::ExitRelease}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 286:29-286:38 -/
+@[reducible]
+impl_def ledger.ExitRelease.Insts.CoreCmpPartialEqExitRelease :
+  core.cmp.PartialEq ledger.ExitRelease ledger.ExitRelease := {
+  eq := ledger.ExitRelease.Insts.CoreCmpPartialEqExitRelease.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.ExitRelease.Insts.CoreCmpPartialEqExitRelease
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::ExitRelease}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 286:40-286:42
+    Visibility: public -/
+def ledger.ExitRelease.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.ExitRelease) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::ExitRelease}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 286:40-286:42 -/
+@[reducible]
+def ledger.ExitRelease.Insts.CoreCmpEq : core.cmp.Eq ledger.ExitRelease := {
+  partialEqInst := ledger.ExitRelease.Insts.CoreCmpPartialEqExitRelease
+  assert_fields_are_eq :=
+    ledger.ExitRelease.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::SessionState}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 294:9-294:14
+    Visibility: public -/
+def ledger.SessionState.Insts.CoreCloneClone.clone
+  (self : ledger.SessionState) : Result ledger.SessionState := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::SessionState}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 294:9-294:14 -/
+@[reducible]
+def ledger.SessionState.Insts.CoreCloneClone : core.clone.Clone
+  ledger.SessionState := {
+  clone := ledger.SessionState.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::SessionState}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 294:16-294:20 -/
+@[reducible]
+def ledger.SessionState.Insts.CoreMarkerCopy : core.marker.Copy
+  ledger.SessionState := {
+  cloneInst := ledger.SessionState.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::SessionState}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 294:22-294:27
+    Visibility: public -/
+def ledger.SessionState.Insts.CoreFmtDebug.fmt
+  (self : ledger.SessionState) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | ledger.SessionState.Retained =>
+    core.fmt.Formatter.write_str f (toStr "Retained")
+  | ledger.SessionState.TerminatedAfterGuestFailure =>
+    core.fmt.Formatter.write_str f (toStr "TerminatedAfterGuestFailure")
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::SessionState}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 294:22-294:27 -/
+@[reducible]
+def ledger.SessionState.Insts.CoreFmtDebug : core.fmt.Debug ledger.SessionState
+  := {
+  fmt := ledger.SessionState.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::SessionState}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 294:29-294:38 -/
+@[reducible]
+def ledger.SessionState.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.SessionState := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::SessionState> for noble_kernel::ledger::SessionState}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 294:29-294:38
+    Visibility: public -/
+def ledger.SessionState.Insts.CoreCmpPartialEqSessionState.eq
+  (self : ledger.SessionState) (other : ledger.SessionState) :
+  Result Bool
+  := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::SessionState> for noble_kernel::ledger::SessionState}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 294:29-294:38 -/
+@[reducible]
+impl_def ledger.SessionState.Insts.CoreCmpPartialEqSessionState :
+  core.cmp.PartialEq ledger.SessionState ledger.SessionState := {
+  eq := ledger.SessionState.Insts.CoreCmpPartialEqSessionState.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.SessionState.Insts.CoreCmpPartialEqSessionState
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::SessionState}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 294:40-294:42 -/
+@[reducible]
+impl_def ledger.SessionState.Insts.CoreCmpEq : core.cmp.Eq ledger.SessionState
+  := {
+  partialEqInst := ledger.SessionState.Insts.CoreCmpPartialEqSessionState
+  assert_fields_are_eq := core.cmp.Eq.assert_fields_are_eq.default
+    ledger.SessionState.Insts.CoreCmpEq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::FrameTransition}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 302:9-302:14
+    Visibility: public -/
+def ledger.FrameTransition.Insts.CoreCloneClone.clone
+  (self : ledger.FrameTransition) : Result ledger.FrameTransition := do
+  let s ← ledger.Snapshot.Insts.CoreCloneClone.clone self.next
+  let fpc ← ledger.FramePinCounts.Insts.CoreCloneClone.clone self.counts
+  ok { next := s, counts := fpc }
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::FrameTransition}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 302:9-302:14 -/
+@[reducible]
+def ledger.FrameTransition.Insts.CoreCloneClone : core.clone.Clone
+  ledger.FrameTransition := {
+  clone := ledger.FrameTransition.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::FrameTransition}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 302:16-302:21
+    Visibility: public -/
+def ledger.FrameTransition.Insts.CoreFmtDebug.fmt
+  (self : ledger.FrameTransition) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ ledger.Snapshot.Insts.CoreFmtDebug self.next
+  let dyn1 :=
+    Dyn.mk _ (core.fmt.DebugShared ledger.FramePinCounts.Insts.CoreFmtDebug)
+      self.counts
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "FrameTransition")
+    (toStr "next") dyn (toStr "counts") dyn1
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::FrameTransition}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 302:16-302:21 -/
+@[reducible]
+def ledger.FrameTransition.Insts.CoreFmtDebug : core.fmt.Debug
+  ledger.FrameTransition := {
+  fmt := ledger.FrameTransition.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::FrameTransition}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 302:23-302:32 -/
+@[reducible]
+def ledger.FrameTransition.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.FrameTransition := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::FrameTransition> for noble_kernel::ledger::FrameTransition}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 302:23-302:32
+    Visibility: public -/
+def ledger.FrameTransition.Insts.CoreCmpPartialEqFrameTransition.eq
+  (self : ledger.FrameTransition) (other : ledger.FrameTransition) :
+  Result Bool
+  := do
+  let b ←
+    ledger.Snapshot.Insts.CoreCmpPartialEqSnapshot.eq self.next other.next
+  if b
+  then
+    ledger.FramePinCounts.Insts.CoreCmpPartialEqFramePinCounts.eq self.counts
+      other.counts
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::FrameTransition> for noble_kernel::ledger::FrameTransition}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 302:23-302:32 -/
+@[reducible]
+impl_def ledger.FrameTransition.Insts.CoreCmpPartialEqFrameTransition :
+  core.cmp.PartialEq ledger.FrameTransition ledger.FrameTransition := {
+  eq := ledger.FrameTransition.Insts.CoreCmpPartialEqFrameTransition.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.FrameTransition.Insts.CoreCmpPartialEqFrameTransition
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::FrameTransition}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 302:34-302:36
+    Visibility: public -/
+def ledger.FrameTransition.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.FrameTransition) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::FrameTransition}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 302:34-302:36 -/
+@[reducible]
+def ledger.FrameTransition.Insts.CoreCmpEq : core.cmp.Eq ledger.FrameTransition
+  := {
+  partialEqInst := ledger.FrameTransition.Insts.CoreCmpPartialEqFrameTransition
+  assert_fields_are_eq :=
+    ledger.FrameTransition.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::FinishActions}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 309:9-309:14
+    Visibility: public -/
+def ledger.FinishActions.Insts.CoreCloneClone.clone
+  (self : ledger.FinishActions) : Result ledger.FinishActions := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::FinishActions}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 309:9-309:14 -/
+@[reducible]
+def ledger.FinishActions.Insts.CoreCloneClone : core.clone.Clone
+  ledger.FinishActions := {
+  clone := ledger.FinishActions.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::FinishActions}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 309:16-309:20 -/
+@[reducible]
+def ledger.FinishActions.Insts.CoreMarkerCopy : core.marker.Copy
+  ledger.FinishActions := {
+  cloneInst := ledger.FinishActions.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::FinishActions}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 309:22-309:27
+    Visibility: public -/
+def ledger.FinishActions.Insts.CoreFmtDebug.fmt
+  (self : ledger.FinishActions) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ ledger.MapEpoch.Insts.CoreFmtDebug self.retire_map_pin
+  let dyn1 := Dyn.mk _ core.fmt.DebugBool self.retire_root_versions
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugBool)
+      self.sweep_module_retirement
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "FinishActions")
+    (toStr "retire_map_pin") dyn (toStr "retire_root_versions") dyn1 (toStr
+    "sweep_module_retirement") dyn2
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::FinishActions}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 309:22-309:27 -/
+@[reducible]
+def ledger.FinishActions.Insts.CoreFmtDebug : core.fmt.Debug
+  ledger.FinishActions := {
+  fmt := ledger.FinishActions.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::FinishActions}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 309:29-309:38 -/
+@[reducible]
+def ledger.FinishActions.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.FinishActions := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::FinishActions> for noble_kernel::ledger::FinishActions}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 309:29-309:38
+    Visibility: public -/
+def ledger.FinishActions.Insts.CoreCmpPartialEqFinishActions.eq
+  (self : ledger.FinishActions) (other : ledger.FinishActions) :
+  Result Bool
+  := do
+  if self.retire_root_versions = other.retire_root_versions
+  then
+    if self.sweep_module_retirement = other.sweep_module_retirement
+    then
+      ledger.MapEpoch.Insts.CoreCmpPartialEqMapEpoch.eq self.retire_map_pin
+        other.retire_map_pin
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::FinishActions> for noble_kernel::ledger::FinishActions}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 309:29-309:38 -/
+@[reducible]
+impl_def ledger.FinishActions.Insts.CoreCmpPartialEqFinishActions :
+  core.cmp.PartialEq ledger.FinishActions ledger.FinishActions := {
+  eq := ledger.FinishActions.Insts.CoreCmpPartialEqFinishActions.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.FinishActions.Insts.CoreCmpPartialEqFinishActions
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::FinishActions}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 309:40-309:42
+    Visibility: public -/
+def ledger.FinishActions.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.FinishActions) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::FinishActions}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 309:40-309:42 -/
+@[reducible]
+def ledger.FinishActions.Insts.CoreCmpEq : core.cmp.Eq ledger.FinishActions
+  := {
+  partialEqInst := ledger.FinishActions.Insts.CoreCmpPartialEqFinishActions
+  assert_fields_are_eq :=
+    ledger.FinishActions.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::FinishPlan}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 318:9-318:14
+    Visibility: public -/
+def ledger.FinishPlan.Insts.CoreCloneClone.clone
+  (self : ledger.FinishPlan) : Result ledger.FinishPlan := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::FinishPlan}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 318:9-318:14 -/
+@[reducible]
+def ledger.FinishPlan.Insts.CoreCloneClone : core.clone.Clone ledger.FinishPlan
+  := {
+  clone := ledger.FinishPlan.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::FinishPlan}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 318:16-318:20 -/
+@[reducible]
+def ledger.FinishPlan.Insts.CoreMarkerCopy : core.marker.Copy ledger.FinishPlan
+  := {
+  cloneInst := ledger.FinishPlan.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::FinishPlan}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 318:22-318:27
+    Visibility: public -/
+def ledger.FinishPlan.Insts.CoreFmtDebug.fmt
+  (self : ledger.FinishPlan) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ ledger.RootToken.Insts.CoreFmtDebug self.root
+  let dyn1 := Dyn.mk _ ledger.MapEpoch.Insts.CoreFmtDebug self.map_epoch
+  let dyn2 := Dyn.mk _ ledger.FramePinCounts.Insts.CoreFmtDebug self.counts
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugShared ledger.FinishActions.Insts.CoreFmtDebug)
+      self.actions
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "FinishPlan") (toStr
+    "root") dyn (toStr "map_epoch") dyn1 (toStr "counts") dyn2 (toStr
+    "actions") dyn3
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::FinishPlan}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 318:22-318:27 -/
+@[reducible]
+def ledger.FinishPlan.Insts.CoreFmtDebug : core.fmt.Debug ledger.FinishPlan
+  := {
+  fmt := ledger.FinishPlan.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::FinishPlan}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 318:29-318:38 -/
+@[reducible]
+def ledger.FinishPlan.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.FinishPlan := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::FinishPlan> for noble_kernel::ledger::FinishPlan}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 318:29-318:38
+    Visibility: public -/
+def ledger.FinishPlan.Insts.CoreCmpPartialEqFinishPlan.eq
+  (self : ledger.FinishPlan) (other : ledger.FinishPlan) : Result Bool := do
+  let b ←
+    ledger.RootToken.Insts.CoreCmpPartialEqRootToken.eq self.root other.root
+  if b
+  then
+    let b1 ←
+      ledger.MapEpoch.Insts.CoreCmpPartialEqMapEpoch.eq self.map_epoch
+        other.map_epoch
+    if b1
+    then
+      let b2 ←
+        ledger.FramePinCounts.Insts.CoreCmpPartialEqFramePinCounts.eq
+          self.counts other.counts
+      if b2
+      then
+        ledger.FinishActions.Insts.CoreCmpPartialEqFinishActions.eq
+          self.actions other.actions
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::FinishPlan> for noble_kernel::ledger::FinishPlan}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 318:29-318:38 -/
+@[reducible]
+impl_def ledger.FinishPlan.Insts.CoreCmpPartialEqFinishPlan :
+  core.cmp.PartialEq ledger.FinishPlan ledger.FinishPlan := {
+  eq := ledger.FinishPlan.Insts.CoreCmpPartialEqFinishPlan.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.FinishPlan.Insts.CoreCmpPartialEqFinishPlan
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::FinishPlan}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 318:40-318:42
+    Visibility: public -/
+def ledger.FinishPlan.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.FinishPlan) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::FinishPlan}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 318:40-318:42 -/
+@[reducible]
+def ledger.FinishPlan.Insts.CoreCmpEq : core.cmp.Eq ledger.FinishPlan := {
+  partialEqInst := ledger.FinishPlan.Insts.CoreCmpPartialEqFinishPlan
+  assert_fields_are_eq :=
+    ledger.FinishPlan.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{noble_kernel::ledger::FinishPlan}::root]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 327:4-329:5
+    Visibility: public -/
+def ledger.FinishPlan.impl.root
+  (self : ledger.FinishPlan) : Result ledger.RootToken := do
+  ok self.root
+
+/-- [noble_kernel::ledger::{noble_kernel::ledger::FinishPlan}::map_epoch]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 331:4-333:5
+    Visibility: public -/
+def ledger.FinishPlan.impl.map_epoch
+  (self : ledger.FinishPlan) : Result ledger.MapEpoch := do
+  ok self.map_epoch
+
+/-- [noble_kernel::ledger::{noble_kernel::ledger::FinishPlan}::counts]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 335:4-337:5
+    Visibility: public -/
+def ledger.FinishPlan.impl.counts
+  (self : ledger.FinishPlan) : Result ledger.FramePinCounts := do
+  ok self.counts
+
+/-- [noble_kernel::ledger::{noble_kernel::ledger::FinishPlan}::actions]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 339:4-341:5
+    Visibility: public -/
+def ledger.FinishPlan.impl.actions
+  (self : ledger.FinishPlan) : Result ledger.FinishActions := do
+  ok self.actions
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::FinishAck}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 345:9-345:14
+    Visibility: public -/
+def ledger.FinishAck.Insts.CoreCloneClone.clone
+  (self : ledger.FinishAck) : Result ledger.FinishAck := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::FinishAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 345:9-345:14 -/
+@[reducible]
+def ledger.FinishAck.Insts.CoreCloneClone : core.clone.Clone ledger.FinishAck
+  := {
+  clone := ledger.FinishAck.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::FinishAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 345:16-345:20 -/
+@[reducible]
+def ledger.FinishAck.Insts.CoreMarkerCopy : core.marker.Copy ledger.FinishAck
+  := {
+  cloneInst := ledger.FinishAck.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::FinishAck}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 345:22-345:27
+    Visibility: public -/
+def ledger.FinishAck.Insts.CoreFmtDebug.fmt
+  (self : ledger.FinishAck) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ ledger.RootToken.Insts.CoreFmtDebug self.root
+  let dyn1 :=
+    Dyn.mk _ ledger.BackendAck.Insts.CoreFmtDebug self.retire_versions
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared ledger.BackendAck.Insts.CoreFmtDebug)
+      self.sweep_retirement
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "FinishAck") (toStr
+    "root") dyn (toStr "retire_versions") dyn1 (toStr "sweep_retirement") dyn2
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::FinishAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 345:22-345:27 -/
+@[reducible]
+def ledger.FinishAck.Insts.CoreFmtDebug : core.fmt.Debug ledger.FinishAck := {
+  fmt := ledger.FinishAck.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::FinishAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 345:29-345:38 -/
+@[reducible]
+def ledger.FinishAck.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.FinishAck := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::FinishAck> for noble_kernel::ledger::FinishAck}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 345:29-345:38
+    Visibility: public -/
+def ledger.FinishAck.Insts.CoreCmpPartialEqFinishAck.eq
+  (self : ledger.FinishAck) (other : ledger.FinishAck) : Result Bool := do
+  let b ←
+    ledger.RootToken.Insts.CoreCmpPartialEqRootToken.eq self.root other.root
+  if b
+  then
+    let b1 ←
+      ledger.BackendAck.Insts.CoreCmpPartialEqBackendAck.eq
+        self.retire_versions other.retire_versions
+    if b1
+    then
+      ledger.BackendAck.Insts.CoreCmpPartialEqBackendAck.eq
+        self.sweep_retirement other.sweep_retirement
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::FinishAck> for noble_kernel::ledger::FinishAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 345:29-345:38 -/
+@[reducible]
+impl_def ledger.FinishAck.Insts.CoreCmpPartialEqFinishAck : core.cmp.PartialEq
+  ledger.FinishAck ledger.FinishAck := {
+  eq := ledger.FinishAck.Insts.CoreCmpPartialEqFinishAck.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.FinishAck.Insts.CoreCmpPartialEqFinishAck
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::FinishAck}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 345:40-345:42
+    Visibility: public -/
+def ledger.FinishAck.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.FinishAck) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::FinishAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 345:40-345:42 -/
+@[reducible]
+def ledger.FinishAck.Insts.CoreCmpEq : core.cmp.Eq ledger.FinishAck := {
+  partialEqInst := ledger.FinishAck.Insts.CoreCmpPartialEqFinishAck
+  assert_fields_are_eq := ledger.FinishAck.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::FinishOutcome}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 353:9-353:14
+    Visibility: public -/
+def ledger.FinishOutcome.Insts.CoreCloneClone.clone
+  (self : ledger.FinishOutcome) : Result ledger.FinishOutcome := do
+  let s ← ledger.Snapshot.Insts.CoreCloneClone.clone self.next
+  let fpc ← ledger.FramePinCounts.Insts.CoreCloneClone.clone self.counts
+  let er ← ledger.ExitRelease.Insts.CoreCloneClone.clone self.exit_release
+  let ss ← ledger.SessionState.Insts.CoreCloneClone.clone self.session_state
+  ok { next := s, counts := fpc, exit_release := er, session_state := ss }
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::FinishOutcome}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 353:9-353:14 -/
+@[reducible]
+def ledger.FinishOutcome.Insts.CoreCloneClone : core.clone.Clone
+  ledger.FinishOutcome := {
+  clone := ledger.FinishOutcome.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::FinishOutcome}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 353:16-353:21
+    Visibility: public -/
+def ledger.FinishOutcome.Insts.CoreFmtDebug.fmt
+  (self : ledger.FinishOutcome) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ ledger.Snapshot.Insts.CoreFmtDebug self.next
+  let dyn1 := Dyn.mk _ ledger.FramePinCounts.Insts.CoreFmtDebug self.counts
+  let dyn2 := Dyn.mk _ ledger.ExitRelease.Insts.CoreFmtDebug self.exit_release
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugShared ledger.SessionState.Insts.CoreFmtDebug)
+      self.session_state
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "FinishOutcome")
+    (toStr "next") dyn (toStr "counts") dyn1 (toStr "exit_release") dyn2 (toStr
+    "session_state") dyn3
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::FinishOutcome}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 353:16-353:21 -/
+@[reducible]
+def ledger.FinishOutcome.Insts.CoreFmtDebug : core.fmt.Debug
+  ledger.FinishOutcome := {
+  fmt := ledger.FinishOutcome.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::FinishOutcome}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 353:23-353:32 -/
+@[reducible]
+def ledger.FinishOutcome.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.FinishOutcome := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::FinishOutcome> for noble_kernel::ledger::FinishOutcome}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 353:23-353:32
+    Visibility: public -/
+def ledger.FinishOutcome.Insts.CoreCmpPartialEqFinishOutcome.eq
+  (self : ledger.FinishOutcome) (other : ledger.FinishOutcome) :
+  Result Bool
+  := do
+  let b ←
+    ledger.Snapshot.Insts.CoreCmpPartialEqSnapshot.eq self.next other.next
+  if b
+  then
+    let b1 ←
+      ledger.FramePinCounts.Insts.CoreCmpPartialEqFramePinCounts.eq self.counts
+        other.counts
+    if b1
+    then
+      let b2 ←
+        ledger.ExitRelease.Insts.CoreCmpPartialEqExitRelease.eq
+          self.exit_release other.exit_release
+      if b2
+      then
+        ledger.SessionState.Insts.CoreCmpPartialEqSessionState.eq
+          self.session_state other.session_state
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::FinishOutcome> for noble_kernel::ledger::FinishOutcome}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 353:23-353:32 -/
+@[reducible]
+impl_def ledger.FinishOutcome.Insts.CoreCmpPartialEqFinishOutcome :
+  core.cmp.PartialEq ledger.FinishOutcome ledger.FinishOutcome := {
+  eq := ledger.FinishOutcome.Insts.CoreCmpPartialEqFinishOutcome.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.FinishOutcome.Insts.CoreCmpPartialEqFinishOutcome
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::FinishOutcome}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 353:34-353:36
+    Visibility: public -/
+def ledger.FinishOutcome.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.FinishOutcome) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::FinishOutcome}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 353:34-353:36 -/
+@[reducible]
+def ledger.FinishOutcome.Insts.CoreCmpEq : core.cmp.Eq ledger.FinishOutcome
+  := {
+  partialEqInst := ledger.FinishOutcome.Insts.CoreCmpPartialEqFinishOutcome
+  assert_fields_are_eq :=
+    ledger.FinishOutcome.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::AbortActions}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 362:9-362:14
+    Visibility: public -/
+def ledger.AbortActions.Insts.CoreCloneClone.clone
+  (self : ledger.AbortActions) : Result ledger.AbortActions := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::AbortActions}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 362:9-362:14 -/
+@[reducible]
+def ledger.AbortActions.Insts.CoreCloneClone : core.clone.Clone
+  ledger.AbortActions := {
+  clone := ledger.AbortActions.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::AbortActions}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 362:16-362:20 -/
+@[reducible]
+def ledger.AbortActions.Insts.CoreMarkerCopy : core.marker.Copy
+  ledger.AbortActions := {
+  cloneInst := ledger.AbortActions.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::AbortActions}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 362:22-362:27
+    Visibility: public -/
+def ledger.AbortActions.Insts.CoreFmtDebug.fmt
+  (self : ledger.AbortActions) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugBool self.clear_operand_stack
+  let dyn1 := Dyn.mk _ ledger.MapEpoch.Insts.CoreFmtDebug self.retire_map_pin
+  let dyn2 := Dyn.mk _ core.fmt.DebugBool self.retire_aborted_root_versions
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugShared core.fmt.DebugBool)
+      self.sweep_module_retirement
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "AbortActions") (toStr
+    "clear_operand_stack") dyn (toStr "retire_map_pin") dyn1 (toStr
+    "retire_aborted_root_versions") dyn2 (toStr "sweep_module_retirement") dyn3
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::AbortActions}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 362:22-362:27 -/
+@[reducible]
+def ledger.AbortActions.Insts.CoreFmtDebug : core.fmt.Debug ledger.AbortActions
+  := {
+  fmt := ledger.AbortActions.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::AbortActions}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 362:29-362:38 -/
+@[reducible]
+def ledger.AbortActions.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.AbortActions := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::AbortActions> for noble_kernel::ledger::AbortActions}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 362:29-362:38
+    Visibility: public -/
+def ledger.AbortActions.Insts.CoreCmpPartialEqAbortActions.eq
+  (self : ledger.AbortActions) (other : ledger.AbortActions) :
+  Result Bool
+  := do
+  if self.clear_operand_stack = other.clear_operand_stack
+  then
+    if self.retire_aborted_root_versions = other.retire_aborted_root_versions
+    then
+      if self.sweep_module_retirement = other.sweep_module_retirement
+      then
+        ledger.MapEpoch.Insts.CoreCmpPartialEqMapEpoch.eq self.retire_map_pin
+          other.retire_map_pin
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::AbortActions> for noble_kernel::ledger::AbortActions}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 362:29-362:38 -/
+@[reducible]
+impl_def ledger.AbortActions.Insts.CoreCmpPartialEqAbortActions :
+  core.cmp.PartialEq ledger.AbortActions ledger.AbortActions := {
+  eq := ledger.AbortActions.Insts.CoreCmpPartialEqAbortActions.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.AbortActions.Insts.CoreCmpPartialEqAbortActions
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::AbortActions}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 362:40-362:42
+    Visibility: public -/
+def ledger.AbortActions.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.AbortActions) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::AbortActions}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 362:40-362:42 -/
+@[reducible]
+def ledger.AbortActions.Insts.CoreCmpEq : core.cmp.Eq ledger.AbortActions := {
+  partialEqInst := ledger.AbortActions.Insts.CoreCmpPartialEqAbortActions
+  assert_fields_are_eq :=
+    ledger.AbortActions.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::AbortPlan}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 379:9-379:14
+    Visibility: public -/
+def ledger.AbortPlan.Insts.CoreCloneClone.clone
+  (self : ledger.AbortPlan) : Result ledger.AbortPlan := do
+  let rt ← ledger.RootToken.Insts.CoreCloneClone.clone self.root
+  let me ← ledger.MapEpoch.Insts.CoreCloneClone.clone self.map_epoch
+  let fpc ← ledger.FramePinCounts.Insts.CoreCloneClone.clone self.counts
+  let v ←
+    alloc.vec.CloneVec.clone ledger.FrameToken.Insts.CoreCloneClone
+      self.released_frames
+  let aa ← ledger.AbortActions.Insts.CoreCloneClone.clone self.actions
+  let o ←
+    core.option.Option.Insts.CoreCloneClone.clone
+      ledger.UnprovenReason.Insts.CoreCloneClone self.plan_unproven
+  ok
+    {
+      root := rt,
+      map_epoch := me,
+      counts := fpc,
+      released_frames := v,
+      actions := aa,
+      plan_unproven := o
+    }
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::AbortPlan}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 379:9-379:14 -/
+@[reducible]
+def ledger.AbortPlan.Insts.CoreCloneClone : core.clone.Clone ledger.AbortPlan
+  := {
+  clone := ledger.AbortPlan.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::AbortPlan}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 379:16-379:21
+    Visibility: public -/
+def ledger.AbortPlan.Insts.CoreFmtDebug.fmt
+  (self : ledger.AbortPlan) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ ledger.RootToken.Insts.CoreFmtDebug self.root
+  let dyn1 := Dyn.mk _ ledger.MapEpoch.Insts.CoreFmtDebug self.map_epoch
+  let dyn2 := Dyn.mk _ ledger.FramePinCounts.Insts.CoreFmtDebug self.counts
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugVec ledger.FrameToken.Insts.CoreFmtDebug)
+      self.released_frames
+  let dyn4 := Dyn.mk _ ledger.AbortActions.Insts.CoreFmtDebug self.actions
+  let dyn5 :=
+    Dyn.mk _ (core.fmt.DebugShared (core.option.Option.Insts.CoreFmtDebug
+      ledger.UnprovenReason.Insts.CoreFmtDebug)) self.plan_unproven
+  let values :=
+    Array.to_slice (Array.make 6#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5 ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 6#usize [
+        toStr "root", toStr "map_epoch", toStr "counts", toStr
+        "released_frames", toStr "actions", toStr "plan_unproven"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "AbortPlan") s values
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::AbortPlan}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 379:16-379:21 -/
+@[reducible]
+def ledger.AbortPlan.Insts.CoreFmtDebug : core.fmt.Debug ledger.AbortPlan := {
+  fmt := ledger.AbortPlan.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::AbortPlan}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 379:23-379:32 -/
+@[reducible]
+def ledger.AbortPlan.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.AbortPlan := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::AbortPlan> for noble_kernel::ledger::AbortPlan}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 379:23-379:32
+    Visibility: public -/
+def ledger.AbortPlan.Insts.CoreCmpPartialEqAbortPlan.eq
+  (self : ledger.AbortPlan) (other : ledger.AbortPlan) : Result Bool := do
+  let b ←
+    ledger.RootToken.Insts.CoreCmpPartialEqRootToken.eq self.root other.root
+  if b
+  then
+    let b1 ←
+      ledger.MapEpoch.Insts.CoreCmpPartialEqMapEpoch.eq self.map_epoch
+        other.map_epoch
+    if b1
+    then
+      let b2 ←
+        ledger.FramePinCounts.Insts.CoreCmpPartialEqFramePinCounts.eq
+          self.counts other.counts
+      if b2
+      then
+        let b3 ←
+          alloc.vec.partial_eq.PartialEqVec.eq
+            ledger.FrameToken.Insts.CoreCmpPartialEqFrameToken
+            self.released_frames other.released_frames
+        if b3
+        then
+          let b4 ←
+            ledger.AbortActions.Insts.CoreCmpPartialEqAbortActions.eq
+              self.actions other.actions
+          if b4
+          then
+            core.option.Option.Insts.CoreCmpPartialEqOption.eq
+              ledger.UnprovenReason.Insts.CoreCmpPartialEqUnprovenReason
+              self.plan_unproven other.plan_unproven
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::AbortPlan> for noble_kernel::ledger::AbortPlan}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 379:23-379:32 -/
+@[reducible]
+impl_def ledger.AbortPlan.Insts.CoreCmpPartialEqAbortPlan : core.cmp.PartialEq
+  ledger.AbortPlan ledger.AbortPlan := {
+  eq := ledger.AbortPlan.Insts.CoreCmpPartialEqAbortPlan.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.AbortPlan.Insts.CoreCmpPartialEqAbortPlan
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::AbortPlan}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 379:34-379:36
+    Visibility: public -/
+def ledger.AbortPlan.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.AbortPlan) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::AbortPlan}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 379:34-379:36 -/
+@[reducible]
+def ledger.AbortPlan.Insts.CoreCmpEq : core.cmp.Eq ledger.AbortPlan := {
+  partialEqInst := ledger.AbortPlan.Insts.CoreCmpPartialEqAbortPlan
+  assert_fields_are_eq := ledger.AbortPlan.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{noble_kernel::ledger::AbortPlan}::root]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 390:4-392:5
+    Visibility: public -/
+def ledger.AbortPlan.impl.root
+  (self : ledger.AbortPlan) : Result ledger.RootToken := do
+  ok self.root
+
+/-- [noble_kernel::ledger::{noble_kernel::ledger::AbortPlan}::map_epoch]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 394:4-396:5
+    Visibility: public -/
+def ledger.AbortPlan.impl.map_epoch
+  (self : ledger.AbortPlan) : Result ledger.MapEpoch := do
+  ok self.map_epoch
+
+/-- [noble_kernel::ledger::{noble_kernel::ledger::AbortPlan}::counts]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 398:4-400:5
+    Visibility: public -/
+def ledger.AbortPlan.impl.counts
+  (self : ledger.AbortPlan) : Result ledger.FramePinCounts := do
+  ok self.counts
+
+/-- [noble_kernel::ledger::{noble_kernel::ledger::AbortPlan}::actions]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 402:4-404:5
+    Visibility: public -/
+def ledger.AbortPlan.impl.actions
+  (self : ledger.AbortPlan) : Result ledger.AbortActions := do
+  ok self.actions
+
+/-- [noble_kernel::ledger::{noble_kernel::ledger::AbortPlan}::plan_unproven]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 406:4-408:5
+    Visibility: public -/
+def ledger.AbortPlan.impl.plan_unproven
+  (self : ledger.AbortPlan) : Result (Option ledger.UnprovenReason) := do
+  ok self.plan_unproven
+
+/-- [noble_kernel::ledger::{noble_kernel::ledger::AbortPlan}::released_frames]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 412:4-414:5
+    Visibility: public -/
+def ledger.AbortPlan.impl.released_frames
+  (self : ledger.AbortPlan) : Result (Slice ledger.FrameToken) := do
+  alloc.vec.Vec.as_slice Global self.released_frames
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::AbortAck}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 418:9-418:14
+    Visibility: public -/
+def ledger.AbortAck.Insts.CoreCloneClone.clone
+  (self : ledger.AbortAck) : Result ledger.AbortAck := do
+  ok self
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::AbortAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 418:9-418:14 -/
+@[reducible]
+def ledger.AbortAck.Insts.CoreCloneClone : core.clone.Clone ledger.AbortAck
+  := {
+  clone := ledger.AbortAck.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::Copy for noble_kernel::ledger::AbortAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 418:16-418:20 -/
+@[reducible]
+def ledger.AbortAck.Insts.CoreMarkerCopy : core.marker.Copy ledger.AbortAck
+  := {
+  cloneInst := ledger.AbortAck.Insts.CoreCloneClone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::AbortAck}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 418:22-418:27
+    Visibility: public -/
+def ledger.AbortAck.Insts.CoreFmtDebug.fmt
+  (self : ledger.AbortAck) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ ledger.RootToken.Insts.CoreFmtDebug self.root
+  let dyn1 := Dyn.mk _ ledger.ClearStackAck.Insts.CoreFmtDebug self.clear_stack
+  let dyn2 :=
+    Dyn.mk _ ledger.BackendAck.Insts.CoreFmtDebug self.retire_versions
+  let dyn3 :=
+    Dyn.mk _ (core.fmt.DebugShared ledger.BackendAck.Insts.CoreFmtDebug)
+      self.sweep_retirement
+  core.fmt.Formatter.debug_struct_field4_finish f (toStr "AbortAck") (toStr
+    "root") dyn (toStr "clear_stack") dyn1 (toStr "retire_versions") dyn2
+    (toStr "sweep_retirement") dyn3
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::AbortAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 418:22-418:27 -/
+@[reducible]
+def ledger.AbortAck.Insts.CoreFmtDebug : core.fmt.Debug ledger.AbortAck := {
+  fmt := ledger.AbortAck.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::AbortAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 418:29-418:38 -/
+@[reducible]
+def ledger.AbortAck.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.AbortAck := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::AbortAck> for noble_kernel::ledger::AbortAck}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 418:29-418:38
+    Visibility: public -/
+def ledger.AbortAck.Insts.CoreCmpPartialEqAbortAck.eq
+  (self : ledger.AbortAck) (other : ledger.AbortAck) : Result Bool := do
+  let b ←
+    ledger.RootToken.Insts.CoreCmpPartialEqRootToken.eq self.root other.root
+  if b
+  then
+    let b1 ←
+      ledger.ClearStackAck.Insts.CoreCmpPartialEqClearStackAck.eq
+        self.clear_stack other.clear_stack
+    if b1
+    then
+      let b2 ←
+        ledger.BackendAck.Insts.CoreCmpPartialEqBackendAck.eq
+          self.retire_versions other.retire_versions
+      if b2
+      then
+        ledger.BackendAck.Insts.CoreCmpPartialEqBackendAck.eq
+          self.sweep_retirement other.sweep_retirement
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::AbortAck> for noble_kernel::ledger::AbortAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 418:29-418:38 -/
+@[reducible]
+impl_def ledger.AbortAck.Insts.CoreCmpPartialEqAbortAck : core.cmp.PartialEq
+  ledger.AbortAck ledger.AbortAck := {
+  eq := ledger.AbortAck.Insts.CoreCmpPartialEqAbortAck.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.AbortAck.Insts.CoreCmpPartialEqAbortAck
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::AbortAck}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 418:40-418:42
+    Visibility: public -/
+def ledger.AbortAck.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.AbortAck) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::AbortAck}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 418:40-418:42 -/
+@[reducible]
+def ledger.AbortAck.Insts.CoreCmpEq : core.cmp.Eq ledger.AbortAck := {
+  partialEqInst := ledger.AbortAck.Insts.CoreCmpPartialEqAbortAck
+  assert_fields_are_eq := ledger.AbortAck.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::AbortOutcome}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 427:9-427:14
+    Visibility: public -/
+def ledger.AbortOutcome.Insts.CoreCloneClone.clone
+  (self : ledger.AbortOutcome) : Result ledger.AbortOutcome := do
+  let s ← ledger.Snapshot.Insts.CoreCloneClone.clone self.next
+  let fpc ← ledger.FramePinCounts.Insts.CoreCloneClone.clone self.counts
+  let v ←
+    alloc.vec.CloneVec.clone ledger.FrameToken.Insts.CoreCloneClone
+      self.released_frames
+  let er ← ledger.ExitRelease.Insts.CoreCloneClone.clone self.exit_release
+  let ss ← ledger.SessionState.Insts.CoreCloneClone.clone self.session_state
+  ok
+    {
+      next := s,
+      counts := fpc,
+      released_frames := v,
+      exit_release := er,
+      session_state := ss
+    }
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::AbortOutcome}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 427:9-427:14 -/
+@[reducible]
+def ledger.AbortOutcome.Insts.CoreCloneClone : core.clone.Clone
+  ledger.AbortOutcome := {
+  clone := ledger.AbortOutcome.Insts.CoreCloneClone.clone
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::AbortOutcome}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 427:16-427:21
+    Visibility: public -/
+def ledger.AbortOutcome.Insts.CoreFmtDebug.fmt
+  (self : ledger.AbortOutcome) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ ledger.Snapshot.Insts.CoreFmtDebug self.next
+  let dyn1 := Dyn.mk _ ledger.FramePinCounts.Insts.CoreFmtDebug self.counts
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugVec ledger.FrameToken.Insts.CoreFmtDebug)
+      self.released_frames
+  let dyn3 := Dyn.mk _ ledger.ExitRelease.Insts.CoreFmtDebug self.exit_release
+  let dyn4 :=
+    Dyn.mk _ (core.fmt.DebugShared ledger.SessionState.Insts.CoreFmtDebug)
+      self.session_state
+  core.fmt.Formatter.debug_struct_field5_finish f (toStr "AbortOutcome") (toStr
+    "next") dyn (toStr "counts") dyn1 (toStr "released_frames") dyn2 (toStr
+    "exit_release") dyn3 (toStr "session_state") dyn4
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::AbortOutcome}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 427:16-427:21 -/
+@[reducible]
+def ledger.AbortOutcome.Insts.CoreFmtDebug : core.fmt.Debug ledger.AbortOutcome
+  := {
+  fmt := ledger.AbortOutcome.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::AbortOutcome}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 427:23-427:32 -/
+@[reducible]
+def ledger.AbortOutcome.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq ledger.AbortOutcome := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::AbortOutcome> for noble_kernel::ledger::AbortOutcome}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 427:23-427:32
+    Visibility: public -/
+def ledger.AbortOutcome.Insts.CoreCmpPartialEqAbortOutcome.eq
+  (self : ledger.AbortOutcome) (other : ledger.AbortOutcome) :
+  Result Bool
+  := do
+  let b ←
+    ledger.Snapshot.Insts.CoreCmpPartialEqSnapshot.eq self.next other.next
+  if b
+  then
+    let b1 ←
+      ledger.FramePinCounts.Insts.CoreCmpPartialEqFramePinCounts.eq self.counts
+        other.counts
+    if b1
+    then
+      let b2 ←
+        alloc.vec.partial_eq.PartialEqVec.eq
+          ledger.FrameToken.Insts.CoreCmpPartialEqFrameToken
+          self.released_frames other.released_frames
+      if b2
+      then
+        let b3 ←
+          ledger.ExitRelease.Insts.CoreCmpPartialEqExitRelease.eq
+            self.exit_release other.exit_release
+        if b3
+        then
+          ledger.SessionState.Insts.CoreCmpPartialEqSessionState.eq
+            self.session_state other.session_state
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::AbortOutcome> for noble_kernel::ledger::AbortOutcome}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 427:23-427:32 -/
+@[reducible]
+impl_def ledger.AbortOutcome.Insts.CoreCmpPartialEqAbortOutcome :
+  core.cmp.PartialEq ledger.AbortOutcome ledger.AbortOutcome := {
+  eq := ledger.AbortOutcome.Insts.CoreCmpPartialEqAbortOutcome.eq
+  ne := core.cmp.PartialEq.ne.trait_default
+    ledger.AbortOutcome.Insts.CoreCmpPartialEqAbortOutcome
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::AbortOutcome}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 427:34-427:36
+    Visibility: public -/
+def ledger.AbortOutcome.Insts.CoreCmpEq.assert_fields_are_eq
+  (self : ledger.AbortOutcome) : Result Unit := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::AbortOutcome}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 427:34-427:36 -/
+@[reducible]
+def ledger.AbortOutcome.Insts.CoreCmpEq : core.cmp.Eq ledger.AbortOutcome := {
+  partialEqInst := ledger.AbortOutcome.Insts.CoreCmpPartialEqAbortOutcome
+  assert_fields_are_eq :=
+    ledger.AbortOutcome.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::RejectedAck<T>}::clone]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 438:9-438:14
+    Visibility: public -/
+def ledger.RejectedAck.Insts.CoreCloneClone.clone
+  {T : Type _} (corecloneCloneInst : core.clone.Clone T)
+  (self : ledger.RejectedAck T) :
+  Result (ledger.RejectedAck T)
+  := do
+  let e ← ledger.Error.Insts.CoreCloneClone.clone self.error
+  let t ← corecloneCloneInst.clone self.plan
+  ok { error := e, plan := t }
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::clone::Clone for noble_kernel::ledger::RejectedAck<T>}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 438:9-438:14 -/
+@[reducible]
+def ledger.RejectedAck.Insts.CoreCloneClone {T : Type _} (corecloneCloneInst :
+  core.clone.Clone T) : core.clone.Clone (ledger.RejectedAck T) := {
+  clone := ledger.RejectedAck.Insts.CoreCloneClone.clone corecloneCloneInst
+}
+
+/-- [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::RejectedAck<T>}::fmt]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 438:16-438:21
+    Visibility: public -/
+def ledger.RejectedAck.Insts.CoreFmtDebug.fmt
+  {T : Type _} (corefmtDebugInst : core.fmt.Debug T)
+  (self : ledger.RejectedAck T) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ ledger.Error.Insts.CoreFmtDebug self.error
+  let dyn1 := Dyn.mk _ (core.fmt.DebugShared corefmtDebugInst) self.plan
+  core.fmt.Formatter.debug_struct_field2_finish f (toStr "RejectedAck") (toStr
+    "error") dyn (toStr "plan") dyn1
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::fmt::Debug for noble_kernel::ledger::RejectedAck<T>}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 438:16-438:21 -/
+@[reducible]
+def ledger.RejectedAck.Insts.CoreFmtDebug {T : Type _} (corefmtDebugInst :
+  core.fmt.Debug T) : core.fmt.Debug (ledger.RejectedAck T) := {
+  fmt := ledger.RejectedAck.Insts.CoreFmtDebug.fmt corefmtDebugInst
+}
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::marker::StructuralPartialEq for noble_kernel::ledger::RejectedAck<T>}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 438:23-438:32 -/
+@[reducible]
+def ledger.RejectedAck.Insts.CoreMarkerStructuralPartialEq {T : Type _}
+  (corecmpPartialEqInst : core.cmp.PartialEq T T) :
+  core.marker.StructuralPartialEq (ledger.RejectedAck T) := {
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::RejectedAck<T>> for noble_kernel::ledger::RejectedAck<T>}::eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 438:23-438:32
+    Visibility: public -/
+def ledger.RejectedAck.Insts.CoreCmpPartialEqRejectedAck.eq
+  {T : Type _} (corecmpPartialEqInst : core.cmp.PartialEq T T)
+  (self : ledger.RejectedAck T) (other : ledger.RejectedAck T) :
+  Result Bool
+  := do
+  let b ← ledger.Error.Insts.CoreCmpPartialEqError.eq self.error other.error
+  if b
+  then corecmpPartialEqInst.eq self.plan other.plan
+  else ok false
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::PartialEq<noble_kernel::ledger::RejectedAck<T>> for noble_kernel::ledger::RejectedAck<T>}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 438:23-438:32 -/
+@[reducible]
+impl_def ledger.RejectedAck.Insts.CoreCmpPartialEqRejectedAck {T : Type _}
+  (corecmpPartialEqInst : core.cmp.PartialEq T T) : core.cmp.PartialEq
+  (ledger.RejectedAck T) (ledger.RejectedAck T) := {
+  eq := ledger.RejectedAck.Insts.CoreCmpPartialEqRejectedAck.eq
+    corecmpPartialEqInst
+  ne := core.cmp.PartialEq.ne.trait_default
+    (ledger.RejectedAck.Insts.CoreCmpPartialEqRejectedAck corecmpPartialEqInst)
+}
+
+/-- [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::RejectedAck<T>}::assert_fields_are_eq]:
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 438:34-438:36
+    Visibility: public -/
+def ledger.RejectedAck.Insts.CoreCmpEq.assert_fields_are_eq
+  {T : Type _} (corecmpEqInst : core.cmp.Eq T) (self : ledger.RejectedAck T) :
+  Result Unit
+  := do
+  ok ()
+
+/-- Trait implementation: [noble_kernel::ledger::{impl core::cmp::Eq for noble_kernel::ledger::RejectedAck<T>}]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 438:34-438:36 -/
+@[reducible]
+def ledger.RejectedAck.Insts.CoreCmpEq {T : Type _} (corecmpEqInst :
+  core.cmp.Eq T) : core.cmp.Eq (ledger.RejectedAck T) := {
+  partialEqInst := ledger.RejectedAck.Insts.CoreCmpPartialEqRejectedAck
+    corecmpEqInst.partialEqInst
+  assert_fields_are_eq :=
+    ledger.RejectedAck.Insts.CoreCmpEq.assert_fields_are_eq corecmpEqInst
+}
+
+/-- [noble_kernel::ledger::transition::classify_guest]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 5:0-22:1
+    Visibility: public -/
+def ledger.transition.classify_guest
+  (observation : ledger.GuestObservation) : Result ledger.GuestSettlement := do
+  if observation.guest_faulted
+  then
+    ok (ledger.GuestSettlement.Unsettled
+      ledger.UnprovenReason.GuestCallInterrupted)
+  else
+    if observation.failure_flag != 0#u32
+    then
+      ok (ledger.GuestSettlement.Unsettled
+        ledger.UnprovenReason.GuestFailureRecorded)
+    else
+      if observation.continuation_depth != 0#u32
+      then
+        ok (ledger.GuestSettlement.Unsettled
+          ledger.UnprovenReason.GuestWorkOpen)
+      else
+        if observation.reflection_depth != 0#u32
+        then
+          ok (ledger.GuestSettlement.Unsettled
+            ledger.UnprovenReason.GuestWorkOpen)
+        else
+          if observation.dispatch_flag != 0#u32
+          then
+            ok (ledger.GuestSettlement.Unsettled
+              ledger.UnprovenReason.GuestWorkOpen)
+          else
+            if observation.current_frame_ptr != 0#u32
+            then
+              ok (ledger.GuestSettlement.Unsettled
+                ledger.UnprovenReason.GuestInsideBorrowedFrame)
+            else
+              if observation.live_frame_token != 0#u32
+              then
+                ok (ledger.GuestSettlement.Unsettled
+                  ledger.UnprovenReason.GuestInsideBorrowedFrame)
+              else ok ledger.GuestSettlement.Settled
+
+/-- [noble_kernel::ledger::transition::validate_frame_stack]: loop body 0:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 472:4-484:1 -/
+@[rust_loop_body]
+def ledger.transition.validate_frame_stack_loop.body
+  (frames : Slice ledger.FrameToken) (previous : Std.U32) (index : Std.Usize) :
+  Result (ControlFlow (Std.U32 × Std.Usize) (core.result.Result Unit
+    ledger.Error))
+  := do
+  let i := Slice.len frames
+  if index < i
+  then
+    let ft ← Slice.index_usize frames index
+    if ft = 0#u32
+    then ok (done (core.result.Result.Err ledger.Error.InvalidFrameToken))
+    else
+      if ft <= previous
+      then
+        ok (done (core.result.Result.Err
+          ledger.Error.DuplicateOrUnorderedFrame))
+      else let index1 ← index + 1#usize
+           ok (cont (ft, index1))
+  else ok (done (core.result.Result.Ok ()))
+
+/-- [noble_kernel::ledger::transition::validate_frame_stack]: loop 0:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 472:4-484:1 -/
+@[rust_loop]
+def ledger.transition.validate_frame_stack_loop
+  (frames : Slice ledger.FrameToken) (previous : Std.U32) (index : Std.Usize) :
+  Result (core.result.Result Unit ledger.Error)
+  := do
+  loop
+    (fun (previous1, index1) =>
+      ledger.transition.validate_frame_stack_loop.body frames previous1 index1)
+    (previous, index)
+
+/-- [noble_kernel::ledger::transition::validate_frame_stack]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 469:0-484:1 -/
+@[reducible]
+def ledger.transition.validate_frame_stack
+  (frames : Slice ledger.FrameToken) :
+  Result (core.result.Result Unit ledger.Error)
+  := do
+  ledger.transition.validate_frame_stack_loop frames 0#u32 0#usize
+
+/-- [noble_kernel::ledger::transition::validate_active_root]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 435:0-467:1 -/
+def ledger.transition.validate_active_root
+  (snapshot : ledger.Snapshot) (claim_root : ledger.RootToken) :
+  Result (core.result.Result Std.U32 ledger.Error)
+  := do
+  let b ←
+    match snapshot.session with
+    | ledger.SessionHealth.Healthy => ok false
+    | ledger.SessionHealth.Poisoned => ok true
+  if b
+  then ok (core.result.Result.Err ledger.Error.SessionPoisoned)
+  else
+    let i := snapshot.root
+    if i = 0#u64
+    then ok (core.result.Result.Err ledger.Error.InvalidRootToken)
+    else
+      if claim_root = 0#u64
+      then ok (core.result.Result.Err ledger.Error.InvalidRootToken)
+      else
+        if i != claim_root
+        then ok (core.result.Result.Err ledger.Error.ForeignRoot)
+        else
+          let b1 ←
+            match snapshot.status with
+            | ledger.RootStatus.Active => ok true
+            | ledger.RootStatus.Finished => ok false
+            | ledger.RootStatus.Aborted => ok false
+          if b1
+          then
+            let o ← lift (U32.checked_sub snapshot.entered snapshot.released)
+            match o with
+            | none => ok (core.result.Result.Err ledger.Error.MalformedCounts)
+            | some value =>
+              let i1 := alloc.vec.Vec.len snapshot.frames
+              let r ←
+                core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from i1
+              match r with
+              | core.result.Result.Ok value1 =>
+                if value1 > ledger.MAX_ACTIVE_FRAMES
+                then
+                  ok (core.result.Result.Err ledger.Error.FrameBoundExceeded)
+                else
+                  if value > ledger.MAX_ACTIVE_FRAMES
+                  then
+                    ok (core.result.Result.Err ledger.Error.FrameBoundExceeded)
+                  else
+                    if value1 != value
+                    then
+                      ok (core.result.Result.Err ledger.Error.MalformedCounts)
+                    else
+                      let s ← alloc.vec.Vec.as_slice Global snapshot.frames
+                      let r1 ← ledger.transition.validate_frame_stack s
+                      match r1 with
+                      | core.result.Result.Ok _ =>
+                        ok (core.result.Result.Ok value)
+                      | core.result.Result.Err failure =>
+                        ok (core.result.Result.Err failure)
+              | core.result.Result.Err _ =>
+                ok (core.result.Result.Err ledger.Error.FrameBoundExceeded)
+          else ok (core.result.Result.Err ledger.Error.InactiveRoot)
+
+/-- [noble_kernel::ledger::transition::frame_pin_counts]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 25:0-36:1
+    Visibility: public -/
+def ledger.transition.frame_pin_counts
+  (snapshot : ledger.Snapshot) (claim_root : ledger.RootToken) :
+  Result (core.result.Result ledger.FramePinCounts ledger.Error)
+  := do
+  let r ← ledger.transition.validate_active_root snapshot claim_root
+  match r with
+  | core.result.Result.Ok value =>
+    ok (core.result.Result.Ok
+      {
+        entered := snapshot.entered,
+        released := snapshot.released,
+        active := value,
+        released_on_abort := 0#u32
+      })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::ledger::transition::copy_frame_prefix]: loop body 0:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 497:4-500:5 -/
+@[rust_loop_body]
+def ledger.transition.copy_frame_prefix_loop.body
+  (frames : Slice ledger.FrameToken) (prefix_len : Std.Usize)
+  (result : alloc.vec.Vec ledger.FrameToken) (index : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec ledger.FrameToken) × Std.Usize)
+    (alloc.vec.Vec ledger.FrameToken))
+  := do
+  if index < prefix_len
+  then
+    let ft ← Slice.index_usize frames index
+    let result1 ← alloc.vec.Vec.push result ft
+    let index1 ← index + 1#usize
+    ok (cont (result1, index1))
+  else ok (done result)
+
+/-- [noble_kernel::ledger::transition::copy_frame_prefix]: loop 0:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 497:4-500:5 -/
+@[rust_loop]
+def ledger.transition.copy_frame_prefix_loop
+  (frames : Slice ledger.FrameToken) (prefix_len : Std.Usize)
+  (result : alloc.vec.Vec ledger.FrameToken) (index : Std.Usize) :
+  Result (alloc.vec.Vec ledger.FrameToken)
+  := do
+  loop
+    (fun (result1, index1) => ledger.transition.copy_frame_prefix_loop.body
+      frames prefix_len result1 index1)
+    (result, index)
+
+/-- [noble_kernel::ledger::transition::copy_frame_prefix]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 486:0-502:1 -/
+def ledger.transition.copy_frame_prefix
+  (frames : Slice ledger.FrameToken) (count : Std.Usize) :
+  Result (alloc.vec.Vec ledger.FrameToken)
+  := do
+  let i := Slice.len frames
+  let prefix_len ← if count < i
+                     then ok count
+                     else ok (Slice.len frames)
+  let result := alloc.vec.Vec.with_capacity ledger.FrameToken prefix_len
+  ledger.transition.copy_frame_prefix_loop frames prefix_len result 0#usize
+
+/-- [noble_kernel::ledger::transition::enter_frame]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 46:0-91:1
+    Visibility: public -/
+def ledger.transition.enter_frame
+  (snapshot : ledger.Snapshot) (claim_root : ledger.RootToken)
+  (frame_token : ledger.FrameToken) :
+  Result (core.result.Result ledger.FrameTransition ledger.Error)
+  := do
+  let r ← ledger.transition.validate_active_root snapshot claim_root
+  match r with
+  | core.result.Result.Ok value =>
+    if frame_token = 0#u32
+    then ok (core.result.Result.Err ledger.Error.InvalidFrameToken)
+    else
+      let len := alloc.vec.Vec.len snapshot.frames
+      let o ← lift (Usize.checked_sub len 1#usize)
+      match o with
+      | none =>
+        if value >= ledger.MAX_ACTIVE_FRAMES
+        then ok (core.result.Result.Err ledger.Error.FrameBoundExceeded)
+        else
+          let o1 ← lift (U32.checked_add snapshot.entered 1#u32)
+          match o1 with
+          | none =>
+            ok (core.result.Result.Err ledger.Error.FrameCounterExhausted)
+          | some value1 =>
+            let o2 ← lift (U32.checked_add value 1#u32)
+            match o2 with
+            | none =>
+              ok (core.result.Result.Err ledger.Error.FrameBoundExceeded)
+            | some value2 =>
+              let s ← alloc.vec.Vec.as_slice Global snapshot.frames
+              let next_frames ← ledger.transition.copy_frame_prefix s len
+              let next_frames1 ← alloc.vec.Vec.push next_frames frame_token
+              ok (core.result.Result.Ok
+                {
+                  next :=
+                    {
+                      snapshot
+                        with
+                        frames := next_frames1,
+                        entered := value1,
+                        pending_dispatch := false,
+                        status := ledger.RootStatus.Active,
+                        session := ledger.SessionHealth.Healthy
+                    },
+                  counts :=
+                    {
+                      entered := value1,
+                      released := snapshot.released,
+                      active := value2,
+                      released_on_abort := 0#u32
+                    }
+                })
+      | some last_index =>
+        let ft ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            ledger.FrameToken) snapshot.frames last_index
+        if frame_token <= ft
+        then ok (core.result.Result.Err ledger.Error.DuplicateOrUnorderedFrame)
+        else
+          if value >= ledger.MAX_ACTIVE_FRAMES
+          then ok (core.result.Result.Err ledger.Error.FrameBoundExceeded)
+          else
+            let o1 ← lift (U32.checked_add snapshot.entered 1#u32)
+            match o1 with
+            | none =>
+              ok (core.result.Result.Err ledger.Error.FrameCounterExhausted)
+            | some value1 =>
+              let o2 ← lift (U32.checked_add value 1#u32)
+              match o2 with
+              | none =>
+                ok (core.result.Result.Err ledger.Error.FrameBoundExceeded)
+              | some value2 =>
+                let s ← alloc.vec.Vec.as_slice Global snapshot.frames
+                let next_frames ← ledger.transition.copy_frame_prefix s len
+                let next_frames1 ← alloc.vec.Vec.push next_frames frame_token
+                ok (core.result.Result.Ok
+                  {
+                    next :=
+                      {
+                        snapshot
+                          with
+                          frames := next_frames1,
+                          entered := value1,
+                          pending_dispatch := false,
+                          status := ledger.RootStatus.Active,
+                          session := ledger.SessionHealth.Healthy
+                      },
+                    counts :=
+                      {
+                        entered := value1,
+                        released := snapshot.released,
+                        active := value2,
+                        released_on_abort := 0#u32
+                      }
+                  })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::ledger::transition::leave_frame]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 102:0-147:1
+    Visibility: public -/
+def ledger.transition.leave_frame
+  (snapshot : ledger.Snapshot) (claim_root : ledger.RootToken)
+  (frame_token : ledger.FrameToken) :
+  Result (core.result.Result ledger.FrameTransition ledger.Error)
+  := do
+  let r ← ledger.transition.validate_active_root snapshot claim_root
+  match r with
+  | core.result.Result.Ok value =>
+    if snapshot.pending_dispatch
+    then ok (core.result.Result.Err ledger.Error.PendingDispatch)
+    else
+      if frame_token = 0#u32
+      then ok (core.result.Result.Err ledger.Error.InvalidFrameToken)
+      else
+        let i := alloc.vec.Vec.len snapshot.frames
+        let o ← lift (Usize.checked_sub i 1#usize)
+        match o with
+        | none => ok (core.result.Result.Err ledger.Error.NonLifoFrameRelease)
+        | some index =>
+          let ft ←
+            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+              ledger.FrameToken) snapshot.frames index
+          if ft != frame_token
+          then ok (core.result.Result.Err ledger.Error.NonLifoFrameRelease)
+          else
+            let o1 ← lift (U32.checked_add snapshot.released 1#u32)
+            match o1 with
+            | none => ok (core.result.Result.Err ledger.Error.MalformedCounts)
+            | some value1 =>
+              let o2 ← lift (U32.checked_sub value 1#u32)
+              match o2 with
+              | none =>
+                ok (core.result.Result.Err ledger.Error.MalformedCounts)
+              | some value2 =>
+                let s ← alloc.vec.Vec.as_slice Global snapshot.frames
+                let next_frames ← ledger.transition.copy_frame_prefix s index
+                ok (core.result.Result.Ok
+                  {
+                    next :=
+                      {
+                        snapshot
+                          with
+                          frames := next_frames,
+                          released := value1,
+                          status := ledger.RootStatus.Active,
+                          session := ledger.SessionHealth.Healthy
+                      },
+                    counts :=
+                      {
+                        entered := snapshot.entered,
+                        released := value1,
+                        active := value2,
+                        released_on_abort := 0#u32
+                      }
+                  })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::ledger::transition::plan_finish_root]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 157:0-185:1
+    Visibility: public -/
+def ledger.transition.plan_finish_root
+  (snapshot : ledger.Snapshot) (claim_root : ledger.RootToken) :
+  Result (core.result.Result ledger.FinishPlan ledger.Error)
+  := do
+  let r ← ledger.transition.validate_active_root snapshot claim_root
+  match r with
+  | core.result.Result.Ok value =>
+    if value != 0#u32
+    then ok (core.result.Result.Err ledger.Error.ActiveFramesRemaining)
+    else
+      if snapshot.pending_dispatch
+      then ok (core.result.Result.Err ledger.Error.PendingDispatch)
+      else
+        ok (core.result.Result.Ok
+          {
+            root := snapshot.root,
+            map_epoch := snapshot.map_epoch,
+            counts :=
+              {
+                entered := snapshot.entered,
+                released := snapshot.released,
+                active := 0#u32,
+                released_on_abort := 0#u32
+              },
+            actions :=
+              {
+                retire_map_pin := snapshot.map_epoch,
+                retire_root_versions := true,
+                sweep_module_retirement := true
+              }
+          })
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::ledger::transition::disposition]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 338:0-348:1 -/
+def ledger.transition.disposition
+  (exit_release : ledger.ExitRelease) :
+  Result (ledger.SessionHealth × ledger.SessionState)
+  := do
+  match exit_release with
+  | ledger.ExitRelease.Exact =>
+    ok (ledger.SessionHealth.Healthy, ledger.SessionState.Retained)
+  | ledger.ExitRelease.Unproven _ =>
+    ok (ledger.SessionHealth.Poisoned,
+      ledger.SessionState.TerminatedAfterGuestFailure)
+
+/-- [noble_kernel::ledger::transition::ack_finish_root]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 194:0-238:1
+    Visibility: public -/
+def ledger.transition.ack_finish_root
+  (plan : ledger.FinishPlan) (ack : ledger.FinishAck) :
+  Result (core.result.Result ledger.FinishOutcome (ledger.RejectedAck
+    ledger.FinishPlan))
+  := do
+  let i := ack.root
+  if i = 0#u64
+  then
+    ok (core.result.Result.Err
+      { error := ledger.Error.InvalidRootToken, plan })
+  else
+    let i1 := plan.root
+    if i != i1
+    then
+      ok (core.result.Result.Err { error := ledger.Error.ForeignRoot, plan })
+    else
+      let exit_release ←
+        match ack.retire_versions with
+        | ledger.BackendAck.NotAttempted =>
+          ok (ledger.ExitRelease.Unproven
+            ledger.UnprovenReason.VersionRetirementFailed)
+        | ledger.BackendAck.Succeeded =>
+          match ack.sweep_retirement with
+          | ledger.BackendAck.NotAttempted =>
+            ok (ledger.ExitRelease.Unproven
+              ledger.UnprovenReason.RetirementSweepFailed)
+          | ledger.BackendAck.Succeeded => ok ledger.ExitRelease.Exact
+          | ledger.BackendAck.Failed =>
+            ok (ledger.ExitRelease.Unproven
+              ledger.UnprovenReason.RetirementSweepFailed)
+        | ledger.BackendAck.Failed =>
+          ok (ledger.ExitRelease.Unproven
+            ledger.UnprovenReason.VersionRetirementFailed)
+      let (session, session_state) ←
+        ledger.transition.disposition exit_release
+      ok (core.result.Result.Ok
+        {
+          next :=
+            {
+              root := plan.root,
+              map_epoch := plan.map_epoch,
+              frames := (alloc.vec.Vec.new ledger.FrameToken),
+              entered := plan.counts.entered,
+              released := plan.counts.released,
+              pending_dispatch := false,
+              status := ledger.RootStatus.Finished,
+              session
+            },
+          counts := plan.counts,
+          exit_release,
+          session_state
+        })
+
+/-- [noble_kernel::ledger::transition::reverse_frames]: loop body 0:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 507:4-510:5 -/
+@[rust_loop_body]
+def ledger.transition.reverse_frames_loop.body
+  (frames : Slice ledger.FrameToken) (result : alloc.vec.Vec ledger.FrameToken)
+  (remaining : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec ledger.FrameToken) × Std.Usize)
+    (alloc.vec.Vec ledger.FrameToken))
+  := do
+  let o ← lift (Usize.checked_sub remaining 1#usize)
+  match o with
+  | none => ok (done result)
+  | some next =>
+    let ft ← Slice.index_usize frames next
+    let result1 ← alloc.vec.Vec.push result ft
+    ok (cont (result1, next))
+
+/-- [noble_kernel::ledger::transition::reverse_frames]: loop 0:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 507:4-510:5 -/
+@[rust_loop]
+def ledger.transition.reverse_frames_loop
+  (frames : Slice ledger.FrameToken) (result : alloc.vec.Vec ledger.FrameToken)
+  (remaining : Std.Usize) :
+  Result (alloc.vec.Vec ledger.FrameToken)
+  := do
+  loop
+    (fun (result1, remaining1) => ledger.transition.reverse_frames_loop.body
+      frames result1 remaining1)
+    (result, remaining)
+
+/-- [noble_kernel::ledger::transition::reverse_frames]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 504:0-512:1 -/
+def ledger.transition.reverse_frames
+  (frames : Slice ledger.FrameToken) :
+  Result (alloc.vec.Vec ledger.FrameToken)
+  := do
+  let i := Slice.len frames
+  let result := alloc.vec.Vec.with_capacity ledger.FrameToken i
+  let remaining := Slice.len frames
+  ledger.transition.reverse_frames_loop frames result remaining
+
+/-- [noble_kernel::ledger::transition::first_plan_unproven]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 354:0-382:1 -/
+def ledger.transition.first_plan_unproven
+  (pre_abort : ledger.PreAbortObservation) (released_on_abort : Std.U32)
+  (pending_dispatch : Bool) :
+  Result (Option ledger.UnprovenReason)
+  := do
+  if pre_abort.replay_release_ok
+  then
+    if pre_abort.provisional_owners_release_ok
+    then
+      if pre_abort.trace_available
+      then
+        let gs ← ledger.transition.classify_guest pre_abort.guest
+        match gs with
+        | ledger.GuestSettlement.Settled =>
+          if released_on_abort != 0#u32
+          then
+            ok (some ledger.UnprovenReason.AbortedFramePinsRetainBackendRefs)
+          else
+            if pending_dispatch
+            then ok (some ledger.UnprovenReason.PendingDispatchUnresolved)
+            else
+              if pre_abort.engine_poisoned_during_root
+              then ok (some ledger.UnprovenReason.SessionPoisonedDuringRoot)
+              else ok none
+        | ledger.GuestSettlement.Unsettled reason => ok (some reason)
+      else ok (some ledger.UnprovenReason.RootTraceUnavailable)
+    else ok (some ledger.UnprovenReason.ProvisionalSavedOwnerReleaseFailed)
+  else ok (some ledger.UnprovenReason.FrozenReplayReleaseFailed)
+
+/-- [noble_kernel::ledger::transition::plan_abort_root]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 252:0-285:1
+    Visibility: public -/
+def ledger.transition.plan_abort_root
+  (snapshot : ledger.Snapshot) (claim_root : ledger.RootToken)
+  (pre_abort : ledger.PreAbortObservation) :
+  Result (core.result.Result ledger.AbortPlan ledger.Error)
+  := do
+  let r ← ledger.transition.validate_active_root snapshot claim_root
+  match r with
+  | core.result.Result.Ok value =>
+    let o ← lift (U32.checked_add snapshot.released value)
+    match o with
+    | none => ok (core.result.Result.Err ledger.Error.MalformedCounts)
+    | some value1 =>
+      if value1 = snapshot.entered
+      then
+        let s ← alloc.vec.Vec.as_slice Global snapshot.frames
+        let released_frames ← ledger.transition.reverse_frames s
+        let plan_unproven ←
+          ledger.transition.first_plan_unproven pre_abort value
+            snapshot.pending_dispatch
+        let can_prove_exact := core.option.Option.is_none plan_unproven
+        ok (core.result.Result.Ok
+          {
+            root := snapshot.root,
+            map_epoch := snapshot.map_epoch,
+            counts :=
+              {
+                entered := snapshot.entered,
+                released := value1,
+                active := 0#u32,
+                released_on_abort := value
+              },
+            released_frames,
+            actions :=
+              {
+                clear_operand_stack := can_prove_exact,
+                retire_map_pin := snapshot.map_epoch,
+                retire_aborted_root_versions := true,
+                sweep_module_retirement := can_prove_exact
+              },
+            plan_unproven
+          })
+      else ok (core.result.Result.Err ledger.Error.MalformedCounts)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_kernel::ledger::transition::resolve_abort_release]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 388:0-425:1 -/
+def ledger.transition.resolve_abort_release
+  (actions : ledger.AbortActions)
+  (plan_unproven : Option ledger.UnprovenReason) (ack : ledger.AbortAck) :
+  Result ledger.ExitRelease
+  := do
+  if actions.clear_operand_stack
+  then
+    match plan_unproven with
+    | none =>
+      match ack.clear_stack with
+      | ledger.ClearStackAck.NotAttempted =>
+        ok (ledger.ExitRelease.Unproven
+          ledger.UnprovenReason.OperandRootsNotCleared)
+      | ledger.ClearStackAck.Cleared =>
+        match ack.retire_versions with
+        | ledger.BackendAck.NotAttempted =>
+          ok (ledger.ExitRelease.Unproven
+            ledger.UnprovenReason.VersionRetirementFailed)
+        | ledger.BackendAck.Succeeded =>
+          match ack.sweep_retirement with
+          | ledger.BackendAck.NotAttempted =>
+            ok (ledger.ExitRelease.Unproven
+              ledger.UnprovenReason.RetirementSweepFailed)
+          | ledger.BackendAck.Succeeded => ok ledger.ExitRelease.Exact
+          | ledger.BackendAck.Failed =>
+            ok (ledger.ExitRelease.Unproven
+              ledger.UnprovenReason.RetirementSweepFailed)
+        | ledger.BackendAck.Failed =>
+          ok (ledger.ExitRelease.Unproven
+            ledger.UnprovenReason.VersionRetirementFailed)
+      | ledger.ClearStackAck.Refused =>
+        ok (ledger.ExitRelease.Unproven
+          ledger.UnprovenReason.OperandRootReleaseRefused)
+      | ledger.ClearStackAck.Trapped =>
+        ok (ledger.ExitRelease.Unproven
+          ledger.UnprovenReason.OperandRootReleaseTrapped)
+    | some reason => ok (ledger.ExitRelease.Unproven reason)
+  else
+    let (csa, b) ←
+      match ack.clear_stack with
+      | ledger.ClearStackAck.NotAttempted =>
+        ok (ledger.ClearStackAck.NotAttempted, true)
+      | ledger.ClearStackAck.Cleared =>
+        ok (ledger.ClearStackAck.Cleared, false)
+      | ledger.ClearStackAck.Refused =>
+        ok (ledger.ClearStackAck.Refused, false)
+      | ledger.ClearStackAck.Trapped =>
+        ok (ledger.ClearStackAck.Trapped, false)
+    if b
+    then
+      match plan_unproven with
+      | none =>
+        match csa with
+        | ledger.ClearStackAck.NotAttempted =>
+          ok (ledger.ExitRelease.Unproven
+            ledger.UnprovenReason.OperandRootsNotCleared)
+        | ledger.ClearStackAck.Cleared =>
+          match ack.retire_versions with
+          | ledger.BackendAck.NotAttempted =>
+            ok (ledger.ExitRelease.Unproven
+              ledger.UnprovenReason.VersionRetirementFailed)
+          | ledger.BackendAck.Succeeded =>
+            match ack.sweep_retirement with
+            | ledger.BackendAck.NotAttempted =>
+              ok (ledger.ExitRelease.Unproven
+                ledger.UnprovenReason.RetirementSweepFailed)
+            | ledger.BackendAck.Succeeded => ok ledger.ExitRelease.Exact
+            | ledger.BackendAck.Failed =>
+              ok (ledger.ExitRelease.Unproven
+                ledger.UnprovenReason.RetirementSweepFailed)
+          | ledger.BackendAck.Failed =>
+            ok (ledger.ExitRelease.Unproven
+              ledger.UnprovenReason.VersionRetirementFailed)
+        | ledger.ClearStackAck.Refused =>
+          ok (ledger.ExitRelease.Unproven
+            ledger.UnprovenReason.OperandRootReleaseRefused)
+        | ledger.ClearStackAck.Trapped =>
+          ok (ledger.ExitRelease.Unproven
+            ledger.UnprovenReason.OperandRootReleaseTrapped)
+      | some reason => ok (ledger.ExitRelease.Unproven reason)
+    else
+      ok (ledger.ExitRelease.Unproven
+        ledger.UnprovenReason.UnexpectedGuestResumption)
+
+/-- [noble_kernel::ledger::transition::ack_abort_root]:
+    Source: 'crates/noble-kernel/src/ledger/transition.rs', lines 301:0-336:1
+    Visibility: public -/
+def ledger.transition.ack_abort_root
+  (plan : ledger.AbortPlan) (ack : ledger.AbortAck) :
+  Result (core.result.Result ledger.AbortOutcome (ledger.RejectedAck
+    ledger.AbortPlan))
+  := do
+  let i := ack.root
+  if i = 0#u64
+  then
+    ok (core.result.Result.Err
+      { error := ledger.Error.InvalidRootToken, plan })
+  else
+    let i1 := plan.root
+    if i != i1
+    then
+      ok (core.result.Result.Err { error := ledger.Error.ForeignRoot, plan })
+    else
+      let exit_release ←
+        ledger.transition.resolve_abort_release plan.actions plan.plan_unproven
+          ack
+      let (session, session_state) ←
+        ledger.transition.disposition exit_release
+      ok (core.result.Result.Ok
+        {
+          next :=
+            {
+              root := plan.root,
+              map_epoch := plan.map_epoch,
+              frames := (alloc.vec.Vec.new ledger.FrameToken),
+              entered := plan.counts.entered,
+              released := plan.counts.released,
+              pending_dispatch := false,
+              status := ledger.RootStatus.Aborted,
+              session
+            },
+          counts := plan.counts,
+          released_frames := plan.released_frames,
+          exit_release,
+          session_state
+        })
+
 /-- [noble_kernel::consume_budget]:
-    Source: 'crates/noble-kernel/src/lib.rs', lines 66:0-71:1
+    Source: 'crates/noble-kernel/src/lib.rs', lines 67:0-72:1
     Visibility: public -/
 def consume_budget (remaining : Std.U32) : Result BudgetOutcome := do
   let o ← lift (U32.checked_sub remaining 1#u32)

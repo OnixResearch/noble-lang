@@ -1484,7 +1484,7 @@ def component.parser.resolve.uses_checked_u64.closure_1 := Unit
 def component.parser.resolve.uses_checked_u64.closure := Unit
 
 /-- [noble_contracts::source::declared::state::CheckedProgramInterface]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 143:0-147:1
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 148:0-152:1
     Visibility: public -/
 structure source.declared.state.CheckedProgramInterface where
   input : alloc.vec.Vec noble_kernel.types.Ty
@@ -6804,7 +6804,7 @@ structure source.declared.Alias where
   pending : Bool
 
 /-- [noble_contracts::source::declared::state::ModuleSession]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 27:0-46:1
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 27:0-51:1
     Visibility: public -/
 structure source.declared.state.ModuleSession where
   bindings : alloc.vec.Vec source.declared.BoundOperation
@@ -6814,6 +6814,7 @@ structure source.declared.state.ModuleSession where
   generation : Std.U64
   retained_source_limit : Std.U32
   proof_budgets : Option intrinsic.ProofBudgets
+  proof_editor : Bool
   source : source.Session
 
 /-- [noble_contracts::source::declared::signatures::generic_payload_params::{closure}]
@@ -7296,7 +7297,7 @@ def source.preparation.symbolic.verify.closure_1 := Unit
 def source.preparation.symbolic.verify.closure := Unit
 
 /-- [noble_contracts::source::declared::state::SignedOrigin]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1913:0-1919:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1973:0-1979:1 -/
 structure source.declared.state.SignedOrigin where
   definition : source.Named
   scheme : noble_kernel.words.Scheme
@@ -7305,99 +7306,99 @@ structure source.declared.state.SignedOrigin where
   module_source_len : Std.Usize
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::compare_signed_node::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1311:62-1316:17 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1316:62-1321:17 -/
 @[reducible]
 def source.declared.state.ModulePrepared.compare_signed_node.closure := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1248:28-1248:72 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1253:28-1253:72 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_specialization.closure :=
   noble_kernel.words.Scheme
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1238:21-1238:86 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1243:21-1243:86 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_specialization.closure_1 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1234:33-1234:98 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1239:33-1239:98 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_specialization.closure_2 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#13}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1175:17-1175:82 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1180:17-1180:82 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_signed_source.closure_13 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#12}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1149:25-1149:90 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1154:25-1154:90 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_signed_source.closure_12 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#5}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1146:25-1146:56 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1151:25-1151:56 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_signed_source.closure_5 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#11}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1140:25-1140:90 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1145:25-1145:90 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_signed_source.closure_11 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#10}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1124:21-1124:86 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1129:21-1129:86 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_signed_source.closure_10 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#4}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1111:68-1116:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1116:68-1121:9 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_signed_source.closure_4 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#8}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1104:21-1104:86 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1109:21-1109:86 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_signed_source.closure_8 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#9}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1101:29-1101:94 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1106:29-1106:94 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_signed_source.closure_9 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#7}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1090:17-1090:82 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1095:17-1095:82 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_signed_source.closure_7 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#6}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1080:56-1083:17 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1085:56-1088:17 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_signed_source.closure_6 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1062:57-1067:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1067:57-1072:9 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_signed_source.closure_3 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1056:61-1061:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1061:61-1066:9 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_signed_source.closure_2 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1047:69-1049:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1052:69-1054:9 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_signed_source.closure_1 :=
   source.Named
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1040:58-1040:91 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1045:58-1045:91 -/
 @[reducible]
 def source.declared.state.ModulePrepared.check_signed_source.closure := Std.U64
 
 /-- [noble_contracts::source::declared::state::RebuiltImportDefinition]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 75:0-79:1
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 80:0-84:1
     Visibility: public -/
 structure source.declared.state.RebuiltImportDefinition where
   «name» : String
@@ -7405,7 +7406,7 @@ structure source.declared.state.RebuiltImportDefinition where
   new_identity : Std.U64
 
 /-- [noble_contracts::source::declared::state::ModulePrepared]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 52:0-72:1
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 57:0-77:1
     Visibility: public -/
 structure source.declared.state.ModulePrepared where
   kind : source.declared.state.ModuleKind
@@ -7531,33 +7532,33 @@ structure source.declared.state.register.collection.OpaqueDeclaration where
   «public» : Bool
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#5}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 992:28-992:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 997:28-997:74 -/
 @[reducible]
 def source.declared.state.ModulePrepared.request_signed_slot.closure_5 :=
   Std.U32
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#4}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 981:24-986:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 986:24-991:13 -/
 @[reducible]
 def source.declared.state.ModulePrepared.request_signed_slot.closure_4 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 970:64-975:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 975:64-980:9 -/
 @[reducible]
 def source.declared.state.ModulePrepared.request_signed_slot.closure_3 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 964:59-969:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 969:59-974:9 -/
 @[reducible]
 def source.declared.state.ModulePrepared.request_signed_slot.closure_2 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 958:24-963:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 963:24-968:13 -/
 @[reducible]
 def source.declared.state.ModulePrepared.request_signed_slot.closure_1 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 949:51-951:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 954:51-956:9 -/
 @[reducible]
 def source.declared.state.ModulePrepared.request_signed_slot.closure := Unit
 
@@ -7751,48 +7752,48 @@ structure source.declared.state.register.schema.nominals.Candidate where
 def source.declared.state.register.schema.nominals.declare.closure := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1265:45-1265:77 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1490:45-1490:77 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_reference.closure_3 :=
   String
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1256:66-1258:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1481:66-1483:5 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_reference.closure_2 := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1243:42-1243:68 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1468:42-1468:68 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_reference.closure_1 := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1233:42-1233:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1458:42-1458:74 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_reference.closure := String
 
 /-- [noble_contracts::source::declared::state::register::logical::imported_module::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 991:22-997:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1216:22-1222:5 -/
 @[reducible]
 def source.declared.state.register.logical.imported_module.closure_3 := Span
 
 /-- [noble_contracts::source::declared::state::register::logical::imported_module::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 984:44-986:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1209:44-1211:5 -/
 @[reducible]
 def source.declared.state.register.logical.imported_module.closure_2 := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::imported_module::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 976:20-982:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1201:20-1207:9 -/
 @[reducible]
 def source.declared.state.register.logical.imported_module.closure_1 := Span
 
 /-- [noble_contracts::source::declared::state::register::logical::imported_module::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 973:57-975:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1198:57-1200:9 -/
 def source.declared.state.register.logical.imported_module.closure :=
   Str × Option Std.U32
 
 /-- [noble_contracts::source::declared::state::register::logical::is_current::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 952:58-955:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1177:58-1180:5 -/
 def source.declared.state.register.logical.is_current.closure := Str × Std.U32
 
 /-- [noble_contracts::source::declared::state::register::logical::Request]
@@ -7808,7 +7809,7 @@ structure source.declared.state.register.logical.Request where
   limits : Limits
 
 /-- [noble_contracts::source::declared::state::register::logical::UseVisit]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1012:0-1015:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1237:0-1240:1 -/
 @[discriminant isize]
 inductive source.declared.state.register.logical.UseVisit where
 | Done : source.declared.state.register.logical.UseVisit
@@ -7817,106 +7818,119 @@ inductive source.declared.state.register.logical.UseVisit where
   source.declared.state.register.logical.UseVisit
 
 /-- [noble_contracts::source::declared::state::register::logical::UseFrame]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1005:0-1008:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1230:0-1233:1 -/
 structure source.declared.state.register.logical.UseFrame where
   items : alloc.vec.Vec intrinsic.Form
   visited : Std.Usize
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#8}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 938:16-944:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1163:16-1169:5 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_8 := Span
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#7}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 937:9-937:41 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1162:9-1162:41 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_7 := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#6}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 934:47-936:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1159:47-1161:5 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_6 := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#5}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 925:24-931:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1150:24-1156:13 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_5 := Span
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#4}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 924:17-924:49 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1149:17-1149:49 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_4 := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 923:47-923:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1148:47-1148:79 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_3 := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 914:24-920:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1139:24-1145:13 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_2 := Span
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 913:17-913:49 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1138:17-1138:49 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_1 := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 912:47-912:84 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1137:47-1137:84 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure := Str
 
+/-- [noble_contracts::source::declared::state::register::logical::FormLevel]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 309:0-312:1 -/
+structure source.declared.state.register.logical.FormLevel where
+  index : Std.Usize
+  len : Std.Usize
+
+/-- [noble_contracts::source::declared::state::register::logical::HoleMode]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 302:0-305:1 -/
+@[discriminant isize]
+inductive source.declared.state.register.logical.HoleMode where
+| ProofTerm : Bool → source.declared.state.register.logical.HoleMode
+| OutsideTerm : source.declared.state.register.logical.HoleMode
+
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 881:73-883:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1106:73-1108:5 -/
 @[reducible]
 def source.declared.state.register.logical.subject_dependency.closure_3 :=
   Std.U64
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 870:38-870:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1095:38-1095:79 -/
 @[reducible]
 def source.declared.state.register.logical.subject_dependency.closure_2 :=
   Std.U64
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 864:20-869:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1089:20-1094:9 -/
 @[reducible]
 def source.declared.state.register.logical.subject_dependency.closure_1 := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 852:59-857:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1077:59-1082:5 -/
 @[reducible]
 def source.declared.state.register.logical.subject_dependency.closure := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::bind_subject::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 692:56-692:82 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 917:56-917:82 -/
 @[reducible]
 def source.declared.state.register.logical.bind_subject.closure := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 664:54-669:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 889:54-894:9 -/
 @[reducible]
 def source.declared.state.register.logical.SourceOrigin.definition_source.closure_2
   :=
 Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 658:68-663:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 883:68-888:9 -/
 @[reducible]
 def source.declared.state.register.logical.SourceOrigin.definition_source.closure_1
   :=
 Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 652:72-657:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 877:72-882:9 -/
 @[reducible]
 def source.declared.state.register.logical.SourceOrigin.definition_source.closure
   :=
 Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::SourceOrigin]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 485:0-492:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 710:0-717:1 -/
 structure source.declared.state.register.logical.SourceOrigin where
   module_name : Str
   version : Std.U32
@@ -7926,27 +7940,27 @@ structure source.declared.state.register.logical.SourceOrigin where
   owner : Std.U64
 
 /-- [noble_contracts::source::declared::state::register::logical::definition_span::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 606:39-606:67 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 831:39-831:67 -/
 @[reducible]
 def source.declared.state.register.logical.definition_span.closure_2 := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::definition_span::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 600:47-605:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 825:47-830:5 -/
 @[reducible]
 def source.declared.state.register.logical.definition_span.closure_1 := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::definition_span::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 594:46-594:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 819:46-819:74 -/
 @[reducible]
 def source.declared.state.register.logical.definition_span.closure := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::origin_module::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 567:60-567:93 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 792:60-792:93 -/
 @[reducible]
 def source.declared.state.register.logical.origin_module.closure := Std.U64
 
 /-- [noble_contracts::source::declared::state::register::logical::OwnerModule]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 536:0-544:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 761:0-769:1 -/
 structure source.declared.state.register.logical.OwnerModule where
   «name» : Str
   version : Std.U32
@@ -7954,17 +7968,17 @@ structure source.declared.state.register.logical.OwnerModule where
   spans : Slice source.declared.DefinitionSource
 
 /-- [noble_contracts::source::declared::state::register::logical::source_origin::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 515:44-521:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 740:44-746:5 -/
 @[reducible]
 def source.declared.state.register.logical.source_origin.closure := Span
 
 /-- [noble_contracts::source::declared::state::register::logical::contract_type::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 468:13-468:96 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 693:13-693:96 -/
 @[reducible]
 def source.declared.state.register.logical.contract_type.closure := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::pure_subtree::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 413:54-413:81 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 638:54-638:81 -/
 @[reducible]
 def source.declared.state.register.logical.pure_subtree.closure := Unit
 
@@ -8056,17 +8070,17 @@ def source.declared.state.register.logical.origin.imports.closure_1 := Unit
 def source.declared.state.register.logical.origin.imports.closure := Std.U64
 
 /-- [noble_contracts::source::declared::state::register::logical::stage_contract::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 196:25-199:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 201:25-204:9 -/
 @[reducible]
 def source.declared.state.register.logical.stage_contract.closure_2 := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::stage_contract::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 186:81-186:87 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 191:81-191:87 -/
 @[reducible]
 def source.declared.state.register.logical.stage_contract.closure_1 := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::stage_contract::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 185:75-185:81 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 190:75-190:81 -/
 @[reducible]
 def source.declared.state.register.logical.stage_contract.closure := Unit
 
@@ -8303,7 +8317,7 @@ def source.declared.state.prepare.ModuleSession.stage_unit.closure :=
   source.declared.state.ModuleSession
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::declared_text::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1770:25-1770:56 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1829:25-1829:56 -/
 @[reducible]
 def source.declared.state.ModuleSession.declared_text.closure := Unit
 
@@ -8639,7 +8653,7 @@ def source.declared.state.proof.ModuleSession.unique_module.closure :=
   Str × Std.U32
 
 /-- [noble_contracts::source::declared::state::CheckedNominal]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 96:0-100:1
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 101:0-105:1
     Visibility: public -/
 structure source.declared.state.CheckedNominal where
   declaration : noble_kernel.contracts.NominalDecl
@@ -8647,7 +8661,7 @@ structure source.declared.state.CheckedNominal where
   module_version : Std.U32
 
 /-- [noble_contracts::source::declared::state::CheckedProgramOwner]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 116:0-124:1
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 121:0-129:1
     Visibility: public -/
 structure source.declared.state.CheckedProgramOwner where
   module_identity : Std.U64
@@ -8658,7 +8672,7 @@ structure source.declared.state.CheckedProgramOwner where
   recursive : Bool
 
 /-- [noble_contracts::source::declared::state::ProgramClosureError]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 129:0-138:1
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 134:0-143:1
     Visibility: public -/
 @[discriminant isize]
 inductive source.declared.state.ProgramClosureError where
@@ -8667,75 +8681,75 @@ inductive source.declared.state.ProgramClosureError where
 | Invalid : source.declared.state.ProgramClosureError
 
 /-- [noble_contracts::source::declared::state::SignedSourceOwner]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 211:0-213:1
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 216:0-218:1
     Visibility: public -/
 structure source.declared.state.SignedSourceOwner where
   prepared : source.declared.state.ModulePrepared
 
 /-- [noble_contracts::source::declared::state::DeclaredTextSourceOwner]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 221:0-223:1
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 226:0-228:1
     Visibility: public -/
 structure source.declared.state.DeclaredTextSourceOwner where
   prepared : source.declared.state.ModulePrepared
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 255:45-260:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 260:45-265:9 -/
 @[reducible]
 def source.declared.state.DeclaredTextSourceOwner.rederive.closure_2 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 242:63-247:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 247:63-252:9 -/
 @[reducible]
 def source.declared.state.DeclaredTextSourceOwner.rederive.closure_1 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 233:25-233:56 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 238:25-238:56 -/
 @[reducible]
 def source.declared.state.DeclaredTextSourceOwner.rederive.closure := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::SignedSourceOwner<'_0>}::rederive::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 285:45-290:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 290:45-295:9 -/
 @[reducible]
 def source.declared.state.SignedSourceOwner.rederive.closure := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 376:53-376:77 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 381:53-381:77 -/
 @[reducible]
 def source.declared.state.ModulePrepared.checked_program_owner_source.closure_2
   :=
   Str
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 374:64-374:90 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 379:64-379:90 -/
 @[reducible]
 def source.declared.state.ModulePrepared.checked_program_owner_source.closure_1
   :=
   Str
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 371:63-373:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 376:63-378:9 -/
 @[reducible]
 def source.declared.state.ModulePrepared.checked_program_owner_source.closure
   :=
   Str
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 799:58-799:90 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 804:58-804:90 -/
 @[reducible]
 def source.declared.state.ModulePrepared.reached_row.closure_2 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 797:63-797:95 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 802:63-802:95 -/
 @[reducible]
 def source.declared.state.ModulePrepared.reached_row.closure_1 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 787:42-789:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 792:42-794:9 -/
 def source.declared.state.ModulePrepared.reached_row.closure :=
   source.declared.DefinitionSource × source.declared.Module
 
 /-- [noble_contracts::source::declared::state::ClosureWalk]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1903:0-1908:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1963:0-1968:1 -/
 structure source.declared.state.ClosureWalk where
   meter : Meter
   visited : alloc.vec.Vec Bool
@@ -8743,76 +8757,76 @@ structure source.declared.state.ClosureWalk where
   pending : alloc.vec.Vec Std.Usize
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1954:74-1956:17 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2014:74-2016:17 -/
 @[reducible]
 def source.declared.state.ClosureWalk.follow.closure_2 := Std.Usize
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1941:60-1941:92 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2001:60-2001:92 -/
 @[reducible]
 def source.declared.state.ClosureWalk.follow.closure_1 := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1938:21-1938:55 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1998:21-1998:55 -/
 @[reducible]
 def source.declared.state.ClosureWalk.follow.closure := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_step::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 725:56-725:88 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 730:56-730:88 -/
 @[reducible]
 def source.declared.state.ModulePrepared.closure_step.closure := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_walk::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 676:59-676:91 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 681:59-681:91 -/
 @[reducible]
 def source.declared.state.ModulePrepared.closure_walk.closure := Unit
 
 /-- [noble_contracts::source::declared::state::unique_adapter::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2040:19-2042:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2100:19-2102:5 -/
 def source.declared.state.unique_adapter.closure :=
   noble_kernel.contracts.Env × source.declared.BoundOperation × Std.U64
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_for_binding::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 359:17-359:35 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 364:17-364:35 -/
 @[reducible]
 def source.declared.state.ModulePrepared.checked_program_owner_for_binding.closure
   :=
 Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1436:23-1444:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1441:23-1449:9 -/
 def source.declared.state.ModulePrepared.checked_program_invocation.closure_1
   :=
   source.declared.state.CheckedProgramOwner ×
   noble_kernel.execution.Submission
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1417:67-1419:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1422:67-1424:9 -/
 @[reducible]
 def source.declared.state.ModulePrepared.checked_program_invocation.closure :=
   source.declared.state.CheckedProgramOwner
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::selected_dependency_modules::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 469:59-469:95 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 474:59-474:95 -/
 @[reducible]
 def source.declared.state.ModulePrepared.selected_dependency_modules.closure :=
   Std.U64
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_invocation_closure::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 440:67-442:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 445:67-447:9 -/
 @[reducible]
 def source.declared.state.ModulePrepared.checked_invocation_closure.closure :=
   Std.U64
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_closure_for_binding::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 499:17-499:39 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 504:17-504:39 -/
 @[reducible]
 def source.declared.state.ModulePrepared.checked_program_closure_for_binding.closure
   :=
 Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::declared_text_source_owner::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 812:29-812:60 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 817:29-817:60 -/
 @[reducible]
 def source.declared.state.ModulePrepared.declared_text_source_owner.closure :=
 Unit
@@ -9112,25 +9126,33 @@ inductive source.sizechange.ProfileError where
 def source.sizechange.calls_self.closure := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1571:71-1573:17 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1576:71-1578:17 -/
 @[reducible]
 def source.declared.state.ModulePrepared.resolved_module.closure_1 :=
   Option Std.U64
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1560:45-1560:70 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1565:45-1565:70 -/
 @[reducible]
 def source.declared.state.ModulePrepared.resolved_module.closure := Std.U64
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1615:76-1617:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1620:76-1622:9 -/
 def source.declared.state.ModulePrepared.linked_binding.closure_1 :=
   String × Std.U32
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1596:52-1596:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1601:52-1601:79 -/
 @[reducible]
 def source.declared.state.ModulePrepared.linked_binding.closure := Std.U32
+
+/-- [noble_contracts::source::declared::state::SessionProfile]
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1645:0-1650:1 -/
+structure source.declared.state.SessionProfile where
+  signed_self : Bool
+  declared_text : Bool
+  calculator : Bool
+  proof_editor : Bool
 
 /-- [noble_contracts::source::RetainedSourceLimit]
     Source: 'crates/noble-contracts/src/source.rs', lines 70:0-72:1
@@ -9139,18 +9161,18 @@ structure source.RetainedSourceLimit where
   bytes : Std.U32
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::initialize::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1737:17-1737:92 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1795:17-1795:92 -/
 @[reducible]
 def source.declared.state.ModuleSession.initialize.closure := Unit
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::checkpoint::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1786:22-1786:40 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1845:22-1845:40 -/
 @[reducible]
 def source.declared.state.ModuleSession.checkpoint.closure :=
   source.declared.state.ModuleSession
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::remaining_request_work::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1820:39-1820:66 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1879:39-1879:66 -/
 @[reducible]
 def source.declared.state.ModuleSession.remaining_request_work.closure := Unit
 

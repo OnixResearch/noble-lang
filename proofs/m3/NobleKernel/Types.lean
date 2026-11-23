@@ -322,7 +322,7 @@ structure untrusted.Diagnostic where
   truncated : Bool
 
 /-- [noble_kernel::acceptance::parts::Site]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 24:0-27:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 25:0-28:1 -/
 structure acceptance.parts.Site where
   node : Option untrusted.NodeId
   «def» : Option contracts.Definition
@@ -448,7 +448,7 @@ structure contracts.Env where
   effects : alloc.vec.Vec types.EffId
 
 /-- [noble_kernel::acceptance::parts::Ctx]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 14:0-20:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 15:0-21:1 -/
 structure acceptance.parts.Ctx where
   request : untrusted.Request
   env : contracts.Env
@@ -545,7 +545,7 @@ structure contracts.nominal.type.walk.Scope where
   caller : Option Std.U64
 
 /-- [noble_kernel::acceptance::parts::join::{closure}]
-    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 228:19-228:80 -/
+    Source: 'crates/noble-kernel/src/acceptance/parts.rs', lines 229:19-229:80 -/
 @[reducible]
 def acceptance.parts.join.closure := untrusted.Request
 
@@ -703,37 +703,37 @@ structure contracts.nominal.payload.Build where
   entered : Std.Usize
 
 /-- [noble_kernel::acceptance::preflight::nominal_payload_size::{closure}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 669:22-669:61 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 675:22-675:61 -/
 @[reducible]
 def acceptance.preflight.nominal_payload_size.closure := Unit
 
 /-- [noble_kernel::acceptance::preflight::NominalFailure]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 568:0-570:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 574:0-576:1 -/
 structure acceptance.preflight.NominalFailure where
   is_invalid_type : Bool
 
 /-- [noble_kernel::acceptance::preflight::guard_ty::{closure#1}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 460:29-460:90 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 466:29-466:90 -/
 @[reducible]
 def acceptance.preflight.guard_ty.closure_1 := Unit
 
 /-- [noble_kernel::acceptance::preflight::guard_ty::{closure}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 453:32-453:68 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 459:32-459:68 -/
 @[reducible]
 def acceptance.preflight.guard_ty.closure := untrusted.Request
 
 /-- [noble_kernel::acceptance::preflight::guard_one_binding::{closure#1}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 353:25-353:86 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 359:25-359:86 -/
 @[reducible]
 def acceptance.preflight.guard_one_binding.closure_1 := Unit
 
 /-- [noble_kernel::acceptance::preflight::guard_one_binding::{closure}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 337:28-337:67 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 343:28-343:67 -/
 @[reducible]
 def acceptance.preflight.guard_one_binding.closure := untrusted.Request
 
 /-- [noble_kernel::acceptance::preflight::SignedOwner]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 216:0-221:1 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 222:0-227:1 -/
 structure acceptance.preflight.SignedOwner where
   scheme : words.Scheme
   inst : words.Inst
@@ -741,9 +741,33 @@ structure acceptance.preflight.SignedOwner where
   «at» : acceptance.parts.Site
 
 /-- [noble_kernel::acceptance::preflight::check_request::{closure}]
-    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 121:39-121:57 -/
+    Source: 'crates/noble-kernel/src/acceptance/preflight.rs', lines 127:39-127:57 -/
 @[reducible]
 def acceptance.preflight.check_request.closure := Unit
+
+/-- [noble_kernel::acceptance::parts::named::Role]
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 42:0-47:1 -/
+@[discriminant isize]
+inductive acceptance.parts.named.Role where
+| SupplyOuter : acceptance.parts.named.Role
+| SupplyInner : Bool → acceptance.parts.named.Role
+| DemandBare : acceptance.parts.named.Role
+| DemandGuarded : Bool → acceptance.parts.named.Role
+
+/-- [noble_kernel::acceptance::parts::named::VarUsage]
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 14:0-20:1 -/
+structure acceptance.parts.named.VarUsage where
+  supplied : Std.U32
+  demanded : Std.U32
+  direct_in : Bool
+  in_returned_program : Bool
+  bare_out : Bool
+
+/-- [noble_kernel::acceptance::parts::named::Step]
+    Source: 'crates/noble-kernel/src/acceptance/parts/named.rs', lines 50:0-53:1 -/
+structure acceptance.parts.named.Step where
+  pattern : shapes.Pattern
+  role : acceptance.parts.named.Role
 
 /-- [noble_kernel::acceptance::nodes::visibility::Access]
     Source: 'crates/noble-kernel/src/acceptance/nodes/visibility.rs', lines 230:0-236:1 -/
@@ -1866,8 +1890,257 @@ structure execution.Submission where
 structure integer.I64 where
   value : Std.I64
 
+/-- [noble_kernel::ledger::RootToken]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 78:0-78:30
+    Visibility: public -/
+@[reducible]
+def ledger.RootToken := Std.U64
+
+/-- [noble_kernel::ledger::FrameToken]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 82:0-82:31
+    Visibility: public -/
+@[reducible]
+def ledger.FrameToken := Std.U32
+
+/-- [noble_kernel::ledger::MapEpoch]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 86:0-86:29
+    Visibility: public -/
+@[reducible]
+def ledger.MapEpoch := Std.U64
+
+/-- [noble_kernel::ledger::RootStatus]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 91:0-95:1
+    Visibility: public -/
+@[discriminant isize]
+inductive ledger.RootStatus where
+| Active : ledger.RootStatus
+| Finished : ledger.RootStatus
+| Aborted : ledger.RootStatus
+
+/-- [noble_kernel::ledger::SessionHealth]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 100:0-103:1
+    Visibility: public -/
+@[discriminant isize]
+inductive ledger.SessionHealth where
+| Healthy : ledger.SessionHealth
+| Poisoned : ledger.SessionHealth
+
+/-- [noble_kernel::ledger::FramePinCounts]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 108:0-113:1
+    Visibility: public -/
+structure ledger.FramePinCounts where
+  entered : Std.U32
+  released : Std.U32
+  active : Std.U32
+  released_on_abort : Std.U32
+
+/-- [noble_kernel::ledger::Snapshot]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 117:0-126:1
+    Visibility: public -/
+structure ledger.Snapshot where
+  root : ledger.RootToken
+  map_epoch : ledger.MapEpoch
+  frames : alloc.vec.Vec ledger.FrameToken
+  entered : Std.U32
+  released : Std.U32
+  pending_dispatch : Bool
+  status : ledger.RootStatus
+  session : ledger.SessionHealth
+
+/-- [noble_kernel::ledger::Error]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 153:0-166:1
+    Visibility: public -/
+@[discriminant isize]
+inductive ledger.Error where
+| SessionPoisoned : ledger.Error
+| InvalidRootToken : ledger.Error
+| ForeignRoot : ledger.Error
+| InactiveRoot : ledger.Error
+| InvalidFrameToken : ledger.Error
+| DuplicateOrUnorderedFrame : ledger.Error
+| FrameBoundExceeded : ledger.Error
+| FrameCounterExhausted : ledger.Error
+| MalformedCounts : ledger.Error
+| PendingDispatch : ledger.Error
+| NonLifoFrameRelease : ledger.Error
+| ActiveFramesRemaining : ledger.Error
+
+/-- [noble_kernel::ledger::UnprovenReason]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 172:0-189:1
+    Visibility: public -/
+@[discriminant isize]
+inductive ledger.UnprovenReason where
+| FrozenReplayReleaseFailed : ledger.UnprovenReason
+| ProvisionalSavedOwnerReleaseFailed : ledger.UnprovenReason
+| RootTraceUnavailable : ledger.UnprovenReason
+| GuestCallInterrupted : ledger.UnprovenReason
+| GuestFailureRecorded : ledger.UnprovenReason
+| GuestWorkOpen : ledger.UnprovenReason
+| GuestInsideBorrowedFrame : ledger.UnprovenReason
+| AbortedFramePinsRetainBackendRefs : ledger.UnprovenReason
+| PendingDispatchUnresolved : ledger.UnprovenReason
+| SessionPoisonedDuringRoot : ledger.UnprovenReason
+| UnexpectedGuestResumption : ledger.UnprovenReason
+| OperandRootsNotCleared : ledger.UnprovenReason
+| OperandRootReleaseRefused : ledger.UnprovenReason
+| OperandRootReleaseTrapped : ledger.UnprovenReason
+| VersionRetirementFailed : ledger.UnprovenReason
+| RetirementSweepFailed : ledger.UnprovenReason
+
+/-- [noble_kernel::ledger::GuestSettlement]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 195:0-198:1
+    Visibility: public -/
+@[discriminant isize]
+inductive ledger.GuestSettlement where
+| Settled : ledger.GuestSettlement
+| Unsettled : ledger.UnprovenReason → ledger.GuestSettlement
+
+/-- [noble_kernel::ledger::GuestObservation]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 202:0-217:1
+    Visibility: public -/
+structure ledger.GuestObservation where
+  guest_faulted : Bool
+  failure_flag : Std.U32
+  continuation_depth : Std.U32
+  reflection_depth : Std.U32
+  dispatch_flag : Std.U32
+  current_frame_ptr : Std.U32
+  live_frame_token : Std.U32
+
+/-- [noble_kernel::ledger::PreAbortObservation]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 238:0-250:1
+    Visibility: public -/
+structure ledger.PreAbortObservation where
+  replay_release_ok : Bool
+  provisional_owners_release_ok : Bool
+  trace_available : Bool
+  engine_poisoned_during_root : Bool
+  guest : ledger.GuestObservation
+
+/-- [noble_kernel::ledger::ClearStackAck]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 269:0-274:1
+    Visibility: public -/
+@[discriminant isize]
+inductive ledger.ClearStackAck where
+| NotAttempted : ledger.ClearStackAck
+| Cleared : ledger.ClearStackAck
+| Refused : ledger.ClearStackAck
+| Trapped : ledger.ClearStackAck
+
+/-- [noble_kernel::ledger::BackendAck]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 279:0-283:1
+    Visibility: public -/
+@[discriminant isize]
+inductive ledger.BackendAck where
+| NotAttempted : ledger.BackendAck
+| Succeeded : ledger.BackendAck
+| Failed : ledger.BackendAck
+
+/-- [noble_kernel::ledger::ExitRelease]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 288:0-291:1
+    Visibility: public -/
+@[discriminant isize]
+inductive ledger.ExitRelease where
+| Exact : ledger.ExitRelease
+| Unproven : ledger.UnprovenReason → ledger.ExitRelease
+
+/-- [noble_kernel::ledger::SessionState]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 296:0-299:1
+    Visibility: public -/
+@[discriminant isize]
+inductive ledger.SessionState where
+| Retained : ledger.SessionState
+| TerminatedAfterGuestFailure : ledger.SessionState
+
+/-- [noble_kernel::ledger::FrameTransition]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 303:0-306:1
+    Visibility: public -/
+structure ledger.FrameTransition where
+  next : ledger.Snapshot
+  counts : ledger.FramePinCounts
+
+/-- [noble_kernel::ledger::FinishActions]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 310:0-314:1
+    Visibility: public -/
+structure ledger.FinishActions where
+  retire_map_pin : ledger.MapEpoch
+  retire_root_versions : Bool
+  sweep_module_retirement : Bool
+
+/-- [noble_kernel::ledger::FinishPlan]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 319:0-324:1
+    Visibility: public -/
+structure ledger.FinishPlan where
+  root : ledger.RootToken
+  map_epoch : ledger.MapEpoch
+  counts : ledger.FramePinCounts
+  actions : ledger.FinishActions
+
+/-- [noble_kernel::ledger::FinishAck]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 346:0-350:1
+    Visibility: public -/
+structure ledger.FinishAck where
+  root : ledger.RootToken
+  retire_versions : ledger.BackendAck
+  sweep_retirement : ledger.BackendAck
+
+/-- [noble_kernel::ledger::FinishOutcome]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 354:0-359:1
+    Visibility: public -/
+structure ledger.FinishOutcome where
+  next : ledger.Snapshot
+  counts : ledger.FramePinCounts
+  exit_release : ledger.ExitRelease
+  session_state : ledger.SessionState
+
+/-- [noble_kernel::ledger::AbortActions]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 363:0-375:1
+    Visibility: public -/
+structure ledger.AbortActions where
+  clear_operand_stack : Bool
+  retire_map_pin : ledger.MapEpoch
+  retire_aborted_root_versions : Bool
+  sweep_module_retirement : Bool
+
+/-- [noble_kernel::ledger::AbortPlan]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 380:0-387:1
+    Visibility: public -/
+structure ledger.AbortPlan where
+  root : ledger.RootToken
+  map_epoch : ledger.MapEpoch
+  counts : ledger.FramePinCounts
+  released_frames : alloc.vec.Vec ledger.FrameToken
+  actions : ledger.AbortActions
+  plan_unproven : Option ledger.UnprovenReason
+
+/-- [noble_kernel::ledger::AbortAck]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 419:0-424:1
+    Visibility: public -/
+structure ledger.AbortAck where
+  root : ledger.RootToken
+  clear_stack : ledger.ClearStackAck
+  retire_versions : ledger.BackendAck
+  sweep_retirement : ledger.BackendAck
+
+/-- [noble_kernel::ledger::AbortOutcome]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 428:0-434:1
+    Visibility: public -/
+structure ledger.AbortOutcome where
+  next : ledger.Snapshot
+  counts : ledger.FramePinCounts
+  released_frames : alloc.vec.Vec ledger.FrameToken
+  exit_release : ledger.ExitRelease
+  session_state : ledger.SessionState
+
+/-- [noble_kernel::ledger::RejectedAck]
+    Source: 'crates/noble-kernel/src/ledger/mod.rs', lines 439:0-442:1
+    Visibility: public -/
+structure ledger.RejectedAck (T : Type _) where
+  error : ledger.Error
+  plan : T
+
 /-- [noble_kernel::BudgetOutcome]
-    Source: 'crates/noble-kernel/src/lib.rs', lines 59:0-62:1
+    Source: 'crates/noble-kernel/src/lib.rs', lines 60:0-63:1
     Visibility: public -/
 @[discriminant isize]
 inductive BudgetOutcome where

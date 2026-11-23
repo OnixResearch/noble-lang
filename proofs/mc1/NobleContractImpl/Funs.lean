@@ -18850,7 +18850,7 @@ def component.World.impl.checked_u64
   ok self.checked_u64
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::CheckedProgramInterface}::is_pure_i64_endomorphism]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 150:4-154:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 155:4-159:5
     Visibility: public -/
 def source.declared.state.CheckedProgramInterface.is_pure_i64_endomorphism
   (self : source.declared.state.CheckedProgramInterface) : Result Bool := do
@@ -19232,7 +19232,7 @@ def component.World.select_worker_program
     ok (core.result.Result.Err e)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::CheckedProgramInterface}::is_test_emit_i64_endomorphism]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 156:4-160:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 161:4-165:5
     Visibility: public -/
 def source.declared.state.CheckedProgramInterface.is_test_emit_i64_endomorphism
   (self : source.declared.state.CheckedProgramInterface) : Result Bool := do
@@ -19280,7 +19280,7 @@ def component.World.select_worker_program_for_test_emit
     ok (core.result.Result.Err e)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::CheckedProgramInterface}::is_test_code_export_i64_endomorphism]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 162:4-166:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 167:4-171:5
     Visibility: public -/
 def
   source.declared.state.CheckedProgramInterface.is_test_code_export_i64_endomorphism
@@ -19329,7 +19329,7 @@ def component.World.select_worker_program_for_test_code_export
     ok (core.result.Result.Err e)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::CheckedProgramInterface}::is_test_send_i64_endomorphism]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 168:4-172:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 173:4-177:5
     Visibility: public -/
 def source.declared.state.CheckedProgramInterface.is_test_send_i64_endomorphism
   (self : source.declared.state.CheckedProgramInterface) : Result Bool := do
@@ -19469,7 +19469,7 @@ def component.World.has_transition_operation_shape
           else ok false
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::CheckedProgramInterface}::ty]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 174:4-180:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 179:4-185:5
     Visibility: public -/
 def source.declared.state.CheckedProgramInterface.ty
   (self : source.declared.state.CheckedProgramInterface) :
@@ -137726,9 +137726,9 @@ def source.declared.signatures.families_loop1.body
     noble_kernel.types.NominalTypeId × (Array Std.U8 2#usize))) × Std.Usize)
     ((alloc.vec.Vec source.declared.BoundOperation) × (alloc.vec.Vec
     source.declared.Module) × (alloc.vec.Vec source.declared.Alias) × Std.U64
-    × Std.U64 × Std.U32 × (Option intrinsic.ProofBudgets) × source.Session
-    × (alloc.vec.Vec (String × noble_kernel.types.NominalTypeId × (Array
-    Std.U8 2#usize)))))
+    × Std.U64 × Std.U32 × (Option intrinsic.ProofBudgets) × Bool ×
+    source.Session × (alloc.vec.Vec (String ×
+    noble_kernel.types.NominalTypeId × (Array Std.U8 2#usize)))))
   := do
   let i := alloc.vec.Vec.len session.modules
   if module_slot < i
@@ -137742,8 +137742,8 @@ def source.declared.signatures.families_loop1.body
   else
     ok (done (session.bindings, session.modules, session.aliases,
       session.next_module_identity, session.generation,
-      session.retained_source_limit, session.proof_budgets, session.source,
-      result))
+      session.retained_source_limit, session.proof_budgets,
+      session.proof_editor, session.source, result))
 
 /-- [noble_contracts::source::declared::signatures::families]: loop 1:
     Source: 'crates/noble-contracts/src/source/declared/signatures.rs', lines 64:4-67:5 -/
@@ -137754,9 +137754,9 @@ def source.declared.signatures.families_loop1
   Std.U8 2#usize))) (module_slot : Std.Usize) :
   Result ((alloc.vec.Vec source.declared.BoundOperation) × (alloc.vec.Vec
     source.declared.Module) × (alloc.vec.Vec source.declared.Alias) × Std.U64
-    × Std.U64 × Std.U32 × (Option intrinsic.ProofBudgets) × source.Session
-    × (alloc.vec.Vec (String × noble_kernel.types.NominalTypeId × (Array
-    Std.U8 2#usize))))
+    × Std.U64 × Std.U32 × (Option intrinsic.ProofBudgets) × Bool ×
+    source.Session × (alloc.vec.Vec (String ×
+    noble_kernel.types.NominalTypeId × (Array Std.U8 2#usize))))
   := do
   loop
     (fun (result1, module_slot1) =>
@@ -137775,7 +137775,7 @@ def source.declared.signatures.families
     source.declared.signatures.families_loop0 session names identity
       (alloc.vec.Vec.new (String × noble_kernel.types.NominalTypeId × (Array
       Std.U8 2#usize))) 0#usize false
-  let (v, v1, v2, i, i1, i2, o, s, result1) ←
+  let (v, v1, v2, i, i1, i2, o, b, s, result1) ←
     source.declared.signatures.families_loop1 session result 0#usize
   let s1 := alloc.vec.Vec.deref v1
   let o1 ←
@@ -137788,6 +137788,7 @@ def source.declared.signatures.families
         generation := i1,
         retained_source_limit := i2,
         proof_budgets := o,
+        proof_editor := b,
         source := s
       }
   ok
@@ -140526,10 +140527,10 @@ def source.declared.state.namespace.words.word_capacity_loop1.body
   (v : alloc.vec.Vec source.declared.BoundOperation)
   (v1 : alloc.vec.Vec source.declared.Module)
   (v2 : alloc.vec.Vec source.declared.Alias) (i : Std.U64) (i1 : Std.U64)
-  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets)
+  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets) (b : Bool)
   (v3 : alloc.vec.Vec source.Named) (v4 : alloc.vec.Vec Std.U8) (i3 : Std.U64)
-  (b : Bool) (b1 : Bool) (o1 : Option String) (o2 : Option source.LiveSlots)
-  (b2 : Bool) (b3 : Bool) (o3 : Option component.Bindings)
+  (b1 : Bool) (b2 : Bool) (o1 : Option String) (o2 : Option source.LiveSlots)
+  (b3 : Bool) (b4 : Bool) (o3 : Option component.Bindings)
   (o4 : Option source.declared.Context) (permit_signed : Bool)
   (count : Option Std.Usize) (module_slot : Std.Usize) :
   Result (ControlFlow ((Option Std.Usize) × Std.Usize) (Option Std.Usize))
@@ -140537,8 +140538,8 @@ def source.declared.state.namespace.words.word_capacity_loop1.body
   let i4 := alloc.vec.Vec.len v1
   if module_slot < i4
   then
-    let b4 := core.option.Option.is_some count
-    if b4
+    let b5 := core.option.Option.is_some count
+    if b5
     then
       let count1 ←
         if permit_signed
@@ -140550,7 +140551,7 @@ def source.declared.state.namespace.words.word_capacity_loop1.body
           source.declared.state.namespace.words.add_export_count count m
         else
           do
-          let b5 ←
+          let b6 ←
             source.declared.state.namespace.ModuleSession.module_has_unverified_signed_owner
               {
                 bindings := v,
@@ -140560,22 +140561,23 @@ def source.declared.state.namespace.words.word_capacity_loop1.body
                 generation := i1,
                 retained_source_limit := i2,
                 proof_budgets := o,
+                proof_editor := b,
                 source :=
                   {
                     definitions := v3,
                     history := v4,
                     generation := i3,
-                    hosts := b,
-                    text_cursor := b1,
+                    hosts := b1,
+                    text_cursor := b2,
                     live_selected := o1,
                     live_slots := o2,
-                    calculator := b2,
-                    checked_i64 := b3,
+                    calculator := b3,
+                    checked_i64 := b4,
                     bindings := o3,
                     declared := o4
                   }
               } module_slot
-          if b5
+          if b6
           then ok count
           else
             let m ←
@@ -140594,10 +140596,10 @@ def source.declared.state.namespace.words.word_capacity_loop1
   (v : alloc.vec.Vec source.declared.BoundOperation)
   (v1 : alloc.vec.Vec source.declared.Module)
   (v2 : alloc.vec.Vec source.declared.Alias) (i : Std.U64) (i1 : Std.U64)
-  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets)
+  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets) (b : Bool)
   (v3 : alloc.vec.Vec source.Named) (v4 : alloc.vec.Vec Std.U8) (i3 : Std.U64)
-  (b : Bool) (b1 : Bool) (o1 : Option String) (o2 : Option source.LiveSlots)
-  (b2 : Bool) (b3 : Bool) (o3 : Option component.Bindings)
+  (b1 : Bool) (b2 : Bool) (o1 : Option String) (o2 : Option source.LiveSlots)
+  (b3 : Bool) (b4 : Bool) (o3 : Option component.Bindings)
   (o4 : Option source.declared.Context) (permit_signed : Bool)
   (count : Option Std.Usize) (module_slot : Std.Usize) :
   Result (Option Std.Usize)
@@ -140605,7 +140607,7 @@ def source.declared.state.namespace.words.word_capacity_loop1
   loop
     (fun (count1, module_slot1) =>
       source.declared.state.namespace.words.word_capacity_loop1.body v v1 v2 i
-      i1 i2 o v3 v4 i3 b b1 o1 o2 b2 b3 o3 o4 permit_signed count1
+      i1 i2 o b v3 v4 i3 b1 b2 o1 o2 b3 b4 o3 o4 permit_signed count1
       module_slot1)
     (count, module_slot)
 
@@ -140623,7 +140625,7 @@ def source.declared.state.namespace.words.word_capacity
     source.declared.state.namespace.words.word_capacity_loop1 session.bindings
       session.modules session.aliases session.next_module_identity
       session.generation session.retained_source_limit session.proof_budgets
-      session.source.definitions session.source.history
+      session.proof_editor session.source.definitions session.source.history
       session.source.generation session.source.hosts session.source.text_cursor
       session.source.live_selected session.source.live_slots
       session.source.calculator session.source.checked_i64
@@ -141171,11 +141173,11 @@ def
   Result (ControlFlow ((alloc.vec.Vec (String × source.Target)) × Std.Usize)
     ((alloc.vec.Vec source.declared.BoundOperation) × (alloc.vec.Vec
     source.declared.Module) × (alloc.vec.Vec source.declared.Alias) × Std.U64
-    × Std.U64 × Std.U32 × (Option intrinsic.ProofBudgets) × (alloc.vec.Vec
-    source.Named) × (alloc.vec.Vec Std.U8) × Std.U64 × Bool × Bool ×
-    (Option String) × (Option source.LiveSlots) × Bool × Bool × (Option
-    component.Bindings) × (Option source.declared.Context) × (alloc.vec.Vec
-    (String × source.Target))))
+    × Std.U64 × Std.U32 × (Option intrinsic.ProofBudgets) × Bool ×
+    (alloc.vec.Vec source.Named) × (alloc.vec.Vec Std.U8) × Std.U64 × Bool
+    × Bool × (Option String) × (Option source.LiveSlots) × Bool × Bool ×
+    (Option component.Bindings) × (Option source.declared.Context) ×
+    (alloc.vec.Vec (String × source.Target))))
   := do
   let i := alloc.vec.Vec.len self.source.definitions
   if definition_slot < i
@@ -141197,11 +141199,11 @@ def
   else
     ok (done (self.bindings, self.modules, self.aliases,
       self.next_module_identity, self.generation, self.retained_source_limit,
-      self.proof_budgets, self.source.definitions, self.source.history,
-      self.source.generation, self.source.hosts, self.source.text_cursor,
-      self.source.live_selected, self.source.live_slots,
-      self.source.calculator, self.source.checked_i64, self.source.bindings,
-      self.source.declared, words))
+      self.proof_budgets, self.proof_editor, self.source.definitions,
+      self.source.history, self.source.generation, self.source.hosts,
+      self.source.text_cursor, self.source.live_selected,
+      self.source.live_slots, self.source.calculator, self.source.checked_i64,
+      self.source.bindings, self.source.declared, words))
 
 /-- [noble_contracts::source::declared::state::namespace::words::{noble_contracts::source::declared::state::ModuleSession}::refresh_outside_words]: loop 0:
     Source: 'crates/noble-contracts/src/source/declared/state/namespace/words.rs', lines 291:8-299:9 -/
@@ -141213,11 +141215,11 @@ def
   (definition_slot : Std.Usize) :
   Result ((alloc.vec.Vec source.declared.BoundOperation) × (alloc.vec.Vec
     source.declared.Module) × (alloc.vec.Vec source.declared.Alias) × Std.U64
-    × Std.U64 × Std.U32 × (Option intrinsic.ProofBudgets) × (alloc.vec.Vec
-    source.Named) × (alloc.vec.Vec Std.U8) × Std.U64 × Bool × Bool ×
-    (Option String) × (Option source.LiveSlots) × Bool × Bool × (Option
-    component.Bindings) × (Option source.declared.Context) × (alloc.vec.Vec
-    (String × source.Target)))
+    × Std.U64 × Std.U32 × (Option intrinsic.ProofBudgets) × Bool ×
+    (alloc.vec.Vec source.Named) × (alloc.vec.Vec Std.U8) × Std.U64 × Bool
+    × Bool × (Option String) × (Option source.LiveSlots) × Bool × Bool ×
+    (Option component.Bindings) × (Option source.declared.Context) ×
+    (alloc.vec.Vec (String × source.Target)))
   := do
   loop
     (fun (words1, definition_slot1) =>
@@ -141295,8 +141297,8 @@ def source.declared.state.namespace.words.ModuleSession.refresh_outside_words
   match r with
   | core.result.Result.Ok value =>
     let words := alloc.vec.Vec.with_capacity (String × source.Target) value
-    let (v, v1, v2, i, i1, i2, o, v3, v4, i3, b, b1, o1, o2, b2, b3, o3, o4,
-      words1) ←
+    let (v, v1, v2, i, i1, i2, o, b, v3, v4, i3, b1, b2, o1, o2, b3, b4, o3,
+      o4, words1) ←
       source.declared.state.namespace.words.ModuleSession.refresh_outside_words_loop0
         self words 0#usize
     let r1 ←
@@ -141309,17 +141311,18 @@ def source.declared.state.namespace.words.ModuleSession.refresh_outside_words
           generation := i1,
           retained_source_limit := i2,
           proof_budgets := o,
+          proof_editor := b,
           source :=
             {
               definitions := v3,
               history := v4,
               generation := i3,
-              hosts := b,
-              text_cursor := b1,
+              hosts := b1,
+              text_cursor := b2,
               live_selected := o1,
               live_slots := o2,
-              calculator := b2,
-              checked_i64 := b3,
+              calculator := b3,
+              checked_i64 := b4,
               bindings := o3,
               declared := o4
             }
@@ -141336,17 +141339,18 @@ def source.declared.state.namespace.words.ModuleSession.refresh_outside_words
             generation := i1,
             retained_source_limit := i2,
             proof_budgets := o,
+            proof_editor := b,
             source :=
               {
                 definitions := v3,
                 history := v4,
                 generation := i3,
-                hosts := b,
-                text_cursor := b1,
+                hosts := b1,
+                text_cursor := b2,
                 live_selected := o1,
                 live_slots := o2,
-                calculator := b2,
-                checked_i64 := b3,
+                calculator := b3,
+                checked_i64 := b4,
                 bindings := o3,
                 declared := o4
               }
@@ -141371,17 +141375,18 @@ def source.declared.state.namespace.words.ModuleSession.refresh_outside_words
                 generation := i1,
                 retained_source_limit := i2,
                 proof_budgets := o,
+                proof_editor := b,
                 source :=
                   {
                     definitions := v3,
                     history := v4,
                     generation := i3,
-                    hosts := b,
-                    text_cursor := b1,
+                    hosts := b1,
+                    text_cursor := b2,
                     live_selected := o1,
                     live_slots := o2,
-                    calculator := b2,
-                    checked_i64 := b3,
+                    calculator := b3,
+                    checked_i64 := b4,
                     bindings := o3,
                     declared := none
                   }
@@ -141396,17 +141401,18 @@ def source.declared.state.namespace.words.ModuleSession.refresh_outside_words
                 generation := i1,
                 retained_source_limit := i2,
                 proof_budgets := o,
+                proof_editor := b,
                 source :=
                   {
                     definitions := v3,
                     history := v4,
                     generation := i3,
-                    hosts := b,
-                    text_cursor := b1,
+                    hosts := b1,
+                    text_cursor := b2,
                     live_selected := o1,
                     live_slots := o2,
-                    calculator := b2,
-                    checked_i64 := b3,
+                    calculator := b3,
+                    checked_i64 := b4,
                     bindings := o3,
                     declared :=
                       (some
@@ -141435,17 +141441,18 @@ def source.declared.state.namespace.words.ModuleSession.refresh_outside_words
               generation := i1,
               retained_source_limit := i2,
               proof_budgets := o,
+              proof_editor := b,
               source :=
                 {
                   definitions := v3,
                   history := v4,
                   generation := i3,
-                  hosts := b,
-                  text_cursor := b1,
+                  hosts := b1,
+                  text_cursor := b2,
                   live_selected := o1,
                   live_slots := o2,
-                  calculator := b2,
-                  checked_i64 := b3,
+                  calculator := b3,
+                  checked_i64 := b4,
                   bindings := o3,
                   declared := o4
                 }
@@ -141460,17 +141467,18 @@ def source.declared.state.namespace.words.ModuleSession.refresh_outside_words
             generation := i1,
             retained_source_limit := i2,
             proof_budgets := o,
+            proof_editor := b,
             source :=
               {
                 definitions := v3,
                 history := v4,
                 generation := i3,
-                hosts := b,
-                text_cursor := b1,
+                hosts := b1,
+                text_cursor := b2,
                 live_selected := o1,
                 live_slots := o2,
-                calculator := b2,
-                checked_i64 := b3,
+                calculator := b3,
+                checked_i64 := b4,
                 bindings := o3,
                 declared := o4
               }
@@ -141485,17 +141493,18 @@ def source.declared.state.namespace.words.ModuleSession.refresh_outside_words
           generation := i1,
           retained_source_limit := i2,
           proof_budgets := o,
+          proof_editor := b,
           source :=
             {
               definitions := v3,
               history := v4,
               generation := i3,
-              hosts := b,
-              text_cursor := b1,
+              hosts := b1,
+              text_cursor := b2,
               live_selected := o1,
               live_slots := o2,
-              calculator := b2,
-              checked_i64 := b3,
+              calculator := b3,
+              checked_i64 := b4,
               bindings := o3,
               declared := o4
             }
@@ -144438,7 +144447,7 @@ def source.declared.state.namespace.ModuleSession.reserved_word
 def source.declared.MODULE_CAP : Std.Usize := 128#usize
 
 /-- [noble_contracts::source::declared::state::position_first]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1976:4-1981:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2036:4-2041:5 -/
 @[rust_loop_body]
 def source.declared.state.position_first_loop.body
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleSharedTBoolInst :
@@ -144465,7 +144474,7 @@ def source.declared.state.position_first_loop.body
   else ok (done found)
 
 /-- [noble_contracts::source::declared::state::position_first]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1976:4-1981:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2036:4-2041:5 -/
 @[rust_loop]
 def source.declared.state.position_first_loop
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleSharedTBoolInst :
@@ -144481,7 +144490,7 @@ def source.declared.state.position_first_loop
     (predicate, index1, found)
 
 /-- [noble_contracts::source::declared::state::position_first]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1973:0-1983:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2033:0-2043:1 -/
 @[reducible]
 def source.declared.state.position_first
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleShared0TBoolInst :
@@ -144725,7 +144734,7 @@ def source.declared.state.namespace.ModuleSession.import
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::state::has_signed_self]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1868:4-1871:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1928:4-1931:5 -/
 @[rust_loop_body]
 def source.declared.state.has_signed_self_loop.body
   (nodes : Slice noble_kernel.untrusted.Node) (is_found : Bool)
@@ -144751,7 +144760,7 @@ def source.declared.state.has_signed_self_loop.body
     else ok (done is_found)
 
 /-- [noble_contracts::source::declared::state::has_signed_self]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1868:4-1871:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1928:4-1931:5 -/
 @[rust_loop]
 def source.declared.state.has_signed_self_loop
   (nodes : Slice noble_kernel.untrusted.Node) (is_found : Bool)
@@ -144764,7 +144773,7 @@ def source.declared.state.has_signed_self_loop
     (is_found, «at»)
 
 /-- [noble_contracts::source::declared::state::has_signed_self]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1865:0-1873:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1925:0-1933:1 -/
 @[reducible]
 def source.declared.state.has_signed_self
   (nodes : Slice noble_kernel.untrusted.Node) : Result Bool := do
@@ -145000,7 +145009,7 @@ def
   Result (ControlFlow (source.declared.state.ModuleSession × Std.Usize)
     ((alloc.vec.Vec source.declared.BoundOperation) × (alloc.vec.Vec
     source.declared.Module) × (alloc.vec.Vec source.declared.Alias) × Std.U64
-    × Std.U64 × Std.U32 × (Option intrinsic.ProofBudgets) ×
+    × Std.U64 × Std.U32 × (Option intrinsic.ProofBudgets) × Bool ×
     source.Session))
   := do
   let i := alloc.vec.Vec.len self.aliases
@@ -145029,7 +145038,7 @@ def
   else
     ok (done (self.bindings, self.modules, self.aliases,
       self.next_module_identity, self.generation, self.retained_source_limit,
-      self.proof_budgets, self.source))
+      self.proof_budgets, self.proof_editor, self.source))
 
 /-- [noble_contracts::source::declared::state::namespace::{noble_contracts::source::declared::state::ModuleSession}::record_signed_certified]: loop 1:
     Source: 'crates/noble-contracts/src/source/declared/state/namespace.rs', lines 265:8-272:9 -/
@@ -145038,7 +145047,8 @@ def source.declared.state.namespace.ModuleSession.record_signed_certified_loop1
   (self : source.declared.state.ModuleSession) («at» : Std.Usize) :
   Result ((alloc.vec.Vec source.declared.BoundOperation) × (alloc.vec.Vec
     source.declared.Module) × (alloc.vec.Vec source.declared.Alias) × Std.U64
-    × Std.U64 × Std.U32 × (Option intrinsic.ProofBudgets) × source.Session)
+    × Std.U64 × Std.U32 × (Option intrinsic.ProofBudgets) × Bool ×
+    source.Session)
   := do
   loop
     (fun (self1, at1) =>
@@ -145058,7 +145068,7 @@ def source.declared.state.namespace.ModuleSession.record_signed_certified
       self submission (core.result.Result.Ok ()) 0#usize
   match certified with
   | core.result.Result.Ok _ =>
-    let (v, v1, v2, i, i1, i2, o, s) ←
+    let (v, v1, v2, i, i1, i2, o, b, s) ←
       source.declared.state.namespace.ModuleSession.record_signed_certified_loop1
         self1 0#usize
     source.declared.state.namespace.words.ModuleSession.outside_words
@@ -145070,6 +145080,7 @@ def source.declared.state.namespace.ModuleSession.record_signed_certified
         generation := i1,
         retained_source_limit := i2,
         proof_budgets := o,
+        proof_editor := b,
         source := s
       }
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
@@ -145522,7 +145533,7 @@ def source.preparation.symbolic.verify
     ok (core.result.Result.Err failure, meter)
 
 /-- [noble_contracts::source::declared::state::same_scheme]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2168:0-2173:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2228:0-2233:1 -/
 def source.declared.state.same_scheme
   (left : noble_kernel.words.Scheme) (right : noble_kernel.words.Scheme) :
   Result Bool
@@ -145553,7 +145564,7 @@ def source.declared.state.same_scheme
   else ok false
 
 /-- [noble_contracts::source::declared::state::calls_self]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1854:4-1860:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1914:4-1920:5 -/
 @[rust_loop_body]
 def source.declared.state.calls_self_loop.body
   (definition : source.Named) (is_found : Bool) («at» : Std.Usize) :
@@ -145586,7 +145597,7 @@ def source.declared.state.calls_self_loop.body
     else ok (done is_found)
 
 /-- [noble_contracts::source::declared::state::calls_self]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1854:4-1860:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1914:4-1920:5 -/
 @[rust_loop]
 def source.declared.state.calls_self_loop
   (definition : source.Named) (is_found : Bool) («at» : Std.Usize) :
@@ -145598,14 +145609,14 @@ def source.declared.state.calls_self_loop
     (is_found, «at»)
 
 /-- [noble_contracts::source::declared::state::calls_self]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1851:0-1862:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1911:0-1922:1 -/
 @[reducible]
 def source.declared.state.calls_self
   (definition : source.Named) : Result Bool := do
   source.declared.state.calls_self_loop definition false 0#usize
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::compare_signed_node::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::compare_signed_node::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1311:62-1316:17 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1316:62-1321:17 -/
 def
   source.declared.state.ModulePrepared.compare_signed_node.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
   (c : source.declared.state.ModulePrepared.compare_signed_node.closure)
@@ -145616,7 +145627,7 @@ def
     "signed lexical node index overflow")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::compare_signed_node::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::compare_signed_node::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1311:62-1316:17 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1316:62-1321:17 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.compare_signed_node.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
@@ -145628,7 +145639,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::compare_signed_node]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1293:4-1346:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1298:4-1351:5 -/
 def source.declared.state.ModulePrepared.compare_signed_node
   (definition : source.Named) (relation : source.SignedRelation)
   (node_index : Std.Usize) (saved : source.Node) (parsed : source.Node) :
@@ -145915,7 +145926,7 @@ def source.declared.state.ModulePrepared.compare_signed_node
       ok (core.result.Result.Err e)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::count_signed_nodes]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1268:8-1284:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1273:8-1289:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.count_signed_nodes_loop.body
   (definition : source.Named) (relation : source.SignedRelation)
@@ -145958,7 +145969,7 @@ def source.declared.state.ModulePrepared.count_signed_nodes_loop.body
   else ok (done (signed_count, failure))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::count_signed_nodes]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1268:8-1284:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1273:8-1289:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.count_signed_nodes_loop
   (definition : source.Named) (relation : source.SignedRelation)
@@ -145973,7 +145984,7 @@ def source.declared.state.ModulePrepared.count_signed_nodes_loop
     (signed_count, failure, node_index)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::count_signed_nodes]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1260:4-1289:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1265:4-1294:5 -/
 def source.declared.state.ModulePrepared.count_signed_nodes
   (definition : source.Named) (relation : source.SignedRelation)
   (original : source.Tree) :
@@ -145987,7 +145998,7 @@ def source.declared.state.ModulePrepared.count_signed_nodes
   | some error => ok (core.result.Result.Err error)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{impl core::ops::function::FnOnce<(&'_1 noble_kernel::words::Scheme,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1248:28-1248:72 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1253:28-1253:72 -/
 def
   source.declared.state.ModulePrepared.check_specialization.closure.Insts.CoreOpsFunctionFnOnceTupleShared1SchemeBool.call_once
   (c : source.declared.state.ModulePrepared.check_specialization.closure)
@@ -145998,7 +146009,7 @@ def
   ok (¬ b)
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{impl core::ops::function::FnOnce<(&'_1 noble_kernel::words::Scheme,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1248:28-1248:72 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1253:28-1253:72 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_specialization.closure.Insts.CoreOpsFunctionFnOnceTupleShared1SchemeBool
@@ -146016,7 +146027,7 @@ def source.declared.diagnostic
   source.Error.at stage problem
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1238:21-1238:86 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1243:21-1243:86 -/
 def
   source.declared.state.ModulePrepared.check_specialization.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.declared.state.ModulePrepared.check_specialization.closure_1)
@@ -146026,7 +146037,7 @@ def
   source.declared.diagnostic source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1238:21-1238:86 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1243:21-1243:86 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_specialization.closure_1.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -146038,7 +146049,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{closure#2}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1234:33-1234:98 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1239:33-1239:98 -/
 def
   source.declared.state.ModulePrepared.check_specialization.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.declared.state.ModulePrepared.check_specialization.closure_2)
@@ -146048,7 +146059,7 @@ def
   source.declared.diagnostic source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization::{closure#2}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1234:33-1234:98 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1239:33-1239:98 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_specialization.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -146060,7 +146071,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specialization]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1221:4-1256:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1226:4-1261:5 -/
 def source.declared.state.ModulePrepared.check_specialization
   (submission : noble_kernel.execution.Submission)
   (specialization : noble_kernel.execution.Definition)
@@ -146137,7 +146148,7 @@ def source.declared.state.ModulePrepared.check_specialization
       ok (core.result.Result.Err failure, meter)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specializations]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1193:8-1200:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1198:8-1205:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.check_specializations_loop.body
   (submission : noble_kernel.execution.Submission) (n : source.Named)
@@ -146180,7 +146191,7 @@ def source.declared.state.ModulePrepared.check_specializations_loop.body
   else ok (done (meter, is_matched, failure))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specializations]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1193:8-1200:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1198:8-1205:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.check_specializations_loop
   (submission : noble_kernel.execution.Submission) (n : source.Named)
@@ -146196,7 +146207,7 @@ def source.declared.state.ModulePrepared.check_specializations_loop
     (meter, is_matched, failure, «at»)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_specializations]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1185:4-1205:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1190:4-1210:5 -/
 def source.declared.state.ModulePrepared.check_specializations
   (submission : noble_kernel.execution.Submission)
   (origin : source.declared.state.SignedOrigin) (meter : Meter) :
@@ -146211,7 +146222,7 @@ def source.declared.state.ModulePrepared.check_specializations
   | some error => ok (core.result.Result.Err error, meter1)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#13}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1175:17-1175:82 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1180:17-1180:82 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_13.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.declared.state.ModulePrepared.check_signed_source.closure_13)
@@ -146221,7 +146232,7 @@ def
   source.declared.diagnostic source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#13}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1175:17-1175:82 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1180:17-1180:82 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_13.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -146233,7 +146244,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#12}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1149:25-1149:90 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1154:25-1154:90 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_12.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.declared.state.ModulePrepared.check_signed_source.closure_12)
@@ -146243,7 +146254,7 @@ def
   source.declared.diagnostic source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#12}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1149:25-1149:90 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1154:25-1154:90 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_12.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -146255,7 +146266,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::Context,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#5}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1146:25-1146:56 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1151:25-1151:56 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_5.Insts.CoreOpsFunctionFnOnceTupleShared0ContextBool.call_once
   (c : source.declared.state.ModulePrepared.check_signed_source.closure_5)
@@ -146265,7 +146276,7 @@ def
   ok tupled_args.declared_text
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::Context,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#5}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1146:25-1146:56 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1151:25-1151:56 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_5.Insts.CoreOpsFunctionFnOnceTupleShared0ContextBool
@@ -146277,7 +146288,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#11}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1140:25-1140:90 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1145:25-1145:90 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_11.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.declared.state.ModulePrepared.check_signed_source.closure_11)
@@ -146287,7 +146298,7 @@ def
   source.declared.diagnostic source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#11}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1140:25-1140:90 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1145:25-1145:90 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_11.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -146299,7 +146310,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#10}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1124:21-1124:86 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1129:21-1129:86 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_10.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.declared.state.ModulePrepared.check_signed_source.closure_10)
@@ -146309,7 +146320,7 @@ def
   source.declared.diagnostic source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#10}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1124:21-1124:86 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1129:21-1129:86 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_10.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -146321,7 +146332,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#4}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1111:68-1116:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1116:68-1121:9 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_4.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.declared.state.ModulePrepared.check_signed_source.closure_4)
@@ -146332,7 +146343,7 @@ def
     "signed definition has no retained signature")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#4}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1111:68-1116:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1116:68-1121:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_4.Insts.CoreOpsFunctionFnOnceTupleError
@@ -146344,7 +146355,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#8}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1104:21-1104:86 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1109:21-1109:86 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_8.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.declared.state.ModulePrepared.check_signed_source.closure_8)
@@ -146354,7 +146365,7 @@ def
   source.declared.diagnostic source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#8}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1104:21-1104:86 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1109:21-1109:86 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_8.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -146366,7 +146377,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#9}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1101:29-1101:94 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1106:29-1106:94 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_9.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.declared.state.ModulePrepared.check_signed_source.closure_9)
@@ -146376,7 +146387,7 @@ def
   source.declared.diagnostic source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#9}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1101:29-1101:94 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1106:29-1106:94 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_9.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -146388,7 +146399,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#7}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1090:17-1090:82 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1095:17-1095:82 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_7.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.declared.state.ModulePrepared.check_signed_source.closure_7)
@@ -146398,7 +146409,7 @@ def
   source.declared.diagnostic source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#7}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1090:17-1090:82 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1095:17-1095:82 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_7.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -146410,7 +146421,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#6}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1080:56-1083:17 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1085:56-1088:17 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_6.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
   (c : source.declared.state.ModulePrepared.check_signed_source.closure_6)
@@ -146421,7 +146432,7 @@ def
     "signed definition ordinal overflow")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#6}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1080:56-1083:17 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1085:56-1088:17 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_6.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
@@ -146433,7 +146444,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#3}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1062:57-1067:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1067:57-1072:9 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_3.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
   (c : source.declared.state.ModulePrepared.check_signed_source.closure_3)
@@ -146444,7 +146455,7 @@ def
     "signed source span exceeds address space")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#3}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1062:57-1067:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1067:57-1072:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_3.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
@@ -146456,7 +146467,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#2}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1056:61-1061:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1061:61-1066:9 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_2.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
   (c : source.declared.state.ModulePrepared.check_signed_source.closure_2)
@@ -146467,7 +146478,7 @@ def
     "signed source span exceeds address space")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#2}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1056:61-1061:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1061:61-1066:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_2.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
@@ -146479,7 +146490,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#1}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1047:69-1049:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1052:69-1054:9 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1DefinitionSourceBool.call_mut
   (c : source.declared.state.ModulePrepared.check_signed_source.closure_1)
@@ -146492,7 +146503,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1047:69-1049:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1052:69-1054:9 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1DefinitionSourceBool.call_once
   (c : source.declared.state.ModulePrepared.check_signed_source.closure_1)
@@ -146505,7 +146516,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1047:69-1049:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1052:69-1054:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1DefinitionSourceBool
@@ -146517,7 +146528,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1047:69-1049:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1052:69-1054:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1DefinitionSourceBool
@@ -146531,7 +146542,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1040:58-1040:91 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1045:58-1045:91 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure.Insts.CoreOpsFunctionFnMutTupleShared1ModuleBool.call_mut
   (c : source.declared.state.ModulePrepared.check_signed_source.closure)
@@ -146542,7 +146553,7 @@ def
   ok (tupled_args.identity = c, c)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1040:58-1040:91 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1045:58-1045:91 -/
 def
   source.declared.state.ModulePrepared.check_signed_source.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ModuleBool.call_once
   (c : source.declared.state.ModulePrepared.check_signed_source.closure)
@@ -146555,7 +146566,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1040:58-1040:91 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1045:58-1045:91 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ModuleBool
@@ -146567,7 +146578,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1040:58-1040:91 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1045:58-1045:91 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.check_signed_source.closure.Insts.CoreOpsFunctionFnMutTupleShared1ModuleBool
@@ -147882,7 +147893,7 @@ def source.declared.state.register.original_signature
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::check_signed_source]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1009:4-1177:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1014:4-1182:5 -/
 def source.declared.state.ModulePrepared.check_signed_source
   (self : source.declared.state.ModulePrepared)
   (submission : noble_kernel.execution.Submission)
@@ -148436,7 +148447,7 @@ def source.declared.state.ModulePrepared.check_signed_source
   else ok (core.result.Result.Ok false)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::SignedRelation,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#5}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 992:28-992:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 997:28-997:74 -/
 def
   source.declared.state.ModulePrepared.request_signed_slot.closure_5.Insts.CoreOpsFunctionFnOnceTupleShared1SignedRelationBool.call_once
   (c : source.declared.state.ModulePrepared.request_signed_slot.closure_5)
@@ -148446,7 +148457,7 @@ def
   ok (tupled_args.source_slot != c)
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::SignedRelation,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#5}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 992:28-992:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 997:28-997:74 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.request_signed_slot.closure_5.Insts.CoreOpsFunctionFnOnceTupleShared1SignedRelationBool
@@ -148458,7 +148469,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#4}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 981:24-986:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 986:24-991:13 -/
 def
   source.declared.state.ModulePrepared.request_signed_slot.closure_4.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.declared.state.ModulePrepared.request_signed_slot.closure_4)
@@ -148469,7 +148480,7 @@ def
     "signed owner source slot is absent")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#4}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 981:24-986:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 986:24-991:13 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.request_signed_slot.closure_4.Insts.CoreOpsFunctionFnOnceTupleError
@@ -148481,7 +148492,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#3}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 970:64-975:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 975:64-980:9 -/
 def
   source.declared.state.ModulePrepared.request_signed_slot.closure_3.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
   (c : source.declared.state.ModulePrepared.request_signed_slot.closure_3)
@@ -148492,7 +148503,7 @@ def
     "signed owner source slot overflow")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#3}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 970:64-975:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 975:64-980:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.request_signed_slot.closure_3.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
@@ -148504,7 +148515,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#2}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 964:59-969:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 969:59-974:9 -/
 def
   source.declared.state.ModulePrepared.request_signed_slot.closure_2.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.declared.state.ModulePrepared.request_signed_slot.closure_2)
@@ -148515,7 +148526,7 @@ def
     "signed owner has no exact source slot")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#2}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 964:59-969:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 969:59-974:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.request_signed_slot.closure_2.Insts.CoreOpsFunctionFnOnceTupleError
@@ -148527,7 +148538,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 958:24-963:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 963:24-968:13 -/
 def
   source.declared.state.ModulePrepared.request_signed_slot.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.declared.state.ModulePrepared.request_signed_slot.closure_1)
@@ -148538,7 +148549,7 @@ def
     "signed call has no declared module owner")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 958:24-963:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 963:24-968:13 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.request_signed_slot.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
@@ -148550,7 +148561,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 949:51-951:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 954:51-956:9 -/
 def
   source.declared.state.ModulePrepared.request_signed_slot.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
   (c : source.declared.state.ModulePrepared.request_signed_slot.closure)
@@ -148561,7 +148572,7 @@ def
     "signed owner index overflow")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 949:51-951:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 954:51-956:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.request_signed_slot.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
@@ -148573,7 +148584,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slot]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 936:4-1004:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 941:4-1009:5 -/
 def source.declared.state.ModulePrepared.request_signed_slot
   (self : source.declared.state.ModulePrepared)
   (submission : noble_kernel.execution.Submission)
@@ -148718,7 +148729,7 @@ def source.declared.state.ModulePrepared.request_signed_slot
       ok (r2, requested_slots)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slots]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 903:8-911:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 908:8-916:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.request_signed_slots_loop.body
   (self : source.declared.state.ModulePrepared)
@@ -148762,7 +148773,7 @@ def source.declared.state.ModulePrepared.request_signed_slots_loop.body
   else ok (done (definition, requested_slots, has_self, requested))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slots]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 903:8-911:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 908:8-916:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.request_signed_slots_loop
   (self : source.declared.state.ModulePrepared)
@@ -148780,7 +148791,7 @@ def source.declared.state.ModulePrepared.request_signed_slots_loop
     (requested_slots, has_self, requested, node_at)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::request_signed_slots]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 894:4-920:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 899:4-925:5 -/
 def source.declared.state.ModulePrepared.request_signed_slots
   (self : source.declared.state.ModulePrepared)
   (submission : noble_kernel.execution.Submission)
@@ -148808,7 +148819,7 @@ def source.declared.state.ModulePrepared.request_signed_slots
   | core.result.Result.Err _ => ok (requested, requested_slots1)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::verify_signed_origins]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 840:8-847:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 845:8-852:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.verify_signed_origins_loop0.body
   (mk : source.declared.state.ModuleKind) (i : Std.U64) (l : Limits)
@@ -148862,7 +148873,7 @@ def source.declared.state.ModulePrepared.verify_signed_origins_loop0.body
   else ok (done (submission, requested_slots, requested))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::verify_signed_origins]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 840:8-847:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 845:8-852:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.verify_signed_origins_loop0
   (mk : source.declared.state.ModuleKind) (i : Std.U64) (l : Limits)
@@ -148888,7 +148899,7 @@ def source.declared.state.ModulePrepared.verify_signed_origins_loop0
     (requested_slots, requested, definition_at)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::verify_signed_origins]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 852:8-859:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 857:8-864:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.verify_signed_origins_loop1.body
   (mk : source.declared.state.ModuleKind) (i : Std.U64) (l : Limits)
@@ -148948,7 +148959,7 @@ def source.declared.state.ModulePrepared.verify_signed_origins_loop1.body
   else ok (done (checked_slots, failure))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::verify_signed_origins]: loop 1:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 852:8-859:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 857:8-864:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.verify_signed_origins_loop1
   (mk : source.declared.state.ModuleKind) (i : Std.U64) (l : Limits)
@@ -148973,7 +148984,7 @@ def source.declared.state.ModulePrepared.verify_signed_origins_loop1
     (checked_slots, failure, source_index)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::verify_signed_origins]: loop body 2:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 865:8-868:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 870:8-873:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.verify_signed_origins_loop2.body
   (requested_slots : alloc.vec.Vec Std.Usize)
@@ -148997,7 +149008,7 @@ def source.declared.state.ModulePrepared.verify_signed_origins_loop2.body
     else ok (done is_unchecked)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::verify_signed_origins]: loop 2:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 865:8-868:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 870:8-873:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.verify_signed_origins_loop2
   (requested_slots : alloc.vec.Vec Std.Usize)
@@ -149012,7 +149023,7 @@ def source.declared.state.ModulePrepared.verify_signed_origins_loop2
     (is_unchecked, slot_at)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::verify_signed_origins]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 830:4-882:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 835:4-887:5 -/
 def source.declared.state.ModulePrepared.verify_signed_origins
   (self : source.declared.state.ModulePrepared) :
   Result (core.result.Result Unit source.Error)
@@ -149593,7 +149604,7 @@ impl_def source.declared.BoundOperation.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::snapshot]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1823:4-1846:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1882:4-1906:5
     Visibility: public -/
 def source.declared.state.ModuleSession.snapshot
   (self : source.declared.state.ModuleSession) :
@@ -149690,15 +149701,15 @@ def source.declared.state.register.session_import_aliases_loop.body
   (v : alloc.vec.Vec source.declared.BoundOperation)
   (v1 : alloc.vec.Vec source.declared.Module)
   (v2 : alloc.vec.Vec source.declared.Alias) (i : Std.U64) (i1 : Std.U64)
-  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets) (s : source.Session)
-  (aliases : alloc.vec.Vec source.declared.ImportAlias) (alias_at : Std.Usize)
-  (failure : Option source.Error) :
+  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets) (b : Bool)
+  (s : source.Session) (aliases : alloc.vec.Vec source.declared.ImportAlias)
+  (alias_at : Std.Usize) (failure : Option source.Error) :
   Result (ControlFlow ((alloc.vec.Vec source.declared.ImportAlias) × Std.Usize
     × (Option source.Error)) ((alloc.vec.Vec source.declared.ImportAlias) ×
     (Option source.Error)))
   := do
-  let b := core.option.Option.is_none failure
-  if b
+  let b1 := core.option.Option.is_none failure
+  if b1
   then
     let i3 := alloc.vec.Vec.len v2
     if alias_at < i3
@@ -149713,6 +149724,7 @@ def source.declared.state.register.session_import_aliases_loop.body
             generation := i1,
             retained_source_limit := i2,
             proof_budgets := o,
+            proof_editor := b,
             source := s
           } alias_at
       let (aliases1, failure1) ←
@@ -149734,15 +149746,15 @@ def source.declared.state.register.session_import_aliases_loop
   (v : alloc.vec.Vec source.declared.BoundOperation)
   (v1 : alloc.vec.Vec source.declared.Module)
   (v2 : alloc.vec.Vec source.declared.Alias) (i : Std.U64) (i1 : Std.U64)
-  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets) (s : source.Session)
-  (aliases : alloc.vec.Vec source.declared.ImportAlias) (alias_at : Std.Usize)
-  (failure : Option source.Error) :
+  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets) (b : Bool)
+  (s : source.Session) (aliases : alloc.vec.Vec source.declared.ImportAlias)
+  (alias_at : Std.Usize) (failure : Option source.Error) :
   Result ((alloc.vec.Vec source.declared.ImportAlias) × (Option source.Error))
   := do
   loop
     (fun (aliases1, alias_at1, failure1) =>
       source.declared.state.register.session_import_aliases_loop.body v v1 v2 i
-      i1 i2 o s aliases1 alias_at1 failure1)
+      i1 i2 o b s aliases1 alias_at1 failure1)
     (aliases, alias_at, failure)
 
 /-- [noble_contracts::source::declared::state::register::session_import_aliases]:
@@ -149758,7 +149770,7 @@ def source.declared.state.register.session_import_aliases
     source.declared.state.register.session_import_aliases_loop session.bindings
       session.modules session.aliases session.next_module_identity
       session.generation session.retained_source_limit session.proof_budgets
-      session.source aliases 0#usize none
+      session.proof_editor session.source aliases 0#usize none
   match failure with
   | none => ok (core.result.Result.Ok aliases1)
   | some problem => ok (core.result.Result.Err problem)
@@ -152710,7 +152722,7 @@ def source.declared.state.register.schema.resolve
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::state::register::logical::entered_dependency]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 367:4-370:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 592:4-595:5 -/
 @[rust_loop_body]
 def source.declared.state.register.logical.entered_dependency_loop.body
   (path : Slice Std.Usize) (node : intrinsic.ProofDependency)
@@ -152730,7 +152742,7 @@ def source.declared.state.register.logical.entered_dependency_loop.body
   else ok (done node)
 
 /-- [noble_contracts::source::declared::state::register::logical::entered_dependency]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 367:4-370:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 592:4-595:5 -/
 @[rust_loop]
 def source.declared.state.register.logical.entered_dependency_loop
   (path : Slice Std.Usize) (node : intrinsic.ProofDependency)
@@ -152744,7 +152756,7 @@ def source.declared.state.register.logical.entered_dependency_loop
     (node, level)
 
 /-- [noble_contracts::source::declared::state::register::logical::entered_dependency]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 364:0-372:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 589:0-597:1 -/
 def source.declared.state.register.logical.entered_dependency
   (root : intrinsic.ProofDependency) (path : Slice Std.Usize) :
   Result (Std.Usize × Std.Usize)
@@ -152757,7 +152769,7 @@ def source.declared.state.register.logical.entered_dependency
   ok (i, i1)
 
 /-- [noble_contracts::source::declared::state::register::logical::counted_bytes]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 346:0-360:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 571:0-585:1 -/
 def source.declared.state.register.logical.counted_bytes
   (total : Std.Usize) (bytes : Std.Usize) (limit : Std.Usize) :
   Result (core.result.Result Std.Usize source.Error)
@@ -152779,7 +152791,7 @@ def source.declared.state.register.logical.counted_bytes
     else ok (core.result.Result.Ok total1)
 
 /-- [noble_contracts::source::declared::state::register::logical::dependency_bytes]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 311:4-325:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 536:4-550:5 -/
 @[rust_loop_body]
 def source.declared.state.register.logical.dependency_bytes_loop.body
   (s : String) (s1 : String) (i : Std.U32) (v : alloc.vec.Vec Std.U8)
@@ -152822,7 +152834,7 @@ def source.declared.state.register.logical.dependency_bytes_loop.body
   else ok (done (total, failure))
 
 /-- [noble_contracts::source::declared::state::register::logical::dependency_bytes]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 311:4-325:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 536:4-550:5 -/
 @[rust_loop]
 def source.declared.state.register.logical.dependency_bytes_loop
   (s : String) (s1 : String) (i : Std.U32) (v : alloc.vec.Vec Std.U8)
@@ -152839,7 +152851,7 @@ def source.declared.state.register.logical.dependency_bytes_loop
     (total, levels, failure)
 
 /-- [noble_contracts::source::declared::state::register::logical::dependency_bytes]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 301:0-330:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 526:0-555:1 -/
 def source.declared.state.register.logical.dependency_bytes
   (dependency : intrinsic.ProofDependency) (limit : Std.Usize) :
   Result (core.result.Result Std.Usize source.Error)
@@ -152866,7 +152878,7 @@ def source.declared.state.register.logical.dependency_bytes
   | core.result.Result.Err _ => ok r
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnMut<(&'_1 noble_contracts::intrinsic::ProofDependency,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#3}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1265:45-1265:77 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1490:45-1490:77 -/
 def
   source.declared.state.register.logical.resolve_reference.closure_3.Insts.CoreOpsFunctionFnMutTupleShared1ProofDependencyBool.call_mut
   (c : source.declared.state.register.logical.resolve_reference.closure_3)
@@ -152879,7 +152891,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::intrinsic::ProofDependency,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1265:45-1265:77 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1490:45-1490:77 -/
 def
   source.declared.state.register.logical.resolve_reference.closure_3.Insts.CoreOpsFunctionFnOnceTupleShared1ProofDependencyBool.call_once
   (c : source.declared.state.register.logical.resolve_reference.closure_3)
@@ -152892,7 +152904,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::intrinsic::ProofDependency,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1265:45-1265:77 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1490:45-1490:77 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_reference.closure_3.Insts.CoreOpsFunctionFnOnceTupleShared1ProofDependencyBool
@@ -152904,7 +152916,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnMut<(&'_1 noble_contracts::intrinsic::ProofDependency,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1265:45-1265:77 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1490:45-1490:77 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_reference.closure_3.Insts.CoreOpsFunctionFnMutTupleShared1ProofDependencyBool
@@ -152918,7 +152930,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::PublishedProof,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#2}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1256:66-1258:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1481:66-1483:5 -/
 def
   source.declared.state.register.logical.resolve_reference.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2PublishedProofBool.call_mut
   (c : source.declared.state.register.logical.resolve_reference.closure_2)
@@ -152934,7 +152946,7 @@ def
   else ok (false, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::PublishedProof,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#2}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1256:66-1258:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1481:66-1483:5 -/
 def
   source.declared.state.register.logical.resolve_reference.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared2PublishedProofBool.call_once
   (c : source.declared.state.register.logical.resolve_reference.closure_2)
@@ -152947,7 +152959,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::PublishedProof,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#2}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1256:66-1258:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1481:66-1483:5 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_reference.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared2PublishedProofBool
@@ -152959,7 +152971,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::PublishedProof,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#2}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1256:66-1258:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1481:66-1483:5 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_reference.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2PublishedProofBool
@@ -152973,7 +152985,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnMut<(&'_2 noble_contracts::intrinsic::ProofObligation,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#1}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1243:42-1243:68 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1468:42-1468:68 -/
 def
   source.declared.state.register.logical.resolve_reference.closure_1.Insts.CoreOpsFunctionFnMutTupleShared2ProofObligationBool.call_mut
   (c : source.declared.state.register.logical.resolve_reference.closure_1)
@@ -152986,7 +152998,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::intrinsic::ProofObligation,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#1}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1243:42-1243:68 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1468:42-1468:68 -/
 def
   source.declared.state.register.logical.resolve_reference.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared2ProofObligationBool.call_once
   (c : source.declared.state.register.logical.resolve_reference.closure_1)
@@ -152999,7 +153011,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::intrinsic::ProofObligation,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#1}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1243:42-1243:68 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1468:42-1468:68 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_reference.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared2ProofObligationBool
@@ -153011,7 +153023,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnMut<(&'_2 noble_contracts::intrinsic::ProofObligation,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#1}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1243:42-1243:68 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1468:42-1468:68 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_reference.closure_1.Insts.CoreOpsFunctionFnMutTupleShared2ProofObligationBool
@@ -153025,7 +153037,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnMut<(&'_1 noble_contracts::intrinsic::ProofObligation,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1233:42-1233:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1458:42-1458:74 -/
 def
   source.declared.state.register.logical.resolve_reference.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProofObligationBool.call_mut
   (c : source.declared.state.register.logical.resolve_reference.closure)
@@ -153038,7 +153050,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::intrinsic::ProofObligation,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1233:42-1233:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1458:42-1458:74 -/
 def
   source.declared.state.register.logical.resolve_reference.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ProofObligationBool.call_once
   (c : source.declared.state.register.logical.resolve_reference.closure)
@@ -153051,7 +153063,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::intrinsic::ProofObligation,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1233:42-1233:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1458:42-1458:74 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_reference.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ProofObligationBool
@@ -153063,7 +153075,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_reference::{impl core::ops::function::FnMut<(&'_1 noble_contracts::intrinsic::ProofObligation,), bool> for noble_contracts::source::declared::state::register::logical::resolve_reference::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1233:42-1233:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1458:42-1458:74 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_reference.closure.Insts.CoreOpsFunctionFnMutTupleShared1ProofObligationBool
@@ -153086,7 +153098,7 @@ def source.declared.state.register.logical.at
   source.declared.diagnostic stage d
 
 /-- [noble_contracts::source::declared::state::register::logical::imported_module::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::imported_module::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 991:22-997:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1216:22-1222:5 -/
 def
   source.declared.state.register.logical.imported_module.closure_3.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.declared.state.register.logical.imported_module.closure_3)
@@ -153097,7 +153109,7 @@ def
     "missing imported proof module version")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::imported_module::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::imported_module::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 991:22-997:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1216:22-1222:5 -/
 @[reducible]
 def
   source.declared.state.register.logical.imported_module.closure_3.Insts.CoreOpsFunctionFnOnceTupleError
@@ -153109,7 +153121,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::imported_module::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::Alias,), bool> for noble_contracts::source::declared::state::register::logical::imported_module::{closure#2}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 984:44-986:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1209:44-1211:5 -/
 def
   source.declared.state.register.logical.imported_module.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2AliasBool.call_mut
   (c : source.declared.state.register.logical.imported_module.closure_2)
@@ -153126,7 +153138,7 @@ def
     ok (b, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::imported_module::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::Alias,), bool> for noble_contracts::source::declared::state::register::logical::imported_module::{closure#2}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 984:44-986:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1209:44-1211:5 -/
 def
   source.declared.state.register.logical.imported_module.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared2AliasBool.call_once
   (c : source.declared.state.register.logical.imported_module.closure_2)
@@ -153139,7 +153151,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::imported_module::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::Alias,), bool> for noble_contracts::source::declared::state::register::logical::imported_module::{closure#2}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 984:44-986:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1209:44-1211:5 -/
 @[reducible]
 def
   source.declared.state.register.logical.imported_module.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared2AliasBool
@@ -153151,7 +153163,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::imported_module::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::Alias,), bool> for noble_contracts::source::declared::state::register::logical::imported_module::{closure#2}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 984:44-986:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1209:44-1211:5 -/
 @[reducible]
 def
   source.declared.state.register.logical.imported_module.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2AliasBool
@@ -153165,7 +153177,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::imported_module::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::imported_module::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 976:20-982:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1201:20-1207:9 -/
 def
   source.declared.state.register.logical.imported_module.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.declared.state.register.logical.imported_module.closure_1)
@@ -153176,7 +153188,7 @@ def
     "missing imported proof module version")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::imported_module::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::imported_module::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 976:20-982:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1201:20-1207:9 -/
 @[reducible]
 def
   source.declared.state.register.logical.imported_module.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
@@ -153188,7 +153200,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::imported_module::{impl core::ops::function::FnMut<(&'_3 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::logical::imported_module::{closure}<'_0, '_1, '_2>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 973:57-975:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1198:57-1200:9 -/
 def
   source.declared.state.register.logical.imported_module.closure.Insts.CoreOpsFunctionFnMutTupleShared3ModuleBool.call_mut
   (c : source.declared.state.register.logical.imported_module.closure)
@@ -153208,7 +153220,7 @@ def
   else ok (false, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::imported_module::{impl core::ops::function::FnOnce<(&'_3 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::logical::imported_module::{closure}<'_0, '_1, '_2>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 973:57-975:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1198:57-1200:9 -/
 def
   source.declared.state.register.logical.imported_module.closure.Insts.CoreOpsFunctionFnOnceTupleShared3ModuleBool.call_once
   (c : source.declared.state.register.logical.imported_module.closure)
@@ -153221,7 +153233,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::imported_module::{impl core::ops::function::FnOnce<(&'_3 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::logical::imported_module::{closure}<'_0, '_1, '_2>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 973:57-975:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1198:57-1200:9 -/
 @[reducible]
 def
   source.declared.state.register.logical.imported_module.closure.Insts.CoreOpsFunctionFnOnceTupleShared3ModuleBool
@@ -153233,7 +153245,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::imported_module::{impl core::ops::function::FnMut<(&'_3 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::logical::imported_module::{closure}<'_0, '_1, '_2>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 973:57-975:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1198:57-1200:9 -/
 @[reducible]
 def
   source.declared.state.register.logical.imported_module.closure.Insts.CoreOpsFunctionFnMutTupleShared3ModuleBool
@@ -153247,7 +153259,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::find_last]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 638:4-643:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 863:4-868:5 -/
 @[rust_loop_body]
 def source.declared.state.register.logical.find_last_loop.body
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleSharedTBoolInst :
@@ -153272,7 +153284,7 @@ def source.declared.state.register.logical.find_last_loop.body
   else ok (done found)
 
 /-- [noble_contracts::source::declared::state::register::logical::find_last]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 638:4-643:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 863:4-868:5 -/
 @[rust_loop]
 def source.declared.state.register.logical.find_last_loop
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleSharedTBoolInst :
@@ -153288,7 +153300,7 @@ def source.declared.state.register.logical.find_last_loop
     (predicate, remaining, found)
 
 /-- [noble_contracts::source::declared::state::register::logical::find_last]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 635:0-648:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 860:0-873:1 -/
 def source.declared.state.register.logical.find_last
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleShared0TBoolInst :
   core.ops.function.FnMut T1 T Bool) (items : Slice T) (predicate : T1) :
@@ -153305,7 +153317,7 @@ def source.declared.state.register.logical.find_last
                    ok (some t)
 
 /-- [noble_contracts::source::declared::state::register::logical::imported_module]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 966:0-998:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1191:0-1223:1 -/
 def source.declared.state.register.logical.imported_module
   (session : source.declared.state.ModuleSession) (scope : Str) (span : Span) :
   Result (core.result.Result source.declared.Module source.Error)
@@ -153341,7 +153353,7 @@ def source.declared.state.register.logical.imported_module
       o1 span
 
 /-- [noble_contracts::source::declared::state::register::logical::is_current::{impl core::ops::function::FnOnce<((&'_3 str, &'_4 str),), bool> for noble_contracts::source::declared::state::register::logical::is_current::{closure}<'_0, '_1, '_2>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 952:58-955:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1177:58-1180:5 -/
 def
   source.declared.state.register.logical.is_current.closure.Insts.CoreOpsFunctionFnOnceTuplePairShared3StrShared4StrBool.call_once
   (c : source.declared.state.register.logical.is_current.closure)
@@ -153359,7 +153371,7 @@ def
   else ok false
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::is_current::{impl core::ops::function::FnOnce<((&'_3 str, &'_4 str),), bool> for noble_contracts::source::declared::state::register::logical::is_current::{closure}<'_0, '_1, '_2>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 952:58-955:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1177:58-1180:5 -/
 @[reducible]
 def
   source.declared.state.register.logical.is_current.closure.Insts.CoreOpsFunctionFnOnceTuplePairShared3StrShared4StrBool
@@ -153371,7 +153383,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::is_current]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 951:0-956:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1176:0-1181:1 -/
 def source.declared.state.register.logical.is_current
   (request : source.declared.state.register.logical.Request) (scope : Str) :
   Result Bool
@@ -153382,7 +153394,7 @@ def source.declared.state.register.logical.is_current
     o (request.name, request.version)
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1225:0-1271:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1450:0-1496:1 -/
 def source.declared.state.register.logical.resolve_reference
   (request : source.declared.state.register.logical.Request)
   (reference : String) (reference_span : Span)
@@ -153472,7 +153484,7 @@ def source.declared.state.register.logical.resolve_reference
         ok (core.result.Result.Err failure, reference, dependencies)
 
 /-- [noble_contracts::source::declared::state::register::logical::is_use_list]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1197:0-1205:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1422:0-1430:1 -/
 def source.declared.state.register.logical.is_use_list
   (items : Slice intrinsic.Form) : Result Bool := do
   let o ← core.slice.Slice.first items
@@ -153486,12 +153498,12 @@ def source.declared.state.register.logical.is_use_list
     | intrinsic.FormKind.List _ => ok false
 
 /-- [noble_contracts::source::declared::state::register::logical::LIST_DEPTH]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1001:0-1001:29 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1226:0-1226:29 -/
 @[global_simps, irreducible]
 def source.declared.state.register.logical.LIST_DEPTH : Std.Usize := 64#usize
 
 /-- [noble_contracts::source::declared::state::register::logical::visit_use]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1145:0-1190:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1370:0-1415:1 -/
 def source.declared.state.register.logical.visit_use
   (request : source.declared.state.register.logical.Request)
   (form : intrinsic.Form) (depth : Std.Usize)
@@ -153571,7 +153583,7 @@ def source.declared.state.register.logical.visit_use
           dependencies)
 
 /-- [noble_contracts::source::declared::state::register::logical::restore_items]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1118:0-1125:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1343:0-1350:1 -/
 def source.declared.state.register.logical.restore_items
   (form : intrinsic.Form) (items : alloc.vec.Vec intrinsic.Form) :
   Result intrinsic.Form
@@ -153582,7 +153594,7 @@ def source.declared.state.register.logical.restore_items
     ok (intrinsic.Form.mk (intrinsic.FormKind.List items) form.span)
 
 /-- [noble_contracts::source::declared::state::register::logical::use_step]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1072:0-1110:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1297:0-1335:1 -/
 def source.declared.state.register.logical.use_step
   (request : source.declared.state.register.logical.Request)
   (term : intrinsic.Form)
@@ -153667,7 +153679,7 @@ def source.declared.state.register.logical.use_step
           ok (core.result.Result.Ok (), term, frames2, dependencies)
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_uses]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1038:4-1042:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1263:4-1267:5 -/
 @[rust_loop_body]
 def source.declared.state.register.logical.resolve_uses_loop.body
   (ms : source.declared.state.ModuleSession)
@@ -153710,7 +153722,7 @@ def source.declared.state.register.logical.resolve_uses_loop.body
   else ok (done (term, dependencies, failure))
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_uses]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1038:4-1042:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1263:4-1267:5 -/
 @[rust_loop]
 def source.declared.state.register.logical.resolve_uses_loop
   (ms : source.declared.state.ModuleSession)
@@ -153730,7 +153742,7 @@ def source.declared.state.register.logical.resolve_uses_loop
     (term, dependencies, frames, failure)
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_uses]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1020:0-1047:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1245:0-1272:1 -/
 def source.declared.state.register.logical.resolve_uses
   (request : source.declared.state.register.logical.Request)
   (term : intrinsic.Form) (prior : Slice intrinsic.ProofObligation)
@@ -153763,7 +153775,7 @@ def source.declared.state.register.logical.resolve_uses
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#8}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 938:16-944:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1163:16-1169:5 -/
 def
   source.declared.state.register.logical.resolve_contract.closure_8.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.declared.state.register.logical.resolve_contract.closure_8)
@@ -153774,7 +153786,7 @@ def
     "unknown or private imported contract")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#8}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 938:16-944:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1163:16-1169:5 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_contract.closure_8.Insts.CoreOpsFunctionFnOnceTupleError
@@ -153786,7 +153798,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::LogicalContract,), noble_contracts::intrinsic::ContractGoal> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#7}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 937:9-937:41 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1162:9-1162:41 -/
 def
   source.declared.state.register.logical.resolve_contract.closure_7.Insts.CoreOpsFunctionFnOnceTupleShared0LogicalContractContractGoal.call_once
   (c : source.declared.state.register.logical.resolve_contract.closure_7)
@@ -153796,7 +153808,7 @@ def
   intrinsic.ContractGoal.Insts.CoreCloneClone.clone tupled_args.goal
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::LogicalContract,), noble_contracts::intrinsic::ContractGoal> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#7}}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 937:9-937:41 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1162:9-1162:41 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_contract.closure_7.Insts.CoreOpsFunctionFnOnceTupleShared0LogicalContractContractGoal
@@ -153808,7 +153820,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::LogicalContract,), bool> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#6}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 934:47-936:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1159:47-1161:5 -/
 def
   source.declared.state.register.logical.resolve_contract.closure_6.Insts.CoreOpsFunctionFnMutTupleShared2LogicalContractBool.call_mut
   (c : source.declared.state.register.logical.resolve_contract.closure_6)
@@ -153823,7 +153835,7 @@ def
   else ok (false, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::LogicalContract,), bool> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#6}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 934:47-936:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1159:47-1161:5 -/
 def
   source.declared.state.register.logical.resolve_contract.closure_6.Insts.CoreOpsFunctionFnOnceTupleShared2LogicalContractBool.call_once
   (c : source.declared.state.register.logical.resolve_contract.closure_6)
@@ -153836,7 +153848,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::LogicalContract,), bool> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#6}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 934:47-936:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1159:47-1161:5 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_contract.closure_6.Insts.CoreOpsFunctionFnOnceTupleShared2LogicalContractBool
@@ -153848,7 +153860,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::LogicalContract,), bool> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#6}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 934:47-936:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1159:47-1161:5 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_contract.closure_6.Insts.CoreOpsFunctionFnMutTupleShared2LogicalContractBool
@@ -153862,7 +153874,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#5}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 925:24-931:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1150:24-1156:13 -/
 def
   source.declared.state.register.logical.resolve_contract.closure_5.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.declared.state.register.logical.resolve_contract.closure_5)
@@ -153873,7 +153885,7 @@ def
     "unknown local proof contract")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#5}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 925:24-931:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1150:24-1156:13 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_contract.closure_5.Insts.CoreOpsFunctionFnOnceTupleError
@@ -153885,7 +153897,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::LogicalContract,), noble_contracts::intrinsic::ContractGoal> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#4}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 924:17-924:49 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1149:17-1149:49 -/
 def
   source.declared.state.register.logical.resolve_contract.closure_4.Insts.CoreOpsFunctionFnOnceTupleShared0LogicalContractContractGoal.call_once
   (c : source.declared.state.register.logical.resolve_contract.closure_4)
@@ -153895,7 +153907,7 @@ def
   intrinsic.ContractGoal.Insts.CoreCloneClone.clone tupled_args.goal
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::LogicalContract,), noble_contracts::intrinsic::ContractGoal> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#4}}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 924:17-924:49 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1149:17-1149:49 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_contract.closure_4.Insts.CoreOpsFunctionFnOnceTupleShared0LogicalContractContractGoal
@@ -153907,7 +153919,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::LogicalContract,), bool> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#3}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 923:47-923:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1148:47-1148:79 -/
 def
   source.declared.state.register.logical.resolve_contract.closure_3.Insts.CoreOpsFunctionFnMutTupleShared2LogicalContractBool.call_mut
   (c : source.declared.state.register.logical.resolve_contract.closure_3)
@@ -153920,7 +153932,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::LogicalContract,), bool> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#3}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 923:47-923:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1148:47-1148:79 -/
 def
   source.declared.state.register.logical.resolve_contract.closure_3.Insts.CoreOpsFunctionFnOnceTupleShared2LogicalContractBool.call_once
   (c : source.declared.state.register.logical.resolve_contract.closure_3)
@@ -153933,7 +153945,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::LogicalContract,), bool> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#3}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 923:47-923:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1148:47-1148:79 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_contract.closure_3.Insts.CoreOpsFunctionFnOnceTupleShared2LogicalContractBool
@@ -153945,7 +153957,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::LogicalContract,), bool> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#3}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 923:47-923:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1148:47-1148:79 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_contract.closure_3.Insts.CoreOpsFunctionFnMutTupleShared2LogicalContractBool
@@ -153959,7 +153971,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 914:24-920:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1139:24-1145:13 -/
 def
   source.declared.state.register.logical.resolve_contract.closure_2.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.declared.state.register.logical.resolve_contract.closure_2)
@@ -153970,7 +153982,7 @@ def
     "unknown local proof contract")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 914:24-920:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1139:24-1145:13 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_contract.closure_2.Insts.CoreOpsFunctionFnOnceTupleError
@@ -153982,7 +153994,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::LogicalContract,), noble_contracts::intrinsic::ContractGoal> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 913:17-913:49 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1138:17-1138:49 -/
 def
   source.declared.state.register.logical.resolve_contract.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared0LogicalContractContractGoal.call_once
   (c : source.declared.state.register.logical.resolve_contract.closure_1)
@@ -153992,7 +154004,7 @@ def
   intrinsic.ContractGoal.Insts.CoreCloneClone.clone tupled_args.goal
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::LogicalContract,), noble_contracts::intrinsic::ContractGoal> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 913:17-913:49 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1138:17-1138:49 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_contract.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared0LogicalContractContractGoal
@@ -154004,7 +154016,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::LogicalContract,), bool> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 912:47-912:84 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1137:47-1137:84 -/
 def
   source.declared.state.register.logical.resolve_contract.closure.Insts.CoreOpsFunctionFnMutTupleShared2LogicalContractBool.call_mut
   (c : source.declared.state.register.logical.resolve_contract.closure)
@@ -154017,7 +154029,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::LogicalContract,), bool> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 912:47-912:84 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1137:47-1137:84 -/
 def
   source.declared.state.register.logical.resolve_contract.closure.Insts.CoreOpsFunctionFnOnceTupleShared2LogicalContractBool.call_once
   (c : source.declared.state.register.logical.resolve_contract.closure)
@@ -154030,7 +154042,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::LogicalContract,), bool> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 912:47-912:84 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1137:47-1137:84 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_contract.closure.Insts.CoreOpsFunctionFnOnceTupleShared2LogicalContractBool
@@ -154042,7 +154054,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::resolve_contract::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::LogicalContract,), bool> for noble_contracts::source::declared::state::register::logical::resolve_contract::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 912:47-912:84 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1137:47-1137:84 -/
 @[reducible]
 def
   source.declared.state.register.logical.resolve_contract.closure.Insts.CoreOpsFunctionFnMutTupleShared2LogicalContractBool
@@ -154056,7 +154068,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 905:0-945:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1130:0-1170:1 -/
 def source.declared.state.register.logical.resolve_contract
   (request : source.declared.state.register.logical.Request)
   (staged : Slice source.declared.LogicalContract) (reference : Str)
@@ -154113,8 +154125,365 @@ def source.declared.state.register.logical.resolve_contract
           o2 span
       | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
+/-- [noble_contracts::source::declared::state::register::logical::advance_hole_level]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 420:4-429:5 -/
+@[rust_loop_body]
+def source.declared.state.register.logical.advance_hole_level_loop.body
+  (levels : alloc.vec.Vec source.declared.state.register.logical.FormLevel)
+  (is_advanced : Bool) :
+  Result (ControlFlow ((alloc.vec.Vec
+    source.declared.state.register.logical.FormLevel) × Bool) (alloc.vec.Vec
+    source.declared.state.register.logical.FormLevel))
+  := do
+  if is_advanced
+  then ok (done levels)
+  else
+    let b ← alloc.vec.Vec.is_empty Global levels
+    if b
+    then ok (done levels)
+    else
+      let (o, levels1) ← alloc.vec.Vec.pop Global levels
+      match o with
+      | none => ok (cont (levels1, is_advanced))
+      | some top =>
+        let next ← lift (core.num.Usize.saturating_add top.index 1#usize)
+        if next < top.len
+        then
+          let levels2 ← alloc.vec.Vec.push levels1 { top with index := next }
+          ok (cont (levels2, true))
+        else ok (cont (levels1, is_advanced))
+
+/-- [noble_contracts::source::declared::state::register::logical::advance_hole_level]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 420:4-429:5 -/
+@[rust_loop]
+def source.declared.state.register.logical.advance_hole_level_loop
+  (levels : alloc.vec.Vec source.declared.state.register.logical.FormLevel)
+  (is_advanced : Bool) :
+  Result (alloc.vec.Vec source.declared.state.register.logical.FormLevel)
+  := do
+  loop
+    (fun (levels1, is_advanced1) =>
+      source.declared.state.register.logical.advance_hole_level_loop.body
+      levels1 is_advanced1)
+    (levels, is_advanced)
+
+/-- [noble_contracts::source::declared::state::register::logical::advance_hole_level]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 418:0-431:1 -/
+@[reducible]
+def source.declared.state.register.logical.advance_hole_level
+  (levels : alloc.vec.Vec source.declared.state.register.logical.FormLevel) :
+  Result (alloc.vec.Vec source.declared.state.register.logical.FormLevel)
+  := do
+  source.declared.state.register.logical.advance_hole_level_loop levels false
+
+/-- [noble_contracts::source::declared::state::register::logical::valid_hole_label]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 504:4-510:5 -/
+@[rust_loop_body]
+def source.declared.state.register.logical.valid_hole_label_loop.body
+  (bytes : Slice Std.U8) («at» : Std.Usize) (is_valid : Bool) :
+  Result (ControlFlow (Std.Usize × Bool) Bool)
+  := do
+  if is_valid
+  then
+    let i := Slice.len bytes
+    if «at» < i
+    then
+      let byte ← Slice.index_usize bytes «at»
+      let b ← core.num.U8.is_ascii_lowercase byte
+      let is_valid1 ←
+        if b
+        then ok is_valid
+        else
+          do
+          let b1 ← core.num.U8.is_ascii_digit byte
+          if b1
+          then ok is_valid
+          else if byte != 45#u8
+               then ok false
+               else ok is_valid
+      let at1 ← «at» + 1#usize
+      ok (cont (at1, is_valid1))
+    else ok (done is_valid)
+  else ok (done is_valid)
+
+/-- [noble_contracts::source::declared::state::register::logical::valid_hole_label]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 504:4-510:5 -/
+@[rust_loop]
+def source.declared.state.register.logical.valid_hole_label_loop
+  (bytes : Slice Std.U8) («at» : Std.Usize) (is_valid : Bool) :
+  Result Bool
+  := do
+  loop
+    (fun (at1, is_valid1) =>
+      source.declared.state.register.logical.valid_hole_label_loop.body bytes
+      at1 is_valid1)
+    («at», is_valid)
+
+/-- [noble_contracts::source::declared::state::register::logical::valid_hole_label]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 497:0-512:1 -/
+def source.declared.state.register.logical.valid_hole_label
+  (label : Str) : Result Bool := do
+  let bytes ← core.str.Str.as_bytes label
+  let b ← core.slice.Slice.is_empty bytes
+  if b
+  then ok false
+  else
+    let i := Slice.len bytes
+    if i > 32#usize
+    then ok false
+    else
+      source.declared.state.register.logical.valid_hole_label_loop bytes
+        0#usize true
+
+/-- [noble_contracts::source::declared::state::register::logical::check_hole_list]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 454:0-494:1 -/
+def source.declared.state.register.logical.check_hole_list
+  (span : Span) (items : Slice intrinsic.Form)
+  (mode : source.declared.state.register.logical.HoleMode) :
+  Result (core.result.Result Unit source.Error)
+  := do
+  match mode with
+  | source.declared.state.register.logical.HoleMode.ProofTerm allow =>
+    let i := Slice.len items
+    if i != 2#usize
+    then
+      let e ←
+        source.declared.state.register.logical.at source.Stage.Check span
+          (toStr "a proof hole carries exactly one lowercase label")
+      ok (core.result.Result.Err e)
+    else
+      let f ← Slice.index_usize items 1#usize
+      let is_label ←
+        match f.kind with
+        | intrinsic.FormKind.Atom label =>
+          do
+          let s ← alloc.string.String.as_str label
+          source.declared.state.register.logical.valid_hole_label s
+        | intrinsic.FormKind.List _ => ok false
+      if is_label
+      then
+        if allow
+        then ok (core.result.Result.Ok ())
+        else
+          let e ←
+            source.declared.state.register.logical.at source.Stage.Check span
+              (toStr "a proof hole is editor-only and never .noble source")
+          ok (core.result.Result.Err e)
+      else
+        let e ←
+          source.declared.state.register.logical.at source.Stage.Check span
+            (toStr "a proof hole carries exactly one lowercase label")
+        ok (core.result.Result.Err e)
+  | source.declared.state.register.logical.HoleMode.OutsideTerm =>
+    let e ←
+      source.declared.state.register.logical.at source.Stage.Check span (toStr
+        "a proof hole is only valid in a proof term")
+    ok (core.result.Result.Err e)
+
+/-- [noble_contracts::source::declared::state::register::logical::is_editor_hole_list]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 439:0-447:1 -/
+def source.declared.state.register.logical.is_editor_hole_list
+  (items : Slice intrinsic.Form) : Result Bool := do
+  let o ← core.slice.Slice.first items
+  match o with
+  | none => ok false
+  | some f =>
+    match f.kind with
+    | intrinsic.FormKind.Atom head =>
+      let s ← alloc.string.String.as_str head
+      Str.Insts.CoreCmpPartialEqStr.eq s (toStr "editor-hole")
+    | intrinsic.FormKind.List _ => ok false
+
+/-- [noble_contracts::source::declared::state::register::logical::visit_hole_node]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 389:0-415:1 -/
+def source.declared.state.register.logical.visit_hole_node
+  (node : intrinsic.Form) (depth : Std.Usize)
+  (mode : source.declared.state.register.logical.HoleMode) :
+  Result (core.result.Result (Option
+    source.declared.state.register.logical.FormLevel) source.Error)
+  := do
+  match node.kind with
+  | intrinsic.FormKind.Atom _ => ok (core.result.Result.Ok none)
+  | intrinsic.FormKind.List items =>
+    let s := alloc.vec.Vec.deref items
+    let b ← source.declared.state.register.logical.is_editor_hole_list s
+    if b
+    then
+      let s1 := alloc.vec.Vec.deref items
+      let r ←
+        source.declared.state.register.logical.check_hole_list node.span s1
+          mode
+      match r with
+      | core.result.Result.Ok _ => ok (core.result.Result.Ok none)
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    else
+      let b1 ← alloc.vec.Vec.is_empty Global items
+      if b1
+      then ok (core.result.Result.Ok none)
+      else
+        if depth >= source.declared.state.register.logical.LIST_DEPTH
+        then
+          let e ←
+            source.declared.state.register.logical.at source.Stage.Check
+              node.span (toStr "logical nesting exceeds supported depth")
+          ok (core.result.Result.Err e)
+        else
+          let i := alloc.vec.Vec.len items
+          ok (core.result.Result.Ok (some { index := 0#usize, len := i }))
+
+/-- [noble_contracts::source::declared::state::register::logical::visit_hole_at]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 371:4-381:1 -/
+@[rust_loop_body]
+def source.declared.state.register.logical.visit_hole_at_loop.body
+  (path : Slice source.declared.state.register.logical.FormLevel)
+  (mode : source.declared.state.register.logical.HoleMode)
+  (node : intrinsic.Form) (level : Std.Usize) :
+  Result (ControlFlow (intrinsic.Form × Std.Usize) (core.result.Result (Option
+    source.declared.state.register.logical.FormLevel) source.Error))
+  := do
+  let i := Slice.len path
+  if level < i
+  then
+    match node.kind with
+    | intrinsic.FormKind.Atom _ => ok (done (core.result.Result.Ok none))
+    | intrinsic.FormKind.List items =>
+      let fl ← Slice.index_usize path level
+      let node1 ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          intrinsic.Form) items fl.index
+      let level1 ← level + 1#usize
+      ok (cont (node1, level1))
+  else
+    let i1 := Slice.len path
+    let r ←
+      source.declared.state.register.logical.visit_hole_node node i1 mode
+    ok (done r)
+
+/-- [noble_contracts::source::declared::state::register::logical::visit_hole_at]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 371:4-381:1 -/
+@[rust_loop]
+def source.declared.state.register.logical.visit_hole_at_loop
+  (path : Slice source.declared.state.register.logical.FormLevel)
+  (mode : source.declared.state.register.logical.HoleMode)
+  (node : intrinsic.Form) (level : Std.Usize) :
+  Result (core.result.Result (Option
+    source.declared.state.register.logical.FormLevel) source.Error)
+  := do
+  loop
+    (fun (node1, level1) =>
+      source.declared.state.register.logical.visit_hole_at_loop.body path mode
+      node1 level1)
+    (node, level)
+
+/-- [noble_contracts::source::declared::state::register::logical::visit_hole_at]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 364:0-381:1 -/
+@[reducible]
+def source.declared.state.register.logical.visit_hole_at
+  (root : intrinsic.Form)
+  (path : Slice source.declared.state.register.logical.FormLevel)
+  (mode : source.declared.state.register.logical.HoleMode) :
+  Result (core.result.Result (Option
+    source.declared.state.register.logical.FormLevel) source.Error)
+  := do
+  source.declared.state.register.logical.visit_hole_at_loop path mode root
+    0#usize
+
+/-- [noble_contracts::source::declared::state::register::logical::walk_proof_holes]: loop body 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 350:4-356:5 -/
+@[rust_loop_body]
+def source.declared.state.register.logical.walk_proof_holes_loop.body
+  (root : intrinsic.Form)
+  (mode : source.declared.state.register.logical.HoleMode)
+  (levels : alloc.vec.Vec source.declared.state.register.logical.FormLevel)
+  (failure : Option source.Error) :
+  Result (ControlFlow ((alloc.vec.Vec
+    source.declared.state.register.logical.FormLevel) × (Option source.Error))
+    (Option source.Error))
+  := do
+  let b := core.option.Option.is_none failure
+  if b
+  then
+    let b1 ← alloc.vec.Vec.is_empty Global levels
+    if b1
+    then ok (done failure)
+    else
+      let s := alloc.vec.Vec.deref levels
+      let r ←
+        source.declared.state.register.logical.visit_hole_at root s mode
+      match r with
+      | core.result.Result.Ok o =>
+        match o with
+        | none =>
+          let levels1 ←
+            source.declared.state.register.logical.advance_hole_level levels
+          ok (cont (levels1, failure))
+        | some child =>
+          let levels1 ← alloc.vec.Vec.push levels child
+          ok (cont (levels1, failure))
+      | core.result.Result.Err problem => ok (cont (levels, some problem))
+  else ok (done failure)
+
+/-- [noble_contracts::source::declared::state::register::logical::walk_proof_holes]: loop 0:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 350:4-356:5 -/
+@[rust_loop]
+def source.declared.state.register.logical.walk_proof_holes_loop
+  (root : intrinsic.Form)
+  (mode : source.declared.state.register.logical.HoleMode)
+  (levels : alloc.vec.Vec source.declared.state.register.logical.FormLevel)
+  (failure : Option source.Error) :
+  Result (Option source.Error)
+  := do
+  loop
+    (fun (levels1, failure1) =>
+      source.declared.state.register.logical.walk_proof_holes_loop.body root
+      mode levels1 failure1)
+    (levels, failure)
+
+/-- [noble_contracts::source::declared::state::register::logical::walk_proof_holes]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 341:0-361:1 -/
+def source.declared.state.register.logical.walk_proof_holes
+  (root : intrinsic.Form)
+  (mode : source.declared.state.register.logical.HoleMode) :
+  Result (core.result.Result Unit source.Error)
+  := do
+  let levels :=
+    alloc.vec.Vec.with_capacity
+      source.declared.state.register.logical.FormLevel
+      source.declared.state.register.logical.LIST_DEPTH
+  let r ←
+    source.declared.state.register.logical.visit_hole_node root 0#usize mode
+  match r with
+  | core.result.Result.Ok value =>
+    let levels1 ←
+      match value with
+      | none => ok levels
+      | some first => alloc.vec.Vec.push levels first
+    let failure ←
+      source.declared.state.register.logical.walk_proof_holes_loop root mode
+        levels1 none
+    match failure with
+    | none => ok (core.result.Result.Ok ())
+    | some problem => ok (core.result.Result.Err problem)
+  | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+
+/-- [noble_contracts::source::declared::state::register::logical::refuse_hole_outside_term]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 335:0-337:1 -/
+def source.declared.state.register.logical.refuse_hole_outside_term
+  (form : intrinsic.Form) : Result (core.result.Result Unit source.Error) := do
+  source.declared.state.register.logical.walk_proof_holes form
+    source.declared.state.register.logical.HoleMode.OutsideTerm
+
+/-- [noble_contracts::source::declared::state::register::logical::check_proof_holes]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 320:0-330:1 -/
+def source.declared.state.register.logical.check_proof_holes
+  (term : intrinsic.Form) (proof_editor : Bool) :
+  Result (core.result.Result Unit source.Error)
+  := do
+  source.declared.state.register.logical.walk_proof_holes term
+    (source.declared.state.register.logical.HoleMode.ProofTerm proof_editor)
+
 /-- [noble_contracts::source::declared::state::register::logical::stage_proof]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 237:0-287:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 242:0-297:1 -/
 def source.declared.state.register.logical.stage_proof
   (request : source.declared.state.register.logical.Request)
   (contracts : Slice source.declared.LogicalContract)
@@ -154146,41 +154515,61 @@ def source.declared.state.register.logical.stage_proof
         match r1 with
         | core.result.Result.Ok value1 =>
           let (term, dependencies1) := value1
-          let s1 ← alloc.string.String.Insts.CoreCloneClone.clone proof.name
+          let r2 ←
+            source.declared.state.register.logical.check_proof_holes term
+              request.session.proof_editor
+          match r2 with
+          | core.result.Result.Ok _ =>
+            let s1 ←
+              alloc.string.String.Insts.CoreCloneClone.clone proof.name
+            ok (core.result.Result.Ok
+              ({
+                 «name» := s1,
+                 revision := proof.revision,
+                 goal := (intrinsic.PendingGoal.Contract value),
+                 term,
+                 span := proof.span,
+                 elaboration := proof.elaboration
+               }, dependencies1))
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure)
+        | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
+  | source.declared.parsing.ProofClaim.Pure proposition =>
+    let r ←
+      source.declared.state.register.logical.refuse_hole_outside_term
+        proposition
+    match r with
+    | core.result.Result.Ok _ =>
+      let f ← intrinsic.Form.Insts.CoreCloneClone.clone proposition
+      let f1 ← intrinsic.Form.Insts.CoreCloneClone.clone proof.term
+      let r1 ←
+        source.declared.state.register.logical.resolve_uses request f1 prior
+          dependencies
+      match r1 with
+      | core.result.Result.Ok value =>
+        let (term, dependencies1) := value
+        let r2 ←
+          source.declared.state.register.logical.check_proof_holes term
+            request.session.proof_editor
+        match r2 with
+        | core.result.Result.Ok _ =>
+          let s ← alloc.string.String.Insts.CoreCloneClone.clone proof.name
           ok (core.result.Result.Ok
             ({
-               «name» := s1,
+               «name» := s,
                revision := proof.revision,
-               goal := (intrinsic.PendingGoal.Contract value),
+               goal := (intrinsic.PendingGoal.Pure f),
                term,
                span := proof.span,
                elaboration := proof.elaboration
              }, dependencies1))
         | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-  | source.declared.parsing.ProofClaim.Pure proposition =>
-    let f ← intrinsic.Form.Insts.CoreCloneClone.clone proposition
-    let f1 ← intrinsic.Form.Insts.CoreCloneClone.clone proof.term
-    let r ←
-      source.declared.state.register.logical.resolve_uses request f1 prior
-        dependencies
-    match r with
-    | core.result.Result.Ok value =>
-      let (term, dependencies1) := value
-      let s ← alloc.string.String.Insts.CoreCloneClone.clone proof.name
-      ok (core.result.Result.Ok
-        ({
-           «name» := s,
-           revision := proof.revision,
-           goal := (intrinsic.PendingGoal.Pure f),
-           term,
-           span := proof.span,
-           elaboration := proof.elaboration
-         }, dependencies1))
+      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::state::register::logical::exported_proof]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 220:0-229:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 225:0-234:1 -/
 def source.declared.state.register.logical.exported_proof
   (names : alloc.vec.Vec String) (exports : Slice String)
   (proof : source.declared.parsing.Proof) :
@@ -154196,7 +154585,7 @@ def source.declared.state.register.logical.exported_proof
   else ok names
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#3}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 881:73-883:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1106:73-1108:5 -/
 def
   source.declared.state.register.logical.subject_dependency.closure_3.Insts.CoreOpsFunctionFnMutTupleShared1ModuleBool.call_mut
   (c : source.declared.state.register.logical.subject_dependency.closure_3)
@@ -154207,7 +154596,7 @@ def
   ok (tupled_args.identity = c, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#3}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 881:73-883:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1106:73-1108:5 -/
 def
   source.declared.state.register.logical.subject_dependency.closure_3.Insts.CoreOpsFunctionFnOnceTupleShared1ModuleBool.call_once
   (c : source.declared.state.register.logical.subject_dependency.closure_3)
@@ -154220,7 +154609,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::subject_dependency::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 881:73-883:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1106:73-1108:5 -/
 @[reducible]
 def
   source.declared.state.register.logical.subject_dependency.closure_3.Insts.CoreOpsFunctionFnOnceTupleShared1ModuleBool
@@ -154232,7 +154621,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::subject_dependency::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#3}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 881:73-883:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1106:73-1108:5 -/
 @[reducible]
 def
   source.declared.state.register.logical.subject_dependency.closure_3.Insts.CoreOpsFunctionFnMutTupleShared1ModuleBool
@@ -154246,7 +154635,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency::{impl core::ops::function::FnMut<(&'_1 noble_contracts::intrinsic::ResolvedSourceModule,), bool> for noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#2}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 870:38-870:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1095:38-1095:79 -/
 def
   source.declared.state.register.logical.subject_dependency.closure_2.Insts.CoreOpsFunctionFnMutTupleShared1ResolvedSourceModuleBool.call_mut
   (c : source.declared.state.register.logical.subject_dependency.closure_2)
@@ -154257,7 +154646,7 @@ def
   ok (tupled_args.owner = c, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::intrinsic::ResolvedSourceModule,), bool> for noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 870:38-870:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1095:38-1095:79 -/
 def
   source.declared.state.register.logical.subject_dependency.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared1ResolvedSourceModuleBool.call_once
   (c : source.declared.state.register.logical.subject_dependency.closure_2)
@@ -154270,7 +154659,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::subject_dependency::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::intrinsic::ResolvedSourceModule,), bool> for noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 870:38-870:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1095:38-1095:79 -/
 @[reducible]
 def
   source.declared.state.register.logical.subject_dependency.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared1ResolvedSourceModuleBool
@@ -154282,7 +154671,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::subject_dependency::{impl core::ops::function::FnMut<(&'_1 noble_contracts::intrinsic::ResolvedSourceModule,), bool> for noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 870:38-870:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1095:38-1095:79 -/
 @[reducible]
 def
   source.declared.state.register.logical.subject_dependency.closure_2.Insts.CoreOpsFunctionFnMutTupleShared1ResolvedSourceModuleBool
@@ -154296,7 +154685,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 864:20-869:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1089:20-1094:9 -/
 def
   source.declared.state.register.logical.subject_dependency.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.declared.state.register.logical.subject_dependency.closure_1)
@@ -154307,7 +154696,7 @@ def
     "subject dependency has no immutable module owner")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::subject_dependency::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 864:20-869:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1089:20-1094:9 -/
 @[reducible]
 def
   source.declared.state.register.logical.subject_dependency.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
@@ -154319,7 +154708,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::subject_dependency::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 852:59-857:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1077:59-1082:5 -/
 def
   source.declared.state.register.logical.subject_dependency.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
   (c : source.declared.state.register.logical.subject_dependency.closure)
@@ -154330,7 +154719,7 @@ def
     "subject dependency identity exceeds address space")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::subject_dependency::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::subject_dependency::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 852:59-857:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1077:59-1082:5 -/
 @[reducible]
 def
   source.declared.state.register.logical.subject_dependency.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
@@ -154342,7 +154731,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 846:0-895:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1071:0-1120:1 -/
 def source.declared.state.register.logical.subject_dependency
   (request : source.declared.state.register.logical.Request)
   (submission : noble_kernel.execution.Submission)
@@ -154430,7 +154819,7 @@ def source.declared.state.register.logical.subject_dependency
       source.Error) residual
 
 /-- [noble_contracts::source::declared::state::register::logical::retain_dependency]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 820:0-838:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1045:0-1063:1 -/
 def source.declared.state.register.logical.retain_dependency
   (request : source.declared.state.register.logical.Request)
   (submission : noble_kernel.execution.Submission)
@@ -154462,7 +154851,7 @@ def source.declared.state.register.logical.retain_dependency
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::state::register::logical::retained_dependencies]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 806:4-814:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1031:4-1039:5 -/
 @[rust_loop_body]
 def source.declared.state.register.logical.retained_dependencies_loop.body
   (ms : source.declared.state.ModuleSession)
@@ -154506,7 +154895,7 @@ def source.declared.state.register.logical.retained_dependencies_loop.body
   else ok (done retained)
 
 /-- [noble_contracts::source::declared::state::register::logical::retained_dependencies]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 806:4-814:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1031:4-1039:5 -/
 @[rust_loop]
 def source.declared.state.register.logical.retained_dependencies_loop
   (ms : source.declared.state.ModuleSession)
@@ -154525,7 +154914,7 @@ def source.declared.state.register.logical.retained_dependencies_loop
     (body_at, retained)
 
 /-- [noble_contracts::source::declared::state::register::logical::retained_dependencies]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 800:0-816:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1025:0-1041:1 -/
 @[reducible]
 def source.declared.state.register.logical.retained_dependencies
   (request : source.declared.state.register.logical.Request)
@@ -154540,7 +154929,7 @@ def source.declared.state.register.logical.retained_dependencies
     intrinsic.ResolvedSourceModule))
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_name_start]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 787:0-796:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1012:0-1021:1 -/
 def source.declared.state.register.logical.subject_name_start
   (request : source.declared.state.register.logical.Request) (subject : Str) :
   Result Std.Usize
@@ -154557,7 +154946,7 @@ def source.declared.state.register.logical.subject_name_start
     else ok 0#usize
 
 /-- [noble_contracts::source::declared::state::register::logical::bind_subject::{impl core::ops::function::FnMut<(&'_2 (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::state::register::logical::bind_subject::{closure}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 692:56-692:82 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 917:56-917:82 -/
 def
   source.declared.state.register.logical.bind_subject.closure.Insts.CoreOpsFunctionFnMutTupleShared2PairStringTargetBool.call_mut
   (c : source.declared.state.register.logical.bind_subject.closure)
@@ -154569,7 +154958,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::bind_subject::{impl core::ops::function::FnOnce<(&'_2 (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::state::register::logical::bind_subject::{closure}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 692:56-692:82 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 917:56-917:82 -/
 def
   source.declared.state.register.logical.bind_subject.closure.Insts.CoreOpsFunctionFnOnceTupleShared2PairStringTargetBool.call_once
   (c : source.declared.state.register.logical.bind_subject.closure)
@@ -154582,7 +154971,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::bind_subject::{impl core::ops::function::FnOnce<(&'_2 (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::state::register::logical::bind_subject::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 692:56-692:82 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 917:56-917:82 -/
 @[reducible]
 def
   source.declared.state.register.logical.bind_subject.closure.Insts.CoreOpsFunctionFnOnceTupleShared2PairStringTargetBool
@@ -154594,7 +154983,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::bind_subject::{impl core::ops::function::FnMut<(&'_2 (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::state::register::logical::bind_subject::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 692:56-692:82 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 917:56-917:82 -/
 @[reducible]
 def
   source.declared.state.register.logical.bind_subject.closure.Insts.CoreOpsFunctionFnMutTupleShared2PairStringTargetBool
@@ -154608,7 +154997,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 664:54-669:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 889:54-894:9 -/
 def
   source.declared.state.register.logical.SourceOrigin.definition_source.closure_2.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c :
@@ -154620,7 +155009,7 @@ def
     "subject span is outside retained module source")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 664:54-669:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 889:54-894:9 -/
 @[reducible]
 def
   source.declared.state.register.logical.SourceOrigin.definition_source.closure_2.Insts.CoreOpsFunctionFnOnceTupleError
@@ -154632,7 +155021,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 658:68-663:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 883:68-888:9 -/
 def
   source.declared.state.register.logical.SourceOrigin.definition_source.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
   (c :
@@ -154644,7 +155033,7 @@ def
     "subject span exceeds address space")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 658:68-663:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 883:68-888:9 -/
 @[reducible]
 def
   source.declared.state.register.logical.SourceOrigin.definition_source.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
@@ -154656,7 +155045,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 652:72-657:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 877:72-882:9 -/
 def
   source.declared.state.register.logical.SourceOrigin.definition_source.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
   (c :
@@ -154668,7 +155057,7 @@ def
     "subject span exceeds address space")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 652:72-657:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 877:72-882:9 -/
 @[reducible]
 def
   source.declared.state.register.logical.SourceOrigin.definition_source.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
@@ -154680,7 +155069,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 651:4-670:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 876:4-895:5 -/
 def source.declared.state.register.logical.SourceOrigin.definition_source
   (self : source.declared.state.register.logical.SourceOrigin) :
   Result (core.result.Result (Slice Std.U8) source.Error)
@@ -154719,7 +155108,7 @@ def source.declared.state.register.logical.SourceOrigin.definition_source
       (Slice Std.U8) (core.convert.FromSame source.Error) residual
 
 /-- [noble_contracts::source::declared::state::register::logical::position_from]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 624:4-629:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 849:4-854:5 -/
 @[rust_loop_body]
 def source.declared.state.register.logical.position_from_loop.body
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleSharedTBoolInst :
@@ -154746,7 +155135,7 @@ def source.declared.state.register.logical.position_from_loop.body
   else ok (done found)
 
 /-- [noble_contracts::source::declared::state::register::logical::position_from]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 624:4-629:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 849:4-854:5 -/
 @[rust_loop]
 def source.declared.state.register.logical.position_from_loop
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleSharedTBoolInst :
@@ -154762,7 +155151,7 @@ def source.declared.state.register.logical.position_from_loop
     (predicate, index1, found)
 
 /-- [noble_contracts::source::declared::state::register::logical::position_from]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 617:0-631:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 842:0-856:1 -/
 @[reducible]
 def source.declared.state.register.logical.position_from
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleShared0TBoolInst :
@@ -154774,7 +155163,7 @@ def source.declared.state.register.logical.position_from
     coreopsfunctionFnMutT1TupleShared0TBoolInst items predicate «from» none
 
 /-- [noble_contracts::source::declared::state::register::logical::definition_span::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::register::logical::definition_span::{closure#2}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 606:39-606:67 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 831:39-831:67 -/
 def
   source.declared.state.register.logical.definition_span.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2DefinitionSourceBool.call_mut
   (c : source.declared.state.register.logical.definition_span.closure_2)
@@ -154787,7 +155176,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::definition_span::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::register::logical::definition_span::{closure#2}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 606:39-606:67 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 831:39-831:67 -/
 def
   source.declared.state.register.logical.definition_span.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared2DefinitionSourceBool.call_once
   (c : source.declared.state.register.logical.definition_span.closure_2)
@@ -154800,7 +155189,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::definition_span::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::register::logical::definition_span::{closure#2}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 606:39-606:67 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 831:39-831:67 -/
 @[reducible]
 def
   source.declared.state.register.logical.definition_span.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared2DefinitionSourceBool
@@ -154812,7 +155201,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::definition_span::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::register::logical::definition_span::{closure#2}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 606:39-606:67 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 831:39-831:67 -/
 @[reducible]
 def
   source.declared.state.register.logical.definition_span.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2DefinitionSourceBool
@@ -154826,7 +155215,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::definition_span::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::definition_span::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 600:47-605:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 825:47-830:5 -/
 def
   source.declared.state.register.logical.definition_span.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once
   (c : source.declared.state.register.logical.definition_span.closure_1)
@@ -154837,7 +155226,7 @@ def
     "subject definition ordinal exceeds address space")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::definition_span::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::definition_span::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 600:47-605:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 825:47-830:5 -/
 @[reducible]
 def
   source.declared.state.register.logical.definition_span.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError
@@ -154849,7 +155238,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::definition_span::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::register::logical::definition_span::{closure}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 594:46-594:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 819:46-819:74 -/
 def
   source.declared.state.register.logical.definition_span.closure.Insts.CoreOpsFunctionFnMutTupleShared2DefinitionSourceBool.call_mut
   (c : source.declared.state.register.logical.definition_span.closure)
@@ -154862,7 +155251,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::definition_span::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::register::logical::definition_span::{closure}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 594:46-594:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 819:46-819:74 -/
 def
   source.declared.state.register.logical.definition_span.closure.Insts.CoreOpsFunctionFnOnceTupleShared2DefinitionSourceBool.call_once
   (c : source.declared.state.register.logical.definition_span.closure)
@@ -154875,7 +155264,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::definition_span::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::register::logical::definition_span::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 594:46-594:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 819:46-819:74 -/
 @[reducible]
 def
   source.declared.state.register.logical.definition_span.closure.Insts.CoreOpsFunctionFnOnceTupleShared2DefinitionSourceBool
@@ -154887,7 +155276,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::definition_span::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::register::logical::definition_span::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 594:46-594:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 819:46-819:74 -/
 @[reducible]
 def
   source.declared.state.register.logical.definition_span.closure.Insts.CoreOpsFunctionFnMutTupleShared2DefinitionSourceBool
@@ -154901,7 +155290,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::definition_span]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 590:0-613:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 815:0-838:1 -/
 def source.declared.state.register.logical.definition_span
   (spans : Slice source.declared.DefinitionSource) («name» : Str) :
   Result (core.result.Result (source.declared.DefinitionSource × Std.U32)
@@ -154948,7 +155337,7 @@ def source.declared.state.register.logical.definition_span
         source.Error) residual
 
 /-- [noble_contracts::source::declared::state::register::logical::origin_module::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::logical::origin_module::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 567:60-567:93 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 792:60-792:93 -/
 def
   source.declared.state.register.logical.origin_module.closure.Insts.CoreOpsFunctionFnMutTupleShared1ModuleBool.call_mut
   (c : source.declared.state.register.logical.origin_module.closure)
@@ -154958,7 +155347,7 @@ def
   ok (tupled_args.identity = c, c)
 
 /-- [noble_contracts::source::declared::state::register::logical::origin_module::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::logical::origin_module::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 567:60-567:93 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 792:60-792:93 -/
 def
   source.declared.state.register.logical.origin_module.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ModuleBool.call_once
   (c : source.declared.state.register.logical.origin_module.closure)
@@ -154971,7 +155360,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::origin_module::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::logical::origin_module::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 567:60-567:93 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 792:60-792:93 -/
 @[reducible]
 def
   source.declared.state.register.logical.origin_module.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ModuleBool
@@ -154983,7 +155372,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::origin_module::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::register::logical::origin_module::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 567:60-567:93 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 792:60-792:93 -/
 @[reducible]
 def
   source.declared.state.register.logical.origin_module.closure.Insts.CoreOpsFunctionFnMutTupleShared1ModuleBool
@@ -154997,7 +155386,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::origin_module]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 555:0-579:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 780:0-804:1 -/
 def source.declared.state.register.logical.origin_module
   (request : source.declared.state.register.logical.Request) (owner : Std.U64)
   :
@@ -155039,7 +155428,7 @@ def source.declared.state.register.logical.origin_module
         })
 
 /-- [noble_contracts::source::declared::state::register::logical::source_origin::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::source_origin::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 515:44-521:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 740:44-746:5 -/
 def
   source.declared.state.register.logical.source_origin.closure.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.declared.state.register.logical.source_origin.closure) 
@@ -155050,7 +155439,7 @@ def
     "contract subject has no immutable module owner")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::source_origin::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::source_origin::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 515:44-521:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 740:44-746:5 -/
 @[reducible]
 def
   source.declared.state.register.logical.source_origin.closure.Insts.CoreOpsFunctionFnOnceTupleError
@@ -155062,7 +155451,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::source_origin]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 510:0-532:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 735:0-757:1 -/
 def source.declared.state.register.logical.source_origin
   (request : source.declared.state.register.logical.Request)
   (definition : source.Named) (reference_span : Span) :
@@ -155103,7 +155492,7 @@ def source.declared.state.register.logical.source_origin
       (core.convert.FromSame source.Error) residual
 
 /-- [noble_contracts::source::declared::state::register::logical::resolved_definition]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 495:0-504:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 720:0-729:1 -/
 def source.declared.state.register.logical.resolved_definition
   (session : source.declared.state.ModuleSession) (index1 : Std.U32) :
   Result (Option source.Named)
@@ -155117,7 +155506,7 @@ def source.declared.state.register.logical.resolved_definition
   | core.result.Result.Err _ => ok none
 
 /-- [noble_contracts::source::declared::state::register::logical::contract_type::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::contract_type::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 468:13-468:96 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 693:13-693:96 -/
 def
   source.declared.state.register.logical.contract_type.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.declared.state.register.logical.contract_type.closure)
@@ -155127,7 +155516,7 @@ def
   source.declared.diagnostic source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::contract_type::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::contract_type::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 468:13-468:96 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 693:13-693:96 -/
 @[reducible]
 def
   source.declared.state.register.logical.contract_type.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -155139,12 +155528,12 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::TYPE_STACK]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 379:0-379:29 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 604:0-604:29 -/
 @[global_simps, irreducible]
 def source.declared.state.register.logical.TYPE_STACK : Std.Usize := 64#usize
 
 /-- [noble_contracts::source::declared::state::register::logical::pure_subtree::{impl core::ops::function::FnOnce<(&'_0 usize,), bool> for noble_contracts::source::declared::state::register::logical::pure_subtree::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 413:54-413:81 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 638:54-638:81 -/
 def
   source.declared.state.register.logical.pure_subtree.closure.Insts.CoreOpsFunctionFnOnceTupleShared0UsizeBool.call_once
   (c : source.declared.state.register.logical.pure_subtree.closure)
@@ -155154,7 +155543,7 @@ def
   ok (tupled_args < source.declared.state.register.logical.TYPE_STACK)
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::pure_subtree::{impl core::ops::function::FnOnce<(&'_0 usize,), bool> for noble_contracts::source::declared::state::register::logical::pure_subtree::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 413:54-413:81 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 638:54-638:81 -/
 @[reducible]
 def
   source.declared.state.register.logical.pure_subtree.closure.Insts.CoreOpsFunctionFnOnceTupleShared0UsizeBool
@@ -155166,7 +155555,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::pure_subtree]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 406:0-434:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 631:0-659:1 -/
 def source.declared.state.register.logical.pure_subtree
   (ty : noble_kernel.types.Ty) (pending : Std.Usize) (remaining : Std.Usize) :
   Result (Option Std.Usize)
@@ -155243,7 +155632,7 @@ def source.declared.state.register.logical.pure_subtree
 partial_fixpoint
 
 /-- [noble_contracts::source::declared::state::register::logical::pure_type]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 383:0-385:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 608:0-610:1 -/
 def source.declared.state.register.logical.pure_type
   (ty : noble_kernel.types.Ty) : Result Bool := do
   let o ←
@@ -155251,7 +155640,7 @@ def source.declared.state.register.logical.pure_type
   ok (core.option.Option.is_some o)
 
 /-- [noble_contracts::source::declared::state::register::logical::contract_type]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 457:0-477:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 682:0-702:1 -/
 def source.declared.state.register.logical.contract_type
   (binding : source.declared.parsing.Binding)
   (environment : noble_kernel.contracts.Env) :
@@ -155283,7 +155672,7 @@ def source.declared.state.register.logical.contract_type
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::state::register::logical::types]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 443:4-449:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 668:4-674:5 -/
 @[rust_loop_body]
 def source.declared.state.register.logical.types_loop.body
   (bindings : Slice source.declared.parsing.Binding)
@@ -155316,7 +155705,7 @@ def source.declared.state.register.logical.types_loop.body
   else ok (done (result, failure))
 
 /-- [noble_contracts::source::declared::state::register::logical::types]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 443:4-449:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 668:4-674:5 -/
 @[rust_loop]
 def source.declared.state.register.logical.types_loop
   (bindings : Slice source.declared.parsing.Binding)
@@ -155332,7 +155721,7 @@ def source.declared.state.register.logical.types_loop
     (result, binding_at, failure)
 
 /-- [noble_contracts::source::declared::state::register::logical::types]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 436:0-454:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 661:0-679:1 -/
 def source.declared.state.register.logical.types
   (bindings : Slice source.declared.parsing.Binding)
   (environment : noble_kernel.contracts.Env) :
@@ -156737,7 +157126,7 @@ def source.declared.state.register.logical.origin.imports
         source.Error) residual
 
 /-- [noble_contracts::source::declared::state::register::logical::bind_subject]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 681:0-775:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 906:0-1000:1 -/
 def source.declared.state.register.logical.bind_subject
   (request : source.declared.state.register.logical.Request)
   (contract : source.declared.parsing.Contract) :
@@ -157070,7 +157459,7 @@ def source.declared.state.register.logical.bind_subject
         ok (core.result.Result.Err e)
 
 /-- [noble_contracts::source::declared::state::register::logical::binding_pairs]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 213:4-215:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 218:4-220:5 -/
 @[rust_loop_body]
 def source.declared.state.register.logical.binding_pairs_loop.body
   (iter : core.slice.iter.Iter source.declared.parsing.Binding)
@@ -157088,7 +157477,7 @@ def source.declared.state.register.logical.binding_pairs_loop.body
     ok (cont (iter1, pairs1))
 
 /-- [noble_contracts::source::declared::state::register::logical::binding_pairs]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 213:4-215:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 218:4-220:5 -/
 @[rust_loop]
 def source.declared.state.register.logical.binding_pairs_loop
   (iter : core.slice.iter.Iter source.declared.parsing.Binding)
@@ -157102,7 +157491,7 @@ def source.declared.state.register.logical.binding_pairs_loop
     (iter, pairs)
 
 /-- [noble_contracts::source::declared::state::register::logical::binding_pairs]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 209:0-217:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 214:0-222:1 -/
 def source.declared.state.register.logical.binding_pairs
   (bindings : Slice source.declared.parsing.Binding) :
   Result (alloc.vec.Vec (String × String))
@@ -157113,7 +157502,7 @@ def source.declared.state.register.logical.binding_pairs
   source.declared.state.register.logical.binding_pairs_loop iter pairs
 
 /-- [noble_contracts::source::declared::state::register::logical::stage_contract::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::stage_contract::{closure#2}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 196:25-199:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 201:25-204:9 -/
 def
   source.declared.state.register.logical.stage_contract.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError.call_once
   (c : source.declared.state.register.logical.stage_contract.closure_2)
@@ -157123,7 +157512,7 @@ def
   source.declared.diagnostic source.Stage.Check tupled_args
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::stage_contract::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::stage_contract::{closure#2}}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 196:25-199:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 201:25-204:9 -/
 @[reducible]
 def
   source.declared.state.register.logical.stage_contract.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
@@ -157135,7 +157524,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::stage_contract::{impl core::ops::function::FnOnce<(alloc::string::String,), ()> for noble_contracts::source::declared::state::register::logical::stage_contract::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 186:81-186:87 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 191:81-191:87 -/
 def
   source.declared.state.register.logical.stage_contract.closure_1.Insts.CoreOpsFunctionFnOnceTupleStringTuple.call_once
   (c : source.declared.state.register.logical.stage_contract.closure_1)
@@ -157145,7 +157534,7 @@ def
   ok ()
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::stage_contract::{impl core::ops::function::FnOnce<(alloc::string::String,), ()> for noble_contracts::source::declared::state::register::logical::stage_contract::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 186:81-186:87 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 191:81-191:87 -/
 @[reducible]
 def
   source.declared.state.register.logical.stage_contract.closure_1.Insts.CoreOpsFunctionFnOnceTupleStringTuple
@@ -157157,7 +157546,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::stage_contract::{impl core::ops::function::FnOnce<(noble_contracts::Prepared,), ()> for noble_contracts::source::declared::state::register::logical::stage_contract::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 185:75-185:81 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 190:75-190:81 -/
 def
   source.declared.state.register.logical.stage_contract.closure.Insts.CoreOpsFunctionFnOnceTuplePreparedTuple.call_once
   (c : source.declared.state.register.logical.stage_contract.closure)
@@ -157167,7 +157556,7 @@ def
   ok ()
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::stage_contract::{impl core::ops::function::FnOnce<(noble_contracts::Prepared,), ()> for noble_contracts::source::declared::state::register::logical::stage_contract::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 185:75-185:81 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 190:75-190:81 -/
 @[reducible]
 def
   source.declared.state.register.logical.stage_contract.closure.Insts.CoreOpsFunctionFnOnceTuplePreparedTuple
@@ -157179,7 +157568,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::stage_contract]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 169:0-206:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 169:0-211:1 -/
 def source.declared.state.register.logical.stage_contract
   (request : source.declared.state.register.logical.Request)
   (contract : source.declared.parsing.Contract) :
@@ -157196,38 +157585,18 @@ def source.declared.state.register.logical.stage_contract
     let v1 ← source.declared.state.register.logical.binding_pairs s2
     let f ← intrinsic.Form.Insts.CoreCloneClone.clone contract.requires
     let f1 ← intrinsic.Form.Insts.CoreCloneClone.clone contract.ensures
-    match contract.revision with
-    | 1#uscalar =>
-      let r1 ←
-        intrinsic.prepare_contract
-          {
-            contract_name := s,
-            revision := contract.revision,
-            contract_span := contract.span,
-            subject := value,
-            inputs := v,
-            outputs := v1,
-            requires := f,
-            ensures := f1
-          } request.limits
-      let prepared ←
-        core.result.Result.map
-          source.declared.state.register.logical.stage_contract.closure.Insts.CoreOpsFunctionFnOnceTuplePreparedTuple
-          r1 ()
+    let r1 ←
+      source.declared.state.register.logical.refuse_hole_outside_term f
+    match r1 with
+    | core.result.Result.Ok _ =>
       let r2 ←
-        core.result.Result.map_err
-          source.declared.state.register.logical.stage_contract.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
-          prepared ()
+        source.declared.state.register.logical.refuse_hole_outside_term f1
       match r2 with
       | core.result.Result.Ok _ =>
-        let s3 := alloc.vec.Vec.deref request.collected.exports
-        let b ←
-          core.slice.Slice.contains
-            alloc.string.String.Insts.CoreCmpPartialEqString s3 contract.name
-        ok (core.result.Result.Ok
-          {
-            «name» := s,
-            goal :=
+        match contract.revision with
+        | 1#uscalar =>
+          let r3 ←
+            intrinsic.prepare_contract
               {
                 contract_name := s,
                 revision := contract.revision,
@@ -157237,41 +157606,43 @@ def source.declared.state.register.logical.stage_contract
                 outputs := v1,
                 requires := f,
                 ensures := f1
-              },
-            exported := b
-          })
-      | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-    | 2#uscalar =>
-      let r1 ←
-        intrinsic.named_v2.prepare_named_contract
-          {
-            contract_name := s,
-            revision := contract.revision,
-            contract_span := contract.span,
-            subject := value,
-            inputs := v,
-            outputs := v1,
-            requires := f,
-            ensures := f1
-          } request.limits
-      let prepared ←
-        core.result.Result.map
-          source.declared.state.register.logical.stage_contract.closure_1.Insts.CoreOpsFunctionFnOnceTupleStringTuple
-          r1 ()
-      let r2 ←
-        core.result.Result.map_err
-          source.declared.state.register.logical.stage_contract.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
-          prepared ()
-      match r2 with
-      | core.result.Result.Ok _ =>
-        let s3 := alloc.vec.Vec.deref request.collected.exports
-        let b ←
-          core.slice.Slice.contains
-            alloc.string.String.Insts.CoreCmpPartialEqString s3 contract.name
-        ok (core.result.Result.Ok
-          {
-            «name» := s,
-            goal :=
+              } request.limits
+          let prepared ←
+            core.result.Result.map
+              source.declared.state.register.logical.stage_contract.closure.Insts.CoreOpsFunctionFnOnceTuplePreparedTuple
+              r3 ()
+          let r4 ←
+            core.result.Result.map_err
+              source.declared.state.register.logical.stage_contract.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
+              prepared ()
+          match r4 with
+          | core.result.Result.Ok _ =>
+            let s3 := alloc.vec.Vec.deref request.collected.exports
+            let b ←
+              core.slice.Slice.contains
+                alloc.string.String.Insts.CoreCmpPartialEqString s3
+                contract.name
+            ok (core.result.Result.Ok
+              {
+                «name» := s,
+                goal :=
+                  {
+                    contract_name := s,
+                    revision := contract.revision,
+                    contract_span := contract.span,
+                    subject := value,
+                    inputs := v,
+                    outputs := v1,
+                    requires := f,
+                    ensures := f1
+                  },
+                exported := b
+              })
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure)
+        | 2#uscalar =>
+          let r3 ←
+            intrinsic.named_v2.prepare_named_contract
               {
                 contract_name := s,
                 revision := contract.revision,
@@ -157281,15 +157652,47 @@ def source.declared.state.register.logical.stage_contract
                 outputs := v1,
                 requires := f,
                 ensures := f1
-              },
-            exported := b
-          })
+              } request.limits
+          let prepared ←
+            core.result.Result.map
+              source.declared.state.register.logical.stage_contract.closure_1.Insts.CoreOpsFunctionFnOnceTupleStringTuple
+              r3 ()
+          let r4 ←
+            core.result.Result.map_err
+              source.declared.state.register.logical.stage_contract.closure_2.Insts.CoreOpsFunctionFnOnceTupleDiagnosticError
+              prepared ()
+          match r4 with
+          | core.result.Result.Ok _ =>
+            let s3 := alloc.vec.Vec.deref request.collected.exports
+            let b ←
+              core.slice.Slice.contains
+                alloc.string.String.Insts.CoreCmpPartialEqString s3
+                contract.name
+            ok (core.result.Result.Ok
+              {
+                «name» := s,
+                goal :=
+                  {
+                    contract_name := s,
+                    revision := contract.revision,
+                    contract_span := contract.span,
+                    subject := value,
+                    inputs := v,
+                    outputs := v1,
+                    requires := f,
+                    ensures := f1
+                  },
+                exported := b
+              })
+          | core.result.Result.Err failure =>
+            ok (core.result.Result.Err failure)
+        | _ =>
+          let e ←
+            source.declared.state.register.logical.at source.Stage.Check
+              contract.span (toStr "unsupported contract revision")
+          ok (core.result.Result.Err e)
       | core.result.Result.Err failure => ok (core.result.Result.Err failure)
-    | _ =>
-      let e ←
-        source.declared.state.register.logical.at source.Stage.Check
-          contract.span (toStr "unsupported contract revision")
-      ok (core.result.Result.Err e)
+    | core.result.Result.Err failure => ok (core.result.Result.Err failure)
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::state::register::logical::stage::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::Error> for noble_contracts::source::declared::state::register::logical::stage::{closure#2}}::call_once]:
@@ -161973,7 +162376,7 @@ def source.declared.state.prepare.ModuleSession.stage_unit
       | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::declared_text::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::Context,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::declared_text::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1770:25-1770:56 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1829:25-1829:56 -/
 def
   source.declared.state.ModuleSession.declared_text.closure.Insts.CoreOpsFunctionFnOnceTupleShared0ContextBool.call_once
   (c : source.declared.state.ModuleSession.declared_text.closure)
@@ -161983,7 +162386,7 @@ def
   ok tupled_args.declared_text
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::declared_text::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::Context,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::declared_text::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1770:25-1770:56 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1829:25-1829:56 -/
 @[reducible]
 def
   source.declared.state.ModuleSession.declared_text.closure.Insts.CoreOpsFunctionFnOnceTupleShared0ContextBool
@@ -161995,7 +162398,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::declared_text]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1766:4-1771:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1825:4-1830:5
     Visibility: public -/
 def source.declared.state.ModuleSession.declared_text
   (self : source.declared.state.ModuleSession) : Result Bool := do
@@ -165107,10 +165510,10 @@ def source.declared.state.rebind.ModuleSession.rebuild_import_alias_loop1.body
   (v : alloc.vec.Vec source.declared.BoundOperation)
   (v1 : alloc.vec.Vec source.declared.Module)
   (v2 : alloc.vec.Vec source.declared.Alias) (i : Std.U64) (i1 : Std.U64)
-  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets)
+  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets) (b : Bool)
   (v3 : alloc.vec.Vec source.Named) (v4 : alloc.vec.Vec Std.U8) (i3 : Std.U64)
-  (b : Bool) (b1 : Bool) (o1 : Option String) (o2 : Option source.LiveSlots)
-  (b2 : Bool) (b3 : Bool) (o3 : Option component.Bindings)
+  (b1 : Bool) (b2 : Bool) (o1 : Option String) (o2 : Option source.LiveSlots)
+  (b3 : Bool) (b4 : Bool) (o3 : Option component.Bindings)
   (o4 : Option source.declared.Context) (s : Str) (i4 : Std.U64) (i5 : Std.U64)
   (source_count : Std.Usize) (current : alloc.vec.Vec Bool)
   (affected : alloc.vec.Vec Bool) (dependents : alloc.vec.Vec Std.Usize)
@@ -165120,8 +165523,8 @@ def source.declared.state.rebind.ModuleSession.rebuild_import_alias_loop1.body
     Meter × (core.result.Result Unit source.Error) × Std.Usize)
     ((alloc.vec.Vec Std.Usize) × (core.result.Result Unit source.Error)))
   := do
-  let b4 ← core.result.Result.is_ok scanned
-  if b4
+  let b5 ← core.result.Result.is_ok scanned
+  if b5
   then
     if definition_at < source_count
     then
@@ -165137,17 +165540,18 @@ def source.declared.state.rebind.ModuleSession.rebuild_import_alias_loop1.body
             generation := i1,
             retained_source_limit := i2,
             proof_budgets := o,
+            proof_editor := b,
             source :=
               {
                 definitions := v3,
                 history := v4,
                 generation := i3,
-                hosts := b,
-                text_cursor := b1,
+                hosts := b1,
+                text_cursor := b2,
                 live_selected := o1,
                 live_slots := o2,
-                calculator := b2,
-                checked_i64 := b3,
+                calculator := b3,
+                checked_i64 := b4,
                 bindings := o3,
                 declared := o4
               }
@@ -165164,11 +165568,11 @@ def source.declared.state.rebind.ModuleSession.rebuild_import_alias_loop1.body
               let (_, index_mut_back) ←
                 alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
                   Bool) affected definition_at
-              let b5 ←
+              let b6 ←
                 alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
                   Bool) current definition_at
               let (v7, v8) ←
-                if b5
+                if b6
                 then
                   do
                   let dependents2 ←
@@ -165195,10 +165599,10 @@ def source.declared.state.rebind.ModuleSession.rebuild_import_alias_loop1
   (v : alloc.vec.Vec source.declared.BoundOperation)
   (v1 : alloc.vec.Vec source.declared.Module)
   (v2 : alloc.vec.Vec source.declared.Alias) (i : Std.U64) (i1 : Std.U64)
-  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets)
+  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets) (b : Bool)
   (v3 : alloc.vec.Vec source.Named) (v4 : alloc.vec.Vec Std.U8) (i3 : Std.U64)
-  (b : Bool) (b1 : Bool) (o1 : Option String) (o2 : Option source.LiveSlots)
-  (b2 : Bool) (b3 : Bool) (o3 : Option component.Bindings)
+  (b1 : Bool) (b2 : Bool) (o1 : Option String) (o2 : Option source.LiveSlots)
+  (b3 : Bool) (b4 : Bool) (o3 : Option component.Bindings)
   (o4 : Option source.declared.Context) (s : Str) (i4 : Std.U64) (i5 : Std.U64)
   (source_count : Std.Usize) (affected : alloc.vec.Vec Bool)
   (current : alloc.vec.Vec Bool) (dependents : alloc.vec.Vec Std.Usize)
@@ -165209,7 +165613,7 @@ def source.declared.state.rebind.ModuleSession.rebuild_import_alias_loop1
   loop
     (fun (affected1, dependents1, meter1, scanned1, definition_at1) =>
       source.declared.state.rebind.ModuleSession.rebuild_import_alias_loop1.body
-      v v1 v2 i i1 i2 o v3 v4 i3 b b1 o1 o2 b2 b3 o3 o4 s i4 i5 source_count
+      v v1 v2 i i1 i2 o b v3 v4 i3 b1 b2 o1 o2 b3 b4 o3 o4 s i4 i5 source_count
       current affected1 dependents1 meter1 scanned1 definition_at1)
     (affected, dependents, meter, scanned, definition_at)
 
@@ -165220,10 +165624,10 @@ def source.declared.state.rebind.ModuleSession.rebuild_import_alias_loop2.body
   (v : alloc.vec.Vec source.declared.BoundOperation)
   (v1 : alloc.vec.Vec source.declared.Module)
   (v2 : alloc.vec.Vec source.declared.Alias) (i : Std.U64) (i1 : Std.U64)
-  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets)
+  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets) (b : Bool)
   (v3 : alloc.vec.Vec source.Named) (v4 : alloc.vec.Vec Std.U8) (i3 : Std.U64)
-  (b : Bool) (b1 : Bool) (o1 : Option String) (o2 : Option source.LiveSlots)
-  (b2 : Bool) (b3 : Bool) (o3 : Option component.Bindings)
+  (b1 : Bool) (b2 : Bool) (o1 : Option String) (o2 : Option source.LiveSlots)
+  (b3 : Bool) (b4 : Bool) (o3 : Option component.Bindings)
   (o4 : Option source.declared.Context) (i4 : Std.U32) (i5 : Std.U32)
   (i6 : Std.U32) (s : Str) (i7 : Std.U64) (i8 : Std.U64)
   (dependents : alloc.vec.Vec Std.Usize) (work : Std.U32)
@@ -165239,8 +165643,8 @@ def source.declared.state.rebind.ModuleSession.rebuild_import_alias_loop2.body
     source.declared.state.RebuiltImportDefinition) × (core.result.Result Unit
     source.Error)))
   := do
-  let b4 ← core.result.Result.is_ok replayed
-  if b4
+  let b5 ← core.result.Result.is_ok replayed
+  if b5
   then
     let i9 := alloc.vec.Vec.len dependents
     if dependent_at < i9
@@ -165259,17 +165663,18 @@ def source.declared.state.rebind.ModuleSession.rebuild_import_alias_loop2.body
             generation := i1,
             retained_source_limit := i2,
             proof_budgets := o,
+            proof_editor := b,
             source :=
               {
                 definitions := v3,
                 history := v4,
                 generation := i3,
-                hosts := b,
-                text_cursor := b1,
+                hosts := b1,
+                text_cursor := b2,
                 live_selected := o1,
                 live_slots := o2,
-                calculator := b2,
-                checked_i64 := b3,
+                calculator := b3,
+                checked_i64 := b4,
                 bindings := o3,
                 declared := o4
               }
@@ -165301,10 +165706,10 @@ def source.declared.state.rebind.ModuleSession.rebuild_import_alias_loop2
   (v : alloc.vec.Vec source.declared.BoundOperation)
   (v1 : alloc.vec.Vec source.declared.Module)
   (v2 : alloc.vec.Vec source.declared.Alias) (i : Std.U64) (i1 : Std.U64)
-  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets)
+  (i2 : Std.U32) (o : Option intrinsic.ProofBudgets) (b : Bool)
   (v3 : alloc.vec.Vec source.Named) (v4 : alloc.vec.Vec Std.U8) (i3 : Std.U64)
-  (b : Bool) (b1 : Bool) (o1 : Option String) (o2 : Option source.LiveSlots)
-  (b2 : Bool) (b3 : Bool) (o3 : Option component.Bindings)
+  (b1 : Bool) (b2 : Bool) (o1 : Option String) (o2 : Option source.LiveSlots)
+  (b3 : Bool) (b4 : Bool) (o3 : Option component.Bindings)
   (o4 : Option source.declared.Context)
   (staged : source.declared.state.ModuleSession) (i4 : Std.U32) (i5 : Std.U32)
   (i6 : Std.U32) (s : Str) (i7 : Std.U64) (i8 : Std.U64)
@@ -165320,7 +165725,7 @@ def source.declared.state.rebind.ModuleSession.rebuild_import_alias_loop2
   loop
     (fun (staged1, rebuilt1, replacements1, replayed1, dependent_at1) =>
       source.declared.state.rebind.ModuleSession.rebuild_import_alias_loop2.body
-      v v1 v2 i i1 i2 o v3 v4 i3 b b1 o1 o2 b2 b3 o3 o4 i4 i5 i6 s i7 i8
+      v v1 v2 i i1 i2 o b v3 v4 i3 b1 b2 o1 o2 b3 b4 o3 o4 i4 i5 i6 s i7 i8
       dependents work staged1 rebuilt1 replacements1 replayed1 dependent_at1)
     (staged, rebuilt, replacements, replayed, dependent_at)
 
@@ -165363,13 +165768,13 @@ def source.declared.state.rebind.ModuleSession.rebuild_import_alias
           source.declared.state.rebind.ModuleSession.rebuild_import_alias_loop1
             self.bindings self.modules self.aliases self.next_module_identity
             self.generation self.retained_source_limit self.proof_budgets
-            self.source.definitions self.source.history self.source.generation
-            self.source.hosts self.source.text_cursor self.source.live_selected
-            self.source.live_slots self.source.calculator
-            self.source.checked_i64 self.source.bindings self.source.declared
-            s1 r1.prior_owner r1.next_owner source_count affected current
-            (alloc.vec.Vec.new Std.Usize) meter (core.result.Result.Ok ())
-            0#usize
+            self.proof_editor self.source.definitions self.source.history
+            self.source.generation self.source.hosts self.source.text_cursor
+            self.source.live_selected self.source.live_slots
+            self.source.calculator self.source.checked_i64 self.source.bindings
+            self.source.declared s1 r1.prior_owner r1.next_owner source_count
+            affected current (alloc.vec.Vec.new Std.Usize) meter
+            (core.result.Result.Ok ()) 0#usize
         match scanned with
         | core.result.Result.Ok _ =>
           let i := alloc.vec.Vec.len dependents
@@ -165410,15 +165815,15 @@ def source.declared.state.rebind.ModuleSession.rebuild_import_alias
                     self.bindings self.modules self.aliases
                     self.next_module_identity self.generation
                     self.retained_source_limit self.proof_budgets
-                    self.source.definitions self.source.history
-                    self.source.generation self.source.hosts
-                    self.source.text_cursor self.source.live_selected
-                    self.source.live_slots self.source.calculator
-                    self.source.checked_i64 self.source.bindings
-                    self.source.declared staged limits.bytes limits.nodes
-                    limits.depth s1 r1.prior_owner r1.next_owner dependents
-                    rebuilt replacements work (core.result.Result.Ok ())
-                    0#usize
+                    self.proof_editor self.source.definitions
+                    self.source.history self.source.generation
+                    self.source.hosts self.source.text_cursor
+                    self.source.live_selected self.source.live_slots
+                    self.source.calculator self.source.checked_i64
+                    self.source.bindings self.source.declared staged
+                    limits.bytes limits.nodes limits.depth s1 r1.prior_owner
+                    r1.next_owner dependents rebuilt replacements work
+                    (core.result.Result.Ok ()) 0#usize
                 match replayed with
                 | core.result.Result.Ok _ =>
                   ok (core.result.Result.Ok (some rebuilt1), staged1)
@@ -169531,8 +169936,66 @@ def source.declared.state.register.logical.Request.Insts.CoreMarkerCopy :
     source.declared.state.register.logical.Request.Insts.CoreCloneClone
 }
 
+/-- [noble_contracts::source::declared::state::register::logical::{impl core::clone::Clone for noble_contracts::source::declared::state::register::logical::HoleMode}::clone]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 301:9-301:14
+    Visibility: public -/
+def source.declared.state.register.logical.HoleMode.Insts.CoreCloneClone.clone
+  (self : source.declared.state.register.logical.HoleMode) :
+  Result source.declared.state.register.logical.HoleMode
+  := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::logical::{impl core::clone::Clone for noble_contracts::source::declared::state::register::logical::HoleMode}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 301:9-301:14 -/
+@[reducible]
+impl_def source.declared.state.register.logical.HoleMode.Insts.CoreCloneClone :
+  core.clone.Clone source.declared.state.register.logical.HoleMode := {
+  clone :=
+    source.declared.state.register.logical.HoleMode.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    source.declared.state.register.logical.HoleMode.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::logical::{impl core::marker::Copy for noble_contracts::source::declared::state::register::logical::HoleMode}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 301:16-301:20 -/
+@[reducible]
+def source.declared.state.register.logical.HoleMode.Insts.CoreMarkerCopy :
+  core.marker.Copy source.declared.state.register.logical.HoleMode := {
+  cloneInst :=
+    source.declared.state.register.logical.HoleMode.Insts.CoreCloneClone
+}
+
+/-- [noble_contracts::source::declared::state::register::logical::{impl core::clone::Clone for noble_contracts::source::declared::state::register::logical::FormLevel}::clone]:
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 308:9-308:14
+    Visibility: public -/
+def source.declared.state.register.logical.FormLevel.Insts.CoreCloneClone.clone
+  (self : source.declared.state.register.logical.FormLevel) :
+  Result source.declared.state.register.logical.FormLevel
+  := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::logical::{impl core::clone::Clone for noble_contracts::source::declared::state::register::logical::FormLevel}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 308:9-308:14 -/
+@[reducible]
+impl_def source.declared.state.register.logical.FormLevel.Insts.CoreCloneClone
+  : core.clone.Clone source.declared.state.register.logical.FormLevel := {
+  clone :=
+    source.declared.state.register.logical.FormLevel.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    source.declared.state.register.logical.FormLevel.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::state::register::logical::{impl core::marker::Copy for noble_contracts::source::declared::state::register::logical::FormLevel}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 308:16-308:20 -/
+@[reducible]
+def source.declared.state.register.logical.FormLevel.Insts.CoreMarkerCopy :
+  core.marker.Copy source.declared.state.register.logical.FormLevel := {
+  cloneInst :=
+    source.declared.state.register.logical.FormLevel.Insts.CoreCloneClone
+}
+
 /-- [noble_contracts::source::declared::state::register::logical::{impl core::clone::Clone for noble_contracts::source::declared::state::register::logical::SourceOrigin<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 484:9-484:14
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 709:9-709:14
     Visibility: public -/
 def
   source.declared.state.register.logical.SourceOrigin.Insts.CoreCloneClone.clone
@@ -169542,7 +170005,7 @@ def
   ok self
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::{impl core::clone::Clone for noble_contracts::source::declared::state::register::logical::SourceOrigin<'a>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 484:9-484:14 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 709:9-709:14 -/
 @[reducible]
 impl_def
   source.declared.state.register.logical.SourceOrigin.Insts.CoreCloneClone :
@@ -169554,7 +170017,7 @@ impl_def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::{impl core::marker::Copy for noble_contracts::source::declared::state::register::logical::SourceOrigin<'a>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 484:16-484:20 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 709:16-709:20 -/
 @[reducible]
 def source.declared.state.register.logical.SourceOrigin.Insts.CoreMarkerCopy :
   core.marker.Copy source.declared.state.register.logical.SourceOrigin := {
@@ -169563,7 +170026,7 @@ def source.declared.state.register.logical.SourceOrigin.Insts.CoreMarkerCopy :
 }
 
 /-- [noble_contracts::source::declared::state::register::logical::{impl core::clone::Clone for noble_contracts::source::declared::state::register::logical::OwnerModule<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 535:9-535:14
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 760:9-760:14
     Visibility: public -/
 def
   source.declared.state.register.logical.OwnerModule.Insts.CoreCloneClone.clone
@@ -169573,7 +170036,7 @@ def
   ok self
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::{impl core::clone::Clone for noble_contracts::source::declared::state::register::logical::OwnerModule<'a>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 535:9-535:14 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 760:9-760:14 -/
 @[reducible]
 impl_def
   source.declared.state.register.logical.OwnerModule.Insts.CoreCloneClone :
@@ -169585,7 +170048,7 @@ impl_def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::register::logical::{impl core::marker::Copy for noble_contracts::source::declared::state::register::logical::OwnerModule<'a>}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 535:16-535:20 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 760:16-760:20 -/
 @[reducible]
 def source.declared.state.register.logical.OwnerModule.Insts.CoreMarkerCopy :
   core.marker.Copy source.declared.state.register.logical.OwnerModule := {
@@ -170269,18 +170732,22 @@ def source.declared.state.ModuleSession.Insts.CoreFmtDebug.fmt
   let dyn6 :=
     Dyn.mk _ (core.option.Option.Insts.CoreFmtDebug
       intrinsic.ProofBudgets.Insts.CoreFmtDebug) self.proof_budgets
-  let dyn7 :=
+  let dyn7 := Dyn.mk _ core.fmt.DebugBool self.proof_editor
+  let dyn8 :=
     Dyn.mk _ (core.fmt.DebugShared source.Session.Insts.CoreFmtDebug)
       self.source
   let values :=
     Array.to_slice
-      (Array.make 8#usize [ dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7 ])
+      (Array.make 9#usize [
+        dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7, dyn8
+        ])
   let s ←
     lift (Array.to_slice
-      (Array.make 8#usize [
+      (Array.make 9#usize [
         toStr "bindings", toStr "modules", toStr "aliases", toStr
         "next_module_identity", toStr "generation", toStr
-        "retained_source_limit", toStr "proof_budgets", toStr "source"
+        "retained_source_limit", toStr "proof_budgets", toStr "proof_editor",
+        toStr "source"
         ]))
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "ModuleSession") s
     values
@@ -170294,13 +170761,13 @@ def source.declared.state.ModuleSession.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_contracts::source::declared::state::CALCULATOR_RETAINED_SOURCE_BYTES]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 49:0-49:57 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 54:0-54:57 -/
 @[global_simps, irreducible]
 def source.declared.state.CALCULATOR_RETAINED_SOURCE_BYTES : Result Std.U32 :=
   512#u32 * 1024#u32
 
 /-- [noble_contracts::source::declared::state::{impl core::fmt::Debug for noble_contracts::source::declared::state::RebuiltImportDefinition}::fmt]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 74:16-74:21
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 79:16-79:21
     Visibility: public -/
 def source.declared.state.RebuiltImportDefinition.Insts.CoreFmtDebug.fmt
   (self : source.declared.state.RebuiltImportDefinition)
@@ -170316,7 +170783,7 @@ def source.declared.state.RebuiltImportDefinition.Insts.CoreFmtDebug.fmt
     dyn1 (toStr "new_identity") dyn2
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{impl core::fmt::Debug for noble_contracts::source::declared::state::RebuiltImportDefinition}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 74:16-74:21 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 79:16-79:21 -/
 @[reducible]
 def source.declared.state.RebuiltImportDefinition.Insts.CoreFmtDebug :
   core.fmt.Debug source.declared.state.RebuiltImportDefinition := {
@@ -170324,7 +170791,7 @@ def source.declared.state.RebuiltImportDefinition.Insts.CoreFmtDebug :
 }
 
 /-- [noble_contracts::source::declared::state::{impl core::fmt::Debug for noble_contracts::source::declared::state::ModulePrepared}::fmt]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 51:9-51:14
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 56:9-56:14
     Visibility: public -/
 def source.declared.state.ModulePrepared.Insts.CoreFmtDebug.fmt
   (self : source.declared.state.ModulePrepared) (f : core.fmt.Formatter) :
@@ -170383,7 +170850,7 @@ def source.declared.state.ModulePrepared.Insts.CoreFmtDebug.fmt
     values
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{impl core::fmt::Debug for noble_contracts::source::declared::state::ModulePrepared}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 51:9-51:14 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 56:9-56:14 -/
 @[reducible]
 def source.declared.state.ModulePrepared.Insts.CoreFmtDebug : core.fmt.Debug
   source.declared.state.ModulePrepared := {
@@ -170391,7 +170858,7 @@ def source.declared.state.ModulePrepared.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_contracts::source::declared::state::{impl core::clone::Clone for noble_contracts::source::declared::state::RebuiltImportDefinition}::clone]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 74:9-74:14
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 79:9-79:14
     Visibility: public -/
 def source.declared.state.RebuiltImportDefinition.Insts.CoreCloneClone.clone
   (self : source.declared.state.RebuiltImportDefinition) :
@@ -170403,7 +170870,7 @@ def source.declared.state.RebuiltImportDefinition.Insts.CoreCloneClone.clone
   ok { «name» := s, previous_identity := i, new_identity := i1 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{impl core::clone::Clone for noble_contracts::source::declared::state::RebuiltImportDefinition}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 74:9-74:14 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 79:9-79:14 -/
 @[reducible]
 impl_def source.declared.state.RebuiltImportDefinition.Insts.CoreCloneClone :
   core.clone.Clone source.declared.state.RebuiltImportDefinition := {
@@ -170414,28 +170881,28 @@ impl_def source.declared.state.RebuiltImportDefinition.Insts.CoreCloneClone :
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::RebuiltImportDefinition}::name]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 82:4-84:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 87:4-89:5
     Visibility: public -/
 def source.declared.state.RebuiltImportDefinition.impl.name
   (self : source.declared.state.RebuiltImportDefinition) : Result Str := do
   alloc.string.String.Insts.CoreOpsDerefDerefStr.deref self.name
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::RebuiltImportDefinition}::previous_identity]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 85:4-87:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 90:4-92:5
     Visibility: public -/
 def source.declared.state.RebuiltImportDefinition.impl.previous_identity
   (self : source.declared.state.RebuiltImportDefinition) : Result Std.U64 := do
   ok self.previous_identity
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::RebuiltImportDefinition}::new_identity]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 88:4-90:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 93:4-95:5
     Visibility: public -/
 def source.declared.state.RebuiltImportDefinition.impl.new_identity
   (self : source.declared.state.RebuiltImportDefinition) : Result Std.U64 := do
   ok self.new_identity
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::CheckedNominal<'_0>}::declaration]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 103:4-105:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 108:4-110:5
     Visibility: public -/
 def source.declared.state.CheckedNominal.impl.declaration
   (self : source.declared.state.CheckedNominal) :
@@ -170444,21 +170911,21 @@ def source.declared.state.CheckedNominal.impl.declaration
   ok self.declaration
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::CheckedNominal<'_0>}::module_identity]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 106:4-108:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 111:4-113:5
     Visibility: public -/
 def source.declared.state.CheckedNominal.impl.module_identity
   (self : source.declared.state.CheckedNominal) : Result Std.U64 := do
   ok self.module_identity
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::CheckedNominal<'_0>}::module_version]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 109:4-111:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 114:4-116:5
     Visibility: public -/
 def source.declared.state.CheckedNominal.impl.module_version
   (self : source.declared.state.CheckedNominal) : Result Std.U32 := do
   ok self.module_version
 
 /-- [noble_contracts::source::declared::state::{impl core::clone::Clone for noble_contracts::source::declared::state::ProgramClosureError}::clone]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 128:9-128:14
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 133:9-133:14
     Visibility: public -/
 def source.declared.state.ProgramClosureError.Insts.CoreCloneClone.clone
   (self : source.declared.state.ProgramClosureError) :
@@ -170467,7 +170934,7 @@ def source.declared.state.ProgramClosureError.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{impl core::clone::Clone for noble_contracts::source::declared::state::ProgramClosureError}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 128:9-128:14 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 133:9-133:14 -/
 @[reducible]
 impl_def source.declared.state.ProgramClosureError.Insts.CoreCloneClone :
   core.clone.Clone source.declared.state.ProgramClosureError := {
@@ -170477,7 +170944,7 @@ impl_def source.declared.state.ProgramClosureError.Insts.CoreCloneClone :
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{impl core::marker::Copy for noble_contracts::source::declared::state::ProgramClosureError}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 128:16-128:20 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 133:16-133:20 -/
 @[reducible]
 def source.declared.state.ProgramClosureError.Insts.CoreMarkerCopy :
   core.marker.Copy source.declared.state.ProgramClosureError := {
@@ -170485,7 +170952,7 @@ def source.declared.state.ProgramClosureError.Insts.CoreMarkerCopy :
 }
 
 /-- [noble_contracts::source::declared::state::{impl core::fmt::Debug for noble_contracts::source::declared::state::ProgramClosureError}::fmt]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 128:22-128:27
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 133:22-133:27
     Visibility: public -/
 def source.declared.state.ProgramClosureError.Insts.CoreFmtDebug.fmt
   (self : source.declared.state.ProgramClosureError) (f : core.fmt.Formatter) :
@@ -170500,7 +170967,7 @@ def source.declared.state.ProgramClosureError.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "Invalid")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{impl core::fmt::Debug for noble_contracts::source::declared::state::ProgramClosureError}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 128:22-128:27 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 133:22-133:27 -/
 @[reducible]
 def source.declared.state.ProgramClosureError.Insts.CoreFmtDebug :
   core.fmt.Debug source.declared.state.ProgramClosureError := {
@@ -170508,7 +170975,7 @@ def source.declared.state.ProgramClosureError.Insts.CoreFmtDebug :
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{impl core::marker::StructuralPartialEq for noble_contracts::source::declared::state::ProgramClosureError}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 128:29-128:38 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 133:29-133:38 -/
 @[reducible]
 def
   source.declared.state.ProgramClosureError.Insts.CoreMarkerStructuralPartialEq
@@ -170517,7 +170984,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{impl core::cmp::PartialEq<noble_contracts::source::declared::state::ProgramClosureError> for noble_contracts::source::declared::state::ProgramClosureError}::eq]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 128:29-128:38
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 133:29-133:38
     Visibility: public -/
 def
   source.declared.state.ProgramClosureError.Insts.CoreCmpPartialEqProgramClosureError.eq
@@ -170530,7 +170997,7 @@ def
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{impl core::cmp::PartialEq<noble_contracts::source::declared::state::ProgramClosureError> for noble_contracts::source::declared::state::ProgramClosureError}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 128:29-128:38 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 133:29-133:38 -/
 @[reducible]
 impl_def
   source.declared.state.ProgramClosureError.Insts.CoreCmpPartialEqProgramClosureError
@@ -170543,7 +171010,7 @@ impl_def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{impl core::cmp::Eq for noble_contracts::source::declared::state::ProgramClosureError}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 128:40-128:42 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 133:40-133:42 -/
 @[reducible]
 impl_def source.declared.state.ProgramClosureError.Insts.CoreCmpEq :
   core.cmp.Eq source.declared.state.ProgramClosureError := {
@@ -170554,49 +171021,49 @@ impl_def source.declared.state.ProgramClosureError.Insts.CoreCmpEq :
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::CheckedProgramOwner}::module_identity]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 184:4-186:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 189:4-191:5
     Visibility: public -/
 def source.declared.state.CheckedProgramOwner.impl.module_identity
   (self : source.declared.state.CheckedProgramOwner) : Result Std.U64 := do
   ok self.module_identity
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::CheckedProgramOwner}::module_version]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 187:4-189:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 192:4-194:5
     Visibility: public -/
 def source.declared.state.CheckedProgramOwner.impl.module_version
   (self : source.declared.state.CheckedProgramOwner) : Result Std.U32 := do
   ok self.module_version
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::CheckedProgramOwner}::definition_ordinal]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 190:4-192:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 195:4-197:5
     Visibility: public -/
 def source.declared.state.CheckedProgramOwner.impl.definition_ordinal
   (self : source.declared.state.CheckedProgramOwner) : Result Std.U32 := do
   ok self.definition_ordinal
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::CheckedProgramOwner}::definition_identity]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 193:4-195:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 198:4-200:5
     Visibility: public -/
 def source.declared.state.CheckedProgramOwner.impl.definition_identity
   (self : source.declared.state.CheckedProgramOwner) : Result Std.U64 := do
   ok self.definition_identity
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::CheckedProgramOwner}::definition_slot]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 196:4-198:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 201:4-203:5
     Visibility: public -/
 def source.declared.state.CheckedProgramOwner.impl.definition_slot
   (self : source.declared.state.CheckedProgramOwner) : Result Std.U32 := do
   ok self.definition_slot
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::CheckedProgramOwner}::is_recursive]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 200:4-202:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 205:4-207:5
     Visibility: public -/
 def source.declared.state.CheckedProgramOwner.is_recursive
   (self : source.declared.state.CheckedProgramOwner) : Result Bool := do
   ok self.recursive
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 255:45-260:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 260:45-265:9 -/
 def
   source.declared.state.DeclaredTextSourceOwner.rederive.closure_2.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.declared.state.DeclaredTextSourceOwner.rederive.closure_2)
@@ -170607,7 +171074,7 @@ def
     "declared text source did not rederive an executable body")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 255:45-260:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 260:45-265:9 -/
 @[reducible]
 def
   source.declared.state.DeclaredTextSourceOwner.rederive.closure_2.Insts.CoreOpsFunctionFnOnceTupleError
@@ -170619,7 +171086,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 242:63-247:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 247:63-252:9 -/
 def
   source.declared.state.DeclaredTextSourceOwner.rederive.closure_1.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.declared.state.DeclaredTextSourceOwner.rederive.closure_1)
@@ -170630,7 +171097,7 @@ def
     "declared text expression has no submission")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 242:63-247:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 247:63-252:9 -/
 @[reducible]
 def
   source.declared.state.DeclaredTextSourceOwner.rederive.closure_1.Insts.CoreOpsFunctionFnOnceTupleError
@@ -170642,7 +171109,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Context,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 233:25-233:56 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 238:25-238:56 -/
 def
   source.declared.state.DeclaredTextSourceOwner.rederive.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ContextBool.call_once
   (c : source.declared.state.DeclaredTextSourceOwner.rederive.closure)
@@ -170652,7 +171119,7 @@ def
   ok tupled_args.declared_text
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Context,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 233:25-233:56 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 238:25-238:56 -/
 @[reducible]
 def
   source.declared.state.DeclaredTextSourceOwner.rederive.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ContextBool
@@ -170664,7 +171131,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::DeclaredTextSourceOwner<'_0>}::rederive]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 226:4-261:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 231:4-266:5
     Visibility: public -/
 def source.declared.state.DeclaredTextSourceOwner.rederive
   (self : source.declared.state.DeclaredTextSourceOwner) :
@@ -170732,7 +171199,7 @@ def source.declared.state.DeclaredTextSourceOwner.rederive
     ok (core.result.Result.Err e)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::SignedSourceOwner<'_0>}::rederive::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::SignedSourceOwner<'_0>}::rederive::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 285:45-290:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 290:45-295:9 -/
 def
   source.declared.state.SignedSourceOwner.rederive.closure.Insts.CoreOpsFunctionFnOnceTupleError.call_once
   (c : source.declared.state.SignedSourceOwner.rederive.closure) (_ : Unit) :
@@ -170742,7 +171209,7 @@ def
     "signed source did not rederive an executable body")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::SignedSourceOwner<'_0>}::rederive::{impl core::ops::function::FnOnce<(), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::SignedSourceOwner<'_0>}::rederive::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 285:45-290:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 290:45-295:9 -/
 @[reducible]
 def
   source.declared.state.SignedSourceOwner.rederive.closure.Insts.CoreOpsFunctionFnOnceTupleError
@@ -170754,7 +171221,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::SignedSourceOwner<'_0>}::rederive]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 269:4-291:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 274:4-296:5
     Visibility: public -/
 def source.declared.state.SignedSourceOwner.rederive
   (self : source.declared.state.SignedSourceOwner) :
@@ -170795,7 +171262,7 @@ def source.declared.state.SignedSourceOwner.rederive
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolve_type]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 297:4-308:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 302:4-313:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.resolve_type
   (self : source.declared.state.ModulePrepared) (spelling : Str) :
@@ -170821,7 +171288,7 @@ def source.declared.state.ModulePrepared.resolve_type
       ok (core.result.Result.Err e)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_nominals]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 321:8-329:9
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 326:8-334:9
     Visibility: public -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.checked_nominals_loop.body
@@ -170850,7 +171317,7 @@ def source.declared.state.ModulePrepared.checked_nominals_loop.body
     else ok (cont (iter1, nominals))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_nominals]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 321:8-329:9
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 326:8-334:9
     Visibility: public -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.checked_nominals_loop
@@ -170866,7 +171333,7 @@ def source.declared.state.ModulePrepared.checked_nominals_loop
     (iter, nominals)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_nominals]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 311:4-331:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 316:4-336:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.checked_nominals
   (self : source.declared.state.ModulePrepared) :
@@ -170919,7 +171386,7 @@ def source.declared.state.ModulePrepared.checked_nominals
       else ok none
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{impl core::ops::function::FnMut<(&'_2 (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure#2}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 376:53-376:77 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 381:53-381:77 -/
 def
   source.declared.state.ModulePrepared.checked_program_owner_source.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2PairStringTargetBool.call_mut
   (c :
@@ -170933,7 +171400,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{impl core::ops::function::FnOnce<(&'_2 (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure#2}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 376:53-376:77 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 381:53-381:77 -/
 def
   source.declared.state.ModulePrepared.checked_program_owner_source.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared2PairStringTargetBool.call_once
   (c :
@@ -170947,7 +171414,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{impl core::ops::function::FnOnce<(&'_2 (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure#2}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 376:53-376:77 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 381:53-381:77 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.checked_program_owner_source.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared2PairStringTargetBool
@@ -170959,7 +171426,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{impl core::ops::function::FnMut<(&'_2 (alloc::string::String, noble_contracts::source::Target),), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure#2}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 376:53-376:77 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 381:53-381:77 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.checked_program_owner_source.closure_2.Insts.CoreOpsFunctionFnMutTupleShared2PairStringTargetBool
@@ -170973,7 +171440,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::Export,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure#1}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 374:64-374:90 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 379:64-379:90 -/
 def
   source.declared.state.ModulePrepared.checked_program_owner_source.closure_1.Insts.CoreOpsFunctionFnMutTupleShared2ExportBool.call_mut
   (c :
@@ -170987,7 +171454,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::Export,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure#1}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 374:64-374:90 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 379:64-379:90 -/
 def
   source.declared.state.ModulePrepared.checked_program_owner_source.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared2ExportBool.call_once
   (c :
@@ -171001,7 +171468,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::Export,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure#1}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 374:64-374:90 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 379:64-379:90 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.checked_program_owner_source.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared2ExportBool
@@ -171013,7 +171480,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::Export,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure#1}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 374:64-374:90 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 379:64-379:90 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.checked_program_owner_source.closure_1.Insts.CoreOpsFunctionFnMutTupleShared2ExportBool
@@ -171027,7 +171494,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 371:63-373:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 376:63-378:9 -/
 def
   source.declared.state.ModulePrepared.checked_program_owner_source.closure.Insts.CoreOpsFunctionFnMutTupleShared2DefinitionSourceBool.call_mut
   (c :
@@ -171041,7 +171508,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 371:63-373:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 376:63-378:9 -/
 def
   source.declared.state.ModulePrepared.checked_program_owner_source.closure.Insts.CoreOpsFunctionFnOnceTupleShared2DefinitionSourceBool.call_once
   (c :
@@ -171055,7 +171522,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 371:63-373:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 376:63-378:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.checked_program_owner_source.closure.Insts.CoreOpsFunctionFnOnceTupleShared2DefinitionSourceBool
@@ -171067,7 +171534,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::DefinitionSource,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 371:63-373:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 376:63-378:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.checked_program_owner_source.closure.Insts.CoreOpsFunctionFnMutTupleShared2DefinitionSourceBool
@@ -171081,7 +171548,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_source]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 366:4-399:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 371:4-404:5 -/
 def source.declared.state.ModulePrepared.checked_program_owner_source
   (self : source.declared.state.ModulePrepared)
   (module : source.declared.Module) («name» : Str) :
@@ -171212,7 +171679,7 @@ def source.declared.state.ModulePrepared.checked_program_owner_source
       source.declared.state.CheckedProgramOwner residual
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 335:4-344:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 340:4-349:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.checked_program_owner
   (self : source.declared.state.ModulePrepared) («name» : Str) :
@@ -171245,7 +171712,7 @@ def source.declared.state.ModulePrepared.checked_program_owner
       else ok none
 
 /-- [noble_contracts::source::declared::state::reached_count]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1988:4-1992:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2048:4-2052:5 -/
 @[rust_loop_body]
 def source.declared.state.reached_count_loop.body
   (iter : core.slice.iter.Iter Bool) (count : Std.Usize) :
@@ -171261,7 +171728,7 @@ def source.declared.state.reached_count_loop.body
     else ok (cont (iter1, count))
 
 /-- [noble_contracts::source::declared::state::reached_count]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1988:4-1992:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2048:4-2052:5 -/
 @[rust_loop]
 def source.declared.state.reached_count_loop
   (iter : core.slice.iter.Iter Bool) (count : Std.Usize) :
@@ -171273,7 +171740,7 @@ def source.declared.state.reached_count_loop
     (iter, count)
 
 /-- [noble_contracts::source::declared::state::reached_count]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1986:0-1994:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2046:0-2054:1 -/
 def source.declared.state.reached_count
   (visited : Slice Bool) : Result Std.Usize := do
   let iter ←
@@ -171282,7 +171749,7 @@ def source.declared.state.reached_count
   source.declared.state.reached_count_loop iter 0#usize
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::declared::state::ProgramClosureError> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{closure#2}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 799:58-799:90 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 804:58-804:90 -/
 def
   source.declared.state.ModulePrepared.reached_row.closure_2.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorProgramClosureError.call_once
   (c : source.declared.state.ModulePrepared.reached_row.closure_2)
@@ -171292,7 +171759,7 @@ def
   ok source.declared.state.ProgramClosureError.Invalid
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::declared::state::ProgramClosureError> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{closure#2}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 799:58-799:90 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 804:58-804:90 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.reached_row.closure_2.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorProgramClosureError
@@ -171304,7 +171771,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::declared::state::ProgramClosureError> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 797:63-797:95 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 802:63-802:95 -/
 def
   source.declared.state.ModulePrepared.reached_row.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorProgramClosureError.call_once
   (c : source.declared.state.ModulePrepared.reached_row.closure_1)
@@ -171314,7 +171781,7 @@ def
   ok source.declared.state.ProgramClosureError.Invalid
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::declared::state::ProgramClosureError> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 797:63-797:95 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 802:63-802:95 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.reached_row.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorProgramClosureError
@@ -171326,7 +171793,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::Named,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{closure}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 787:42-789:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 792:42-794:9 -/
 def
   source.declared.state.ModulePrepared.reached_row.closure.Insts.CoreOpsFunctionFnMutTupleShared2NamedBool.call_mut
   (c : source.declared.state.ModulePrepared.reached_row.closure)
@@ -171346,7 +171813,7 @@ def
   else ok (false, c)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::Named,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{closure}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 787:42-789:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 792:42-794:9 -/
 def
   source.declared.state.ModulePrepared.reached_row.closure.Insts.CoreOpsFunctionFnOnceTupleShared2NamedBool.call_once
   (c : source.declared.state.ModulePrepared.reached_row.closure)
@@ -171359,7 +171826,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::Named,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 787:42-789:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 792:42-794:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.reached_row.closure.Insts.CoreOpsFunctionFnOnceTupleShared2NamedBool
@@ -171371,7 +171838,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::Named,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 787:42-789:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 792:42-794:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.reached_row.closure.Insts.CoreOpsFunctionFnMutTupleShared2NamedBool
@@ -171385,7 +171852,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_row]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 779:4-802:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 784:4-807:5 -/
 def source.declared.state.ModulePrepared.reached_row
   (self : source.declared.state.ModulePrepared)
   (module : source.declared.Module) (visited : Slice Bool)
@@ -171471,7 +171938,7 @@ def source.declared.state.ModulePrepared.reached_row
       source.declared.state.ProgramClosureError) residual
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_rows]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 758:8-769:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 763:8-774:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.reached_rows_loop.body
   (self : source.declared.state.ModulePrepared) (s : String) (i : Std.U32)
@@ -171547,7 +172014,7 @@ def source.declared.state.ModulePrepared.reached_rows_loop.body
   else ok (done (meter, closure, unreached, failure))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_rows]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 758:8-769:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 763:8-774:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.reached_rows_loop
   (self : source.declared.state.ModulePrepared) (s : String) (i : Std.U32)
@@ -171574,7 +172041,7 @@ def source.declared.state.ModulePrepared.reached_rows_loop
     (meter, closure, unreached, failure, ordinal)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::reached_rows]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 744:4-775:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 749:4-780:5 -/
 def source.declared.state.ModulePrepared.reached_rows
   (self : source.declared.state.ModulePrepared)
   (module : source.declared.Module) (visited : Slice Bool) (meter : Meter) :
@@ -171596,7 +172063,7 @@ def source.declared.state.ModulePrepared.reached_rows
   | some error => ok (meter1, core.result.Result.Err error)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::SignedRelation,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{closure#2}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1954:74-1956:17 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2014:74-2016:17 -/
 def
   source.declared.state.ClosureWalk.follow.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared1SignedRelationBool.call_once
   (c : source.declared.state.ClosureWalk.follow.closure_2)
@@ -171611,7 +172078,7 @@ def
     (some c)
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::SignedRelation,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{closure#2}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1954:74-1956:17 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2014:74-2016:17 -/
 @[reducible]
 def
   source.declared.state.ClosureWalk.follow.closure_2.Insts.CoreOpsFunctionFnOnceTupleShared1SignedRelationBool
@@ -171622,7 +172089,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::declared::state::ProgramClosureError> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{closure#1}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1941:60-1941:92 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2001:60-2001:92 -/
 def
   source.declared.state.ClosureWalk.follow.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorProgramClosureError.call_once
   (c : source.declared.state.ClosureWalk.follow.closure_1)
@@ -171632,7 +172099,7 @@ def
   ok source.declared.state.ProgramClosureError.Invalid
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::declared::state::ProgramClosureError> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{closure#1}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1941:60-1941:92 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2001:60-2001:92 -/
 @[reducible]
 def
   source.declared.state.ClosureWalk.follow.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorProgramClosureError
@@ -171643,7 +172110,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::declared::state::ProgramClosureError> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1938:21-1938:55 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1998:21-1998:55 -/
 def
   source.declared.state.ClosureWalk.follow.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnosticProgramClosureError.call_once
   (c : source.declared.state.ClosureWalk.follow.closure)
@@ -171653,7 +172120,7 @@ def
   ok source.declared.state.ProgramClosureError.Exhausted
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{impl core::ops::function::FnOnce<(noble_contracts::Diagnostic,), noble_contracts::source::declared::state::ProgramClosureError> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1938:21-1938:55 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1998:21-1998:55 -/
 @[reducible]
 def
   source.declared.state.ClosureWalk.follow.closure.Insts.CoreOpsFunctionFnOnceTupleDiagnosticProgramClosureError
@@ -171664,7 +172131,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ClosureWalk}::follow]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1930:4-1967:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1990:4-2027:5 -/
 def source.declared.state.ClosureWalk.follow
   (self : source.declared.state.ClosureWalk) (definition : source.Named)
   (index1 : Std.Usize) (node : source.Node) :
@@ -171760,7 +172227,7 @@ def source.declared.state.ClosureWalk.follow
     ok (r2, { self with meter := m })
 
 /-- [noble_contracts::source::declared::state::closure_owner]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1889:4-1894:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1949:4-1954:5 -/
 @[rust_loop_body]
 def source.declared.state.closure_owner_loop.body
   (modules : Slice source.declared.Module) (dependencies : Slice Std.Usize)
@@ -171784,7 +172251,7 @@ def source.declared.state.closure_owner_loop.body
   else ok (done found)
 
 /-- [noble_contracts::source::declared::state::closure_owner]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1889:4-1894:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1949:4-1954:5 -/
 @[rust_loop]
 def source.declared.state.closure_owner_loop
   (modules : Slice source.declared.Module) (dependencies : Slice Std.Usize)
@@ -171797,7 +172264,7 @@ def source.declared.state.closure_owner_loop
     (found, «at»)
 
 /-- [noble_contracts::source::declared::state::closure_owner]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1877:0-1899:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1937:0-1959:1 -/
 def source.declared.state.closure_owner
   (modules : Slice source.declared.Module) (module : source.declared.Module)
   (dependencies : Slice Std.Usize) (owner : Option Std.U64) :
@@ -171821,7 +172288,7 @@ def source.declared.state.closure_owner
       source.declared.Module residual
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_step::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::declared::state::ProgramClosureError> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_step::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 725:56-725:88 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 730:56-730:88 -/
 def
   source.declared.state.ModulePrepared.closure_step.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorProgramClosureError.call_once
   (c : source.declared.state.ModulePrepared.closure_step.closure)
@@ -171831,7 +172298,7 @@ def
   ok source.declared.state.ProgramClosureError.Invalid
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_step::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::declared::state::ProgramClosureError> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_step::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 725:56-725:88 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 730:56-730:88 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.closure_step.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorProgramClosureError
@@ -171843,7 +172310,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_step]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 735:8-738:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 740:8-743:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.closure_step_loop0.body
   (index1 : Std.Usize) (s : String) (i : Std.U64) (o : Option Std.U64)
@@ -171884,7 +172351,7 @@ def source.declared.state.ModulePrepared.closure_step_loop0.body
   else ok (done (outcome, walk))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_step]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 735:8-738:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 740:8-743:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.closure_step_loop0
   (index1 : Std.Usize) (walk : source.declared.state.ClosureWalk) (s : String)
@@ -171903,7 +172370,7 @@ def source.declared.state.ModulePrepared.closure_step_loop0
     (walk, outcome, «at»)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_step]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 735:8-738:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 740:8-743:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.closure_step_loop1.body
   (index1 : Std.Usize) (s : String) (i : Std.U64) (o : Option Std.U64)
@@ -171944,7 +172411,7 @@ def source.declared.state.ModulePrepared.closure_step_loop1.body
   else ok (done (outcome, walk))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_step]: loop 1:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 735:8-738:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 740:8-743:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.closure_step_loop1
   (index1 : Std.Usize) (walk : source.declared.state.ClosureWalk) (s : String)
@@ -171963,7 +172430,7 @@ def source.declared.state.ModulePrepared.closure_step_loop1
     (walk, outcome, «at»)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_step]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 707:4-740:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 712:4-745:5 -/
 def source.declared.state.ModulePrepared.closure_step
   (self : source.declared.state.ModulePrepared)
   (module : source.declared.Module) (dependencies : Slice Std.Usize)
@@ -172058,7 +172525,7 @@ def source.declared.state.ModulePrepared.closure_step
     ok (outcome, walk)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_walk::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::declared::state::ProgramClosureError> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_walk::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 676:59-676:91 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 681:59-681:91 -/
 def
   source.declared.state.ModulePrepared.closure_walk.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorProgramClosureError.call_once
   (c : source.declared.state.ModulePrepared.closure_walk.closure)
@@ -172068,7 +172535,7 @@ def
   ok source.declared.state.ProgramClosureError.Invalid
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_walk::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_contracts::source::declared::state::ProgramClosureError> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_walk::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 676:59-676:91 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 681:59-681:91 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.closure_walk.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorProgramClosureError
@@ -172080,7 +172547,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_walk]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 690:8-695:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 695:8-700:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.closure_walk_loop.body
   (mk : source.declared.state.ModuleKind) (i : Std.U64) (l : Limits)
@@ -172090,10 +172557,10 @@ def source.declared.state.ModulePrepared.closure_walk_loop.body
   (v3 : alloc.vec.Vec source.declared.BoundOperation)
   (v4 : alloc.vec.Vec source.declared.Module)
   (v5 : alloc.vec.Vec source.declared.Alias) (i4 : Std.U64) (i5 : Std.U64)
-  (i6 : Std.U32) (o : Option intrinsic.ProofBudgets)
+  (i6 : Std.U32) (o : Option intrinsic.ProofBudgets) (b : Bool)
   (named : alloc.vec.Vec source.Named) (v6 : alloc.vec.Vec Std.U8)
-  (i7 : Std.U64) (b : Bool) (b1 : Bool) (o1 : Option String)
-  (o2 : Option source.LiveSlots) (b2 : Bool) (b3 : Bool)
+  (i7 : Std.U64) (b1 : Bool) (b2 : Bool) (o1 : Option String)
+  (o2 : Option source.LiveSlots) (b3 : Bool) (b4 : Bool)
   (o3 : Option component.Bindings) (o4 : Option source.declared.Context)
   (o5 : Option noble_kernel.execution.Submission)
   (v7 : alloc.vec.Vec noble_kernel.types.Ty) (o6 : Option intrinsic.ProofBatch)
@@ -172108,8 +172575,8 @@ def source.declared.state.ModulePrepared.closure_walk_loop.body
     (source.declared.state.ClosureWalk × (core.result.Result Unit
     source.declared.state.ProgramClosureError)))
   := do
-  let b4 ← core.result.Result.is_ok outcome
-  if b4
+  let b5 ← core.result.Result.is_ok outcome
+  if b5
   then
     let (o8, v9) ← alloc.vec.Vec.pop Global walk.pending
     match o8 with
@@ -172136,17 +172603,18 @@ def source.declared.state.ModulePrepared.closure_walk_loop.body
                 generation := i5,
                 retained_source_limit := i6,
                 proof_budgets := o,
+                proof_editor := b,
                 source :=
                   {
                     definitions := named,
                     history := v6,
                     generation := i7,
-                    hosts := b,
-                    text_cursor := b1,
+                    hosts := b1,
+                    text_cursor := b2,
                     live_selected := o1,
                     live_slots := o2,
-                    calculator := b2,
-                    checked_i64 := b3,
+                    calculator := b3,
+                    checked_i64 := b4,
                     bindings := o3,
                     declared := o4
                   }
@@ -172161,7 +172629,7 @@ def source.declared.state.ModulePrepared.closure_walk_loop.body
   else ok (done (walk, outcome))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_walk]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 690:8-695:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 695:8-700:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.closure_walk_loop
   (mk : source.declared.state.ModuleKind) (i : Std.U64) (l : Limits)
@@ -172171,10 +172639,10 @@ def source.declared.state.ModulePrepared.closure_walk_loop
   (v3 : alloc.vec.Vec source.declared.BoundOperation)
   (v4 : alloc.vec.Vec source.declared.Module)
   (v5 : alloc.vec.Vec source.declared.Alias) (i4 : Std.U64) (i5 : Std.U64)
-  (i6 : Std.U32) (o : Option intrinsic.ProofBudgets)
+  (i6 : Std.U32) (o : Option intrinsic.ProofBudgets) (b : Bool)
   (named : alloc.vec.Vec source.Named) (v6 : alloc.vec.Vec Std.U8)
-  (i7 : Std.U64) (b : Bool) (b1 : Bool) (o1 : Option String)
-  (o2 : Option source.LiveSlots) (b2 : Bool) (b3 : Bool)
+  (i7 : Std.U64) (b1 : Bool) (b2 : Bool) (o1 : Option String)
+  (o2 : Option source.LiveSlots) (b3 : Bool) (b4 : Bool)
   (o3 : Option component.Bindings) (o4 : Option source.declared.Context)
   (o5 : Option noble_kernel.execution.Submission)
   (v7 : alloc.vec.Vec noble_kernel.types.Ty) (o6 : Option intrinsic.ProofBatch)
@@ -172190,12 +172658,12 @@ def source.declared.state.ModulePrepared.closure_walk_loop
   loop
     (fun (walk1, outcome1) =>
       source.declared.state.ModulePrepared.closure_walk_loop.body mk i l i1 i2
-      v v1 i3 v2 v3 v4 v5 i4 i5 i6 o named v6 i7 b b1 o1 o2 b2 b3 o3 o4 o5 v7
-      o6 v8 o7 module dependencies walk1 outcome1)
+      v v1 i3 v2 v3 v4 v5 i4 i5 i6 o b named v6 i7 b1 b2 o1 o2 b3 b4 o3 o4 o5
+      v7 o6 v8 o7 module dependencies walk1 outcome1)
     (walk, outcome)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_walk]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 667:4-698:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 672:4-703:5 -/
 def source.declared.state.ModulePrepared.closure_walk
   (self : source.declared.state.ModulePrepared)
   (module : source.declared.Module)
@@ -172240,15 +172708,15 @@ def source.declared.state.ModulePrepared.closure_walk
           self.previous_history self.staged.bindings self.staged.modules
           self.staged.aliases self.staged.next_module_identity
           self.staged.generation self.staged.retained_source_limit
-          self.staged.proof_budgets self.staged.source.definitions
-          self.staged.source.history self.staged.source.generation
-          self.staged.source.hosts self.staged.source.text_cursor
-          self.staged.source.live_selected self.staged.source.live_slots
-          self.staged.source.calculator self.staged.source.checked_i64
-          self.staged.source.bindings self.staged.source.declared
-          self.submission self.output self.pending self.signed_expression
-          self.rebuilt_import_definitions module dependencies
-          { meter, visited := v, enqueued := v2, pending := ret }
+          self.staged.proof_budgets self.staged.proof_editor
+          self.staged.source.definitions self.staged.source.history
+          self.staged.source.generation self.staged.source.hosts
+          self.staged.source.text_cursor self.staged.source.live_selected
+          self.staged.source.live_slots self.staged.source.calculator
+          self.staged.source.checked_i64 self.staged.source.bindings
+          self.staged.source.declared self.submission self.output self.pending
+          self.signed_expression self.rebuilt_import_definitions module
+          dependencies { meter, visited := v, enqueued := v2, pending := ret }
           (core.result.Result.Ok ())
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch outcome
       match cf1 with
@@ -172264,7 +172732,7 @@ def source.declared.state.ModulePrepared.closure_walk
       source.declared.state.ProgramClosureError) residual
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::dependency_rows]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 642:8-657:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 647:8-662:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.dependency_rows_loop.body
   (self : source.declared.state.ModulePrepared)
@@ -172314,7 +172782,7 @@ def source.declared.state.ModulePrepared.dependency_rows_loop.body
   else ok (done (closure, failure))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::dependency_rows]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 642:8-657:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 647:8-662:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.dependency_rows_loop
   (self : source.declared.state.ModulePrepared)
@@ -172332,7 +172800,7 @@ def source.declared.state.ModulePrepared.dependency_rows_loop
     (meter, closure, failure, «at»)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::dependency_rows]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 631:4-662:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 636:4-667:5 -/
 def source.declared.state.ModulePrepared.dependency_rows
   (self : source.declared.state.ModulePrepared)
   (dependencies : Slice Std.Usize) (visited : Slice Bool) (meter : Meter)
@@ -172349,7 +172817,7 @@ def source.declared.state.ModulePrepared.dependency_rows
   | some error => ok (core.result.Result.Err error)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::dependency_over_cap]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 621:8-625:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 626:8-630:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.dependency_over_cap_loop.body
   (self : source.declared.state.ModulePrepared)
@@ -172372,7 +172840,7 @@ def source.declared.state.ModulePrepared.dependency_over_cap_loop.body
     else ok (done is_over)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::dependency_over_cap]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 621:8-625:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 626:8-630:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.dependency_over_cap_loop
   (self : source.declared.state.ModulePrepared)
@@ -172386,7 +172854,7 @@ def source.declared.state.ModulePrepared.dependency_over_cap_loop
     (is_over, «at»)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::dependency_over_cap]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 618:4-627:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 623:4-632:5 -/
 @[reducible]
 def source.declared.state.ModulePrepared.dependency_over_cap
   (self : source.declared.state.ModulePrepared)
@@ -172397,7 +172865,7 @@ def source.declared.state.ModulePrepared.dependency_over_cap
     dependencies false 0#usize
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_closure_source]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 582:4-614:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 587:4-619:5 -/
 def source.declared.state.ModulePrepared.checked_program_closure_source
   (self : source.declared.state.ModulePrepared)
   (module : source.declared.Module)
@@ -172481,7 +172949,7 @@ def source.declared.state.ModulePrepared.checked_program_closure_source
             residual
 
 /-- [noble_contracts::source::declared::state::is_bound_behavior]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2081:0-2098:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2141:0-2158:1 -/
 def source.declared.state.is_bound_behavior
   (kind : Option noble_kernel.contracts.Behavior)
   (binding : source.declared.BoundOperation) :
@@ -172558,7 +173026,7 @@ def source.declared.state.is_bound_behavior
     | noble_kernel.contracts.Behavior.NamedBehavior => ok false
 
 /-- [noble_contracts::source::declared::state::adapter_matches]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2110:0-2126:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2170:0-2186:1 -/
 def source.declared.state.adapter_matches
   (environment : noble_kernel.contracts.Env)
   (adapter : noble_kernel.contracts.BoundAdapter)
@@ -172615,7 +173083,7 @@ def source.declared.state.adapter_matches
   else ok false
 
 /-- [noble_contracts::source::declared::state::unique_adapter::{impl core::ops::function::Fn<(&'_3 noble_kernel::contracts::BoundAdapter,), bool> for noble_contracts::source::declared::state::unique_adapter::{closure}<'_0, '_1, '_2>}::call]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2040:19-2042:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2100:19-2102:5 -/
 def
   source.declared.state.unique_adapter.closure.Insts.CoreOpsFunctionFnTupleShared3BoundAdapterBool.call
   (c : source.declared.state.unique_adapter.closure)
@@ -172626,7 +173094,7 @@ def
   source.declared.state.adapter_matches e tupled_args bo i
 
 /-- [noble_contracts::source::declared::state::unique_adapter::{impl core::ops::function::FnMut<(&'_3 noble_kernel::contracts::BoundAdapter,), bool> for noble_contracts::source::declared::state::unique_adapter::{closure}<'_0, '_1, '_2>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2040:19-2042:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2100:19-2102:5 -/
 def
   source.declared.state.unique_adapter.closure.Insts.CoreOpsFunctionFnMutTupleShared3BoundAdapterBool.call_mut
   (state : source.declared.state.unique_adapter.closure)
@@ -172639,7 +173107,7 @@ def
   ok (b, state)
 
 /-- [noble_contracts::source::declared::state::unique_adapter::{impl core::ops::function::FnOnce<(&'_3 noble_kernel::contracts::BoundAdapter,), bool> for noble_contracts::source::declared::state::unique_adapter::{closure}<'_0, '_1, '_2>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2040:19-2042:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2100:19-2102:5 -/
 def
   source.declared.state.unique_adapter.closure.Insts.CoreOpsFunctionFnOnceTupleShared3BoundAdapterBool.call_once
   (c : source.declared.state.unique_adapter.closure)
@@ -172652,7 +173120,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::unique_adapter::{impl core::ops::function::FnOnce<(&'_3 noble_kernel::contracts::BoundAdapter,), bool> for noble_contracts::source::declared::state::unique_adapter::{closure}<'_0, '_1, '_2>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2040:19-2042:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2100:19-2102:5 -/
 @[reducible]
 def
   source.declared.state.unique_adapter.closure.Insts.CoreOpsFunctionFnOnceTupleShared3BoundAdapterBool
@@ -172663,7 +173131,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::unique_adapter::{impl core::ops::function::FnMut<(&'_3 noble_kernel::contracts::BoundAdapter,), bool> for noble_contracts::source::declared::state::unique_adapter::{closure}<'_0, '_1, '_2>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2040:19-2042:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2100:19-2102:5 -/
 @[reducible]
 def
   source.declared.state.unique_adapter.closure.Insts.CoreOpsFunctionFnMutTupleShared3BoundAdapterBool
@@ -172676,7 +173144,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::unique_adapter]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2035:0-2049:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2095:0-2109:1 -/
 def source.declared.state.unique_adapter
   (environment : noble_kernel.contracts.Env)
   (binding : source.declared.BoundOperation) (module_identity : Std.U64) :
@@ -172714,7 +173182,7 @@ def source.declared.state.unique_adapter
       Std.Usize residual
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_bound_adapter]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 560:4-580:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 565:4-585:5 -/
 def source.declared.state.ModulePrepared.checked_bound_adapter
   (self : source.declared.state.ModulePrepared)
   (module : source.declared.Module) (binding : source.declared.BoundOperation)
@@ -172793,7 +173261,7 @@ def source.declared.state.ModulePrepared.checked_bound_adapter
       else ok none
 
 /-- [noble_contracts::source::declared::state::is_builtin_call]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2008:0-2014:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2068:0-2074:1 -/
 def source.declared.state.is_builtin_call
   (node : source.Node) (target : Std.U32) : Result Bool := do
   match node.kind with
@@ -172810,7 +173278,7 @@ def source.declared.state.is_builtin_call
   | source.Kind.EditorHole => ok false
 
 /-- [noble_contracts::source::declared::state::calls_builtin]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2000:4-2003:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2060:4-2063:5 -/
 @[rust_loop_body]
 def source.declared.state.calls_builtin_loop.body
   (definition : source.Named) (target : Std.U32) (is_found : Bool)
@@ -172832,7 +173300,7 @@ def source.declared.state.calls_builtin_loop.body
     else ok (done is_found)
 
 /-- [noble_contracts::source::declared::state::calls_builtin]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2000:4-2003:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2060:4-2063:5 -/
 @[rust_loop]
 def source.declared.state.calls_builtin_loop
   (definition : source.Named) (target : Std.U32) (is_found : Bool)
@@ -172845,14 +173313,14 @@ def source.declared.state.calls_builtin_loop
     (is_found, «at»)
 
 /-- [noble_contracts::source::declared::state::calls_builtin]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1997:0-2005:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2057:0-2065:1 -/
 @[reducible]
 def source.declared.state.calls_builtin
   (definition : source.Named) (target : Std.U32) : Result Bool := do
   source.declared.state.calls_builtin_loop definition target false 0#usize
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::member_invokes_bound]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 542:4-554:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 547:4-559:5 -/
 def source.declared.state.ModulePrepared.member_invokes_bound
   (self : source.declared.state.ModulePrepared)
   (member : source.declared.state.CheckedProgramOwner)
@@ -172874,7 +173342,7 @@ def source.declared.state.ModulePrepared.member_invokes_bound
   | core.result.Result.Err _ => ok false
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_invokes_bound]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 530:8-533:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 535:8-538:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.closure_invokes_bound_loop.body
   (self : source.declared.state.ModulePrepared)
@@ -172898,7 +173366,7 @@ def source.declared.state.ModulePrepared.closure_invokes_bound_loop.body
     else ok (done is_invoked)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_invokes_bound]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 530:8-533:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 535:8-538:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.closure_invokes_bound_loop
   (self : source.declared.state.ModulePrepared)
@@ -172914,7 +173382,7 @@ def source.declared.state.ModulePrepared.closure_invokes_bound_loop
     (is_invoked, «at»)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::closure_invokes_bound]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 523:4-535:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 528:4-540:5 -/
 @[reducible]
 def source.declared.state.ModulePrepared.closure_invokes_bound
   (self : source.declared.state.ModulePrepared)
@@ -172926,7 +173394,7 @@ def source.declared.state.ModulePrepared.closure_invokes_bound
     bound false 0#usize
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_bound_closure]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 502:4-521:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 507:4-526:5 -/
 def source.declared.state.ModulePrepared.checked_program_bound_closure
   (self : source.declared.state.ModulePrepared)
   (module : source.declared.Module) (root : Str)
@@ -172986,7 +173454,7 @@ def source.declared.state.ModulePrepared.checked_program_bound_closure
       source.declared.state.ProgramClosureError) residual
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_for_binding::{impl core::ops::function::FnOnce<((noble_contracts::source::declared::state::CheckedProgramOwner, alloc::vec::Vec<noble_contracts::source::declared::state::CheckedProgramOwner>),), noble_contracts::source::declared::state::CheckedProgramOwner> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_for_binding::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 359:17-359:35 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 364:17-364:35 -/
 def
   source.declared.state.ModulePrepared.checked_program_owner_for_binding.closure.Insts.CoreOpsFunctionFnOnceTuplePairCheckedProgramOwnerVecCheckedProgramOwnerCheckedProgramOwner.call_once
   (c :
@@ -172999,7 +173467,7 @@ def
   ok owner
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_for_binding::{impl core::ops::function::FnOnce<((noble_contracts::source::declared::state::CheckedProgramOwner, alloc::vec::Vec<noble_contracts::source::declared::state::CheckedProgramOwner>),), noble_contracts::source::declared::state::CheckedProgramOwner> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_for_binding::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 359:17-359:35 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 364:17-364:35 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.checked_program_owner_for_binding.closure.Insts.CoreOpsFunctionFnOnceTuplePairCheckedProgramOwnerVecCheckedProgramOwnerCheckedProgramOwner
@@ -173013,7 +173481,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_owner_for_binding]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 348:4-360:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 353:4-365:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.checked_program_owner_for_binding
   (self : source.declared.state.ModulePrepared) («name» : Str)
@@ -173048,7 +173516,7 @@ def source.declared.state.ModulePrepared.checked_program_owner_for_binding
           source.declared.state.CheckedProgramOwner residual
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_closure]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 405:4-418:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 410:4-423:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.checked_program_closure
   (self : source.declared.state.ModulePrepared) (root : Str) :
@@ -173087,7 +173555,7 @@ def source.declared.state.ModulePrepared.checked_program_closure
       residual
 
 /-- [noble_contracts::source::declared::state::root_invokes]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2021:0-2031:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2081:0-2091:1 -/
 def source.declared.state.root_invokes
   (nodes : Slice noble_kernel.untrusted.Node) (root : Std.Usize)
   (definition : noble_kernel.contracts.Definition) :
@@ -173109,7 +173577,7 @@ def source.declared.state.root_invokes
     | noble_kernel.untrusted.Node.Quotation _ _ => ok false
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{impl core::ops::function::Fn<(&'_2 noble_kernel::execution::Definition,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{closure#1}<'_0, '_1>}::call]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1436:23-1444:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1441:23-1449:9 -/
 def
   source.declared.state.ModulePrepared.checked_program_invocation.closure_1.Insts.CoreOpsFunctionFnTupleShared2DefinitionBool.call
   (c :
@@ -173139,7 +173607,7 @@ def
   else ok false
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{impl core::ops::function::FnMut<(&'_2 noble_kernel::execution::Definition,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{closure#1}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1436:23-1444:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1441:23-1449:9 -/
 def
   source.declared.state.ModulePrepared.checked_program_invocation.closure_1.Insts.CoreOpsFunctionFnMutTupleShared2DefinitionBool.call_mut
   (state :
@@ -173154,7 +173622,7 @@ def
   ok (b, state)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{impl core::ops::function::FnOnce<(&'_2 noble_kernel::execution::Definition,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{closure#1}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1436:23-1444:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1441:23-1449:9 -/
 def
   source.declared.state.ModulePrepared.checked_program_invocation.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared2DefinitionBool.call_once
   (c :
@@ -173168,7 +173636,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{impl core::ops::function::FnOnce<(&'_2 noble_kernel::execution::Definition,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{closure#1}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1436:23-1444:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1441:23-1449:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.checked_program_invocation.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared2DefinitionBool
@@ -173180,7 +173648,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{impl core::ops::function::FnMut<(&'_2 noble_kernel::execution::Definition,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{closure#1}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1436:23-1444:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1441:23-1449:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.checked_program_invocation.closure_1.Insts.CoreOpsFunctionFnMutTupleShared2DefinitionBool
@@ -173194,7 +173662,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1417:67-1419:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1422:67-1424:9 -/
 def
   source.declared.state.ModulePrepared.checked_program_invocation.closure.Insts.CoreOpsFunctionFnMutTupleShared1ModuleBool.call_mut
   (c : source.declared.state.ModulePrepared.checked_program_invocation.closure)
@@ -173207,7 +173675,7 @@ def
   else ok (false, c)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1417:67-1419:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1422:67-1424:9 -/
 def
   source.declared.state.ModulePrepared.checked_program_invocation.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ModuleBool.call_once
   (c : source.declared.state.ModulePrepared.checked_program_invocation.closure)
@@ -173220,7 +173688,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1417:67-1419:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1422:67-1424:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.checked_program_invocation.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ModuleBool
@@ -173232,7 +173700,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1417:67-1419:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1422:67-1424:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.checked_program_invocation.closure.Insts.CoreOpsFunctionFnMutTupleShared1ModuleBool
@@ -173246,7 +173714,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_invocation]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1406:4-1467:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1411:4-1472:5 -/
 def source.declared.state.ModulePrepared.checked_program_invocation
   (self : source.declared.state.ModulePrepared)
   (owner : source.declared.state.CheckedProgramOwner) :
@@ -173435,7 +173903,7 @@ def source.declared.state.ModulePrepared.checked_program_invocation
           noble_kernel.execution.Definition × source.declared.Module) residual
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::selected_dependency_modules::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::selected_dependency_modules::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 469:59-469:95 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 474:59-474:95 -/
 def
   source.declared.state.ModulePrepared.selected_dependency_modules.closure.Insts.CoreOpsFunctionFnMutTupleShared1ModuleBool.call_mut
   (c :
@@ -173447,7 +173915,7 @@ def
   ok (tupled_args.identity = c, c)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::selected_dependency_modules::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::selected_dependency_modules::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 469:59-469:95 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 474:59-474:95 -/
 def
   source.declared.state.ModulePrepared.selected_dependency_modules.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ModuleBool.call_once
   (c :
@@ -173461,7 +173929,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::selected_dependency_modules::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::selected_dependency_modules::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 469:59-469:95 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 474:59-474:95 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.selected_dependency_modules.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ModuleBool
@@ -173473,7 +173941,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::selected_dependency_modules::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::selected_dependency_modules::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 469:59-469:95 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 474:59-474:95 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.selected_dependency_modules.closure.Insts.CoreOpsFunctionFnMutTupleShared1ModuleBool
@@ -173487,7 +173955,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::selected_dependency_modules]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 465:8-475:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 470:8-480:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.selected_dependency_modules_loop.body
   (root_module : Std.U64) (dependencies : Slice Std.U64)
@@ -173537,7 +174005,7 @@ def source.declared.state.ModulePrepared.selected_dependency_modules_loop.body
   else ok (done (selected, is_valid))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::selected_dependency_modules]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 465:8-475:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 470:8-480:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.selected_dependency_modules_loop
   (self : source.declared.state.ModulePrepared) (root_module : Std.U64)
@@ -173552,7 +174020,7 @@ def source.declared.state.ModulePrepared.selected_dependency_modules_loop
     (self, selected, is_valid, «at»)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::selected_dependency_modules]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 457:4-481:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 462:4-486:5 -/
 def source.declared.state.ModulePrepared.selected_dependency_modules
   (self : source.declared.state.ModulePrepared) (root_module : Std.U64)
   (dependencies : Slice Std.U64) :
@@ -173571,7 +174039,7 @@ def source.declared.state.ModulePrepared.selected_dependency_modules
       source.declared.state.ProgramClosureError.Invalid)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_invocation_closure::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_invocation_closure::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 440:67-442:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 445:67-447:9 -/
 def
   source.declared.state.ModulePrepared.checked_invocation_closure.closure.Insts.CoreOpsFunctionFnMutTupleShared1ModuleBool.call_mut
   (c : source.declared.state.ModulePrepared.checked_invocation_closure.closure)
@@ -173582,7 +174050,7 @@ def
   ok (tupled_args.identity = c, c)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_invocation_closure::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_invocation_closure::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 440:67-442:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 445:67-447:9 -/
 def
   source.declared.state.ModulePrepared.checked_invocation_closure.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ModuleBool.call_once
   (c : source.declared.state.ModulePrepared.checked_invocation_closure.closure)
@@ -173595,7 +174063,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_invocation_closure::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_invocation_closure::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 440:67-442:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 445:67-447:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.checked_invocation_closure.closure.Insts.CoreOpsFunctionFnOnceTupleShared1ModuleBool
@@ -173607,7 +174075,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_invocation_closure::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_invocation_closure::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 440:67-442:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 445:67-447:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.checked_invocation_closure.closure.Insts.CoreOpsFunctionFnMutTupleShared1ModuleBool
@@ -173621,7 +174089,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_invocation_closure]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 427:4-453:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 432:4-458:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.checked_invocation_closure
   (self : source.declared.state.ModulePrepared) (module_identity : Std.U64)
@@ -173719,7 +174187,7 @@ def source.declared.state.ModulePrepared.checked_invocation_closure
           source.declared.state.ProgramClosureError.Invalid)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_closure_for_binding::{impl core::ops::function::FnOnce<((noble_contracts::source::declared::state::CheckedProgramOwner, alloc::vec::Vec<noble_contracts::source::declared::state::CheckedProgramOwner>),), alloc::vec::Vec<noble_contracts::source::declared::state::CheckedProgramOwner>> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_closure_for_binding::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 499:17-499:39 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 504:17-504:39 -/
 def
   source.declared.state.ModulePrepared.checked_program_closure_for_binding.closure.Insts.CoreOpsFunctionFnOnceTuplePairCheckedProgramOwnerVecCheckedProgramOwnerVecCheckedProgramOwner.call_once
   (c :
@@ -173732,7 +174200,7 @@ def
   ok closure
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_closure_for_binding::{impl core::ops::function::FnOnce<((noble_contracts::source::declared::state::CheckedProgramOwner, alloc::vec::Vec<noble_contracts::source::declared::state::CheckedProgramOwner>),), alloc::vec::Vec<noble_contracts::source::declared::state::CheckedProgramOwner>> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_closure_for_binding::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 499:17-499:39 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 504:17-504:39 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.checked_program_closure_for_binding.closure.Insts.CoreOpsFunctionFnOnceTuplePairCheckedProgramOwnerVecCheckedProgramOwnerVecCheckedProgramOwner
@@ -173746,7 +174214,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_closure_for_binding]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 485:4-500:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 490:4-505:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.checked_program_closure_for_binding
   (self : source.declared.state.ModulePrepared) (root : Str)
@@ -173791,7 +174259,7 @@ def source.declared.state.ModulePrepared.checked_program_closure_for_binding
           residual
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::declared_text_source_owner::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::Context,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::declared_text_source_owner::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 812:29-812:60 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 817:29-817:60 -/
 def
   source.declared.state.ModulePrepared.declared_text_source_owner.closure.Insts.CoreOpsFunctionFnOnceTupleShared0ContextBool.call_once
   (c : source.declared.state.ModulePrepared.declared_text_source_owner.closure)
@@ -173801,7 +174269,7 @@ def
   ok tupled_args.declared_text
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::declared_text_source_owner::{impl core::ops::function::FnOnce<(&'_0 noble_contracts::source::declared::Context,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::declared_text_source_owner::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 812:29-812:60 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 817:29-817:60 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.declared_text_source_owner.closure.Insts.CoreOpsFunctionFnOnceTupleShared0ContextBool
@@ -173813,7 +174281,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::declared_text_source_owner]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 804:4-817:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 809:4-822:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.declared_text_source_owner
   (self : source.declared.state.ModulePrepared) :
@@ -173840,7 +174308,7 @@ def source.declared.state.ModulePrepared.declared_text_source_owner
       else ok none
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::signed_source_owner]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 819:4-824:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 824:4-829:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.signed_source_owner
   (self : source.declared.state.ModulePrepared) :
@@ -173859,7 +174327,7 @@ def source.declared.state.ModulePrepared.signed_source_owner
     else ok (some { prepared := self })
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_interface]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1350:4-1369:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1355:4-1374:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.checked_program_interface
   (self : source.declared.state.ModulePrepared)
@@ -173906,7 +174374,7 @@ def source.declared.state.ModulePrepared.checked_program_interface
   else ok none
 
 /-- [noble_contracts::source::declared::state::actual_adapter_matches]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2149:0-2162:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2209:0-2222:1 -/
 def source.declared.state.actual_adapter_matches
   (environment : noble_kernel.contracts.Env)
   (actual : noble_kernel.contracts.BoundAdapter)
@@ -173954,7 +174422,7 @@ def source.declared.state.actual_adapter_matches
   else ok false
 
 /-- [noble_contracts::source::declared::state::bound_adapter_count]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2135:4-2139:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2195:4-2199:5 -/
 @[rust_loop_body]
 def source.declared.state.bound_adapter_count_loop.body
   (v : alloc.vec.Vec noble_kernel.words.Scheme)
@@ -174007,7 +174475,7 @@ def source.declared.state.bound_adapter_count_loop.body
     else ok (cont (iter1, count))
 
 /-- [noble_contracts::source::declared::state::bound_adapter_count]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2135:4-2139:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2195:4-2199:5 -/
 @[rust_loop]
 def source.declared.state.bound_adapter_count_loop
   (iter : core.slice.iter.Iter noble_kernel.contracts.BoundAdapter)
@@ -174034,7 +174502,7 @@ def source.declared.state.bound_adapter_count_loop
     (iter, count)
 
 /-- [noble_contracts::source::declared::state::bound_adapter_count]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2129:0-2141:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2189:0-2201:1 -/
 def source.declared.state.bound_adapter_count
   (environment : noble_kernel.contracts.Env)
   (adapter : noble_kernel.contracts.BoundAdapter)
@@ -174054,7 +174522,7 @@ def source.declared.state.bound_adapter_count
     environment.effects adapter binding 0#usize
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::checked_program_interface_for_binding]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1377:4-1399:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1382:4-1404:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.checked_program_interface_for_binding
   (self : source.declared.state.ModulePrepared)
@@ -174131,7 +174599,7 @@ def source.declared.state.ModulePrepared.checked_program_interface_for_binding
       source.declared.state.CheckedProgramInterface residual
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::kind]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1469:4-1471:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1474:4-1476:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.impl.kind
   (self : source.declared.state.ModulePrepared) :
@@ -174140,7 +174608,7 @@ def source.declared.state.ModulePrepared.impl.kind
   ok self.kind
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::submission]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1472:4-1474:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1477:4-1479:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.impl.submission
   (self : source.declared.state.ModulePrepared) :
@@ -174149,7 +174617,7 @@ def source.declared.state.ModulePrepared.impl.submission
   core.option.Option.as_ref self.submission
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::output]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1475:4-1477:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1480:4-1482:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.impl.output
   (self : source.declared.state.ModulePrepared) :
@@ -174158,7 +174626,7 @@ def source.declared.state.ModulePrepared.impl.output
   alloc.vec.Vec.as_slice Global self.output
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::proof_obligations]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1479:4-1481:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1484:4-1486:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.proof_obligations
   (self : source.declared.state.ModulePrepared) :
@@ -177999,7 +178467,7 @@ def source.sizechange.calls_self
   ok (core.option.Option.is_some o)
 
 /-- [noble_contracts::source::declared::state::size_change_rows]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2057:4-2061:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2117:4-2121:5 -/
 @[rust_loop_body]
 def source.declared.state.size_change_rows_loop0.body
   (iter : core.slice.iter.Iter source.Named) (recursive_count : Std.Usize) :
@@ -178018,7 +178486,7 @@ def source.declared.state.size_change_rows_loop0.body
     else ok (cont (iter1, recursive_count))
 
 /-- [noble_contracts::source::declared::state::size_change_rows]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2057:4-2061:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2117:4-2121:5 -/
 @[rust_loop]
 def source.declared.state.size_change_rows_loop0
   (iter : core.slice.iter.Iter source.Named) (recursive_count : Std.Usize) :
@@ -178030,7 +178498,7 @@ def source.declared.state.size_change_rows_loop0
     (iter, recursive_count)
 
 /-- [noble_contracts::source::declared::state::size_change_rows]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2063:4-2067:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2123:4-2127:5 -/
 @[rust_loop_body]
 def source.declared.state.size_change_rows_loop1.body
   (environment : noble_kernel.contracts.Env)
@@ -178052,7 +178520,7 @@ def source.declared.state.size_change_rows_loop1.body
     else ok (cont (iter1, evidence))
 
 /-- [noble_contracts::source::declared::state::size_change_rows]: loop 1:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2063:4-2067:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2123:4-2127:5 -/
 @[rust_loop]
 def source.declared.state.size_change_rows_loop1
   (iter : core.slice.iter.Iter source.Named)
@@ -178067,7 +178535,7 @@ def source.declared.state.size_change_rows_loop1
     (iter, evidence)
 
 /-- [noble_contracts::source::declared::state::size_change_rows]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2052:0-2069:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 2112:0-2129:1 -/
 def source.declared.state.size_change_rows
   (definitions : Slice source.Named) (environment : noble_kernel.contracts.Env)
   :
@@ -178086,7 +178554,7 @@ def source.declared.state.size_change_rows
   source.declared.state.size_change_rows_loop1 iter1 environment evidence
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::size_change_evidence]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1486:4-1494:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1491:4-1499:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.size_change_evidence
   (self : source.declared.state.ModulePrepared) :
@@ -178105,7 +178573,7 @@ def source.declared.state.ModulePrepared.size_change_evidence
     source.declared.state.size_change_rows s context.environment
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::contract_goals]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1502:16-1504:17
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1507:16-1509:17
     Visibility: public -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.contract_goals_loop.body
@@ -178123,7 +178591,7 @@ def source.declared.state.ModulePrepared.contract_goals_loop.body
     ok (cont (iter1, goals1))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::contract_goals]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1502:16-1504:17
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1507:16-1509:17
     Visibility: public -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.contract_goals_loop
@@ -178138,7 +178606,7 @@ def source.declared.state.ModulePrepared.contract_goals_loop
     (iter, goals)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::contract_goals]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1497:4-1508:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1502:4-1513:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.contract_goals
   (self : source.declared.state.ModulePrepared) :
@@ -178169,7 +178637,7 @@ def source.declared.state.ModulePrepared.contract_goals
         intrinsic.ContractGoal)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::bindings]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1509:4-1511:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1514:4-1516:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.bindings
   (self : source.declared.state.ModulePrepared) :
@@ -178178,7 +178646,7 @@ def source.declared.state.ModulePrepared.bindings
   ok (alloc.vec.Vec.deref self.staged.bindings)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_import_alias]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1514:4-1523:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1519:4-1528:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.resolved_import_alias
   (self : source.declared.state.ModulePrepared) : Result (Option Str) := do
@@ -178203,7 +178671,7 @@ def source.declared.state.ModulePrepared.resolved_import_alias
         Str residual
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::rebuilt_import_definitions]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1527:4-1530:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1532:4-1535:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.impl.rebuilt_import_definitions
   (self : source.declared.state.ModulePrepared) :
@@ -178220,7 +178688,7 @@ def source.declared.state.ModulePrepared.impl.rebuilt_import_definitions
       (Slice source.declared.state.RebuiltImportDefinition) residual
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{closure#1}<'_0>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1571:71-1573:17 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1576:71-1578:17 -/
 def
   source.declared.state.ModulePrepared.resolved_module.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1ModuleBool.call_mut
   (c : source.declared.state.ModulePrepared.resolved_module.closure_1)
@@ -178234,7 +178702,7 @@ def
   ok (b, c)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{closure#1}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1571:71-1573:17 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1576:71-1578:17 -/
 def
   source.declared.state.ModulePrepared.resolved_module.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1ModuleBool.call_once
   (c : source.declared.state.ModulePrepared.resolved_module.closure_1)
@@ -178247,7 +178715,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{impl core::ops::function::FnOnce<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1571:71-1573:17 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1576:71-1578:17 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.resolved_module.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1ModuleBool
@@ -178259,7 +178727,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{impl core::ops::function::FnMut<(&'_1 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{closure#1}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1571:71-1573:17 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1576:71-1578:17 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.resolved_module.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1ModuleBool
@@ -178273,7 +178741,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{impl core::ops::function::FnOnce<(u64,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1560:45-1560:70 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1565:45-1565:70 -/
 def
   source.declared.state.ModulePrepared.resolved_module.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool.call_once
   (c : source.declared.state.ModulePrepared.resolved_module.closure)
@@ -178283,7 +178751,7 @@ def
   ok (tupled_args != c)
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{impl core::ops::function::FnOnce<(u64,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1560:45-1560:70 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1565:45-1565:70 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.resolved_module.closure.Insts.CoreOpsFunctionFnOnceTupleU64Bool
@@ -178295,7 +178763,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1547:16-1567:17
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1552:16-1572:17
     Visibility: public -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.resolved_module_loop0.body
@@ -178340,7 +178808,7 @@ def source.declared.state.ModulePrepared.resolved_module_loop0.body
   else ok (done (owner, false))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1547:16-1567:17
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1552:16-1572:17
     Visibility: public -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.resolved_module_loop0
@@ -178355,7 +178823,7 @@ def source.declared.state.ModulePrepared.resolved_module_loop0
     (owner, definition_at)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1547:16-1567:17
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1552:16-1572:17
     Visibility: public -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.resolved_module_loop1.body
@@ -178400,7 +178868,7 @@ def source.declared.state.ModulePrepared.resolved_module_loop1.body
   else ok (done (owner, false))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module]: loop 1:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1547:16-1567:17
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1552:16-1572:17
     Visibility: public -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.resolved_module_loop1
@@ -178415,7 +178883,7 @@ def source.declared.state.ModulePrepared.resolved_module_loop1
     (owner, definition_at)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::resolved_module]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1531:4-1577:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1536:4-1582:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.resolved_module
   (self : source.declared.state.ModulePrepared) :
@@ -178492,7 +178960,7 @@ def source.declared.state.ModulePrepared.resolved_module
           ok (some (value1.identity, s1, value1.version))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::binding_for_slot]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1625:8-1630:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1630:8-1635:9 -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.binding_for_slot_loop.body
   (self : source.declared.state.ModulePrepared) (slot : Std.U32)
@@ -178519,7 +178987,7 @@ def source.declared.state.ModulePrepared.binding_for_slot_loop.body
   else ok (done (self.staged.bindings, matched_at))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::binding_for_slot]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1625:8-1630:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1630:8-1635:9 -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.binding_for_slot_loop
   (self : source.declared.state.ModulePrepared) (slot : Std.U32)
@@ -178533,7 +179001,7 @@ def source.declared.state.ModulePrepared.binding_for_slot_loop
     («at», matched_at)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::binding_for_slot]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1622:4-1635:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1627:4-1640:5 -/
 def source.declared.state.ModulePrepared.binding_for_slot
   (self : source.declared.state.ModulePrepared) (slot : Std.U32) :
   Result (Option source.declared.BoundOperation)
@@ -178549,7 +179017,7 @@ def source.declared.state.ModulePrepared.binding_for_slot
       source.declared.BoundOperation) s index1
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{closure#1}<'_0, '_1>}::call_mut]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1615:76-1617:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1620:76-1622:9 -/
 def
   source.declared.state.ModulePrepared.linked_binding.closure_1.Insts.CoreOpsFunctionFnMutTupleShared2ModuleBool.call_mut
   (c : source.declared.state.ModulePrepared.linked_binding.closure_1)
@@ -178565,7 +179033,7 @@ def
   else ok (false, c)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{closure#1}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1615:76-1617:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1620:76-1622:9 -/
 def
   source.declared.state.ModulePrepared.linked_binding.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared2ModuleBool.call_once
   (c : source.declared.state.ModulePrepared.linked_binding.closure_1)
@@ -178578,7 +179046,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{impl core::ops::function::FnOnce<(&'_2 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{closure#1}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1615:76-1617:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1620:76-1622:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.linked_binding.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared2ModuleBool
@@ -178590,7 +179058,7 @@ def
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{impl core::ops::function::FnMut<(&'_2 noble_contracts::source::declared::Module,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{closure#1}<'_0, '_1>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1615:76-1617:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1620:76-1622:9 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.linked_binding.closure_1.Insts.CoreOpsFunctionFnMutTupleShared2ModuleBool
@@ -178604,7 +179072,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{impl core::ops::function::FnOnce<(u32,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1596:52-1596:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1601:52-1601:79 -/
 def
   source.declared.state.ModulePrepared.linked_binding.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool.call_once
   (c : source.declared.state.ModulePrepared.linked_binding.closure)
@@ -178614,7 +179082,7 @@ def
   ok (tupled_args != c)
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{impl core::ops::function::FnOnce<(u32,), bool> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1596:52-1596:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1601:52-1601:79 -/
 @[reducible]
 def
   source.declared.state.ModulePrepared.linked_binding.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool
@@ -178625,7 +179093,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1586:16-1604:17
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1591:16-1609:17
     Visibility: public -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.linked_binding_loop0_loop0.body
@@ -178840,7 +179308,7 @@ def source.declared.state.ModulePrepared.linked_binding_loop0_loop0.body
   else ok (done (selected, is_ambiguous))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding]: loop 1:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1586:16-1604:17
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1591:16-1609:17
     Visibility: public -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.linked_binding_loop0_loop0
@@ -178856,7 +179324,7 @@ def source.declared.state.ModulePrepared.linked_binding_loop0_loop0
     (selected, node_at)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1583:12-1606:13
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1588:12-1611:13
     Visibility: public -/
 @[rust_loop_body]
 def source.declared.state.ModulePrepared.linked_binding_loop0.body
@@ -178883,7 +179351,7 @@ def source.declared.state.ModulePrepared.linked_binding_loop0.body
   else ok (done (selected, is_ambiguous))
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1583:12-1606:13
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1588:12-1611:13
     Visibility: public -/
 @[rust_loop]
 def source.declared.state.ModulePrepared.linked_binding_loop0
@@ -178898,7 +179366,7 @@ def source.declared.state.ModulePrepared.linked_binding_loop0
     (selected, definition_at, is_ambiguous)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModulePrepared}::linked_binding]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1578:4-1620:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1583:4-1625:5
     Visibility: public -/
 def source.declared.state.ModulePrepared.linked_binding
   (self : source.declared.state.ModulePrepared) :
@@ -178953,6 +179421,33 @@ def source.declared.state.ModulePrepared.linked_binding
       | some slot =>
         source.declared.state.ModulePrepared.binding_for_slot self slot
 
+/-- [noble_contracts::source::declared::state::{impl core::clone::Clone for noble_contracts::source::declared::state::SessionProfile}::clone]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1644:9-1644:14
+    Visibility: public -/
+def source.declared.state.SessionProfile.Insts.CoreCloneClone.clone
+  (self : source.declared.state.SessionProfile) :
+  Result source.declared.state.SessionProfile
+  := do
+  ok self
+
+/-- Trait implementation: [noble_contracts::source::declared::state::{impl core::clone::Clone for noble_contracts::source::declared::state::SessionProfile}]
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1644:9-1644:14 -/
+@[reducible]
+impl_def source.declared.state.SessionProfile.Insts.CoreCloneClone :
+  core.clone.Clone source.declared.state.SessionProfile := {
+  clone := source.declared.state.SessionProfile.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    source.declared.state.SessionProfile.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [noble_contracts::source::declared::state::{impl core::marker::Copy for noble_contracts::source::declared::state::SessionProfile}]
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1644:16-1644:20 -/
+@[reducible]
+def source.declared.state.SessionProfile.Insts.CoreMarkerCopy :
+  core.marker.Copy source.declared.state.SessionProfile := {
+  cloneInst := source.declared.state.SessionProfile.Insts.CoreCloneClone
+}
+
 /-- [noble_contracts::source::{noble_contracts::source::RetainedSourceLimit}::bytes]:
     Source: 'crates/noble-contracts/src/source.rs', lines 85:4-87:5
     Visibility: public -/
@@ -178961,7 +179456,7 @@ def source.RetainedSourceLimit.impl.bytes
   ok self.bytes
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::initialize::{impl core::ops::function::FnOnce<(noble_kernel::shapes::Defect,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::initialize::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1737:17-1737:92 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1795:17-1795:92 -/
 def
   source.declared.state.ModuleSession.initialize.closure.Insts.CoreOpsFunctionFnOnceTupleDefectError.call_once
   (c : source.declared.state.ModuleSession.initialize.closure)
@@ -178971,7 +179466,7 @@ def
   source.declared.error source.Stage.Check (toStr "invalid kernel environment")
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::initialize::{impl core::ops::function::FnOnce<(noble_kernel::shapes::Defect,), noble_contracts::source::Error> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::initialize::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1737:17-1737:92 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1795:17-1795:92 -/
 @[reducible]
 def
   source.declared.state.ModuleSession.initialize.closure.Insts.CoreOpsFunctionFnOnceTupleDefectError
@@ -178983,7 +179478,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::initialize]: loop body 1:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1712:12-1718:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1770:12-1776:13 -/
 @[rust_loop_body]
 def source.declared.state.ModuleSession.initialize_loop0_loop0.body
   (bindings : Slice source.declared.BoundOperation) (index1 : Std.Usize)
@@ -179002,7 +179497,7 @@ def source.declared.state.ModuleSession.initialize_loop0_loop0.body
   else ok (done is_invalid_binding)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::initialize]: loop 1:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1712:12-1718:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1770:12-1776:13 -/
 @[rust_loop]
 def source.declared.state.ModuleSession.initialize_loop0_loop0
   (bindings : Slice source.declared.BoundOperation) (index1 : Std.Usize)
@@ -179016,7 +179511,7 @@ def source.declared.state.ModuleSession.initialize_loop0_loop0
     prior
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::initialize]: loop body 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1706:8-1723:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1764:8-1781:9 -/
 @[rust_loop_body]
 def source.declared.state.ModuleSession.initialize_loop0.body
   (bindings : Slice source.declared.BoundOperation) (index1 : Std.Usize)
@@ -179042,7 +179537,7 @@ def source.declared.state.ModuleSession.initialize_loop0.body
   else ok (done is_invalid_binding)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::initialize]: loop 0:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1706:8-1723:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1764:8-1781:9 -/
 @[rust_loop]
 def source.declared.state.ModuleSession.initialize_loop0
   (bindings : Slice source.declared.BoundOperation) (index1 : Std.Usize)
@@ -179056,10 +179551,10 @@ def source.declared.state.ModuleSession.initialize_loop0
     (index1, is_invalid_binding)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::initialize]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1691:4-1760:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1751:4-1819:5 -/
 def source.declared.state.ModuleSession.initialize
-  (bindings : Slice source.declared.BoundOperation) (signed_self : Bool)
-  (declared_text : Bool) (calculator : Bool)
+  (bindings : Slice source.declared.BoundOperation)
+  (profile : source.declared.state.SessionProfile)
   (retained_source_limit_bytes : Std.U32) :
   Result (core.result.Result source.declared.state.ModuleSession source.Error)
   := do
@@ -179082,10 +179577,10 @@ def source.declared.state.ModuleSession.initialize
       ok (core.result.Result.Err e)
     else
       let r ←
-        if calculator
+        if profile.calculator
         then noble_kernel.contracts.calculator_environment
         else
-          if declared_text
+          if profile.declared_text
           then noble_kernel.contracts.declared_text_environment
           else noble_kernel.contracts.environment
       let r1 ←
@@ -179107,11 +179602,12 @@ def source.declared.state.ModuleSession.initialize
             generation := 0#u64,
             retained_source_limit := retained_source_limit_bytes,
             proof_budgets := none,
+            proof_editor := profile.proof_editor,
             source :=
               {
                 source_session
                   with
-                  calculator,
+                  calculator := profile.calculator,
                   declared :=
                     (some
                       {
@@ -179119,8 +179615,8 @@ def source.declared.state.ModuleSession.initialize
                         words := (alloc.vec.Vec.new (String × source.Target)),
                         aliases := (alloc.vec.Vec.new (String × Std.U64)),
                         owner := none,
-                        signed_self,
-                        declared_text,
+                        signed_self := profile.signed_self,
+                        declared_text := profile.declared_text,
                         request_work := none
                       })
               }
@@ -179128,7 +179624,7 @@ def source.declared.state.ModuleSession.initialize
       | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::new]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1644:4-1649:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1658:4-1672:5
     Visibility: public -/
 def source.declared.state.ModuleSession.new
   (bindings : Slice source.declared.BoundOperation)
@@ -179136,10 +179632,16 @@ def source.declared.state.ModuleSession.new
   Result (core.result.Result source.declared.state.ModuleSession source.Error)
   := do
   let i ← source.RetainedSourceLimit.impl.bytes retained_source_limit
-  source.declared.state.ModuleSession.initialize bindings false false false i
+  source.declared.state.ModuleSession.initialize bindings
+    {
+      signed_self := false,
+      declared_text := false,
+      calculator := false,
+      proof_editor := false
+    } i
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::new_signed_self]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1653:4-1658:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1676:4-1690:5
     Visibility: public -/
 def source.declared.state.ModuleSession.new_signed_self
   (bindings : Slice source.declared.BoundOperation)
@@ -179147,10 +179649,16 @@ def source.declared.state.ModuleSession.new_signed_self
   Result (core.result.Result source.declared.state.ModuleSession source.Error)
   := do
   let i ← source.RetainedSourceLimit.impl.bytes retained_source_limit
-  source.declared.state.ModuleSession.initialize bindings true false false i
+  source.declared.state.ModuleSession.initialize bindings
+    {
+      signed_self := true,
+      declared_text := false,
+      calculator := false,
+      proof_editor := false
+    } i
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::new_declared_text]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1662:4-1680:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1694:4-1715:5
     Visibility: public -/
 def source.declared.state.ModuleSession.new_declared_text
   (bindings : Slice source.declared.BoundOperation) (signed_self : Bool)
@@ -179161,8 +179669,13 @@ def source.declared.state.ModuleSession.new_declared_text
   if b
   then
     let i ← source.RetainedSourceLimit.impl.bytes retained_source_limit
-    source.declared.state.ModuleSession.initialize bindings signed_self true
-      false i
+    source.declared.state.ModuleSession.initialize bindings
+      {
+        signed_self,
+        declared_text := true,
+        calculator := false,
+        proof_editor := false
+      } i
   else
     let e ←
       source.declared.error source.Stage.Link (toStr
@@ -179170,7 +179683,7 @@ def source.declared.state.ModuleSession.new_declared_text
     ok (core.result.Result.Err e)
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::new_calculator]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1683:4-1685:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1718:4-1729:5
     Visibility: public -/
 def source.declared.state.ModuleSession.new_calculator
   :
@@ -179179,17 +179692,40 @@ def source.declared.state.ModuleSession.new_calculator
   let s ←
     lift (Array.to_slice (Std.Array.empty source.declared.BoundOperation))
   let i ← source.declared.state.CALCULATOR_RETAINED_SOURCE_BYTES
-  source.declared.state.ModuleSession.initialize s false false true i
+  source.declared.state.ModuleSession.initialize s
+    {
+      signed_self := false,
+      declared_text := false,
+      calculator := true,
+      proof_editor := false
+    } i
+
+/-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::new_proof_editor]:
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1735:4-1749:5
+    Visibility: public -/
+def source.declared.state.ModuleSession.new_proof_editor
+  (bindings : Slice source.declared.BoundOperation)
+  (retained_source_limit : source.RetainedSourceLimit) :
+  Result (core.result.Result source.declared.state.ModuleSession source.Error)
+  := do
+  let i ← source.RetainedSourceLimit.impl.bytes retained_source_limit
+  source.declared.state.ModuleSession.initialize bindings
+    {
+      signed_self := false,
+      declared_text := false,
+      calculator := false,
+      proof_editor := true
+    } i
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::generation]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1762:4-1764:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1821:4-1823:5
     Visibility: public -/
 def source.declared.state.ModuleSession.impl.generation
   (self : source.declared.state.ModuleSession) : Result Std.U64 := do
   ok self.generation
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::checkpoint::{impl core::ops::function::FnOnce<(), noble_contracts::source::declared::state::ModuleSession> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::checkpoint::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1786:22-1786:40 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1845:22-1845:40 -/
 def
   source.declared.state.ModuleSession.checkpoint.closure.Insts.CoreOpsFunctionFnOnceTupleModuleSession.call_once
   (c : source.declared.state.ModuleSession.checkpoint.closure) (_ : Unit) :
@@ -179198,7 +179734,7 @@ def
   source.declared.state.ModuleSession.snapshot c
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::checkpoint::{impl core::ops::function::FnOnce<(), noble_contracts::source::declared::state::ModuleSession> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::checkpoint::{closure}<'_0>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1786:22-1786:40 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1845:22-1845:40 -/
 @[reducible]
 def
   source.declared.state.ModuleSession.checkpoint.closure.Insts.CoreOpsFunctionFnOnceTupleModuleSession
@@ -179210,7 +179746,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::checkpoint]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1778:4-1787:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1837:4-1846:5
     Visibility: public -/
 def source.declared.state.ModuleSession.checkpoint
   (self : source.declared.state.ModuleSession) :
@@ -179239,7 +179775,7 @@ def source.declared.state.ModuleSession.checkpoint
     is_exact self
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::share_request_work]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1801:4-1805:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1860:4-1864:5
     Visibility: public -/
 def source.declared.state.ModuleSession.share_request_work
   (self : source.declared.state.ModuleSession) (work : Std.U32) :
@@ -179257,7 +179793,7 @@ def source.declared.state.ModuleSession.share_request_work
     ok { self with source := { self.source with declared := o1 } }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::share_proof_budgets]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1814:4-1816:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1873:4-1875:5
     Visibility: public -/
 def source.declared.state.ModuleSession.share_proof_budgets
   (self : source.declared.state.ModuleSession)
@@ -179267,7 +179803,7 @@ def source.declared.state.ModuleSession.share_proof_budgets
   ok { self with proof_budgets := (some budgets) }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::remaining_request_work::{impl core::ops::function::FnOnce<(&'_0 alloc::rc::Rc<core::cell::Cell<u32>>,), u32> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::remaining_request_work::{closure}}::call_once]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1820:39-1820:66 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1879:39-1879:66 -/
 def
   source.declared.state.ModuleSession.remaining_request_work.closure.Insts.CoreOpsFunctionFnOnceTupleShared0RcCellU32U32.call_once
   (c : source.declared.state.ModuleSession.remaining_request_work.closure)
@@ -179278,7 +179814,7 @@ def
   core.cell.Cell.get core.marker.CopyU32 c1
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::remaining_request_work::{impl core::ops::function::FnOnce<(&'_0 alloc::rc::Rc<core::cell::Cell<u32>>,), u32> for noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::remaining_request_work::{closure}}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1820:39-1820:66 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1879:39-1879:66 -/
 @[reducible]
 def
   source.declared.state.ModuleSession.remaining_request_work.closure.Insts.CoreOpsFunctionFnOnceTupleShared0RcCellU32U32
@@ -179290,7 +179826,7 @@ def
 }
 
 /-- [noble_contracts::source::declared::state::{noble_contracts::source::declared::state::ModuleSession}::remaining_request_work]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1819:4-1821:5
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1878:4-1880:5
     Visibility: public -/
 def source.declared.state.ModuleSession.remaining_request_work
   (self : source.declared.state.ModuleSession) : Result (Option Std.U32) := do
@@ -179300,7 +179836,7 @@ def source.declared.state.ModuleSession.remaining_request_work
     o ()
 
 /-- [noble_contracts::source::declared::state::{impl core::clone::Clone for noble_contracts::source::declared::state::SignedOrigin<'a>}::clone]:
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1912:9-1912:14
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1972:9-1972:14
     Visibility: public -/
 def source.declared.state.SignedOrigin.Insts.CoreCloneClone.clone
   (self : source.declared.state.SignedOrigin) :
@@ -179309,7 +179845,7 @@ def source.declared.state.SignedOrigin.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{impl core::clone::Clone for noble_contracts::source::declared::state::SignedOrigin<'a>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1912:9-1912:14 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1972:9-1972:14 -/
 @[reducible]
 impl_def source.declared.state.SignedOrigin.Insts.CoreCloneClone :
   core.clone.Clone source.declared.state.SignedOrigin := {
@@ -179319,7 +179855,7 @@ impl_def source.declared.state.SignedOrigin.Insts.CoreCloneClone :
 }
 
 /-- Trait implementation: [noble_contracts::source::declared::state::{impl core::marker::Copy for noble_contracts::source::declared::state::SignedOrigin<'a>}]
-    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1912:16-1912:20 -/
+    Source: 'crates/noble-contracts/src/source/declared/state.rs', lines 1972:16-1972:20 -/
 @[reducible]
 def source.declared.state.SignedOrigin.Insts.CoreMarkerCopy : core.marker.Copy
   source.declared.state.SignedOrigin := {
