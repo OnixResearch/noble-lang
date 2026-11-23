@@ -76,8 +76,14 @@ pub(super) fn check_request(
         let at = super::parts::site(None, Some(owner));
         let (owner_cost, next_remaining) = attempt!(guard_inst(owner_inst, request, remaining));
         remaining = next_remaining;
-        let (interface, _, spent) = attempt!(super::parts::instantiate::apply(
+        let (interface, resolved, spent) = attempt!(super::parts::instantiate::apply(
             scheme, owner_inst, None, at, &context, remaining,
+        ));
+        attempt!(super::parts::named::check_eligibility(
+            Some(crate::contracts::Behavior::Named),
+            scheme,
+            &resolved,
+            at,
         ));
         remaining = attempt!(super::parts::charge(
             remaining,

@@ -91,7 +91,7 @@ Test design remains open for this requirement. No scenario or execution evidence
 ### Requirement: B-CHECK-03
 r[B-CHECK-03]
 
-**B-CHECK-03.** Every node MUST have a declarative derivation. Sequence joins match complete ordered stacks. Quotation construction separates its own effects from latent body effects. Each named invocation instantiates its scheme freshly.
+**B-CHECK-03.** Every node MUST have a declarative derivation. Sequence joins match each node's instantiated input stack against the top suffix of the running ordered stack without reordering, preserving any lower stack tail under stack-tail polymorphism, and frame exit matches the complete ordered output stack. Quotation construction separates its own effects from latent body effects. Each named invocation instantiates its scheme freshly.
 
 Duplicated first-class program values share one instantiated interface. A witness cannot turn duplication into independent polymorphism.
 

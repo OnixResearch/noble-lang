@@ -28,6 +28,8 @@ mod support;
 
 #[path = "acceptance/controls.rs"]
 mod controls;
+#[path = "acceptance/named/eligibility.rs"]
+mod named_eligibility;
 #[path = "acceptance/nominal.rs"]
 mod nominal;
 #[path = "acceptance/ownership.rs"]

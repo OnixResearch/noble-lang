@@ -1148,6 +1148,30 @@ fn contract_subject_evidence(
         ("generated_statement", encoding::string(generated_statement)),
     ])
 }
+/// Verify that every arena slot in `candidate.nodes` carries exactly one
+/// accepted kernel derivation (no unreachable unchecked payload may hide in
+/// the candidate arena).
+fn ensure_all_nodes_derived(
+    candidate: &noble_kernel::untrusted::Candidate,
+    checked: &noble_kernel::untrusted::Checked,
+    detail: &str,
+) -> Result<(), output::Failure> {
+    let fail = || output::Failure::error("named-report-derivation", detail.into());
+    let mut visited = std::vec![false; candidate.nodes.len()];
+    for row in &checked.derivations {
+        let index = usize::try_from(row.node.0).map_err(|_| fail())?;
+        let slot = visited.get_mut(index).ok_or_else(fail)?;
+        if *slot {
+            return Err(fail());
+        }
+        *slot = true;
+    }
+    if visited.iter().any(|seen| !*seen) {
+        return Err(fail());
+    }
+    Ok(())
+}
+
 fn named_subject_evidence(
     contract: &noble_contracts::intrinsic::ContractGoal,
     obligation_source: &str,
@@ -1185,6 +1209,11 @@ fn named_subject_evidence(
             "accepted body derivation unavailable".into(),
         ));
     };
+    ensure_all_nodes_derived(
+        &selected.body.candidate,
+        &derived,
+        "accepted body contains unreachable or duplicate arena nodes",
+    )?;
     let root_node = usize::try_from(root.candidate_node.0)
         .ok()
         .and_then(|index| accepted.body.candidate.nodes.get(index));
@@ -1207,6 +1236,11 @@ fn named_subject_evidence(
             "submission root derivation unavailable".into(),
         ));
     };
+    ensure_all_nodes_derived(
+        &accepted.body.candidate,
+        &root_checked,
+        "submission root contains unreachable or duplicate arena nodes",
+    )?;
     let root_derivation = root_checked
         .derivations
         .iter()
@@ -1535,6 +1569,11 @@ fn specialization_evidence(
             "named step derivation unavailable".into(),
         ));
     };
+    ensure_all_nodes_derived(
+        body,
+        &checked,
+        "named step body contains unreachable or duplicate arena nodes",
+    )?;
     let mut nodes = std::vec::Vec::with_capacity(body.body.len());
     for id in &body.body {
         let node = usize::try_from(id.0)
@@ -1991,5 +2030,85 @@ mod tests {
             million.finish(),
             "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0"
         );
+    }
+
+    #[test]
+    fn specialization_evidence_rejects_unreachable_ill_typed_arena_node() {
+        use noble_kernel::contracts::Definition;
+        use noble_kernel::execution::{Body, Definition as ExecDef, Submission};
+        use noble_kernel::types::{EffSet, Ty};
+        use noble_kernel::untrusted::{
+            Candidate, Expected, Limits, Lit, Node, NodeId, Request, CANDIDATE_FORMAT,
+            SEMANTIC_REVISION,
+        };
+        use noble_kernel::words::{Binding, Inst};
+
+        let env = noble_kernel::contracts::environment().expect("bootstrap env");
+        let valid_lit = Node::Literal {
+            lit: Lit::I64(1),
+            inst: Inst {
+                bindings: vec![Binding::Stack(vec![])],
+            },
+        };
+        // An unreachable arena slot carrying an unknown definition / type error.
+        let unreachable_bad = Node::Invocation {
+            def: Definition(9999),
+            inst: Inst { bindings: vec![] },
+        };
+        let expected = Expected {
+            stack_in: vec![],
+            stack_out: vec![Ty::I64],
+            allowed_effects: EffSet::empty(),
+        };
+        let limits = Limits {
+            bytes: 4096,
+            nodes: 64,
+            depth: 16,
+            stack_height: 64,
+            type_size: 64,
+            work: 10_000,
+            diagnostics: 64,
+        };
+        let request = Request {
+            input_bytes: 0,
+            expected: expected.clone(),
+            limits,
+        };
+        let clean_body = Body {
+            candidate: Candidate {
+                format: CANDIDATE_FORMAT,
+                revision: SEMANTIC_REVISION,
+                nodes: vec![valid_lit.clone()],
+                body: vec![NodeId(0)],
+            },
+            texts: vec![],
+        };
+        let polluted_def = ExecDef {
+            definition: Definition(23),
+            identity: 1,
+            source_identity: 1,
+            expected,
+            body: Body {
+                candidate: Candidate {
+                    format: CANDIDATE_FORMAT,
+                    revision: SEMANTIC_REVISION,
+                    nodes: vec![valid_lit, unreachable_bad],
+                    body: vec![NodeId(0)],
+                },
+                texts: vec![],
+            },
+            owner_slot: None,
+            owner_inst: None,
+        };
+        let submission = Submission {
+            environment: env,
+            request,
+            definitions: vec![polluted_def.clone()],
+            body: clean_body,
+        };
+        let Err(refusal) = super::specialization_evidence(&submission, &polluted_def) else {
+            panic!("unreachable arena slot must be refused");
+        };
+        assert_eq!(refusal.code, "named-report-derivation");
     }
 }
