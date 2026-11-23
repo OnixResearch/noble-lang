@@ -14,6 +14,34 @@
 
 - [x] [serial] Prove reviewed Lean theorems T1-T6 (`NamedV3.exec_append_iff`, `callFrame`, `embed`, `liftMc1Claim`, `chainClaim`, `Holds₂` evaluation lemmas) in a separate `NamedV3` module under the gate's axiom list. Whitelist `List.nil_append`, `List.append_nil`, `BitVec.add_assoc`, `BitVec.add_comm` and `BitVec.mul_add` as exact reviewed rule identities. r[PREUSE-CALL-01] r[PREUSE-LEMMA-01] — **Accepted as amended (owner decision 2026-11-20).** The independent review (fresh-context reviewer agent, owner decision 1) returned REVISE in rounds 1 and 2 and found the amended slice acceptable in substance; the integrator verified the round-2 fixes (all four intrinsic revision digests unchanged from base; `lib.rs`, `intrinsic.rs` and `Rules.lean` byte-identical to base; gate at 114). OWNER DECISION 2026-11-20: task 1 is accepted as amended, with T3 as identity placement and per-embedding slot uniqueness, T4 as a profile-restricted lifted-tail claim, and T5 as call-only, whole-stack, output-only chains. The follow-up task below carries the T4 bridge, the T5 generalization and the `Holds₂` lemmas. Landed and kernel-checked in `proofs/mc1/NobleContracts/NamedV3.lean` and pinned by `proofs/mc1/ContractGate.lean` (commit `65adc464`, plus the round-2 tip): T1, T2 `callFrame`, T3 `embed` (identity placement; per-embedding occurrence slots) plus `holds₂_env_free`, T4 `liftMc1Claim` (profile-restricted, lifted tails), T5 `chainClaim` (call-only, whole-stack, output-only posts) and T6. `lake env lean ContractGate.lean` reports `MC1-CONTRACT-LIBRARY: 114 required theorems; strict axioms accepted`, including the six reviewed rule identities (`List.append_assoc`, `List.nil_append`, `List.append_nil`, `BitVec.add_assoc`, `BitVec.add_comm`, `BitVec.mul_add`) pinned by name. `crates/noble-contracts/tests/named_v2/proofs.rs::reviewed_v3_rule_identities_are_exact` keeps the rule table local to the test (the extracted `noble-contracts` library stays byte-identical: `lib.rs`, `intrinsic.rs` and `Rules.lean` are at their base blobs) and requires every declaration to appear as a pin in the gate. Open after the review: the design amendment records what T2–T5 state and what they do not, the tracked follow-up task below owns the T4 bridge, the T5 generalization and the m7 lemmas, and the `V-INTRINSIC-01` delta still needs owner acceptance. The landed shapes are *not* the full Decision 3 obligations.
 - [ ] [serial] Implement the revision-3 grammar, frozen-snapshot `use`, envelope reconstruction, the symbolic checker, `Eq` over bounded scalar terms, and isolated dependency replay. Leave revisions 1 and 2 byte-for-byte unchanged in behavior. r[PREUSE-GRAMMAR-01] r[PREUSE-ENVELOPE-01] r[PREUSE-CHECK-01]
+  Progress (2026-11-23, slice `preuse-r3`, commit `66f427ee`): the implementation is written and
+  compiles (`cargo check -p noble-contracts -p noble-cli --all-targets --offline` finished clean),
+  but the box stays open. Landed in `crates/noble-contracts/src/intrinsic/named_v3.rs`:
+  `subject_view`/`authenticate_occurrences` (exact subject, kernel re-acceptance, ordered call
+  occurrences, full-token spans, frozen module and export bindings), `verify` (bridge/join symbolic
+  execution over the bounded `I64`/`Bool` stack, fact set, ghost outputs, contract-only callee
+  claims), `replay` (each distinct closure member once; revision-1 members through
+  `check_dependency`, revision-3 members re-entering `verify` at the next depth), `claim_shape` and
+  `prepare_named_v3`. `intrinsic.rs` adds `Term`/`Proposition::EqTerm` with literal folding,
+  `parse_term`, term arguments to `apply`, `EqTerm` `subst`, and the `bv-add-assoc`/`bv-add-comm`/
+  `bv-mul-add` reviewed rules; a contract dependency is admitted only in a batch carrying a
+  revision-3 obligation and never becomes a logical `use`. `parsing.rs`/`members.rs` accept
+  `contract 3`/`proof 3` with the revision-2 colon refusal text unchanged; `logical.rs` stages
+  revision-3 contracts (`claim_shape`), traces their occurrences, and resolves `pc-call` and `use`
+  through the frozen `NamedImportBinding` snapshot (`resolve_module`, `resolve_pc_calls`). The CLI
+  reports the regenerated claim in `verify-module`/link reports and refuses publication with
+  `named-v3-lowering-unavailable`.
+  Not done, and why the box is open: (1) no focused tests yet for the new grammar, the snapshot
+  `use`, the envelope, the checker's accept/refuse cases or the PREUSE-S01..S04 shapes, so none of
+  the new paths is executed; (2) the required `cargo test -p noble-contracts`, consuming
+  `noble-cli` tests, `cargo clippy -D warnings`, `cargo fmt --check` and the Octet probe were not
+  run; (3) Decision 5 step 8 (a reviewed Lean lowering of a revision-3 chain) and the same-session
+  strict replay of the closure do not exist, so `verify-module` refuses a revision-3 proof instead
+  of publishing it; (4) revisions 1 and 2 have no differential run over the existing fixtures:
+  the variable-only `Eq` path is preserved structurally and every existing revision-1/2 code path
+  is untouched, but that is inference until those tests run. The intrinsic checker/model digests
+  change (edited `intrinsic.rs`, `members.rs`, `logical.rs`, `named_v3.rs`, `named_v2` model list);
+  the integrator must re-pin and re-run receipts.
 - [x] [serial] Close the amendment's follow-up vocabulary before the revision-3 checker leans on it: prove a T4 bridge that turns `liftMc1Claim` into the `exportedNamedClaim` form `callFrame`/`ChainStep` instantiate at a caller's frame (or restrict both and record it), generalize `chainClaim` to literal/builtin segments (S04 `[ swap d.sub2 ]`), frame-carrying steps and relational posts over inputs, and add the public `Holds₂` evaluation lemmas for `false`, `not`, `and`, `lt` and `le` that NamedV2's private helpers keep out of `simp` (review m7). PREUSE-S01, S02, S03 and S04 depend on this work. r[PREUSE-CALL-01] r[PREUSE-LEMMA-01]
   Progress (2026-11-22): the `Holds₂` evaluation lemmas are in `NobleContracts/NamedV2.lean`:
   `holds₂_bool` (simp; a Boolean literal holds exactly when it is `true`), `not_holds₂_false`,
