@@ -2419,7 +2419,23 @@
     },
     {
       "file": ".cairn/changes/artifact-correspondence-extension/tasks.md",
-      "sha256": "4c6dadece7037d737c4287697704b4afb55923a6a9dff54bebaf4c452b71c316"
+      "sha256": "32922fc34c54e3fee3178da1974f88f94c777b89556f245fe944bee6c3740b1a"
+    },
+    {
+      "file": ".cairn/changes/bounded-wasm-correspondence/design.md",
+      "sha256": "2aa8155c26b70b09e59934ebd6f5644ace6d03247bc1c60060f21ef61e102c6a"
+    },
+    {
+      "file": ".cairn/changes/bounded-wasm-correspondence/proposal.md",
+      "sha256": "f4ce36e8714ec31e2f05e5ab1430680fb1b42dc79a5f55464278f1c7268e66cc"
+    },
+    {
+      "file": ".cairn/changes/bounded-wasm-correspondence/specs/verification/spec.md",
+      "sha256": "f1a363b31728e87b9f1190027e1fd35aca2a581df1eccbbe3a38de69602ade5a"
+    },
+    {
+      "file": ".cairn/changes/bounded-wasm-correspondence/tasks.md",
+      "sha256": "8ae205822bc2c1c6cb504299986e5c5668274f8d11f6478bf94288c08864b885"
     },
     {
       "file": ".cairn/changes/c-backend/design.md",
@@ -2595,7 +2611,7 @@
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/design.md",
-      "sha256": "c927cdb49ba9086d39dd5caa22bfc8f5c7942484e92c3c332d9fc15627ba3f1b"
+      "sha256": "6a8d3874649db7011b6816dd639b41edb00b7b509a6dc688515bd430708ce73e"
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/proposal.md",
@@ -2619,7 +2635,7 @@
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/tasks.md",
-      "sha256": "8ba9fe871e335225abfd118cde5cf5e8fa2f1083f4140bff4438ac4927227146"
+      "sha256": "20cc373051ddfdadd2261439830a5c91536996735bff67215fe6466f932dab0a"
     },
     {
       "file": ".cairn/changes/proof-automation-diagnostics/design.md",
@@ -2667,7 +2683,7 @@
     },
     {
       "file": ".cairn/changes/resource-safe-wiring-laws/tasks.md",
-      "sha256": "3c4dedb4d027d1683848518f143f68c82be8058f45d6222e0090a7622ff10061"
+      "sha256": "dfee8483277dab54f3d9c2b4beb31661c6594539fea243083d344a4c5b061bc9"
     },
     {
       "file": ".cairn/changes/reusable-contract-calls/design.md",
@@ -2935,7 +2951,7 @@
     },
     {
       "file": "specs/DECISIONS.md",
-      "sha256": "23eaa5344fe67e089b5878a9fe07d131e9e2d60424ff00721f47921dcb83f10d"
+      "sha256": "bf804069084b62264a505ca71bb1d43ce5fe45d52c2c08d5c54bfa9f50f01d09"
     },
     {
       "file": "specs/DEVELOPER-EXPERIENCE.md",

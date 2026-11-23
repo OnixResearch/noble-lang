@@ -84,3 +84,7 @@
   receipt's `gate_sha256`/`prepare_sha256` fields hold the script paths; the digests are in its
   `inputs` map and the case records cite them (`verification/acorr/README.md`).
 - [ ] [serial] Pursue O1–O7 separately (PO-17/18 slices, optimizer, PO-21 C6, the PO-20 erasure theorem, PO-16 refinement); never close them from hashes, tests or extraction success. Extend the envelope for the #7 named-call profile only after its dependency-closure design is accepted. r[ACORR-TB-01]
+  Owner decision 56 (2026-11-23) starts the
+  [bounded Wasm correspondence research change](../bounded-wasm-correspondence/design.md).
+  Its first cut covers structured opt-off lowering and reached helpers, not binary
+  encoding, actual loading or end-to-end composition. This task stays open.

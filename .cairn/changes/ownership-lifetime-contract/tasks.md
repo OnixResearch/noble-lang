@@ -204,4 +204,8 @@
     `verification/foundation/claims.mjs` passed.
   The task stays open: no lowering, runtime or host-ledger correspondence exists for
   OWN-PO-4..7, and the retained foundation receipt and claims audit are integrator evidence.
+  Owner decision 57 (2026-11-23) selects the extracted Rust route for the
+  host ledger. The design records the existing state owners, synchronous worker
+  boundary and backend-acknowledgement obligations. An abstract model or a
+  differential suite by itself does not complete OWN-PO-6/7.
 - [x] [serial] Select any scratch-arena promotion form only after measured comparison under the allocation benchmark plan, and verify reset safety with OWN-CASE-08. r[OWN-SCRATCH-01] OWNER DECISION 2026-11-20: no scratch-arena profile is selected, so no promotion form is chosen and OWN-CASE-08 is inapplicable. The task closes on that recorded outcome (owner rule for conditional tasks). Scratch arenas stay a design option. Selecting one later needs the allocation benchmark measurements and an executed OWN-CASE-08 reset-safety receipt in a new change.

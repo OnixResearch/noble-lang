@@ -53,3 +53,6 @@
 - [ ] [serial] Develop trace, ownership and failure models: PO-04, PO-05, PO-06, V-MODEL-03/04 and V-RESOURCE-01..03. Develop resource-admitting execution before claiming any T, O or F entry or packaging the frame bundle. r[WIRE-LAW-01] r[WIRE-EVID-01]
 - [ ] [serial] At sync, register WIRE-CASE-01 to 24 as conformance designs and add a `WIRE` route to `tools/check-specs.mjs` `ROUTES`. Then execute with independent expectations and retain receipts without promoting proof status. r[WIRE-EVID-01]
 - [ ] [serial] Implement the optional known-graph analysis and validate any flattening optimization by artifact correspondence (#10, PO-17) under the declared quota policy. Consider archive only after implementation, evidence and separately reviewed gates. r[WIRE-GRAPH-01]
+  Owner decision 59 (2026-11-23): keep this box open until flattening is validated.
+  A recorded negative does not complete it. The bounded Wasm research route is a
+  prerequisite, not validation of a wiring transformation.
