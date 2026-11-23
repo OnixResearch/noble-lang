@@ -5,6 +5,7 @@ import NobleContracts.NamedV3Lifted
 import NobleContracts.Merge
 import NobleContracts.SpecQuality
 import NobleContracts.Wire
+import NobleContracts.WasmStep
 import Lean
 
 open Lean Elab Command
@@ -125,7 +126,45 @@ elab "check_contract_library" : command => do
     ``NobleContracts.NamedV3.incrementSubject_lifted, ``NobleContracts.NamedV3.swapCall_lifted,
     ``NobleContracts.NamedV2.holds₂_bool, ``NobleContracts.NamedV2.not_holds₂_false,
     ``NobleContracts.NamedV2.holds₂_not, ``NobleContracts.NamedV2.holds₂_and,
-    ``NobleContracts.NamedV2.holds₂_lt, ``NobleContracts.NamedV2.holds₂_le]
+    ``NobleContracts.NamedV2.holds₂_lt, ``NobleContracts.NamedV2.holds₂_le,
+    -- Bounded Wasm small-step semantics and MC1 `Exec` simulation (r[WREF-STEP-01],
+    -- Decision 56 first mechanization unit, scoped to the abstract tagged-slot contract):
+    -- determinism, helper steps, simulation soundness/completeness, tail-preserving frame
+    -- simulation, quota/fault separation, wraparound witnesses, and rejection sensitivity.
+    ``NobleContracts.WasmStep.status_disjoint_exec_phase,
+    ``NobleContracts.WasmStep.quota_reason_nonzero_vs_fault,
+    ``NobleContracts.WasmStep.wasmStep_deterministic,
+    ``NobleContracts.WasmStep.wasmSteps_terminal_deterministic,
+    ``NobleContracts.WasmStep.dispatchStep_deterministic,
+    ``NobleContracts.WasmStep.dispatchRun_deterministic,
+    ``NobleContracts.WasmStep.runLowered_deterministic,
+    ``NobleContracts.WasmStep.pushI64_steps_ok,
+    ``NobleContracts.WasmStep.pushI64_steps_quota,
+    ``NobleContracts.WasmStep.opAdd_steps_ok,
+    ``NobleContracts.WasmStep.opSub_steps_ok,
+    ``NobleContracts.WasmStep.opMul_steps_ok,
+    ``NobleContracts.WasmStep.opSub_steps_underflow_one,
+    ``NobleContracts.WasmStep.opSub_steps_tag_mismatch,
+    ``NobleContracts.WasmStep.slotRel_i64_iff,
+    ``NobleContracts.WasmStep.stackRel_append,
+    ``NobleContracts.WasmStep.lowerOp_sound,
+    ``NobleContracts.WasmStep.lowerOp_complete,
+    ``NobleContracts.WasmStep.runLowered_sound,
+    ``NobleContracts.WasmStep.runLowered_complete,
+    ``NobleContracts.WasmStep.lowerOp_frame_complete,
+    ``NobleContracts.WasmStep.runLowered_frame_complete,
+    ``NobleContracts.WasmStep.step_quota_not_divergence,
+    ``NobleContracts.WasmStep.continuation_quota_not_divergence,
+    ``NobleContracts.WasmStep.operand_quota_not_divergence,
+    ``NobleContracts.WasmStep.underflow_fault_distinct_from_quota,
+    ``NobleContracts.WasmStep.tag_mismatch_fault_distinct_from_quota,
+    ``NobleContracts.WasmStep.ordered_sub_with_tail_witness,
+    ``NobleContracts.WasmStep.wraparound_sub_witness,
+    ``NobleContracts.WasmStep.wraparound_add_mul_witness,
+    ``NobleContracts.WasmStep.runtimeEnv_soundFor,
+    ``NobleContracts.WasmStep.swapped_opSub_fails_simulation,
+    ``NobleContracts.WasmStep.substituted_body_fails_correspondence,
+    ``NobleContracts.WasmStep.same_value_distinct_recipe_sensitivity]
   for name in required do
     match env.find? name with
     | some (.thmInfo _) => pure ()
