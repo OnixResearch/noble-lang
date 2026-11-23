@@ -146,10 +146,14 @@ pub(super) fn fold_node(
                 }
             };
             let at = super::parts::site(Some(node_id), Some(*def));
-            let data_var = super::parts::instantiate::data_slot(context.env.kind(*def));
+            let kind = context.env.kind(*def);
+            let data_var = super::parts::instantiate::data_slot(kind);
             let cost = attempt!(super::parts::scheme_cost(&scheme));
-            let (interface, _resolved, spent) = attempt!(super::parts::instantiate::apply(
+            let (interface, resolved, spent) = attempt!(super::parts::instantiate::apply(
                 &scheme, inst, data_var, at, context, fuel
+            ));
+            attempt!(super::parts::named::check_eligibility(
+                kind, &scheme, &resolved, at
             ));
             let cost = cost
                 .saturating_add(attempt!(super::parts::join_cost(&interface)))

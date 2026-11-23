@@ -4,6 +4,7 @@
 pub(crate) mod effects;
 pub(crate) mod instantiate;
 mod multiset;
+pub(crate) mod named;
 
 /// The request and environment a check runs against.
 ///
